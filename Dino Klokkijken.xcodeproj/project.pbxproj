@@ -257,6 +257,34 @@
 		F951E83E307BE03500FF04C4 /* MathTopic.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E649307BE03500FF04C4 /* MathTopic.swift */; };
 		F951E83F307BE03500FF04C4 /* Scenery.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E725307BE03500FF04C4 /* Scenery.swift */; };
 		F951E840307BE03500FF04C4 /* LevelIntroCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E65B307BE03500FF04C4 /* LevelIntroCard.swift */; };
+		4568618D8654E5F5F80F7B5E /* ClockTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEC125D38CB3D527355CFD3B; };
+		96D5615039527B7E63D0F335 /* ClockTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23C747A1E72C8680BB9E684A; };
+		F7411D539E03C079C2D93FD5 /* KeyValueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F902DD15DBC1EC0D309AA1E; };
+		9D7D43B62142FE4FF7C72420 /* LevelConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349A7C34F9172244294A0CFE; };
+		E062E3966BF6466ABA396FCC /* PlayerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56A2803CE327ECBD272C7D1; };
+		25664453B43D58747D2F6A9F /* ProgressManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0EF4D0B58F41DAEDFA25C60; };
+		4A4EE5D04DED4353797FA272 /* QuestionGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8733E214B415C99CC4B23060; };
+		3D31E4F0E012C4E2405C644C /* DinoGameModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE17A7B8D0894CC3A54091A5; };
+		A7A164A2377507068726D1A9 /* DinoRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82850239C26FF8580E07FB20; };
+		61C0ADA07C4CE151409379BB /* AnalogClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = D133564D7720CB902ED7C582; };
+		DDD392F183235DB51B76875F /* ClockCustomizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B1DFC98581D62FAF83297BD; };
+		3B68E92C41BE1E6926B1CD26 /* DigitalClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC831804F11124D46221EE6; };
+		A3A7FCEFEAA9FAF58F4BD046 /* DinoGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AAEBD1E16CB94C4F51E8B01; };
+		3B04AE1E8CC46A033D379434 /* DinoUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5887DAD74B3F2A6183A38A01; };
+		0E03B85644DFB788EEC72EB8 /* LevelResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7BF4989C8E56DBDD0035B47; };
+		DD8D8D9B86AD1F7BD4729496 /* OnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B80587E32D18C0831D8ACC9; };
+		7140D2190606B1466B055EDB /* QuestionRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6006716CA601E3DD24C0D9F6; };
+		DCAE59100EB467AA8769FEF8 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A5B3DA16BFBAC637CDC6B5; };
+		4620A862B268173EC07E4C75 /* WorldMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361CBFA8D6D56E667A6AB6CD; };
+9C7CA32620369705A6E2ADC4 = {isa = PBXBuildFile; fileRef = 61DE2EBAB8070983619B6E0F; };
+5F8093FBC7E1188F832026E5 = {isa = PBXBuildFile; fileRef = AEC125D38CB3D527355CFD3B; };
+4F961AD95991DE68F9B7E490 = {isa = PBXBuildFile; fileRef = 23C747A1E72C8680BB9E684A; };
+17F3D50BFC83FB20302FE95E = {isa = PBXBuildFile; fileRef = 3F902DD15DBC1EC0D309AA1E; };
+CF65DC853F33210C13C32356 = {isa = PBXBuildFile; fileRef = 349A7C34F9172244294A0CFE; };
+113D4C997110CB7A3F76A105 = {isa = PBXBuildFile; fileRef = A56A2803CE327ECBD272C7D1; };
+636C2C17505D475DDE107573 = {isa = PBXBuildFile; fileRef = E0EF4D0B58F41DAEDFA25C60; };
+E044537997C9F23D2302F7FE = {isa = PBXBuildFile; fileRef = 8733E214B415C99CC4B23060; };
+1853284F4CC0ACD94CA0AA66 = {isa = PBXBuildFile; fileRef = F951E650307BE03500FF04C4; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -513,6 +541,27 @@
 		F951E742307BE03500FF04C4 /* Translations.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = Translations.csv; sourceTree = "<group>"; };
 		F951E743307BE03500FF04C4 /* Tutorial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tutorial.swift; sourceTree = "<group>"; };
 		F951E744307BE03500FF04C4 /* wrong_answer.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = wrong_answer.caf; sourceTree = "<group>"; };
+		AEC125D38CB3D527355CFD3B /* ClockTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Core/ClockTheme.swift"; sourceTree = SOURCE_ROOT; };
+		23C747A1E72C8680BB9E684A /* ClockTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Core/ClockTime.swift"; sourceTree = SOURCE_ROOT; };
+		3F902DD15DBC1EC0D309AA1E /* KeyValueStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Core/KeyValueStore.swift"; sourceTree = SOURCE_ROOT; };
+		349A7C34F9172244294A0CFE /* LevelConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Core/LevelConfiguration.swift"; sourceTree = SOURCE_ROOT; };
+		A56A2803CE327ECBD272C7D1 /* PlayerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Core/PlayerProfile.swift"; sourceTree = SOURCE_ROOT; };
+		E0EF4D0B58F41DAEDFA25C60 /* ProgressManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Core/ProgressManager.swift"; sourceTree = SOURCE_ROOT; };
+		8733E214B415C99CC4B23060 /* QuestionGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Core/QuestionGenerator.swift"; sourceTree = SOURCE_ROOT; };
+		AE17A7B8D0894CC3A54091A5 /* DinoGameModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/DinoGameModel.swift"; sourceTree = SOURCE_ROOT; };
+		82850239C26FF8580E07FB20 /* DinoRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/DinoRootView.swift"; sourceTree = SOURCE_ROOT; };
+		D133564D7720CB902ED7C582 /* AnalogClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Views/AnalogClock.swift"; sourceTree = SOURCE_ROOT; };
+		6B1DFC98581D62FAF83297BD /* ClockCustomizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Views/ClockCustomizer.swift"; sourceTree = SOURCE_ROOT; };
+		9CC831804F11124D46221EE6 /* DigitalClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Views/DigitalClock.swift"; sourceTree = SOURCE_ROOT; };
+		8AAEBD1E16CB94C4F51E8B01 /* DinoGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Views/DinoGameView.swift"; sourceTree = SOURCE_ROOT; };
+		5887DAD74B3F2A6183A38A01 /* DinoUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Views/DinoUI.swift"; sourceTree = SOURCE_ROOT; };
+		B7BF4989C8E56DBDD0035B47 /* LevelResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Views/LevelResult.swift"; sourceTree = SOURCE_ROOT; };
+		0B80587E32D18C0831D8ACC9 /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Views/OnboardingFlow.swift"; sourceTree = SOURCE_ROOT; };
+		6006716CA601E3DD24C0D9F6 /* QuestionRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Views/QuestionRenderer.swift"; sourceTree = SOURCE_ROOT; };
+		B8A5B3DA16BFBAC637CDC6B5 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Views/Settings.swift"; sourceTree = SOURCE_ROOT; };
+		361CBFA8D6D56E667A6AB6CD /* WorldMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Dino/Views/WorldMap.swift"; sourceTree = SOURCE_ROOT; };
+61DE2EBAB8070983619B6E0F = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tests/DinoUITests.swift"; sourceTree = SOURCE_ROOT; };
+4C8BBB08B81CA32863E546A3 = {isa = PBXFileReference; explicitFileType = "wrapper.cfbundle"; path = DinoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -521,12 +570,15 @@
 			files = (
 			);
 		};
+9E1B4E89413DF3CDD6D71CCC = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		F951E627307BE01100FF04C4 = {
 			isa = PBXGroup;
 			children = (
+61DE2EBAB8070983619B6E0F /* DinoUITests.swift */,
+				D1A012340000000000000001 /* Dino */,
 				F951E640307BE03500FF04C4 /* AppAudio.swift */,
 				F951E641307BE03500FF04C4 /* AppSettings.swift */,
 				F951E642307BE03500FF04C4 /* Assets.xcassets */,
@@ -870,6 +922,32 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		D1A012340000000000000001 /* Dino */ = {
+			isa = PBXGroup;
+			children = (
+				AEC125D38CB3D527355CFD3B /* ClockTheme.swift */,
+				23C747A1E72C8680BB9E684A /* ClockTime.swift */,
+				3F902DD15DBC1EC0D309AA1E /* KeyValueStore.swift */,
+				349A7C34F9172244294A0CFE /* LevelConfiguration.swift */,
+				A56A2803CE327ECBD272C7D1 /* PlayerProfile.swift */,
+				E0EF4D0B58F41DAEDFA25C60 /* ProgressManager.swift */,
+				8733E214B415C99CC4B23060 /* QuestionGenerator.swift */,
+				AE17A7B8D0894CC3A54091A5 /* DinoGameModel.swift */,
+				82850239C26FF8580E07FB20 /* DinoRootView.swift */,
+				D133564D7720CB902ED7C582 /* AnalogClock.swift */,
+				6B1DFC98581D62FAF83297BD /* ClockCustomizer.swift */,
+				9CC831804F11124D46221EE6 /* DigitalClock.swift */,
+				8AAEBD1E16CB94C4F51E8B01 /* DinoGameView.swift */,
+				5887DAD74B3F2A6183A38A01 /* DinoUI.swift */,
+				B7BF4989C8E56DBDD0035B47 /* LevelResult.swift */,
+				0B80587E32D18C0831D8ACC9 /* OnboardingFlow.swift */,
+				6006716CA601E3DD24C0D9F6 /* QuestionRenderer.swift */,
+				B8A5B3DA16BFBAC637CDC6B5 /* Settings.swift */,
+				361CBFA8D6D56E667A6AB6CD /* WorldMap.swift */,
+			);
+			name = Dino;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -888,8 +966,20 @@
 			productReference = F951E630307BE01200FF04C4 /* Dino Klokkijken.app */;
 			productType = "com.apple.product-type.application";
 		};
+C0596AAE94B8DC6526A6DE24 /* DinoUITests */ = {
+isa = PBXNativeTarget; buildConfigurationList = F975AA4B31E499530B94DAF1;
+buildPhases = (09BE8DD855369313A16B68D5,9E1B4E89413DF3CDD6D71CCC,13C4A5FF766A139D7B2C3D55);
+buildRules = (); dependencies = (8AF73ABD670919989A80E330); name = DinoUITests;
+productName = DinoUITests; productReference = 4C8BBB08B81CA32863E546A3; productType = "com.apple.product-type.bundle.ui-testing";
+};
 /* End PBXNativeTarget section */
 
+/* Begin PBXContainerItemProxy section */
+B25328EFD7740DFB6BC6F116 = {isa = PBXContainerItemProxy; containerPortal = F951E628307BE01100FF04C4; proxyType = 1; remoteGlobalIDString = F951E62F307BE01200FF04C4; remoteInfo = "Dino Klokkijken"; };
+/* End PBXContainerItemProxy section */
+/* Begin PBXTargetDependency section */
+8AF73ABD670919989A80E330 = {isa = PBXTargetDependency; target = F951E62F307BE01200FF04C4; targetProxy = B25328EFD7740DFB6BC6F116; };
+/* End PBXTargetDependency section */
 /* Begin PBXProject section */
 		F951E628307BE01100FF04C4 /* Project object */ = {
 			isa = PBXProject;
@@ -923,6 +1013,7 @@
 			);
 			projectRoot = "";
 			targets = (
+C0596AAE94B8DC6526A6DE24 /* DinoUITests */,
 				F951E62F307BE01200FF04C4 /* Dino Klokkijken */,
 			);
 		};
@@ -932,266 +1023,43 @@
 		F951E62E307BE01200FF04C4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
-				F951E747307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-15_90s.png in Resources */,
-				F951E748307BE03500FF04C4 /* frog-app-store-teaser-1920x886-04_20s.png in Resources */,
-				F951E749307BE03500FF04C4 /* app-store-teaser-1600x1200-05_69s.png in Resources */,
-				F951E74A307BE03500FF04C4 /* app-store-teaser-1920x886-21s.png in Resources */,
-				F951E74B307BE03500FF04C4 /* sfx_wrong.caf in Resources */,
-				F951E74C307BE03500FF04C4 /* frog-app-store-teaser-1920x886-12_54s.png in Resources */,
-				F951E74D307BE03500FF04C4 /* app-store-teaser-1920x886-00_20s.png in Resources */,
-				F951E74E307BE03500FF04C4 /* app-store-teaser-1600x1200-13_52s.png in Resources */,
-				F951E74F307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-08_40s.png in Resources */,
-				F951E750307BE03500FF04C4 /* export-complete.json in Resources */,
-				F951E751307BE03500FF04C4 /* promo3.png in Resources */,
-				F951E752307BE03500FF04C4 /* app-store-teaser-1920x886-18s.png in Resources */,
-				F951E753307BE03500FF04C4 /* app-store-teaser-1920x886-04_47s.png in Resources */,
-				F951E754307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-03_54s.png in Resources */,
-				F951E755307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-02_13s.png in Resources */,
-				F951E756307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-04_20s.png in Resources */,
-				F951E757307BE03500FF04C4 /* sfx_high_score.caf in Resources */,
-				F951E758307BE03500FF04C4 /* render-app-store-stills.sh in Resources */,
-				F951E759307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-02_42s.png in Resources */,
-				F951E75A307BE03500FF04C4 /* splash.caf in Resources */,
 				F951E75B307BE03500FF04C4 /* Localizable.xcstrings in Resources */,
-				F951E75C307BE03500FF04C4 /* frog-app-store-teaser-1920x886-03_54s.png in Resources */,
-				F951E75D307BE03500FF04C4 /* app-store-teaser-1600x1200-20_24s.png in Resources */,
-				F951E75E307BE03500FF04C4 /* promo3_ipad.png in Resources */,
-				F951E75F307BE03500FF04C4 /* frog-app-store-teaser-1920x886-02_62s.png in Resources */,
-				F951E760307BE03500FF04C4 /* app-store-teaser-1600x1200-18_90s.png in Resources */,
-				F951E761307BE03500FF04C4 /* frog-app-store-teaser-1920x886-01_00s.png in Resources */,
-				F951E762307BE03500FF04C4 /* app-store-teaser-1600x1200-05s.png in Resources */,
-				F951E763307BE03500FF04C4 /* Products.storekit in Resources */,
-				F951E764307BE03500FF04C4 /* sfx_select.caf in Resources */,
-				F951E765307BE03500FF04C4 /* frog-app-store-teaser-1920x886-checkpoints.jpg in Resources */,
-				F951E766307BE03500FF04C4 /* sfx_double_score.caf in Resources */,
-				F951E767307BE03500FF04C4 /* app-store-teaser-1920x886-00_48s.png in Resources */,
-				F951E768307BE03500FF04C4 /* app-store-teaser-1920x886-11s.png in Resources */,
-				F951E769307BE03500FF04C4 /* wrong_answer.caf in Resources */,
-				F951E76A307BE03500FF04C4 /* frog-app-store-teaser-1920x886-00_00s.png in Resources */,
-				F951E76B307BE03500FF04C4 /* app-store-teaser-1920x886-02s.png in Resources */,
-				F951E76C307BE03500FF04C4 /* frog-app-store-teaser-1920x886-17_20s.png in Resources */,
-				F951E76D307BE03500FF04C4 /* frog-app-store-teaser-1920x886-13_29s.png in Resources */,
-				F951E76E307BE03500FF04C4 /* frog-app-store-teaser-1920x886-15_16s.png in Resources */,
-				F951E76F307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-05_20s.png in Resources */,
-				F951E770307BE03500FF04C4 /* app-store-teaser-1600x1200-16s.png in Resources */,
-				F951E771307BE03500FF04C4 /* sfx_flamethrower.caf in Resources */,
-				F951E772307BE03500FF04C4 /* sfx_card_reveal.caf in Resources */,
-				F951E773307BE03500FF04C4 /* app-store-teaser-1600x1200-00_00s.png in Resources */,
-				F951E774307BE03500FF04C4 /* app-store-teaser-1920x886-00_32s.png in Resources */,
-				F951E775307BE03500FF04C4 /* app-store-teaser-1920x886-03s.png in Resources */,
-				F951E776307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-06_50s.png in Resources */,
-				F951E777307BE03500FF04C4 /* app-store-teaser-1600x1200-03s.png in Resources */,
-				F951E778307BE03500FF04C4 /* Hungry_Frog_vertaalsheet_07082026.csv in Resources */,
-				F951E779307BE03500FF04C4 /* frog-app-store-teaser-1920x886-19_00s.png in Resources */,
-				F951E77A307BE03500FF04C4 /* sfx_character_unlock.caf in Resources */,
-				F951E77B307BE03500FF04C4 /* app-store-teaser-1920x886-13s.png in Resources */,
-				F951E77C307BE03500FF04C4 /* frog-app-store-teaser-1920x886.mp4 in Resources */,
-				F951E77D307BE03500FF04C4 /* app-store-teaser-1920x886-13_52s.png in Resources */,
-				F951E77E307BE03500FF04C4 /* app-store-teaser-1600x1200-08_05s.png in Resources */,
-				F951E77F307BE03500FF04C4 /* frog-app-store-teaser-1920x886-14_42s.png in Resources */,
-				F951E780307BE03500FF04C4 /* app-store-teaser-1920x886-15s.png in Resources */,
-				F951E781307BE03500FF04C4 /* app-store-teaser-1600x1200-03_34s.png in Resources */,
-				F951E782307BE03500FF04C4 /* frog-app-store-teaser-1920x886-19_90s.png in Resources */,
-				F951E783307BE03500FF04C4 /* frog-app-store-teaser-1920x886-07_64s.png in Resources */,
-				F951E784307BE03500FF04C4 /* app-store-teaser-1600x1200-08s.png in Resources */,
-				F951E785307BE03500FF04C4 /* app-store-teaser-1920x886-08_05s.png in Resources */,
-				F951E786307BE03500FF04C4 /* frog-app-store-teaser-1920x886-02_13s.png in Resources */,
-				F951E787307BE03500FF04C4 /* app-store-teaser-1600x1200-10s.png in Resources */,
-				F951E788307BE03500FF04C4 /* frog-app-store-teaser-1920x886-10_91s.png in Resources */,
-				F951E789307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-02_62s.png in Resources */,
-				F951E78A307BE03500FF04C4 /* frog-app-store-teaser-1600x1200.mp4 in Resources */,
-				F951E78B307BE03500FF04C4 /* translations.py in Resources */,
-				F951E78C307BE03500FF04C4 /* app-store-teaser-1600x1200-06_91s.png in Resources */,
-				F951E78D307BE03500FF04C4 /* render-app-store-teaser.sh in Resources */,
-				F951E78E307BE03500FF04C4 /* app-store-teaser-1920x886-12_12s.png in Resources */,
-				F951E78F307BE03500FF04C4 /* app-store-teaser-1600x1200-01s.png in Resources */,
-				F951E790307BE03500FF04C4 /* frog-app-store-teaser-1920x886-08_40s.png in Resources */,
-				F951E791307BE03500FF04C4 /* frog-app-store-teaser-1920x886-06_50s.png in Resources */,
-				F951E792307BE03500FF04C4 /* app-store-teaser-1920x886-01s.png in Resources */,
-				F951E793307BE03500FF04C4 /* app-store-teaser-1600x1200.mp4 in Resources */,
-				F951E794307BE03500FF04C4 /* frog-app-store-teaser-1920x886-02_42s.png in Resources */,
-				F951E795307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-19_00s.png in Resources */,
-				F951E796307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-01_00s.png in Resources */,
-				F951E797307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-15_16s.png in Resources */,
-				F951E798307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-17_20s.png in Resources */,
-				F951E799307BE03500FF04C4 /* app-store-teaser-1600x1200-11s.png in Resources */,
-				F951E79A307BE03500FF04C4 /* app-store-teaser-1600x1200-17s.png in Resources */,
-				F951E79B307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-10_91s.png in Resources */,
-				F951E79C307BE03500FF04C4 /* app-store-teaser-1920x886-17s.png in Resources */,
-				F951E79D307BE03500FF04C4 /* QA.md in Resources */,
-				F951E79E307BE03500FF04C4 /* README.md in Resources */,
-				F951E79F307BE03500FF04C4 /* QA.md in Resources */,
-				F951E7A0307BE03500FF04C4 /* app-store-teaser-1600x1200-17_58s.png in Resources */,
-				F951E7A1307BE03500FF04C4 /* app-store-still-pick-topic-level-2048x1535.png in Resources */,
-				F951E7A2307BE03500FF04C4 /* render-app-store-teaser.sh in Resources */,
-				F951E7A3307BE03500FF04C4 /* app-store-teaser-1600x1200-13s.png in Resources */,
-				F951E7A4307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-16_38s.png in Resources */,
-				F951E7A5307BE03500FF04C4 /* app-store-teaser-1600x1200-04_47s.png in Resources */,
-				F951E7A6307BE03500FF04C4 /* sfx_card_count.caf in Resources */,
-				F951E7A7307BE03500FF04C4 /* app-store-still-fly-dive-math-2048x1535.png in Resources */,
-				F951E7A8307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-01_90s.png in Resources */,
-				F951E7A9307BE03500FF04C4 /* app-store-teaser-1600x1200-12_82s.png in Resources */,
-				F951E7AA307BE03500FF04C4 /* app-store-teaser-1920x886-07s.png in Resources */,
-				F951E7AB307BE03500FF04C4 /* frog-app-store-teaser-1920x886-13_04s.png in Resources */,
-				F951E7AC307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-05_43s.png in Resources */,
-				F951E7AD307BE03500FF04C4 /* app-store-teaser-1920x886-12s.png in Resources */,
-				F951E7AE307BE03500FF04C4 /* frog-app-store-teaser-1920x886-09_27s.png in Resources */,
-				F951E7AF307BE03500FF04C4 /* app-store-teaser-1920x886-03_34s.png in Resources */,
-				F951E7B0307BE03500FF04C4 /* app-store-teaser-1920x886-16s.png in Resources */,
-				F951E7B1307BE03500FF04C4 /* frog-app-store-teaser-1920x886-05_43s.png in Resources */,
-				F951E7B2307BE03500FF04C4 /* frog-app-store-teaser-1920x886-17_80s.png in Resources */,
-				F951E7B3307BE03500FF04C4 /* app-store-teaser-1600x1200-13_36s.png in Resources */,
-				F951E7B4307BE03500FF04C4 /* app-store-teaser-1600x1200-00_48s.png in Resources */,
-				F951E7B5307BE03500FF04C4 /* frog-app-store-teaser-1920x886-15_90s.png in Resources */,
-				F951E7B6307BE03500FF04C4 /* sfx_switch_off.caf in Resources */,
-				F951E7B7307BE03500FF04C4 /* frog-app-store-teaser-1920x886-18_00s.png in Resources */,
-				F951E7B8307BE03500FF04C4 /* app-store-teaser-1920x886-06s.png in Resources */,
-				F951E7B9307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-00_00s.png in Resources */,
-				F951E7BA307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-18_40s.png in Resources */,
-				F951E7BB307BE03500FF04C4 /* app-store-teaser-1920x886-06_91s.png in Resources */,
-				F951E7BC307BE03500FF04C4 /* frog-app-store-teaser-1920x886-02_90s.png in Resources */,
-				F951E7BD307BE03500FF04C4 /* app-store-teaser-1600x1200-00_20s.png in Resources */,
-				F951E7BE307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-12_79s.png in Resources */,
-				F951E7BF307BE03500FF04C4 /* frog-app-store-teaser-1920x886-16_38s.png in Resources */,
-				F951E7C0307BE03500FF04C4 /* sfx_double_card.caf in Resources */,
-				F951E7C1307BE03500FF04C4 /* score_increase_main.caf in Resources */,
-				F951E7C2307BE03500FF04C4 /* sfx_level_complete.caf in Resources */,
-				F951E7C3307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-07_39s.png in Resources */,
-				F951E7C4307BE03500FF04C4 /* app-store-teaser-1600x1200-04s.png in Resources */,
-				F951E7C5307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-13_68s.png in Resources */,
-				F951E7C6307BE03500FF04C4 /* app-store-teaser-1920x886-10_52s.png in Resources */,
-				F951E7C7307BE03500FF04C4 /* app-store-teaser-1600x1200-03_46s.png in Resources */,
-				F951E7C8307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-19_90s.png in Resources */,
-				F951E7C9307BE03500FF04C4 /* app-store-teaser-1600x1200-12_12s.png in Resources */,
-				F951E7CA307BE03500FF04C4 /* make-contact-sheets.py in Resources */,
-				F951E7CB307BE03500FF04C4 /* app-store-teaser-1600x1200-11_50s.png in Resources */,
-				F951E7CC307BE03500FF04C4 /* app-store-teaser-1920x886-03_46s.png in Resources */,
-				F951E7CD307BE03500FF04C4 /* app-store-teaser-1920x886-16_54s.png in Resources */,
-				F951E7CE307BE03500FF04C4 /* frog-app-store-teaser-1920x886-12_79s.png in Resources */,
-				F951E7CF307BE03500FF04C4 /* frog-app-store-teaser-1920x886-01_90s.png in Resources */,
-				F951E7D0307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-17_80s.png in Resources */,
-				F951E7D1307BE03500FF04C4 /* app-store-teaser-1920x886-18_90s.png in Resources */,
-				F951E7D2307BE03500FF04C4 /* app-store-teaser-1600x1200-20s.png in Resources */,
-				F951E7D3307BE03500FF04C4 /* app-store-teaser-1920x886-20s.png in Resources */,
-				F951E7D4307BE03500FF04C4 /* app-store-teaser-1600x1200-16_66s.png in Resources */,
-				F951E7D5307BE03500FF04C4 /* app-store-still-easy-controls-2048x944.png in Resources */,
-				F951E7D6307BE03500FF04C4 /* app-store-teaser-1600x1200-07s.png in Resources */,
-				F951E7D7307BE03500FF04C4 /* app-store-teaser-1920x886-09s.png in Resources */,
-				F951E7D8307BE03500FF04C4 /* app-store-teaser-1600x1200-12s.png in Resources */,
-				F951E7D9307BE03500FF04C4 /* app-store-teaser-1600x1200-19s.png in Resources */,
-				F951E7DA307BE03500FF04C4 /* app-store-teaser-1600x1200-09s.png in Resources */,
-				F951E7DB307BE03500FF04C4 /* frog-app-store-teaser-1920x886-05_65s.png in Resources */,
-				F951E7DC307BE03500FF04C4 /* app-store-teaser-1920x886-17_58s.png in Resources */,
-				F951E7DD307BE03500FF04C4 /* frog-app-store-teaser-1920x886-05_20s.png in Resources */,
-				F951E7DE307BE03500FF04C4 /* README.md in Resources */,
-				F951E7DF307BE03500FF04C4 /* export-complete.json in Resources */,
-				F951E7E0307BE03500FF04C4 /* sfx_half_life.caf in Resources */,
-				F951E7E1307BE03500FF04C4 /* app-store-teaser-1600x1200-15s.png in Resources */,
-				F951E7E2307BE03500FF04C4 /* app-store-teaser-1920x886-13_36s.png in Resources */,
-				F951E7E3307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-09_27s.png in Resources */,
-				F951E7E4307BE03500FF04C4 /* app-store-teaser-1920x886-05_69s.png in Resources */,
-				F951E7E5307BE03500FF04C4 /* app-store-teaser-1920x886-11_50s.png in Resources */,
-				F951E7E6307BE03500FF04C4 /* app-store-teaser-1920x886.mp4 in Resources */,
-				F951E7E7307BE03500FF04C4 /* app-store-still-easy-controls-2048x1535.png in Resources */,
-				F951E7E8307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-checkpoints.jpg in Resources */,
-				F951E7E9307BE03500FF04C4 /* app-store-still-pick-topic-level-2048x944.png in Resources */,
-				F951E7EA307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-14_42s.png in Resources */,
-				F951E7EB307BE03500FF04C4 /* app-store-teaser-1920x886-08s.png in Resources */,
-				F951E7EC307BE03500FF04C4 /* app-store-teaser-1920x886-16_66s.png in Resources */,
-				F951E7ED307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-07_64s.png in Resources */,
-				F951E7EE307BE03500FF04C4 /* Hungry_Frog_vertaalsheet_07082026.gecorrigeerd.csv in Resources */,
-				F951E7EF307BE03500FF04C4 /* app-store-teaser-1600x1200-14s.png in Resources */,
-				F951E7F0307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-02_90s.png in Resources */,
 				F951E7F1307BE03500FF04C4 /* Assets.xcassets in Resources */,
-				F951E7F2307BE03500FF04C4 /* app-store-teaser-1920x886-19s.png in Resources */,
-				F951E7F3307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-13_04s.png in Resources */,
-				F951E7F4307BE03500FF04C4 /* app-store-teaser-1920x886-14s.png in Resources */,
-				F951E7F5307BE03500FF04C4 /* app-store-teaser-1600x1200-02s.png in Resources */,
-				F951E7F6307BE03500FF04C4 /* app-store-teaser-1920x886-20_24s.png in Resources */,
-				F951E7F7307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-13_29s.png in Resources */,
-				F951E7F8307BE03500FF04C4 /* app-store-teaser-1600x1200-18s.png in Resources */,
-				F951E7F9307BE03500FF04C4 /* app-store-teaser-1920x886-04s.png in Resources */,
-				F951E7FA307BE03500FF04C4 /* app-store-teaser-1920x886-21_02s.png in Resources */,
-				F951E7FB307BE03500FF04C4 /* sfx_card_flight.caf in Resources */,
-				F951E7FC307BE03500FF04C4 /* app-store-teaser-1920x886-05s.png in Resources */,
-				F951E7FD307BE03500FF04C4 /* app-store-teaser-1920x886-12_82s.png in Resources */,
-				F951E7FE307BE03500FF04C4 /* README.md in Resources */,
-				F951E7FF307BE03500FF04C4 /* app-store-teaser-1600x1200-16_54s.png in Resources */,
-				F951E800307BE03500FF04C4 /* sfx_life_lost.caf in Resources */,
-				F951E801307BE03500FF04C4 /* frog-app-store-teaser-1920x886-18_40s.png in Resources */,
-				F951E802307BE03500FF04C4 /* app-store-teaser-1600x1200-10_52s.png in Resources */,
-				F951E803307BE03500FF04C4 /* app-store-teaser-1920x886-00_00s.png in Resources */,
-				F951E804307BE03500FF04C4 /* app-store-teaser-1600x1200-21_02s.png in Resources */,
-				F951E805307BE03500FF04C4 /* sfx_correct.caf in Resources */,
-				F951E806307BE03500FF04C4 /* frog-app-store-teaser-1920x886-07_39s.png in Resources */,
-				F951E807307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-05_65s.png in Resources */,
-				F951E808307BE03500FF04C4 /* frog_music.m4a in Resources */,
-				F951E809307BE03500FF04C4 /* frog-app-store-teaser-1920x886-03_30s.png in Resources */,
-				F951E80A307BE03500FF04C4 /* app-store-teaser-1920x886-10s.png in Resources */,
-				F951E80B307BE03500FF04C4 /* frog-app-store-teaser-1920x886-13_68s.png in Resources */,
-				F951E80C307BE03500FF04C4 /* app-store-teaser-1600x1200-06s.png in Resources */,
-				F951E80D307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-03_30s.png in Resources */,
-				F951E80E307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-18_00s.png in Resources */,
-				F951E80F307BE03500FF04C4 /* frog-app-store-teaser-1600x1200-12_54s.png in Resources */,
-				F951E810307BE03500FF04C4 /* sfx_session_start.caf in Resources */,
-				F951E811307BE03500FF04C4 /* sfx_card_flip.caf in Resources */,
-				F951E812307BE03500FF04C4 /* app-store-still-fly-dive-math-2048x944.png in Resources */,
-				F951E813307BE03500FF04C4 /* app-store-teaser-1600x1200-00_32s.png in Resources */,
-				F951E814307BE03500FF04C4 /* Translations.csv in Resources */,
-				F951E815307BE03500FF04C4 /* sfx_switch_on.caf in Resources */,
-				F951E816307BE03500FF04C4 /* app-store-teaser-1600x1200-21s.png in Resources */,
 			);
 		};
+13C4A5FF766A139D7B2C3D55 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		F951E62C307BE01200FF04C4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
-				F951E817307BE03500FF04C4 /* MenuMeadowBackground.swift in Sources */,
-				F951E818307BE03500FF04C4 /* MathQuestion.swift in Sources */,
-				F951E819307BE03500FF04C4 /* FlyGame.swift in Sources */,
-				F951E81A307BE03500FF04C4 /* Notifications.swift in Sources */,
-				F951E81B307BE03500FF04C4 /* GameView.swift in Sources */,
-				F951E81C307BE03500FF04C4 /* AppSettings.swift in Sources */,
-				F951E81D307BE03500FF04C4 /* OnboardingView.swift in Sources */,
-				F951E81E307BE03500FF04C4 /* HomeComponents.swift in Sources */,
-				F951E81F307BE03500FF04C4 /* CharacterScenes.swift in Sources */,
-				F951E820307BE03500FF04C4 /* RoundFactory.swift in Sources */,
-				F951E821307BE03500FF04C4 /* Tutorial.swift in Sources */,
-				F951E822307BE03500FF04C4 /* PremiumView.swift in Sources */,
-				F951E823307BE03500FF04C4 /* GameViewModel.swift in Sources */,
-				F951E824307BE03500FF04C4 /* DecimalAnswer.swift in Sources */,
-				F951E825307BE03500FF04C4 /* AppAudio.swift in Sources */,
-				F951E826307BE03500FF04C4 /* CharacterUnlocks.swift in Sources */,
-				F951E827307BE03500FF04C4 /* PremiumStore.swift in Sources */,
-				F951E828307BE03500FF04C4 /* ResultView.swift in Sources */,
-				F951E829307BE03500FF04C4 /* ScreenSafeArea.swift in Sources */,
-				F951E82A307BE03500FF04C4 /* PausedSessionStore.swift in Sources */,
-				F951E82B307BE03500FF04C4 /* MemoryGame.swift in Sources */,
-				F951E82C307BE03500FF04C4 /* ReviewRequestCoordinator.swift in Sources */,
-				F951E82D307BE03500FF04C4 /* GameConfig.swift in Sources */,
-				F951E82E307BE03500FF04C4 /* PracticeMode.swift in Sources */,
-				F951E82F307BE03500FF04C4 /* ParentApprovalGate.swift in Sources */,
-				F951E830307BE03500FF04C4 /* SettingsView.swift in Sources */,
-				F951E831307BE03500FF04C4 /* ProgressStore.swift in Sources */,
-				F951E832307BE03500FF04C4 /* HomeView.swift in Sources */,
-				F951E833307BE03500FF04C4 /* Theme.swift in Sources */,
-				F951E834307BE03500FF04C4 /* ElephantChallengeApp.swift in Sources */,
 				F951E835307BE03500FF04C4 /* SeededGenerator.swift in Sources */,
+				F951E829307BE03500FF04C4 /* ScreenSafeArea.swift in Sources */,
+				F951E834307BE03500FF04C4 /* ElephantChallengeApp.swift in Sources */,
 				F951E836307BE03500FF04C4 /* Localization.swift in Sources */,
-				F951E837307BE03500FF04C4 /* QuestionGenerator.swift in Sources */,
-				F951E838307BE03500FF04C4 /* FoodCatalog.swift in Sources */,
-				F951E839307BE03500FF04C4 /* PlaytimeTracker.swift in Sources */,
-				F951E83A307BE03500FF04C4 /* EmphasizedText.swift in Sources */,
-				F951E83B307BE03500FF04C4 /* TrailerCompositionView.swift in Sources */,
-				F951E83C307BE03500FF04C4 /* PromotedPurchaseCoordinator.swift in Sources */,
-				F951E83D307BE03500FF04C4 /* ProgressSync.swift in Sources */,
-				F951E83E307BE03500FF04C4 /* MathTopic.swift in Sources */,
-				F951E83F307BE03500FF04C4 /* Scenery.swift in Sources */,
-				F951E840307BE03500FF04C4 /* LevelIntroCard.swift in Sources */,
+				4568618D8654E5F5F80F7B5E /* ClockTheme.swift in Sources */,
+				96D5615039527B7E63D0F335 /* ClockTime.swift in Sources */,
+				F7411D539E03C079C2D93FD5 /* KeyValueStore.swift in Sources */,
+				9D7D43B62142FE4FF7C72420 /* LevelConfiguration.swift in Sources */,
+				E062E3966BF6466ABA396FCC /* PlayerProfile.swift in Sources */,
+				25664453B43D58747D2F6A9F /* ProgressManager.swift in Sources */,
+				4A4EE5D04DED4353797FA272 /* QuestionGenerator.swift in Sources */,
+				3D31E4F0E012C4E2405C644C /* DinoGameModel.swift in Sources */,
+				A7A164A2377507068726D1A9 /* DinoRootView.swift in Sources */,
+				61C0ADA07C4CE151409379BB /* AnalogClock.swift in Sources */,
+				DDD392F183235DB51B76875F /* ClockCustomizer.swift in Sources */,
+				3B68E92C41BE1E6926B1CD26 /* DigitalClock.swift in Sources */,
+				A3A7FCEFEAA9FAF58F4BD046 /* DinoGameView.swift in Sources */,
+				3B04AE1E8CC46A033D379434 /* DinoUI.swift in Sources */,
+				0E03B85644DFB788EEC72EB8 /* LevelResult.swift in Sources */,
+				DD8D8D9B86AD1F7BD4729496 /* OnboardingFlow.swift in Sources */,
+				7140D2190606B1466B055EDB /* QuestionRenderer.swift in Sources */,
+				DCAE59100EB467AA8769FEF8 /* Settings.swift in Sources */,
+				4620A862B268173EC07E4C75 /* WorldMap.swift in Sources */,
 			);
 		};
+09BE8DD855369313A16B68D5 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (9C7CA32620369705A6E2ADC4, 5F8093FBC7E1188F832026E5, 4F961AD95991DE68F9B7E490, 17F3D50BFC83FB20302FE95E, CF65DC853F33210C13C32356, 113D4C997110CB7A3F76A105, 636C2C17505D475DDE107573, E044537997C9F23D2302F7FE, 1853284F4CC0ACD94CA0AA66,); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
@@ -1325,7 +1193,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = CAMERA_USAGE_DESCRIPTION;
+				INFOPLIST_KEY_CFBundleDisplayName = "Dino Tijdavontuur";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -1336,7 +1204,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
@@ -1346,13 +1214,13 @@
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx appletvos appletvsimulator xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,3,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				TVOS_DEPLOYMENT_TARGET = 27.0;
 				XROS_DEPLOYMENT_TARGET = 27.0;
 			};
@@ -1372,7 +1240,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = CAMERA_USAGE_DESCRIPTION;
+				INFOPLIST_KEY_CFBundleDisplayName = "Dino Tijdavontuur";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -1383,7 +1251,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
@@ -1393,18 +1261,20 @@
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx appletvos appletvsimulator xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2,3,7";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				TVOS_DEPLOYMENT_TARGET = 27.0;
 				XROS_DEPLOYMENT_TARGET = 27.0;
 			};
 			name = Release;
 		};
+AAC9DA23F4CAC87DBD02B3D3 = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 26.0; PRODUCT_BUNDLE_IDENTIFIER = Hakketjak.Dino-Klokkijken.UITests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_TARGET_NAME = "Dino Klokkijken";}; name = Debug; };
+4700AB0C6CF4D9E62ECB32FB = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 26.0; PRODUCT_BUNDLE_IDENTIFIER = Hakketjak.Dino-Klokkijken.UITests; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_TARGET_NAME = "Dino Klokkijken";}; name = Release; };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1424,6 +1294,7 @@
 			);
 			defaultConfigurationName = Release;
 		};
+F975AA4B31E499530B94DAF1 = {isa = XCConfigurationList; buildConfigurations = (AAC9DA23F4CAC87DBD02B3D3,4700AB0C6CF4D9E62ECB32FB); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* End XCConfigurationList section */
 	};
 	rootObject = F951E628307BE01100FF04C4 /* Project object */;
