@@ -11,7 +11,7 @@ struct DinoTimeAdventureApp: App {
 
     var body: some Scene {
         WindowGroup {
-            DinoRootView().environmentObject(player).environmentObject(friends)
+            DinoRootView().id(player.resetGeneration).environmentObject(player).environmentObject(friends)
                 .environmentObject(settings).environmentObject(cloudSync)
                 .environment(\.locale, language.locale)
                 .environment(\.layoutDirection, language.effective.layoutDirection)

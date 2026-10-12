@@ -11,6 +11,7 @@ struct DinoRootView: View {
     @State private var showsCompletion = false
     @State private var startCard: LevelConfiguration?
     @State private var showsFriends = false
+    @State private var showsPractice = false
     @State private var mapHUDHeight: CGFloat = 103
 
     var body: some View {
@@ -37,6 +38,14 @@ struct DinoRootView: View {
             .sheet(isPresented: $showsSettings) {
                 DinoSettingsView().environmentObject(player).gameEnvironment()
                     .presentationDetents([.large]).presentationDragIndicator(.visible)
+            }
+            .sheet(isPresented: $showsPractice) {
+                NavigationStack {
+                    DinoPracticeView()
+                        .toolbar { ToolbarItem(placement: .confirmationAction) {
+                            Button("dino.done") { showsPractice = false }.accessibilityIdentifier("practice.close")
+                        } }
+                }.gameEnvironment()
             }
             .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
                 if friends.enabled { friends.refresh(); friends.scheduleSync() }
@@ -69,7 +78,7 @@ struct DinoRootView: View {
                     }
                 }).id(ObjectIdentifier(session))
             } else {
-                WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true }, openCompletion: { showsCompletion = true }, openFriends: { showsFriends = true }, hudHeightChanged: { mapHUDHeight = $0 })
+                WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true }, openPractice: { showsPractice = true }, openCompletion: { showsCompletion = true }, openFriends: { showsFriends = true }, hudHeightChanged: { mapHUDHeight = $0 })
             }
         }
     }

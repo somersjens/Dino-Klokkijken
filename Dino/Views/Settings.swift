@@ -1,4 +1,7 @@
 import SwiftUI
+#if DEBUG
+import Darwin
+#endif
 
 /// Scrollable player preferences, clock customization and progress reset.
 struct DinoSettingsView: View {
@@ -78,16 +81,35 @@ struct DinoSettingsView: View {
                 .navigationTitle(Text(verbatim: L("dino.settings")))
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("dino.done") { dismiss() } } }
                 .confirmationDialog("dino.resetTitle", isPresented: $confirmReset, titleVisibility: .visible) {
-                    Button("dino.resetProgress", role: .destructive) { player.resetProgress() }
+                    Button("dino.resetProgress", role: .destructive, action: resetApp)
+                        .accessibilityIdentifier("settings.reset.confirm")
                     Button("dino.cancel", role: .cancel) {}
                 } message: {
                     Text("dino.resetMessage")
-                    if settings.icloudSyncEnabled { Text("dino.settings.icloudResetMessage") }
+                    Text("dino.settings.icloudResetMessage")
                     Text("dino.friends.resetMessage")
                 }
                 .sheet(isPresented: $showsPrivacy) { DinoSocialPrivacyView() }
                 .sheet(isPresented: $showsGameCenter) { DinoFriendsView().gameEnvironment() }
         }.foregroundStyle(DinoStyle.ink)
+    }
+
+    private func resetApp() {
+        let date = Date()
+        friends.disable()
+        cloudSync.removeAllData(at: date)
+        player.resetAllData(at: date)
+        settings.resetPreferences()
+        language.resetPreference()
+        dismiss()
+#if DEBUG
+        // The development build closes after the reset has been flushed, allowing
+        // a genuine cold-launch onboarding test. Release resets the root in place.
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(700))
+            Darwin.exit(EXIT_SUCCESS)
+        }
+#endif
     }
 
     private func preference(_ key: LocalizedStringKey, symbol: String, value: Binding<Bool>, identifier: String) -> some View {

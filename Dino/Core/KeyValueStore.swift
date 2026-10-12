@@ -10,9 +10,15 @@ public protocol KeyValueStore: AnyObject {
     func set(_ value: Int, forKey key: String)
     func set(_ value: Any?, forKey key: String)
     func removeObject(forKey key: String)
+    func removeAllObjects()
 }
 
-extension UserDefaults: KeyValueStore {}
+extension UserDefaults: KeyValueStore {
+    public func removeAllObjects() {
+        // Removes values from this app/suite; global system preferences are read-only here.
+        for key in dictionaryRepresentation().keys { removeObject(forKey: key) }
+    }
+}
 
 /// A dictionary-backed store for tests.
 public final class InMemoryKeyValueStore: KeyValueStore {
@@ -29,5 +35,5 @@ public final class InMemoryKeyValueStore: KeyValueStore {
     public func set(_ value: Int, forKey key: String) { storage[key] = value }
     public func set(_ value: Any?, forKey key: String) { storage[key] = value }
     public func removeObject(forKey key: String) { storage.removeValue(forKey: key) }
+    public func removeAllObjects() { storage.removeAll() }
 }
-

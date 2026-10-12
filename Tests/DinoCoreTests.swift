@@ -15,6 +15,8 @@ struct DinoCoreTests {
         testQuestions()
         testAttempt()
         testTiming()
+        testPractice()
+        testExpandedQuestions()
         testProgress()
         testStorage()
         testDinoAppearance()
@@ -22,6 +24,7 @@ struct DinoCoreTests {
         testPlayerModel()
         testSettingsAndFeedback()
         testCloudSync()
+        testFullReset()
         let socialChecks = await DinoSocialTests.run()
         print("PASS: \(checks + socialChecks) checks — gameplay, persistence, social progress, privacy guards, offline sync and international names.")
     }
@@ -46,6 +49,193 @@ struct DinoCoreTests {
         }
         expect(ClockTime.shiftedHour(12, by: 1) == 1, "plus wraps")
         expect(ClockTime.shiftedHour(1, by: -1) == 12, "minus wraps")
+    }
+
+    static func testPractice() {
+        expect(Set(DinoPracticeQuestion.allCases.map { $0.recipe.kind }) == Set(ClockQuestionKind.allCases), "practice covers every interaction")
+        let orders = DinoPracticeQuestion.allCases.map { DinoPracticeOrder.specific($0) } + [.ascending, .mix]
+        for time in DinoPracticeTime.allCases {
+            for order in orders {
+                let configuration = DinoPracticeConfiguration(time: time, order: order)
+                var generator = DinoPracticeGenerator(configuration: configuration, seed: 42)
+                var replay = DinoPracticeGenerator(configuration: configuration, seed: 42)
+                var previous: ClockTime?
+                var blockTypes: [ClockQuestionKind] = []
+                for index in 0..<120 {
+                    let question = generator.next(index: index)
+                    expect(question == replay.next(index: index), "practice seed is reproducible")
+                    expect(question.id == index && time.minutes.contains(question.target.minute), "practice IDs and selected time granularity")
+                    expect(question.target != previous, "practice avoids consecutive duplicate times")
+                    previous = question.target
+                    if case .specific(let type) = order {
+                        expect(question.kind == type.recipe.kind, "specific practice keeps chosen type")
+                    }
+                    if order == .ascending {
+                        let recipe = DinoPracticeQuestion.allCases[index % DinoPracticeQuestion.allCases.count].recipe
+                        expect(question.kind == recipe.kind, "ascending cycles through every type indefinitely")
+                    }
+                    if order == .mix {
+                        blockTypes.append(question.kind)
+                        if blockTypes.count == DinoPracticeQuestion.allCases.count {
+                            expect(DinoPracticeQuestion.allCases.allSatisfy { blockTypes.contains($0.recipe.kind) }, "every mixed block covers all unique types")
+                            blockTypes.removeAll()
+                        }
+                    }
+                    expect(Set(question.options).count == question.options.count, "unique practice distractors")
+                    expect(question.options.allSatisfy { time.minutes.contains($0.minute) }, "practice options use the selected time family")
+                    if question.kind.usesOptions {
+                        expect(question.responses.filter { $0 == question.expectedAnswer }.count == 1, "exactly one correct response")
+                        expect(Set(question.responses).count == question.responses.count, "unique response choices")
+                    }
+                    if [.chooseAnalog, .chooseDigital].contains(question.kind) {
+                        expect([2, 4].contains(question.options.count), "choice count remains an internal difficulty variation")
+                    }
+                    if [.setAnalog, .setDigital, .advanceAnalog].contains(question.kind) {
+                        expect(question.options.isEmpty, "setting a clock has no options")
+                    }
+                    if let activity = question.activity { expect(activity.hour == question.target.hour, "practice activity time remains consistent") }
+                    expect(question.companionClocks.count == 2 && !question.companionClocks.contains(question.target), "matching companions differ from selected clock")
+                    expect(AnswerValidator.isCorrect(question.expectedAnswer, for: question), "every practice question can be answered")
+                }
+            }
+            for minute in stride(from: 0, to: 60, by: time.minuteStep) {
+                let angle = Double(minute) * .pi / 30
+                expect(ClockTime.snappedMinute(x: sin(angle), y: -cos(angle), step: time.minuteStep) == minute, "minute hand snaps across twelve")
+                for hour in 1...12 {
+                    let hourAngle = ClockTime(hour: hour, minute: minute).hourAngle * .pi / 180
+                    expect(ClockTime.snappedHour(x: sin(hourAngle), y: -cos(hourAngle), minute: minute) == hour, "hour dragging preserves its fractional-minute offset")
+                }
+            }
+        }
+        expect(ClockTime.shiftedMinute(0, by: -5) == 55 && ClockTime.shiftedMinute(55, by: 5) == 0, "minute controls wrap both directions")
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        let player = DinoPlayer(store: store)
+        player.completeOnboarding(theme: .standard)
+        let original = player.profile
+        var uploads = 0
+        player.progressChanged = { uploads += 1 }
+        let config = DinoPracticeConfiguration(time: .mix, order: .ascending)
+        var now = 100.0
+        let session = DinoSession(level: config.level, player: player, practice: config, now: { now })
+        session.demonstration = .setAnalog
+        session.submit(session.question.target)
+        expect(session.practiceAnswered == 0, "help cannot answer a practice question")
+        session.dismissDemonstration()
+        for index in 0..<1_000 {
+            expect(session.question.id == index && session.demonstration == nil, "practice continues past finite levels without forced help")
+            session.advance()
+            expect(session.question.id == index, "unanswered practice question cannot be skipped")
+            let correct = index.isMultiple(of: 2)
+            let answer = correct ? session.question.expectedAnswer : wrongAnswer(for: session.question)
+            if case .time(let time) = answer {
+                session.inputHour = time.hour; session.inputMinute = time.minute
+                expect(session.inputTime == time, "submission includes minutes and 24-hour times")
+            }
+            now += 90
+            session.submit(answer)
+            session.submit(answer)
+            expect(session.practiceAnswered == index + 1, "practice ignores duplicate submissions")
+            expect(session.attempt.questionSeconds == [60], "practice answer timing remains bounded")
+            session.advance()
+            expect(session.attempt.answers.isEmpty && session.attempt.questions.count == 1, "endless practice retains only current question")
+            let expectedMinute = session.question.kind == .advanceAnalog ? session.question.relatedTimes[0].minute : 0
+            expect(session.result == nil && session.inputMinute == expectedMinute, "practice never finishes and initializes the appropriate clock")
+            expect(session.selectedOrder.isEmpty && session.pairSelections.isEmpty, "board selections reset for every question")
+        }
+        expect(session.practiceCorrect == 500, "practice keeps a correct running count")
+        expect(player.profile == original && store.load() == original && uploads == 0, "practice and help never save progress or upload level scores")
+    }
+
+
+    static func wrongAnswer(for q: ClockQuestion) -> ClockAnswer {
+        switch q.expectedAnswer {
+        case .time(let time): return .time(time.adding(minutes: 60))
+        case .duration(let minutes): return .duration(minutes + 1)
+        case .truth(let truth): return .truth(!truth)
+        case .dayPart(let part): return .dayPart(DinoDayPart.allCases.first { $0 != part }!)
+        case .ordering(let times): return .ordering(Array(times.reversed()))
+        case .pairs(let times): return .pairs(Array(times.reversed()))
+        }
+    }
+
+    static func testExpandedQuestions() {
+        expect(ClockTime(hour: 23, minute: 55).adding(minutes: 10) == ClockTime(hour: 0, minute: 5), "addition crosses midnight")
+        expect(ClockTime(hour: 0, minute: 5).adding(minutes: -10) == ClockTime(hour: 23, minute: 55), "subtraction crosses midnight")
+        expect(ClockTime(hour: 22).adding(minutes: -180) == ClockTime(hour: 19), "source exercise subtraction")
+        expect(DinoTimeWords.time(.init(hour: 0), language: "nl", dayPart: true) == "twaalf uur ’s nachts", "00:00 spoken correctly")
+        expect(DinoTimeWords.time(.init(hour: 15, minute: 30), language: "nl", dayPart: true) == "half vier ’s middags", "Dutch half hour refers to next hour")
+        expect(DinoTimeWords.time(.init(hour: 23, minute: 45), language: "nl") == "kwart voor twaalf", "quarter before midnight")
+        expect(DinoTimeWords.time(.init(hour: 13, minute: 30), language: "en", dayPart: true) == "half past one in the afternoon", "English half-hour wording")
+        for (hour, part) in [(0, DinoDayPart.night), (5, .night), (6, .morning), (11, .morning), (12, .afternoon), (17, .afternoon), (18, .evening), (23, .evening)] {
+            expect(DinoDayPart(hour: hour) == part, "part-of-day boundaries")
+        }
+        for time in DinoPracticeTime.allCases {
+            for type in DinoPracticeQuestion.allCases where type.recipe.kind.isExpanded {
+                let kind = type.recipe.kind
+                let example = DinoExpandedQuestions.example(kind: kind, time: time)
+                expect(example == DinoExpandedQuestions.example(kind: kind, time: time), "worked example is reproducible")
+                expect(AnswerValidator.isCorrect(example.expectedAnswer, for: example), "example has a valid answer")
+                var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(type)), seed: 20261012)
+                var sawMidnight = false
+                for index in 0..<150 {
+                    let q = generator.next(index: index)
+                    expect(!AnswerValidator.isCorrect(wrongAnswer(for: q), for: q), "wrong typed answer rejected")
+                    switch kind {
+                    case .addTime, .advanceAnalog, .schoolEnd, .flightArrival:
+                        expect(q.relatedTimes[0].adding(minutes: q.durationMinutes) == q.target, "later-time arithmetic")
+                        sawMidnight = sawMidnight || q.relatedTimes[0].minutesOfDay > q.target.minutesOfDay
+                        if kind == .advanceAnalog {
+                            let face = ClockTime(hour: q.target.hour % 12 == 0 ? 12 : q.target.hour % 12, minute: q.target.minute)
+                            expect(AnswerValidator.isCorrect(face, for: q), "analog answers accept the matching 12-hour face")
+                        }
+                    case .subtractTime:
+                        expect(q.relatedTimes[0].adding(minutes: -q.durationMinutes) == q.target, "earlier-time arithmetic")
+                        sawMidnight = sawMidnight || q.relatedTimes[0].minutesOfDay < q.target.minutesOfDay
+                    case .elapsedTime:
+                        expect(q.relatedTimes[0].adding(minutes: q.durationMinutes) == q.relatedTimes[1], "duration matches elapsed time")
+                        sawMidnight = sawMidnight || q.relatedTimes[0].minutesOfDay > q.relatedTimes[1].minutesOfDay
+                    case .timeSequence:
+                        expect(q.relatedTimes.count == 3, "three terms in pattern")
+                        let all = q.relatedTimes + [q.target]
+                        for pair in zip(all, all.dropFirst()) {
+                            expect(pair.0.adding(minutes: q.durationMinutes) == pair.1, "every sequence step is identical")
+                        }
+                    case .timeZone:
+                        expect(q.relatedTimes[0].adding(minutes: q.offsetHours * 60) == q.target, "explicit zone difference determines answer")
+                    case .sortTimes:
+                        guard case .ordering(let ordered) = q.expectedAnswer else { fatalError("sorting answer") }
+                        expect(ordered.count == 4 && Set(ordered) == Set(q.options), "sorting uses exactly the displayed clocks")
+                        expect(ordered.map(\.minutesOfDay) == ordered.map(\.minutesOfDay).sorted(), "sorting is chronological on one day")
+                    case .pairClocks:
+                        expect(Set(q.relatedTimes) == Set(q.options) && q.relatedTimes.count == 4, "four unique pairs")
+                        expect(Set(q.relatedTimes.map { ($0.hour % 12) * 60 + $0.minute }).count == 4, "distinct analog faces avoid ambiguous pairs")
+                        expect(q.expectedAnswer == .pairs(q.relatedTimes), "pairs preserve row order")
+                    case .trueFalse:
+                        expect(q.expectedAnswer == .truth(q.statement == q.target), "truth judgement matches statement")
+                    case .dayPart:
+                        expect(q.expectedAnswer == .dayPart(.init(hour: q.target.hour)), "digital hour determines day part")
+                    default: break
+                    }
+                }
+                if time == .whole && [.addTime, .advanceAnalog, .schoolEnd, .flightArrival, .subtractTime, .elapsedTime].contains(kind) {
+                    expect(sawMidnight, "generated whole-hour arithmetic covers midnight: \(kind)")
+                }
+            }
+        }
+        let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+        let before = player.profile
+        let configuration = DinoPracticeConfiguration(time: .quarter, order: .specific(.addTime))
+        let active = DinoSession(level: configuration.level, player: player, practice: configuration)
+        let question = active.question
+        for type in DinoPracticeQuestion.allCases where type.recipe.kind.isExpanded {
+            let sampleQuestion = DinoExpandedQuestions.example(kind: type.recipe.kind, time: .quarter)
+            let sample = DinoSession(level: configuration.level, player: player, practice: configuration, example: sampleQuestion)
+            sample.submit(sampleQuestion.expectedAnswer)
+            sample.submit(wrongAnswer(for: sampleQuestion))
+            expect(sample.hasFeedback && sample.practiceAnswered == 1 && sample.correctFeedback, "interactive example accepts only one answer")
+            expect(active.question == question && active.practiceAnswered == 0, "help uses an independent question and score")
+        }
+        expect(player.profile == before, "interactive examples preserve saved profile")
     }
 
     static func testAnimation() {
@@ -110,7 +300,7 @@ struct DinoCoreTests {
                 }
             }
         }
-        expect(observedKinds == Set(ClockQuestionKind.allCases), "all six interactions")
+        expect(observedKinds == Set(DinoLevelCatalog.levels.flatMap { $0.recipes.map(\.kind) }), "regular catalog interactions")
     }
 
     static func testAttempt() {
@@ -334,17 +524,70 @@ struct DinoCoreTests {
         let player = DinoPlayer(store: DinoProgressStore(defaults: memory))
         var feedback: [Bool] = []
         let session = DinoSession(level: DinoLevelCatalog.level(1)!, player: player, answerFeedback: { feedback.append($0) })
+        expect(session.canExitWithoutConfirmation, "first question exits without a confirmation")
         session.demonstration = session.question.kind
         session.submit(session.question.target)
         expect(feedback.isEmpty, "demonstration never emits answer feedback")
         session.dismissDemonstration()
         session.submit(session.question.target); session.submit(session.question.target)
         expect(feedback == [true], "one success feedback despite repeated taps")
+        expect(session.canExitWithoutConfirmation, "first question also exits directly while answer feedback is showing")
         session.advance()
+        expect(!session.canExitWithoutConfirmation, "later questions keep the exit confirmation")
         session.submit(ClockTime(hour: ClockTime.shiftedHour(session.question.target.hour, by: 1)))
         expect(feedback == [true, false], "wrong answer emits distinct feedback")
         player.resetProgress()
         expect(DinoSettings(defaults: memory).highContrastEnabled, "progress reset preserves preferences")
+    }
+
+    static func testFullReset() {
+        let memory = InMemoryKeyValueStore(["future.preference": "old", "dino.social.sharing.v1.test": 1,
+                                           "settings.languageOverride": "en"])
+        let store = DinoProgressStore(defaults: memory)
+        var original = PlayerProfile()
+        original.name = "Legacy Sam"; original.onboardingComplete = true
+        original.clockTheme.face = .blue
+        original.dinoAppearance = DinoAppearance(bandana: 0x459CDF, spikes: 0xA77BE0, body: 0xF48EB6, belly: 0xF59A32)
+        original.recordCompletedAttempt(levelID: 1, correct: 5, questionSeconds: [4,4,4,4,4])
+        original.demonstratedInteractions.insert(.setAnalog)
+        store.save(original)
+        let player = DinoPlayer(store: store)
+        let settings = DinoSettings(defaults: memory)
+        settings.soundEffectsEnabled = false; settings.hapticsEnabled = false
+        settings.highContrastEnabled = true; settings.icloudSyncEnabled = true
+        let previousDevice = settings.cloudDeviceID
+        let oldData = try! JSONEncoder().encode(DinoCloudProgress(original))
+        let cloud = TestCloudStore()
+        cloud.values = [DinoCloudSync.progressKey + ".old-device": oldData, "other.feature": Data([1])]
+        let sync = DinoCloudSync(store: cloud); sync.connect(player: player, settings: settings)
+        cloud.succeeds = false
+        let resetAt = Date(timeIntervalSince1970: 1_800_000_000)
+        let generation = player.resetGeneration
+        sync.removeAllData(at: resetAt)
+        player.resetAllData(at: resetAt)
+        settings.resetPreferences()
+        expect(player.resetGeneration != generation, "full reset recreates the root and dismisses all previous screens")
+        var expected = PlayerProfile(); expected.progressResetAt = resetAt
+        expect(player.profile == expected, "full reset clears onboarding, colors, clocks, names, history, timing and demonstration state")
+        expect(DinoPlayer(store: store).profile == expected, "cold launch starts with a fresh welcome profile")
+        for key in [DinoProgressStore.profileKey, DinoProgressStore.legacyNameKey, "future.preference",
+                    "dino.social.sharing.v1.test", "settings.languageOverride"] {
+            expect(memory.object(forKey: key) == nil, "all old local app data is erased, including unrecognized preference keys")
+        }
+        let restarted = DinoSettings(defaults: memory)
+        expect(restarted.soundEffectsEnabled && restarted.hapticsEnabled && !restarted.highContrastEnabled && !restarted.icloudSyncEnabled,
+               "settings return to fresh-install defaults")
+        expect(restarted.cloudDeviceID != previousDevice, "reset generates a new cloud installation identity")
+        expect(Set(cloud.values.keys) == [DinoCloudSync.progressKey, "other.feature"], "reset removes all app progress snapshots and leaves unrelated keys alone")
+        let marker = try! JSONDecoder().decode(DinoCloudProgress.self, from: cloud.values[DinoCloudSync.progressKey]!)
+        expect(marker.resetAt == resetAt && marker.levels.isEmpty && marker.demonstratedInteractions.isEmpty,
+               "an offline reset queues only an empty deletion marker")
+        cloud.succeeds = true
+        cloud.values[DinoCloudSync.progressKey + ".stale-device"] = oldData
+        settings.icloudSyncEnabled = true
+        expect(player.profile == expected, "a delayed old cloud snapshot cannot restore erased progress or bypass welcome")
+        expect(cloud.values[DinoCloudSync.progressKey + "." + settings.cloudDeviceID] != nil,
+               "re-enabling sync uses the new installation identity")
     }
 
     static func testCloudSync() {
@@ -447,5 +690,6 @@ private final class TestCloudStore: DinoCloudProgressStore {
     var isAvailable: Bool { available }
     func snapshots() -> [String: Data] { reads += 1; return hideSnapshots ? [:] : values }
     func set(_ data: Data, forKey key: String) { writes += 1; values[key] = data }
+    func removeObject(forKey key: String) { values.removeValue(forKey: key) }
     func synchronize() -> Bool { syncs += 1; return succeeds }
 }

@@ -17,23 +17,21 @@ struct AdventureHeader: View {
     let stars: Int
     var compact = false
     var control: Control = .pause
+    var questionCounter: String?
+    var helpEnabled = true
+    var help: () -> Void = {}
     var action: () -> Void
 
-    private var tileHeight: CGFloat { compact ? 64 : 86 }
-    private var avatarSize: CGFloat { compact ? 60 : 82 }
-    private var numberSize: CGFloat { compact ? 22 : 25 }
+    private var tileHeight: CGFloat { compact ? 52 : 64 }
+    private var avatarSize: CGFloat { compact ? 64 : 84 }
+    private var numberSize: CGFloat { compact ? 20 : 22 }
+    private var labelSize: CGFloat { compact ? 11 : 12 }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
+        HStack(alignment: .center, spacing: 8) {
             Button { showsPersonalizer = true } label: {
-                ZStack {
-                    Circle().fill(Color(dinoHex: 0xD9EDAD))
-                        .overlay(Circle().stroke(.white, lineWidth: 2))
-                    DinoAvatar(appearance: player.profile.dinoAppearance ?? .standard, portrait: true)
-                        .frame(width: avatarSize + 12, height: avatarSize)
-                }.frame(width: avatarSize, height: avatarSize)
-                .frame(maxWidth: .infinity).frame(height: tileHeight)
-                .contentShape(Rectangle())
+                DinoPortrait(appearance: player.profile.dinoAppearance ?? .standard, size: avatarSize, circular: false)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text("dino.appearance.title"))
@@ -42,46 +40,65 @@ struct AdventureHeader: View {
 
             VStack(spacing: 3) {
                 Text("dino.levelLabel")
-                    .font(.system(size: 10, weight: .heavy, design: .rounded))
-                    .tracking(1).foregroundStyle(DinoStyle.deepGreen)
+                    .font(.system(size: labelSize, weight: .heavy, design: .rounded))
+                    .tracking(0.3).foregroundStyle(DinoStyle.deepGreen)
+                    .lineLimit(1).minimumScaleFactor(0.85)
                     .frame(height: 18)
                 Text(verbatim: "\(level)")
                     .font(.system(size: numberSize, weight: .heavy, design: .rounded))
                     .monospacedDigit().frame(height: 28)
             }
             .frame(maxWidth: .infinity).frame(height: tileHeight)
-            .background(Color(dinoHex: 0xE7F0D7), in: RoundedRectangle(cornerRadius: 17))
+            .background { tileBackground }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text("dino.levelNumber \(level)"))
             .accessibilityIdentifier("header.level")
 
             VStack(spacing: 3) {
-                Image(systemName: "star.fill")
-                    .font(.system(size: 19, weight: .bold))
-                    .foregroundStyle(highContrast ? DinoStyle.deepGreen : DinoStyle.green).frame(height: 18)
-                Text(verbatim: "\(stars)")
+                Text(LocalizedStringKey(questionCounter == nil ? "dino.starsLabel" : "dino.questionsLabel"))
+                    .font(.system(size: labelSize, weight: .heavy, design: .rounded))
+                    .tracking(0.3).foregroundStyle(DinoStyle.deepGreen)
+                    .lineLimit(1).minimumScaleFactor(0.85)
+                    .frame(height: 18)
+                Text(verbatim: questionCounter ?? "\(stars)")
                     .font(.system(size: numberSize, weight: .heavy, design: .rounded))
                     .monospacedDigit().lineLimit(1).minimumScaleFactor(0.7).frame(height: 28)
+                    .accessibilityIdentifier(questionCounter == nil ? "header.starCount" : "header.questionCounter")
             }
             .frame(maxWidth: .infinity).frame(height: tileHeight)
-            .background(Color(dinoHex: 0xE7F0D7), in: RoundedRectangle(cornerRadius: 17))
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text("dino.stars \(stars)"))
-            .accessibilityIdentifier("header.stars")
+            .background { tileBackground }
+            .accessibilityElement(children: questionCounter == nil ? .ignore : .contain)
+            .accessibilityLabel(questionCounter == nil ? Text("dino.stars \(stars)") : Text("dino.questionsLabel"))
+            .accessibilityIdentifier(questionCounter == nil ? "header.stars" : "header.questions")
+
+            Button(action: help) {
+                VStack(spacing: 3) {
+                    Image(systemName: control == .settings ? "book.fill" : "questionmark")
+                        .font(.system(size: compact ? 22 : 25, weight: .bold))
+                    if control == .settings {
+                        Text("dino.practice.shortTitle")
+                            .font(.system(size: compact ? 10 : 11, weight: .bold, design: .rounded))
+                            .lineLimit(1).minimumScaleFactor(0.8)
+                    }
+                }.frame(maxWidth: .infinity).frame(height: tileHeight)
+                    .background { tileBackground }
+            }.buttonStyle(.plain).disabled(!helpEnabled)
+                .opacity(helpEnabled ? 1 : 0.5)
+                .accessibilityLabel(Text(LocalizedStringKey(control == .settings ? "dino.practice.title" : "dino.example")))
+                .accessibilityIdentifier(control == .settings ? "header.practice" : "question.example")
 
             Button(action: action) {
                 Image(systemName: control.icon)
-                    .font(.system(size: 21, weight: .bold))
-                    .frame(width: 46, height: 46)
-                    .background(.white.opacity(0.85), in: RoundedRectangle(cornerRadius: 16))
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(highContrast ? DinoStyle.ink : Color(dinoHex: 0xD8E6C5), lineWidth: highContrast ? 3 : 1.5))
+                    .font(.system(size: compact ? 24 : 27, weight: .bold))
+                    .frame(maxWidth: .infinity).frame(height: tileHeight)
+                    .background { tileBackground }
             }.buttonStyle(.plain)
                 .accessibilityLabel(Text(LocalizedStringKey(control.labelKey)))
                 .accessibilityIdentifier(control.identifier)
         }
         .foregroundStyle(DinoStyle.ink)
-        .padding(.horizontal, 18).padding(.top, compact ? 4 : 7).padding(.bottom, compact ? 10 : 14)
-        .frame(maxWidth: 440).frame(maxWidth: .infinity)
+        .padding(.horizontal, 14).padding(.top, compact ? 4 : 7).padding(.bottom, compact ? 10 : 14)
+        .frame(maxWidth: 480).frame(maxWidth: .infinity)
         .background {
             HeaderEdge().fill(Color(dinoHex: 0xF6FAE9))
                 .shadow(color: DinoStyle.deepGreen.opacity(0.06), radius: 6, y: 3)
@@ -92,6 +109,12 @@ struct AdventureHeader: View {
                 .presentationDetents([.large]).presentationDragIndicator(.visible)
         }
         .onChange(of: showsPersonalizer) { _, shown in personalizerChanged(shown) }
+    }
+
+    private var tileBackground: some View {
+        RoundedRectangle(cornerRadius: 16).fill(Color(dinoHex: 0xE7F0D7))
+            .overlay(RoundedRectangle(cornerRadius: 16)
+                .stroke(highContrast ? DinoStyle.ink : Color(dinoHex: 0xD8E6C5), lineWidth: highContrast ? 3 : 1))
     }
 }
 

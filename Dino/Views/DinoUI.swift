@@ -95,15 +95,16 @@ struct DinoIconButton: View {
 
 struct DinoCard: ViewModifier {
     @Environment(\.dinoHighContrast) private var highContrast
+    var padding: CGFloat = 20
     func body(content: Content) -> some View {
-        content.padding(20)
+        content.padding(padding)
             .background(.white.opacity(highContrast ? 1 : 0.96), in: RoundedRectangle(cornerRadius: 28))
             .overlay(RoundedRectangle(cornerRadius: 28).stroke(highContrast ? DinoStyle.ink : .white, lineWidth: highContrast ? 3 : 2))
             .shadow(color: DinoStyle.deepGreen.opacity(0.08), radius: 18, y: 8)
     }
 }
 
-extension View { func dinoCard() -> some View { modifier(DinoCard()) } }
+extension View { func dinoCard(padding: CGFloat = 20) -> some View { modifier(DinoCard(padding: padding)) } }
 
 struct DinoStars: View {
     @Environment(\.dinoHighContrast) private var highContrast

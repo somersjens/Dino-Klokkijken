@@ -72,18 +72,25 @@ struct DigitalClockControl: View {
     var minute = 0
     var fontSize: CGFloat = 38
     var onMinuteChange: ((Int) -> Void)? = nil
+    var minuteStep = 1
+    var valueIdentifier = "clock.value"
     var body: some View {
         VStack(spacing: 16) {
             HStack(spacing: 14) {
                 DinoIconButton(icon: "minus", labelKey: "dino.hourLess") { hour = ClockTime.shiftedHour(hour, by: -1) }
+                    .accessibilityIdentifier("clock.hour.less")
                 DigitalClock(time: ClockTime(hour: hour, minute: minute), theme: theme, fontSize: fontSize)
+                    .accessibilityIdentifier(valueIdentifier)
                 DinoIconButton(icon: "plus", labelKey: "dino.hourMore") { hour = ClockTime.shiftedHour(hour, by: 1) }
+                    .accessibilityIdentifier("clock.hour.more")
             }
             if let onMinuteChange {
                 HStack {
-                    DinoIconButton(icon: "minus", labelKey: "dino.minuteLess") { onMinuteChange((minute + 59) % 60) }
+                    DinoIconButton(icon: "minus", labelKey: "dino.minuteLess") { onMinuteChange(ClockTime.shiftedMinute(minute, by: -minuteStep)) }
+                        .accessibilityIdentifier("clock.minute.less")
                     Text("dino.minutes").font(.subheadline)
-                    DinoIconButton(icon: "plus", labelKey: "dino.minuteMore") { onMinuteChange((minute + 1) % 60) }
+                    DinoIconButton(icon: "plus", labelKey: "dino.minuteMore") { onMinuteChange(ClockTime.shiftedMinute(minute, by: minuteStep)) }
+                        .accessibilityIdentifier("clock.minute.more")
                 }
             }
         }

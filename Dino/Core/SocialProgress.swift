@@ -13,6 +13,14 @@ struct SharedLevelResult: Equatable, Sendable {
         levelID == 10 ? 1 + bestCorrect + (bossComplete ? 16 : 0) + (perfectBoss ? 32 : 0) : 1 + stars * 8 + bestCorrect
     }
     var completed: Bool { levelID == 10 ? bossComplete : stars > 0 }
+
+    /// Visible level results rank by stars, then measured time. Missing times come last.
+    func ranking(comparedTo other: SharedLevelResult) -> ComparisonResult {
+        if stars != other.stars { return stars > other.stars ? .orderedAscending : .orderedDescending }
+        let time = seconds ?? Int.max, otherTime = other.seconds ?? Int.max
+        if time != otherTime { return time < otherTime ? .orderedAscending : .orderedDescending }
+        return .orderedSame
+    }
 }
 
 enum DinoLeaderboards {

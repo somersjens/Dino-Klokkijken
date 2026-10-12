@@ -7,6 +7,8 @@ struct AnalogClock: View {
     var size: CGFloat = 230
     var onHourChange: ((Int) -> Void)? = nil
     var showHandHints = false
+    var onMinuteChange: ((Int) -> Void)? = nil
+    var minuteStep = 1
     var body: some View {
         ZStack {
             Circle().fill(Color(dinoHex: theme.rimInk.hex))
@@ -35,6 +37,7 @@ struct AnalogClock: View {
             if showHandHints {
                 Image(systemName: "arrow.down").foregroundStyle(Color(dinoHex: theme.minuteInk.hex))
                     .font(.system(size: size * 0.09, weight: .bold)).offset(x: size * 0.10, y: -size * 0.2)
+                    .rotationEffect(.degrees(time.minuteAngle))
                 Image(systemName: "arrow.down").foregroundStyle(Color(dinoHex: theme.hourInk.hex))
                     .font(.system(size: size * 0.09, weight: .bold)).offset(y: -size * 0.29)
                     .rotationEffect(.degrees(time.hourAngle))
@@ -43,13 +46,16 @@ struct AnalogClock: View {
         .frame(width: size, height: size)
         .contentShape(Circle())
         .gesture(DragGesture(minimumDistance: 0).onChanged { value in
-            guard let onHourChange else { return }
             let x = value.location.x - size / 2
             let y = value.location.y - size / 2
             guard hypot(x, y) > size * 0.10 else { return }
-            onHourChange(ClockTime.snappedHour(x: Double(x), y: Double(y)))
-        }, including: onHourChange == nil ? .none : .all)
-        .modifier(ClockAccessibility(time: time, onHourChange: onHourChange))
+            if let onMinuteChange {
+                onMinuteChange(ClockTime.snappedMinute(x: Double(x), y: Double(y), step: minuteStep))
+            } else {
+                onHourChange?(ClockTime.snappedHour(x: Double(x), y: Double(y), minute: time.minute))
+            }
+        }, including: onHourChange == nil && onMinuteChange == nil ? .none : .all)
+        .modifier(ClockAccessibility(time: time, onHourChange: onHourChange, onMinuteChange: onMinuteChange, minuteStep: minuteStep))
     }
 
     private var hourWidth: CGFloat { size * (theme.hands == .playful ? 0.055 : 0.038) }
@@ -66,8 +72,17 @@ struct AnalogClock: View {
 private struct ClockAccessibility: ViewModifier {
     let time: ClockTime
     let onHourChange: ((Int) -> Void)?
+    let onMinuteChange: ((Int) -> Void)?
+    let minuteStep: Int
     @ViewBuilder func body(content: Content) -> some View {
-        if let onHourChange {
+        if let onMinuteChange {
+            content.accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text("dino.minutes"))
+                .accessibilityValue(time.digitalText)
+                .accessibilityAdjustableAction { direction in
+                    onMinuteChange(ClockTime.shiftedMinute(time.minute, by: direction == .increment ? minuteStep : -minuteStep))
+                }
+        } else if let onHourChange {
             content.accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text("dino.question.setAnalog"))
                 .accessibilityValue(time.digitalText)

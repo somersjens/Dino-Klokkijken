@@ -4,6 +4,7 @@ struct QuestionRenderer: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject var session: DinoSession
+    @State private var adjustingMinutes = false
     let theme: ClockTheme
     let width: CGFloat
     let clockSize: CGFloat
@@ -25,14 +26,19 @@ struct QuestionRenderer: View {
                 targetCard
                 analogInput.id("question.answers")
                 if !session.hasFeedback {
+                    if session.allowsMinutes {
+                        Picker("dino.practice.hand", selection: $adjustingMinutes) {
+                            Text("dino.hours").tag(false)
+                            Text("dino.minutes").tag(true)
+                        }.pickerStyle(.segmented).frame(maxWidth: 280)
+                            .accessibilityIdentifier("question.hand")
+                    }
                     HStack(spacing: 14) {
-                        DinoIconButton(icon: "arrow.counterclockwise", labelKey: "dino.hourLess") {
-                            session.inputHour = ClockTime.shiftedHour(session.inputHour, by: -1)
-                        }
+                        DinoIconButton(icon: "arrow.counterclockwise", labelKey: adjustingMinutes ? "dino.minuteLess" : "dino.hourLess") { adjustAnalog(by: -1) }
+                            .accessibilityIdentifier("question.analog.less")
                         Image(systemName: "hand.draw.fill").font(.title2).foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-                        DinoIconButton(icon: "arrow.clockwise", labelKey: "dino.hourMore") {
-                            session.inputHour = ClockTime.shiftedHour(session.inputHour, by: 1)
-                        }
+                        DinoIconButton(icon: "arrow.clockwise", labelKey: adjustingMinutes ? "dino.minuteMore" : "dino.hourMore") { adjustAnalog(by: 1) }
+                            .accessibilityIdentifier("question.analog.more")
                     }
                 }
                 confirmButton
@@ -44,6 +50,8 @@ struct QuestionRenderer: View {
                 matchingBoard
                 Image(systemName: "arrow.down").font(.system(size: 22, weight: .heavy)).foregroundStyle(DinoStyle.green)
                 digitalOptions
+            default:
+                DinoExpandedQuestionView(session: session, theme: theme, width: width, clockSize: clockSize)
             }
         }.frame(maxWidth: .infinity)
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.34), value: session.hasFeedback)
@@ -55,8 +63,10 @@ struct QuestionRenderer: View {
         let height = (targetSize + 20) * scale
         return HStack(alignment: .top, spacing: 14) {
             VStack(spacing: 10) {
-                AnalogClock(time: session.attempt.submittedAnswer ?? ClockTime(hour: session.inputHour), theme: theme, size: targetSize,
-                            onHourChange: session.hasFeedback ? nil : { session.inputHour = $0 })
+                AnalogClock(time: session.attempt.submittedAnswer ?? session.inputTime, theme: theme, size: targetSize,
+                            onHourChange: session.hasFeedback || adjustingMinutes ? nil : { session.inputHour = $0 },
+                            onMinuteChange: session.hasFeedback || !adjustingMinutes ? nil : { session.inputMinute = $0 },
+                            minuteStep: session.minuteStep)
                     .accessibilityIdentifier("question.analogControl")
                     .padding(10).modifier(ClockAnswerOutline(visible: session.hasFeedback, correct: session.correctFeedback))
                     .scaleEffect(scale).frame(width: comparing ? cellWidth : width, height: height)
@@ -81,7 +91,7 @@ struct QuestionRenderer: View {
         if session.hasFeedback {
             HStack(alignment: .top, spacing: 14) {
                 VStack(spacing: 10) {
-                    DigitalClock(time: session.attempt.submittedAnswer ?? ClockTime(hour: session.inputHour), theme: theme, fontSize: comparing ? min(28, width * 0.075) : 38)
+                    DigitalClock(time: session.attempt.submittedAnswer ?? session.inputTime, theme: theme, fontSize: comparing ? min(28, width * 0.075) : 38)
                         .padding(8).modifier(ClockAnswerOutline(visible: true, correct: session.correctFeedback))
                         .accessibilityIdentifier("question.digitalControl")
                     if comparing { comparisonLabel(correct: false) }
@@ -97,8 +107,9 @@ struct QuestionRenderer: View {
                 }
             }
         } else {
-            DigitalClockControl(hour: $session.inputHour, theme: theme, fontSize: width < 350 ? 32 : 38)
-                .accessibilityIdentifier("question.digitalControl")
+            DigitalClockControl(hour: $session.inputHour, theme: theme, minute: session.inputMinute, fontSize: width < 350 ? 32 : 38,
+                                onMinuteChange: session.allowsMinutes ? { session.inputMinute = $0 } : nil,
+                                minuteStep: session.minuteStep, valueIdentifier: "question.digitalControl")
         }
     }
 
@@ -186,12 +197,17 @@ struct QuestionRenderer: View {
     private var confirmButton: some View {
         Group {
             if !session.hasFeedback {
-                Button { session.submit(ClockTime(hour: session.inputHour)) } label: {
+                Button { session.submit(session.inputTime) } label: {
                     Image(systemName: "checkmark").font(.system(size: 25, weight: .heavy))
                 }.buttonStyle(DinoButtonStyle()).frame(maxWidth: 260)
                     .accessibilityLabel(Text("dino.confirm")).accessibilityIdentifier("question.confirm")
             }
         }
+    }
+
+    private func adjustAnalog(by direction: Int) {
+        if adjustingMinutes { session.inputMinute = ClockTime.shiftedMinute(session.inputMinute, by: direction * session.minuteStep) }
+        else { session.inputHour = ClockTime.shiftedHour(session.inputHour, by: direction) }
     }
 
     private func answerButton<Content: View>(option: ClockTime, index: Int, @ViewBuilder content: () -> Content) -> some View {
@@ -213,7 +229,7 @@ struct QuestionRenderer: View {
     }
 }
 
-private struct ClockAnswerOutline: ViewModifier {
+struct ClockAnswerOutline: ViewModifier {
     @Environment(\.dinoHighContrast) private var highContrast
     let visible: Bool
     let correct: Bool

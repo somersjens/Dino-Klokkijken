@@ -21,10 +21,11 @@ struct AppLanguage: Identifiable, Hashable, Sendable {
 final class LanguageManager: ObservableObject {
     static let shared = LanguageManager()
     private static let overrideKey = "settings.languageOverride"
+    private let defaults: UserDefaults
     @Published var override: AppLanguage? {
         didSet {
-            if let override { UserDefaults.standard.set(override.code, forKey: Self.overrideKey) }
-            else { UserDefaults.standard.removeObject(forKey: Self.overrideKey) }
+            if let override { defaults.set(override.code, forKey: Self.overrideKey) }
+            else { defaults.removeObject(forKey: Self.overrideKey) }
             apply()
         }
     }
@@ -32,9 +33,16 @@ final class LanguageManager: ObservableObject {
     static let englishBundle = lprojBundle(for: "en")
 
     private init() {
-        if let saved = UserDefaults.standard.string(forKey: Self.overrideKey) {
+#if DEBUG
+        if let suite = ProcessInfo.processInfo.environment["DINO_TEST_SUITE"], let isolated = UserDefaults(suiteName: suite) {
+            defaults = isolated
+        } else { defaults = .standard }
+#else
+        defaults = .standard
+#endif
+        if let saved = defaults.string(forKey: Self.overrideKey) {
             override = AppLanguage.named(saved) ?? .english
-            if saved != override?.code { UserDefaults.standard.set(override?.code, forKey: Self.overrideKey) }
+            if saved != override?.code { defaults.set(override?.code, forKey: Self.overrideKey) }
         }
         apply()
     }
@@ -51,6 +59,10 @@ final class LanguageManager: ObservableObject {
     }
     func select(_ language: AppLanguage) {
         withAnimation(.easeInOut(duration: 0.2)) { override = language }
+    }
+    func resetPreference() {
+        override = nil
+        defaults.synchronize()
     }
 }
 

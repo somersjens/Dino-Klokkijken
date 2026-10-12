@@ -4,6 +4,7 @@ import Foundation
 final class DinoProgressStore {
     static let profileKey = "dino.profile.v1"
     static let legacyNameKey = "profile.playerName"
+    static let resetKey = "dino.profile.reset.v1"
     private let defaults: KeyValueStore
 
     init(defaults: KeyValueStore = UserDefaults.standard) { self.defaults = defaults }
@@ -14,6 +15,7 @@ final class DinoProgressStore {
             return validated(decoded)
         }
         var fresh = PlayerProfile()
+        fresh.progressResetAt = defaults.object(forKey: Self.resetKey) as? Date
         fresh.name = PlayerProfile.sanitizedName(defaults.string(forKey: Self.legacyNameKey) ?? "")
         return fresh
     }
@@ -22,6 +24,13 @@ final class DinoProgressStore {
         guard let data = try? JSONEncoder().encode(profile) else { return }
         defaults.set(data, forKey: Self.profileKey)
         defaults.set(profile.name, forKey: Self.legacyNameKey)
+    }
+
+    func removeAllData(resetAt date: Date) {
+        defaults.removeAllObjects()
+        // Only a deletion timestamp remains, preventing older cloud saves from returning.
+        defaults.set(date, forKey: Self.resetKey)
+        (defaults as? UserDefaults)?.synchronize()
     }
 
     private func validated(_ profile: PlayerProfile) -> PlayerProfile {

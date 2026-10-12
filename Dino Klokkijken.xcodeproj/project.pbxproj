@@ -6,6 +6,17 @@
 	"archiveVersion" = "1";
 	"validationLevel" = "1";
 	"objects" = {
+		"DA121026AC02000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/ExpandedQuestions.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+		"DB121026AC02000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000001"; };
+		"DC121026AC02000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000001"; };
+		"DA121026AC02000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/ExpandedQuestionView.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+		"DB121026AC02000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000002"; };
+
+		"DA121026AC01000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/PracticeConfiguration.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+		"DB121026AC01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC01000000000001"; };
+		"DC121026AC01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC01000000000001"; };
+		"DA121026AC01000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/Practice.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+		"DB121026AC01000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC01000000000002"; };
 		"DA121026AB13000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/DinoAvatarMask.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
 		"DB121026AB13000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AB13000000000001"; };
 		"DC121026AB13000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AB13000000000001"; };
@@ -182,6 +193,8 @@
 			"isa" = "PBXSourcesBuildPhase";
 			"buildActionMask" = "2147483647";
 			"files" = (
+				"DC121026AC02000000000001",
+				"DC121026AC01000000000001",
 				"DC121026AB13000000000001",
 				"DC121026AB12000000000001",
 				"32DE52ED6A9A0D73B817A387",
@@ -221,6 +234,10 @@
 		"F951E62C307BE01200FF04C4" = {
 			"isa" = "PBXSourcesBuildPhase";
 			"files" = (
+				"DB121026AC02000000000001",
+				"DB121026AC01000000000001",
+				"DB121026AC02000000000002",
+				"DB121026AC01000000000002",
 				"DB121026AB13000000000001",
 				"DB121026AB12000000000003",
 				"DB121026AB12000000000002",
@@ -834,6 +851,8 @@
 			"isa" = "PBXGroup";
 			"name" = "Core";
 			"children" = (
+				"DA121026AC02000000000001",
+				"DA121026AC01000000000001",
 				"DA121026AB13000000000001",
 				"DA121026AB12000000000001",
 				"DA1220261012000000000001",
@@ -857,6 +876,8 @@
 			"isa" = "PBXGroup";
 			"name" = "Views";
 			"children" = (
+				"DA121026AC02000000000002",
+				"DA121026AC01000000000002",
 				"DA121026AB12000000000003",
 				"DA121026AB12000000000002",
                 "DA1A20261011000000000001",

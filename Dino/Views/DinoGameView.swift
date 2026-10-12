@@ -11,27 +11,31 @@ struct DinoGameView: View {
 
     var body: some View {
         GeometryReader { g in
-            let width = min(520, g.size.width - 36)
+            let width = min(520, max(280, g.size.width - 36))
             let clockSize = min(210, width * 0.54, max(160, g.size.height * 0.28))
             ZStack {
                 JungleBackground(quiet: true)
                 VStack(spacing: 0) {
-                    AdventureHeader(personalizerChanged: { personalizing = $0 }, level: session.level.id,
-                                    stars: player.profile.totalStars, compact: g.size.height < 430) {
-                        confirmExit = true
+                    if session.practice != nil { practiceHeader }
+                    else {
+                        AdventureHeader(personalizerChanged: { personalizing = $0 }, level: session.level.id,
+                                        stars: player.profile.totalStars, compact: g.size.height < 430,
+                                        questionCounter: "\(min(session.attempt.index + 1, session.level.questionCount))/\(session.level.questionCount)",
+                                        helpEnabled: !session.hasFeedback,
+                                        help: showExample, action: pause)
                     }
                     ScrollViewReader { proxy in
                         ScrollView {
                             VStack(spacing: 18) {
-                                questionProgress
+                                if session.practice != nil { questionProgress.id("question.progress") }
                                 if session.level.isBoss { crystals }
-                                Text(LocalizedStringKey(session.question.kind.instructionKey))
+                                Text(LocalizedStringKey(session.instructionKey))
                                     .font(.system(size: 21, weight: .heavy, design: .rounded))
                                     .multilineTextAlignment(.center).frame(maxWidth: .infinity)
                                     .accessibilityIdentifier("question.title")
                                     .id("question.top")
                                 QuestionRenderer(session: session, theme: player.profile.clockTheme, width: width, clockSize: clockSize)
-                                    .id(session.attempt.index)
+                                    .id(session.question.id)
                             }.padding(.vertical, 20).frame(width: width).frame(maxWidth: .infinity)
                         }
                         .onChange(of: session.hasFeedback) { _, visible in
@@ -41,15 +45,17 @@ struct DinoGameView: View {
                                 }
                             }
                         }
-                        .onChange(of: session.attempt.index) { _, _ in
-                            proxy.scrollTo("question.top", anchor: .top)
+                        .onChange(of: session.question.id) { _, _ in
+                            proxy.scrollTo(session.practice == nil ? "question.top" : "question.progress", anchor: .top)
                         }
                     }
                 }.disabled(confirmExit || session.demonstration != nil).accessibilityHidden(confirmExit || session.demonstration != nil)
                 if let kind = session.demonstration {
                     Color.black.opacity(0.28).ignoresSafeArea()
                     ScrollView {
-                        InteractionDemonstration(kind: kind, theme: player.profile.clockTheme, done: session.dismissDemonstration)
+                        InteractionDemonstration(kind: kind, theme: player.profile.clockTheme, minuteStep: session.minuteStep,
+                                                 practiceTime: session.practice?.time ?? .whole,
+                                                 width: min(380, max(230, g.size.width - 80)), done: session.dismissDemonstration)
                             .padding(16)
                     }.frame(maxWidth: 480, maxHeight: g.size.height - 24)
                         .transition(.scale.combined(with: .opacity))
@@ -102,7 +108,7 @@ struct DinoGameView: View {
                 Text("dino.exitTitle").font(.system(size: 25, weight: .heavy, design: .rounded))
                     .multilineTextAlignment(.center)
             }
-            Text("dino.exitMessage").font(.system(size: 15, weight: .medium, design: .rounded))
+            Text(LocalizedStringKey(session.practice == nil ? "dino.exitMessage" : "dino.practice.exitMessage")).font(.system(size: 15, weight: .medium, design: .rounded))
                 .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted).multilineTextAlignment(.center)
             Button { confirmExit = false } label: { Label("dino.keepPlaying", systemImage: "play.fill") }
                 .buttonStyle(DinoButtonStyle(compact: compact)).accessibilityIdentifier("game.exit.cancel")
@@ -112,25 +118,43 @@ struct DinoGameView: View {
         }.padding(4).dinoCard().accessibilityAddTraits(.isModal)
     }
 
-    private var questionProgress: some View {
-        HStack(spacing: 12) {
+    @ViewBuilder private var questionProgress: some View {
+        if let practice = session.practice {
             VStack(alignment: .leading, spacing: 7) {
                 HStack {
-                    Text("dino.questionProgress").font(.system(size: 13, weight: .bold, design: .rounded))
+                    Text(LocalizedStringKey(practice.time.titleKey)).font(.system(size: 13, weight: .bold, design: .rounded))
                     Spacer()
-                    Text(verbatim: "\(min(session.attempt.index + 1, session.level.questionCount))/\(session.level.questionCount)")
+                    Text(verbatim: "\(L("dino.practice.questionNumber")) \(session.question.id + 1)")
                         .font(.system(size: 14, weight: .bold, design: .rounded)).monospacedDigit()
+                        .accessibilityIdentifier("practice.questionNumber")
                 }
-                GeometryReader { g in
-                    Capsule().fill(DinoStyle.green.opacity(0.12))
-                    Capsule().fill(DinoStyle.green)
-                        .frame(width: g.size.width * Double(session.attempt.answers.count) / Double(session.level.questionCount))
-                }.frame(height: 8)
-            }
-            DinoIconButton(icon: "questionmark", labelKey: "dino.example") { session.demonstration = session.question.kind }
-                .accessibilityIdentifier("question.example")
-                .disabled(session.hasFeedback)
-        }.padding(12).background(.white.opacity(0.65), in: RoundedRectangle(cornerRadius: 22))
+                Label("\(session.practiceCorrect) / \(session.practiceAnswered)", systemImage: "checkmark.circle.fill")
+                    .font(.footnote.bold()).foregroundStyle(DinoStyle.deepGreen)
+                    .accessibilityLabel(Text(verbatim: "\(L("dino.practice.correct")): \(session.practiceCorrect) / \(session.practiceAnswered)"))
+            }.padding(12).background(.white.opacity(0.65), in: RoundedRectangle(cornerRadius: 22))
+        }
+    }
+
+    private var practiceHeader: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "book.fill").font(.title2).foregroundStyle(DinoStyle.deepGreen)
+                .frame(width: 48, height: 48).background(DinoStyle.green.opacity(0.15), in: RoundedRectangle(cornerRadius: 16))
+            Text("dino.practice.title").font(.system(size: 22, weight: .heavy, design: .rounded))
+            Spacer()
+            DinoIconButton(icon: "questionmark", labelKey: "dino.example", action: showExample)
+                .accessibilityIdentifier("question.example").disabled(session.hasFeedback)
+            DinoIconButton(icon: "pause.fill", labelKey: "dino.pause", action: pause)
+                .accessibilityIdentifier("header.pause")
+        }.padding(.horizontal, 18).padding(.vertical, 12)
+            .frame(maxWidth: 520).frame(maxWidth: .infinity)
+            .background(DinoStyle.paper.ignoresSafeArea(edges: .top))
+    }
+
+    private func showExample() { session.demonstration = session.question.kind }
+
+    private func pause() {
+        if session.canExitWithoutConfirmation { onExit() }
+        else { confirmExit = true }
     }
 
     private var crystals: some View {
@@ -151,18 +175,38 @@ struct DinoGameView: View {
 struct InteractionDemonstration: View {
     let kind: ClockQuestionKind
     let theme: ClockTheme
+    var minuteStep = 60
+    var practiceTime: DinoPracticeTime = .whole
+    var width: CGFloat = 280
     var done: () -> Void
     @State private var exampleHour = 3
+    @State private var exampleMinute = 0
+    @State private var adjustingMinutes = false
     var body: some View {
+        if kind.isExpanded {
+            DinoExpandedDemonstration(kind: kind, time: practiceTime, width: width, theme: theme, done: done)
+        } else { originalExample }
+    }
+    private var originalExample: some View {
         VStack(spacing: 18) {
             Label("dino.example", systemImage: "sparkles").font(.system(size: 13, weight: .heavy, design: .rounded)).foregroundStyle(DinoStyle.green)
-            Text(LocalizedStringKey(kind.instructionKey)).font(.system(size: 24, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
-            AnalogClock(time: ClockTime(hour: exampleHour), theme: theme, size: 170,
-                        onHourChange: kind == .setAnalog ? { exampleHour = $0 } : nil, showHandHints: true)
+            Text(LocalizedStringKey(minuteStep < 60 && (kind == .setAnalog || kind == .setDigital) ? "dino.practice.\(kind.rawValue)" : kind.instructionKey))
+                .font(.system(size: 24, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
+            AnalogClock(time: ClockTime(hour: exampleHour, minute: exampleMinute), theme: theme, size: 170,
+                        onHourChange: kind == .setAnalog && !adjustingMinutes ? { exampleHour = $0 } : nil, showHandHints: true,
+                        onMinuteChange: kind == .setAnalog && adjustingMinutes ? { exampleMinute = $0 } : nil, minuteStep: minuteStep)
+            if kind == .setAnalog && minuteStep < 60 {
+                Picker("dino.practice.hand", selection: $adjustingMinutes) {
+                    Text("dino.hours").tag(false)
+                    Text("dino.minutes").tag(true)
+                }.pickerStyle(.segmented).frame(maxWidth: 280)
+            }
             Image(systemName: kind == .setAnalog ? "hand.draw.fill" : "arrow.down")
                 .font(.system(size: 25, weight: .bold)).foregroundStyle(DinoStyle.green)
-            if kind == .setDigital { DigitalClockControl(hour: $exampleHour, theme: theme, fontSize: 30) }
-            else { DigitalClock(time: ClockTime(hour: exampleHour), theme: theme, fontSize: 30) }
+            if kind == .setDigital {
+                DigitalClockControl(hour: $exampleHour, theme: theme, minute: exampleMinute, fontSize: 30,
+                                    onMinuteChange: minuteStep < 60 ? { exampleMinute = $0 } : nil, minuteStep: minuteStep)
+            } else { DigitalClock(time: ClockTime(hour: exampleHour, minute: exampleMinute), theme: theme, fontSize: 30) }
             Text(LocalizedStringKey(kind == .setAnalog || kind == .setDigital ? "dino.demoSet" : "dino.demoTap"))
                 .font(.system(size: 14, weight: .medium, design: .rounded)).multilineTextAlignment(.center)
             Button(action: done) { Label("dino.ready", systemImage: "checkmark") }
@@ -170,7 +214,7 @@ struct InteractionDemonstration: View {
         }.dinoCard()
             .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
             .foregroundStyle(DinoStyle.ink).accessibilityAddTraits(.isModal)
-            .onAppear { exampleHour = 3 }
+            .onAppear { exampleHour = 3; exampleMinute = minuteStep < 60 ? minuteStep : 0 }
             .task {
                 guard kind == .setAnalog || kind == .setDigital else { return }
                 do { try await Task.sleep(for: .milliseconds(650)) } catch { return }

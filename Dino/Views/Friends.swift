@@ -276,11 +276,15 @@ struct LevelFriendsView: View {
     let levelID: Int
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if manager.authenticated, let name = manager.playerDisplayName {
-                ownResult(name: name)
-            }
             if manager.authenticated && manager.state == .ready {
                 let completed = manager.friends(completed: levelID)
+                if !completed.isEmpty {
+                    Text("dino.friends.levelResults").font(.system(size: 14, weight: .heavy, design: .rounded))
+                }
+                ForEach(rankedRows(completed: completed)) { row in
+                    if let friend = row.friend { friendResult(friend) }
+                    else { ownResult(name: row.name) }
+                }
                 if completed.isEmpty {
                     let known = manager.friends.allSatisfy { $0.progress.levels[levelID] != nil }
                     let ownCompleted = FriendProgress.local(player.profile).levels[levelID]?.completed == true
@@ -289,35 +293,9 @@ struct LevelFriendsView: View {
                         .font(.system(size: 14, weight: .bold, design: .rounded))
                         .foregroundStyle(DinoStyle.deepGreen)
                         .accessibilityIdentifier("level.friends.empty")
-                } else {
-                    Text("dino.friends.completedHere").font(.system(size: 14, weight: .heavy, design: .rounded))
-                    ForEach(completed.sorted { lhs, rhs in
-                        let a = lhs.progress.levels[levelID], b = rhs.progress.levels[levelID]
-                        if a?.bestCorrect != b?.bestCorrect { return (a?.bestCorrect ?? 0) > (b?.bestCorrect ?? 0) }
-                        if a?.seconds != b?.seconds { return (a?.seconds ?? Int.max) < (b?.seconds ?? Int.max) }
-                        return lhs.displayName.localizedStandardCompare(rhs.displayName) == .orderedAscending
-                    }) { friend in
-                        Button { socialSheet = .profile(friend.id) } label: {
-                            HStack(spacing: 10) {
-                                FriendAvatar(friend: friend, size: 36)
-                                Text(verbatim: friend.displayName)
-                                    .font(.system(size: 13, weight: .bold, design: .rounded))
-                                    .lineLimit(1).minimumScaleFactor(0.8).frame(maxWidth: .infinity, alignment: .leading)
-                                if let result = friend.progress.levels[levelID] {
-                                    if levelID == 10 { Image(systemName: "trophy.fill").foregroundStyle(DinoStyle.deepGreen) }
-                                    else { Label(String(result.stars), systemImage: "star.fill").foregroundStyle(DinoStyle.deepGreen) }
-                                    Text(verbatim: result.seconds.map(DinoQuestionTiming.text) ?? "—")
-                                        .monospacedDigit().frame(minWidth: 44, alignment: .trailing)
-                                        .accessibilityLabel(Text(verbatim: result.seconds.map { L("dino.friends.time") + " " + DinoQuestionTiming.text($0) } ?? L("dino.friends.timeUnavailable")))
-                                }
-                            }.font(.system(size: 13, weight: .bold, design: .rounded))
-                                .padding(.vertical, 5).frame(minHeight: 44)
-                                .contentShape(Rectangle())
-                        }.buttonStyle(.plain).accessibilityElement(children: .combine)
-                            .accessibilityIdentifier("level.friend.\(friend.id)")
-                    }
                 }
             } else {
+                if manager.authenticated, let name = manager.playerDisplayName { ownResult(name: name) }
                 Button { socialSheet = .connection } label: {
                     Label("dino.friends.connect", systemImage: "person.2.fill")
                         .font(.system(size: 14, weight: .bold, design: .rounded))
@@ -341,35 +319,79 @@ struct LevelFriendsView: View {
             }
     }
 
+    private struct ResultRow: Identifiable {
+        let id: String
+        let name: String
+        let result: SharedLevelResult
+        var friend: DinoFriend?
+    }
+
+    private func rankedRows(completed: [DinoFriend]) -> [ResultRow] {
+        var rows = completed.compactMap { friend -> ResultRow? in
+            guard let result = friend.progress.levels[levelID] else { return nil }
+            return ResultRow(id: "friend." + friend.id, name: friend.displayName, result: result, friend: friend)
+        }
+        if let name = manager.playerDisplayName, let result = FriendProgress.local(player.profile).levels[levelID] {
+            rows.append(ResultRow(id: "own", name: name, result: result))
+        }
+        return rows.sorted { lhs, rhs in
+            let order = lhs.result.ranking(comparedTo: rhs.result)
+            if order != .orderedSame { return order == .orderedAscending }
+            let nameOrder = lhs.name.localizedStandardCompare(rhs.name)
+            return nameOrder == .orderedSame ? lhs.id < rhs.id : nameOrder == .orderedAscending
+        }
+    }
+
+    private func friendResult(_ friend: DinoFriend) -> some View {
+        Button { socialSheet = .profile(friend.id) } label: {
+            HStack(spacing: 10) {
+                FriendAvatar(friend: friend, size: 36)
+                Text(verbatim: friend.displayName)
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .lineLimit(1).minimumScaleFactor(0.8).frame(maxWidth: .infinity, alignment: .leading)
+                if let result = friend.progress.levels[levelID] {
+                    Label(String(result.stars), systemImage: "star.fill").foregroundStyle(DinoStyle.deepGreen)
+                    Text(verbatim: result.seconds.map(DinoQuestionTiming.text) ?? "—")
+                        .monospacedDigit().frame(minWidth: 44, alignment: .trailing)
+                        .accessibilityLabel(Text(verbatim: result.seconds.map { L("dino.friends.time") + " " + DinoQuestionTiming.text($0) } ?? L("dino.friends.timeUnavailable")))
+                }
+            }.font(.system(size: 13, weight: .bold, design: .rounded))
+                .padding(.vertical, 5).frame(minHeight: 44)
+                .contentShape(Rectangle())
+        }.buttonStyle(.plain).accessibilityElement(children: .combine)
+            .accessibilityIdentifier("level.friend.\(friend.id)")
+    }
+
     private func ownResult(name: String) -> some View {
         let result = FriendProgress.local(player.profile).levels[levelID]
-        let count = DinoLevelCatalog.level(levelID)?.questionCount ?? 5
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(verbatim: name)
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .lineLimit(2)
-                    .accessibilityIdentifier("level.ownName")
-                Spacer(minLength: 0)
-                Text("dino.friends.you").font(.caption.bold()).foregroundStyle(DinoStyle.deepGreen)
-            }
-            HStack(spacing: 10) {
-                if let result, result.attempted {
-                    if levelID != 10 {
-                        Label(String(result.stars), systemImage: "star.fill").foregroundStyle(DinoStyle.deepGreen)
-                    }
-                    Text(verbatim: "\(result.bestCorrect)/\(count)")
-                        .monospacedDigit().accessibilityIdentifier("level.ownScore")
-                } else {
-                    Text("dino.friends.notPlayed").accessibilityIdentifier("level.ownScore")
+        return HStack(spacing: 12) {
+            DinoPortrait(appearance: player.profile.dinoAppearance ?? .standard, size: 52)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text("dino.appearance.title"))
+                .accessibilityIdentifier("level.ownAvatar")
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(verbatim: name)
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .lineLimit(2)
+                        .accessibilityIdentifier("level.ownName")
+                    Spacer(minLength: 0)
+                    Text("dino.friends.you").font(.caption.bold()).foregroundStyle(DinoStyle.deepGreen)
                 }
-                Spacer(minLength: 0)
-                Label(result?.seconds.map(DinoQuestionTiming.text) ?? "—", systemImage: "stopwatch")
-                    .monospacedDigit().accessibilityIdentifier("level.ownTime")
-                    .accessibilityLabel(Text(verbatim: result?.seconds.map {
-                        L("dino.friends.time") + " " + DinoQuestionTiming.text($0)
-                    } ?? L("dino.friends.timeUnavailable")))
-            }.font(.system(size: 13, weight: .semibold, design: .rounded))
+                HStack(spacing: 10) {
+                    Label(String(result?.stars ?? 0), systemImage: "star.fill")
+                        .foregroundStyle(DinoStyle.deepGreen).monospacedDigit()
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(Text("dino.stars \(result?.stars ?? 0)"))
+                        .accessibilityIdentifier("level.ownScore")
+                    Spacer(minLength: 0)
+                    Text(verbatim: result?.seconds.map(DinoQuestionTiming.text) ?? "—")
+                        .monospacedDigit().accessibilityIdentifier("level.ownTime")
+                        .accessibilityLabel(Text(verbatim: result?.seconds.map {
+                            L("dino.friends.time") + " " + DinoQuestionTiming.text($0)
+                        } ?? L("dino.friends.timeUnavailable")))
+                }.font(.system(size: 13, weight: .semibold, design: .rounded))
+            }
         }.padding(12).background(DinoStyle.green.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
     }
 }

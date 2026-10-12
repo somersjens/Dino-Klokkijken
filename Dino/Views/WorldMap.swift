@@ -7,6 +7,7 @@ struct WorldMap: View {
     @EnvironmentObject private var friends: FriendsManager
     var openLevel: (LevelConfiguration) -> Void
     var openSettings: () -> Void
+    var openPractice: () -> Void
     var openCompletion: () -> Void
     var openFriends: () -> Void
     var hudHeightChanged: (CGFloat) -> Void = { _ in }
@@ -51,7 +52,7 @@ struct WorldMap: View {
             }.safeAreaInset(edge: .top, spacing: 0) {
                 AdventureHeader(level: max(1, player.profile.dinoLevel),
                                 stars: player.profile.totalStars, compact: verticalSizeClass == .compact,
-                                control: .settings, action: openSettings)
+                                control: .settings, help: openPractice, action: openSettings)
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { hudHeightChanged($0) }
             }
         }

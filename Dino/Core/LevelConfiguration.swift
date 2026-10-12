@@ -2,6 +2,8 @@ import Foundation
 
 enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
     case chooseAnalog, chooseDigital, activity, setAnalog, setDigital, match
+    case readDigital, spokenTime, trueFalse, dayPart, pairClocks, read24Hour, sortTimes, timeSequence
+    case addTime, advanceAnalog, elapsedTime, subtractTime, schoolEnd, flightArrival, timeZone
     var instructionKey: String { "dino.question.\(rawValue)" }
     var symbol: String {
         switch self {
@@ -11,9 +13,23 @@ enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
         case .setAnalog: return "hand.draw.fill"
         case .setDigital: return "plusminus.circle.fill"
         case .match: return "link"
+        case .readDigital, .read24Hour: return "text.bubble.fill"
+        case .spokenTime: return "quote.bubble.fill"
+        case .trueFalse: return "checkmark.circle.fill"
+        case .dayPart: return "sun.horizon.fill"
+        case .pairClocks: return "arrow.triangle.branch"
+        case .sortTimes: return "list.number"
+        case .timeSequence: return "ellipsis"
+        case .addTime, .advanceAnalog: return "clock.arrow.2.circlepath"
+        case .elapsedTime: return "stopwatch.fill"
+        case .subtractTime: return "minus.circle.fill"
+        case .schoolEnd: return "book.fill"
+        case .flightArrival: return "airplane"
+        case .timeZone: return "globe.europe.africa.fill"
         }
     }
-    var usesOptions: Bool { self != .setAnalog && self != .setDigital }
+    var usesOptions: Bool { ![.setAnalog, .setDigital, .advanceAnalog, .sortTimes, .pairClocks].contains(self) }
+    var isExpanded: Bool { ![.chooseAnalog, .chooseDigital, .activity, .setAnalog, .setDigital, .match].contains(self) }
 }
 
 enum DinoActivity: String, Codable, CaseIterable, Sendable {

@@ -36,6 +36,7 @@ enum DinoSocialTests {
         testNames()
         testProjections()
         testTimedProjections()
+        testLevelRanking()
         testLegacyProfileMigration()
         await testSync()
         await testTimedSync()
@@ -123,6 +124,24 @@ enum DinoSocialTests {
         profile.recordCompletedAttempt(levelID: 1, correct: 3, questionSeconds: [1,1,1,1,1])
         profile.recordCompletedAttempt(levelID: 1, correct: 5) // Legacy result with no measured time.
         expect(FriendProgress.local(profile).levels[1]?.seconds == nil, "old best score never displays the time of a worse attempt")
+    }
+
+    private static func testLevelRanking() {
+        func result(stars: Int, seconds: Int?, correct: Int = 5, levelID: Int = 1) -> SharedLevelResult {
+            SharedLevelResult(levelID: levelID, attempted: true, stars: stars, bestCorrect: correct,
+                              bossComplete: levelID == 10, perfectBoss: levelID == 10 && correct == 10, seconds: seconds)
+        }
+        let fastest = result(stars: 3, seconds: 20)
+        let slower = result(stars: 3, seconds: 60)
+        let unknown = result(stars: 3, seconds: nil)
+        let fewer = result(stars: 2, seconds: 5, correct: 4)
+        let sorted = [unknown, fewer, slower, fastest].sorted { $0.ranking(comparedTo: $1) == .orderedAscending }
+        expect(sorted == [fastest, slower, unknown, fewer], "stars outrank speed; equal stars use shortest measured time; missing time comes last")
+        expect(fastest.ranking(comparedTo: fastest) == .orderedSame, "identical displayed results allow a stable name tie-break")
+        let fastBoss = result(stars: 0, seconds: 30, correct: 5, levelID: 10)
+        let slowBoss = result(stars: 0, seconds: 60, correct: 10, levelID: 10)
+        expect(fastBoss.ranking(comparedTo: slowBoss) == .orderedAscending,
+               "correct-answer counts do not override time when stars are equal")
     }
 
     private static func testTimedSync() async {

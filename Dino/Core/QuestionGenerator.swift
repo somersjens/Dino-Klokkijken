@@ -4,10 +4,18 @@ struct ClockQuestion: Identifiable, Equatable, Sendable {
     let id: Int
     let kind: ClockQuestionKind
     let target: ClockTime
-    let options: [ClockTime]
+    var options: [ClockTime]
     let activity: DinoActivity?
     /// Other cards on the matching board; the target is visibly selected.
     let companionClocks: [ClockTime]
+    var relatedTimes: [ClockTime] = []
+    var durationMinutes = 0
+    var offsetHours = 0
+    var statement: ClockTime? = nil
+    var answerChoices: [ClockAnswer] = []
+    var answer: ClockAnswer? = nil
+    var expectedAnswer: ClockAnswer { answer ?? .time(target) }
+    var responses: [ClockAnswer] { answerChoices.isEmpty ? options.map(ClockAnswer.time) : answerChoices }
 }
 
 enum DinoQuestionGenerator {
@@ -52,7 +60,13 @@ enum DinoQuestionGenerator {
 
 enum AnswerValidator {
     static func isCorrect(_ answer: ClockTime, for question: ClockQuestion) -> Bool {
-        answer == question.target
+        isCorrect(.time(answer), for: question)
+    }
+    static func isCorrect(_ answer: ClockAnswer, for question: ClockQuestion) -> Bool {
+        if question.kind == .advanceAnalog, case .time(let time) = answer {
+            return time.hour % 12 == question.target.hour % 12 && time.minute == question.target.minute
+        }
+        return answer == question.expectedAnswer
     }
 }
 
@@ -81,7 +95,11 @@ struct LevelAttempt: Sendable {
     let questions: [ClockQuestion]
     private(set) var answers: [Bool] = []
     private(set) var questionSeconds: [Int] = []
-    private(set) var submittedAnswer: ClockTime?
+    private(set) var submittedResponse: ClockAnswer?
+    var submittedAnswer: ClockTime? {
+        if case .time(let time) = submittedResponse { return time }
+        return nil
+    }
     private(set) var index = 0
     var current: ClockQuestion { questions[min(index, questions.count - 1)] }
     var correctCount: Int { answers.filter { $0 }.count }
@@ -89,18 +107,22 @@ struct LevelAttempt: Sendable {
 
     @discardableResult
     mutating func submit(_ answer: ClockTime, elapsed: TimeInterval? = nil) -> Bool? {
-        guard !isComplete, submittedAnswer == nil else { return nil }
+        submit(.time(answer), elapsed: elapsed)
+    }
+    @discardableResult
+    mutating func submit(_ answer: ClockAnswer, elapsed: TimeInterval? = nil) -> Bool? {
+        guard !isComplete, submittedResponse == nil else { return nil }
         let correct = AnswerValidator.isCorrect(answer, for: current)
-        submittedAnswer = answer
+        submittedResponse = answer
         answers.append(correct)
         if let elapsed { questionSeconds.append(DinoQuestionTiming.scoredSeconds(elapsed)) }
         return correct
     }
 
     mutating func advance() {
-        guard submittedAnswer != nil, !isComplete else { return }
+        guard submittedResponse != nil, !isComplete else { return }
         index += 1
-        submittedAnswer = nil
+        submittedResponse = nil
     }
 }
 
