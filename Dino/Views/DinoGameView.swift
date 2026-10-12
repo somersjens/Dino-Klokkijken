@@ -1,11 +1,13 @@
 import SwiftUI
 
 struct DinoGameView: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     @EnvironmentObject private var player: DinoPlayer
     @StateObject var session: DinoSession
     let onExit: () -> Void
     let onResult: (DinoLevelResult) -> Void
     @State private var confirmExit = false
+    @State private var personalizing = false
 
     var body: some View {
         GeometryReader { g in
@@ -14,7 +16,7 @@ struct DinoGameView: View {
             ZStack {
                 JungleBackground(quiet: true)
                 VStack(spacing: 0) {
-                    AdventureHeader(name: player.profile.name, level: session.level.id,
+                    AdventureHeader(personalizerChanged: { personalizing = $0 }, name: player.profile.name, level: session.level.id,
                                     stars: player.profile.totalStars, compact: g.size.height < 430) {
                         confirmExit = true
                     }
@@ -75,8 +77,11 @@ struct DinoGameView: View {
                 }
             }
         }.foregroundStyle(DinoStyle.ink)
-            .task(id: session.hasFeedback && session.correctFeedback && !confirmExit) {
-                guard session.hasFeedback && session.correctFeedback && !confirmExit else { return }
+            .transformPreference(DinoCompanionPreference.self) { anchors in
+                if confirmExit || session.demonstration != nil { anchors = [:] }
+            }
+            .task(id: session.hasFeedback && session.correctFeedback && !confirmExit && !personalizing) {
+                guard session.hasFeedback && session.correctFeedback && !confirmExit && !personalizing else { return }
                 do { try await Task.sleep(for: .seconds(DinoAnimation.correctAnswerDelay)) } catch { return }
                 guard !Task.isCancelled else { return }
                 session.advance()
@@ -100,7 +105,7 @@ struct DinoGameView: View {
                     .multilineTextAlignment(.center)
             }
             Text("dino.exitMessage").font(.system(size: 15, weight: .medium, design: .rounded))
-                .foregroundStyle(DinoStyle.muted).multilineTextAlignment(.center)
+                .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted).multilineTextAlignment(.center)
             Button { confirmExit = false } label: { Label("dino.keepPlaying", systemImage: "play.fill") }
                 .buttonStyle(DinoButtonStyle(compact: compact)).accessibilityIdentifier("game.exit.cancel")
             Button(role: .destructive, action: onExit) { Label("dino.exit", systemImage: "rectangle.portrait.and.arrow.right") }
@@ -143,14 +148,16 @@ struct DinoGameView: View {
 
     private var feedback: some View {
         HStack(spacing: 12) {
-            Image(systemName: "arrow.trianglehead.clockwise")
-                .font(.system(size: 26, weight: .bold))
-            Text("dino.correctTime")
-                .font(.system(size: 17, weight: .bold, design: .rounded))
+            DinoCompanionAnchor(placement: .game, size: 72)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("dino.correctTime").font(.system(size: 16, weight: .bold, design: .rounded))
+                Text(verbatim: session.question.target.digitalText).font(.system(size: 24, weight: .heavy, design: .rounded))
+            }
             Spacer(minLength: 0)
-            Text(verbatim: session.question.target.digitalText).font(.system(size: 22, weight: .heavy, design: .rounded))
         }.foregroundStyle(DinoStyle.ink)
-            .padding(16).background(Color(dinoHex: 0xFBEDEA), in: RoundedRectangle(cornerRadius: 20))
+            .padding(.horizontal, 14).padding(.vertical, 10)
+            .background(Color(dinoHex: 0xFBEDEA), in: RoundedRectangle(cornerRadius: 20))
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("question.feedback")
     }
 }

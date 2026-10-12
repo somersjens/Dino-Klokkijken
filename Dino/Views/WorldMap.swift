@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct WorldMap: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @EnvironmentObject private var player: DinoPlayer
     @EnvironmentObject private var friends: FriendsManager
@@ -9,8 +10,6 @@ struct WorldMap: View {
     var openCompletion: () -> Void
     var openFriends: () -> Void
     @State private var landscapeRouteOffset: CGFloat = 320
-    @State private var paused = false
-    @State private var selectedLevel: LevelConfiguration?
     @State private var selectedFriend: FriendSelection?
 
     var body: some View {
@@ -50,28 +49,11 @@ struct WorldMap: View {
                 }
             }.safeAreaInset(edge: .top, spacing: 0) {
                 AdventureHeader(name: player.profile.name, level: max(1, player.profile.dinoLevel),
-                                stars: player.profile.totalStars, compact: verticalSizeClass == .compact) { paused = true }
-            }.disabled(paused).accessibilityHidden(paused)
-            if paused {
-                Color.black.opacity(0.24).ignoresSafeArea()
-                MapPauseCard(resume: { paused = false }, settings: {
-                    paused = false
-                    openSettings()
-                }).padding(24).frame(maxWidth: 420)
-                    .transition(.scale(scale: 0.95).combined(with: .opacity))
+                                stars: player.profile.totalStars, compact: verticalSizeClass == .compact,
+                                control: .settings, action: openSettings)
             }
         }
         .foregroundStyle(DinoStyle.ink)
-        .animation(.easeOut(duration: 0.18), value: paused)
-        .sheet(item: $selectedLevel) { level in
-            LevelInfoPanel(level: level, start: {
-                selectedLevel = nil
-                openLevel(level)
-            })
-            .environmentObject(player).environmentObject(friends).gameEnvironment()
-            .presentationDetents([.height(level.isBoss ? 620 : 400), .large])
-            .presentationDragIndicator(.visible)
-        }
         .sheet(item: $selectedFriend) { friend in
             NavigationStack {
                 FriendProfileView(friendID: friend.id)
@@ -88,12 +70,12 @@ struct WorldMap: View {
                 .foregroundStyle(DinoStyle.deepGreen).padding(.top, 27)
             Text("dino.jungle").font(.system(size: 38, weight: .heavy, design: .rounded))
             Label("dino.wholeHours", systemImage: "clock")
-                .font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(DinoStyle.muted)
+                .font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
         }.frame(maxWidth: .infinity)
     }
 
     private var bossShortcut: some View {
-        Button { selectedLevel = DinoLevelCatalog.level(10) } label: {
+        Button { if let boss = DinoLevelCatalog.level(10) { openLevel(boss) } } label: {
             HStack(spacing: 13) {
                 Image(systemName: "trophy.fill").font(.system(size: 26)).foregroundStyle(DinoStyle.green)
                     .frame(width: 52, height: 52).background(DinoStyle.ink, in: RoundedRectangle(cornerRadius: 16))
@@ -103,8 +85,8 @@ struct WorldMap: View {
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right").font(.system(size: 15, weight: .heavy))
-            }.padding(12).background(.white.opacity(0.8), in: RoundedRectangle(cornerRadius: 23))
-                .overlay(RoundedRectangle(cornerRadius: 23).stroke(DinoStyle.green.opacity(0.5), lineWidth: 1.5))
+            }.padding(12).background(.white.opacity(highContrast ? 1 : 0.8), in: RoundedRectangle(cornerRadius: 23))
+                .overlay(RoundedRectangle(cornerRadius: 23).stroke(highContrast ? DinoStyle.ink : DinoStyle.green.opacity(0.5), lineWidth: highContrast ? 3 : 1.5))
                 .shadow(color: DinoStyle.ink.opacity(0.05), radius: 10, y: 4)
         }.buttonStyle(.plain).accessibilityIdentifier("map.bossShortcut")
     }
@@ -120,9 +102,9 @@ struct WorldMap: View {
                     .font(.system(size: 16, weight: .heavy, design: .rounded))
                 Text("dino.nextAdventure")
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(DinoStyle.muted)
+                    .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
             }.padding(20).background(.white.opacity(0.55), in: RoundedRectangle(cornerRadius: 29))
-                .rotationEffect(.degrees(-2)).padding(.top, 2045)
+                .padding(.top, 2045)
                 .accessibilityIdentifier("map.nextWorld")
         }.frame(height: 2230)
     }
@@ -130,7 +112,7 @@ struct WorldMap: View {
     private var routeNodes: some View {
         GeometryReader { g in
             let points = (0...10).map { routePoint($0, width: g.size.width) }
-            let dinoSize = min(180, g.size.width * 0.48)
+            let dinoSize = min(144, g.size.width * 0.37)
             ZStack(alignment: .topLeading) {
                 Path { p in
                     p.move(to: points[10])
@@ -160,19 +142,15 @@ struct WorldMap: View {
                                     LevelNode(level: level, record: player.profile.record(index),
                                               unlocked: player.profile.isUnlocked(index),
                                               current: player.profile.dinoLevel == index,
-                                              bossComplete: player.profile.worldOneComplete) { selectedLevel = level }
+                                              bossComplete: player.profile.worldOneComplete) { openLevel(level) }
                                 }
-                            }.offset(x: point.x - g.size.width / 2)
+                            }.offset(x: point.x - g.size.width / 2, y: index == 0 ? 0 : index == 10 ? 13 : 16)
                             if player.profile.dinoLevel == index {
-                                VStack(spacing: 2) {
-                                    DinoCharacter(state: .happy, size: dinoSize)
-                                    Text(verbatim: player.profile.name).font(.system(size: 13, weight: .bold, design: .rounded))
-                                        .lineLimit(1).minimumScaleFactor(0.7).frame(width: min(120, dinoSize * 0.7))
-                                }
-                                .allowsHitTesting(false).accessibilityElement(children: .combine)
-                                .accessibilityIdentifier("map.dino.\(index)")
-                                .offset(x: (point.x < g.size.width / 2 ? g.size.width - dinoSize * 0.38 : dinoSize * 0.38) - g.size.width / 2,
-                                        y: -6)
+                                DinoCharacter(state: .happy, size: dinoSize)
+                                    .allowsHitTesting(false)
+                                    .accessibilityIdentifier("map.dino.\(index)")
+                                    .offset(x: point.x - g.size.width / 2,
+                                            y: -dinoSize / 2 - (index == 10 ? 38 : 24))
                             }
                             if index > 0, !friends.friends(at: index).isEmpty {
                                 FriendMapAvatars(friends: friends.friends(at: index), openFriend: { selectedFriend = FriendSelection(id: $0) }, openMore: openFriends)
@@ -180,14 +158,14 @@ struct WorldMap: View {
                             }
                         }.frame(width: g.size.width, height: 175).id("node-\(index)")
                     }
-                }.padding(.top, 12.5)
+                }.padding(.top, 72.5)
             }
-        }.frame(height: 1960).environment(\.layoutDirection, .leftToRight)
+        }.frame(height: 2020).environment(\.layoutDirection, .leftToRight)
     }
 
     private func routePoint(_ index: Int, width: CGFloat) -> CGPoint {
         let positions: [CGFloat] = [0.28, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5]
-        return CGPoint(x: width * positions[index], y: 100 + CGFloat(index) * 175)
+        return CGPoint(x: width * positions[index], y: 160 + CGFloat(index) * 175)
     }
     private func routePath(_ points: [CGPoint]) -> Path {
         Path { p in
@@ -202,6 +180,7 @@ struct WorldMap: View {
 }
 
 struct LevelNode: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     let level: LevelConfiguration
     let record: LevelRecord
     let unlocked: Bool
@@ -213,10 +192,10 @@ struct LevelNode: View {
         VStack(spacing: 12) {
             Button(action: action) {
                 ZStack {
-                    if current { Circle().stroke(DinoStyle.green.opacity(0.5), lineWidth: 3).padding(-9) }
+                    if current { Circle().stroke(highContrast ? DinoStyle.deepGreen : DinoStyle.green.opacity(0.5), lineWidth: 3).padding(-9) }
                     Circle().fill(color.opacity(0.55)).offset(y: 6)
                     Circle().fill(LinearGradient(colors: [color.opacity(0.85), color], startPoint: .top, endPoint: .bottom))
-                    Circle().stroke(level.isBoss ? DinoStyle.green : .white.opacity(0.6), lineWidth: level.isBoss ? 5 : 3).padding(3)
+                    Circle().stroke(level.isBoss ? DinoStyle.green : highContrast ? DinoStyle.ink : .white.opacity(0.6), lineWidth: level.isBoss ? 5 : 3).padding(3)
                     VStack(spacing: 1) {
                         if level.isBoss { Image(systemName: bossComplete ? "trophy.fill" : "crown.fill").font(.system(size: 24)).foregroundStyle(DinoStyle.green) }
                         if unlocked { Text(verbatim: "\(level.id)").font(.system(size: level.isBoss ? 23 : 30, weight: .heavy, design: .rounded)) }
@@ -238,10 +217,12 @@ struct LevelNode: View {
 }
 
 struct LevelInfoPanel: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     @EnvironmentObject private var player: DinoPlayer
     @Environment(\.dismiss) private var dismiss
     let level: LevelConfiguration
     var start: () -> Void
+    var close: (() -> Void)? = nil
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
@@ -252,7 +233,7 @@ struct LevelInfoPanel: View {
                         Image(systemName: level.icon).font(.system(size: 44, weight: .bold)).foregroundStyle(DinoStyle.green)
                     }
                 }
-                Text("dino.levelNumber \(level.id)").font(.system(size: 13, weight: .heavy, design: .rounded)).foregroundStyle(DinoStyle.muted)
+                Text("dino.levelNumber \(level.id)").font(.system(size: 13, weight: .heavy, design: .rounded)).foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
                 Text(LocalizedStringKey(level.titleKey)).font(.system(size: 28, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
                 if level.isBoss {
                     HStack(spacing: 8) { ForEach(0..<10) { _ in Image(systemName: "diamond.fill").foregroundStyle(DinoStyle.green) } }
@@ -265,10 +246,49 @@ struct LevelInfoPanel: View {
                 }
                 Button(action: start) { Label("dino.play", systemImage: "play.fill") }
                     .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("level.play")
-                Button("dino.map") { dismiss() }.buttonStyle(DinoSecondaryButtonStyle())
+                Button("dino.map") { if let close { close() } else { dismiss() } }.buttonStyle(DinoSecondaryButtonStyle())
                 LevelFriendsView(levelID: level.id)
             }.padding(26).frame(maxWidth: 450).frame(maxWidth: .infinity)
         }.background(JungleBackground(quiet: true)).foregroundStyle(DinoStyle.ink)
+    }
+}
+
+/// The start card and game share one scene, so Play never waits for a sheet dismissal.
+struct LevelStartOverlay: View {
+    let level: LevelConfiguration
+    var start: () -> Void
+    var close: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var dragOffset: CGFloat = 0
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .bottom) {
+                Color.black.opacity(0.28).ignoresSafeArea()
+                    .onTapGesture(perform: close).transition(.opacity)
+                VStack(spacing: 0) {
+                    Capsule().fill(DinoStyle.ink.opacity(0.15)).frame(width: 36, height: 5)
+                        .frame(maxWidth: .infinity).frame(height: 28).contentShape(Rectangle())
+                        .gesture(DragGesture()
+                            .onChanged { dragOffset = max(0, $0.translation.height) }
+                            .onEnded {
+                                if $0.translation.height > 70 || $0.predictedEndTranslation.height > 130 { close() }
+                                else { withAnimation(.easeOut(duration: 0.2)) { dragOffset = 0 } }
+                            })
+                        .accessibilityHidden(true)
+                    LevelInfoPanel(level: level, start: start, close: close)
+                }
+                .frame(width: min(540, geometry.size.width - 24),
+                       height: min(level.isBoss ? 640 : 430, geometry.size.height - 20))
+                .background(Color(dinoHex: 0xF6FAE9))
+                .clipShape(RoundedRectangle(cornerRadius: 28))
+                .shadow(color: .black.opacity(0.14), radius: 20, y: 8)
+                .padding(.bottom, 10)
+                .offset(y: dragOffset)
+                .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+                .accessibilityAddTraits(.isModal)
+            }
+        }
     }
 }
 

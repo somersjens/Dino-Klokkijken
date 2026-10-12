@@ -16,6 +16,7 @@ struct PlayerProfile: Codable, Equatable, Sendable {
     var version = 1
     var name = ""
     var nameChangedAt: Date?
+    var dinoAppearance: DinoAppearance?
     var onboardingComplete = false
     var clockTheme = ClockTheme.standard
     var levels: [String: LevelRecord] = [:]
@@ -23,6 +24,8 @@ struct PlayerProfile: Codable, Equatable, Sendable {
     var perfectBossVictory = false
     var worldOneComplete = false
     var demonstratedInteractions: Set<ClockQuestionKind> = []
+    // Optional for compatibility with existing version-one saves.
+    var progressResetAt: Date?
 
     var normalLevelsComplete: Bool { (1...9).allSatisfy { record($0).stars >= 1 } }
     var totalStars: Int { (1...9).reduce(0) { $0 + record($1).stars } }
@@ -62,5 +65,12 @@ struct PlayerProfile: Codable, Equatable, Sendable {
         }
         return String(String.UnicodeScalarView(scalars))
             .trimmingCharacters(in: .whitespacesAndNewlines).prefix(20).description
+    }
+
+    mutating func resetProgress(date: Date = Date()) {
+        levels = [:]; bossResults = []
+        perfectBossVictory = false; worldOneComplete = false
+        demonstratedInteractions = []
+        progressResetAt = date
     }
 }

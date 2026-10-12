@@ -1,5 +1,21 @@
 import SwiftUI
 
+private struct DinoHighContrastKey: EnvironmentKey { static let defaultValue = false }
+extension EnvironmentValues {
+    var dinoHighContrast: Bool {
+        get { self[DinoHighContrastKey.self] }
+        set { self[DinoHighContrastKey.self] = newValue }
+    }
+}
+
+struct DinoContrastEnvironment: ViewModifier {
+    @Environment(\.colorSchemeContrast) private var systemContrast
+    let enabled: Bool
+    func body(content: Content) -> some View {
+        content.environment(\.dinoHighContrast, enabled || systemContrast == .increased)
+    }
+}
+
 extension Color {
     init(dinoHex: UInt32) {
         self.init(red: Double((dinoHex >> 16) & 255) / 255,
@@ -17,6 +33,7 @@ enum DinoStyle {
 }
 
 struct DinoButtonStyle: ButtonStyle {
+    @Environment(\.dinoHighContrast) private var highContrast
     var color = DinoStyle.green
     var compact = false
     func makeBody(configuration: Configuration) -> some View {
@@ -26,9 +43,9 @@ struct DinoButtonStyle: ButtonStyle {
             .padding(.horizontal, compact ? 16 : 24)
             .frame(minHeight: compact ? 48 : 58)
             .frame(maxWidth: .infinity)
-            .background(LinearGradient(colors: [color, color.opacity(0.88)], startPoint: .top, endPoint: .bottom),
+            .background(LinearGradient(colors: [color, color.opacity(highContrast ? 1 : 0.88)], startPoint: .top, endPoint: .bottom),
                         in: RoundedRectangle(cornerRadius: 20))
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(.white.opacity(0.22), lineWidth: 2))
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(highContrast ? DinoStyle.ink : .white.opacity(0.22), lineWidth: highContrast ? 3 : 2))
             .shadow(color: color.opacity(0.36), radius: 0, y: configuration.isPressed ? 1 : 5)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
@@ -36,6 +53,7 @@ struct DinoButtonStyle: ButtonStyle {
 }
 
 struct DinoSecondaryButtonStyle: ButtonStyle {
+    @Environment(\.dinoHighContrast) private var highContrast
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 17, weight: .bold, design: .rounded))
@@ -43,8 +61,8 @@ struct DinoSecondaryButtonStyle: ButtonStyle {
             .padding(.horizontal, 20)
             .frame(minHeight: 52)
             .frame(maxWidth: .infinity)
-            .background(.white.opacity(configuration.isPressed ? 0.6 : 0.95), in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(DinoStyle.ink.opacity(0.1), lineWidth: 1.5))
+            .background(.white.opacity(highContrast ? 1 : configuration.isPressed ? 0.6 : 0.95), in: RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: highContrast ? 3 : 1.5))
     }
 }
 
@@ -56,6 +74,7 @@ struct DinoAnswerButtonStyle: ButtonStyle {
 }
 
 struct DinoIconButton: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     let icon: String
     let labelKey: String
     var action: () -> Void
@@ -65,8 +84,8 @@ struct DinoIconButton: View {
                 .font(.system(size: 19, weight: .bold))
                 .foregroundStyle(DinoStyle.ink)
                 .frame(width: 48, height: 48)
-                .background(.white.opacity(0.9), in: RoundedRectangle(cornerRadius: 17))
-                .overlay(RoundedRectangle(cornerRadius: 17).stroke(.white, lineWidth: 1.5))
+                .background(.white.opacity(highContrast ? 1 : 0.9), in: RoundedRectangle(cornerRadius: 17))
+                .overlay(RoundedRectangle(cornerRadius: 17).stroke(highContrast ? DinoStyle.ink : .white, lineWidth: highContrast ? 3 : 1.5))
                 .shadow(color: DinoStyle.ink.opacity(0.08), radius: 8, y: 3)
         }
         .buttonStyle(.plain)
@@ -75,10 +94,11 @@ struct DinoIconButton: View {
 }
 
 struct DinoCard: ViewModifier {
+    @Environment(\.dinoHighContrast) private var highContrast
     func body(content: Content) -> some View {
         content.padding(20)
-            .background(.white.opacity(0.96), in: RoundedRectangle(cornerRadius: 28))
-            .overlay(RoundedRectangle(cornerRadius: 28).stroke(.white, lineWidth: 2))
+            .background(.white.opacity(highContrast ? 1 : 0.96), in: RoundedRectangle(cornerRadius: 28))
+            .overlay(RoundedRectangle(cornerRadius: 28).stroke(highContrast ? DinoStyle.ink : .white, lineWidth: highContrast ? 3 : 2))
             .shadow(color: DinoStyle.deepGreen.opacity(0.08), radius: 18, y: 8)
     }
 }
@@ -86,6 +106,7 @@ struct DinoCard: ViewModifier {
 extension View { func dinoCard() -> some View { modifier(DinoCard()) } }
 
 struct DinoStars: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     let count: Int
     var size: CGFloat = 25
     var showEmpty = true
@@ -95,7 +116,7 @@ struct DinoStars: View {
                 if showEmpty || index < count {
                     Image(systemName: "star.fill")
                         .font(.system(size: size, weight: .bold))
-                        .foregroundStyle(index < count ? DinoStyle.green : DinoStyle.ink.opacity(0.13))
+                        .foregroundStyle(index < count ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : DinoStyle.ink.opacity(highContrast ? 0.5 : 0.13))
                         .rotationEffect(.degrees(index == 1 ? 0 : index == 0 ? -12 : 12))
                         .offset(y: index == 1 ? -4 : 0)
                         .shadow(color: index < count ? DinoStyle.deepGreen.opacity(0.18) : .clear, radius: 0, y: 2)
@@ -120,6 +141,7 @@ struct JungleLeaf: Shape {
 }
 
 struct JungleBackground: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     var quiet = false
     var body: some View {
         GeometryReader { _ in
@@ -128,7 +150,7 @@ struct JungleBackground: View {
                                ? [Color(dinoHex: 0xF0F8E8), DinoStyle.paper]
                                : [Color(dinoHex: 0xDBF4BB), Color(dinoHex: 0xEFF8E2), Color(dinoHex: 0xD0EBAD)],
                                startPoint: .top, endPoint: .bottom)
-                JungleVista(quiet: quiet)
+                JungleVista(quiet: quiet).opacity(highContrast && quiet ? 0.25 : 1)
             }
         }
         .ignoresSafeArea()

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct AnalogClock: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     let time: ClockTime
     let theme: ClockTheme
     var size: CGFloat = 230
@@ -13,7 +14,7 @@ struct AnalogClock: View {
             Circle().fill(Color(dinoHex: theme.face.hex)).padding(size * 0.034)
             Circle().stroke(.white.opacity(0.4), lineWidth: size * 0.008).padding(size * 0.015)
             ForEach(0..<60, id: \.self) { tick in
-                Capsule().fill(DinoStyle.ink.opacity(tick.isMultiple(of: 5) ? 0.6 : 0.28))
+                Capsule().fill(DinoStyle.ink.opacity(highContrast ? 1 : tick.isMultiple(of: 5) ? 0.6 : 0.28))
                     .frame(width: tick.isMultiple(of: 5) ? size * 0.012 : size * 0.005,
                            height: tick.isMultiple(of: 5) ? size * 0.045 : size * 0.023)
                     .offset(y: -size * 0.425)

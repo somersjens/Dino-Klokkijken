@@ -4,6 +4,7 @@ import Combine
 @MainActor
 final class DinoPlayer: ObservableObject {
     @Published private(set) var profile: PlayerProfile
+    let profileChanges = PassthroughSubject<PlayerProfile, Never>()
     private let store: DinoProgressStore
     var progressChanged: (() -> Void)?
     var progressReset: (() -> Void)?
@@ -27,17 +28,21 @@ final class DinoPlayer: ObservableObject {
         mutation(&next)
         profile = next
         store.save(next)
+        profileChanges.send(next)
     }
 
     @discardableResult
     func setName(_ name: String, date: Date = Date()) -> Bool {
         guard case .success(let valid) = DinoNameValidator.validated(name) else { return false }
         if valid == profile.name { return true }
-        guard profile.nameChangedAt.map({ date.timeIntervalSince($0) >= 86_400 }) ?? true else { return false }
         update { $0.name = valid; $0.nameChangedAt = date }
         return true
     }
     func setTheme(_ theme: ClockTheme) { update { $0.clockTheme = theme } }
+    func setDinoAppearance(_ appearance: DinoAppearance) {
+        guard appearance != (profile.dinoAppearance ?? .standard) else { return }
+        update { $0.dinoAppearance = appearance }
+    }
     func completeOnboarding(theme: ClockTheme) {
         guard !profile.name.isEmpty else { return }
         update { $0.clockTheme = theme; $0.onboardingComplete = true }
@@ -55,21 +60,20 @@ final class DinoPlayer: ObservableObject {
     }
     func resetProgress() {
         progressReset?()
-        update {
-            let name = $0.name
-            let theme = $0.clockTheme
-            let onboarded = $0.onboardingComplete
-            let nameChangedAt = $0.nameChangedAt
-            $0 = PlayerProfile()
-            $0.name = name; $0.clockTheme = theme; $0.onboardingComplete = onboarded
-            $0.nameChangedAt = nameChangedAt
-        }
+        update { $0.resetProgress() }
     }
     func mergeSharedProgress(_ progress: FriendProgress) {
         var next = profile
         next.mergeSharedProgress(progress)
         guard next != profile else { return }
-        profile = next; store.save(next)
+        profile = next; store.save(next); profileChanges.send(next)
+    }
+    func mergeCloudProgress(_ progress: DinoCloudProgress) {
+        var next = profile
+        next.mergeCloudProgress(progress)
+        guard next != profile else { return }
+        if (next.progressResetAt ?? .distantPast) > (profile.progressResetAt ?? .distantPast) { progressReset?() }
+        profile = next; store.save(next); profileChanges.send(next)
     }
 }
 
@@ -88,10 +92,12 @@ final class DinoSession: ObservableObject {
     @Published var demonstration: ClockQuestionKind?
     @Published private(set) var result: DinoLevelResult?
     private let player: DinoPlayer
+    private let answerFeedback: ((Bool) -> Void)?
 
-    init(level: LevelConfiguration, player: DinoPlayer) {
+    init(level: LevelConfiguration, player: DinoPlayer, answerFeedback: ((Bool) -> Void)? = nil) {
         self.level = level
         self.player = player
+        self.answerFeedback = answerFeedback
         let questions: [ClockQuestion]
 #if DEBUG
         if let raw = ProcessInfo.processInfo.environment["DINO_TEST_SEED"], let seed = UInt64(raw) {
@@ -115,7 +121,7 @@ final class DinoSession: ObservableObject {
 
     func submit(_ answer: ClockTime) {
         guard demonstration == nil else { return }
-        _ = attempt.submit(answer)
+        if let correct = attempt.submit(answer) { answerFeedback?(correct) }
     }
 
     func advance() {

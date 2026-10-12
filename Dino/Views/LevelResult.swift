@@ -1,11 +1,13 @@
 import SwiftUI
 
 struct DinoResultView: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     @EnvironmentObject private var player: DinoPlayer
     let result: DinoLevelResult
     let retry: () -> Void
     let next: () -> Void
     let map: () -> Void
+    var sharedCompanion = false
     private var succeeded: Bool { result.level.isBoss ? result.victory != .none : result.stars > 0 }
     private var nextAvailable: Bool { result.level.isBoss ? succeeded : player.profile.isUnlocked(result.level.id + 1) }
     var body: some View {
@@ -17,8 +19,12 @@ struct DinoResultView: View {
                     Text(LocalizedStringKey(succeeded ? (result.level.isBoss ? "dino.bossWon" : "dino.wellDone") : "dino.keepPracticing"))
                         .font(.system(size: 34, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
                     ZStack(alignment: .bottomTrailing) {
-                        DinoCharacter(state: succeeded ? .celebrating : .thinking, size: 210,
-                                      performsBackflip: result.correct == result.level.questionCount)
+                        if sharedCompanion {
+                            DinoCompanionAnchor(placement: .result, size: 210)
+                        } else {
+                            DinoCharacter(state: succeeded ? .celebrating : .thinking, size: 210,
+                                          performsBackflip: result.correct == result.level.questionCount)
+                        }
                         if result.level.isBoss && succeeded {
                             Image(systemName: "trophy.fill").font(.system(size: 75))
                                 .foregroundStyle(DinoStyle.green)
@@ -30,7 +36,7 @@ struct DinoResultView: View {
                     } else { DinoStars(count: result.stars, size: 48) }
                     Text(verbatim: "\(result.correct)/\(result.level.questionCount)")
                         .font(.system(size: 42, weight: .heavy, design: .rounded)).monospacedDigit()
-                    Text("dino.correctAnswers").font(.system(size: 14, weight: .medium, design: .rounded)).foregroundStyle(DinoStyle.muted)
+                    Text("dino.correctAnswers").font(.system(size: 14, weight: .medium, design: .rounded)).foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
                     if !succeeded {
                         Text(LocalizedStringKey(result.level.isBoss ? (player.profile.normalLevelsComplete ? "dino.needFive" : "dino.needPerfectOrRoute") : "dino.needThree"))
                             .font(.system(size: 15, weight: .semibold, design: .rounded)).multilineTextAlignment(.center)

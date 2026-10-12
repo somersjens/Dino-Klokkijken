@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct QuestionRenderer: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     @ObservedObject var session: DinoSession
     let theme: ClockTheme
     let width: CGFloat
@@ -29,7 +30,7 @@ struct QuestionRenderer: View {
                     DinoIconButton(icon: "arrow.counterclockwise", labelKey: "dino.hourLess") {
                         session.inputHour = ClockTime.shiftedHour(session.inputHour, by: -1)
                     }
-                    Image(systemName: "hand.draw.fill").font(.title2).foregroundStyle(DinoStyle.muted)
+                    Image(systemName: "hand.draw.fill").font(.title2).foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
                     DinoIconButton(icon: "arrow.clockwise", labelKey: "dino.hourMore") {
                         session.inputHour = ClockTime.shiftedHour(session.inputHour, by: 1)
                     }
@@ -75,10 +76,9 @@ struct QuestionRenderer: View {
                                           @ViewBuilder content: () -> Content) -> some View {
         content().frame(width: width, height: showsDino ? max(height, dinoSize) : height)
             .overlay(alignment: .trailing) {
-                if showsDino {
-                    DinoCharacter(state: .thinking, size: dinoSize,
-                                  givesThumbsUp: session.hasFeedback && session.correctFeedback)
-                        .offset(x: dinoSize * 0.18).allowsHitTesting(false)
+                if showsDino && !(session.hasFeedback && !session.correctFeedback) {
+                    DinoCompanionAnchor(placement: .game, size: dinoSize)
+                        .offset(x: dinoSize * 0.18).allowsHitTesting(false).transition(.identity)
                 }
             }
     }
@@ -138,15 +138,15 @@ struct QuestionRenderer: View {
         return Button { session.submit(option) } label: {
             content().frame(maxWidth: .infinity)
                 .background(.white, in: RoundedRectangle(cornerRadius: 22))
-                .overlay(RoundedRectangle(cornerRadius: 22).stroke(correct ? DinoStyle.green : wrong ? Color(dinoHex: 0xC65A59) : DinoStyle.ink.opacity(0.1), lineWidth: correct || wrong ? 4 : 1.5))
+                .overlay(RoundedRectangle(cornerRadius: 22).stroke(correct ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : wrong ? Color(dinoHex: 0xC65A59) : DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: correct || wrong ? 4 : highContrast ? 3 : 1.5))
                 .overlay(alignment: .topTrailing) {
                     if correct || wrong {
                         Image(systemName: correct ? "checkmark.circle.fill" : "xmark.circle.fill")
-                            .font(.system(size: 24, weight: .bold)).foregroundStyle(correct ? DinoStyle.green : Color(dinoHex: 0xC65A59))
+                            .font(.system(size: 24, weight: .bold)).foregroundStyle(correct ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : Color(dinoHex: 0xC65A59))
                             .background(.white, in: Circle()).offset(x: 5, y: -5)
                     }
                 }.shadow(color: DinoStyle.ink.opacity(0.06), radius: 7, y: 4)
-                .opacity(session.hasFeedback && !correct && !wrong ? 0.55 : 1)
+                .opacity(!highContrast && session.hasFeedback && !correct && !wrong ? 0.55 : 1)
         }.buttonStyle(DinoAnswerButtonStyle()).disabled(session.hasFeedback).accessibilityIdentifier("question.option.\(index)")
     }
 }

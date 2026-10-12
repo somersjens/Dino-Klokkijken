@@ -56,7 +56,36 @@ Alle spelteksten zijn vertaald in Nederlands en Engels. De overige talen en oude
 - Alle landschapselementen zijn uit shapes opgebouwd in één statische Canvas. Het decor loopt achter de titel en over de hele scrollroute door; de sierlijke vormen onderscheppen geen aanrakingen.
 - De ingang heeft boomkruinen en lianen, de middenroute een rotswaterval en lagune, en de boss een open plek met mosstenen. Het zandpad blijft vrij voor levelknoppen en Dino.
 - De laatste 560 punten mengen het junglepalet met een apart horizonpalet. Begroeiing maakt plaats voor lage silhouetten en nevel. De preview van wereld 2 blijft gesloten.
-- De header heeft een dinoportret met naam, een levelbadge, het verdiende sterrentotaal zonder maximum en een pauzeknop. De badges hebben beperkte breedte op tablets; de onderrand bestaat uit zachte golven.
-- UI-controle op iPhone 18 Pro / iOS 27 en iPad A16 / iPadOS 27: vaste positie van de header tijdens scrollen, juiste volgorde van de onderdelen, pauzeren en hervatten, en verandering van 0 naar 3 sterren na een voltooid level. Op beide apparaten geslaagd.
-- De bestaande UI-controle voor vier antwoordkeuzes en blijvende foutfeedback slaagt op iPhone. Op iPad slagen landschapstand en taalwisseling via de instellingen in het pauzemenu.
-- Ook op iPhone SE (3e generatie) / iOS 26.1 slagen de header-, pauze-, sterren-, foutfeedback- en portret/landschapcontroles. De kernsuite slaagt met 110.536 controles.
+- De header heeft een dinoportret met naam, een levelbadge, de ster boven het verdiende sterrentotaal zonder maximum en een instellingenknop op de kaart. De badges zijn recht uitgelijnd en hebben beperkte breedte op tablets; de onderrand is licht gebogen. Tijdens een level blijft pauzeren beschikbaar.
+- UI-controle op iPhone 18 Pro / iOS 27 en iPad A16 / iPadOS 27: vaste positie van de header tijdens scrollen, juiste volgorde van de onderdelen, direct openen van instellingen, en verandering van 0 naar 3 sterren na een voltooid level. Op beide apparaten geslaagd.
+- De bestaande UI-controle voor vier antwoordkeuzes en blijvende foutfeedback slaagt op iPhone. Landschapstand en taalwisseling worden gecontroleerd via de kaartinstellingen; pauzeren blijft beschikbaar tijdens een level.
+- Op iPhone SE (3e generatie) / iOS 26.1 zijn ook de foutfeedback en portret/landschapindeling gecontroleerd. De eerdere kernsuite slaagde met 110.536 controles.
+
+## Verfijning van landschap en HUD
+
+- Bomen hebben een vertakte, taps toelopende stam en asymmetrische kruinen. Palmen gebruiken gebogen, hangende bladeren; struiken hebben lage, overlappende silhouetten en varens een herkenbare bladstructuur.
+- Rotsen hebben onregelmatige contouren, schaduwvlakken en kleine mosplekken. Steenclusters liggen op de grond. De waterval heeft een zichtbare aanvoer, een getrapte rotswand, een verbredende waterstroom, schuim en een poel.
+- Dino staat met zijn voeten op de huidige levelknop, horizontaal gecentreerd, zonder naamlabel. De figuur onderschept geen aanrakingen. Het blanco beginpunt en de bestaande voortgangsregels blijven behouden.
+- De HUD staat recht, met gelijke level- en sterrentegels. De ster staat boven het verdiende totaal. Het tandwiel opent vanuit de kaart direct de instellingen; het hoofdmenu heeft geen pauzeknop.
+- De definitieve UI-controle slaagt op iPad A16 / iPadOS 27 en iPhone SE / iOS 26.1: header tijdens scrollen, direct openen van instellingen, horizonovergang, verdiende sterren en Dino op de levelknop. De previews zijn visueel nagekeken en opgeslagen in `Documentation/Screenshots`. De level-10-positie, portret/landschap en taalwisseling zijn daarnaast gecontroleerd op iPhone 18 Pro. De definitieve Release-build slaagt.
+
+## Rustigere reacties
+
+De duimen gebruiken één geselecteerde afbeelding met een kleine vergroting; de foutreactie gebruikt één geselecteerde afbeelding met een lichte kanteling en blijft daarna stil staan. De nieuwe foutbeelden zijn ongewijzigd hernoemd. De salto gebruikt vier gekozen poses, met één vaste afbeelding gedurende de volledige draai; geen pose-overvloeiingen of dubbele contouren.
+
+Kerncontrole: **112.169 geslaagde controles**, inclusief stabiele reactiebeelden, stille eindposes en Minder beweging. De directe perfecte boss en de foutfeedback zijn via UI getest op iPhone 18 Pro. De foutreactie is na visuele controle naar de vaste feedbackbalk verplaatst; op iPhone SE blijven alle vier de antwoorden, Dino en Verder zichtbaar. De afzonderlijke Dino-reactie is toegankelijk en verdwijnt pas bij de volgende vraag. De native schermopname is per frame beoordeeld op de duimen en salto.
+
+## Doorlopende start en voltooiing
+
+- De startkaart staat in dezelfde scène als de kaart en het level. Spelen bereidt de sessie direct voor; de kaart verdwijnt tegelijk met het verschijnen van het level. Sluiten via de knop, buiten de kaart tikken en de greep omlaag slepen blijven beschikbaar.
+- Eén gedeelde Dino wordt bij vragen, foutfeedback en resultaat gebruikt. Bij maximale punten begint de salto bij de laatste vraag en eindigt hij op de resultaatplek. De resultaatweergave maakt geen tweede Dino aan. De figuur onderschept geen knoppen en blijft tijdens scrollen op zijn plek in de inhoud.
+- UI-controles slagen op iPhone SE / iOS 26.1 en iPad A16 / iPadOS 27: startkaart verdwenen zodra het level opent, één Dino voor/na voltooiing en correcte landingspositie. De directe perfecte boss en blijvende foutfeedback slagen op iPhone SE; verlaten/annuleren, landschap en taalwisseling zijn ook gecontroleerd. De iPad-opname is per tiende seconde visueel nagekeken.
+
+## Dinoportret en personalisatie — 12 oktober 2026
+
+- Het headerportret is vergroot van 44 naar 62 punten (36 naar 46 in compacte weergave). De bovenste stekels blijven volledig zichtbaar. Portret en naam openen **Mijn dino**, zowel op de kaart als tijdens een level.
+- Bandana, stekels, lichaam en buikje/tenen hebben elk kleurbolletjes en een vrije systeemkleurkiezer. Het vaste voorbeeld blijft zichtbaar tijdens scrollen. De oorspronkelijke kleuren gebruiken de originele afbeelding; kleurwijzigingen behouden textuur, schaduwen, ogen, mond en bandanatekst. Alleen het headerportret en het voorbeeld gebruiken de personalisatie.
+- De vier kleuren worden direct lokaal opgeslagen. Oude profielen zonder kleurvelden behouden hun naam, klokthema en voortgang. Herstel naar de oorspronkelijke kleuren, voortgang resetten en cloudmerge zijn gecontroleerd. Cloudvoortgang bevat geen dinokleuren.
+- Naamwijzigingen zijn op elk moment mogelijk; de bestaande Unicode-validatie blijft gelden. Bewaren en afsluiten met een aangepaste naam zijn getest, inclusief twee opeenvolgende wijzigingen en herstart.
+- `Tools/test-dino.sh`: **112.204 geslaagde controles**. `testPersonalizeHeaderColorsAndName` slaagt op iPhone 17 / iOS 26.5 en iPad Air 13-inch (M4) / iPadOS 27, inclusief portret/landschap en personalisatie tijdens een level. `testFreeAvatarColorPicker` slaagt op iPhone: een vrije RGB-kleur via de systeemschuifbalken blijft na herstart bewaard.
+- De Debug-build slaagt. Screenshots van header en personalisatie zijn visueel nagekeken en opgeslagen als `personalize-header-*` en `personalize-colors-*` in `Documentation/Screenshots`.

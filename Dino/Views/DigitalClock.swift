@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct DigitalClock: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     let time: ClockTime
     let theme: ClockTheme
     var fontSize: CGFloat = 42
@@ -24,7 +25,7 @@ struct DigitalClock: View {
         .foregroundStyle(theme.display.isDark ? .white : DinoStyle.ink)
         .padding(.horizontal, fontSize * 0.38).padding(.vertical, fontSize * 0.22)
         .background(Color(dinoHex: theme.display.hex), in: RoundedRectangle(cornerRadius: fontSize * 0.35))
-        .overlay(RoundedRectangle(cornerRadius: fontSize * 0.35).stroke(DinoStyle.ink.opacity(0.1), lineWidth: 2))
+        .overlay(RoundedRectangle(cornerRadius: fontSize * 0.35).stroke(DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: highContrast ? 3 : 2))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(time.digitalText)
         .environment(\.layoutDirection, .leftToRight)
@@ -32,6 +33,7 @@ struct DigitalClock: View {
 }
 
 private struct SevenSegmentDigit: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     let character: Character
     private let segments: [Character: Set<Int>] = [
         "0": [0, 1, 2, 3, 4, 5], "1": [1, 2], "2": [0, 1, 6, 4, 3],
@@ -56,7 +58,7 @@ private struct SevenSegmentDigit: View {
                 ForEach(0..<7, id: \.self) { i in
                     Capsule().frame(width: [0, 3, 6].contains(i) ? w * 0.72 : thickness,
                                     height: [0, 3, 6].contains(i) ? thickness : h * 0.37)
-                        .opacity(segments[character, default: []].contains(i) ? 1 : 0.08)
+                        .opacity(segments[character, default: []].contains(i) ? 1 : highContrast ? 0 : 0.08)
                         .position(points[i])
                 }
             }

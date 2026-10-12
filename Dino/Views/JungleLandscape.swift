@@ -52,8 +52,8 @@ struct WorldMapLandscape: View {
             sky.ellipse(CGRect(x: w * 0.70, y: 12, width: 92, height: 92), color: Color(dinoHex: 0xFFF4C4).opacity(0.75))
             sky.hill(x: -w * 0.45, y: 75, width: w, height: 340, color: Color(dinoHex: 0xB4D69D).opacity(0.30))
             sky.hill(x: w * 0.65, y: 130, width: w * 0.7, height: 330, color: Color(dinoHex: 0xAACF93).opacity(0.22))
-            sky.bush(at: CGPoint(x: left - 45, y: 64), size: 0.85)
-            sky.bush(at: CGPoint(x: right + 50, y: 85), size: 1.0)
+            sky.bush(at: CGPoint(x: left - 12, y: 64), size: 0.85)
+            sky.bush(at: CGPoint(x: right + 18, y: 85), size: 1.0)
             sky.vine(from: CGPoint(x: left + 13, y: 0), length: 122, bend: 20)
             sky.vine(from: CGPoint(x: right - 16, y: 0), length: 94, bend: -20)
             var routeContext = context
@@ -91,7 +91,7 @@ struct WorldMapLandscape: View {
 
             // A rocky waterfall and a lagoon make the middle of the world a
             // distinct destination. Water stays at the edge of the playable path.
-            painter.waterfall(at: CGPoint(x: right - 55 * scale, y: 620), size: scale)
+            painter.waterfall(at: CGPoint(x: right - 35 * scale, y: 525), size: scale)
             painter.palm(at: CGPoint(x: left + 13, y: 785), size: 0.96 * scale, flipped: false)
             painter.fern(at: CGPoint(x: left + 8, y: 885), size: 1.13 * scale, flipped: false)
             painter.flowers(at: CGPoint(x: right - 42, y: 965), size: 0.9 * scale)
@@ -99,7 +99,7 @@ struct WorldMapLandscape: View {
             // Deeper jungle: buttress roots, large leaves, mossy boulders.
             painter.tree(at: CGPoint(x: left - 25, y: 1250), size: 1.02 * scale, leaning: 1)
             painter.palm(at: CGPoint(x: right + 4, y: 1370), size: 1.05 * scale, flipped: true)
-            painter.rocks(at: CGPoint(x: right - 25, y: 1130), size: 1.2 * scale)
+            painter.rocks(at: CGPoint(x: right - 25, y: 1382), size: 0.92 * scale)
             painter.bush(at: CGPoint(x: left + 15, y: 1320), size: 1.05 * scale)
             painter.fern(at: CGPoint(x: right - 8, y: 1470), size: 1.2 * scale, flipped: true)
             painter.flowers(at: CGPoint(x: left + 40, y: 1475), size: scale)
@@ -114,8 +114,10 @@ struct WorldMapLandscape: View {
                              y: y, width: w * 0.82, height: 195,
                              color: palette.color(\.distant, toward: nextPalette, progress: CGFloat(i + 1) / 3).opacity(0.44))
             }
-            painter.ruin(at: CGPoint(x: left + 55, y: 1845), size: scale, flipped: false)
-            painter.ruin(at: CGPoint(x: right - 55, y: 1880), size: scale * 0.83, flipped: true)
+            painter.rocks(at: CGPoint(x: left + 29, y: 1910), size: scale * 0.9)
+            painter.fern(at: CGPoint(x: left + 45, y: 1916), size: scale * 0.45, flipped: false)
+            painter.rocks(at: CGPoint(x: right - 28, y: 1940), size: scale * 0.8)
+            painter.fern(at: CGPoint(x: right - 43, y: 1945), size: scale * 0.40, flipped: true)
             context.fill(Path(CGRect(x: 0, y: size.height - 240, width: w, height: 240)),
                          with: .linearGradient(Gradient(colors: [Color(dinoHex: nextPalette.ground).opacity(0),
                                                                  Color(dinoHex: nextPalette.ground)]),
@@ -203,11 +205,50 @@ private struct JunglePainter {
         }
     }
 
+    /// Scalloped, asymmetrical foliage silhouettes instead of rows of circles.
+    private func foliagePath(in r: CGRect) -> Path {
+        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: r.minX + x * r.width, y: r.minY + y * r.height)
+        }
+        return Path { p in
+            p.move(to: pt(0.07, 0.69))
+            p.addCurve(to: pt(0.05, 0.35), control1: pt(-0.04, 0.60), control2: pt(-0.03, 0.40))
+            p.addCurve(to: pt(0.27, 0.16), control1: pt(0.02, 0.19), control2: pt(0.15, 0.10))
+            p.addCurve(to: pt(0.56, 0.07), control1: pt(0.32, -0.02), control2: pt(0.48, -0.06))
+            p.addCurve(to: pt(0.80, 0.19), control1: pt(0.62, -0.01), control2: pt(0.79, 0.01))
+            p.addCurve(to: pt(0.96, 0.48), control1: pt(0.97, 0.16), control2: pt(1.05, 0.34))
+            p.addCurve(to: pt(0.92, 0.80), control1: pt(1.05, 0.60), control2: pt(1.00, 0.75))
+            p.addCurve(to: pt(0.62, 0.93), control1: pt(0.88, 0.98), control2: pt(0.73, 1.03))
+            p.addCurve(to: pt(0.31, 0.91), control1: pt(0.50, 1.04), control2: pt(0.36, 1.00))
+            p.addCurve(to: pt(0.07, 0.69), control1: pt(0.10, 1.00), control2: pt(0.02, 0.87))
+            p.closeSubpath()
+        }
+    }
+
+    private func foliage(in r: CGRect, color: Color, highlights: Bool = true) {
+        context.fill(foliagePath(in: r), with: .color(color))
+        if highlights {
+            // Small leaf pairs belong to the crown, rather than separate blobs.
+            for i in 0..<3 {
+                let at = CGPoint(x: r.minX + r.width * (0.27 + CGFloat(i) * 0.21),
+                                 y: r.minY + r.height * (0.30 + CGFloat(i % 2) * 0.13))
+                leaf(at: at, length: r.width * 0.095, width: r.width * 0.033,
+                     angle: Double(-40 + i * 25), color: light.opacity(0.35), vein: false)
+                leaf(at: at, length: r.width * 0.075, width: r.width * 0.025,
+                     angle: Double(45 + i * 18), color: light.opacity(0.24), vein: false)
+            }
+        }
+    }
+
     func bush(at point: CGPoint, size: CGFloat) {
-        ellipse(CGRect(x: point.x - 74 * size, y: point.y - 12 * size, width: 148 * size, height: 28 * size), color: dark.opacity(0.12))
-        for i in 0..<7 {
-            leaf(at: point, length: CGFloat([76, 106, 98, 130, 93, 112, 78][i]) * size,
-                 width: 28 * size, angle: Double(i * 27 - 82), color: [dark, green, light][i % 3])
+        ellipse(CGRect(x: point.x - 58 * size, y: point.y - 5 * size, width: 116 * size, height: 17 * size), color: dark.opacity(0.10))
+        foliage(in: CGRect(x: point.x - 57 * size, y: point.y - 46 * size, width: 79 * size, height: 47 * size), color: dark)
+        foliage(in: CGRect(x: point.x - 9 * size, y: point.y - 62 * size, width: 67 * size, height: 60 * size), color: Color(dinoHex: 0x4F905B))
+        foliage(in: CGRect(x: point.x - 36 * size, y: point.y - 47 * size, width: 75 * size, height: 50 * size), color: green)
+        for i in 0..<3 {
+            leaf(at: CGPoint(x: point.x + CGFloat(i - 1) * 19 * size, y: point.y - 6 * size),
+                 length: CGFloat(25 + i * 4) * size, width: 8 * size,
+                 angle: Double(i * 38 - 45), color: light.opacity(0.65))
         }
     }
 
@@ -217,61 +258,96 @@ private struct JunglePainter {
         let p = JunglePainter(context: c)
         let direction: CGFloat = flipped ? -1 : 1
         for frond in 0..<5 {
-            let reach = CGFloat(frond - 2) * 27 * size * direction
-            let height = CGFloat(93 - abs(frond - 2) * 17) * size
+            let reach = CGFloat(frond - 2) * 30 * size * direction
+            let height = CGFloat(88 - abs(frond - 2) * 20) * size
             var stem = Path()
             stem.move(to: point)
             stem.addQuadCurve(to: CGPoint(x: point.x + reach, y: point.y - height),
-                              control: CGPoint(x: point.x + reach * 0.15, y: point.y - height * 0.7))
-            c.stroke(stem, with: .color(dark), style: StrokeStyle(lineWidth: 2 * size, lineCap: .round))
-            for pair in 1..<7 {
-                let t = CGFloat(pair) / 7
+                              control: CGPoint(x: point.x, y: point.y - height))
+            c.stroke(stem, with: .color(dark), style: StrokeStyle(lineWidth: 1.4 * size, lineCap: .round))
+            for pair in 1...7 {
+                let t = CGFloat(pair) / 8
                 let origin = CGPoint(x: point.x + reach * t * t, y: point.y - height * (2 * t - t * t))
+                let angle = atan2(2 * reach * t, 2 * height * (1 - t)) * 180 / .pi
                 for side in [-1.0, 1.0] {
-                    p.leaf(at: origin, length: (22 - t * 10) * size, width: 7 * size,
-                           angle: side * 60 + Double(reach / size) * 0.3, color: frond.isMultiple(of: 2) ? dark : green, vein: false)
+                    p.leaf(at: origin, length: (18 - t * 12) * size, width: (4.2 - t * 2) * size,
+                           angle: Double(angle) + side * 61,
+                           color: frond.isMultiple(of: 2) ? dark : green, vein: false)
                 }
             }
         }
     }
 
     func tree(at base: CGPoint, size: CGFloat, leaning: CGFloat) {
-        let crown = CGPoint(x: base.x + leaning * 18 * size, y: base.y - 260 * size)
+        let crown = CGPoint(x: base.x + leaning * 21 * size, y: base.y - 240 * size)
+        ellipse(CGRect(x: base.x - 44 * size, y: base.y - 5 * size, width: 88 * size, height: 18 * size), color: dark.opacity(0.12))
         var trunk = Path()
-        trunk.move(to: CGPoint(x: base.x - 35 * size, y: base.y))
-        trunk.addQuadCurve(to: CGPoint(x: crown.x - 13 * size, y: crown.y),
-                           control: CGPoint(x: base.x + 16 * size, y: base.y - 70 * size))
-        trunk.addLine(to: CGPoint(x: crown.x + 19 * size, y: crown.y))
-        trunk.addQuadCurve(to: CGPoint(x: base.x + 47 * size, y: base.y + 4 * size),
-                           control: CGPoint(x: base.x - 5 * size, y: base.y - 55 * size))
+        trunk.move(to: CGPoint(x: base.x - 34 * size, y: base.y + 3 * size))
+        trunk.addCurve(to: CGPoint(x: crown.x - 11 * size, y: crown.y + 10 * size),
+                       control1: CGPoint(x: base.x - 7 * size, y: base.y - 25 * size),
+                       control2: CGPoint(x: base.x - 5 * size, y: base.y - 150 * size))
+        trunk.addLine(to: CGPoint(x: crown.x + 13 * size, y: crown.y + 8 * size))
+        trunk.addCurve(to: CGPoint(x: base.x + 34 * size, y: base.y + 2 * size),
+                       control1: CGPoint(x: base.x + 21 * size, y: base.y - 145 * size),
+                       control2: CGPoint(x: base.x + 10 * size, y: base.y - 19 * size))
+        trunk.addQuadCurve(to: CGPoint(x: base.x - 34 * size, y: base.y + 3 * size),
+                           control: CGPoint(x: base.x, y: base.y - 3 * size))
         trunk.closeSubpath()
-        context.fill(trunk, with: .color(Color(dinoHex: 0x8B9D62)))
-        var bark = Path()
-        bark.move(to: CGPoint(x: base.x + 6 * size, y: base.y - 20 * size))
-        bark.addQuadCurve(to: crown, control: CGPoint(x: base.x + 2 * size, y: base.y - 155 * size))
-        context.stroke(bark, with: .color(Color(dinoHex: 0xB3BD7E)), style: StrokeStyle(lineWidth: 7 * size, lineCap: .round))
-        for i in 0..<6 {
-            let x = crown.x + CGFloat(i % 3 - 1) * 43 * size
-            let y = crown.y + CGFloat(i / 3) * 31 * size
-            ellipse(CGRect(x: x - 58 * size, y: y - 42 * size, width: 116 * size, height: 76 * size), color: i < 3 ? dark : green)
-            ellipse(CGRect(x: x - 48 * size, y: y - 38 * size, width: 77 * size, height: 31 * size), color: light.opacity(0.37))
+        context.fill(trunk, with: .color(Color(dinoHex: 0x92774F)))
+        // A fork and tapered roots make the crown and trunk read as one tree.
+        for side in [-1.0, 1.0] {
+            var branch = Path()
+            branch.move(to: CGPoint(x: base.x + 4 * size, y: base.y - 137 * size))
+            branch.addQuadCurve(to: CGPoint(x: crown.x + CGFloat(side) * 55 * size, y: crown.y - 8 * size),
+                                control: CGPoint(x: crown.x + CGFloat(side) * 26 * size, y: crown.y + 71 * size))
+            context.stroke(branch, with: .color(Color(dinoHex: 0x92774F)), style: StrokeStyle(lineWidth: 11 * size, lineCap: .round))
         }
-        bush(at: CGPoint(x: base.x - leaning * 19 * size, y: base.y + 8), size: size * 0.58)
+        var bark = Path()
+        bark.move(to: CGPoint(x: base.x + 11 * size, y: base.y - 12 * size))
+        bark.addQuadCurve(to: CGPoint(x: crown.x + 5 * size, y: crown.y + 56 * size),
+                          control: CGPoint(x: base.x + 6 * size, y: base.y - 97 * size))
+        context.stroke(bark, with: .color(Color(dinoHex: 0xB59A67)), style: StrokeStyle(lineWidth: 4 * size, lineCap: .round))
+        foliage(in: CGRect(x: crown.x - 94 * size, y: crown.y - 42 * size, width: 185 * size, height: 100 * size), color: dark, highlights: false)
+        foliage(in: CGRect(x: crown.x - 94 * size, y: crown.y - 34 * size, width: 100 * size, height: 83 * size), color: Color(dinoHex: 0x58955B))
+        foliage(in: CGRect(x: crown.x - 20 * size, y: crown.y - 53 * size, width: 118 * size, height: 89 * size), color: green)
+        foliage(in: CGRect(x: crown.x - 52 * size, y: crown.y - 4 * size, width: 104 * size, height: 71 * size), color: Color(dinoHex: 0x7CAE61))
+        fern(at: CGPoint(x: base.x - leaning * 17 * size, y: base.y + 7 * size), size: size * 0.55, flipped: leaning < 0)
+    }
+
+    private func palmFrond(from point: CGPoint, reach: CGFloat, drop: CGFloat, lift: CGFloat, size: CGFloat, color: Color) {
+        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: point.x + x * size, y: point.y + y * size) }
+        var frond = Path()
+        frond.move(to: point)
+        frond.addCurve(to: pt(reach, drop), control1: pt(reach * 0.24, -lift),
+                       control2: pt(reach * 0.76, -lift * 0.72))
+        frond.addCurve(to: point, control1: pt(reach * 0.80, drop - 5),
+                       control2: pt(reach * 0.36, -lift + 25))
+        frond.closeSubpath()
+        context.fill(frond, with: .color(color))
+        var vein = Path()
+        vein.move(to: point)
+        vein.addCurve(to: pt(reach * 0.96, drop * 0.92), control1: pt(reach * 0.29, -lift * 0.69),
+                      control2: pt(reach * 0.71, -lift * 0.42))
+        context.stroke(vein, with: .color(light.opacity(0.35)), style: StrokeStyle(lineWidth: 1.2 * size, lineCap: .round))
     }
 
     func palm(at base: CGPoint, size: CGFloat, flipped: Bool) {
         let direction: CGFloat = flipped ? -1 : 1
-        let top = CGPoint(x: base.x + direction * 38 * size, y: base.y - 172 * size)
+        let top = CGPoint(x: base.x + direction * 32 * size, y: base.y - 172 * size)
         var stem = Path()
         stem.move(to: base)
-        stem.addQuadCurve(to: top, control: CGPoint(x: base.x - direction * 8 * size, y: base.y - 118 * size))
-        context.stroke(stem, with: .color(Color(dinoHex: 0x899559)), style: StrokeStyle(lineWidth: 17 * size, lineCap: .round))
-        context.stroke(stem, with: .color(Color(dinoHex: 0xC0B77A)), style: StrokeStyle(lineWidth: 8 * size, lineCap: .round))
-        for i in 0..<7 {
-            leaf(at: top, length: CGFloat(i.isMultiple(of: 2) ? 120 : 103) * size,
-                 width: 24 * size, angle: Double(i * 37 - 115), color: i.isMultiple(of: 2) ? dark : green)
+        stem.addQuadCurve(to: top, control: CGPoint(x: base.x - direction * 4 * size, y: base.y - 121 * size))
+        context.stroke(stem, with: .color(Color(dinoHex: 0x987E53)), style: StrokeStyle(lineWidth: 13 * size, lineCap: .round))
+        var highlight = context
+        highlight.translateBy(x: -3 * direction * size, y: 0)
+        highlight.stroke(stem, with: .color(Color(dinoHex: 0xBCA06D)), style: StrokeStyle(lineWidth: 4 * size, lineCap: .round))
+        let fronds: [(CGFloat, CGFloat, CGFloat)] = [(-104, 36, 44), (107, 37, 40), (-96, 4, 54),
+                                                       (85, -12, 48), (-68, -32, 55), (35, -54, 53), (-23, -65, 50)]
+        for (i, frond) in fronds.enumerated() {
+            palmFrond(from: top, reach: frond.0 * direction, drop: frond.1, lift: frond.2,
+                      size: size, color: i < 2 ? dark : i.isMultiple(of: 2) ? green : Color(dinoHex: 0x56955E))
         }
-        ellipse(CGRect(x: top.x - 12 * size, y: top.y - 3 * size, width: 17 * size, height: 19 * size), color: Color(dinoHex: 0xB29D68))
+        ellipse(CGRect(x: top.x - 7 * size, y: top.y - 1 * size, width: 12 * size, height: 13 * size), color: Color(dinoHex: 0x90724C))
     }
 
     func vine(from start: CGPoint, length: CGFloat, bend: CGFloat) {
@@ -287,42 +363,133 @@ private struct JunglePainter {
         }
     }
 
-    func rocks(at point: CGPoint, size: CGFloat) {
-        for i in 0..<3 {
-            let x = point.x + CGFloat(i - 1) * 24 * size
-            let y = point.y + CGFloat(i % 2) * 9 * size
-            let r = CGRect(x: x - 24 * size, y: y - 29 * size, width: 48 * size, height: 34 * size)
-            context.fill(Path(roundedRect: r, cornerRadius: 13 * size), with: .color(Color(dinoHex: i == 1 ? 0x8C9F78 : 0xA4B58C)))
-            ellipse(CGRect(x: r.minX + 3 * size, y: r.minY - 2 * size, width: 39 * size, height: 12 * size), color: light)
+    /// Rounded corners retain a rock's uneven planes instead of forming a cylinder.
+    private func roundedOutline(_ points: [CGPoint], rounding: CGFloat = 0.18) -> Path {
+        guard points.count > 2 else { return Path() }
+        func between(_ a: CGPoint, _ b: CGPoint, fraction: CGFloat) -> CGPoint {
+            CGPoint(x: a.x + (b.x - a.x) * fraction, y: a.y + (b.y - a.y) * fraction)
+        }
+        return Path { p in
+            p.move(to: between(points[0], points[points.count - 1], fraction: rounding))
+            for i in points.indices {
+                let previous = points[(i + points.count - 1) % points.count]
+                let next = points[(i + 1) % points.count]
+                p.addLine(to: between(points[i], previous, fraction: rounding))
+                p.addQuadCurve(to: between(points[i], next, fraction: rounding), control: points[i])
+            }
+            p.closeSubpath()
         }
     }
 
+    private func boulder(in r: CGRect, moss: Bool) {
+        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: r.minX + x * r.width, y: r.minY + y * r.height) }
+        ellipse(CGRect(x: r.minX, y: r.maxY - r.height * 0.17, width: r.width, height: r.height * 0.28), color: dark.opacity(0.13))
+        let stone = roundedOutline([pt(0.05, 0.66), pt(0.09, 0.32), pt(0.30, 0.09), pt(0.57, 0.05),
+                                    pt(0.86, 0.24), pt(0.98, 0.61), pt(0.83, 0.86), pt(0.53, 0.97), pt(0.18, 0.90)])
+        context.fill(stone, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xB4BDAB), Color(dinoHex: 0x7F9584)]),
+                                                  startPoint: pt(0.2, 0), endPoint: pt(0.8, 1)))
+        context.fill(roundedOutline([pt(0.60, 0.21), pt(0.91, 0.42), pt(0.88, 0.81), pt(0.54, 0.93), pt(0.44, 0.65)]),
+                     with: .color(Color(dinoHex: 0x6A8378).opacity(0.32)))
+        if moss {
+            let patch = roundedOutline([pt(0.08, 0.48), pt(0.17, 0.26), pt(0.33, 0.14), pt(0.53, 0.21),
+                                        pt(0.68, 0.19), pt(0.83, 0.34), pt(0.67, 0.43), pt(0.51, 0.34),
+                                        pt(0.40, 0.44), pt(0.27, 0.34), pt(0.15, 0.52)])
+            context.fill(patch, with: .color(Color(dinoHex: 0x739759)))
+        }
+    }
+
+    func rocks(at point: CGPoint, size: CGFloat) {
+        boulder(in: CGRect(x: point.x - 47 * size, y: point.y - 27 * size, width: 43 * size, height: 30 * size), moss: false)
+        boulder(in: CGRect(x: point.x - 20 * size, y: point.y - 36 * size, width: 55 * size, height: 40 * size), moss: true)
+        boulder(in: CGRect(x: point.x + 24 * size, y: point.y - 17 * size, width: 30 * size, height: 23 * size), moss: true)
+    }
+
     func waterfall(at point: CGPoint, size: CGFloat) {
-        let cliff = CGRect(x: point.x - 35 * size, y: point.y - 90 * size, width: 115 * size, height: 180 * size)
-        context.fill(Path(roundedRect: cliff, cornerRadius: 28 * size), with: .color(Color(dinoHex: 0x8EAA86)))
-        for i in 0..<4 {
-            let r = CGRect(x: cliff.minX + CGFloat(i % 2) * 26 * size, y: cliff.minY + CGFloat(i) * 39 * size,
-                           width: 96 * size, height: 31 * size)
-            context.fill(Path(roundedRect: r, cornerRadius: 13 * size), with: .color(Color(dinoHex: i.isMultiple(of: 2) ? 0xA6BC92 : 0x789B7D)))
-        }
-        ellipse(CGRect(x: point.x - 77 * size, y: point.y + 60 * size, width: 190 * size, height: 105 * size), color: Color(dinoHex: 0xB0D5BB))
-        ellipse(CGRect(x: point.x - 67 * size, y: point.y + 61 * size, width: 175 * size, height: 79 * size), color: Color(dinoHex: 0x79BFBB))
-        ellipse(CGRect(x: point.x - 38 * size, y: point.y + 76 * size, width: 130 * size, height: 42 * size), color: Color(dinoHex: 0xA0D8CD))
-        let water = CGRect(x: point.x - 4 * size, y: cliff.minY + 7 * size, width: 39 * size, height: 185 * size)
-        context.fill(Path(roundedRect: water, cornerRadius: 15 * size),
-                     with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xB9E8D4), Color(dinoHex: 0xE4F4D9)]),
-                                           startPoint: CGPoint(x: 0, y: water.minY), endPoint: CGPoint(x: 0, y: water.maxY)))
+        var c = context
+        c.translateBy(x: point.x, y: point.y)
+        c.scaleBy(x: size, y: size)
+        let p = JunglePainter(context: c)
+        // The shallow pool lies below the cliff; its uneven bank follows the shore.
+        let pool = p.roundedOutline([CGPoint(x: -78, y: 103), CGPoint(x: -63, y: 79), CGPoint(x: -12, y: 66),
+                                    CGPoint(x: 55, y: 73), CGPoint(x: 91, y: 96), CGPoint(x: 69, y: 124),
+                                    CGPoint(x: 14, y: 135), CGPoint(x: -44, y: 128)], rounding: 0.4)
+        c.fill(pool, with: .color(Color(dinoHex: 0xA8C6A1)))
+        let waterSurface = p.roundedOutline([CGPoint(x: -68, y: 102), CGPoint(x: -50, y: 82), CGPoint(x: -7, y: 73),
+                                            CGPoint(x: 52, y: 81), CGPoint(x: 79, y: 99), CGPoint(x: 58, y: 118),
+                                            CGPoint(x: 12, y: 126), CGPoint(x: -36, y: 121)], rounding: 0.4)
+        c.fill(waterSurface, with: .color(Color(dinoHex: 0x73B7BD)))
+        let cliff = p.roundedOutline([CGPoint(x: -55, y: 77), CGPoint(x: -58, y: 32), CGPoint(x: -47, y: 7),
+                                     CGPoint(x: -50, y: -35), CGPoint(x: -31, y: -91), CGPoint(x: -14, y: -113),
+                                     CGPoint(x: 45, y: -109), CGPoint(x: 70, y: -79), CGPoint(x: 67, y: -34),
+                                     CGPoint(x: 89, y: -11), CGPoint(x: 86, y: 40), CGPoint(x: 70, y: 87),
+                                     CGPoint(x: 22, y: 92)], rounding: 0.12)
+        c.fill(cliff, with: .color(Color(dinoHex: 0x98AB96)))
+        let shadowPlane = p.roundedOutline([CGPoint(x: 40, y: -102), CGPoint(x: 66, y: -71), CGPoint(x: 61, y: -32),
+                                            CGPoint(x: 83, y: -9), CGPoint(x: 80, y: 39), CGPoint(x: 65, y: 86),
+                                            CGPoint(x: 36, y: 85), CGPoint(x: 44, y: 16)], rounding: 0.12)
+        c.fill(shadowPlane, with: .color(Color(dinoHex: 0x7D9786)))
+        let lightPlane = p.roundedOutline([CGPoint(x: -31, y: -72), CGPoint(x: -14, y: -99), CGPoint(x: 10, y: -97),
+                                           CGPoint(x: -1, y: -12), CGPoint(x: -18, y: 64), CGPoint(x: -32, y: 73)])
+        c.fill(lightPlane, with: .color(Color(dinoHex: 0xB2BFA5)))
         for i in 0..<3 {
-            let r = CGRect(x: water.minX + CGFloat(i) * 12 * size + 4, y: water.minY + 15,
-                           width: 3 * size, height: (110 + CGFloat(i % 2) * 40) * size)
-            context.fill(Path(roundedRect: r, cornerRadius: 2), with: .color(.white.opacity(0.65)))
+            var fissure = Path()
+            fissure.move(to: CGPoint(x: 41, y: -63 + CGFloat(i) * 46))
+            fissure.addLine(to: CGPoint(x: 57, y: -55 + CGFloat(i) * 46))
+            fissure.addLine(to: CGPoint(x: 70, y: -57 + CGFloat(i) * 46))
+            c.stroke(fissure, with: .color(Color(dinoHex: 0x678678).opacity(0.4)),
+                     style: StrokeStyle(lineWidth: 1.3, lineCap: .round, lineJoin: .round))
         }
-        for i in 0..<5 {
-            ellipse(CGRect(x: point.x - 18 * size + CGFloat(i) * 13 * size, y: point.y + 86 * size - CGFloat(i % 2) * 8,
-                           width: 24 * size, height: 16 * size), color: Color(dinoHex: 0xE4F4D9))
+        for i in 0..<3 {
+            var crack = Path()
+            crack.move(to: CGPoint(x: -35, y: -44 + CGFloat(i) * 40))
+            crack.addLine(to: CGPoint(x: -20, y: -37 + CGFloat(i) * 40))
+            crack.addLine(to: CGPoint(x: -6, y: -41 + CGFloat(i) * 40))
+            c.stroke(crack, with: .color(Color(dinoHex: 0x718E7D).opacity(0.25)),
+                     style: StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round))
         }
-        bush(at: CGPoint(x: cliff.maxX, y: cliff.minY + 9), size: size * 0.6)
-        rocks(at: CGPoint(x: point.x + 46 * size, y: point.y + 144 * size), size: size * 0.62)
+        let mossLip = p.roundedOutline([CGPoint(x: -30, y: -97), CGPoint(x: -15, y: -111),
+                                       CGPoint(x: 36, y: -108), CGPoint(x: 50, y: -100), CGPoint(x: 28, y: -99),
+                                       CGPoint(x: 16, y: -103), CGPoint(x: -4, y: -97), CGPoint(x: -19, y: -101)])
+        c.fill(mossLip, with: .color(Color(dinoHex: 0x81A761)))
+        // A small visible stream feeds the lip; water widens as it reaches the pool.
+        var source = Path()
+        source.move(to: CGPoint(x: 56, y: -116))
+        source.addCurve(to: CGPoint(x: 5, y: -107), control1: CGPoint(x: 27, y: -128), control2: CGPoint(x: 26, y: -104))
+        c.stroke(source, with: .color(Color(dinoHex: 0x8AC8CB)), style: StrokeStyle(lineWidth: 11, lineCap: .round))
+        var fall = Path()
+        fall.move(to: CGPoint(x: -8, y: -106))
+        fall.addCurve(to: CGPoint(x: 1, y: 83), control1: CGPoint(x: -10, y: -48), control2: CGPoint(x: -1, y: 51))
+        fall.addQuadCurve(to: CGPoint(x: 27, y: 84), control: CGPoint(x: 14, y: 95))
+        fall.addCurve(to: CGPoint(x: 18, y: -107), control1: CGPoint(x: 26, y: 45), control2: CGPoint(x: 11, y: -44))
+        fall.closeSubpath()
+        c.fill(fall, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xA5D6D9), Color(dinoHex: 0xDAEFDF)]),
+                                             startPoint: CGPoint(x: 0, y: -106), endPoint: CGPoint(x: 0, y: 90)))
+        for i in 0..<2 {
+            var streak = Path()
+            let x = CGFloat(i) * 10 - 2
+            streak.move(to: CGPoint(x: x, y: i == 0 ? -85 : -24))
+            streak.addCurve(to: CGPoint(x: x + 7, y: i == 0 ? 18 : 72),
+                            control1: CGPoint(x: x - 2, y: i == 0 ? -45 : 5),
+                            control2: CGPoint(x: x + 2, y: i == 0 ? -11 : 39))
+            c.stroke(streak, with: .color(.white.opacity(0.55)), style: StrokeStyle(lineWidth: i == 0 ? 2.3 : 1.4, lineCap: .round))
+        }
+        for i in 0..<6 {
+            p.ellipse(CGRect(x: -8 + CGFloat(i) * 5, y: 83 + CGFloat(i % 3) * 3,
+                             width: 10 + CGFloat(i % 2) * 3, height: 5), color: Color(dinoHex: 0xE2F3E6))
+        }
+        for i in 0..<2 {
+            var ripple = Path()
+            ripple.addArc(center: CGPoint(x: 10, y: 95), radius: CGFloat(23 + i * 12),
+                          startAngle: .degrees(20), endAngle: .degrees(148), clockwise: false)
+            var flattened = c
+            flattened.translateBy(x: 0, y: 66)
+            flattened.scaleBy(x: 1, y: 0.35)
+            flattened.stroke(ripple, with: .color(Color(dinoHex: 0xB9DFD4).opacity(0.85)), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+        }
+        p.bush(at: CGPoint(x: 69, y: -103), size: 0.53)
+        p.fern(at: CGPoint(x: -32, y: -101), size: 0.32, flipped: false)
+        p.boulder(in: CGRect(x: -57, y: 66, width: 40, height: 29), moss: true)
+        p.rocks(at: CGPoint(x: 56, y: 127), size: 0.52)
     }
 
     func grass(at point: CGPoint, size: CGFloat, color: Color) {
@@ -353,13 +520,4 @@ private struct JunglePainter {
         }
     }
 
-    func ruin(at point: CGPoint, size: CGFloat, flipped: Bool) {
-        for i in 0..<3 {
-            let r = CGRect(x: point.x - 19 * size + CGFloat(i % 2) * 4 * size,
-                           y: point.y - CGFloat(i + 1) * 26 * size, width: 37 * size, height: 24 * size)
-            context.fill(Path(roundedRect: r, cornerRadius: 6 * size), with: .color(Color(dinoHex: i.isMultiple(of: 2) ? 0xB1BD91 : 0x9CAA85)))
-            context.fill(Path(roundedRect: CGRect(x: r.minX + 5, y: r.minY + 3, width: r.width - 10, height: 4), cornerRadius: 2), with: .color(.white.opacity(0.22)))
-        }
-        fern(at: CGPoint(x: point.x + (flipped ? 10 : -10), y: point.y + 8), size: size * 0.45, flipped: flipped)
-    }
 }

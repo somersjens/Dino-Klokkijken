@@ -6,6 +6,19 @@
 	"archiveVersion" = "1";
 	"validationLevel" = "1";
 	"objects" = {
+		"DA121026AB12000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/DinoAppearance.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+		"DB121026AB12000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AB12000000000001"; };
+		"DC121026AB12000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AB12000000000001"; };
+		"DA121026AB12000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/DinoAvatar.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+		"DB121026AB12000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AB12000000000002"; };
+		"DA121026AB12000000000003" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/DinoPersonalizer.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+		"DB121026AB12000000000003" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AB12000000000003"; };
+		"DA1220261012000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/DinoSettings.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+		"DB1220261012000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1220261012000000000001"; };
+		"DA1220261012000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/CloudProgress.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+		"DB1220261012000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1220261012000000000002"; };
+		"DA1220261012000000000003" = { "isa" = "PBXFileReference"; "path" = "Dino/AnswerFeedback.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+		"DB1220261012000000000003" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1220261012000000000003"; };
 		"DCDF56484DA8108CF908CF1F" = { "isa" = "PBXFileReference"; "path" = "DinoInfo.plist"; "lastKnownFileType" = "text.plist.xml"; "sourceTree" = "SOURCE_ROOT"; };
         "DA1A20261011000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/JungleLandscape.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
         "DA1A20261011000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1A20261011000000000001"; };
@@ -166,6 +179,7 @@
 			"isa" = "PBXSourcesBuildPhase";
 			"buildActionMask" = "2147483647";
 			"files" = (
+				"DC121026AB12000000000001",
 				"32DE52ED6A9A0D73B817A387",
 				"00BF1DDD8A1DDC39990EF9D2",
 				"57120B7BCBEBA390E542C008",
@@ -203,6 +217,12 @@
 		"F951E62C307BE01200FF04C4" = {
 			"isa" = "PBXSourcesBuildPhase";
 			"files" = (
+				"DB121026AB12000000000003",
+				"DB121026AB12000000000002",
+				"DB121026AB12000000000001",
+				"DB1220261012000000000001",
+				"DB1220261012000000000002",
+				"DB1220261012000000000003",
 				"CF7F3ACA697DBE04D5B1165A",
 				"81A25E16F194F2BF2C4627A3",
 				"C4C9AF12A9918F7F62561C4B",
@@ -745,7 +765,7 @@
 				"TargetAttributes" = {
 					"F951E62F307BE01200FF04C4" = {
 						"CreatedOnToolsVersion" = "27.0";
-						"SystemCapabilities" = { "com.apple.GameCenter" = { "enabled" = "1"; }; };
+						"SystemCapabilities" = { "com.apple.iCloud" = { "enabled" = "1"; }; "com.apple.GameCenter" = { "enabled" = "1"; }; };
 					};
 				};
 			};
@@ -809,6 +829,9 @@
 			"isa" = "PBXGroup";
 			"name" = "Core";
 			"children" = (
+				"DA121026AB12000000000001",
+				"DA1220261012000000000001",
+				"DA1220261012000000000002",
 				"2373432652E69FC550C1E670",
 				"8ED274EAFF7B807862126964",
 				"01881B3B65886D0F9D53F6C8",
@@ -828,6 +851,8 @@
 			"isa" = "PBXGroup";
 			"name" = "Views";
 			"children" = (
+				"DA121026AB12000000000003",
+				"DA121026AB12000000000002",
                 "DA1A20261011000000000001",
                 "DA1A20261011000000000003",
 				"EA69CB435385B9A4C726D862",
@@ -849,6 +874,7 @@
 			"isa" = "PBXGroup";
 			"name" = "Dino";
 			"children" = (
+				"DA1220261012000000000003",
 				"FF502E855D8132CA2685C1B5",
 				"5584788E532954DF01EFED87",
 				"D7CB03CE4A9DCBDC3D1EF9C2",

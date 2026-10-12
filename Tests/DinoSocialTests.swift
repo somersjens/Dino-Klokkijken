@@ -34,7 +34,7 @@ enum DinoSocialTests {
     static func run() async -> Int {
         testNames()
         testProjections()
-        testMigrationAndCooldown()
+        testMigrationAndNameChanges()
         await testSync()
         return checks
     }
@@ -99,7 +99,7 @@ enum DinoSocialTests {
             }
         }
     }
-    private static func testMigrationAndCooldown() {
+    private static func testMigrationAndNameChanges() {
         let memory = InMemoryKeyValueStore()
         var legacy = PlayerProfile(); legacy.name = "Sam"; legacy.onboardingComplete = true
         legacy.recordCompletedAttempt(levelID: 1, correct: 5)
@@ -112,7 +112,7 @@ enum DinoSocialTests {
         let date = Date(timeIntervalSince1970: 1_700_000_000)
         expect(player.setName("Luna", date: date), "first name change")
         let restarted = DinoPlayer(store: store)
-        expect(!restarted.setName("Nova", date: date.addingTimeInterval(60)), "cooldown survives restart")
+        expect(restarted.setName("Nova", date: date.addingTimeInterval(60)), "name can change at any time after restart")
         expect(restarted.setName("Nova", date: date.addingTimeInterval(86_400)), "next-day change")
         expect(!restarted.setName("Dino🦖", date: date.addingTimeInterval(172_800)), "unsafe mutation rejected")
         expect(restarted.profile.record(1).stars == 3 && restarted.profile.name == "Nova", "name validation preserves existing save")

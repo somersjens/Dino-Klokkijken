@@ -4,32 +4,32 @@ import Combine
 struct DinoRootView: View {
     @EnvironmentObject private var player: DinoPlayer
     @EnvironmentObject private var friends: FriendsManager
+    @EnvironmentObject private var settings: DinoSettings
     @State private var session: DinoSession?
     @State private var result: DinoLevelResult?
     @State private var showsSettings = false
     @State private var showsCompletion = false
-    @State private var showsBossIntro = false
+    @State private var startCard: LevelConfiguration?
     @State private var showsFriends = false
 
     var body: some View {
-        Group {
-            if !player.profile.onboardingComplete { OnboardingFlow() }
-            else if showsCompletion { WorldCompleteView(map: showMap) }
-            else if let result {
-                DinoResultView(result: result, retry: { start(result.level) }, next: {
-                    if result.level.isBoss { showsCompletion = true }
-                    else if let next = DinoLevelCatalog.level(result.level.id + 1) {
-                        if next.isBoss { showsBossIntro = true } else { start(next) }
-                    }
-                }, map: showMap)
-            } else if let session {
-                DinoGameView(session: session, onExit: showMap, onResult: { value in
-                    self.result = value; self.session = nil
-                }).id(ObjectIdentifier(session))
-            } else {
-                WorldMap(openLevel: start, openSettings: { showsSettings = true }, openCompletion: { showsCompletion = true }, openFriends: { showsFriends = true })
+        ZStack {
+            scene
+                .transition(.opacity)
+                .disabled(startCard != nil).accessibilityHidden(startCard != nil)
+            if let startCard {
+                LevelStartOverlay(level: startCard, start: { start(startCard) }, close: closeStartCard)
+                    .zIndex(2)
             }
-        }.preferredColorScheme(.light)
+        }
+        .overlayPreferenceValue(DinoCompanionPreference.self) { anchors in
+            GeometryReader { geometry in
+                let anchor = startCard != nil || showsCompletion ? nil : result != nil ? anchors[.result] : anchors[.game]
+                DinoCompanionLayer(destination: anchor.map { geometry[$0] },
+                                   clip: companionClip, isResult: result != nil && startCard == nil && !showsCompletion)
+            }.allowsHitTesting(false)
+        }
+        .preferredColorScheme(.light)
             .sheet(isPresented: $showsFriends) {
                 DinoFriendsView().environmentObject(friends).gameEnvironment()
             }
@@ -37,22 +37,62 @@ struct DinoRootView: View {
                 DinoSettingsView().environmentObject(player).gameEnvironment()
                     .presentationDetents([.large]).presentationDragIndicator(.visible)
             }
-            .sheet(isPresented: $showsBossIntro) {
-                LevelInfoPanel(level: DinoLevelCatalog.level(10)!) {
-                    showsBossIntro = false
-                    start(DinoLevelCatalog.level(10)!)
-                }.environmentObject(player).gameEnvironment()
-                    .presentationDetents([.height(620), .large]).presentationDragIndicator(.visible)
-            }
             .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
                 if friends.enabled { friends.refresh(); friends.scheduleSync() }
             }
+            .onChange(of: player.profile.progressResetAt) { _, _ in showMap() }
+    }
+
+    private var companionClip: DinoAnimation.Clip {
+        if showsCompletion { return .idle }
+        if let result { return result.correct == result.level.questionCount ? .backflip : .idle }
+        guard let session, session.hasFeedback else { return .idle }
+        return session.correctFeedback ? .thumbsUp : .wrongAnswer
+    }
+
+    @ViewBuilder private var scene: some View {
+        Group {
+            if !player.profile.onboardingComplete { OnboardingFlow() }
+            else if showsCompletion { WorldCompleteView(map: showMap) }
+            else if let result {
+                DinoResultView(result: result, retry: { start(result.level) }, next: {
+                    if result.level.isBoss { showsCompletion = true }
+                    else if let next = DinoLevelCatalog.level(result.level.id + 1) {
+                        if next.isBoss { presentStartCard(next) } else { start(next) }
+                    }
+                }, map: showMap, sharedCompanion: true)
+            } else if let session {
+                DinoGameView(session: session, onExit: showMap, onResult: { value in
+                    withAnimation(.easeOut(duration: 0.24)) {
+                        self.result = value; self.session = nil
+                    }
+                }).id(ObjectIdentifier(session))
+            } else {
+                WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true }, openCompletion: { showsCompletion = true }, openFriends: { showsFriends = true })
+            }
+        }
     }
 
     private func start(_ level: LevelConfiguration) {
         guard player.profile.isUnlocked(level.id) else { return }
-        result = nil; showsCompletion = false
-        session = DinoSession(level: level, player: player)
+        let nextSession = DinoSession(level: level, player: player) { [settings] correct in
+            DinoAnswerFeedback.shared.play(correct: correct, sound: settings.soundEffectsEnabled,
+                                           vibration: settings.hapticsEnabled)
+        }
+        withAnimation(.easeOut(duration: 0.24)) {
+            startCard = nil; result = nil; showsCompletion = false
+            session = nextSession
+        }
     }
-    private func showMap() { session = nil; result = nil; showsCompletion = false }
+    private func presentStartCard(_ level: LevelConfiguration) {
+        withAnimation(.easeOut(duration: 0.24)) { startCard = level }
+    }
+    private func closeStartCard() {
+        withAnimation(.easeOut(duration: 0.24)) { startCard = nil }
+    }
+    private func showMap() {
+        withAnimation(.easeOut(duration: 0.24)) {
+            session = nil; result = nil; showsCompletion = false; startCard = nil
+        }
+    }
 }
