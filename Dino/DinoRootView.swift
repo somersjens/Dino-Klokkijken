@@ -11,6 +11,7 @@ struct DinoRootView: View {
     @State private var showsCompletion = false
     @State private var startCard: LevelConfiguration?
     @State private var showsFriends = false
+    @State private var mapHUDHeight: CGFloat = 103
 
     var body: some View {
         ZStack {
@@ -18,7 +19,7 @@ struct DinoRootView: View {
                 .transition(.opacity)
                 .disabled(startCard != nil).accessibilityHidden(startCard != nil)
             if let startCard {
-                LevelStartOverlay(level: startCard, start: { start(startCard) }, close: closeStartCard)
+                LevelStartOverlay(level: startCard, hudHeight: mapHUDHeight, start: { start(startCard) }, close: closeStartCard)
                     .zIndex(2)
             }
         }
@@ -68,17 +69,17 @@ struct DinoRootView: View {
                     }
                 }).id(ObjectIdentifier(session))
             } else {
-                WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true }, openCompletion: { showsCompletion = true }, openFriends: { showsFriends = true })
+                WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true }, openCompletion: { showsCompletion = true }, openFriends: { showsFriends = true }, hudHeightChanged: { mapHUDHeight = $0 })
             }
         }
     }
 
     private func start(_ level: LevelConfiguration) {
         guard player.profile.isUnlocked(level.id) else { return }
-        let nextSession = DinoSession(level: level, player: player) { [settings] correct in
+        let nextSession = DinoSession(level: level, player: player, answerFeedback: { [settings] correct in
             DinoAnswerFeedback.shared.play(correct: correct, sound: settings.soundEffectsEnabled,
                                            vibration: settings.hapticsEnabled)
-        }
+        })
         withAnimation(.easeOut(duration: 0.24)) {
             startCard = nil; result = nil; showsCompletion = false
             session = nextSession

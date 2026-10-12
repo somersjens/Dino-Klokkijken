@@ -2,7 +2,7 @@
 
 ## Wat is toegevoegd
 
-De knop **Vrienden** staat op de bestaande kaart. Het vriendenscherm biedt de officiële Apple-uitnodiging, beschikbare Game Center-vrienden, profielen, privacy-uitleg en optioneel publiceren van eigen resultaten. Op de kaart staan maximaal drie avatars bij het eerste aantoonbaar nog te voltooien level, met `+N` voor overige vrienden. Een levelstartkaart toont de vrienden die dat level daadwerkelijk voltooid hebben, met hun beste sterren. Avatars en levelresultaten openen een profiel met alle tien levels.
+De knop **Vrienden** staat op de bestaande kaart. Het vriendenscherm biedt de officiële Apple-uitnodiging, beschikbare Game Center-vrienden, profielen, privacy-uitleg en optioneel publiceren van eigen resultaten. Op de kaart staan maximaal drie avatars bij het eerste aantoonbaar nog te voltooien level, met `+N` voor overige vrienden. Een levelstartkaart toont de vrienden die dat level daadwerkelijk voltooid hebben, met hun foto, naam, beste sterren en de gemeten tijd bij dat resultaat. Avatars en levelresultaten openen een profiel met alle tien levels.
 
 Er worden uitsluitend door `GKLocalPlayer.loadFriends()` toegestane vrienden getoond. Apple beheert uitnodigingen, namen, foto's en vriendschappen. Beide accounts moeten deze game vriendentoegang toestaan. Een vriend die nog geen resultaten gepubliceerd heeft blijft zichtbaar, met **Niet beschikbaar** voor onbekende gegevens. Afwezige scores worden nooit als nul gedecodeerd. Alleen een expliciet gepubliceerde nulcode vanuit een echte lokale save bevestigt dat een level nog niet gespeeld is.
 
@@ -37,6 +37,16 @@ Twaalf boards vallen ruim binnen de limiet van honderd zonder leaderboardsets. A
 
 Apple-documentatie: [vriendentoegang en uitnodigingen](https://developer.apple.com/documentation/gamekit/connecting-players-with-their-friends-in-your-game), [leaderboards en limieten](https://developer.apple.com/documentation/gamekit/encourage-progress-and-competition-with-leaderboards), [App Store Connect-configuratie](https://developer.apple.com/help/app-store-connect/configure-game-center/manage-leaderboards/), [scoped identifiers](https://developer.apple.com/documentation/gamekit/protecting-the-player-s-privacy-using-scoped-identifiers).
 
+## Speeltijd per poging
+
+Elke beantwoorde vraag meet met Swift `ContinuousClock` de tijd vanaf het verschijnen tot het eerste definitieve antwoord. Kalender- en tijdzonewijzigingen veranderen deze klok niet. Feedback, wachten op Verder en dubbele taps voegen geen tijd toe. Voor de opgeslagen score wordt elke vraag naar boven afgerond en begrensd op 1–60 seconden. Spelen zelf heeft geen tijdslimiet. Elke volledige poging bewaart lokaal de afzonderlijke vraagtijden, score en datum; afgebroken pogingen tellen niet mee. iCloud deelt alleen de beste gemeten resultaten, niet de pogingengeschiedenis.
+
+Voeg voor online tijden **tien extra klassieke leaderboards** toe: `dino.level.1.timed.v1` t/m `dino.level.10.timed.v1`. Gebruik Best Score, High to Low, Integer en Descending. De referentie staat onder `timingLeaderboards` in `GameCenterLeaderboards.json`. De twaalf oorspronkelijke boards en hun codering blijven behouden. De extra boards worden gebruikt zodra ze beschikbaar zijn; ontbrekende timingboards blokkeren de bestaande voortgangssync niet.
+
+De timingcode is `resultaatpunten × 1000 + 601 − seconden`. Een beter resultaat wint altijd; binnen hetzelfde resultaat wint de kortste tijd. Zo wordt een snellere herhaling ook door een Best Score-board opgeslagen. Vriendenresultaten worden uit beide boardtypes samengevoegd. Een oudere beste score zonder passende meting toont **—** voor tijd: de app verzint geen tijd en combineert geen snelle mislukte poging met oude sterren. Accounttoestemming en privacycontroles gelden ook voor deze extra uploads.
+
+De levelkaart toont een melding voor de eerste voltooier wanneer alle beschikbare vriendenresultaten voor dat level bekend zijn en geen vriend het heeft voltooid. Onbekende gegevens geven geen aanspraak op een eerste plaats. Zonder beschikbare verbinding opent **Verbind met Game Center** de bestaande vriendenflow.
+
 ## Privacy, kinderaccounts en moderatie
 
 Game Center-leaderboards bieden geen app-afgedwongen opslag die uitsluitend voor vrienden leesbaar is. De app leest zelf alleen resultaten voor beschikbare vrienden, maar dat beperkt niet de zichtbaarheid van gepubliceerde scores via Apple. Het ouderscherm legt dit uit vóór publicatie. Gebruik deze implementatie niet als bewijs dat resultaten privé zijn. Als uitsluitend privé delen een harde releasevoorwaarde is, laat publiceren uit en ontwerp eerst een expliciete private Apple-sharingflow.
@@ -47,7 +57,7 @@ Uitnodigingen worden niet aangeboden wanneer multiplayer of gepersonaliseerde co
 
 Er is geen chat, app-eigen berichtensysteem, locatie, contactboektoegang, geboortedatumopslag, tracking of externe SDK. De app verstuurt geen zelfgekozen namen; sociale namen komen ongewijzigd van Apple. Een Apple-profiel kan via `GKAccessPoint` worden geopend. Voor **Meld gebruiker** en **Verwijder vriend** verwijst het scherm naar Apple Games. Er wordt geen niet-bestaande GameKit-blokkeer-API geclaimd. Zie [Apples meld- en vriendenbeheer](https://support.apple.com/en-us/101638).
 
-De bestaande lokale naamvelden hebben Unicode-validatie, NFC-normalisatie, maximaal twintig grapheme clusters, scriptbewuste joining-regels, blokkering van emoji/verborgen/bidi/decoratieve tekens, controle op verdachte Latin/Greek/Cyrillic-mengsels, een uitbreidbare meertalige woordenlijst en normalisatie van enkele verhullingen. Geweigerde invoer wordt niet opgeslagen; onboarding biedt **Dino** als veilige naam. De lokale naam kan op elk moment worden gewijzigd via het dinoportret linksboven of de instellingen; dezelfde Unicode-validatie blijft gelden. Reeds opgeslagen namen blijven lokaal behouden. De woordenlijst is geen volledige internationale moderatie-infrastructuur en de spoofcontrole is geen volledige UTS #39-implementatie. Legitieme namen kunnen nog worden afgekeurd en onbekende beledigingen kunnen doorlaten. Deel deze lokale namen niet in een toekomstige sociale uitbreiding zonder aanvullend beleid; gebruik daarvoor Apple-namen of een volledig vooraf goedgekeurde keuzelijst.
+De zichtbare spelersnaam komt uitsluitend uit `GKLocalPlayer.local.displayName`. Onboarding en dino-personalisatie bevatten geen naamvelden; de HUD bevat geen naam. De naam staat als alleen-lezen tekst in Instellingen en, bij een Game Center-koppeling, naast je eigen score en tijd in de levelstartkaart. Bij afmelding wordt de naam verwijderd uit de weergave; er is geen lokale fallback. Oude naamvelden blijven uitsluitend bewaard voor compatibiliteit met bestaande opslag en worden nergens weergegeven.
 
 Vóór publicatie moet de eigenaar een echt veiligheidscontact opgeven via de app-target build setting **DINO_SAFETY_CONTACT** (Info-key `DinoSafetyContact`), een HTTPS-URL instellen via **DINO_PRIVACY_POLICY_URL** (Info-key `DinoPrivacyPolicyURL`), een extern privacybeleid publiceren en de App Store-privacyvragen beantwoorden voor de daadwerkelijke verwerking. De in-app privacytekst is bereikbaar via Vrienden en Instellingen; ontbrekende contactgegevens worden eerlijk aangegeven. Juridische beoordeling van Kids Category, AVG/AVG-K en eventueel COPPA blijft nodig voor de gekozen doelgroep en landen. Deze code is geen verklaring van juridische compliance. Zie [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/) en [App Privacy Details](https://developer.apple.com/app-store/app-privacy-details/).
 
@@ -61,8 +71,8 @@ Vóór publicatie moet de eigenaar een echt veiligheidscontact opgeven via de ap
 | `Dino/Views/Friends.swift` | Vriendenlijst, profiel, avatars, ouderscherm, levelresultaten en privacy |
 | `DinoTimeAdventureApp.swift`, `Dino/DinoRootView.swift` | Manager, native presentatie-anker, scene lifecycle, vriendenscherm |
 | `Dino/Views/WorldMap.swift` | Vriendenknop, maximaal drie avatars plus extra aantal, profielnavigatie en levelkaart |
-| `Dino/DinoGameModel.swift`, `Dino/Core/PlayerProfile.swift` | Voortgang-hooks, behoudende remote merge, optionele naamtimestamp |
-| `Dino/Core/NameValidator.swift`, `Dino/Views/OnboardingFlow.swift`, `Dino/Views/Settings.swift` | Lokale naamvalidatie, foutmelding, fallback en privacytoegang |
+| `Dino/DinoGameModel.swift`, `Dino/Core/PlayerProfile.swift` | Voortgang-hooks, behoudende remote merge, compatibele legacy-opslag zonder naam als onboardingvoorwaarde |
+| `Dino/Views/OnboardingFlow.swift`, `Dino/Views/Settings.swift` | Dino-kleurkeuze bij eerste start, Game Center-naam en privacytoegang |
 | `Dino.entitlements`, `DinoInfo.plist`, `InfoPlist.xcstrings`, `PrivacyInfo.xcprivacy`, `Localizable.xcstrings`, Xcode-project | Capability, privacybeschrijving, manifest, vertalingen en targetlidmaatschap |
 | `Tests/DinoSocialTests.swift`, `Tests/DinoCoreTests.swift`, `Tests/DinoUITests.swift`, `Tools/test-dino.sh` | Synchronisatie-, migratie-, Unicode-, kaart- en schermtests |
 
@@ -70,7 +80,7 @@ De map bevatte reeds andere wijzigingen aan assets, kaart, header en menu. Deze 
 
 ## Verificatie
 
-`Tools/test-dino.sh` voert de bestaande spelcontroles plus nieuwe controles uit: scorecodering/bossgrenzen, beste sterren, onbekende gegevens, nul/volledige voortgang, grote kaartgroepen, opslagmigratie, naamcooldown, internationale schriften en joining-tekens, offline/partiële uploads, retries, idempotentie, samengevoegde voortgang tussen apparaten en ingetrokken toestemming tijdens een request. Transportmocks staan uitsluitend in de tests. UI-fixtures zijn alleen in Debug beschikbaar met zowel een geïsoleerde `DINO_TEST_SUITE` als `DINO_TEST_SOCIAL=fixtures`; normale builds en Release krijgen nooit fictieve vrienden.
+`Tools/test-dino.sh` voert de bestaande spelcontroles plus nieuwe controles uit: scorecodering/bossgrenzen, beste sterren, onbekende gegevens, nul/volledige voortgang, grote kaartgroepen, opslagmigratie, onboarding zonder naam, offline/partiële uploads, retries, idempotentie, samengevoegde voortgang tussen apparaten en ingetrokken toestemming tijdens een request. Transportmocks staan uitsluitend in de tests. UI-fixtures zijn alleen in Debug beschikbaar met zowel een geïsoleerde `DINO_TEST_SUITE` als `DINO_TEST_SOCIAL=fixtures`; normale builds en Release krijgen nooit fictieve vrienden.
 
 Zie `GameCenterVerification.md` voor de uitgevoerde builds/simulatorchecks en resultaten.
 

@@ -31,20 +31,12 @@ final class DinoPlayer: ObservableObject {
         profileChanges.send(next)
     }
 
-    @discardableResult
-    func setName(_ name: String, date: Date = Date()) -> Bool {
-        guard case .success(let valid) = DinoNameValidator.validated(name) else { return false }
-        if valid == profile.name { return true }
-        update { $0.name = valid; $0.nameChangedAt = date }
-        return true
-    }
     func setTheme(_ theme: ClockTheme) { update { $0.clockTheme = theme } }
     func setDinoAppearance(_ appearance: DinoAppearance) {
         guard appearance != (profile.dinoAppearance ?? .standard) else { return }
         update { $0.dinoAppearance = appearance }
     }
     func completeOnboarding(theme: ClockTheme) {
-        guard !profile.name.isEmpty else { return }
         update { $0.clockTheme = theme; $0.onboardingComplete = true }
     }
     func markDemonstrated(_ kind: ClockQuestionKind) { update { $0.demonstratedInteractions.insert(kind) } }
@@ -52,7 +44,7 @@ final class DinoPlayer: ObservableObject {
         guard attempt.isComplete, let level = DinoLevelCatalog.level(attempt.levelID),
               attempt.answers.count == level.questionCount else { return nil }
         var victory = BossVictory.none
-        update { victory = $0.recordCompletedAttempt(levelID: level.id, correct: attempt.correctCount) }
+        update { victory = $0.recordCompletedAttempt(levelID: level.id, correct: attempt.correctCount, questionSeconds: attempt.questionSeconds) }
         progressChanged?()
         return DinoLevelResult(level: level, correct: attempt.correctCount,
                                stars: level.isBoss ? 0 : StarCalculator.stars(correct: attempt.correctCount),
@@ -93,8 +85,12 @@ final class DinoSession: ObservableObject {
     @Published private(set) var result: DinoLevelResult?
     private let player: DinoPlayer
     private let answerFeedback: ((Bool) -> Void)?
+    private let now: () -> TimeInterval
+    private var questionStartedAt: TimeInterval
 
-    init(level: LevelConfiguration, player: DinoPlayer, answerFeedback: ((Bool) -> Void)? = nil) {
+    init(level: LevelConfiguration, player: DinoPlayer, now: @escaping () -> TimeInterval = DinoQuestionTiming.now, answerFeedback: ((Bool) -> Void)? = nil) {
+        self.now = now
+        questionStartedAt = now()
         self.level = level
         self.player = player
         self.answerFeedback = answerFeedback
@@ -112,7 +108,6 @@ final class DinoSession: ObservableObject {
         questions = DinoQuestionGenerator.generate(level: level, attempt: player.profile.record(level.id).attempts, using: &rng)
 #endif
         attempt = LevelAttempt(levelID: level.id, questions: questions)
-        introduceIfNeeded()
     }
 
     var question: ClockQuestion { attempt.current }
@@ -121,7 +116,7 @@ final class DinoSession: ObservableObject {
 
     func submit(_ answer: ClockTime) {
         guard demonstration == nil else { return }
-        if let correct = attempt.submit(answer) { answerFeedback?(correct) }
+        if let correct = attempt.submit(answer, elapsed: now() - questionStartedAt) { answerFeedback?(correct) }
     }
 
     func advance() {
@@ -132,17 +127,12 @@ final class DinoSession: ObservableObject {
             result = player.finish(attempt)
         } else {
             inputHour = question.target.hour == 12 ? 1 : 12
-            introduceIfNeeded()
+            questionStartedAt = now()
         }
     }
 
     func dismissDemonstration() {
         if let kind = demonstration { player.markDemonstrated(kind) }
         demonstration = nil
-    }
-
-    private func introduceIfNeeded() {
-        let kind = question.kind
-        if !player.profile.demonstratedInteractions.contains(kind) { demonstration = kind }
     }
 }

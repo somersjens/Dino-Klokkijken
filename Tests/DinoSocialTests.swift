@@ -3,6 +3,7 @@ import Foundation
 @MainActor
 private final class TestLeaderboards: ProgressLeaderboardTransport {
     enum Failure: Error { case offline }
+    var availableTimingLeaderboardIDs: Set<String> = []
     var values: [String: LeaderboardValue] = [:]
     var failLoad = false
     var failSubmission: Int?
@@ -34,8 +35,10 @@ enum DinoSocialTests {
     static func run() async -> Int {
         testNames()
         testProjections()
-        testMigrationAndNameChanges()
+        testTimedProjections()
+        testLegacyProfileMigration()
         await testSync()
+        await testTimedSync()
         return checks
     }
     private static func testNames() {
@@ -99,7 +102,50 @@ enum DinoSocialTests {
             }
         }
     }
-    private static func testMigrationAndNameChanges() {
+    private static func testTimedProjections() {
+        for level in DinoLevelCatalog.levels {
+            for correct in 0...level.questionCount {
+                var profile = PlayerProfile()
+                if level.id != 1 && !level.isBoss { profile.recordCompletedAttempt(levelID: 10, correct: 10) }
+                for perQuestion in [1, 17, 60] {
+                    profile.recordCompletedAttempt(levelID: level.id, correct: correct, questionSeconds: Array(repeating: perQuestion, count: level.questionCount))
+                    let score = DinoLeaderboards.timedScore(profile: profile, levelID: level.id)!
+                    let result = DinoLeaderboards.decodeTimed(levelID: level.id, score: score, context: 1)
+                    expect(result?.bestCorrect == correct, "timed codec preserves score")
+                    expect(result?.seconds == level.questionCount, "slower equal replay cannot replace best timing")
+                }
+            }
+        }
+        for score in [-1, 0, 30_000, 30_601, Int.max] {
+            expect(DinoLeaderboards.decodeTimed(levelID: 1, score: score, context: 1) == nil, "invalid timed result rejected")
+        }
+        var profile = PlayerProfile()
+        profile.recordCompletedAttempt(levelID: 1, correct: 3, questionSeconds: [1,1,1,1,1])
+        profile.recordCompletedAttempt(levelID: 1, correct: 5) // Legacy result with no measured time.
+        expect(FriendProgress.local(profile).levels[1]?.seconds == nil, "old best score never displays the time of a worse attempt")
+    }
+
+    private static func testTimedSync() async {
+        let transport = TestLeaderboards()
+        transport.availableTimingLeaderboardIDs = Set(DinoLeaderboards.timedIDs)
+        let service = ProgressSyncService()
+        var local = PlayerProfile()
+        local.recordCompletedAttempt(levelID: 1, correct: 5, questionSeconds: [8,8,8,8,8])
+        try! await service.synchronize(transport: transport, current: { local }, merge: { local.mergeSharedProgress($0) }, allowed: { true })
+        expect(transport.values[DinoLeaderboards.timedLevel(1)] != nil && transport.values.count == 13, "only measured games publish a timing")
+        local.recordCompletedAttempt(levelID: 1, correct: 5, questionSeconds: [4,4,4,4,4])
+        try! await service.synchronize(transport: transport, current: { local }, merge: { local.mergeSharedProgress($0) }, allowed: { true })
+        let score = transport.values[DinoLeaderboards.timedLevel(1)]!
+        expect(DinoLeaderboards.decodeTimed(levelID: 1, score: score.score, context: score.context)?.seconds == 20, "faster equal-star replay updates Game Center")
+        var restored = PlayerProfile()
+        try! await service.synchronize(transport: transport, current: { restored }, merge: { restored.mergeSharedProgress($0) }, allowed: { true })
+        expect(FriendProgress.local(restored).levels[1]?.seconds == 20, "timing restored on another device")
+        let count = transport.submitted.count
+        try! await service.synchronize(transport: transport, current: { restored }, merge: { restored.mergeSharedProgress($0) }, allowed: { true })
+        expect(count == transport.submitted.count, "timing retries are idempotent")
+    }
+
+    private static func testLegacyProfileMigration() {
         let memory = InMemoryKeyValueStore()
         var legacy = PlayerProfile(); legacy.name = "Sam"; legacy.onboardingComplete = true
         legacy.recordCompletedAttempt(levelID: 1, correct: 5)
@@ -109,13 +155,10 @@ enum DinoSocialTests {
         let store = DinoProgressStore(defaults: memory)
         expect(store.load() == legacy, "old version-one save decodes without new optional field")
         let player = DinoPlayer(store: store)
-        let date = Date(timeIntervalSince1970: 1_700_000_000)
-        expect(player.setName("Luna", date: date), "first name change")
+        player.setDinoAppearance(.standard)
         let restarted = DinoPlayer(store: store)
-        expect(restarted.setName("Nova", date: date.addingTimeInterval(60)), "name can change at any time after restart")
-        expect(restarted.setName("Nova", date: date.addingTimeInterval(86_400)), "next-day change")
-        expect(!restarted.setName("Dino🦖", date: date.addingTimeInterval(172_800)), "unsafe mutation rejected")
-        expect(restarted.profile.record(1).stars == 3 && restarted.profile.name == "Nova", "name validation preserves existing save")
+        expect(restarted.profile.record(1).stars == 3 && restarted.profile.name == "Sam",
+               "legacy local name remains an unused save field while progress survives")
     }
     private static func testSync() async {
         let transport = TestLeaderboards()

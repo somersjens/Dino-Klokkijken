@@ -80,6 +80,7 @@ struct LevelAttempt: Sendable {
     let levelID: Int
     let questions: [ClockQuestion]
     private(set) var answers: [Bool] = []
+    private(set) var questionSeconds: [Int] = []
     private(set) var submittedAnswer: ClockTime?
     private(set) var index = 0
     var current: ClockQuestion { questions[min(index, questions.count - 1)] }
@@ -87,11 +88,12 @@ struct LevelAttempt: Sendable {
     var isComplete: Bool { index == questions.count }
 
     @discardableResult
-    mutating func submit(_ answer: ClockTime) -> Bool? {
+    mutating func submit(_ answer: ClockTime, elapsed: TimeInterval? = nil) -> Bool? {
         guard !isComplete, submittedAnswer == nil else { return nil }
         let correct = AnswerValidator.isCorrect(answer, for: current)
         submittedAnswer = answer
         answers.append(correct)
+        if let elapsed { questionSeconds.append(DinoQuestionTiming.scoredSeconds(elapsed)) }
         return correct
     }
 
@@ -100,4 +102,40 @@ struct LevelAttempt: Sendable {
         index += 1
         submittedAnswer = nil
     }
+}
+
+/// Continuous time is independent of calendar, time zone and wall-clock changes.
+enum DinoQuestionTiming {
+    private static let origin = ContinuousClock.now
+    static func now() -> TimeInterval {
+        let elapsed = origin.duration(to: .now).components
+        return Double(elapsed.seconds) + Double(elapsed.attoseconds) / 1e18
+    }
+    static func scoredSeconds(_ elapsed: TimeInterval) -> Int {
+        guard elapsed.isFinite else { return elapsed == .infinity ? 60 : 1 }
+        return Int(min(60, max(1, elapsed.rounded(.up))))
+    }
+    static func text(_ seconds: Int) -> String {
+        String(format: "%d:%02d", seconds / 60, seconds % 60)
+    }
+}
+
+struct TimedLevelResult: Codable, Equatable, Sendable {
+    let resultPoints: Int
+    let seconds: Int
+    // Quality always wins; time breaks ties between equally good results.
+    var rankedScore: Int { resultPoints * 1_000 + 601 - seconds }
+    func isValid(levelID: Int) -> Bool {
+        guard let level = DinoLevelCatalog.level(levelID),
+              (level.questionCount...level.questionCount * 60).contains(seconds) else { return false }
+        return DinoLeaderboards.decode(levelID: levelID, score: resultPoints, context: DinoLeaderboards.context)?.attempted == true
+    }
+}
+
+struct TimedLevelAttempt: Codable, Equatable, Sendable {
+    let levelID: Int
+    let correct: Int
+    let questionSeconds: [Int]
+    let date: Date
+    var seconds: Int { questionSeconds.reduce(0, +) }
 }

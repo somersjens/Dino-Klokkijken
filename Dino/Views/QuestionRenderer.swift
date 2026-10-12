@@ -2,10 +2,12 @@ import SwiftUI
 
 struct QuestionRenderer: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject var session: DinoSession
     let theme: ClockTheme
     let width: CGFloat
     let clockSize: CGFloat
+    private var comparing: Bool { session.hasFeedback && !session.correctFeedback }
     private var question: ClockQuestion { session.question }
     private var dinoSize: CGFloat { min(140, width * 0.34) }
     private var targetSize: CGFloat { min(clockSize, width - dinoSize * 1.42) }
@@ -21,26 +23,22 @@ struct QuestionRenderer: View {
                 digitalOptions
             case .setAnalog:
                 targetCard
-                clockStage(height: targetSize) {
-                    AnalogClock(time: ClockTime(hour: session.inputHour), theme: theme, size: targetSize,
-                                onHourChange: session.hasFeedback ? nil : { session.inputHour = $0 })
-                        .accessibilityIdentifier("question.analogControl")
-                }.id("question.answers")
-                HStack(spacing: 14) {
-                    DinoIconButton(icon: "arrow.counterclockwise", labelKey: "dino.hourLess") {
-                        session.inputHour = ClockTime.shiftedHour(session.inputHour, by: -1)
+                analogInput.id("question.answers")
+                if !session.hasFeedback {
+                    HStack(spacing: 14) {
+                        DinoIconButton(icon: "arrow.counterclockwise", labelKey: "dino.hourLess") {
+                            session.inputHour = ClockTime.shiftedHour(session.inputHour, by: -1)
+                        }
+                        Image(systemName: "hand.draw.fill").font(.title2).foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+                        DinoIconButton(icon: "arrow.clockwise", labelKey: "dino.hourMore") {
+                            session.inputHour = ClockTime.shiftedHour(session.inputHour, by: 1)
+                        }
                     }
-                    Image(systemName: "hand.draw.fill").font(.title2).foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-                    DinoIconButton(icon: "arrow.clockwise", labelKey: "dino.hourMore") {
-                        session.inputHour = ClockTime.shiftedHour(session.inputHour, by: 1)
-                    }
-                }.disabled(session.hasFeedback)
+                }
                 confirmButton
             case .setDigital:
                 analogTarget
-                DigitalClockControl(hour: $session.inputHour, theme: theme, fontSize: width < 350 ? 32 : 38)
-                    .disabled(session.hasFeedback)
-                    .id("question.answers")
+                digitalInput.id("question.answers")
                 confirmButton
             case .match:
                 matchingBoard
@@ -48,7 +46,67 @@ struct QuestionRenderer: View {
                 digitalOptions
             }
         }.frame(maxWidth: .infinity)
-            .animation(.easeInOut(duration: 0.2), value: session.hasFeedback)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.34), value: session.hasFeedback)
+    }
+
+    private var analogInput: some View {
+        let cellWidth = (width - 14) / 2
+        let scale = comparing ? min(1, (cellWidth - 12) / (targetSize + 20)) : 1
+        let height = (targetSize + 20) * scale
+        return HStack(alignment: .top, spacing: 14) {
+            VStack(spacing: 10) {
+                AnalogClock(time: session.attempt.submittedAnswer ?? ClockTime(hour: session.inputHour), theme: theme, size: targetSize,
+                            onHourChange: session.hasFeedback ? nil : { session.inputHour = $0 })
+                    .accessibilityIdentifier("question.analogControl")
+                    .padding(10).modifier(ClockAnswerOutline(visible: session.hasFeedback, correct: session.correctFeedback))
+                    .scaleEffect(scale).frame(width: comparing ? cellWidth : width, height: height)
+                if comparing { comparisonLabel(correct: false) }
+            }
+            if comparing {
+                VStack(spacing: 10) {
+                    AnalogClock(time: question.target, theme: theme, size: targetSize).padding(10)
+                        .modifier(ClockAnswerOutline(visible: true, correct: true))
+                        .scaleEffect(scale).frame(width: cellWidth, height: height)
+                        .accessibilityIdentifier("question.correctClock")
+                    comparisonLabel(correct: true)
+                }.transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
+            }
+        }.frame(width: width)
+            .overlay(alignment: .trailing) {
+                if !comparing && session.demonstration == nil { DinoCompanionAnchor(placement: .game, size: dinoSize).offset(x: dinoSize * 0.18) }
+            }
+    }
+
+    @ViewBuilder private var digitalInput: some View {
+        if session.hasFeedback {
+            HStack(alignment: .top, spacing: 14) {
+                VStack(spacing: 10) {
+                    DigitalClock(time: session.attempt.submittedAnswer ?? ClockTime(hour: session.inputHour), theme: theme, fontSize: comparing ? min(28, width * 0.075) : 38)
+                        .padding(8).modifier(ClockAnswerOutline(visible: true, correct: session.correctFeedback))
+                        .accessibilityIdentifier("question.digitalControl")
+                    if comparing { comparisonLabel(correct: false) }
+                }.frame(maxWidth: .infinity)
+                if comparing {
+                    VStack(spacing: 10) {
+                        DigitalClock(time: question.target, theme: theme, fontSize: min(28, width * 0.075))
+                            .padding(8).modifier(ClockAnswerOutline(visible: true, correct: true))
+                            .accessibilityIdentifier("question.correctClock")
+                        comparisonLabel(correct: true)
+                    }.frame(maxWidth: .infinity)
+                        .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
+                }
+            }
+        } else {
+            DigitalClockControl(hour: $session.inputHour, theme: theme, fontSize: width < 350 ? 32 : 38)
+                .accessibilityIdentifier("question.digitalControl")
+        }
+    }
+
+    private func comparisonLabel(correct: Bool) -> some View {
+        Label(LocalizedStringKey(correct ? "dino.correctTime" : "dino.yourAnswer"), systemImage: correct ? "checkmark.circle.fill" : "xmark.circle.fill")
+            .font(.system(size: 12, weight: .bold, design: .rounded))
+            .foregroundStyle(correct ? DinoStyle.deepGreen : Color(dinoHex: 0xB54343))
+            .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
     }
 
     private var targetCard: some View {
@@ -76,7 +134,7 @@ struct QuestionRenderer: View {
                                           @ViewBuilder content: () -> Content) -> some View {
         content().frame(width: width, height: showsDino ? max(height, dinoSize) : height)
             .overlay(alignment: .trailing) {
-                if showsDino && !(session.hasFeedback && !session.correctFeedback) {
+                if showsDino && session.demonstration == nil {
                     DinoCompanionAnchor(placement: .game, size: dinoSize)
                         .offset(x: dinoSize * 0.18).allowsHitTesting(false).transition(.identity)
                 }
@@ -126,10 +184,14 @@ struct QuestionRenderer: View {
     }
 
     private var confirmButton: some View {
-        Button { session.submit(ClockTime(hour: session.inputHour)) } label: {
-            Image(systemName: "checkmark").font(.system(size: 25, weight: .heavy))
-        }.buttonStyle(DinoButtonStyle()).frame(maxWidth: 260).disabled(session.hasFeedback)
-            .accessibilityLabel(Text("dino.confirm")).accessibilityIdentifier("question.confirm")
+        Group {
+            if !session.hasFeedback {
+                Button { session.submit(ClockTime(hour: session.inputHour)) } label: {
+                    Image(systemName: "checkmark").font(.system(size: 25, weight: .heavy))
+                }.buttonStyle(DinoButtonStyle()).frame(maxWidth: 260)
+                    .accessibilityLabel(Text("dino.confirm")).accessibilityIdentifier("question.confirm")
+            }
+        }
     }
 
     private func answerButton<Content: View>(option: ClockTime, index: Int, @ViewBuilder content: () -> Content) -> some View {
@@ -148,5 +210,17 @@ struct QuestionRenderer: View {
                 }.shadow(color: DinoStyle.ink.opacity(0.06), radius: 7, y: 4)
                 .opacity(!highContrast && session.hasFeedback && !correct && !wrong ? 0.55 : 1)
         }.buttonStyle(DinoAnswerButtonStyle()).disabled(session.hasFeedback).accessibilityIdentifier("question.option.\(index)")
+    }
+}
+
+private struct ClockAnswerOutline: ViewModifier {
+    @Environment(\.dinoHighContrast) private var highContrast
+    let visible: Bool
+    let correct: Bool
+    func body(content: Content) -> some View {
+        content
+            .background(.white.opacity(visible ? 0.8 : 0), in: RoundedRectangle(cornerRadius: 22))
+            .overlay(RoundedRectangle(cornerRadius: 22)
+                .stroke(correct ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : Color(dinoHex: 0xC65A59), lineWidth: visible ? 4 : 0))
     }
 }

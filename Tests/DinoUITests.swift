@@ -18,21 +18,25 @@ final class DinoUITests: XCTestCase {
     private func tap(_ id: String) {
         let item = app.descendants(matching: .any).matching(identifier: id).firstMatch
         XCTAssertTrue(item.exists || item.waitForExistence(timeout: 6), "Missing \(id)")
-        for _ in 0..<6 { if item.isHittable { break }; app.swipeUp() }
+        for _ in 0..<6 {
+            let next = app.buttons["onboarding.next"]
+            let aboveFooter = !id.hasPrefix("personalize.") || !next.exists || item.frame.maxY < next.frame.minY - 8
+            if item.isHittable && aboveFooter { break }
+            app.swipeUp()
+        }
         item.tap()
     }
 
     private func onboard(custom: Bool = false) {
-        let name = app.textFields["onboarding.name"]
-        XCTAssertTrue(name.waitForExistence(timeout: 5))
-        XCTAssertFalse(app.buttons["onboarding.start"].exists)
-        XCTAssertFalse(app.buttons["onboarding.next"].isEnabled)
-        name.tap(); name.typeText("Sam")
+        XCTAssertTrue(app.buttons["onboarding.next"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["onboarding.next"].isEnabled)
+        XCTAssertFalse(app.textFields["onboarding.name"].exists)
+        XCTAssertTrue(app.buttons["personalize.bandana.red"].exists)
         tap("onboarding.next")
         if custom { tap("theme.dino.face.blue") }
         tap(custom ? "onboarding.customClock" : "onboarding.standardClock")
         XCTAssertTrue(app.buttons["map.bossShortcut"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.descendants(matching: .any)["header.playerName"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["header.dino"].exists)
     }
 
     private func openSettings() {
@@ -70,9 +74,136 @@ final class DinoUITests: XCTestCase {
         tap("level.play")
     }
 
+    func testManualExamplesAndClockComparison() {
+        onboard()
+        begin(10)
+        XCTAssertFalse(app.buttons["demo.ready"].exists)
+        tap("question.example")
+        XCTAssertTrue(app.buttons["demo.ready"].waitForExistence(timeout: 3))
+        saveScreenshot("manual-example-centered")
+        XCTAssertFalse(app.images["dino.character"].exists, "Example has no companion")
+        tap("demo.ready")
+        var rng = SeededGenerator(seed: seed)
+        let questions = DinoQuestionGenerator.generate(level: DinoLevelCatalog.level(10)!, using: &rng)
+        for question in questions {
+            if question.kind == .setAnalog || question.kind == .setDigital {
+                // The next question always initializes to a different hour than its target.
+                tap("question.confirm")
+                XCTAssertTrue(app.descendants(matching: .any)["question.correctClock"].waitForExistence(timeout: 4))
+                XCTAssertTrue(app.staticTexts["Jouw antwoord"].exists)
+                XCTAssertFalse(app.descendants(matching: .any)["question.feedback"].exists)
+                saveScreenshot(question.kind == .setAnalog ? "analog-answer-comparison" : "digital-answer-comparison")
+                tap("question.next")
+            } else {
+                tap("question.option.\(question.options.firstIndex(of: question.target)!)")
+            }
+            if question.id < questions.count - 1 {
+                XCTAssertTrue(app.staticTexts["\(question.id + 2)/10"].waitForExistence(timeout: 5))
+            }
+        }
+    }
+
+    func testLevelFriendsRowsWithTimings() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_SOCIAL"] = "fixtures"
+        app.launch()
+        onboard()
+        revealMapNode(1).tap()
+        XCTAssertTrue(app.buttons["level.friend.test-0"].waitForExistence(timeout: 5))
+        saveScreenshot("friends-level-timing-rows")
+        XCTAssertTrue(app.buttons["level.friend.test-0"].label.contains("0:20"))
+        XCTAssertTrue(app.buttons["level.friend.test-1"].label.contains("0:35"))
+        tap("level.friend.test-0")
+        XCTAssertTrue(app.buttons["friend.close"].waitForExistence(timeout: 5))
+        tap("friend.close")
+        XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5))
+    }
+
+    func testWelcomeDinoAndGameCenterIdentity() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_SOCIAL"] = "fixtures"
+        app.launch()
+        XCTAssertTrue(app.buttons["onboarding.next"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Maak jouw dino"].exists)
+        XCTAssertEqual(app.textFields.count, 0)
+        XCTAssertFalse(app.staticTexts["Game Center Sam"].exists)
+        for (part, color) in [("bandana", "blue"), ("spikes", "purple"), ("body", "pink"), ("belly", "orange")] {
+            tap("personalize.\(part).\(color)")
+            XCTAssertTrue(app.buttons["personalize.\(part).\(color)"].isSelected)
+        }
+        Thread.sleep(forTimeInterval: 0.75)
+        saveScreenshot("welcome-dino-colors")
+        XCTAssertTrue(app.buttons["onboarding.next"].isHittable)
+        tap("onboarding.next")
+        tap("onboarding.standardClock")
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["header.dino"].label, "Mijn dino")
+        XCTAssertGreaterThanOrEqual(app.buttons["header.dino"].frame.height, 82)
+        XCTAssertFalse(app.staticTexts["Game Center Sam"].exists)
+        saveScreenshot("hud-dino-no-name")
+        tap("header.dino")
+        for (part, color) in [("bandana", "blue"), ("spikes", "purple"), ("body", "pink"), ("belly", "orange")] {
+            XCTAssertTrue(app.buttons["personalize.\(part).\(color)"].isSelected)
+        }
+        XCTAssertEqual(app.textFields.count, 0)
+        XCTAssertFalse(app.staticTexts["Game Center Sam"].exists)
+        tap("personalize.done")
+        openSettings()
+        XCTAssertTrue(app.staticTexts["settings.gameCenterName"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["settings.gameCenterName"].label, "Game Center Sam")
+        XCTAssertEqual(app.textFields.count, 0)
+        saveScreenshot("settings-game-center-name")
+        app.buttons["Klaar"].firstMatch.tap()
+        begin(1)
+        play(1, correct: 5)
+        tap("result.map")
+        revealMapNode(1).tap()
+        XCTAssertTrue(app.staticTexts["level.ownName"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["level.ownName"].label, "Game Center Sam")
+        XCTAssertEqual(app.staticTexts["level.ownScore"].label, "5/5")
+        let time = app.descendants(matching: .any)["level.ownTime"]
+        XCTAssertTrue(time.exists)
+        XCTAssertTrue(time.label.contains(":"), "Completed result has a measured time")
+        saveScreenshot("level-own-game-center-result")
+        app.terminate(); app.launch()
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout: 5))
+        tap("header.dino")
+        XCTAssertTrue(app.buttons["personalize.bandana.blue"].isSelected)
+        XCTAssertTrue(app.buttons["personalize.spikes.purple"].isSelected)
+        XCTAssertEqual(app.textFields.count, 0)
+    }
+
+    func testDinoStandsOnCompletedLevel() {
+        onboard()
+        begin(1)
+        play(1, correct: 5)
+        tap("result.map")
+        let marker = app.descendants(matching: .any)["map.dino.1"]
+        XCTAssertTrue(marker.waitForExistence(timeout: 5))
+        let node = revealMapNode(1)
+        XCTAssertEqual(marker.frame.midX, node.frame.midX, accuracy: 1)
+        XCTAssertEqual(marker.frame.maxY, node.frame.midY + 12, accuracy: 5)
+        saveScreenshot("map-completed-level-dino")
+    }
+
+    func testAvatarColorMaskContours() {
+        onboard()
+        tap("header.dino")
+        for (part, color) in [("bandana", "blue"), ("spikes", "purple"), ("body", "pink"), ("belly", "orange")] {
+            tap("personalize.\(part).\(color)")
+            XCTAssertTrue(app.buttons["personalize.\(part).\(color)"].isSelected)
+        }
+        // Let the asynchronous image render finish before capturing its contours.
+        Thread.sleep(forTimeInterval: 0.75)
+        saveScreenshot("avatar-mask-contours")
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout: 5))
+        saveScreenshot("avatar-mask-header")
+    }
+
     func testFreeAvatarColorPicker() {
         onboard()
-        tap("header.playerName")
+        tap("header.dino")
         let picker = app.buttons["personalize.color.bandana"]
         XCTAssertTrue(picker.waitForExistence(timeout: 5))
         picker.coordinate(withNormalizedOffset: CGVector(dx: 0.96, dy: 0.5)).tap()
@@ -89,15 +220,15 @@ final class DinoUITests: XCTestCase {
         XCTAssertNotNil(chosen)
         tap("personalize.done")
         app.terminate(); app.launch()
-        tap("header.playerName")
+        tap("header.dino")
         XCTAssertEqual(app.buttons["personalize.color.bandana"].value as? String, chosen)
         tap("personalize.done")
     }
 
-    func testPersonalizeHeaderColorsAndName() {
+    func testPersonalizeHeaderColors() {
         onboard()
         saveScreenshot("personalize-header-default")
-        tap("header.playerName")
+        tap("header.dino")
         XCTAssertTrue(app.buttons["personalize.bandana.red"].waitForExistence(timeout: 5))
         for (part, color) in [("bandana", "red"), ("spikes", "darkGreen"), ("body", "green"), ("belly", "yellow")] {
             XCTAssertTrue(app.buttons["personalize.\(part).\(color)"].isSelected)
@@ -110,25 +241,16 @@ final class DinoUITests: XCTestCase {
         }
         XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "personalize.preview").firstMatch.isHittable)
         saveScreenshot("personalize-custom-colors")
-        let name = app.textFields["personalize.name"]
-        tap("personalize.name")
-        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 3) + "Luna")
-        XCTAssertEqual(name.value as? String, "Luna")
-        saveScreenshot("personalize-name-edit")
-        tap("personalize.saveName")
-        XCTAssertFalse(app.staticTexts["personalize.nameError"].exists)
-        XCTAssertEqual(name.value as? String, "Luna")
-        tap("personalize.name")
-        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 4) + "Nova")
-        XCTAssertEqual(name.value as? String, "Nova")
+        XCTAssertFalse(app.textFields["personalize.name"].exists)
+        XCTAssertFalse(app.buttons["personalize.saveName"].exists)
         tap("personalize.done")
-        XCTAssertTrue(app.buttons["header.playerName"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.buttons["header.playerName"].label, "Nova")
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["header.dino"].label, "Mijn dino")
         saveScreenshot("personalize-header-custom")
         app.terminate(); app.launch()
-        XCTAssertTrue(app.buttons["header.playerName"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.buttons["header.playerName"].label, "Nova")
-        tap("header.playerName")
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["header.dino"].label, "Mijn dino")
+        tap("header.dino")
         for (part, color) in [("bandana", "blue"), ("spikes", "purple"), ("body", "pink"), ("belly", "orange")] {
             XCTAssertTrue(app.buttons["personalize.\(part).\(color)"].isSelected)
         }
@@ -138,18 +260,20 @@ final class DinoUITests: XCTestCase {
         }
         tap("personalize.done")
         begin(1)
+        XCTAssertTrue(app.buttons["header.pause"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["level.play"].exists)
         if app.buttons["demo.ready"].exists { tap("demo.ready") }
-        tap("header.playerName")
+        tap("header.dino")
         tap("personalize.bandana.purple")
         tap("personalize.done")
         XCTAssertTrue(app.staticTexts["1/5"].exists)
         XCTAssertTrue(app.buttons["question.option.0"].exists)
         saveScreenshot("personalize-in-level")
         XCUIDevice.shared.orientation = .landscapeLeft
-        tap("header.playerName")
+        tap("header.dino")
         saveScreenshot("personalize-landscape")
         tap("personalize.done")
-        XCTAssertTrue(app.buttons["header.playerName"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout: 5))
         XCUIDevice.shared.orientation = .portrait
     }
 
@@ -405,7 +529,7 @@ final class DinoUITests: XCTestCase {
     func testFourChoicesAndPersistentWrongAnswer() {
         onboard()
         begin(10)
-        tap("demo.ready")
+        XCTAssertFalse(app.buttons["demo.ready"].exists)
         let options = (0..<4).map { app.buttons["question.option.\($0)"] }
         XCTAssertTrue(options.allSatisfy(\.exists))
         XCTAssertFalse(app.buttons["question.option.4"].exists)
@@ -424,12 +548,12 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["1/10"].exists, "Wrong feedback must remain until the child taps Next")
         XCTAssertTrue(app.buttons["question.next"].isHittable)
         XCTAssertTrue(options[3].isHittable, "All four answers remain visible above the feedback")
-        XCTAssertTrue(app.staticTexts["Het juiste antwoord"].exists)
+        XCTAssertFalse(app.descendants(matching: .any)["question.feedback"].exists)
         XCTAssertTrue(app.images["dino.wrongAnswer"].exists, "The wrong-answer pose remains until Next")
         let reaction = app.images["dino.wrongAnswer"]
         XCTAssertEqual(app.images.matching(identifier: "dino.wrongAnswer").count, 1)
         XCTAssertGreaterThanOrEqual(reaction.frame.minY, 0)
-        XCTAssertLessThanOrEqual(reaction.frame.maxY, app.frame.maxY, "Reaction is visible beside the fixed feedback, even on a small phone")
+        XCTAssertLessThanOrEqual(reaction.frame.maxY, app.frame.maxY, "Reaction remains beside the question clock")
         XCTAssertEqual(clock.frame.midX, originalCenter, accuracy: 1, "Dino cannot displace the clock after an answer")
         saveScreenshot("wrong-answer-waits")
         tap("question.next")
@@ -485,15 +609,15 @@ final class DinoUITests: XCTestCase {
         app.terminate()
         app.launchArguments = []
         app.launch()
-        XCTAssertTrue(app.descendants(matching: .any)["header.playerName"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["header.dino"].waitForExistence(timeout: 5))
     }
 
     func testJungleHeaderSettingsAndTransition() {
         onboard()
-        let player = app.descendants(matching: .any)["header.playerName"]
+        let player = app.descendants(matching: .any)["header.dino"]
         let level = app.descendants(matching: .any)["header.level"]
         let stars = app.descendants(matching: .any)["header.stars"]
-        XCTAssertEqual(player.label, "Sam")
+        XCTAssertEqual(player.label, "Mijn dino")
         XCTAssertEqual(level.label, "Level 1")
         XCTAssertEqual(stars.label, "0 sterren")
         XCTAssertFalse(app.staticTexts["0/27"].exists)
@@ -533,7 +657,8 @@ final class DinoUITests: XCTestCase {
         onboard()
         let marker = app.descendants(matching: .any)["map.dino.0"]
         XCTAssertTrue(marker.exists)
-        XCTAssertGreaterThan(marker.frame.height, 110)
+        XCTAssertGreaterThan(marker.frame.height, 95)
+        XCTAssertLessThanOrEqual(marker.frame.height, 123)
         let start = app.descendants(matching: .any)["map.start"]
         XCTAssertTrue(start.exists)
         XCTAssertEqual(marker.frame.midX, start.frame.midX, accuracy: 1)

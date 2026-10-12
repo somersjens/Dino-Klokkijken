@@ -4,6 +4,7 @@ struct LevelRecord: Codable, Equatable, Sendable {
     var stars = 0
     var bestCorrect = 0
     var attempts = 0
+    var bestTimedResult: TimedLevelResult?
 }
 
 struct BossRecord: Codable, Equatable, Sendable {
@@ -14,6 +15,7 @@ struct BossRecord: Codable, Equatable, Sendable {
 
 struct PlayerProfile: Codable, Equatable, Sendable {
     var version = 1
+    // Legacy save fields only; visible player identity always comes from Game Center.
     var name = ""
     var nameChangedAt: Date?
     var dinoAppearance: DinoAppearance?
@@ -21,6 +23,7 @@ struct PlayerProfile: Codable, Equatable, Sendable {
     var clockTheme = ClockTheme.standard
     var levels: [String: LevelRecord] = [:]
     var bossResults: [BossRecord] = []
+    var timedAttempts: [TimedLevelAttempt]?
     var perfectBossVictory = false
     var worldOneComplete = false
     var demonstratedInteractions: Set<ClockQuestionKind> = []
@@ -40,9 +43,21 @@ struct PlayerProfile: Codable, Equatable, Sendable {
     }
 
     @discardableResult
-    mutating func recordCompletedAttempt(levelID: Int, correct: Int, date: Date = Date()) -> BossVictory {
+    mutating func recordCompletedAttempt(levelID: Int, correct: Int, date: Date = Date(), questionSeconds: [Int]? = nil) -> BossVictory {
         guard let level = DinoLevelCatalog.level(levelID), isUnlocked(levelID),
               (0...level.questionCount).contains(correct) else { return .none }
+        defer {
+            if let questionSeconds, questionSeconds.count == level.questionCount,
+               questionSeconds.allSatisfy({ (1...60).contains($0) }) {
+                let attempt = TimedLevelAttempt(levelID: levelID, correct: correct, questionSeconds: questionSeconds, date: date)
+                timedAttempts = (timedAttempts ?? []) + [attempt]
+                // This attempt's score, never combine a fast failed replay with a better old score.
+                let victory = level.isBoss ? BossVictory.evaluate(correct: correct, normalLevelsComplete: normalLevelsComplete) : .none
+                let points = level.isBoss ? 1 + correct + (victory != .none ? 16 : 0) + (victory == .perfect ? 32 : 0)
+                    : 1 + StarCalculator.stars(correct: correct) * 8 + correct
+                mergeTiming(TimedLevelResult(resultPoints: points, seconds: attempt.seconds), levelID: levelID)
+            }
+        }
         var previous = record(levelID)
         previous.attempts += 1
         previous.bestCorrect = max(previous.bestCorrect, correct)
@@ -59,6 +74,14 @@ struct PlayerProfile: Codable, Equatable, Sendable {
         return .none
     }
 
+    mutating func mergeTiming(_ incoming: TimedLevelResult, levelID: Int) {
+        guard incoming.isValid(levelID: levelID) else { return }
+        var saved = record(levelID)
+        if let existing = saved.bestTimedResult, existing.isValid(levelID: levelID), existing.rankedScore >= incoming.rankedScore { return }
+        saved.bestTimedResult = incoming
+        levels[String(levelID)] = saved
+    }
+
     static func sanitizedName(_ input: String) -> String {
         let scalars = input.unicodeScalars.filter {
             !CharacterSet.controlCharacters.contains($0) && $0.properties.generalCategory != .format
@@ -68,7 +91,7 @@ struct PlayerProfile: Codable, Equatable, Sendable {
     }
 
     mutating func resetProgress(date: Date = Date()) {
-        levels = [:]; bossResults = []
+        levels = [:]; bossResults = []; timedAttempts = nil
         perfectBossVictory = false; worldOneComplete = false
         demonstratedInteractions = []
         progressResetAt = date

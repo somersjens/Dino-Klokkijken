@@ -19,6 +19,7 @@ enum GameCenterFailure: Error { case configuration, unavailable }
 
 @MainActor
 final class GameKitProgressTransport: ProgressLeaderboardTransport {
+    private(set) var availableTimingLeaderboardIDs: Set<String> = []
     private let player: GKLocalPlayer
     init(player: GKLocalPlayer = .local) { self.player = player }
 
@@ -30,6 +31,15 @@ final class GameKitProgressTransport: ProgressLeaderboardTransport {
             let (local, _) = try await board.loadEntries(for: [player], timeScope: .allTime)
             if let local {
                 values[board.baseLeaderboardID] = LeaderboardValue(score: local.score, context: local.context)
+            }
+        }
+        // Timing boards are additive: old installations retain working progress sync.
+        if let timedBoards = try? await GKLeaderboard.loadLeaderboards(IDs: DinoLeaderboards.timedIDs) {
+            availableTimingLeaderboardIDs = Set(timedBoards.filter { $0.type == .classic }.map(\.baseLeaderboardID))
+            for board in timedBoards where availableTimingLeaderboardIDs.contains(board.baseLeaderboardID) {
+                if let (local, _) = try? await board.loadEntries(for: [player], timeScope: .allTime), let local {
+                    values[board.baseLeaderboardID] = LeaderboardValue(score: local.score, context: local.context)
+                }
             }
         }
         return values
@@ -52,6 +62,7 @@ final class FriendsManager: NSObject, ObservableObject {
     @Published private(set) var actionMessageKey: String?
     @Published private(set) var accountConflict = false
     @Published private(set) var enabled: Bool
+    @Published private(set) var playerDisplayName: String?
     weak var presentationAnchor: UIViewController?
     private weak var player: DinoPlayer?
     private let defaults: KeyValueStore
@@ -82,6 +93,7 @@ final class FriendsManager: NSObject, ObservableObject {
         defaults = store
         enabled = store.integer(forKey: Self.enabledKey) == 1
         super.init()
+        updatePlayerIdentity()
         NotificationCenter.default.publisher(for: .GKPlayerAuthenticationDidChangeNotificationName)
             .receive(on: RunLoop.main).sink { [weak self] _ in self?.authenticationChanged() }.store(in: &observers)
     }
@@ -108,7 +120,7 @@ final class FriendsManager: NSObject, ObservableObject {
             self?.defaults.removeObject(forKey: Self.ownerKey)
             self?.accountConflict = false
         }
-        if usesUITestFixtures { enabled = true; refresh(); return }
+        if usesUITestFixtures { enabled = true; updatePlayerIdentity(); refresh(); return }
         if enabled { authenticate() }
     }
 
@@ -144,6 +156,7 @@ final class FriendsManager: NSObject, ObservableObject {
         }
     }
     private func authenticationChanged() {
+        updatePlayerIdentity()
         guard enabled else { return }
         if usesUITestFixtures { refresh(); return }
         let local = GKLocalPlayer.local
@@ -163,10 +176,20 @@ final class FriendsManager: NSObject, ObservableObject {
 
     func foreground() {
         appActive = true
+        updatePlayerIdentity()
         guard enabled else { return }
         presentAuthenticationIfPossible()
         authenticationChanged()
         scheduleSync(force: true)
+    }
+    /// Never use a saved local name as a fallback for Apple's account identity.
+    private func updatePlayerIdentity() {
+        if usesUITestFixtures {
+            playerDisplayName = "Game Center Sam"
+        } else {
+            let local = GKLocalPlayer.local
+            playerDisplayName = local.isAuthenticated ? local.displayName : nil
+        }
     }
     func background() {
         appActive = false
@@ -245,8 +268,13 @@ final class FriendsManager: NSObject, ObservableObject {
             let boards = try await GKLeaderboard.loadLeaderboards(IDs: DinoLevelCatalog.levels.map { DinoLeaderboards.level($0.id) })
             guard valid(token, account) else { return }
             if boards.count != DinoLevelCatalog.levels.count { actionMessageKey = "dino.friends.resultsUnavailable" }
-            for level in DinoLevelCatalog.levels {
-                guard let board = boards.first(where: { $0.baseLeaderboardID == DinoLeaderboards.level(level.id) }) else { continue }
+            let timedBoards = (try? await GKLeaderboard.loadLeaderboards(IDs: DinoLeaderboards.timedIDs)) ?? []
+            guard valid(token, account) else { return }
+            for board in boards + timedBoards where board.type == .classic {
+                guard let level = DinoLevelCatalog.levels.first(where: {
+                    board.baseLeaderboardID == DinoLeaderboards.level($0.id) || board.baseLeaderboardID == DinoLeaderboards.timedLevel($0.id)
+                }) else { continue }
+                let isTimed = board.baseLeaderboardID == DinoLeaderboards.timedLevel(level.id)
                 // Explicit friends, in batches; never fetch a global ranked list.
                 for offset in stride(from: 0, to: players.count, by: 50) {
                     guard valid(token, account) else { return }
@@ -256,8 +284,9 @@ final class FriendsManager: NSObject, ObservableObject {
                         guard valid(token, account) else { return }
                         for entry in entries {
                             guard let index = friends.firstIndex(where: { $0.id == entry.player.gamePlayerID }),
-                                  let result = DinoLeaderboards.decode(levelID: level.id, score: entry.score, context: entry.context) else { continue }
-                            friends[index].progress.levels[level.id] = result
+                                  let result = isTimed ? DinoLeaderboards.decodeTimed(levelID: level.id, score: entry.score, context: entry.context)
+                                    : DinoLeaderboards.decode(levelID: level.id, score: entry.score, context: entry.context) else { continue }
+                            friends[index].progress.merge(result)
                         }
                     } catch { if valid(token, account) { actionMessageKey = "dino.friends.resultsUnavailable" } }
                 }
@@ -355,7 +384,7 @@ final class FriendsManager: NSObject, ObservableObject {
         let names = ["Sophie", "Thomas", "Emma", "Luna", "Rex"]
         friends = names.enumerated().map { index, name in
             var saved = PlayerProfile()
-            saved.recordCompletedAttempt(levelID: 1, correct: 5 - index % 3)
+            saved.recordCompletedAttempt(levelID: 1, correct: 5 - index % 3, questionSeconds: Array(repeating: 4 + index * 3, count: 5))
             return DinoFriend(id: "test-\(index)", displayName: name, progress: .local(saved))
         }
         friends.append(DinoFriend(id: "test-missing", displayName: "Alex"))

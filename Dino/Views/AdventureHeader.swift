@@ -13,42 +13,32 @@ struct AdventureHeader: View {
         var identifier: String { self == .settings ? "header.settings" : "header.pause" }
     }
 
-    let name: String
     let level: Int
     let stars: Int
     var compact = false
     var control: Control = .pause
     var action: () -> Void
 
-    private var tileHeight: CGFloat { compact ? 62 : 82 }
-    private var avatarSize: CGFloat { compact ? 46 : 62 }
+    private var tileHeight: CGFloat { compact ? 64 : 86 }
+    private var avatarSize: CGFloat { compact ? 60 : 82 }
     private var numberSize: CGFloat { compact ? 22 : 25 }
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             Button { showsPersonalizer = true } label: {
-                VStack(spacing: 3) {
-                    ZStack {
-                        Circle().fill(Color(dinoHex: 0xD9EDAD))
-                            .overlay(Circle().stroke(.white, lineWidth: 2))
-                        DinoAvatar(appearance: player.profile.dinoAppearance ?? .standard, portrait: true)
-                            .frame(width: avatarSize + 6, height: avatarSize)
-                        Image(systemName: "paintbrush.fill")
-                            .font(.system(size: 9, weight: .bold)).foregroundStyle(DinoStyle.deepGreen)
-                            .frame(width: 20, height: 20).background(.white, in: Circle())
-                            .offset(x: avatarSize * 0.37, y: avatarSize * 0.34)
-                    }.frame(width: avatarSize, height: avatarSize)
-                    Text(verbatim: name)
-                        .font(.system(size: compact ? 11 : 13, weight: .bold, design: .rounded))
-                        .lineLimit(1).minimumScaleFactor(0.7)
-                }
+                ZStack {
+                    Circle().fill(Color(dinoHex: 0xD9EDAD))
+                        .overlay(Circle().stroke(.white, lineWidth: 2))
+                    DinoAvatar(appearance: player.profile.dinoAppearance ?? .standard, portrait: true)
+                        .frame(width: avatarSize + 12, height: avatarSize)
+                }.frame(width: avatarSize, height: avatarSize)
                 .frame(maxWidth: .infinity).frame(height: tileHeight)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(Text(verbatim: name))
+            .accessibilityLabel(Text("dino.appearance.title"))
             .accessibilityHint(Text("dino.appearance.open"))
-            .accessibilityIdentifier("header.playerName")
+            .accessibilityIdentifier("header.dino")
 
             VStack(spacing: 3) {
                 Text("dino.levelLabel")

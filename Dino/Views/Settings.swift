@@ -6,16 +6,31 @@ struct DinoSettingsView: View {
     @EnvironmentObject private var player: DinoPlayer
     @EnvironmentObject private var settings: DinoSettings
     @EnvironmentObject private var cloudSync: DinoCloudSync
+    @EnvironmentObject private var friends: FriendsManager
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.dismiss) private var dismiss
-    @State private var name = ""
     @State private var confirmReset = false
-    @State private var nameError = false
     @State private var showsPrivacy = false
+    @State private var showsGameCenter = false
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("dino.settings.gameCenter", systemImage: "person.crop.circle.fill").font(.headline)
+                        if let name = friends.playerDisplayName {
+                            Text(verbatim: name).font(.title3.bold()).textSelection(.enabled)
+                                .accessibilityIdentifier("settings.gameCenterName")
+                            Text("dino.settings.gameCenter.nameSource").font(.footnote)
+                                .foregroundStyle(DinoStyle.muted)
+                        } else {
+                            Text("dino.settings.gameCenter.noAccount").font(.subheadline)
+                                .accessibilityIdentifier("settings.gameCenterSignedOut")
+                        }
+                        Button("dino.settings.gameCenter.open") { showsGameCenter = true }
+                            .buttonStyle(DinoSecondaryButtonStyle())
+                            .accessibilityIdentifier("settings.gameCenter")
+                    }.dinoCard()
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
                             Label("dino.language", systemImage: "globe").font(.headline)
@@ -51,20 +66,6 @@ struct DinoSettingsView: View {
                             .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
                             .accessibilityIdentifier("settings.icloudStatus")
                     }.dinoCard()
-                    VStack(alignment: .leading, spacing: 14) {
-                        Label("dino.playerName", systemImage: "person.fill").font(.headline)
-                        TextField(L("dino.namePlaceholder"), text: $name).font(.title3)
-                            .padding(14).background(DinoStyle.green.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
-                            .onChange(of: name) { _, _ in nameError = false }
-                        Button("dino.saveName") {
-                            if player.setName(name) { name = player.profile.name; nameError = false }
-                            else { nameError = true }
-                        }.buttonStyle(DinoButtonStyle(compact: true))
-                            .disabled(PlayerProfile.sanitizedName(name).isEmpty)
-                            .opacity(PlayerProfile.sanitizedName(name).isEmpty ? 0.5 : 1)
-                        Text("dino.nameLocalOnly").font(.footnote)
-                        if nameError { Text("dino.nameInvalid").font(.footnote) }
-                    }.dinoCard()
                     Button("dino.friends.privacy") { showsPrivacy = true }.frame(minHeight: 44)
                     Button("dino.map") { dismiss() }.buttonStyle(DinoSecondaryButtonStyle())
                     Button { confirmReset = true } label: {
@@ -85,7 +86,8 @@ struct DinoSettingsView: View {
                     Text("dino.friends.resetMessage")
                 }
                 .sheet(isPresented: $showsPrivacy) { DinoSocialPrivacyView() }
-        }.foregroundStyle(DinoStyle.ink).onAppear { name = player.profile.name }
+                .sheet(isPresented: $showsGameCenter) { DinoFriendsView().gameEnvironment() }
+        }.foregroundStyle(DinoStyle.ink)
     }
 
     private func preference(_ key: LocalizedStringKey, symbol: String, value: Binding<Bool>, identifier: String) -> some View {

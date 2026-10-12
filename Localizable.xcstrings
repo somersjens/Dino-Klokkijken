@@ -120,40 +120,6 @@
         }
       }
     },
-    "dino.yourName": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What’s your name?"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hoe heet jij?"
-          }
-        }
-      }
-    },
-    "dino.namePlaceholder": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your name"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jouw naam"
-          }
-        }
-      }
-    },
     "dino.makeClock": {
       "extractionState": "manual",
       "localizations": {
@@ -1803,40 +1769,6 @@
         }
       }
     },
-    "dino.playerName": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Player name"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spelersnaam"
-          }
-        }
-      }
-    },
-    "dino.saveName": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Save name"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Naam bewaren"
-          }
-        }
-      }
-    },
     "dino.resetProgress": {
       "extractionState": "manual",
       "localizations": {
@@ -1877,13 +1809,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "All stars and boss results will be removed. Your name, language and clocks stay saved."
+            "value": "All stars and boss results will be removed. Your dino colors, language and clocks stay saved."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alle sterren en bossresultaten worden verwijderd. Je naam, taal en klokken blijven bewaard."
+            "value": "Alle sterren en bossresultaten worden verwijderd. Je dinokleuren, taal en klokken blijven bewaard."
           }
         }
       }
@@ -2625,13 +2557,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Optional: publish this device’s best level results, stars and progress to Game Center leaderboards under the Apple display name. Apple leaderboards may show these results to other players, not only friends. Your local name is never uploaded. Existing results from this Apple account are merged by taking the best result per level. Stopping sharing does not delete published results. This parental gate is not legal consent."
+            "value": "Optional: publish this device’s best level results, measured playing times, stars and progress to Game Center leaderboards under the Apple display name. Apple leaderboards may show these results to other players, not only friends. Existing results from this Apple account are merged by taking the best result per level. Stopping sharing does not delete published results. This parental gate is not legal consent."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Optioneel: publiceer de beste levelresultaten, sterren en voortgang van dit apparaat op Game Center-leaderboards onder de Apple-displaynaam. Apple-leaderboards kunnen deze resultaten aan andere spelers tonen, niet alleen aan vrienden. Je lokale naam wordt nooit verstuurd. Bestaande resultaten van dit Apple-account worden samengevoegd met het beste resultaat per level. Stoppen met delen verwijdert gepubliceerde resultaten niet. Dit ouderscherm is geen juridische toestemming."
+            "value": "Optioneel: publiceer de beste levelresultaten, gemeten speeltijden, sterren en voortgang van dit apparaat op Game Center-leaderboards onder de Apple-displaynaam. Apple-leaderboards kunnen deze resultaten aan andere spelers tonen, niet alleen aan vrienden. Bestaande resultaten van dit Apple-account worden samengevoegd met het beste resultaat per level. Stoppen met delen verwijdert gepubliceerde resultaten niet. Dit ouderscherm is geen juridische toestemming."
           }
         }
       }
@@ -2942,57 +2874,6 @@
         }
       }
     },
-    "dino.nameInvalid": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose a friendly name of 3–20 characters, or a shorter name in an East Asian script. Use letters, regular numbers, spaces, apostrophes or hyphens."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kies een vriendelijke naam van 3–20 tekens, of een kortere naam in een Oost-Aziatisch schrift. Gebruik letters, gewone cijfers, spaties, apostroffen of koppeltekens."
-          }
-        }
-      }
-    },
-    "dino.useSafeName": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Use Dino"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dino gebruiken"
-          }
-        }
-      }
-    },
-    "dino.nameLocalOnly": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This name stays on your device. Friends see your Apple Game Center name."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deze naam blijft op je apparaat. Vrienden zien je Apple Game Center-naam."
-          }
-        }
-      }
-    },
     "dino.friends.contactMissing": {
       "extractionState": "manual",
       "localizations": {
@@ -3016,13 +2897,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your name, clocks and progress are stored on this device. Friends are optional. Apple manages sign-in, friendships, display names and avatars. Friends access is requested only when you choose to use it; only friends Apple permits are shown. Friends’ data is held in memory and cleared when the app goes into the background, access changes, or you turn off friends.\n\nIf you enable iCloud sync, only your level results, stars and game progress are shared through your own iCloud account between your devices. Your name, clocks and settings stay on this device. Turning it off stops new iCloud updates on this device; it does not delete previously saved cloud progress.\n\nSharing is off by default. If an adult enables it, the game sends best level results, stars and progress to Apple Game Center leaderboards. These results may be visible to other Game Center players according to Apple’s settings; the app does not offer private, friends-only storage. Your local name, date of birth, location, email and phone number are never uploaded by this game. No chat, custom messages, ads, analytics or tracking are included.\n\nYou can stop future uploads on this device. Published scores are retained by Apple; stopping sharing or resetting the local game does not delete them. Visibility, reporting, friendships and Apple data requests are managed through Apple Games, Game Center and Apple’s privacy controls. Publishing again can restore your previous best results.\n\nRestricted and underage accounts cannot publish progress through this game. A parental gate does not replace legally required parental consent."
+            "value": "Your clocks and progress are stored on this device. Your name comes from your Game Center account. Friends are optional. Apple manages sign-in, friendships, display names and avatars. Friends access is requested only when you choose to use it; only friends Apple permits are shown. Friends’ data is held in memory and cleared when the app goes into the background, access changes, or you turn off friends.\n\nIf you enable iCloud sync, only your level results, measured playing times, stars and game progress are shared through your own iCloud account between your devices. Your dino colors, clocks and settings stay on this device. Turning it off stops new iCloud updates on this device; it does not delete previously saved cloud progress.\n\nSharing is off by default. If an adult enables it, the game sends best level results, measured playing times, stars and progress to Apple Game Center leaderboards. These results may be visible to other Game Center players according to Apple’s settings; the app does not offer private, friends-only storage. Your date of birth, location, email and phone number are never uploaded by this game. No chat, custom messages, ads, analytics or tracking are included.\n\nYou can stop future uploads on this device. Published scores are retained by Apple; stopping sharing or resetting the local game does not delete them. Visibility, reporting, friendships and Apple data requests are managed through Apple Games, Game Center and Apple’s privacy controls. Publishing again can restore your previous best results.\n\nRestricted and underage accounts cannot publish progress through this game. A parental gate does not replace legally required parental consent."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je naam, klokken en voortgang staan op dit apparaat. Vrienden zijn optioneel. Apple beheert het inloggen, vriendschappen, displaynamen en avatars. Vriendentoegang wordt pas gevraagd als je daarvoor kiest; alleen vrienden die Apple toestaat worden getoond. Gegevens van vrienden staan alleen in het geheugen en worden gewist wanneer de app naar de achtergrond gaat, toegang verandert of je vrienden uitschakelt.\n\nAls je iCloud-sync aanzet, worden alleen je levelresultaten, sterren en spelvoortgang met je eigen iCloud-account gedeeld tussen je apparaten. Je naam, klokken en instellingen blijven op dit apparaat. Uitzetten stopt nieuwe iCloud-updates op dit apparaat; het verwijdert eerder opgeslagen cloudvoortgang niet.\n\nDelen staat standaard uit. Als een volwassene dit inschakelt, verstuurt de game de beste levelresultaten, sterren en voortgang naar Apple Game Center-leaderboards. Deze resultaten kunnen volgens Apples instellingen zichtbaar zijn voor andere Game Center-spelers; de app biedt geen besloten opslag voor alleen vrienden. Je lokale naam, geboortedatum, locatie, e-mailadres en telefoonnummer worden nooit door deze game verstuurd. Er is geen chat, eigen berichten, reclame, analyse of tracking.\n\nJe kunt nieuwe uploads op dit apparaat stoppen. Gepubliceerde scores blijven bij Apple; stoppen met delen of de lokale game resetten verwijdert ze niet. Zichtbaarheid, meldingen, vriendschappen en Apple-gegevensverzoeken regel je via Apple Games, Game Center en Apples privacyinstellingen. Opnieuw publiceren kan je eerdere beste resultaten herstellen.\n\nAccounts met beperkingen en minderjarige accounts kunnen via deze game geen voortgang publiceren. Een ouderscherm vervangt geen wettelijk vereiste ouderlijke toestemming."
+            "value": "Je klokken en voortgang staan op dit apparaat. Je naam komt uit je Game Center-account. Vrienden zijn optioneel. Apple beheert het inloggen, vriendschappen, displaynamen en avatars. Vriendentoegang wordt pas gevraagd als je daarvoor kiest; alleen vrienden die Apple toestaat worden getoond. Gegevens van vrienden staan alleen in het geheugen en worden gewist wanneer de app naar de achtergrond gaat, toegang verandert of je vrienden uitschakelt.\n\nAls je iCloud-sync aanzet, worden alleen je levelresultaten, gemeten speeltijden, sterren en spelvoortgang met je eigen iCloud-account gedeeld tussen je apparaten. Je dinokleuren, klokken en instellingen blijven op dit apparaat. Uitzetten stopt nieuwe iCloud-updates op dit apparaat; het verwijdert eerder opgeslagen cloudvoortgang niet.\n\nDelen staat standaard uit. Als een volwassene dit inschakelt, verstuurt de game de beste levelresultaten, gemeten speeltijden, sterren en voortgang naar Apple Game Center-leaderboards. Deze resultaten kunnen volgens Apples instellingen zichtbaar zijn voor andere Game Center-spelers; de app biedt geen besloten opslag voor alleen vrienden. Je geboortedatum, locatie, e-mailadres en telefoonnummer worden nooit door deze game verstuurd. Er is geen chat, eigen berichten, reclame, analyse of tracking.\n\nJe kunt nieuwe uploads op dit apparaat stoppen. Gepubliceerde scores blijven bij Apple; stoppen met delen of de lokale game resetten verwijdert ze niet. Zichtbaarheid, meldingen, vriendschappen en Apple-gegevensverzoeken regel je via Apple Games, Game Center en Apples privacyinstellingen. Opnieuw publiceren kan je eerdere beste resultaten herstellen.\n\nAccounts met beperkingen en minderjarige accounts kunnen via deze game geen voortgang publiceren. Een ouderscherm vervangt geen wettelijk vereiste ouderlijke toestemming."
           }
         }
       }
@@ -3356,13 +3237,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Change your Dino colors and name"
+            "value": "Change your dino’s colors"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pas je dinokleuren en naam aan"
+            "value": "Verander de kleuren van jouw dino"
           }
         }
       }
@@ -3618,6 +3499,193 @@
           "stringUnit": {
             "state": "translated",
             "value": "Roze"
+          }
+        }
+      }
+    },
+    "dino.yourAnswer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your answer"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jouw antwoord"
+          }
+        }
+      }
+    },
+    "dino.friends.firstHere": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are the first of your friends to finish this level!"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jij bent de eerste van je vrienden die dit level heeft gehaald!"
+          }
+        }
+      }
+    },
+    "dino.friends.beFirstHere": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Be the first of your friends to finish this level!"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haal dit level als eerste van je vrienden!"
+          }
+        }
+      }
+    },
+    "dino.friends.time": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijd"
+          }
+        }
+      }
+    },
+    "dino.friends.timeUnavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time unavailable"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tijd niet beschikbaar"
+          }
+        }
+      }
+    },
+    "dino.appearance.welcome": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make your dino"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maak jouw dino"
+          }
+        }
+      }
+    },
+    "dino.settings.gameCenter": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game Center"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game Center"
+          }
+        }
+      }
+    },
+    "dino.settings.gameCenter.nameSource": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your name comes from Game Center. You can change it there."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je naam komt uit Game Center. Je kunt hem daar aanpassen."
+          }
+        }
+      }
+    },
+    "dino.settings.gameCenter.noAccount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are not signed in to Game Center."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je bent niet aangemeld bij Game Center."
+          }
+        }
+      }
+    },
+    "dino.settings.gameCenter.open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game Center & friends"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Game Center en vrienden"
+          }
+        }
+      }
+    },
+    "dino.friends.you": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jij"
           }
         }
       }

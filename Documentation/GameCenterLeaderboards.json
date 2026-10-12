@@ -91,5 +91,78 @@
       "minimum": 0,
       "maximum": 27
     }
+  ],
+  "timingNote": "Additive optional boards. Same best-score descending integer settings; quality first, then fastest time. Existing result boards remain required and unchanged.",
+  "timingLeaderboards": [
+    {
+      "id": "dino.level.1.timed.v1",
+      "titleNL": "Level 1 — resultaat en tijd",
+      "titleEN": "Level 1 — result and time",
+      "minimum": 1000,
+      "maximum": 30596
+    },
+    {
+      "id": "dino.level.2.timed.v1",
+      "titleNL": "Level 2 — resultaat en tijd",
+      "titleEN": "Level 2 — result and time",
+      "minimum": 1000,
+      "maximum": 30596
+    },
+    {
+      "id": "dino.level.3.timed.v1",
+      "titleNL": "Level 3 — resultaat en tijd",
+      "titleEN": "Level 3 — result and time",
+      "minimum": 1000,
+      "maximum": 30596
+    },
+    {
+      "id": "dino.level.4.timed.v1",
+      "titleNL": "Level 4 — resultaat en tijd",
+      "titleEN": "Level 4 — result and time",
+      "minimum": 1000,
+      "maximum": 30596
+    },
+    {
+      "id": "dino.level.5.timed.v1",
+      "titleNL": "Level 5 — resultaat en tijd",
+      "titleEN": "Level 5 — result and time",
+      "minimum": 1000,
+      "maximum": 30596
+    },
+    {
+      "id": "dino.level.6.timed.v1",
+      "titleNL": "Level 6 — resultaat en tijd",
+      "titleEN": "Level 6 — result and time",
+      "minimum": 1000,
+      "maximum": 30596
+    },
+    {
+      "id": "dino.level.7.timed.v1",
+      "titleNL": "Level 7 — resultaat en tijd",
+      "titleEN": "Level 7 — result and time",
+      "minimum": 1000,
+      "maximum": 30596
+    },
+    {
+      "id": "dino.level.8.timed.v1",
+      "titleNL": "Level 8 — resultaat en tijd",
+      "titleEN": "Level 8 — result and time",
+      "minimum": 1000,
+      "maximum": 30596
+    },
+    {
+      "id": "dino.level.9.timed.v1",
+      "titleNL": "Level 9 — resultaat en tijd",
+      "titleEN": "Level 9 — result and time",
+      "minimum": 1000,
+      "maximum": 30596
+    },
+    {
+      "id": "dino.level.10.timed.v1",
+      "titleNL": "Level 10 — resultaat en tijd",
+      "titleEN": "Level 10 — result and time",
+      "minimum": 1000,
+      "maximum": 59591
+    }
   ]
 }

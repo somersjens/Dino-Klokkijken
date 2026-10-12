@@ -86,6 +86,8 @@ struct DinoCompanionLayer: View {
     @State private var atResult = false
 
     var body: some View {
+        Group {
+            if destination != nil || isResult {
         // A fixed drawing size lets position and scale animate without restarting the sprite.
         DinoCharacter(state: clip == .wrongAnswer ? .sad : .idle, size: 210,
                       performsBackflip: clip == .backflip, givesThumbsUp: clip == .thumbsUp)
@@ -116,5 +118,7 @@ struct DinoCompanionLayer: View {
                     withTransaction(transaction) { placement = target }
                 }
             }
+            }
+        }
     }
 }

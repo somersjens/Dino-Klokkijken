@@ -9,6 +9,7 @@ struct WorldMap: View {
     var openSettings: () -> Void
     var openCompletion: () -> Void
     var openFriends: () -> Void
+    var hudHeightChanged: (CGFloat) -> Void = { _ in }
     @State private var landscapeRouteOffset: CGFloat = 320
     @State private var selectedFriend: FriendSelection?
 
@@ -19,7 +20,7 @@ struct WorldMap: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         VStack(spacing: 0) {
-                            VStack(spacing: 18) {
+                            VStack(spacing: 12) {
                                 mapHeading
                                 Button(action: openFriends) {
                                     Label("dino.friends.title", systemImage: "person.2.fill")
@@ -48,9 +49,10 @@ struct WorldMap: View {
                     }
                 }
             }.safeAreaInset(edge: .top, spacing: 0) {
-                AdventureHeader(name: player.profile.name, level: max(1, player.profile.dinoLevel),
+                AdventureHeader(level: max(1, player.profile.dinoLevel),
                                 stars: player.profile.totalStars, compact: verticalSizeClass == .compact,
                                 control: .settings, action: openSettings)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { hudHeightChanged($0) }
             }
         }
         .foregroundStyle(DinoStyle.ink)
@@ -67,8 +69,8 @@ struct WorldMap: View {
     private var mapHeading: some View {
         VStack(spacing: 8) {
             Text("dino.worldOne").font(.system(size: 11, weight: .heavy, design: .rounded)).tracking(3)
-                .foregroundStyle(DinoStyle.deepGreen).padding(.top, 27)
-            Text("dino.jungle").font(.system(size: 38, weight: .heavy, design: .rounded))
+                .foregroundStyle(DinoStyle.deepGreen).padding(.top, 16)
+            Text("dino.jungle").font(.system(size: 34, weight: .heavy, design: .rounded))
             Label("dino.wholeHours", systemImage: "clock")
                 .font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
         }.frame(maxWidth: .infinity)
@@ -112,7 +114,7 @@ struct WorldMap: View {
     private var routeNodes: some View {
         GeometryReader { g in
             let points = (0...10).map { routePoint($0, width: g.size.width) }
-            let dinoSize = min(144, g.size.width * 0.37)
+            let dinoSize = min(144, g.size.width * 0.37) * 0.85
             ZStack(alignment: .topLeading) {
                 Path { p in
                     p.move(to: points[10])
@@ -133,24 +135,25 @@ struct WorldMap: View {
                         ZStack {
                             Group {
                                 if index == 0 {
-                                    Circle().fill(.white.opacity(0.9)).frame(width: 54, height: 54)
-                                        .overlay(Circle().stroke(DinoStyle.green.opacity(0.55), lineWidth: 3))
-                                        .overlay(Circle().fill(DinoStyle.green.opacity(0.2)).frame(width: 18, height: 18))
-                                        .accessibilityLabel(Text("dino.startPoint"))
-                                        .accessibilityIdentifier("map.start")
+                                    startPoint
                                 } else if let level = DinoLevelCatalog.level(index) {
                                     LevelNode(level: level, record: player.profile.record(index),
                                               unlocked: player.profile.isUnlocked(index),
                                               current: player.profile.dinoLevel == index,
                                               bossComplete: player.profile.worldOneComplete) { openLevel(level) }
                                 }
-                            }.offset(x: point.x - g.size.width / 2, y: index == 0 ? 0 : index == 10 ? 13 : 16)
+                            }.offset(x: point.x - g.size.width / 2)
                             if player.profile.dinoLevel == index {
-                                DinoCharacter(state: .happy, size: dinoSize)
+                                ZStack(alignment: .bottom) {
+                                    Ellipse().fill(Color(dinoHex: 0x38552D).opacity(0.25))
+                                        .frame(width: dinoSize * 0.48, height: dinoSize * 0.12)
+                                        .blur(radius: 3).offset(y: -4)
+                                    DinoCharacter(state: .happy, size: dinoSize)
+                                }
                                     .allowsHitTesting(false)
                                     .accessibilityIdentifier("map.dino.\(index)")
                                     .offset(x: point.x - g.size.width / 2,
-                                            y: -dinoSize / 2 - (index == 10 ? 38 : 24))
+                                            y: -dinoSize / 2 + 12)
                             }
                             if index > 0, !friends.friends(at: index).isEmpty {
                                 FriendMapAvatars(friends: friends.friends(at: index), openFriend: { selectedFriend = FriendSelection(id: $0) }, openMore: openFriends)
@@ -158,14 +161,34 @@ struct WorldMap: View {
                             }
                         }.frame(width: g.size.width, height: 175).id("node-\(index)")
                     }
-                }.padding(.top, 72.5)
+                }.padding(.top, -17.5)
             }
         }.frame(height: 2020).environment(\.layoutDirection, .leftToRight)
     }
 
+    private var startPoint: some View {
+        Circle().fill(Color(dinoHex: 0x8CA35F)).offset(y: 7)
+            .overlay {
+                Circle().fill(LinearGradient(colors: [Color(dinoHex: 0xEEF3C4), Color(dinoHex: 0xBDD889)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .overlay(Circle().stroke(Color(dinoHex: 0xFFFBE1), lineWidth: 4).padding(4))
+                    .overlay(Circle().stroke(DinoStyle.deepGreen.opacity(0.15), style: StrokeStyle(lineWidth: 2, dash: [2, 6])).padding(13))
+            }
+            .frame(width: 96, height: 96)
+            .shadow(color: DinoStyle.deepGreen.opacity(0.18), radius: 12, y: 8)
+            .overlay(alignment: .bottom) {
+                Text("dino.startPoint").font(.system(size: 13, weight: .heavy, design: .rounded)).fixedSize()
+                    .padding(.horizontal, 18).padding(.vertical, 7)
+                    .background(Color(dinoHex: 0xFFFBE1), in: Capsule())
+                    .overlay(Capsule().stroke(DinoStyle.deepGreen.opacity(0.18), lineWidth: 1.5))
+                    .offset(y: 25)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("dino.startPoint")).accessibilityIdentifier("map.start")
+    }
+
     private func routePoint(_ index: Int, width: CGFloat) -> CGPoint {
-        let positions: [CGFloat] = [0.28, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5]
-        return CGPoint(x: width * positions[index], y: 160 + CGFloat(index) * 175)
+        let positions: [CGFloat] = [0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5]
+        return CGPoint(x: width * positions[index], y: 70 + CGFloat(index) * 175)
     }
     private func routePath(_ points: [CGPoint]) -> Path {
         Path { p in
@@ -189,8 +212,7 @@ struct LevelNode: View {
     var action: () -> Void
     private var color: Color { !unlocked ? Color(dinoHex: 0xA9B8A0) : level.isBoss ? DinoStyle.ink : DinoStyle.green }
     var body: some View {
-        VStack(spacing: 12) {
-            Button(action: action) {
+        Button(action: action) {
                 ZStack {
                     if current { Circle().stroke(highContrast ? DinoStyle.deepGreen : DinoStyle.green.opacity(0.5), lineWidth: 3).padding(-9) }
                     Circle().fill(color.opacity(0.55)).offset(y: 6)
@@ -207,12 +229,15 @@ struct LevelNode: View {
             .accessibilityLabel(Text("dino.levelNumber \(level.id)"))
             .accessibilityValue(Text(LocalizedStringKey(unlocked ? "dino.unlocked" : "dino.locked")))
             .accessibilityIdentifier("map.level.\(level.id)")
-            if level.isBoss {
-                Text("dino.boss").font(.system(size: 11, weight: .heavy, design: .rounded)).tracking(1.5)
-            } else {
-                DinoStars(count: record.stars, size: 17, showEmpty: record.stars > 0).frame(height: 20)
+            .overlay(alignment: .bottom) {
+                Group {
+                    if level.isBoss {
+                        Text("dino.boss").font(.system(size: 11, weight: .heavy, design: .rounded)).tracking(1.5)
+                    } else {
+                        DinoStars(count: record.stars, size: 17, showEmpty: record.stars > 0).frame(height: 20)
+                    }
+                }.offset(y: 32).allowsHitTesting(false)
             }
-        }
     }
 }
 
@@ -226,10 +251,10 @@ struct LevelInfoPanel: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-                if level.isBoss { ClockGate(size: 170, theme: player.profile.clockTheme) }
+                if level.isBoss { ClockGate(size: 120, theme: player.profile.clockTheme) }
                 else {
                     HStack(spacing: 20) {
-                        DinoCharacter(size: 100)
+                        DinoCharacter(size: 72)
                         Image(systemName: level.icon).font(.system(size: 44, weight: .bold)).foregroundStyle(DinoStyle.green)
                     }
                 }
@@ -246,8 +271,8 @@ struct LevelInfoPanel: View {
                 }
                 Button(action: start) { Label("dino.play", systemImage: "play.fill") }
                     .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("level.play")
-                Button("dino.map") { if let close { close() } else { dismiss() } }.buttonStyle(DinoSecondaryButtonStyle())
                 LevelFriendsView(levelID: level.id)
+                Button("dino.map") { if let close { close() } else { dismiss() } }.buttonStyle(DinoSecondaryButtonStyle())
             }.padding(26).frame(maxWidth: 450).frame(maxWidth: .infinity)
         }.background(JungleBackground(quiet: true)).foregroundStyle(DinoStyle.ink)
     }
@@ -256,6 +281,7 @@ struct LevelInfoPanel: View {
 /// The start card and game share one scene, so Play never waits for a sheet dismissal.
 struct LevelStartOverlay: View {
     let level: LevelConfiguration
+    let hudHeight: CGFloat
     var start: () -> Void
     var close: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -263,7 +289,8 @@ struct LevelStartOverlay: View {
 
     var body: some View {
         GeometryReader { geometry in
-            ZStack(alignment: .bottom) {
+            let top = min(hudHeight + 14, max(14, geometry.size.height - 180))
+            ZStack(alignment: .top) {
                 Color.black.opacity(0.28).ignoresSafeArea()
                     .onTapGesture(perform: close).transition(.opacity)
                 VStack(spacing: 0) {
@@ -279,13 +306,14 @@ struct LevelStartOverlay: View {
                     LevelInfoPanel(level: level, start: start, close: close)
                 }
                 .frame(width: min(540, geometry.size.width - 24),
-                       height: min(level.isBoss ? 640 : 430, geometry.size.height - 20))
+                       height: min(level.isBoss ? 640 : 570, geometry.size.height - top - 16))
                 .background(Color(dinoHex: 0xF6FAE9))
                 .clipShape(RoundedRectangle(cornerRadius: 28))
                 .shadow(color: .black.opacity(0.14), radius: 20, y: 8)
-                .padding(.bottom, 10)
+                .accessibilityIdentifier("level.startCard")
+                .padding(.top, top)
                 .offset(y: dragOffset)
-                .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+                .transition(reduceMotion ? .opacity : .scale(scale: 0.95, anchor: .top).combined(with: .opacity))
                 .accessibilityAddTraits(.isModal)
             }
         }

@@ -16,7 +16,7 @@ struct DinoGameView: View {
             ZStack {
                 JungleBackground(quiet: true)
                 VStack(spacing: 0) {
-                    AdventureHeader(personalizerChanged: { personalizing = $0 }, name: player.profile.name, level: session.level.id,
+                    AdventureHeader(personalizerChanged: { personalizing = $0 }, level: session.level.id,
                                     stars: player.profile.totalStars, compact: g.size.height < 430) {
                         confirmExit = true
                     }
@@ -45,7 +45,7 @@ struct DinoGameView: View {
                             proxy.scrollTo("question.top", anchor: .top)
                         }
                     }
-                }.disabled(confirmExit).accessibilityHidden(confirmExit)
+                }.disabled(confirmExit || session.demonstration != nil).accessibilityHidden(confirmExit || session.demonstration != nil)
                 if let kind = session.demonstration {
                     Color.black.opacity(0.28).ignoresSafeArea()
                     ScrollView {
@@ -65,13 +65,11 @@ struct DinoGameView: View {
             }
             .safeAreaInset(edge: .bottom) {
                 if session.hasFeedback && !session.correctFeedback {
-                    VStack(spacing: 10) {
-                        feedback
-                        Button { session.advance() } label: {
-                            Label("dino.next", systemImage: "arrow.right")
-                        }.buttonStyle(DinoButtonStyle(compact: true))
-                            .accessibilityIdentifier("question.next")
-                    }.padding(12).frame(maxWidth: 520).frame(maxWidth: .infinity)
+                    Button { session.advance() } label: {
+                        Label("dino.next", systemImage: "arrow.right")
+                    }.buttonStyle(DinoButtonStyle(compact: true))
+                        .accessibilityIdentifier("question.next")
+                        .padding(12).frame(maxWidth: 520).frame(maxWidth: .infinity)
                         .background(.ultraThinMaterial)
                         .disabled(confirmExit).accessibilityHidden(confirmExit)
                 }
@@ -130,6 +128,7 @@ struct DinoGameView: View {
                 }.frame(height: 8)
             }
             DinoIconButton(icon: "questionmark", labelKey: "dino.example") { session.demonstration = session.question.kind }
+                .accessibilityIdentifier("question.example")
                 .disabled(session.hasFeedback)
         }.padding(12).background(.white.opacity(0.65), in: RoundedRectangle(cornerRadius: 22))
     }
@@ -146,20 +145,7 @@ struct DinoGameView: View {
         }.environment(\.layoutDirection, .leftToRight)
     }
 
-    private var feedback: some View {
-        HStack(spacing: 12) {
-            DinoCompanionAnchor(placement: .game, size: 72)
-            VStack(alignment: .leading, spacing: 4) {
-                Text("dino.correctTime").font(.system(size: 16, weight: .bold, design: .rounded))
-                Text(verbatim: session.question.target.digitalText).font(.system(size: 24, weight: .heavy, design: .rounded))
-            }
-            Spacer(minLength: 0)
-        }.foregroundStyle(DinoStyle.ink)
-            .padding(.horizontal, 14).padding(.vertical, 10)
-            .background(Color(dinoHex: 0xFBEDEA), in: RoundedRectangle(cornerRadius: 20))
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier("question.feedback")
-    }
+
 }
 
 struct InteractionDemonstration: View {
@@ -171,11 +157,8 @@ struct InteractionDemonstration: View {
         VStack(spacing: 18) {
             Label("dino.example", systemImage: "sparkles").font(.system(size: 13, weight: .heavy, design: .rounded)).foregroundStyle(DinoStyle.green)
             Text(LocalizedStringKey(kind.instructionKey)).font(.system(size: 24, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
-            HStack(alignment: .center, spacing: 14) {
-                DinoCharacter(state: .thinking, size: 78)
-                AnalogClock(time: ClockTime(hour: exampleHour), theme: theme, size: 150,
-                            onHourChange: kind == .setAnalog ? { exampleHour = $0 } : nil, showHandHints: true)
-            }
+            AnalogClock(time: ClockTime(hour: exampleHour), theme: theme, size: 170,
+                        onHourChange: kind == .setAnalog ? { exampleHour = $0 } : nil, showHandHints: true)
             Image(systemName: kind == .setAnalog ? "hand.draw.fill" : "arrow.down")
                 .font(.system(size: 25, weight: .bold)).foregroundStyle(DinoStyle.green)
             if kind == .setDigital { DigitalClockControl(hour: $exampleHour, theme: theme, fontSize: 30) }
@@ -184,7 +167,9 @@ struct InteractionDemonstration: View {
                 .font(.system(size: 14, weight: .medium, design: .rounded)).multilineTextAlignment(.center)
             Button(action: done) { Label("dino.ready", systemImage: "checkmark") }
                 .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("demo.ready")
-        }.dinoCard().foregroundStyle(DinoStyle.ink)
+        }.dinoCard()
+            .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
+            .foregroundStyle(DinoStyle.ink).accessibilityAddTraits(.isModal)
             .onAppear { exampleHour = 3 }
             .task {
                 guard kind == .setAnalog || kind == .setDigital else { return }

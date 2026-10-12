@@ -27,7 +27,6 @@ final class DinoProgressStore {
     private func validated(_ profile: PlayerProfile) -> PlayerProfile {
         var result = profile
         result.name = PlayerProfile.sanitizedName(result.name)
-        result.onboardingComplete = result.onboardingComplete && !result.name.isEmpty
         result.levels = result.levels.filter { key, _ in Int(key).map { (1...10).contains($0) } ?? false }
         for (key, var value) in result.levels {
             value.bestCorrect = min(key == "10" ? 10 : 5, max(0, value.bestCorrect))

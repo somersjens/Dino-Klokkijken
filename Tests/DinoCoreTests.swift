@@ -14,9 +14,11 @@ struct DinoCoreTests {
         testAnimation()
         testQuestions()
         testAttempt()
+        testTiming()
         testProgress()
         testStorage()
         testDinoAppearance()
+        testDinoAvatarMask()
         testPlayerModel()
         testSettingsAndFeedback()
         testCloudSync()
@@ -131,6 +133,40 @@ struct DinoCoreTests {
         for score in 0...5 { expect(StarCalculator.stars(correct: score) == [0,0,0,1,2,3][score], "star thresholds") }
     }
 
+    @MainActor
+    static func testTiming() {
+        for (elapsed, seconds) in [(0.0, 1), (0.9, 1), (1.1, 2), (59.5, 60), (60, 60), (86_400, 60), (-3_600, 1), (Double.infinity, 60), (Double.nan, 1)] {
+            expect(DinoQuestionTiming.scoredSeconds(elapsed) == seconds, "bounded timing including long inactivity and clock anomalies")
+        }
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        let player = DinoPlayer(store: store)
+        var now = 100.0
+        let session = DinoSession(level: DinoLevelCatalog.level(1)!, player: player, now: { now })
+        expect(session.demonstration == nil, "fresh session starts without help")
+        let durations = [0.0, 2.2, 300.0, 5.0, 10.0]
+        for duration in durations {
+            now += duration
+            session.submit(session.question.target)
+            now += 10_000 // Feedback and waiting for Next must not count.
+            session.submit(session.question.target)
+            session.advance()
+            expect(session.demonstration == nil, "new questions never force help")
+        }
+        expect(session.attempt.questionSeconds == [1, 3, 60, 5, 10], "only unanswered time per question, no double taps or feedback")
+        expect(player.profile.timedAttempts?.count == 1 && player.profile.timedAttempts?.first?.seconds == 79, "whole game timing is recorded")
+        expect(store.load().record(1).bestTimedResult?.seconds == 79, "timing persists after reload")
+        var profile = player.profile
+        profile.recordCompletedAttempt(levelID: 1, correct: 4, questionSeconds: [1,1,1,1,1])
+        expect(profile.record(1).bestTimedResult?.seconds == 79, "fast worse replay cannot borrow old stars")
+        profile.recordCompletedAttempt(levelID: 1, correct: 5, questionSeconds: [2,2,2,2,2])
+        expect(profile.record(1).bestTimedResult?.seconds == 10 && profile.timedAttempts?.count == 3, "faster equal-quality result wins, each game retained")
+        var cloud = PlayerProfile()
+        cloud.mergeCloudProgress(DinoCloudProgress(profile))
+        expect(cloud.record(1).bestTimedResult?.seconds == 10 && cloud.timedAttempts == nil, "best timing syncs, local history stays local")
+        profile.resetProgress()
+        expect(profile.timedAttempts == nil && profile.record(1).bestTimedResult == nil, "reset also clears timing")
+    }
+
     static func testProgress() {
         var p = PlayerProfile()
         expect(p.unlockedLevels == [1,10] && p.dinoLevel == 0, "new player map and direct boss")
@@ -194,15 +230,17 @@ struct DinoCoreTests {
     static func testPlayerModel() {
         let memory = InMemoryKeyValueStore()
         let player = DinoPlayer(store: DinoProgressStore(defaults: memory))
-        player.setName(" Sam ")
         var theme = ClockTheme.standard
         theme.face = .green; theme.display = .charcoal; theme.hands = .straight
         player.completeOnboarding(theme: theme)
-        expect(player.profile.name == "Sam" && player.profile.onboardingComplete, "model onboarding")
+        expect(player.profile.name.isEmpty && player.profile.onboardingComplete, "onboarding completes without entering a local name")
         expect(player.profile.clockTheme == theme, "model chosen clocks")
+        expect(DinoPlayer(store: DinoProgressStore(defaults: memory)).profile.onboardingComplete,
+               "nameless onboarding stays complete after restarting")
         let level = DinoLevelCatalog.level(1)!
         let session = DinoSession(level: level, player: player)
-        expect(session.demonstration == .chooseAnalog, "new interaction demonstration")
+        expect(session.demonstration == nil, "examples never open automatically")
+        session.demonstration = session.question.kind
         session.submit(session.question.target)
         expect(session.attempt.answers.isEmpty, "demonstration cannot score active question")
         session.dismissDemonstration()
@@ -221,7 +259,7 @@ struct DinoCoreTests {
         player.resetProgress()
         let restored = DinoProgressStore(defaults: memory).load()
         expect(restored.levels.isEmpty && restored.bossResults.isEmpty && !restored.worldOneComplete, "reset clears only progress")
-        expect(restored.name == "Sam" && restored.onboardingComplete && restored.clockTheme == .standard, "reset preserves profile and clocks")
+        expect(restored.name.isEmpty && restored.onboardingComplete && restored.clockTheme == .standard, "reset preserves nameless onboarding and clocks")
     }
 
     static func testDinoAppearance() {
@@ -244,9 +282,8 @@ struct DinoCoreTests {
         let restarted = DinoPlayer(store: store)
         expect(restarted.profile.dinoAppearance == appearance, "all four custom colors survive restart")
         expect(restarted.profile.name == "Sam" && restarted.profile.clockTheme.face == .blue && restarted.profile.totalStars == 3, "personalization preserves the existing player")
-        expect(restarted.setName("Luna") && restarted.setName("Nova"), "name can be changed repeatedly")
         restarted.resetProgress()
-        expect(restarted.profile.dinoAppearance == appearance && restarted.profile.name == "Nova", "progress reset preserves appearance and name")
+        expect(restarted.profile.dinoAppearance == appearance && restarted.profile.name == "Sam", "progress reset preserves appearance and legacy save fields")
         var cloud = PlayerProfile(); cloud.recordCompletedAttempt(levelID: 1, correct: 5)
         restarted.mergeCloudProgress(DinoCloudProgress(cloud))
         expect(restarted.profile.dinoAppearance == appearance, "cloud merge preserves local avatar colors")
@@ -254,6 +291,35 @@ struct DinoCoreTests {
         expect(!cloudJSON.contains("dinoAppearance") && !cloudJSON.contains("bandana"), "avatar colors remain device-local")
         restarted.setDinoAppearance(.standard)
         expect(DinoPlayer(store: store).profile.dinoAppearance == .standard, "restore original colors persists")
+    }
+
+    static func testDinoAvatarMask() {
+        // Coordinates and colors come from the original illustration's problem areas.
+        for (x, y) in [(595.0, 48.0), (615.0, 61.0)] {
+            expect(DinoAvatarMask.part(hue: 0.29, saturation: 0.43, lightness: 0.57,
+                                      x: x / 1254, y: y / 1254) == .spikes,
+                   "bright front of upper spike uses spike color, not body color")
+        }
+        expect(DinoAvatarMask.part(hue: 0.22, saturation: 0.66, lightness: 0.64,
+                                  x: 646.0 / 1254, y: 83.0 / 1254) == .body,
+               "forehead strip beside the spike keeps the body color")
+        for (x, y) in [(590.0, 453.0), (616.0, 480.0), (622.0, 488.0), (665.0, 540.0)] {
+            expect(DinoAvatarMask.part(hue: 0.11, saturation: 0.60, lightness: 0.75,
+                                      x: x / 1254, y: y / 1254) == .belly,
+                   "cheek and jaw stay colored without rectangular mouth cutouts")
+        }
+        expect(DinoAvatarMask.part(hue: 0.09, saturation: 0.80, lightness: 0.25,
+                                  x: 608.0 / 1254, y: 350.0 / 1254) == nil,
+               "iris retains its original brown color")
+        expect(DinoAvatarMask.part(hue: 0.13, saturation: 0.10, lightness: 0.92,
+                                  x: 560.0 / 1254, y: 330.0 / 1254) == nil,
+               "warm eye reflections remain white without colored speckles")
+        expect(DinoAvatarMask.part(hue: 0.09, saturation: 0.82, lightness: 0.08,
+                                  x: 800.0 / 1254, y: 505.0 / 1254) == nil,
+               "dark mouth interior remains unchanged")
+        expect(DinoAvatarMask.part(hue: 0.01, saturation: 0.80, lightness: 0.45,
+                                  x: 710.0 / 1254, y: 529.0 / 1254) == nil,
+               "tongue is independent of bandana color")
     }
 
     static func testSettingsAndFeedback() {
@@ -267,7 +333,8 @@ struct DinoCoreTests {
         expect(!restarted.soundEffectsEnabled && !restarted.hapticsEnabled && restarted.highContrastEnabled && restarted.icloudSyncEnabled, "all four settings survive restart, including false values")
         let player = DinoPlayer(store: DinoProgressStore(defaults: memory))
         var feedback: [Bool] = []
-        let session = DinoSession(level: DinoLevelCatalog.level(1)!, player: player) { feedback.append($0) }
+        let session = DinoSession(level: DinoLevelCatalog.level(1)!, player: player, answerFeedback: { feedback.append($0) })
+        session.demonstration = session.question.kind
         session.submit(session.question.target)
         expect(feedback.isEmpty, "demonstration never emits answer feedback")
         session.dismissDemonstration()

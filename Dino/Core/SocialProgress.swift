@@ -8,6 +8,10 @@ struct SharedLevelResult: Equatable, Sendable {
     let bestCorrect: Int
     let bossComplete: Bool
     let perfectBoss: Bool
+    var seconds: Int? = nil
+    var resultPoints: Int {
+        levelID == 10 ? 1 + bestCorrect + (bossComplete ? 16 : 0) + (perfectBoss ? 32 : 0) : 1 + stars * 8 + bestCorrect
+    }
     var completed: Bool { levelID == 10 ? bossComplete : stars > 0 }
 }
 
@@ -16,6 +20,8 @@ enum DinoLeaderboards {
     static let totalStars = "dino.progress.stars.v1"
     static let context = 1
     static func level(_ id: Int) -> String { "dino.level.\(id).result.v1" }
+    static func timedLevel(_ id: Int) -> String { "dino.level.\(id).timed.v1" }
+    static var timedIDs: [String] { DinoLevelCatalog.levels.map { timedLevel($0.id) } }
     static var allIDs: [String] { DinoLevelCatalog.levels.map { level($0.id) } + [highestLevel, totalStars] }
 
     /// Integer ordering preserves both best stars and best correct answers.
@@ -46,6 +52,20 @@ enum DinoLeaderboards {
         let stars = value / 8, correct = value % 8
         guard correct <= 5, stars <= 3, stars == StarCalculator.stars(correct: correct) else { return nil }
         return SharedLevelResult(levelID: levelID, attempted: true, stars: stars, bestCorrect: correct, bossComplete: false, perfectBoss: false)
+    }
+
+    static func timedScore(profile: PlayerProfile, levelID: Int) -> Int? {
+        guard let timing = profile.record(levelID).bestTimedResult, timing.isValid(levelID: levelID) else { return nil }
+        return timing.rankedScore
+    }
+
+    static func decodeTimed(levelID: Int, score: Int, context: Int) -> SharedLevelResult? {
+        guard score > 0, let level = DinoLevelCatalog.level(levelID),
+              var result = decode(levelID: levelID, score: score / 1_000, context: context), result.attempted else { return nil }
+        let seconds = 601 - score % 1_000
+        guard (level.questionCount...level.questionCount * 60).contains(seconds) else { return nil }
+        result.seconds = seconds
+        return result
     }
 
     static func submissions(_ profile: PlayerProfile) -> [String: Int] {
@@ -83,10 +103,24 @@ struct FriendProgress: Equatable, Sendable {
         guard let stars = totalStars, let maximum = maximumStarsSoFar, maximum > 0 else { return nil }
         return Int((Double(stars) / Double(maximum) * 100).rounded())
     }
+    mutating func merge(_ incoming: SharedLevelResult) {
+        if let existing = levels[incoming.levelID] {
+            let oldPoints = existing.attempted ? existing.resultPoints : 0
+            let newPoints = incoming.attempted ? incoming.resultPoints : 0
+            if oldPoints > newPoints { return }
+            if oldPoints == newPoints, (existing.seconds ?? Int.max) <= (incoming.seconds ?? Int.max) { return }
+        }
+        levels[incoming.levelID] = incoming
+    }
+
     static func local(_ profile: PlayerProfile) -> FriendProgress {
-        FriendProgress(levels: Dictionary(uniqueKeysWithValues: DinoLevelCatalog.levels.compactMap { level in
-            DinoLeaderboards.decode(levelID: level.id, score: DinoLeaderboards.score(profile: profile, levelID: level.id), context: DinoLeaderboards.context).map { (level.id, $0) }
-        }))
+        var progress = FriendProgress()
+        for level in DinoLevelCatalog.levels {
+            if let result = DinoLeaderboards.decode(levelID: level.id, score: DinoLeaderboards.score(profile: profile, levelID: level.id), context: DinoLeaderboards.context) { progress.merge(result) }
+            if let score = DinoLeaderboards.timedScore(profile: profile, levelID: level.id),
+               let result = DinoLeaderboards.decodeTimed(levelID: level.id, score: score, context: DinoLeaderboards.context) { progress.merge(result) }
+        }
+        return progress
     }
 }
 
@@ -111,6 +145,7 @@ extension PlayerProfile {
             record.bestCorrect = max(record.bestCorrect, result.bestCorrect)
             record.attempts = max(record.attempts, 1)
             levels[String(level.id)] = record
+            if let seconds = result.seconds { mergeTiming(TimedLevelResult(resultPoints: result.resultPoints, seconds: seconds), levelID: level.id) }
             if level.isBoss {
                 worldOneComplete = worldOneComplete || result.bossComplete
                 perfectBossVictory = perfectBossVictory || result.perfectBoss

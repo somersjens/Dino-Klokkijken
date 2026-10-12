@@ -7,8 +7,13 @@ struct LeaderboardValue: Equatable, Sendable {
 
 @MainActor
 protocol ProgressLeaderboardTransport {
+    var availableTimingLeaderboardIDs: Set<String> { get }
     func loadOwnResults() async throws -> [String: LeaderboardValue]
     func submit(score: Int, context: Int, leaderboardID: String) async throws
+}
+
+extension ProgressLeaderboardTransport {
+    var availableTimingLeaderboardIDs: Set<String> { [] }
 }
 
 @MainActor
@@ -27,8 +32,10 @@ final class ProgressSyncService {
         for level in DinoLevelCatalog.levels {
             if let value = remote[DinoLeaderboards.level(level.id)],
                let result = DinoLeaderboards.decode(levelID: level.id, score: value.score, context: value.context) {
-                progress.levels[level.id] = result
+                progress.merge(result)
             }
+            if let value = remote[DinoLeaderboards.timedLevel(level.id)],
+               let result = DinoLeaderboards.decodeTimed(levelID: level.id, score: value.score, context: value.context) { progress.merge(result) }
         }
         merge(progress)
         for id in DinoLeaderboards.allIDs {
@@ -36,6 +43,15 @@ final class ProgressSyncService {
             guard let score = DinoLeaderboards.submissions(current())[id] else { continue }
             let previous = remote[id]
             if previous?.context == DinoLeaderboards.context, let best = previous?.score, best >= score { continue }
+            try await transport.submit(score: score, context: DinoLeaderboards.context, leaderboardID: id)
+        }
+        for level in DinoLevelCatalog.levels {
+            guard allowed(), !Task.isCancelled else { return }
+            let id = DinoLeaderboards.timedLevel(level.id)
+            guard transport.availableTimingLeaderboardIDs.contains(id),
+                  let score = DinoLeaderboards.timedScore(profile: current(), levelID: level.id) else { continue }
+            if let previous = remote[id], DinoLeaderboards.decodeTimed(levelID: level.id, score: previous.score, context: previous.context) != nil,
+               previous.score >= score { continue }
             try await transport.submit(score: score, context: DinoLeaderboards.context, leaderboardID: id)
         }
     }
