@@ -748,16 +748,16 @@
     "dino.comingSoon" : {
       "extractionState" : "manual",
       "localizations" : {
-        "en" : {
+        "nl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Coming soon"
           }
         },
-        "nl" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Binnenkort"
+            "value" : "Coming soon"
           }
         }
       }
@@ -5290,13 +5290,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Learn to tell time with Dino!"
+            "value" : "Learn to Tell Time with Dino"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Leer klokkijken met Dino!"
+            "value" : "Leer klokkijken met Dino"
           }
         }
       }
@@ -5307,13 +5307,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dino Time Adventure"
+            "value" : "Learn to Tell Time with Dino"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dino Tijdavontuur"
+            "value" : "Leer klokkijken met Dino"
           }
         }
       }
@@ -5426,13 +5426,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "World 1 complete!"
+            "value" : "World complete!"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wereld 1 voltooid!"
+            "value" : "Wereld voltooid!"
           }
         }
       }
@@ -5501,6 +5501,516 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jouw antwoord"
+          }
+        }
+      }
+    },
+    "dino.world.2.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slaapvallei"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep Valley"
+          }
+        }
+      }
+    },
+    "dino.world.2.skill" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halve uren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Half hours"
+          }
+        }
+      }
+    },
+    "dino.world.2.boss" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dommel de Droomsaurus"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dozy the Dreamsaurus"
+          }
+        }
+      }
+    },
+    "dino.world.3.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vulkaanland"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volcano Land"
+          }
+        }
+      }
+    },
+    "dino.world.3.skill" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kwartieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quarter hours"
+          }
+        }
+      }
+    },
+    "dino.world.3.boss" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magma de Vuurtriceratops"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magma the Fire Triceratops"
+          }
+        }
+      }
+    },
+    "dino.world.4.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino Dorp"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino Village"
+          }
+        }
+      }
+    },
+    "dino.world.4.skill" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stappen van 5 minuten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5-minute steps"
+          }
+        }
+      }
+    },
+    "dino.world.4.boss" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Burgemeester Tik-Tak"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mayor Tick-Tock"
+          }
+        }
+      }
+    },
+    "dino.world.5.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kristalgrot"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crystal Cave"
+          }
+        }
+      }
+    },
+    "dino.world.5.skill" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exacte minuten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exact minutes"
+          }
+        }
+      }
+    },
+    "dino.world.5.boss" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prisma de Kristalbewaker"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prisma the Crystal Guardian"
+          }
+        }
+      }
+    },
+    "dino.world.6.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino Stad"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino City"
+          }
+        }
+      }
+    },
+    "dino.world.6.skill" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digitale klok"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digital clocks"
+          }
+        }
+      }
+    },
+    "dino.world.6.boss" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neon de Klokrobot"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neon the Clock Robot"
+          }
+        }
+      }
+    },
+    "dino.world.7.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dag-en-nachtbos"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day and Night Forest"
+          }
+        }
+      }
+    },
+    "dino.world.7.skill" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "12- en 24-uursklok"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "12- and 24-hour clocks"
+          }
+        }
+      }
+    },
+    "dino.world.7.boss" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tweelicht de Bosuil"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twilight the Forest Owl"
+          }
+        }
+      }
+    },
+    "dino.world.8.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tijdmachine"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time Machine"
+          }
+        }
+      }
+    },
+    "dino.world.8.skill" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analoog en digitaal combineren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analog and digital clocks"
+          }
+        }
+      }
+    },
+    "dino.world.8.boss" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Professor Pendel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Professor Pendulum"
+          }
+        }
+      }
+    },
+    "dino.world.9.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tijdpiraten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time Pirates"
+          }
+        }
+      }
+    },
+    "dino.world.9.skill" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tijdsduur"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elapsed time"
+          }
+        }
+      }
+    },
+    "dino.world.9.boss" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapitein Zandloper"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Captain Hourglass"
+          }
+        }
+      }
+    },
+    "dino.world.10.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dinokasteel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino Castle"
+          }
+        }
+      }
+    },
+    "dino.world.10.skill" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle vaardigheden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All clock skills"
+          }
+        }
+      }
+    },
+    "dino.world.10.boss" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koning Chronos"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "King Chronos"
+          }
+        }
+      }
+    },
+    "dino.worldNumber %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wereld %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "World %lld"
+          }
+        }
+      }
+    },
+    "dino.nextWorld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naar de volgende wereld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to the next world"
+          }
+        }
+      }
+    },
+    "dino.afterHundred" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het avontuur gaat binnenkort verder."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More adventures are on their way."
           }
         }
       }

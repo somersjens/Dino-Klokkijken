@@ -2,25 +2,37 @@
   "sourceLanguage" : "en",
   "strings" : {
     "CFBundleDisplayName" : {
-      "comment" : "Bundle display name",
-      "extractionState" : "extracted_with_value",
+      "comment" : "Short app name shown below the app icon on the Home Screen.",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dino Tijdavontuur"
+            "state" : "translated",
+            "value" : "Dino Time"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tijd Dino"
           }
         }
       }
     },
     "CFBundleName" : {
-      "comment" : "Bundle name",
-      "extractionState" : "extracted_with_value",
+      "comment" : "Localized short bundle name.",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Dino Klokkijken"
+            "state" : "translated",
+            "value" : "Dino Time"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tijd Dino"
           }
         }
       }

@@ -9,6 +9,7 @@ struct DinoRootView: View {
     @State private var result: DinoLevelResult?
     @State private var showsSettings = false
     @State private var showsCompletion = false
+    @State private var completedWorldID = 1
     @State private var startCard: LevelConfiguration?
     @State private var showsFriends = false
     @State private var showsPractice = false
@@ -63,10 +64,12 @@ struct DinoRootView: View {
     @ViewBuilder private var scene: some View {
         Group {
             if !player.profile.onboardingComplete { OnboardingFlow() }
-            else if showsCompletion { WorldCompleteView(map: showMap) }
+            else if showsCompletion {
+                WorldCompleteView(worldID: completedWorldID, nextWorld: nextWorld, map: showMap)
+            }
             else if let result {
                 DinoResultView(result: result, retry: { start(result.level) }, next: {
-                    if result.level.isBoss { showsCompletion = true }
+                    if result.level.isBoss { completedWorldID = result.level.worldID; showsCompletion = true }
                     else if let next = DinoLevelCatalog.level(result.level.id + 1) {
                         if next.isBoss { presentStartCard(next) } else { start(next) }
                     }
@@ -78,7 +81,7 @@ struct DinoRootView: View {
                     }
                 }).id(ObjectIdentifier(session))
             } else {
-                WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true }, openPractice: { showsPractice = true }, openCompletion: { showsCompletion = true }, openFriends: { showsFriends = true }, hudHeightChanged: { mapHUDHeight = $0 })
+                WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true }, openPractice: { showsPractice = true }, openCompletion: { completedWorldID = 10; showsCompletion = true }, openFriends: { showsFriends = true }, hudHeightChanged: { mapHUDHeight = $0 })
             }
         }
     }
@@ -93,6 +96,11 @@ struct DinoRootView: View {
             startCard = nil; result = nil; showsCompletion = false
             session = nextSession
         }
+    }
+    private var nextWorld: (() -> Void)? {
+        guard let world = DinoWorldCatalog.world(completedWorldID + 1),
+              let level = DinoLevelCatalog.level(world.firstLevel) else { return nil }
+        return { start(level) }
     }
     private func presentStartCard(_ level: LevelConfiguration) {
         withAnimation(.easeOut(duration: 0.24)) { startCard = level }

@@ -18,6 +18,8 @@ enum DinoAnimation {
     }
 
     static let correctAnswerDelay = 0.72
+    static let spriteAssets = ["dino-idle", "dino-thumbs-up-08", "dino-wrong-answer-04",
+                               "dino-backflip-01", "dino-backflip-03", "dino-backflip-07", "dino-backflip-08"]
     static func duration(_ clip: Clip) -> Double {
         switch clip {
         case .idle: 0

@@ -73,13 +73,15 @@ struct AdventureHeader: View {
 
             Button(action: help) {
                 VStack(spacing: 3) {
-                    Image(systemName: control == .settings ? "book.fill" : "questionmark")
-                        .font(.system(size: compact ? 22 : 25, weight: .bold))
                     if control == .settings {
                         Text("dino.practice.shortTitle")
-                            .font(.system(size: compact ? 10 : 11, weight: .bold, design: .rounded))
-                            .lineLimit(1).minimumScaleFactor(0.8)
+                            .font(.system(size: labelSize, weight: .heavy, design: .rounded))
+                            .tracking(0.3).foregroundStyle(DinoStyle.deepGreen)
+                            .lineLimit(1).minimumScaleFactor(0.85).frame(height: 18)
                     }
+                    Image(systemName: control == .settings ? "book.fill" : "questionmark")
+                        .font(.system(size: compact ? 22 : 25, weight: .bold))
+                        .frame(height: control == .settings ? 28 : nil)
                 }.frame(maxWidth: .infinity).frame(height: tileHeight)
                     .background { tileBackground }
             }.buttonStyle(.plain).disabled(!helpEnabled)

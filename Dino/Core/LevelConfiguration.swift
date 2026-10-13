@@ -71,11 +71,92 @@ struct LevelConfiguration: Identifiable, Sendable {
     let questionCount: Int
     let isBoss: Bool
     let recipes: [QuestionRecipe]
+    var allowedMinutes: [Int] = [0]
+    var minuteStep: Int = 60
     var icon: String { isBoss ? "trophy.fill" : recipes[0].kind.symbol }
 }
 
+struct DinoWorld: Identifiable, Sendable {
+    let id: Int
+    let ground: UInt32
+    var titleKey: String { id == 1 ? "dino.jungle" : "dino.world.\(id).name" }
+    var skillKey: String { id == 1 ? "dino.wholeHours" : "dino.world.\(id).skill" }
+    var bossKey: String { id == 1 ? "dino.bossName" : "dino.world.\(id).boss" }
+    var firstLevel: Int { (id - 1) * 10 + 1 }
+    var bossLevel: Int { id * 10 }
+    var normalLevels: ClosedRange<Int> { firstLevel...(bossLevel - 1) }
+    var levels: ClosedRange<Int> { firstLevel...bossLevel }
+    var minutes: [Int] {
+        switch id {
+        case 1: return [0]
+        case 2: return [30]
+        case 3: return [15, 45]
+        case 4, 7, 9: return Array(stride(from: 0, to: 60, by: 5))
+        default: return Array(0..<60)
+        }
+    }
+    var minuteStep: Int {
+        switch id {
+        case 1: return 60
+        case 2: return 30
+        case 3: return 15
+        case 4, 7, 9: return 5
+        default: return 1
+        }
+    }
+}
+
+enum DinoWorldCatalog {
+    static let worlds: [DinoWorld] = [
+        .init(id: 1, ground: 0xDDEEB6), .init(id: 2, ground: 0xDCD6F7),
+        .init(id: 3, ground: 0xFFD1A1), .init(id: 4, ground: 0xC7E8BE),
+        .init(id: 5, ground: 0xD8EEF0), .init(id: 6, ground: 0xB8E4F5),
+        .init(id: 7, ground: 0xD4DDC4), .init(id: 8, ground: 0xE8E9DA),
+        .init(id: 9, ground: 0xF5D698), .init(id: 10, ground: 0xE8DFCC)
+    ]
+    static var lastLevel: Int { worlds.last!.bossLevel }
+    static func world(_ id: Int) -> DinoWorld? { worlds.first { $0.id == id } }
+}
+
 enum DinoLevelCatalog {
-    static let levels: [LevelConfiguration] = (1...10).map { id in
+    static let levels: [LevelConfiguration] = (1...100).map { id in
+        let worldID = (id - 1) / 10 + 1
+        let position = (id - 1) % 10 + 1
+        let world = DinoWorldCatalog.world(worldID)!
+        if worldID > 1 {
+            let kinds: [ClockQuestionKind]
+            switch worldID {
+            case 2, 3, 4, 5:
+                kinds = [.chooseAnalog, .chooseAnalog, .chooseDigital, .spokenTime,
+                         .trueFalse, .setAnalog, .setDigital, .match, .spokenTime]
+            case 6:
+                kinds = [.readDigital, .chooseDigital, .readDigital, .setDigital,
+                         .spokenTime, .trueFalse, .sortTimes, .setDigital, .timeSequence]
+            case 7:
+                kinds = [.dayPart, .read24Hour, .dayPart, .read24Hour,
+                         .pairClocks, .sortTimes, .read24Hour, .pairClocks, .timeSequence]
+            case 8:
+                kinds = [.match, .pairClocks, .chooseDigital, .setAnalog,
+                         .setDigital, .trueFalse, .pairClocks, .match, .spokenTime]
+            case 9:
+                kinds = [.elapsedTime, .addTime, .elapsedTime, .advanceAnalog,
+                         .subtractTime, .schoolEnd, .timeSequence, .flightArrival, .elapsedTime]
+            default:
+                kinds = [.chooseAnalog, .spokenTime, .readDigital, .setAnalog,
+                         .read24Hour, .pairClocks, .elapsedTime, .addTime, .sortTimes]
+            }
+            let boss = position == 10
+            let selected = boss ? kinds + [worldID == 9 ? .elapsedTime : .setDigital] : [kinds[position - 1]]
+            let recipes = selected.map { kind in
+                QuestionRecipe(kind: kind, optionCount: kind.usesOptions ? (position == 1 && !kind.isExpanded ? 2 : 4) : 0)
+            }
+            return LevelConfiguration(id: id, worldID: worldID,
+                                      titleKey: boss ? world.bossKey : world.skillKey,
+                                      instructionKey: recipes[0].kind.instructionKey,
+                                      allowedHours: Array(1...12), difficulty: position,
+                                      questionCount: boss ? 10 : 5, isBoss: boss, recipes: recipes,
+                                      allowedMinutes: world.minutes, minuteStep: world.minuteStep)
+        }
         let recipes: [QuestionRecipe]
         switch id {
         case 1: recipes = [.init(kind: .chooseAnalog, optionCount: 2)]

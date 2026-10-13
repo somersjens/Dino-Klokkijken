@@ -22,6 +22,17 @@ final class DinoPlayer: ObservableObject {
 #endif
         self.store = resolved
         profile = resolved.load()
+#if DEBUG
+        if ProcessInfo.processInfo.environment["DINO_TEST_SUITE"] != nil,
+           let raw = ProcessInfo.processInfo.environment["DINO_TEST_COMPLETED_WORLDS"],
+           let count = Int(raw), (0...10).contains(count) {
+            // Isolated UI-test fixture only; ordinary saves never take this path.
+            profile.onboardingComplete = true
+            for world in DinoWorldCatalog.worlds.prefix(count) {
+                profile.recordCompletedAttempt(levelID: world.bossLevel, correct: 10)
+            }
+        }
+#endif
     }
 
     private func update(_ mutation: (inout PlayerProfile) -> Void) {
@@ -105,12 +116,14 @@ final class DinoSession: ObservableObject, Identifiable {
     private let now: () -> TimeInterval
     private var questionStartedAt: TimeInterval
     private var practiceGenerator: DinoPracticeGenerator?
+    private let exampleMinuteStep: Int?
 
-    init(level: LevelConfiguration, player: DinoPlayer, practice: DinoPracticeConfiguration? = nil, example: ClockQuestion? = nil, now: @escaping () -> TimeInterval = DinoQuestionTiming.now, answerFeedback: ((Bool) -> Void)? = nil) {
+    init(level: LevelConfiguration, player: DinoPlayer, practice: DinoPracticeConfiguration? = nil, example: ClockQuestion? = nil, exampleMinuteStep: Int? = nil, now: @escaping () -> TimeInterval = DinoQuestionTiming.now, answerFeedback: ((Bool) -> Void)? = nil) {
         self.now = now
         questionStartedAt = now()
         self.level = level
         self.practice = practice
+        self.exampleMinuteStep = exampleMinuteStep
         self.player = player
         self.answerFeedback = answerFeedback
         if let practice {
@@ -138,13 +151,14 @@ final class DinoSession: ObservableObject, Identifiable {
         questions = DinoQuestionGenerator.generate(level: level, attempt: player.profile.record(level.id).attempts, using: &rng)
 #endif
         attempt = LevelAttempt(levelID: level.id, questions: questions)
+        resetInputs()
     }
 
     var question: ClockQuestion { attempt.current }
     var hasFeedback: Bool { attempt.submittedResponse != nil }
     var canExitWithoutConfirmation: Bool { question.id == 0 }
     var correctFeedback: Bool { attempt.answers.last == true }
-    var minuteStep: Int { practice?.time.minuteStep ?? 60 }
+    var minuteStep: Int { exampleMinuteStep ?? practice?.time.minuteStep ?? level.minuteStep }
     var allowsMinutes: Bool { minuteStep < 60 }
     var inputTime: ClockTime { ClockTime(hour: inputHour, minute: inputMinute) }
     var instructionKey: String {
@@ -179,7 +193,7 @@ final class DinoSession: ObservableObject, Identifiable {
             guard result == nil else { return }
             result = player.finish(attempt)
         } else {
-            inputHour = question.target.hour == 12 ? 1 : 12
+            resetInputs()
             questionStartedAt = now()
         }
     }

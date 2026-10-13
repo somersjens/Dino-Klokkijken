@@ -23,6 +23,7 @@ enum DinoQuestionGenerator {
                                                    attempt: Int = 0,
                                                    using rng: inout R) -> [ClockQuestion] {
         precondition(!level.allowedHours.isEmpty && level.allowedHours.allSatisfy { (1...12).contains($0) })
+        if level.worldID > 1 { return generateWorld(level: level, using: &rng) }
         var available = level.allowedHours.shuffled(using: &rng)
         var used = Set<Int>()
         let positionOffset = Int.random(in: 0..<12, using: &rng)
@@ -54,6 +55,30 @@ enum DinoQuestionGenerator {
                 .prefix(2).map { ClockTime(hour: $0) }
             return ClockQuestion(id: index, kind: recipe.kind, target: target,
                                  options: options, activity: activity, companionClocks: companions)
+        }
+    }
+
+    private static func generateWorld<R: RandomNumberGenerator>(level: LevelConfiguration, using rng: inout R) -> [ClockQuestion] {
+        let pool = level.allowedHours.flatMap { hour in
+            level.allowedMinutes.map { ClockTime(hour: hour, minute: $0) }
+        }
+        var previous: ClockTime?
+        return (0..<level.questionCount).map { index in
+            let recipe = level.recipes[index % level.recipes.count]
+            if recipe.kind.isExpanded {
+                let question = DinoExpandedQuestions.generate(kind: recipe.kind, minutes: level.allowedMinutes,
+                                                               minuteStep: level.minuteStep, index: index,
+                                                               previousTarget: previous, using: &rng)
+                previous = question.target
+                return question
+            }
+            let target = pool.filter { $0 != previous }.randomElement(using: &rng)!
+            previous = target
+            let others = pool.filter { $0 != target }.shuffled(using: &rng)
+            var options = recipe.kind.usesOptions ? Array(others.prefix(recipe.optionCount - 1)) : []
+            if recipe.kind.usesOptions { options.insert(target, at: Int.random(in: 0..<recipe.optionCount, using: &rng)) }
+            return ClockQuestion(id: index, kind: recipe.kind, target: target, options: options,
+                                 activity: nil, companionClocks: Array(others.prefix(2)))
         }
     }
 }

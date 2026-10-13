@@ -1,6 +1,8 @@
-# Dino Tijdavontuur
+# Dino Time
 
-Native SwiftUI-klokkijkgame voor iPhone en iPad. **Dino Jungle** bevat negen levels met vijf vragen en een direct toegankelijke boss met tien vragen. De app gebruikt uitsluitend Nederlands en Engels, lokale opslag met optionele iCloud-sync en de aangeleverde dino-assets.
+Native SwiftUI-klokkijkgame voor iPhone en iPad met **tien werelden en honderd levels**. Iedere wereld heeft negen levels met vijf vragen en een boss met tien vragen. De app gebruikt uitsluitend Nederlands en Engels, lokale opslag met optionele iCloud-sync en de aangeleverde dino-assets.
+
+De volledige appnaam is **Leer klokkijken met Dino** in het Nederlands en **Learn to Tell Time with Dino** in het Engels. Onder het appicoon op het beginscherm staat **Tijd Dino** in het Nederlands en **Dino Time** in het Engels. De naam op het beginscherm volgt de iOS-app-/systeemtaal; de taalkiezer in de game past de gameteksten aan.
 
 ## Starten
 
@@ -13,7 +15,9 @@ De eerste start opent bij **Maak jouw dino** met vier kleurkeuzes en een vast vo
 - Het junglelandschap bestaat volledig uit SwiftUI-paden en shapes: asymmetrische boomkruinen op vertakte stammen, gebogen palmbladeren, lianen, varens, lage struiken en onregelmatige mosrotsen. De waterval stroomt over een rotswand naar een poel. Alles scrolt samen met het slingerende zandpad.
 - De vaste header toont het grotere dinoportret zonder naam of kwastje, met volledig zichtbare bovenste stekels, het huidige level en de ster boven het totale aantal verdiende sterren. Gelijke, rechte badges houden de HUD rustig. Op de kaart opent het tandwiel direct de instellingen; tijdens een level staat hier de pauzeknop.
 - Tik op het portret linksboven om **Mijn dino** te openen, ook tijdens een level. Kies afzonderlijk kleuren voor de bandana, stekels, het lichaam en buikje/tenen via kleurbolletjes of de vrije systeemkleurkiezer. Het vaste voorbeeld blijft zichtbaar tijdens het kiezen. De standaardkleuren tonen exact de oorspronkelijke afbeelding; **Oorspronkelijke kleuren** zet ze terug. Kleuren worden direct lokaal bewaard. Alleen het headerfiguurtje gebruikt deze kleuren.
-- Na level 10 loopt het pad door naar een nevelige horizon. WorldLandscapePalette houdt het huidige en het volgende kleurenpalet apart; de laatste 560 punten mengen geleidelijk, zodat het volgende blok van tien levels een ander thema kan krijgen. De speelbare volgende wereld blijft een toekomstige uitbreiding.
+- Alle tien kaarten worden met SwiftUI-paden, shapes en Canvas getekend. Na de jungle volgen Slaapvallei, Vulkaanland, Dino Dorp, Kristalgrot, Dino Stad, Dag-en-nachtbos, Tijdmachine, Tijdpiraten en Dinokasteel. Elke wereld heeft een eigen kleurenpalet, omgevingsklokken en een unieke getekende eindbaas. Het pad, de ronde levelknoppen en de dino behouden dezelfde schaal. Achtergronden mengen onderaan naar het volgende thema.
+- Wereld 2 t/m 10 zijn verder uitgewerkt met grotere samengestelde scènes, tuinen, rotswanden, oevers, straatjes, werkplaatsen en materiaal- en kostuumdetails. Zachte kleurverlopen geven de shapes meer volume. De boss-snelkoppelingen en grondschaduw van de dino volgen de jungle. [Native detailoverzicht](Documentation/Screenshots/WorldsRefined/worlds-detail-overview.png).
+- De negen ImageGen-concepten staan uitsluitend in [Documentation/WorldConcepts](Documentation/WorldConcepts) als inspiratie. Ze worden niet als afbeeldingen in de game gebruikt. Ook de previews op boss- en beloningskaarten bestaan uit shapes. [Ontwerpen en prompts](Documentation/WorldDesignPrompts.md) beschrijven de inspiratie.
 - De primaire themakleur is **#81D349**, ook voor sterren, voortgang, correcte keuzes en beloningen. De achtergrond heeft zachte groentinten; groene knoppen hebben donkere tekst.
 - Dino begint op een blanco beginpunt. Zodra een level minstens één ster heeft, staat hij bij het hoogste behaalde level; een gewonnen boss brengt hem naar level 10. Zijn kaartfiguur is 15% kleiner, staat met de voeten midden op de huidige levelknop en heeft een zachte grondschaduw, zonder naamlabel, en verschijnt bij terugkomst in beeld.
 - Het centrale startpunt heeft een gelaagde groene cirkel en een startlabel. De levelstartkaart opent vlak onder de HUD en toont vrienden met foto, naam, sterren en gemeten tijd, of de Game Center-verbindingsknop. Bij een Game Center-koppeling toont deze kaart ook je eigen Game Center-naam, score en tijd. Je naam staat verder alleen in **Instellingen** en komt rechtstreeks van Apple; er is geen lokale naamkeuze of vervangende naam.
@@ -41,24 +45,30 @@ iCloud-sync deelt alleen levelresultaten, sterren en spelvoortgang tussen appara
 
 De app gebruikt Apples [iCloud Key-Value Storage](https://developer.apple.com/documentation/foundation/synchronizing-app-preferences-with-icloud). De entitlement en Xcode-capability zijn opgenomen. Voor echte apparaten moet iCloud Key-Value Storage ook beschikbaar zijn voor de App ID en het provisioningprofiel van het gekozen Apple Developer-team. Simulator-UI-tests gebruiken een eigen opslag en krijgen geen toegang tot echte iCloud-voortgang. Controleer de uiteindelijke uitwisseling op twee ingelogde apparaten; cloudupdates kunnen vertraagd zijn.
 
-Alle klokken gebruiken één `ClockTheme`. De urenwijzer volgt `30 × uur + 0,5 × minuten`, de minutenwijzer `6 × minuten`. Wereld 1 gebruikt uitsluitend 01:00–12:00. Wereldconfiguraties, dino-states en klokstijlen zijn uitbreidbaar.
+Alle klokken gebruiken één `ClockTheme`. De urenwijzer volgt `30 × uur + 0,5 × minuten`, de minutenwijzer `6 × minuten`. Wereld 1 gebruikt uitsluitend 01:00–12:00. De volgende werelden oefenen achtereenvolgens halve uren, kwartieren, stappen van vijf minuten, exacte minuten, digitaal lezen, 12/24 uur, analoog/digitaal combineren en tijdsduur. Het kasteel combineert de vaardigheden. Invoer en voorbeelden volgen de minuutstap van de wereld.
 
 ## Spelregels
 
 - 0–2/5 = geen ster, 3/5 = één, 4/5 = twee, 5/5 = drie. Een ster ontgrendelt het volgende gewone level.
 - Per volledige poging worden ook de vraagtijden verzameld. Alleen de tijd vóór het antwoord telt; de score rekent 1–60 seconden per vraag zonder een tijdslimiet voor de speler. Een monotone klok voorkomt invloed van tijdzone- of kalenderwijzigingen.
 - Alleen volledige pogingen worden opgeslagen. Een slechtere herhaling verlaagt de beste score niet. Elke vraag accepteert één definitief antwoord.
-- Boss: 10/10 voltooit de wereld direct en ontgrendelt alle levels. Anders is minimaal 5/10 nodig én een ster op elk van de negen gewone levels.
-- Wereld 2 is een gesloten preview.
+- De boss is direct toegankelijk zodra zijn wereld ontgrendeld is. 10/10 voltooit die wereld direct en ontgrendelt de gewone levels van die wereld. Anders is minimaal 5/10 nodig én een ster op elk van de negen gewone levels van die wereld.
+- Een voltooide wereld ontgrendelt de volgende wereld. Er zijn maximaal 270 sterren, verdeeld over negentig gewone levels. Boss-resultaten geven geen sterren.
+- Na level 100 staat **Coming soon**. Er is geen level 101. Na de eerste negen wereldvoltooiingen kun je meteen de volgende wereld openen.
+- Bestaande junglevoortgang blijft behouden en ontgrendelt Slaapvallei zodra de jungle voltooid is. Opslag en optionele iCloud-sync ondersteunen alle honderd levels.
 
 ## Verificatie
 
-`Tools/test-dino.sh` voert **112.640 controles** uit, inclusief 3.000 gegenereerde pogingen, alle klokminuten, unieke keuzes, volledige antwoordrijen, scoregrenzen, beide boss-routes, dubbele taps, opslag/herstart, voorkeuren en iCloud-merge/reset/offline-gedrag.
+`Tools/test-dino.sh` voert **361.179 controles** uit, inclusief alle honderd levels, wereldspecifieke minuten, unieke antwoordkeuzes, beide boss-routes in alle tien werelden, ontgrendeling, dubbele taps, opslag/herstart, voorkeuren en iCloud-merge/reset/offline-gedrag.
 
 Via **Product → Test** voert `DinoUITests` de scherminteracties uit. De tests gebruiken een eigen spelersopslag en vaste random seed, uitsluitend in debug-builds. Zie [het acceptatieverslag](Documentation/Acceptance.md) en [de screenshots](Documentation/Screenshots).
+
+De negen nieuwe shape-kaarten en hun minuutvragen zijn gecontroleerd op iPhone en iPad, inclusief Coming soon onder level 100. Zie [wereldverificatie en screenshots](Documentation/WorldsVerification.md).
 
 Het instellingenmenu is gecontroleerd op een iPhone SE en een iPad Air: alle schakelaars, bewaren na herstart, Nederlands/Engels, landschapstand en antwoordfeedback met hoog contrast. [Menu op iPad](Documentation/Screenshots/settings-menu-ipad.png), [hoog contrast op iPhone](Documentation/Screenshots/settings-contrast-iphone.png) en [antwoordfeedback op iPad](Documentation/Screenshots/settings-answers-ipad.png). De cloudtests gebruiken een nagebootste opslag; echte iCloud-uitwisseling en fysieke trillingen moeten op apparaten worden gecontroleerd.
 
 ## Vrienden via Game Center
 
 De kaart heeft een optionele vriendenfunctie met Apple-uitnodigingen, avatars, beschikbare levelresultaten en profielen. Delen staat standaard uit; lokaal spelen blijft mogelijk. Voor werkende online resultaten moeten twaalf klassieke resultaatleaderboards en voor tijden tien aanvullende leaderboards in App Store Connect worden aangemaakt. Zie [configuratie, privacy en beperkingen](Documentation/GameCenter.md) en [verificatie](Documentation/GameCenterVerification.md).
+
+De bestaande Game Center-leaderboards blijven per-level resultaten voor de jungle publiceren. De algemene sterrenscore en het hoogste level tellen alle tien werelden mee. De overige per-level resultaten worden lokaal en via de optionele iCloud-sync bewaard; er worden geen niet-geconfigureerde Game Center-leaderboards opgevraagd.

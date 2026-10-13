@@ -38,7 +38,7 @@ struct DinoResultView: View {
                         .font(.system(size: 42, weight: .heavy, design: .rounded)).monospacedDigit()
                     Text("dino.correctAnswers").font(.system(size: 14, weight: .medium, design: .rounded)).foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
                     if !succeeded {
-                        Text(LocalizedStringKey(result.level.isBoss ? (player.profile.normalLevelsComplete ? "dino.needFive" : "dino.needPerfectOrRoute") : "dino.needThree"))
+                        Text(LocalizedStringKey(result.level.isBoss ? (player.profile.normalLevelsComplete(in: result.level.worldID) ? "dino.needFive" : "dino.needPerfectOrRoute") : "dino.needThree"))
                             .font(.system(size: 15, weight: .semibold, design: .rounded)).multilineTextAlignment(.center)
                     }
                     VStack(spacing: 14) {
@@ -61,6 +61,8 @@ struct DinoResultView: View {
 
 struct WorldCompleteView: View {
     @EnvironmentObject private var player: DinoPlayer
+    var worldID = 1
+    var nextWorld: (() -> Void)? = nil
     var map: () -> Void
     var body: some View {
         ZStack {
@@ -71,13 +73,25 @@ struct WorldCompleteView: View {
                     Text("dino.worldComplete").font(.system(size: 36, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
                     DinoCharacter(state: .celebrating, size: 215)
                     Image(systemName: "trophy.fill").font(.system(size: 74)).foregroundStyle(DinoStyle.green)
-                    if player.profile.perfectBossVictory { Text("dino.perfectBoss").font(.system(size: 18, weight: .bold, design: .rounded)) }
+                    Text(LocalizedStringKey(DinoWorldCatalog.world(worldID)!.titleKey))
+                        .font(.system(size: 22, weight: .heavy, design: .rounded))
+                    if player.profile.perfectVictory(in: worldID) { Text("dino.perfectBoss").font(.system(size: 18, weight: .bold, design: .rounded)) }
                     VStack(spacing: 16) {
-                        Image(systemName: "mountain.2.fill").font(.system(size: 54)).foregroundStyle(Color(dinoHex: 0x85A8B8))
-                            .overlay(Image(systemName: "lock.fill").font(.system(size: 25)).foregroundStyle(.white))
-                        Text("dino.worldTwo").font(.system(size: 24, weight: .heavy, design: .rounded))
-                        Text("dino.comingSoon").font(.system(size: 13, weight: .bold, design: .rounded))
-                            .padding(.horizontal, 16).padding(.vertical, 7).background(DinoStyle.ink.opacity(0.08), in: Capsule())
+                        if let next = DinoWorldCatalog.world(worldID + 1) {
+                            WorldThemePreview(world: next)
+                                .frame(height: 150).clipped().clipShape(RoundedRectangle(cornerRadius: 20))
+                                .accessibilityHidden(true)
+                            Text(LocalizedStringKey(next.titleKey)).font(.system(size: 24, weight: .heavy, design: .rounded))
+                            if let nextWorld {
+                                Button("dino.nextWorld", action: nextWorld).buttonStyle(DinoButtonStyle())
+                                    .accessibilityIdentifier("completion.nextWorld")
+                            }
+                        } else {
+                            Image(systemName: "sparkles").font(.system(size: 54)).foregroundStyle(DinoStyle.green)
+                            Text("dino.comingSoon").font(.system(size: 24, weight: .heavy, design: .rounded))
+                            Text("dino.afterHundred").font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .multilineTextAlignment(.center)
+                        }
                     }.frame(maxWidth: .infinity).dinoCard()
                     Button("dino.map", action: map).buttonStyle(DinoButtonStyle())
                 }.padding(26).frame(maxWidth: 460).frame(maxWidth: .infinity)

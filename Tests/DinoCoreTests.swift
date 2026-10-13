@@ -13,6 +13,7 @@ struct DinoCoreTests {
         testClocks()
         testAnimation()
         testQuestions()
+        testWorlds()
         testAttempt()
         testTiming()
         testPractice()
@@ -271,10 +272,10 @@ struct DinoCoreTests {
     }
 
     static func testQuestions() {
-        expect(DinoLevelCatalog.levels.count == 10, "10 levels")
+        expect(DinoLevelCatalog.levels.count == 100, "100 levels")
         var observedKinds = Set<ClockQuestionKind>()
         for seed in 0..<300 {
-            for level in DinoLevelCatalog.levels {
+            for level in DinoLevelCatalog.levels.filter({ $0.worldID == 1 }) {
                 var rng = SeededGenerator(seed: UInt64(seed))
                 let questions = DinoQuestionGenerator.generate(level: level, attempt: seed % 3, using: &rng)
                 expect(questions.count == (level.isBoss ? 10 : 5), "question count")
@@ -300,7 +301,63 @@ struct DinoCoreTests {
                 }
             }
         }
-        expect(observedKinds == Set(DinoLevelCatalog.levels.flatMap { $0.recipes.map(\.kind) }), "regular catalog interactions")
+        expect(observedKinds == Set(DinoLevelCatalog.levels.filter { $0.worldID == 1 }.flatMap { $0.recipes.map(\.kind) }), "jungle catalog interactions")
+    }
+
+    static func testWorlds() {
+        expect(DinoWorldCatalog.worlds.count == 10, "ten themed worlds")
+        expect(DinoLevelCatalog.levels.map(\.id) == Array(1...100) && DinoLevelCatalog.level(101) == nil, "catalog stops at coming soon after 100")
+        var profile = PlayerProfile()
+        expect(!profile.isUnlocked(11) && !profile.isUnlocked(100), "later worlds start locked")
+        for world in DinoWorldCatalog.worlds {
+            expect(world.levels.count == 10 && world.normalLevels.count == 9, "nine levels and a boss")
+            expect(profile.isUnlocked(world.firstLevel) && profile.isUnlocked(world.bossLevel), "unlocked world has first level and direct boss")
+            expect(profile.recordCompletedAttempt(levelID: world.bossLevel, correct: 9) == .none, "nonperfect direct boss needs its own normal route")
+            for id in world.normalLevels {
+                expect(profile.isUnlocked(id), "normal route unlocks sequentially")
+                profile.recordCompletedAttempt(levelID: id, correct: 3)
+            }
+            expect(profile.recordCompletedAttempt(levelID: world.bossLevel, correct: 5) == .normal, "normal victory is scoped to this world")
+            expect(profile.worldComplete(world.id), "each boss completes its own world")
+            if world.id < 10 { expect(profile.isUnlocked(world.bossLevel + 1), "next world opens after boss") }
+        }
+        expect(profile.adventureComplete && profile.dinoLevel == 100 && profile.totalStars == 90, "complete route reaches 100 and totals all 90 normal levels")
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        store.save(profile)
+        expect(store.load() == profile, "all 100 level records and world victories survive restart")
+        var cloud = PlayerProfile()
+        cloud.mergeCloudProgress(DinoCloudProgress(profile))
+        expect(cloud.adventureComplete && cloud.dinoLevel == 100 && cloud.totalStars == 90, "all worlds survive cloud merge")
+        cloud.resetProgress()
+        expect(cloud.dinoLevel == 0 && !cloud.isUnlocked(11) && cloud.totalStars == 0, "reset clears every world")
+        var direct = PlayerProfile()
+        for world in DinoWorldCatalog.worlds {
+            expect(direct.recordCompletedAttempt(levelID: world.bossLevel, correct: 10) == .perfect, "perfect shortcuts work in all worlds")
+            expect(world.levels.allSatisfy { direct.isUnlocked($0) }, "perfect unlock is scoped to the winning world")
+        }
+        expect(direct.adventureComplete && direct.dinoLevel == 100 && direct.totalStars == 0, "boss shortcuts never fabricate stars")
+        for seed in 0..<20 {
+            for level in DinoLevelCatalog.levels.filter({ $0.worldID > 1 }) {
+                var rng = SeededGenerator(seed: UInt64(seed))
+                let questions = DinoQuestionGenerator.generate(level: level, using: &rng)
+                expect(questions.count == level.questionCount, "new world question count")
+                for q in questions {
+                    expect(level.allowedMinutes.contains(q.target.minute), "world-specific clock granularity")
+                    expect(AnswerValidator.isCorrect(q.expectedAnswer, for: q), "generated expected answer is valid")
+                    if q.kind.usesOptions {
+                        expect([2, 4].contains(q.responses.count), "full answer rows")
+                        expect(Set(q.responses).count == q.responses.count, "distinct responses")
+                        expect(q.responses.filter { AnswerValidator.isCorrect($0, for: q) }.count == 1, "one correct response")
+                    }
+                    if q.kind == .pairClocks {
+                        expect(Set(q.relatedTimes.map { ($0.hour % 12) * 60 + $0.minute }).count == 4, "pair clocks have distinct analog faces")
+                    }
+                    if q.kind == .elapsedTime {
+                        expect(q.relatedTimes[0].adding(minutes: q.durationMinutes) == q.relatedTimes[1], "elapsed duration matches endpoints")
+                    }
+                }
+            }
+        }
     }
 
     static func testAttempt() {
@@ -382,7 +439,7 @@ struct DinoCoreTests {
         var direct = PlayerProfile()
         expect(direct.recordCompletedAttempt(levelID: 10, correct: 9) == .none && !direct.worldOneComplete && direct.dinoLevel == 0, "9/10 without normal route fails")
         expect(direct.recordCompletedAttempt(levelID: 10, correct: 10) == .perfect, "direct perfect victory")
-        expect(direct.worldOneComplete && direct.perfectBossVictory && direct.dinoLevel == 10 && direct.unlockedLevels.count == 10, "perfect opens entire world")
+        expect(direct.worldOneComplete && direct.perfectBossVictory && direct.dinoLevel == 10 && (1...10).allSatisfy(direct.isUnlocked) && direct.isUnlocked(11), "perfect opens entire world and next world entrance")
         expect(direct.totalStars == 0, "skipping never invents earned stars")
         for completed in [false, true] {
             for score in 0...10 {
@@ -666,16 +723,16 @@ struct DinoCoreTests {
 
         var boss = PlayerProfile(); boss.recordCompletedAttempt(levelID: 10, correct: 10)
         var restored = PlayerProfile(); restored.mergeCloudProgress(DinoCloudProgress(boss))
-        expect(restored.perfectBossVictory && restored.worldOneComplete && restored.unlockedLevels.count == 10, "perfect boss progress restores on a second device")
+        expect(restored.perfectBossVictory && restored.worldOneComplete && (1...10).allSatisfy(restored.isUnlocked) && restored.isUnlocked(11), "perfect boss progress restores on a second device")
         var normalBoss = PlayerProfile()
         for id in 1...9 { normalBoss.recordCompletedAttempt(levelID: id, correct: 3) }
         normalBoss.recordCompletedAttempt(levelID: 10, correct: 5)
         var normalRestored = PlayerProfile(); normalRestored.mergeCloudProgress(DinoCloudProgress(normalBoss))
         expect(normalRestored.worldOneComplete && !normalRestored.perfectBossVictory, "normal boss route survives cloud sync")
         var malformed = DinoCloudProgress(PlayerProfile())
-        malformed.levels = ["11": LevelRecord(stars: 3, bestCorrect: 5, attempts: 1), "1": LevelRecord(stars: 3, bestCorrect: 0, attempts: 1)]
+        malformed.levels = ["101": LevelRecord(stars: 3, bestCorrect: 5, attempts: 1), "1": LevelRecord(stars: 3, bestCorrect: 0, attempts: 1)]
         var safe = PlayerProfile(); safe.mergeCloudProgress(malformed)
-        expect(safe.levels["11"] == nil && safe.totalStars == 0, "cloud cannot invent stars or unknown levels")
+        expect(safe.levels["101"] == nil && safe.totalStars == 0, "cloud cannot invent stars or unknown levels")
     }
 
 }

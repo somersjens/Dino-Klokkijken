@@ -26,20 +26,43 @@ struct PlayerProfile: Codable, Equatable, Sendable {
     var timedAttempts: [TimedLevelAttempt]?
     var perfectBossVictory = false
     var worldOneComplete = false
+    // Optional additions keep existing version-one saves readable.
+    var completedWorlds: Set<Int>?
+    var perfectWorlds: Set<Int>?
     var demonstratedInteractions: Set<ClockQuestionKind> = []
     // Optional for compatibility with existing version-one saves.
     var progressResetAt: Date?
 
-    var normalLevelsComplete: Bool { (1...9).allSatisfy { record($0).stars >= 1 } }
-    var totalStars: Int { (1...9).reduce(0) { $0 + record($1).stars } }
+    var normalLevelsComplete: Bool { normalLevelsComplete(in: 1) }
+    func normalLevelsComplete(in worldID: Int) -> Bool {
+        guard let world = DinoWorldCatalog.world(worldID) else { return false }
+        return world.normalLevels.allSatisfy { record($0).stars >= 1 }
+    }
+    func perfectVictory(in worldID: Int) -> Bool {
+        guard let world = DinoWorldCatalog.world(worldID) else { return false }
+        return (worldID == 1 && perfectBossVictory) || perfectWorlds?.contains(worldID) == true || record(world.bossLevel).bestCorrect == 10
+    }
+    func worldComplete(_ worldID: Int) -> Bool {
+        guard let world = DinoWorldCatalog.world(worldID) else { return false }
+        return (worldID == 1 && worldOneComplete) || completedWorlds?.contains(worldID) == true ||
+            perfectVictory(in: worldID) || (record(world.bossLevel).bestCorrect >= 5 && normalLevelsComplete(in: worldID))
+    }
+    func isWorldUnlocked(_ worldID: Int) -> Bool {
+        DinoWorldCatalog.world(worldID) != nil && (worldID == 1 || worldComplete(worldID - 1))
+    }
+    var adventureComplete: Bool { DinoWorldCatalog.worlds.allSatisfy { worldComplete($0.id) } }
+    var totalStars: Int { DinoLevelCatalog.levels.filter { !$0.isBoss }.reduce(0) { $0 + record($1.id).stars } }
     /// Zero identifies the blank start point, never a playable level.
-    var dinoLevel: Int { worldOneComplete ? 10 : (1...9).last { record($0).stars >= 1 } ?? 0 }
-    var unlockedLevels: [Int] { (1...10).filter(isUnlocked) }
+    var dinoLevel: Int {
+        DinoLevelCatalog.levels.last { $0.isBoss ? worldComplete($0.worldID) : record($0.id).stars >= 1 }?.id ?? 0
+    }
+    var unlockedLevels: [Int] { DinoLevelCatalog.levels.map(\.id).filter(isUnlocked) }
     func record(_ id: Int) -> LevelRecord { levels[String(id)] ?? LevelRecord() }
 
     func isUnlocked(_ id: Int) -> Bool {
-        guard (1...10).contains(id) else { return false }
-        return id == 1 || id == 10 || perfectBossVictory || record(id - 1).stars >= 1
+        guard let level = DinoLevelCatalog.level(id), let world = DinoWorldCatalog.world(level.worldID),
+              isWorldUnlocked(world.id) else { return false }
+        return id == world.firstLevel || level.isBoss || perfectVictory(in: world.id) || record(id - 1).stars >= 1
     }
 
     @discardableResult
@@ -52,7 +75,7 @@ struct PlayerProfile: Codable, Equatable, Sendable {
                 let attempt = TimedLevelAttempt(levelID: levelID, correct: correct, questionSeconds: questionSeconds, date: date)
                 timedAttempts = (timedAttempts ?? []) + [attempt]
                 // This attempt's score, never combine a fast failed replay with a better old score.
-                let victory = level.isBoss ? BossVictory.evaluate(correct: correct, normalLevelsComplete: normalLevelsComplete) : .none
+                let victory = level.isBoss ? BossVictory.evaluate(correct: correct, normalLevelsComplete: normalLevelsComplete(in: level.worldID)) : .none
                 let points = level.isBoss ? 1 + correct + (victory != .none ? 16 : 0) + (victory == .perfect ? 32 : 0)
                     : 1 + StarCalculator.stars(correct: correct) * 8 + correct
                 mergeTiming(TimedLevelResult(resultPoints: points, seconds: attempt.seconds), levelID: levelID)
@@ -62,10 +85,15 @@ struct PlayerProfile: Codable, Equatable, Sendable {
         previous.attempts += 1
         previous.bestCorrect = max(previous.bestCorrect, correct)
         if level.isBoss {
-            let victory = BossVictory.evaluate(correct: correct, normalLevelsComplete: normalLevelsComplete)
-            bossResults.append(BossRecord(correct: correct, victory: victory, date: date))
-            if victory != .none { worldOneComplete = true }
-            if victory == .perfect { perfectBossVictory = true }
+            let victory = BossVictory.evaluate(correct: correct, normalLevelsComplete: normalLevelsComplete(in: level.worldID))
+            if level.worldID == 1 {
+                bossResults.append(BossRecord(correct: correct, victory: victory, date: date))
+                if victory != .none { worldOneComplete = true }
+                if victory == .perfect { perfectBossVictory = true }
+            } else {
+                if victory != .none { completedWorlds = (completedWorlds ?? []).union([level.worldID]) }
+                if victory == .perfect { perfectWorlds = (perfectWorlds ?? []).union([level.worldID]) }
+            }
             levels[String(levelID)] = previous
             return victory
         }
@@ -93,6 +121,7 @@ struct PlayerProfile: Codable, Equatable, Sendable {
     mutating func resetProgress(date: Date = Date()) {
         levels = [:]; bossResults = []; timedAttempts = nil
         perfectBossVictory = false; worldOneComplete = false
+        completedWorlds = nil; perfectWorlds = nil
         demonstratedInteractions = []
         progressResetAt = date
     }

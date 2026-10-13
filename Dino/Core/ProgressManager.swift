@@ -36,15 +36,18 @@ final class DinoProgressStore {
     private func validated(_ profile: PlayerProfile) -> PlayerProfile {
         var result = profile
         result.name = PlayerProfile.sanitizedName(result.name)
-        result.levels = result.levels.filter { key, _ in Int(key).map { (1...10).contains($0) } ?? false }
+        result.levels = result.levels.filter { key, _ in Int(key).flatMap(DinoLevelCatalog.level) != nil }
         for (key, var value) in result.levels {
-            value.bestCorrect = min(key == "10" ? 10 : 5, max(0, value.bestCorrect))
-            value.stars = key == "10" ? 0 : min(3, max(0, value.stars))
+            let level = DinoLevelCatalog.level(Int(key)!)!
+            value.bestCorrect = min(level.questionCount, max(0, value.bestCorrect))
+            value.stars = level.isBoss ? 0 : min(3, max(0, value.stars))
             value.attempts = max(0, value.attempts)
             result.levels[key] = value
         }
         result.bossResults = result.bossResults.filter { (0...10).contains($0.correct) }
         if result.perfectBossVictory { result.worldOneComplete = true }
+        result.completedWorlds = result.completedWorlds.map { Set($0.filter { (2...10).contains($0) }) }
+        result.perfectWorlds = result.perfectWorlds.map { Set($0.filter { (2...10).contains($0) }) }
         return result
     }
 }

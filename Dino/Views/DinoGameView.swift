@@ -55,6 +55,7 @@ struct DinoGameView: View {
                     ScrollView {
                         InteractionDemonstration(kind: kind, theme: player.profile.clockTheme, minuteStep: session.minuteStep,
                                                  practiceTime: session.practice?.time ?? .whole,
+                                                 worldMinutes: session.practice == nil ? session.level.allowedMinutes : nil,
                                                  width: min(380, max(230, g.size.width - 80)), done: session.dismissDemonstration)
                             .padding(16)
                     }.frame(maxWidth: 480, maxHeight: g.size.height - 24)
@@ -177,6 +178,7 @@ struct InteractionDemonstration: View {
     let theme: ClockTheme
     var minuteStep = 60
     var practiceTime: DinoPracticeTime = .whole
+    var worldMinutes: [Int]? = nil
     var width: CGFloat = 280
     var done: () -> Void
     @State private var exampleHour = 3
@@ -184,7 +186,8 @@ struct InteractionDemonstration: View {
     @State private var adjustingMinutes = false
     var body: some View {
         if kind.isExpanded {
-            DinoExpandedDemonstration(kind: kind, time: practiceTime, width: width, theme: theme, done: done)
+            DinoExpandedDemonstration(kind: kind, time: practiceTime, worldMinutes: worldMinutes,
+                                      minuteStep: minuteStep, width: width, theme: theme, done: done)
         } else { originalExample }
     }
     private var originalExample: some View {
@@ -214,7 +217,7 @@ struct InteractionDemonstration: View {
         }.dinoCard()
             .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
             .foregroundStyle(DinoStyle.ink).accessibilityAddTraits(.isModal)
-            .onAppear { exampleHour = 3; exampleMinute = minuteStep < 60 ? minuteStep : 0 }
+            .onAppear { exampleHour = 3; exampleMinute = worldMinutes?.first ?? (minuteStep < 60 ? minuteStep : 0) }
             .task {
                 guard kind == .setAnalog || kind == .setDigital else { return }
                 do { try await Task.sleep(for: .milliseconds(650)) } catch { return }

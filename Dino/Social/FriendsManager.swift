@@ -265,9 +265,9 @@ final class FriendsManager: NSObject, ObservableObject {
     }
     private func loadProgress(players: [GKPlayer], token: UUID, account: String) async {
         do {
-            let boards = try await GKLeaderboard.loadLeaderboards(IDs: DinoLevelCatalog.levels.map { DinoLeaderboards.level($0.id) })
+            let boards = try await GKLeaderboard.loadLeaderboards(IDs: DinoLeaderboards.publishedLevels.map { DinoLeaderboards.level($0.id) })
             guard valid(token, account) else { return }
-            if boards.count != DinoLevelCatalog.levels.count { actionMessageKey = "dino.friends.resultsUnavailable" }
+            if boards.count != DinoLeaderboards.publishedLevels.count { actionMessageKey = "dino.friends.resultsUnavailable" }
             let timedBoards = (try? await GKLeaderboard.loadLeaderboards(IDs: DinoLeaderboards.timedIDs)) ?? []
             guard valid(token, account) else { return }
             for board in boards + timedBoards where board.type == .classic {

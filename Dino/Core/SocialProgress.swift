@@ -10,9 +10,9 @@ struct SharedLevelResult: Equatable, Sendable {
     let perfectBoss: Bool
     var seconds: Int? = nil
     var resultPoints: Int {
-        levelID == 10 ? 1 + bestCorrect + (bossComplete ? 16 : 0) + (perfectBoss ? 32 : 0) : 1 + stars * 8 + bestCorrect
+        levelID.isMultiple(of: 10) ? 1 + bestCorrect + (bossComplete ? 16 : 0) + (perfectBoss ? 32 : 0) : 1 + stars * 8 + bestCorrect
     }
-    var completed: Bool { levelID == 10 ? bossComplete : stars > 0 }
+    var completed: Bool { levelID.isMultiple(of: 10) ? bossComplete : stars > 0 }
 
     /// Visible level results rank by stars, then measured time. Missing times come last.
     func ranking(comparedTo other: SharedLevelResult) -> ComparisonResult {
@@ -29,17 +29,20 @@ enum DinoLeaderboards {
     static let context = 1
     static func level(_ id: Int) -> String { "dino.level.\(id).result.v1" }
     static func timedLevel(_ id: Int) -> String { "dino.level.\(id).timed.v1" }
-    static var timedIDs: [String] { DinoLevelCatalog.levels.map { timedLevel($0.id) } }
-    static var allIDs: [String] { DinoLevelCatalog.levels.map { level($0.id) } + [highestLevel, totalStars] }
+    // Keep the already configured Game Center boards. New worlds sync through iCloud.
+    static var publishedLevels: [LevelConfiguration] { DinoLevelCatalog.levels.filter { $0.worldID == 1 } }
+    static var timedIDs: [String] { publishedLevels.map { timedLevel($0.id) } }
+    static var allIDs: [String] { publishedLevels.map { level($0.id) } + [highestLevel, totalStars] }
 
     /// Integer ordering preserves both best stars and best correct answers.
     /// Zero explicitly means no completed attempt was present in the real save.
     /// Missing entries and unknown schema versions must never be decoded as zero.
     static func score(profile: PlayerProfile, levelID: Int) -> Int {
         let record = profile.record(levelID)
-        guard record.attempts > 0 || record.stars > 0 || (levelID == 10 && profile.worldOneComplete) else { return 0 }
-        if levelID == 10 {
-            return 1 + record.bestCorrect + (profile.worldOneComplete ? 16 : 0) + (profile.perfectBossVictory ? 32 : 0)
+        guard let level = DinoLevelCatalog.level(levelID) else { return 0 }
+        guard record.attempts > 0 || record.stars > 0 || (level.isBoss && profile.worldComplete(level.worldID)) else { return 0 }
+        if level.isBoss {
+            return 1 + record.bestCorrect + (profile.worldComplete(level.worldID) ? 16 : 0) + (profile.perfectVictory(in: level.worldID) ? 32 : 0)
         }
         return 1 + record.stars * 8 + record.bestCorrect
     }
@@ -50,7 +53,7 @@ enum DinoLeaderboards {
             return SharedLevelResult(levelID: levelID, attempted: false, stars: 0, bestCorrect: 0, bossComplete: false, perfectBoss: false)
         }
         let value = score - 1
-        if levelID == 10 {
+        if levelID.isMultiple(of: 10) {
             guard value <= 58 else { return nil }
             let correct = value & 15, complete = value & 16 != 0, perfect = value & 32 != 0
             guard correct <= 10, !perfect || (complete && correct == 10), !complete || correct >= 5,
@@ -77,7 +80,7 @@ enum DinoLeaderboards {
     }
 
     static func submissions(_ profile: PlayerProfile) -> [String: Int] {
-        var scores = Dictionary(uniqueKeysWithValues: DinoLevelCatalog.levels.map { (level($0.id), score(profile: profile, levelID: $0.id)) })
+        var scores = Dictionary(uniqueKeysWithValues: publishedLevels.map { (level($0.id), score(profile: profile, levelID: $0.id)) })
         scores[highestLevel] = profile.dinoLevel
         scores[totalStars] = profile.totalStars
         return scores
@@ -101,11 +104,11 @@ struct FriendProgress: Equatable, Sendable {
     var allComplete: Bool { DinoLevelCatalog.levels.allSatisfy { levels[$0.id]?.completed == true } }
     var totalStars: Int? {
         guard (1...9).allSatisfy({ levels[$0] != nil }) else { return nil }
-        return (1...9).reduce(0) { $0 + (levels[$1]?.stars ?? 0) }
+        return levels.values.filter { !$0.levelID.isMultiple(of: 10) }.reduce(0) { $0 + $1.stars }
     }
     var maximumStarsSoFar: Int? {
         guard totalStars != nil else { return nil }
-        return (1...9).filter { levels[$0]?.completed == true }.count * 3
+        return levels.values.filter { !$0.levelID.isMultiple(of: 10) && $0.completed }.count * 3
     }
     var starPercentage: Int? {
         guard let stars = totalStars, let maximum = maximumStarsSoFar, maximum > 0 else { return nil }
@@ -155,8 +158,13 @@ extension PlayerProfile {
             levels[String(level.id)] = record
             if let seconds = result.seconds { mergeTiming(TimedLevelResult(resultPoints: result.resultPoints, seconds: seconds), levelID: level.id) }
             if level.isBoss {
-                worldOneComplete = worldOneComplete || result.bossComplete
-                perfectBossVictory = perfectBossVictory || result.perfectBoss
+                if level.worldID == 1 {
+                    worldOneComplete = worldOneComplete || result.bossComplete
+                    perfectBossVictory = perfectBossVictory || result.perfectBoss
+                } else {
+                    if result.bossComplete { completedWorlds = (completedWorlds ?? []).union([level.worldID]) }
+                    if result.perfectBoss { perfectWorlds = (perfectWorlds ?? []).union([level.worldID]) }
+                }
             }
         }
     }

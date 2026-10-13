@@ -6,9 +6,12 @@ struct DinoCharacter: View {
     var size: CGFloat = 150
     var performsBackflip = false
     var givesThumbsUp = false
+    @EnvironmentObject private var player: DinoPlayer
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var start = Date()
     @State private var finished = false
+
+    private var appearance: DinoAppearance { player.profile.dinoAppearance ?? .standard }
 
     private var clip: DinoAnimation.Clip {
         performsBackflip ? .backflip : givesThumbsUp ? .thumbsUp : state == .sad ? .wrongAnswer : .idle
@@ -39,6 +42,23 @@ struct DinoCharacter: View {
         .accessibilityLabel(Text("dino.character"))
         .accessibilityAddTraits(.isImage)
         .accessibilityIdentifier(animationIdentifier)
+        .task(id: appearance) {
+            guard appearance != .standard else { return }
+            let colors = appearance
+            // Prepare every pose between reactions, so a short animation never
+            // flashes back to green while its next frame is being recolored.
+            do { try await Task.sleep(for: .milliseconds(35)) } catch { return }
+            let originals = DinoAnimation.spriteAssets.compactMap { asset in
+                UIImage(named: asset)?.cgImage.map { (asset, $0) }
+            }
+            let job = Task.detached(priority: .userInitiated) {
+                for (asset, original) in originals {
+                    guard !Task.isCancelled else { return }
+                    _ = DinoAvatarRenderer.render(original: original, appearance: colors, portrait: false, asset: asset)
+                }
+            }
+            await withTaskCancellationHandler { await job.value } onCancel: { job.cancel() }
+        }
         .task(id: clip) {
             start = Date(); finished = false
             guard clip != .idle else { return }
@@ -48,7 +68,7 @@ struct DinoCharacter: View {
     }
 
     private func sprite(_ pose: DinoAnimation.Pose, angle: Double) -> some View {
-        Image(pose.asset).resizable().scaledToFit().frame(width: size, height: size)
+        DinoAvatar(appearance: appearance, asset: pose.asset).frame(width: size, height: size)
             .offset(x: size * pose.offsetX, y: size * pose.offsetY)
             .rotationEffect(.degrees(angle - pose.paintedAngle),
                             anchor: clip == .backflip ? UnitPoint(x: 0.5, y: 0.52) : .bottom)

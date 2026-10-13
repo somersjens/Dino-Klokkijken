@@ -79,6 +79,50 @@ final class DinoUITests: XCTestCase {
         tap("level.play")
     }
 
+    func testNativeWorldChaptersAndMinuteQuestions() {
+        for completed in 1...9 {
+            app.terminate()
+            app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.worlds.\(UUID().uuidString)"
+            app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = String(completed)
+            app.launch()
+            XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 8))
+            let first = completed * 10 + 1
+            let node = revealMapNode(first)
+            XCTAssertTrue(node.isEnabled)
+            XCTAssertGreaterThanOrEqual(node.frame.width, 44)
+            XCTAssertTrue(app.descendants(matching: .any)["map.world.\(completed + 1)"].exists)
+            saveScreenshot("native-world-\(completed + 1)")
+            node.tap()
+            XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5))
+            tap("level.play")
+            XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 5))
+            var rng = SeededGenerator(seed: seed)
+            let q = DinoQuestionGenerator.generate(level: DinoLevelCatalog.level(first)!, using: &rng)[0]
+            if completed == 1 { XCTAssertEqual(q.target.minute, 30) }
+            let option = q.responses.firstIndex(of: q.expectedAnswer)!
+            tap("question.option.\(option)")
+            XCTAssertTrue(app.staticTexts["2/5"].waitForExistence(timeout: 8))
+            saveScreenshot("native-world-\(completed + 1)-question")
+        }
+    }
+
+    func testComingSoonOnlyAfterLevelHundred() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "10"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 8))
+        let boss = revealMapNode(100)
+        XCTAssertTrue(boss.isEnabled)
+        XCTAssertFalse(app.buttons["map.level.101"].exists)
+        let footer = app.descendants(matching: .any)["map.comingSoon"]
+        for _ in 0..<4 { if footer.isHittable { break }; app.swipeUp() }
+        XCTAssertTrue(footer.isHittable)
+        XCTAssertTrue(app.staticTexts["Coming soon"].exists)
+        XCTAssertGreaterThan(footer.frame.minY, boss.frame.maxY)
+        XCTAssertFalse(app.staticTexts["Wereld 2 · binnenkort"].exists)
+        saveScreenshot("native-world-10-coming-soon")
+    }
+
     private func openPractice() {
         onboard()
         tap("header.practice")
@@ -553,6 +597,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertEqual(app.buttons["header.dino"].label, "Mijn dino")
         saveScreenshot("personalize-header-custom")
         app.terminate(); app.launch()
+        saveScreenshot("personalize-cold-start")
         XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.buttons["header.dino"].label, "Mijn dino")
         tap("header.dino")
@@ -655,7 +700,7 @@ final class DinoUITests: XCTestCase {
                 clock.coordinate(withNormalizedOffset: CGVector(dx: 0.5 + sin(angle) * 0.34, dy: 0.5 - cos(angle) * 0.34)).tap()
                 tap("question.confirm")
             case .setDigital:
-                let initial = i == 0 ? 12 : question.target.hour == 12 ? 1 : 12
+                let initial = question.target.hour == 12 ? 1 : 12
                 let increments = (answer.hour - initial + 12) % 12
                 let plus = app.buttons["Een uur vooruit"]
                 XCTAssertTrue(plus.waitForExistence(timeout: 5))
@@ -695,8 +740,10 @@ final class DinoUITests: XCTestCase {
         begin(10)
         play(10, correct: 5)
         tap("result.next")
-        XCTAssertTrue(app.staticTexts["Wereld 1 voltooid!"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Binnenkort"].exists)
+        XCTAssertTrue(app.staticTexts["Wereld voltooid!"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Slaapvallei"].exists)
+        XCTAssertTrue(app.buttons["completion.nextWorld"].exists)
+        XCTAssertFalse(app.staticTexts["Coming soon"].exists)
         saveScreenshot("normal-world-complete")
     }
 
@@ -706,7 +753,17 @@ final class DinoUITests: XCTestCase {
         play(10, correct: 10)
         XCTAssertTrue(app.staticTexts["Perfecte boss-overwinning!"].exists)
         tap("result.next")
-        XCTAssertTrue(app.staticTexts["Wereld 1 voltooid!"].exists)
+        XCTAssertTrue(app.staticTexts["Wereld voltooid!"].exists)
+        XCTAssertTrue(app.staticTexts["Slaapvallei"].exists)
+        XCTAssertFalse(app.staticTexts["Coming soon"].exists)
+        tap("completion.nextWorld")
+        XCTAssertTrue(app.staticTexts["1/5"].waitForExistence(timeout: 5))
+        var rng = SeededGenerator(seed: seed)
+        let nextQuestion = DinoQuestionGenerator.generate(level: DinoLevelCatalog.level(11)!, using: &rng)[0]
+        let option = nextQuestion.responses.firstIndex(of: nextQuestion.expectedAnswer)!
+        tap("question.option.\(option)")
+        XCTAssertTrue(app.staticTexts["2/5"].waitForExistence(timeout: 8))
+        tap("header.pause"); tap("game.exit.confirm")
         app.terminate(); app.launch()
         XCTAssertFalse(app.textFields["onboarding.name"].exists)
         XCTAssertTrue(app.buttons["map.level.9"].exists)
@@ -941,7 +998,7 @@ final class DinoUITests: XCTestCase {
             saveScreenshot("jungle-section-\(section)")
         }
         for _ in 0..<4 { app.swipeUp() }
-        XCTAssertTrue(app.descendants(matching: .any)["map.nextWorld"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["map.world.2"].exists)
         XCTAssertEqual(level.frame.midY, originalHeaderY, accuracy: 1)
         saveScreenshot("jungle-world-transition")
         for _ in 0..<10 { app.swipeDown() }
@@ -998,6 +1055,12 @@ final class DinoUITests: XCTestCase {
 
     func testPlayCardAndContinuousResultDino() {
         onboard()
+        tap("header.dino")
+        for (part, color) in [("bandana", "blue"), ("spikes", "purple"), ("body", "pink"), ("belly", "orange")] {
+            tap("personalize.\(part).\(color)")
+        }
+        tap("personalize.done")
+        saveScreenshot("personalized-map-companion")
         revealMapNode(1).tap()
         let playButton = app.buttons["level.play"]
         XCTAssertTrue(playButton.waitForExistence(timeout: 3))
@@ -1017,5 +1080,8 @@ final class DinoUITests: XCTestCase {
         XCTAssertEqual(landed.frame.midX, app.frame.midX, accuracy: 4)
         XCTAssertEqual(landed.frame.width, 210, accuracy: 1)
         saveScreenshot("transition-result-dino")
+        tap("result.map")
+        XCTAssertTrue(app.descendants(matching: .any)["map.dino.1"].waitForExistence(timeout: 5))
+        saveScreenshot("personalized-completed-map-companion")
     }
 }

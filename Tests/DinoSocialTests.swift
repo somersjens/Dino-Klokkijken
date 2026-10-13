@@ -79,7 +79,7 @@ enum DinoSocialTests {
             expect(DinoLeaderboards.decode(levelID: 1, score: value, context: 1) == nil, "corrupt result rejected")
         }
         expect(DinoLeaderboards.decode(levelID: 1, score: 30, context: 2) == nil, "unknown schema rejected")
-        expect(DinoLeaderboards.decode(levelID: 11, score: 0, context: 1) == nil, "unknown level rejected")
+        expect(DinoLeaderboards.decode(levelID: 101, score: 0, context: 1) == nil, "unknown level rejected")
         expect(DinoLeaderboards.decode(levelID: 10, score: 17, context: 1) == nil, "invalid boss victory rejected")
         var perfect = PlayerProfile()
         perfect.recordCompletedAttempt(levelID: 10, correct: 10)
@@ -87,7 +87,7 @@ enum DinoSocialTests {
         expect(direct.highestCompletedLevel == 10 && direct.nextLevel == 1 && direct.totalStars == 0, "direct boss does not invent normal stars")
         expect(direct.levels[10]?.bossComplete == true && direct.levels[10]?.stars == 0, "boss has no stars")
         for id in 1...9 { perfect.recordCompletedAttempt(levelID: id, correct: 5) }
-        expect(FriendProgress.local(perfect).allComplete && FriendProgress.local(perfect).nextLevel == nil, "all complete has no nonexistent next level")
+        expect(!FriendProgress.local(perfect).allComplete && FriendProgress.local(perfect).nextLevel == 11, "jungle completion continues into world two")
         for count in [0,1,2,3,4,1000] {
             let group = FriendMapGroup(ids: (0..<count).map(String.init))
             expect(group.visibleIDs.count == min(3, count) && group.additionalCount == max(0, count - 3), "bounded map badges for large friend lists")
@@ -107,7 +107,12 @@ enum DinoSocialTests {
         for level in DinoLevelCatalog.levels {
             for correct in 0...level.questionCount {
                 var profile = PlayerProfile()
-                if level.id != 1 && !level.isBoss { profile.recordCompletedAttempt(levelID: 10, correct: 10) }
+                if level.worldID > 1 {
+                    for worldID in 1..<level.worldID { profile.recordCompletedAttempt(levelID: worldID * 10, correct: 10) }
+                }
+                if !level.isBoss {
+                    for id in ((level.worldID - 1) * 10 + 1)..<level.id { profile.recordCompletedAttempt(levelID: id, correct: 3) }
+                }
                 for perQuestion in [1, 17, 60] {
                     profile.recordCompletedAttempt(levelID: level.id, correct: correct, questionSeconds: Array(repeating: perQuestion, count: level.questionCount))
                     let score = DinoLeaderboards.timedScore(profile: profile, levelID: level.id)!
