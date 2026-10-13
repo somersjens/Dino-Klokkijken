@@ -1,5 +1,267 @@
 import SwiftUI
 
+/// Every section meets its neighbour at the same centre line and vertical tangent.
+/// The sign is drawn over the trail, rather than leaving a blank break in it.
+struct WorldRouteTrail: View {
+    let points: [CGPoint]
+    var entryY: CGFloat? = nil
+    let exitY: CGFloat
+
+    private var path: Path {
+        guard let first = points.first, let last = points.last else { return Path() }
+        return Path { path in
+            if let entryY {
+                // Extend the strokes beyond the section, including the offset shadow.
+                path.move(to: CGPoint(x: last.x, y: entryY - 12))
+                path.addCurve(to: first,
+                              control1: CGPoint(x: last.x, y: entryY + (first.y - entryY) * 0.50),
+                              control2: CGPoint(x: first.x, y: first.y - 88))
+            } else { path.move(to: first) }
+            for pair in zip(points, points.dropFirst()) {
+                path.addCurve(to: pair.1, control1: CGPoint(x: pair.0.x, y: pair.0.y + 88),
+                              control2: CGPoint(x: pair.1.x, y: pair.1.y - 88))
+            }
+            path.addLine(to: CGPoint(x: last.x, y: exitY + 12))
+        }
+    }
+
+    var body: some View {
+        // Paths avoid allocating a second full-height Canvas texture per world.
+        ZStack(alignment: .topLeading) {
+            path.stroke(Color(dinoHex: 0x78995D).opacity(0.21), style: StrokeStyle(lineWidth: 46, lineCap: .butt)).offset(y: 5)
+            path.stroke(Color(dinoHex: 0xC9BB83), style: StrokeStyle(lineWidth: 40, lineCap: .butt))
+            path.stroke(Color(dinoHex: 0xF4E6B6), style: StrokeStyle(lineWidth: 34, lineCap: .butt))
+            path.stroke(Color(dinoHex: 0xFFF9D8).opacity(0.95), style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [2, 12]))
+        }.allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+/// A single layered sign: chapter tab, sculpted title plaque and attached skill label.
+struct WorldTitleBanner: View {
+    let world: DinoWorld
+    var highContrast = false
+    private var ink: UInt32 {
+        if highContrast { return world.id == 3 ? 0xFFFFFF : 0x153C48 }
+        switch world.id {
+        case 1: return 0x235C34
+        case 3: return 0xFFF2CD
+        case 5: return 0x425981
+        case 6: return 0x256879
+        case 9: return 0x6A4935
+        default: return 0x294959
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Text("dino.worldNumber \(world.id)")
+                .textCase(.uppercase)
+                .font(.system(size: 12, weight: .heavy, design: .rounded)).tracking(1.5)
+                .foregroundStyle(Color(dinoHex: 0x573C2A))
+                .padding(.horizontal, 24).frame(height: 34)
+                .background {
+                    Capsule().fill(Color(dinoHex: 0x9D754B)).offset(y: 4)
+                    Capsule().fill(LinearGradient(colors: [Color(dinoHex: 0xFFDEA0), Color(dinoHex: 0xE5AB65)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .overlay(Capsule().strokeBorder(Color(dinoHex: 0xFFF0C3), lineWidth: 1.5))
+                        .overlay(alignment: .leading) { Circle().fill(Color(dinoHex: 0xFFF3CD)).frame(width: 3, height: 3).padding(.leading, 9) }
+                        .overlay(alignment: .trailing) { Circle().fill(Color(dinoHex: 0xA97943)).frame(width: 3, height: 3).padding(.trailing, 9) }
+                }.zIndex(2)
+            Text(LocalizedStringKey(world.titleKey))
+                .font(.system(size: 33, weight: .heavy, design: .rounded))
+                .foregroundStyle(Color(dinoHex: ink))
+                .shadow(color: Color(dinoHex: world.id == 3 ? 0x433640 : 0xEBCB73).opacity(0.55), radius: 0, y: 1.5)
+                .lineLimit(1).minimumScaleFactor(0.62)
+                .padding(.horizontal, 32).frame(maxWidth: .infinity).frame(height: 84)
+                .background { WorldSignFace(world: world) }
+                .padding(.top, -5)
+            Label(LocalizedStringKey(world.skillKey), systemImage: "clock")
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(Color(dinoHex: 0x345565))
+                .lineLimit(1).minimumScaleFactor(0.70)
+                .padding(.horizontal, 16).frame(height: 36)
+                .background {
+                    Capsule().fill(Color(dinoHex: 0x8C8967).opacity(0.35)).offset(y: 3)
+                    Capsule().fill(LinearGradient(colors: [Color(dinoHex: 0xFFFEF1), Color(dinoHex: 0xF1F1D9)], startPoint: .top, endPoint: .bottom))
+                        .overlay(Capsule().strokeBorder(.white.opacity(0.85), lineWidth: 1.5))
+                }.padding(.top, -10).padding(.horizontal, 22).zIndex(2)
+        }.padding(.top, 12).padding(.bottom, 16)
+            .frame(maxWidth: .infinity)
+            .accessibilityElement(children: .combine)
+    }
+}
+
+private struct WorldSignFace: View {
+    let world: DinoWorld
+    var body: some View {
+        Canvas { context, size in
+            let p = WorldSignPainter(context: context, world: world)
+            p.draw(in: size)
+        }.allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+private struct WorldSignPainter {
+    let context: GraphicsContext
+    let world: DinoWorld
+    private var colors: WorldThemeColors { WorldThemeColors(world) }
+
+    private func material(_ path: Path, light: UInt32, middle: UInt32, dark: UInt32) {
+        let r = path.boundingRect
+        context.fill(path, with: .linearGradient(Gradient(colors: [Color(dinoHex: light), Color(dinoHex: middle), Color(dinoHex: dark)]),
+                                               startPoint: CGPoint(x: r.minX, y: r.minY), endPoint: CGPoint(x: r.maxX, y: r.maxY)))
+    }
+    private func line(_ points: [CGPoint], color: UInt32, width: CGFloat, opacity: Double = 1) {
+        var p = Path(); p.addLines(points)
+        context.stroke(p, with: .color(Color(dinoHex: color).opacity(opacity)), style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
+    }
+    private func ellipse(_ r: CGRect, color: UInt32) {
+        material(Path(ellipseIn: r), light: 0xFFF0C4, middle: color, dark: colors.shade)
+    }
+    func draw(in size: CGSize) {
+        let w = size.width, h = size.height
+        let r = CGRect(x: 10, y: 4, width: w - 20, height: h - 11)
+        let outline = Path(roundedRect: r, cornerRadius: 29)
+        var shadow = context
+        shadow.translateBy(x: 0, y: 6)
+        shadow.fill(outline, with: .color(Color(dinoHex: colors.shade).opacity(0.25)))
+        let light: UInt32 = world.id == 3 ? 0x9B8790 : world.id == 5 ? 0xF0F8FF : world.id == 6 ? 0xDBF7F4 : 0xFFF4C9
+        let middle: UInt32 = world.id == 3 ? 0x736775 : world.id == 5 ? 0xD3E7EE : world.id == 6 ? 0xBEE3E2 : 0xF2E8BF
+        let dark: UInt32 = world.id == 3 ? 0x514D60 : world.id == 5 ? 0x9FBBCF : world.id == 6 ? 0x82B6BC : 0xC6B484
+        material(outline, light: light, middle: middle, dark: dark)
+        context.stroke(outline, with: .color(Color(dinoHex: world.id == 3 ? 0xE8A166 : 0xBDA674)), lineWidth: 2)
+        let inner = Path(roundedRect: r.insetBy(dx: 4, dy: 4), cornerRadius: 25)
+        context.stroke(inner, with: .color(Color(dinoHex: light).opacity(0.85)), lineWidth: 1.5)
+        // Tiny material details stay out of the text area.
+        for side: CGFloat in [20, w - 20] {
+            ellipse(CGRect(x: side - 2, y: h * 0.45, width: 4, height: 4), color: 0xD5B46E)
+        }
+        if [1, 4, 9].contains(world.id) {
+            for i in 0..<3 {
+                let y = 16 + CGFloat(i) * 19
+                line([CGPoint(x: 37, y: y), CGPoint(x: 50, y: y - 1), CGPoint(x: 65, y: y + 1)], color: 0xC3A46C, width: 0.7, opacity: 0.22)
+                line([CGPoint(x: w - 70, y: y + 7), CGPoint(x: w - 40, y: y + 5)], color: 0xC3A46C, width: 0.7, opacity: 0.22)
+            }
+        }
+        for side: CGFloat in [-1, 1] {
+            let x: CGFloat = side < 0 ? 32 : w - 32
+            switch world.id {
+            case 1:
+                for i in 0..<3 {
+                    leaf(at: CGPoint(x: x, y: 18 + CGFloat(i) * 21), length: 30, angle: Double(side) * Double(48 + i * 22), color: i == 1 ? 0x6CA93F : 0x4C8B46)
+                }
+            case 2:
+                leaf(at: CGPoint(x: x, y: 61), length: 32, angle: Double(side) * 42, color: 0x8CB7A8)
+                moon(at: CGPoint(x: x + side * 3, y: 18), radius: 12)
+                star(at: CGPoint(x: x - side * 9, y: 47), radius: 4)
+            case 3:
+                var rock = Path()
+                rock.addLines([CGPoint(x: x - 13, y: 56), CGPoint(x: x - 8, y: 18), CGPoint(x: x + 6, y: 6), CGPoint(x: x + 15, y: 48), CGPoint(x: x + 8, y: 69)])
+                rock.closeSubpath(); material(rock, light: 0xBFA493, middle: 0x826E75, dark: 0x4E5368)
+                line([CGPoint(x: x, y: 14), CGPoint(x: x - 3, y: 31), CGPoint(x: x + 4, y: 42), CGPoint(x: x + 1, y: 60)], color: 0xFFB570, width: 3)
+            case 4:
+                leaf(at: CGPoint(x: x, y: 64), length: 29, angle: Double(side) * 40, color: 0x7FAC62)
+                for i in 0..<3 {
+                    let px = x + side * CGFloat(i * 7)
+                    var flag = Path()
+                    flag.addLines([CGPoint(x: px - 3, y: 12), CGPoint(x: px + 6, y: 14), CGPoint(x: px + 1, y: 25)]); flag.closeSubpath()
+                    material(flag, light: 0xFBE1A5, middle: i == 1 ? 0x77B7AA : 0xDE9576, dark: 0xA56F65)
+                }
+            case 5:
+                for i in 0..<3 {
+                    let px = x + CGFloat(i - 1) * 9
+                    var crystal = Path()
+                    crystal.addLines([CGPoint(x: px - 7, y: 66), CGPoint(x: px - 6, y: 27 - CGFloat(i) * 7),
+                                      CGPoint(x: px + 1, y: 14 - CGFloat(i) * 7), CGPoint(x: px + 8, y: 29 - CGFloat(i) * 7), CGPoint(x: px + 7, y: 66)])
+                    crystal.closeSubpath()
+                    material(crystal, light: 0xDCFFF6, middle: i == 1 ? 0x9A9FDA : 0x7BCACB, dark: 0x627EAD)
+                    line([CGPoint(x: px + 1, y: 18 - CGFloat(i) * 7), CGPoint(x: px + 1, y: 61)], color: 0xF0FFEF, width: 1, opacity: 0.7)
+                }
+            case 6:
+                line([CGPoint(x: x - side * 5, y: 19), CGPoint(x: x + side * 7, y: 19),
+                      CGPoint(x: x + side * 7, y: 49), CGPoint(x: x - side * 4, y: 49)], color: 0x44A9AD, width: 3)
+                for y: CGFloat in [19, 49] { ellipse(CGRect(x: x - side * 5 - 3, y: y - 3, width: 6, height: 6), color: 0x9AEDE0) }
+                for y: CGFloat in [12, 63] { ellipse(CGRect(x: x - 3, y: y, width: 6, height: 6), color: 0x99B6B3) }
+            case 7:
+                leaf(at: CGPoint(x: x, y: 63), length: 32, angle: Double(side) * 42, color: side < 0 ? 0x8DB468 : 0x8397B7)
+                if side < 0 {
+                    ellipse(CGRect(x: x - 10, y: 8, width: 20, height: 20), color: 0xEACB72)
+                    for i in 0..<8 {
+                        let a = Double(i) * .pi / 4
+                        line([CGPoint(x: x + CGFloat(cos(a)) * 13, y: 18 + CGFloat(sin(a)) * 13),
+                              CGPoint(x: x + CGFloat(cos(a)) * 16, y: 18 + CGFloat(sin(a)) * 16)], color: 0xE5BC6E, width: 1.2)
+                    }
+                } else { moon(at: CGPoint(x: x, y: 18), radius: 11); star(at: CGPoint(x: x - 7, y: 41), radius: 3) }
+            case 8:
+                gear(at: CGPoint(x: x, y: 35), radius: 18)
+                star(at: CGPoint(x: x - side * 7, y: 66), radius: 4)
+            case 9:
+                var rope = Path()
+                rope.addRoundedRect(in: CGRect(x: 16, y: 9, width: w - 32, height: h - 24), cornerSize: CGSize(width: 23, height: 23))
+                context.stroke(rope, with: .color(Color(dinoHex: 0xC49C59)), style: StrokeStyle(lineWidth: 3, dash: [3, 2]))
+                line([CGPoint(x: x, y: 22), CGPoint(x: x, y: 59)], color: 0x527F89, width: 3)
+                line([CGPoint(x: x - 8, y: 36), CGPoint(x: x + 8, y: 36)], color: 0x527F89, width: 2)
+                var arc = Path()
+                arc.addArc(center: CGPoint(x: x, y: 46), radius: 12, startAngle: .degrees(15), endAngle: .degrees(165), clockwise: false)
+                context.stroke(arc, with: .color(Color(dinoHex: 0x527F89)), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                context.stroke(Path(ellipseIn: CGRect(x: x - 4, y: 17, width: 8, height: 8)), with: .color(Color(dinoHex: 0x527F89)), lineWidth: 2)
+            default:
+                var pennant = Path()
+                pennant.addLines([CGPoint(x: x - 9, y: 22), CGPoint(x: x + 9, y: 22), CGPoint(x: x + 9, y: 65),
+                                 CGPoint(x: x, y: 58), CGPoint(x: x - 9, y: 65)]); pennant.closeSubpath()
+                material(pennant, light: 0xB2D4E4, middle: 0x789BCF, dark: 0x4B698F)
+                var crown = Path()
+                crown.addLines([CGPoint(x: x - 9, y: 31), CGPoint(x: x - 11, y: 15), CGPoint(x: x - 4, y: 21),
+                                CGPoint(x: x, y: 10), CGPoint(x: x + 4, y: 21), CGPoint(x: x + 11, y: 15), CGPoint(x: x + 9, y: 31)])
+                crown.closeSubpath(); material(crown, light: 0xFFF1AA, middle: 0xE0B764, dark: 0xB58E53)
+            }
+        }
+    }
+
+    private func leaf(at point: CGPoint, length: CGFloat, angle: Double, color: UInt32) {
+        var layer = context
+        layer.translateBy(x: point.x, y: point.y); layer.rotate(by: .degrees(angle))
+        let path = Path { p in
+            p.move(to: .zero)
+            p.addCurve(to: CGPoint(x: 0, y: -length), control1: CGPoint(x: -15, y: -length * 0.35), control2: CGPoint(x: -10, y: -length * 0.86))
+            p.addCurve(to: .zero, control1: CGPoint(x: 10, y: -length * 0.8), control2: CGPoint(x: 13, y: -length * 0.24))
+        }
+        layer.fill(path, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xB5D96F), Color(dinoHex: color), Color(dinoHex: 0x38734A)]), startPoint: CGPoint(x: -10, y: -length), endPoint: CGPoint(x: 12, y: 0)))
+        var vein = Path(); vein.move(to: .zero); vein.addLine(to: CGPoint(x: 0, y: -length * 0.85))
+        layer.stroke(vein, with: .color(Color(dinoHex: 0xD3E7A0).opacity(0.65)), lineWidth: 0.8)
+        for i in 1...3 {
+            var branch = Path(); let y = -length * CGFloat(i) / 5
+            branch.addLines([CGPoint(x: -7, y: y - 4), CGPoint(x: 0, y: y), CGPoint(x: 6, y: y - 5)])
+            layer.stroke(branch, with: .color(Color(dinoHex: 0xC7E18C).opacity(0.4)), lineWidth: 0.6)
+        }
+    }
+    private func star(at point: CGPoint, radius: CGFloat) {
+        var path = Path()
+        path.addLines((0..<8).map { i in
+            let angle = Double(i) * .pi / 4 - .pi / 2, r = i.isMultiple(of: 2) ? radius : radius * 0.30
+            return CGPoint(x: point.x + CGFloat(cos(angle)) * r, y: point.y + CGFloat(sin(angle)) * r)
+        }); path.closeSubpath()
+        material(path, light: 0xFFF6CB, middle: 0xE9D694, dark: 0xC6B484)
+    }
+    private func moon(at point: CGPoint, radius: CGFloat) {
+        var path = Path(ellipseIn: CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2))
+        path.addEllipse(in: CGRect(x: point.x - radius + 7, y: point.y - radius - 3, width: radius * 1.7, height: radius * 1.7))
+        var moon = context
+        moon.clip(to: Path(ellipseIn: CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)))
+        moon.fill(path, with: .color(Color(dinoHex: 0xEADDAE)), style: FillStyle(eoFill: true))
+    }
+    private func gear(at point: CGPoint, radius: CGFloat) {
+        var path = Path()
+        path.addLines((0..<48).map { i in
+            let a = Double(i) * .pi / 24
+            let r = i % 4 < 2 ? radius : radius * 0.78
+            return CGPoint(x: point.x + CGFloat(cos(a)) * r, y: point.y + CGFloat(sin(a)) * r)
+        }); path.closeSubpath()
+        material(path, light: 0xFFF0BD, middle: 0xD9B46C, dark: 0xAA894F)
+        ellipse(CGRect(x: point.x - 9, y: point.y - 9, width: 18, height: 18), color: 0xBCBAA0)
+        context.stroke(Path(ellipseIn: CGRect(x: point.x - 12, y: point.y - 12, width: 24, height: 24)), with: .color(Color(dinoHex: 0xFAE2A6)), lineWidth: 1)
+    }
+}
+
 /// Each ten-level section can supply its own palette. The last part blends into
 /// the next section's palette, so adjoining worlds share the same horizon.
 struct WorldLandscapePalette {
@@ -39,18 +301,19 @@ struct WorldMapLandscape: View {
             let right = w - left
             let height = size.height - routeOffset
             let scale = min(1.35, max(0.82, w / 390))
+            let skyEnd = min(0.32, max(0.08, (routeOffset + 210) / size.height))
             context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(
                 Gradient(stops: [
-                    .init(color: Color(dinoHex: 0xE7F1BD), location: 0),
-                    .init(color: Color(dinoHex: palette.ground), location: 0.38),
+                    .init(color: Color(dinoHex: 0x98DFF1), location: 0),
+                    .init(color: Color(dinoHex: 0xC6EDF0), location: skyEnd * 0.47),
+                    .init(color: Color(dinoHex: 0xE7F1BD), location: skyEnd),
+                    .init(color: Color(dinoHex: palette.ground), location: 0.45),
                     .init(color: Color(dinoHex: 0xD4E6AD), location: 0.72),
                     .init(color: Color(dinoHex: nextPalette.ground), location: 1)
                 ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
 
             let sky = JunglePainter(context: context)
-            sky.ellipse(CGRect(x: w * 0.70, y: 12, width: 92, height: 92), color: Color(dinoHex: 0xFFF4C4).opacity(0.75))
-            sky.hill(x: -w * 0.45, y: 75, width: w, height: 340, color: Color(dinoHex: 0xB4D69D).opacity(0.30))
-            sky.hill(x: w * 0.65, y: 130, width: w * 0.7, height: 330, color: Color(dinoHex: 0xAACF93).opacity(0.22))
+            sky.entrance(width: w, left: left, right: right, height: max(350, routeOffset), scale: scale)
             sky.bush(at: CGPoint(x: left - 12, y: 64), size: 0.85)
             sky.bush(at: CGPoint(x: right + 18, y: 85), size: 1.0)
             sky.vine(from: CGPoint(x: left + 13, y: 0), length: 122, bend: 20)
@@ -117,11 +380,16 @@ struct WorldMapLandscape: View {
             painter.fern(at: CGPoint(x: left + 45, y: 1916), size: scale * 0.45, flipped: false)
             painter.rocks(at: CGPoint(x: right - 28, y: 1940), size: scale * 0.8)
             painter.fern(at: CGPoint(x: right - 43, y: 1945), size: scale * 0.40, flipped: true)
+            // The jungle has its own guardian, just like every later chapter.
+            let bossPoint = CGPoint(x: right - 79 * scale, y: 1857)
+            let bossScene = ThemePainter(context: routeContext, colors: WorldThemeColors(DinoWorldCatalog.world(1)!))
             context.fill(Path(CGRect(x: 0, y: size.height - 240, width: w, height: 240)),
                          with: .linearGradient(Gradient(colors: [Color(dinoHex: nextPalette.ground).opacity(0),
                                                                  Color(dinoHex: nextPalette.ground)]),
                                                startPoint: CGPoint(x: 0, y: size.height - 240),
                                                endPoint: CGPoint(x: 0, y: size.height)))
+            bossScene.bossClearing(worldID: 1, at: bossPoint, size: scale)
+            bossScene.boss(worldID: 1, at: bossPoint, size: scale * 0.88)
         }
         .allowsHitTesting(false).accessibilityHidden(true)
     }
@@ -166,6 +434,58 @@ private struct JunglePainter {
 
     func ellipse(_ rect: CGRect, color: Color) { context.fill(Path(ellipseIn: rect), with: .color(color)) }
 
+    func entrance(width: CGFloat, left: CGFloat, right: CGFloat, height: CGFloat, scale: CGFloat) {
+        let sun = CGPoint(x: width * 0.76, y: height * 0.29)
+        context.fill(Path(ellipseIn: CGRect(x: sun.x - 160, y: sun.y - 160, width: 320, height: 320)),
+                     with: .radialGradient(Gradient(colors: [Color(dinoHex: 0xFFF8CF).opacity(0.95), Color(dinoHex: 0xFFF8CF).opacity(0)]),
+                                           center: sun, startRadius: 15, endRadius: 160))
+        ellipse(CGRect(x: sun.x - 24, y: sun.y - 24, width: 48, height: 48), color: Color(dinoHex: 0xFFFBE3).opacity(0.85))
+        // Soft, layered cloud banks keep the sky continuous behind the fixed HUD.
+        context.drawLayer { cloud in
+            cloud.addFilter(.blur(radius: 3))
+            for (x, y, s) in [(width * 0.22, height * 0.19, CGFloat(1)),
+                              (width * 0.63, height * 0.43, CGFloat(0.78)),
+                              (width * 0.08, height * 0.56, CGFloat(0.64))] {
+                for i in 0..<4 {
+                    let r = CGRect(x: x + CGFloat(i - 2) * 22 * s, y: y - CGFloat(i % 2) * 11 * s,
+                                   width: 64 * s, height: 26 * s)
+                    cloud.fill(Path(ellipseIn: r), with: .color(.white.opacity(0.52)))
+                }
+            }
+        }
+        hill(x: -width * 0.43, y: height * 0.46, width: width * 0.92, height: 280 * scale,
+             color: Color(dinoHex: 0x8ABDB0).opacity(0.35))
+        hill(x: width * 0.56, y: height * 0.42, width: width * 0.83, height: 330 * scale,
+             color: Color(dinoHex: 0x86B9AD).opacity(0.3))
+        // Distant falls sit behind the sign; the near fall continues beside level one.
+        var distant = context
+        distant.opacity = 0.53
+        let backdrop = JunglePainter(context: distant)
+        backdrop.waterfall(at: CGPoint(x: right - 12 * scale, y: height * 0.82), size: scale * 0.83)
+        backdrop.waterfall(at: CGPoint(x: left - 10 * scale, y: height * 0.70), size: scale * 0.58)
+        context.drawLayer { light in
+            light.addFilter(.blur(radius: 12))
+            for i in 0..<3 {
+                var ray = Path()
+                let x = sun.x + CGFloat(i - 1) * 28
+                ray.addLines([CGPoint(x: x, y: sun.y - 10), CGPoint(x: x + 14, y: sun.y),
+                              CGPoint(x: x - 70 + CGFloat(i) * 25, y: height + 420),
+                              CGPoint(x: x - 165 + CGFloat(i) * 24, y: height + 420)])
+                ray.closeSubpath()
+                light.fill(ray, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xFFF9DB).opacity(0.26), Color(dinoHex: 0xFFF9DB).opacity(0)]),
+                                                      startPoint: sun, endPoint: CGPoint(x: sun.x - 100, y: height + 420)))
+            }
+        }
+        for side: CGFloat in [-1, 1] {
+            let x = side < 0 ? left + 8 : right - 8
+            for i in 0..<4 {
+                leaf(at: CGPoint(x: x, y: 10 + CGFloat(i) * 42), length: CGFloat(50 - i * 5) * scale,
+                     width: 13 * scale, angle: Double(side) * Double(40 + i * 18),
+                     color: i.isMultiple(of: 2) ? green : dark)
+            }
+        }
+    }
+
     func hill(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat, color: Color) {
         var path = Path()
         path.move(to: CGPoint(x: x, y: y + height * 0.65))
@@ -205,7 +525,7 @@ private struct JunglePainter {
     }
 
     /// Scalloped, asymmetrical foliage silhouettes instead of rows of circles.
-    private func foliagePath(in r: CGRect) -> Path {
+    func foliagePath(in r: CGRect) -> Path {
         func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
             CGPoint(x: r.minX + x * r.width, y: r.minY + y * r.height)
         }
@@ -532,6 +852,7 @@ struct WorldThemeColors {
     init(_ world: DinoWorld) {
         ground = world.ground
         switch world.id {
+        case 1: (accent, distant, shade) = (0x8BBE69, 0xACC992, 0x326C55)
         case 2: (accent, distant, shade) = (0x9CCBB8, 0xB2B4D7, 0x596A99)
         case 3: (accent, distant, shade) = (0xF47C65, 0xE4A688, 0x706778)
         case 4: (accent, distant, shade) = (0xD98663, 0xAAD9B8, 0x6C8561)
@@ -565,7 +886,8 @@ struct ThemedWorldLandscape: View {
                 .init(color: Color(dinoHex: nextGround), location: 1)
             ]
             if world.id == 7 {
-                stops = [.init(color: Color(dinoHex: 0xF1E8B7), location: 0),
+                stops = [.init(color: ground, location: 0),
+                         .init(color: Color(dinoHex: 0xF1E8B7), location: 0.10),
                          .init(color: Color(dinoHex: 0xD4E8BE), location: 0.35),
                          .init(color: Color(dinoHex: 0xBFC5E0), location: 0.68),
                          .init(color: Color(dinoHex: 0xA9BBD4), location: 0.90),
@@ -600,13 +922,13 @@ struct ThemedWorldLandscape: View {
                              at: CGPoint(x: onRight ? left - 6 : right + 6, y: point.y + 82),
                              size: scale, variation: index)
             }
-            let bossPoint = CGPoint(x: right - 58 * scale, y: 1690)
-            p.bossClearing(worldID: world.id, at: bossPoint, size: scale)
-            p.boss(worldID: world.id, at: bossPoint, size: scale * 0.96)
+            let bossPoint = CGPoint(x: right - 79 * scale, y: 1728)
             context.fill(Path(CGRect(x: 0, y: size.height - 180, width: w, height: 180)),
                          with: .linearGradient(Gradient(colors: [Color(dinoHex: nextGround).opacity(0), Color(dinoHex: nextGround)]),
                                                startPoint: CGPoint(x: 0, y: size.height - 180),
                                                endPoint: CGPoint(x: 0, y: size.height)))
+            p.bossClearing(worldID: world.id, at: bossPoint, size: scale)
+            p.boss(worldID: world.id, at: bossPoint, size: scale * 0.88)
         }.allowsHitTesting(false).accessibilityHidden(true)
     }
 }
@@ -618,13 +940,21 @@ struct WorldThemePreview: View {
         Canvas { context, size in
             let colors = WorldThemeColors(world)
             context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(dinoHex: colors.ground)))
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(
+                Gradient(colors: [.white.opacity(0.25), Color(dinoHex: colors.shade).opacity(0.08)]),
+                startPoint: .zero, endPoint: CGPoint(x: size.width, y: size.height)))
             let p = ThemePainter(context: context, colors: colors)
-            let scale = min(size.height / 145, size.width / 220)
-            p.scene(worldID: world.id, at: CGPoint(x: size.width * 0.23, y: size.height * 0.87),
-                    size: scale * 0.87, variation: 0)
-            p.bossClearing(worldID: world.id, at: CGPoint(x: size.width * 0.73, y: size.height * 0.90), size: scale)
-            p.boss(worldID: world.id, at: CGPoint(x: size.width * 0.72, y: size.height * 0.93), size: scale)
-        }.allowsHitTesting(false).accessibilityHidden(true)
+            let heightUnits: CGFloat = [8, 10].contains(world.id) ? 218 : 195
+            let scale = min(size.height / heightUnits, size.width / 290)
+            p.scene(worldID: world.id, at: CGPoint(x: size.width * 0.21, y: size.height * 0.87),
+                    size: scale * 1.12, variation: 0)
+            p.bossClearing(worldID: world.id, at: CGPoint(x: size.width * 0.71, y: size.height * 0.92), size: scale)
+            p.boss(worldID: world.id, at: CGPoint(x: size.width * 0.70, y: size.height * 0.94), size: scale)
+        }.allowsHitTesting(false)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(LocalizedStringKey(world.bossKey)))
+            .accessibilityValue(Text(verbatim: String(format: "%02d:%02d", WorldBossClock.time(in: world.id).hour,
+                                                     WorldBossClock.time(in: world.id).minute)))
     }
 }
 
@@ -755,8 +1085,14 @@ private struct ThemePainter {
         at(point, size: size) { p in
             p.gardenPatch(at: CGPoint(x: 0, y: 11), width: 132, color: p.colors.accent)
             switch worldID {
+            case 1:
+                let jungle = JunglePainter(context: p.context)
+                jungle.tree(at: CGPoint(x: -17, y: -2), size: 0.53, leaning: 1)
+                jungle.rocks(at: CGPoint(x: 23, y: 9), size: 0.55)
+                jungle.fern(at: CGPoint(x: 32, y: 23), size: 0.52, flipped: true)
+                jungle.vine(from: CGPoint(x: -30, y: -131), length: 97, bend: 17)
             case 2:
-                p.tree(at: CGPoint(x: -19, y: 0), size: variation.isMultiple(of: 2) ? 0.90 : 0.65, night: true, willow: true)
+                p.tree(at: CGPoint(x: -19, y: 0), size: variation.isMultiple(of: 2) ? 0.90 : 0.65, night: true, willow: true, variation: variation)
                 p.mushroom(at: CGPoint(x: 25, y: 10), size: 0.75)
                 p.mushroom(at: CGPoint(x: 46, y: 20), size: 0.40)
                 if variation % 3 == 1 { p.clockPost(at: CGPoint(x: 28, y: -4), time: .init(hour: 3, minute: 30), size: 0.55) }
@@ -781,8 +1117,8 @@ private struct ThemePainter {
                     p.fountain(at: CGPoint(x: 23, y: 13), size: 0.75)
                 }
                 else {
-                    p.building(at: CGPoint(x: -27, y: -11), size: 0.72, city: false)
-                    p.building(at: CGPoint(x: 25, y: 6), size: 0.61, city: false)
+                    p.building(at: CGPoint(x: -27, y: -11), size: 0.72, city: false, variation: variation)
+                    p.building(at: CGPoint(x: 25, y: 6), size: 0.61, city: false, variation: variation + 1)
                 }
                 p.fence(at: CGPoint(x: -4, y: 29), size: 0.85)
                 p.blossoms(at: CGPoint(x: -33, y: 25), size: 0.70, color: 0xEEA8A0)
@@ -790,8 +1126,8 @@ private struct ThemePainter {
             case 5:
                 p.rock(at: CGPoint(x: -14, y: 1), size: 1.02, color: 0x89A9B8)
                 p.glow(at: CGPoint(x: 14, y: -38), radius: 67, color: 0x8EEDD8, opacity: 0.25)
-                p.crystals(at: CGPoint(x: 0, y: 10), size: 1.16)
-                p.crystals(at: CGPoint(x: 40, y: 25), size: 0.42)
+                p.crystals(at: CGPoint(x: 0, y: 10), size: 1.16, variation: variation)
+                p.crystals(at: CGPoint(x: 40, y: 25), size: 0.42, variation: variation + 1)
                 if variation == 2 { p.clockPost(at: CGPoint(x: 18, y: -47), time: .init(hour: 2, minute: 17), size: 0.65) }
                 p.rock(at: CGPoint(x: -37, y: 21), size: 0.30, color: 0x8CA6AF)
                 for i in 0..<3 { p.star(at: CGPoint(x: CGFloat(i) * 23 - 25, y: -30 - CGFloat(i % 2) * 62), radius: 3, color: 0xECFFF4) }
@@ -803,7 +1139,7 @@ private struct ThemePainter {
                 p.lamp(at: CGPoint(x: 49, y: 12), size: 0.68, night: false)
                 p.planter(at: CGPoint(x: -43, y: 17), size: 0.62, flowers: true)
             case 7:
-                p.tree(at: CGPoint(x: -8, y: -2), size: 0.93, night: variation > 2, willow: false)
+                p.tree(at: CGPoint(x: -8, y: -2), size: 0.93, night: variation > 3, willow: false, variation: variation)
                 p.mushroom(at: CGPoint(x: 32, y: 15), size: 0.63)
                 p.sprig(at: CGPoint(x: -34, y: 22), size: 0.75, color: variation > 2 ? 0x8595AC : 0x9CBE83)
                 if variation % 3 == 1 { p.clockPost(at: CGPoint(x: 22, y: 10), time: .init(hour: variation > 2 ? 20 : 8), size: 0.66, digital: true) }
@@ -841,7 +1177,7 @@ private struct ThemePainter {
             p.gardenPatch(at: CGPoint(x: 0, y: 9), width: 168, color: p.colors.distant)
             switch worldID {
             case 2:
-                p.tree(at: CGPoint(x: -8, y: -8), size: 1.03, night: true, willow: true)
+                p.tree(at: CGPoint(x: -8, y: -8), size: 1.03, night: true, willow: true, variation: variation + 1)
                 p.pond(at: CGPoint(x: 29, y: 17), size: 0.50, lava: false)
                 p.blossoms(at: CGPoint(x: 34, y: 24), size: 0.6, color: 0xDAB9DE)
             case 3:
@@ -850,7 +1186,7 @@ private struct ThemePainter {
                 p.glow(at: CGPoint(x: 15, y: 16), radius: 30, color: 0xFFD88B, opacity: 0.22)
                 p.sprig(at: CGPoint(x: 5, y: 18), size: 0.9, color: 0xC19174)
             case 4, 10:
-                p.tree(at: CGPoint(x: -9, y: -2), size: 0.77, night: false, willow: false)
+                p.tree(at: CGPoint(x: -9, y: -2), size: 0.77, night: false, willow: false, variation: variation)
                 p.planter(at: CGPoint(x: 32, y: 22), size: 0.82, flowers: true)
                 if worldID == 4 {
                     for x: CGFloat in [-18, 0, 18] { p.volume(CGRect(x: x, y: -85, width: 7, height: 8), color: 0xEDAF87) }
@@ -864,7 +1200,7 @@ private struct ThemePainter {
                 p.lamp(at: CGPoint(x: 28, y: 4), size: 0.86, night: false)
                 p.bench(at: CGPoint(x: 10, y: 24), size: 0.73)
             case 7:
-                p.tree(at: CGPoint(x: -5, y: -4), size: 1.12, night: variation > 3, willow: false)
+                p.tree(at: CGPoint(x: -5, y: -4), size: 1.12, night: variation > 3, willow: false, variation: variation + 1)
                 p.mushroom(at: CGPoint(x: 39, y: 17), size: 0.58)
                 p.sprig(at: CGPoint(x: 24, y: 24), size: 0.8, color: variation > 3 ? 0x8595AC : 0x9CBE83)
             case 8:
@@ -926,7 +1262,7 @@ private struct ThemePainter {
                 p.rounded(CGRect(x: -48 + CGFloat(i) * 22, y: 11 + CGFloat(i % 2) * 4, width: 14, height: 5),
                           radius: 2, color: [3, 5].contains(worldID) ? 0xA5ADB1 : 0xE0D6B7)
             }
-            if [2, 4, 7, 10].contains(worldID) {
+            if [1, 2, 4, 7, 10].contains(worldID) {
                 p.sprig(at: CGPoint(x: 44, y: 12), size: 0.60, color: worldID == 7 ? 0x8595AC : 0x9DBE91)
                 p.blossoms(at: CGPoint(x: -41, y: 15), size: 0.50, color: worldID == 2 ? 0xDDD0EF : 0xECA6AF)
             } else if worldID == 5 {
@@ -970,7 +1306,7 @@ private struct ThemePainter {
             }
         }
     }
-    private func tree(at point: CGPoint, size: CGFloat, night: Bool, willow: Bool) {
+    private func tree(at point: CGPoint, size: CGFloat, night: Bool, willow: Bool, variation: Int = 0) {
         at(point, size: size) { p in
             p.shadow(width: 109)
             let wood: UInt32 = night ? 0x8C929E : 0xA68B63
@@ -985,8 +1321,10 @@ private struct ThemePainter {
             p.line([CGPoint(x: 4, y: -74), CGPoint(x: -26, y: -112)], color: wood, width: 8)
             p.line([CGPoint(x: 7, y: -69), CGPoint(x: 32, y: -109)], color: wood, width: 7)
             for i in 0..<5 {
-                let x = CGFloat(i - 2) * 21, y: CGFloat = -128 - CGFloat(i % 2) * 10
-                p.volume(CGRect(x: x - 25, y: y, width: 53, height: willow ? 56 : 45), color: leaf)
+                let x = CGFloat(i - 2) * 21, y: CGFloat = -128 - CGFloat((i + variation) % 3) * 8
+                let r = CGRect(x: x - 26, y: y, width: 55, height: willow ? 58 : 47)
+                let crown = JunglePainter(context: p.context).foliagePath(in: r)
+                p.material(crown, rect: r, color: leaf)
                 if willow {
                     for j in 0..<2 {
                         var tendril = Path()
@@ -998,26 +1336,39 @@ private struct ThemePainter {
                     }
                 }
             }
-            for i in 0..<7 {
-                let x = CGFloat((i * 19) % 90 - 45), y = CGFloat((i * 13) % 30 - 116)
-                JunglePainter(context: p.context).leaf(at: CGPoint(x: x, y: y), length: 11, width: 3.5,
-                    angle: Double(i * 29), color: .white.opacity(0.17))
+            for i in 0..<19 {
+                let x = CGFloat((i * 19 + variation * 7) % 101 - 50), y = CGFloat((i * 13) % 33 - 121)
+                JunglePainter(context: p.context).leaf(at: CGPoint(x: x, y: y), length: 8 + CGFloat(i % 3) * 2, width: 3,
+                    angle: Double(i * 29), color: i.isMultiple(of: 3) ? .white.opacity(0.27) : p.tint(leaf, toward: 0x446A5D, amount: 0.18))
             }
-            p.line([CGPoint(x: 1, y: -62), CGPoint(x: -3, y: -10)], color: 0xD9C7A6, width: 1.4)
+            for i in 0..<3 {
+                var bark = Path()
+                let x = CGFloat(i) * 5 - 5
+                bark.move(to: CGPoint(x: x, y: -61 + CGFloat(i) * 8))
+                bark.addQuadCurve(to: CGPoint(x: x - 3, y: -9), control: CGPoint(x: x + 6, y: -31))
+                p.context.stroke(bark, with: .color(Color(dinoHex: 0xD9C7A6).opacity(0.55)), style: StrokeStyle(lineWidth: 1, lineCap: .round))
+            }
+            p.ellipse(CGRect(x: -1, y: -37, width: 4, height: 7), 0x6F817D, opacity: 0.30)
             p.sprig(at: CGPoint(x: -21, y: 9), size: 0.5, color: leaf)
         }
     }
-    private func rock(at point: CGPoint, size: CGFloat, color: UInt32) {
+    private func rock(at point: CGPoint, size: CGFloat, color: UInt32, variation: Int = 0) {
         at(point, size: size) { p in
             p.shadow(width: 71)
-            let vertices = [CGPoint(x: -37, y: -3), CGPoint(x: -32, y: -28), CGPoint(x: -12, y: -49),
-                            CGPoint(x: 17, y: -43), CGPoint(x: 34, y: -21), CGPoint(x: 29, y: 0), CGPoint(x: 4, y: 6)]
+            let skew = CGFloat(variation % 3 - 1) * 5
+            let vertices = [CGPoint(x: -37, y: -3), CGPoint(x: -32 + skew, y: -28), CGPoint(x: -12 - skew, y: -49),
+                            CGPoint(x: 17 + skew, y: -43 - skew), CGPoint(x: 34, y: -21), CGPoint(x: 29, y: 0), CGPoint(x: 4, y: 6)]
             var path = Path()
             path.addLines(vertices); path.closeSubpath()
             p.material(path, rect: CGRect(x: -37, y: -49, width: 71, height: 55), color: color)
             p.polygon([vertices[2], vertices[3], CGPoint(x: 7, y: -20), vertices[1]], color: 0xFFFFFF, opacity: 0.15)
             p.polygon([vertices[3], vertices[4], vertices[5], CGPoint(x: 7, y: -20)], color: p.colors.shade, opacity: 0.15)
             p.line([CGPoint(x: -17, y: -13), CGPoint(x: -4, y: -18), CGPoint(x: 5, y: -13)], color: p.colors.shade, width: 1)
+            p.line([vertices[1], vertices[2], vertices[3]], color: 0xE6EBDD, width: 0.9)
+            for i in 0..<5 {
+                let x = CGFloat((i * 11 + variation * 7) % 40 - 21), y = CGFloat((i * 7) % 19 - 25)
+                p.ellipse(CGRect(x: x, y: y, width: 1.8, height: 1.4), 0xEDF4DD, opacity: 0.27)
+            }
         }
     }
     private func fence(at point: CGPoint, size: CGFloat) {
@@ -1118,9 +1469,9 @@ private struct ThemePainter {
     }
     private func material(_ path: Path, rect: CGRect, color: UInt32) {
         context.fill(path, with: .linearGradient(Gradient(stops: [
-            .init(color: tint(color, toward: 0xFFFFFF, amount: 0.20), location: 0),
+            .init(color: tint(color, toward: 0xFFFFFF, amount: 0.30), location: 0),
             .init(color: Color(dinoHex: color), location: 0.48),
-            .init(color: tint(color, toward: colors.shade, amount: 0.20), location: 1)
+            .init(color: tint(color, toward: colors.shade, amount: 0.28), location: 1)
         ]), startPoint: CGPoint(x: rect.minX, y: rect.minY),
             endPoint: CGPoint(x: rect.maxX, y: rect.maxY)))
     }
@@ -1132,7 +1483,12 @@ private struct ThemePainter {
         material(Path(roundedRect: rect, cornerRadius: radius), rect: rect, color: color)
     }
     private func volume(_ rect: CGRect, color: UInt32) {
-        material(Path(ellipseIn: rect), rect: rect, color: color)
+        context.fill(Path(ellipseIn: rect), with: .radialGradient(Gradient(stops: [
+            .init(color: tint(color, toward: 0xFFFFFF, amount: 0.33), location: 0),
+            .init(color: Color(dinoHex: color), location: 0.48),
+            .init(color: tint(color, toward: colors.shade, amount: 0.30), location: 1)
+        ]), center: CGPoint(x: rect.minX + rect.width * 0.28, y: rect.minY + rect.height * 0.22),
+             startRadius: 0, endRadius: max(rect.width, rect.height) * 0.85))
     }
     private func polygon(_ points: [CGPoint], color: UInt32, opacity: Double = 1) {
         guard let first = points.first else { return }
@@ -1205,13 +1561,30 @@ private struct ThemePainter {
             p.line([CGPoint(x: 6, y: 0), CGPoint(x: 31, y: 0)], color: lava ? 0xFFF1B8 : 0xE6F9EE, width: 2)
             p.rock(at: CGPoint(x: 47, y: 14), size: 0.55, color: lava ? 0x887F8D : 0xA8B9B0)
             p.rock(at: CGPoint(x: 20, y: 17), size: 0.26, color: lava ? 0x96868C : 0xB8C8B4)
+            for i in 0..<5 {
+                let x = CGFloat(i) * 17 - 43, y = CGFloat(i % 2) * 9 - 16
+                var ripple = Path()
+                ripple.move(to: CGPoint(x: x, y: y))
+                ripple.addQuadCurve(to: CGPoint(x: x + 13, y: y), control: CGPoint(x: x + 6, y: y + 2.5))
+                p.context.stroke(ripple, with: .color(Color(dinoHex: lava ? 0xFFE4AD : 0xDBF4E7).opacity(0.60)),
+                                 style: StrokeStyle(lineWidth: 1, lineCap: .round))
+            }
+            if !lava {
+                p.volume(CGRect(x: -29, y: -14, width: 17, height: 7), color: 0x91B97E)
+                p.polygon([CGPoint(x: -21, y: -12), CGPoint(x: -15, y: -15), CGPoint(x: -15, y: -9)], color: 0xB5E3C8)
+                p.blossoms(at: CGPoint(x: -21, y: -12), size: 0.24, color: 0xE3BCCF)
+                for i in 0..<4 {
+                    let x = CGFloat(i) * 6 - 54
+                    p.line([CGPoint(x: x, y: -1), CGPoint(x: x + 3, y: -18 - CGFloat(i % 2) * 9)], color: 0x88A78F, width: 1.3)
+                }
+            }
         }
     }
-    func crystals(at point: CGPoint, size: CGFloat) {
+    func crystals(at point: CGPoint, size: CGFloat, variation: Int = 0) {
         at(point, size: size) { p in
             p.shadow(width: 96)
             for (index, data) in [(-26.0, 48.0), (0.0, 76.0), (25.0, 54.0)].enumerated() {
-                let x = CGFloat(data.0), h = CGFloat(data.1)
+                let x = CGFloat(data.0), h = CGFloat(data.1) * (1 + CGFloat((variation + index) % 3 - 1) * 0.16)
                 let tint: UInt32 = index == 1 ? 0xA493D7 : index == 0 ? 0x79D8D0 : 0xF1BCD9
                 p.polygon([CGPoint(x: x - 13, y: -h * 0.70), CGPoint(x: x, y: -h), CGPoint(x: x + 15, y: -h * 0.72),
                            CGPoint(x: x + 12, y: -6), CGPoint(x: x, y: 0), CGPoint(x: x - 12, y: -8)], color: tint)
@@ -1219,6 +1592,8 @@ private struct ThemePainter {
                           color: p.colors.shade, opacity: 0.23)
                 p.polygon([CGPoint(x: x - 13, y: -h * 0.70), CGPoint(x: x, y: -h),
                            CGPoint(x: x, y: -h * 0.55)], color: 0xFFFFFF, opacity: 0.24)
+                p.line([CGPoint(x: x - 11, y: -h * 0.69), CGPoint(x: x, y: -h + 2), CGPoint(x: x + 13, y: -h * 0.71)], color: 0xEDFFF0, width: 0.8)
+                p.line([CGPoint(x: x - 10, y: -11), CGPoint(x: x, y: -5), CGPoint(x: x + 10, y: -9)], color: 0xF1F5E8, width: 0.8)
                 p.line([CGPoint(x: x - 5, y: -h * 0.71), CGPoint(x: x - 5, y: -15)], color: 0xF2FBF6, width: 2)
                 p.star(at: CGPoint(x: x - 7, y: -h * 0.65), radius: 3.3, color: 0xF2FBF6)
             }
@@ -1249,12 +1624,12 @@ private struct ThemePainter {
             p.ellipse(CGRect(x: 7, y: -133, width: 34, height: 18), 0xFFF0D6, opacity: 0.33)
         }
     }
-    func building(at point: CGPoint, size: CGFloat, city: Bool, tower: Bool = false) {
+    func building(at point: CGPoint, size: CGFloat, city: Bool, tower: Bool = false, variation: Int = 0) {
         at(point, size: size) { p in
             let h: CGFloat = tower ? (city ? 154 : 123) : city ? 110 : 77
             p.shadow()
             p.rounded(CGRect(x: -36, y: -h, width: 72, height: h), radius: city ? 15 : 28,
-                      color: city ? 0xA9DAE3 : 0xF0DFBA)
+                      color: city ? 0xA9DAE3 : [UInt32(0xF0DFBA), 0xF3E2C5, 0xE6D9BC][variation % 3])
             p.polygon([CGPoint(x: 20, y: -h), CGPoint(x: 36, y: -h + 12), CGPoint(x: 36, y: -4), CGPoint(x: 20, y: 0)],
                       color: p.colors.shade, opacity: 0.15)
             var roof = Path()
@@ -1279,7 +1654,10 @@ private struct ThemePainter {
             }
             p.rounded(CGRect(x: -12, y: -30, width: 24, height: 30), radius: 10, color: 0xA47757)
             p.ellipse(CGRect(x: 4, y: -15, width: 3, height: 3), 0xFFE2A1)
+            for x: CGFloat in [-6, 0, 6] { p.line([CGPoint(x: x, y: -22), CGPoint(x: x, y: -5)], color: 0xC4A17A, width: 0.7) }
             p.rounded(CGRect(x: -16, y: -1, width: 32, height: 5), radius: 2, color: 0xDED0B2)
+            p.rounded(CGRect(x: 25, y: -29, width: 8, height: 11), radius: 3, color: 0xC7A579)
+            p.rounded(CGRect(x: 27, y: -27, width: 4, height: 6), radius: 1, color: 0xFFEDB1)
             if tower {
                 p.clock(at: CGPoint(x: 0, y: -h + 33), time: .init(hour: city ? 8 : 5, minute: city ? 5 : 20), size: 21, digital: city)
                 if city { p.window(at: CGPoint(x: -8, y: -51), size: 1) }
@@ -1293,6 +1671,13 @@ private struct ThemePainter {
             for i in 0..<3 {
                 p.line([CGPoint(x: -31, y: -38 + CGFloat(i) * 11), CGPoint(x: -19, y: -38 + CGFloat(i) * 11)],
                        color: city ? 0x88B8C8 : 0xDBC9A9, width: 1)
+            }
+            if !city && !tower {
+                p.ellipse(CGRect(x: -6, y: -h - 12, width: 12, height: 10), 0xFFF0BF)
+                p.line([CGPoint(x: 0, y: -h - 12), CGPoint(x: 0, y: -h - 2)], color: 0xD4B88A, width: 1)
+                p.line([CGPoint(x: -5, y: -h - 7), CGPoint(x: 5, y: -h - 7)], color: 0xD4B88A, width: 1)
+                p.planter(at: CGPoint(x: -24, y: -28), size: 0.38, flowers: true)
+                for x: CGFloat in [-28, 32] { p.rounded(CGRect(x: x, y: -56, width: 5, height: 23), radius: 2, color: 0xA2B78E) }
             }
         }
     }
@@ -1462,207 +1847,7 @@ private struct ThemePainter {
         }
     }
 
-    private func face(center: CGPoint, width: CGFloat, sleepy: Bool = false) {
-        for direction: CGFloat in [-1, 1] {
-            let eye = CGPoint(x: center.x + direction * width * 0.20, y: center.y - 5)
-            if sleepy {
-                var arc = Path()
-                arc.move(to: CGPoint(x: eye.x - 4, y: eye.y - 1))
-                arc.addQuadCurve(to: CGPoint(x: eye.x + 4, y: eye.y - 1), control: CGPoint(x: eye.x, y: eye.y + 4))
-                context.stroke(arc, with: .color(Color(dinoHex: 0x284C58)), style: StrokeStyle(lineWidth: 2.3, lineCap: .round))
-            } else {
-                ellipse(CGRect(x: eye.x - 6, y: eye.y - 9, width: 12, height: 18), 0xFFFBE9)
-                ellipse(CGRect(x: eye.x - 3, y: eye.y - 3, width: 6, height: 10), 0x284C58)
-                ellipse(CGRect(x: eye.x - 2, y: eye.y - 3, width: 2, height: 3), 0xFFFFFF)
-            }
-        }
-        var smile = Path()
-        smile.move(to: CGPoint(x: center.x - 9, y: center.y + 10))
-        smile.addQuadCurve(to: CGPoint(x: center.x + 9, y: center.y + 10), control: CGPoint(x: center.x, y: center.y + 21))
-        context.stroke(smile, with: .color(Color(dinoHex: 0x284C58)), style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
-    }
-    private func dinosaur(color: UInt32) {
-        shadow(width: 108)
-        var tail = Path()
-        tail.move(to: CGPoint(x: 16, y: -31))
-        tail.addQuadCurve(to: CGPoint(x: 51, y: -57), control: CGPoint(x: 45, y: -16))
-        tail.addQuadCurve(to: CGPoint(x: 20, y: -11), control: CGPoint(x: 61, y: -12))
-        tail.closeSubpath()
-        material(tail, rect: CGRect(x: 16, y: -57, width: 46, height: 47), color: color)
-        for side: CGFloat in [-1, 1] {
-            var arm = Path()
-            arm.move(to: CGPoint(x: side * 20, y: -43))
-            arm.addQuadCurve(to: CGPoint(x: side * 38, y: -26), control: CGPoint(x: side * 36, y: -48))
-            context.stroke(arm, with: .color(tint(color, toward: colors.shade, amount: 0.10)),
-                           style: StrokeStyle(lineWidth: 11, lineCap: .round))
-        }
-        volume(CGRect(x: -33, y: -57, width: 64, height: 55), color: color)
-        volume(CGRect(x: -22, y: -42, width: 40, height: 35), color: 0xF5E6C7)
-        for x in [-28.0, 8.0] { rounded(CGRect(x: CGFloat(x), y: -16, width: 23, height: 17), radius: 8, color: color) }
-        volume(CGRect(x: -28, y: -96, width: 59, height: 51), color: color)
-        volume(CGRect(x: -28, y: -70, width: 67, height: 31), color: color)
-        face(center: CGPoint(x: 1, y: -77), width: 55)
-        for x: CGFloat in [-14, 21] {
-            ellipse(CGRect(x: x, y: -60, width: 3.5, height: 2.8), 0x775F54, opacity: 0.55)
-        }
-        for x: CGFloat in [-24, 12] {
-            for toe in 0..<2 { volume(CGRect(x: x + CGFloat(toe) * 7, y: -5, width: 6, height: 4), color: 0xF5E6C7) }
-        }
-        ellipse(CGRect(x: -24, y: -65, width: 8, height: 5), 0xF0B894, opacity: 0.35)
-    }
     func boss(worldID: Int, at point: CGPoint, size: CGFloat) {
-        at(point, size: size) { p in
-            switch worldID {
-            case 2:
-                p.shadow(width: 115)
-                p.volume(CGRect(x: -25, y: -49, width: 79, height: 46), color: 0x9CCBE3)
-                for x in [-13.0, 23.0] { p.rounded(CGRect(x: CGFloat(x), y: -18, width: 20, height: 20), radius: 8, color: 0x9CCBE3) }
-                var neck = Path()
-                neck.move(to: CGPoint(x: -12, y: -30))
-                neck.addQuadCurve(to: CGPoint(x: -32, y: -99), control: CGPoint(x: -43, y: -39))
-                p.context.stroke(neck, with: .color(Color(dinoHex: 0x9CCBE3)), style: StrokeStyle(lineWidth: 22, lineCap: .round))
-                p.volume(CGRect(x: -55, y: -116, width: 48, height: 39), color: 0x9CCBE3)
-                p.face(center: CGPoint(x: -32, y: -100), width: 42, sleepy: true)
-                p.star(at: CGPoint(x: 18, y: -29), radius: 9, color: 0xFFF1B8)
-                p.moon(at: CGPoint(x: 46, y: -76), size: 0.55)
-            case 3:
-                p.volume(CGRect(x: -43, y: -114, width: 83, height: 73), color: 0xFFC857)
-                p.dinosaur(color: 0xD98663)
-                for x in [-22.0, 19.0] {
-                    p.polygon([CGPoint(x: CGFloat(x) - 7, y: -87), CGPoint(x: CGFloat(x), y: -111),
-                               CGPoint(x: CGFloat(x) + 7, y: -85)], color: 0xFFF1D3)
-                }
-                p.polygon([CGPoint(x: -6, y: -57), CGPoint(x: 0, y: -75), CGPoint(x: 7, y: -57)], color: 0xFFF1D3)
-            case 4:
-                p.dinosaur(color: 0xC69C62)
-                p.rounded(CGRect(x: -25, y: -43, width: 50, height: 27), radius: 8, color: 0x789BCF)
-                p.line([CGPoint(x: 35, y: -2), CGPoint(x: 35, y: -77)], color: 0xA47757, width: 4)
-                p.clock(at: CGPoint(x: 35, y: -82), time: .init(hour: 5, minute: 20), size: 16)
-            case 5:
-                p.shadow(width: 114)
-                p.rounded(CGRect(x: -33, y: -69, width: 66, height: 62), radius: 20, color: 0x98AFBB)
-                p.rounded(CGRect(x: -47, y: -61, width: 24, height: 43), radius: 12, color: 0x98AFBB)
-                p.rounded(CGRect(x: 26, y: -61, width: 24, height: 43), radius: 12, color: 0x98AFBB)
-                p.rounded(CGRect(x: -26, y: -103, width: 52, height: 43), radius: 16, color: 0xB8CFD4)
-                p.face(center: CGPoint(x: 0, y: -85), width: 45)
-                p.crystals(at: CGPoint(x: -29, y: -53), size: 0.37)
-                p.crystals(at: CGPoint(x: 29, y: -53), size: 0.37)
-                p.clock(at: CGPoint(x: 0, y: -34), time: .init(hour: 2, minute: 17), size: 12)
-            case 6:
-                p.shadow()
-                p.rounded(CGRect(x: -29, y: -58, width: 58, height: 49), radius: 14, color: 0x54BCC5)
-                p.rounded(CGRect(x: -34, y: -110, width: 68, height: 49), radius: 17, color: 0x54BCC5)
-                p.rounded(CGRect(x: -27, y: -102, width: 54, height: 33), radius: 13, color: 0xFFE08A)
-                p.face(center: CGPoint(x: 0, y: -89), width: 46)
-                p.line([CGPoint(x: 0, y: -110), CGPoint(x: 0, y: -122)], color: 0xD9B46C, width: 4)
-                p.volume(CGRect(x: -5, y: -130, width: 10, height: 10), color: 0xFFE08A)
-                for x in [-29.0, 11.0] { p.rounded(CGRect(x: CGFloat(x), y: -12, width: 20, height: 16), radius: 7, color: 0xFFE08A) }
-                p.context.draw(Text(verbatim: "12:45").font(.system(size: 13, weight: .bold, design: .monospaced)).foregroundStyle(Color(dinoHex: 0xFFF1B8)),
-                               at: CGPoint(x: 0, y: -33))
-            case 7:
-                p.shadow()
-                p.volume(CGRect(x: -33, y: -97, width: 66, height: 94), color: 0xD4C1A1)
-                p.volume(CGRect(x: -51, y: -63, width: 35, height: 51), color: 0xE8C66D)
-                p.volume(CGRect(x: 18, y: -63, width: 35, height: 51), color: 0x789BCF)
-                for x in [-25.0, 0.0] {
-                    p.ellipse(CGRect(x: CGFloat(x), y: -90, width: 28, height: 33), 0xFFF1D3)
-                    p.volume(CGRect(x: CGFloat(x) + 8, y: -82, width: 13, height: 19), color: 0x526894)
-                    p.ellipse(CGRect(x: CGFloat(x) + 9, y: -80, width: 4, height: 5), 0xFFFFFF)
-                }
-                p.polygon([CGPoint(x: -6, y: -62), CGPoint(x: 8, y: -62), CGPoint(x: 1, y: -49)], color: 0xE8C66D)
-                p.clock(at: CGPoint(x: 0, y: -24), time: .init(hour: 20), size: 14)
-            case 8:
-                p.polygon([CGPoint(x: -18, y: -48), CGPoint(x: -69, y: -87), CGPoint(x: -53, y: -18)], color: 0xB5A6E6)
-                p.polygon([CGPoint(x: 19, y: -48), CGPoint(x: 65, y: -86), CGPoint(x: 49, y: -17)], color: 0xB5A6E6)
-                p.dinosaur(color: 0xA493D7)
-                p.rounded(CGRect(x: -23, y: -45, width: 45, height: 29), radius: 8, color: 0xFFF1D3)
-                for x in [-13.0, 13.0] {
-                    p.context.stroke(Path(ellipseIn: CGRect(x: CGFloat(x) - 9, y: -90, width: 18, height: 18)),
-                                     with: .color(Color(dinoHex: 0xD9B46C)), lineWidth: 2)
-                }
-                p.hourglass(at: CGPoint(x: 42, y: -5), size: 0.55)
-            case 9:
-                p.polygon([CGPoint(x: 13, y: -55), CGPoint(x: 36, y: -106), CGPoint(x: 54, y: -48)], color: 0xEF927B)
-                p.dinosaur(color: 0x648FB5)
-                var hat = Path()
-                hat.move(to: CGPoint(x: -37, y: -96))
-                hat.addQuadCurve(to: CGPoint(x: 38, y: -96), control: CGPoint(x: 0, y: -142))
-                hat.addQuadCurve(to: CGPoint(x: -37, y: -96), control: CGPoint(x: 0, y: -85))
-                p.context.fill(hat, with: .color(Color(dinoHex: 0xEF927B)))
-                p.hourglass(at: CGPoint(x: 0, y: -101), size: 0.30)
-                p.hourglass(at: CGPoint(x: 41, y: -3), size: 0.65)
-            default:
-                p.polygon([CGPoint(x: -27, y: -67), CGPoint(x: 40, y: -62), CGPoint(x: 54, y: -2), CGPoint(x: -43, y: -2)], color: 0x789BCF)
-                p.dinosaur(color: 0xC69C62)
-                p.polygon([CGPoint(x: -26, y: -101), CGPoint(x: -27, y: -124), CGPoint(x: -12, y: -113),
-                           CGPoint(x: 0, y: -134), CGPoint(x: 13, y: -113), CGPoint(x: 29, y: -124), CGPoint(x: 26, y: -101)], color: 0xE8C66D)
-                p.clock(at: CGPoint(x: 0, y: -28), time: .init(hour: 10, minute: 25), size: 15)
-            }
-            // Small costume and surface details make the bosses individual
-            // characters while keeping the shared soft lighting and scale.
-            switch worldID {
-            case 2:
-                for x: CGFloat in [-9, 27] {
-                    for i in 0..<2 { p.volume(CGRect(x: x + CGFloat(i) * 6, y: -2, width: 5, height: 3), color: 0xDAEBE9) }
-                }
-                p.line([CGPoint(x: -32, y: -77), CGPoint(x: -29, y: -57), CGPoint(x: -23, y: -40)],
-                       color: 0xC5E4EC, width: 3)
-                p.clockPost(at: CGPoint(x: -44, y: 3), time: .init(hour: 7, minute: 30), size: 0.38)
-            case 3:
-                for x: CGFloat in [-32, 25] {
-                    for i in 0..<3 { p.volume(CGRect(x: x, y: -104 + CGFloat(i) * 15, width: 7, height: 8), color: 0xF9DD8D) }
-                }
-                for i in 0..<3 { p.volume(CGRect(x: 22 + CGFloat(i) * 6, y: -49 + CGFloat(i) * 4, width: 4, height: 4), color: 0xF6C57F) }
-            case 4:
-                p.volume(CGRect(x: 44, y: -50, width: 22, height: 20), color: 0xC69C62)
-                p.polygon([CGPoint(x: -4, y: -41), CGPoint(x: 4, y: -41), CGPoint(x: 7, y: -20), CGPoint(x: 0, y: -14), CGPoint(x: -7, y: -20)], color: 0xE8C66D)
-                for x: CGFloat in [-15, 15] { p.line([CGPoint(x: x, y: -39), CGPoint(x: x, y: -19)], color: 0xA7C0D7, width: 1.3) }
-            case 5:
-                for x: CGFloat in [-24, 5] { p.rounded(CGRect(x: x, y: -11, width: 24, height: 14), radius: 6, color: 0x88A7B4) }
-                p.line([CGPoint(x: -22, y: -60), CGPoint(x: -14, y: -47), CGPoint(x: -20, y: -37)], color: 0xC4E4DC, width: 1.5)
-                p.line([CGPoint(x: 21, y: -101), CGPoint(x: 14, y: -93), CGPoint(x: 21, y: -83)], color: 0xDAEFE3, width: 1.4)
-                p.crystals(at: CGPoint(x: 5, y: -103), size: 0.30)
-            case 6:
-                for side: CGFloat in [-1, 1] {
-                    p.line([CGPoint(x: side * 28, y: -50), CGPoint(x: side * 40, y: -27)], color: 0x789BA1, width: 9)
-                    p.volume(CGRect(x: side * 39 - 7, y: -32, width: 14, height: 14), color: 0xFFE08A)
-                    p.volume(CGRect(x: side * 23 - 2, y: -54, width: 4, height: 4), color: 0xFFF1C3)
-                }
-                p.rounded(CGRect(x: -22, y: -45, width: 44, height: 23), radius: 6, color: 0x426F7D)
-                p.context.draw(Text(verbatim: "12:45").font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundStyle(Color(dinoHex: 0xFFF1B8)), at: CGPoint(x: 0, y: -33))
-                for x: CGFloat in [-11, 0, 11] { p.ellipse(CGRect(x: x - 1.5, y: -19, width: 3, height: 3), 0xFFF1B8) }
-            case 7:
-                for side: CGFloat in [-1, 1] {
-                    p.polygon([CGPoint(x: side * 21, y: -90), CGPoint(x: side * 28, y: -108), CGPoint(x: side * 4, y: -96)], color: 0xD4C1A1)
-                    for i in 0..<3 {
-                        let x = side * (29 + CGFloat(i) * 5)
-                        p.line([CGPoint(x: x, y: -52), CGPoint(x: x + side * 2, y: -31)], color: side == -1 ? 0xF5DD99 : 0xA4BADD, width: 1.3)
-                    }
-                    p.line([CGPoint(x: side * 12, y: -3), CGPoint(x: side * 13, y: 3)], color: 0xAA9A7C, width: 2)
-                }
-            case 8:
-                for side: CGFloat in [-1, 1] {
-                    p.line([CGPoint(x: side * 24, y: -52), CGPoint(x: side * 54, y: -76)], color: 0xD9C7EE, width: 1.3)
-                    p.line([CGPoint(x: side * 24, y: -52), CGPoint(x: side * 50, y: -28)], color: 0xD9C7EE, width: 1.3)
-                }
-                p.line([CGPoint(x: -4, y: -82), CGPoint(x: 4, y: -82)], color: 0xD9B46C, width: 2)
-                p.line([CGPoint(x: 0, y: -40), CGPoint(x: 0, y: -19)], color: 0xC5AE85, width: 1)
-                for y: CGFloat in [-34, -26] { p.volume(CGRect(x: 3, y: y, width: 3, height: 3), color: 0xD9B46C) }
-            case 9:
-                p.rounded(CGRect(x: -26, y: -22, width: 51, height: 7), radius: 2, color: 0xA47757)
-                p.rounded(CGRect(x: -5, y: -24, width: 10, height: 10), radius: 2, color: 0xE8C66D)
-                p.line([CGPoint(x: -29, y: -98), CGPoint(x: 0, y: -94), CGPoint(x: 30, y: -98)], color: 0xFFE1A1, width: 2)
-                for i in 0..<3 {
-                    p.line([CGPoint(x: 30, y: -52), CGPoint(x: 31 + CGFloat(i) * 6, y: -91 + CGFloat(i) * 13)], color: 0xF9B595, width: 1.2)
-                }
-            default:
-                p.line([CGPoint(x: -29, y: -59), CGPoint(x: -41, y: -8)], color: 0xE8C66D, width: 2)
-                p.line([CGPoint(x: 33, y: -56), CGPoint(x: 48, y: -8)], color: 0xE8C66D, width: 2)
-                for x: CGFloat in [-15, 0, 15] { p.volume(CGRect(x: x - 3, y: -112, width: 6, height: 7), color: x == 0 ? 0xECA6AF : 0xA2D4CD) }
-                p.line([CGPoint(x: -13, y: -47), CGPoint(x: -10, y: -39)], color: 0xE8C66D, width: 2)
-                p.line([CGPoint(x: 13, y: -47), CGPoint(x: 10, y: -39)], color: 0xE8C66D, width: 2)
-            }
-        }
+        WorldBossPainter(context: context).draw(worldID: worldID, at: point, size: size)
     }
 }

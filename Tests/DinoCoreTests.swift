@@ -17,7 +17,9 @@ struct DinoCoreTests {
         testAttempt()
         testTiming()
         testPractice()
+        testPracticeRecords()
         testExpandedQuestions()
+        testDemonstrationExamples()
         testProgress()
         testStorage()
         testDinoAppearance()
@@ -28,6 +30,69 @@ struct DinoCoreTests {
         testFullReset()
         let socialChecks = await DinoSocialTests.run()
         print("PASS: \(checks + socialChecks) checks — gameplay, persistence, social progress, privacy guards, offline sync and international names.")
+    }
+
+    static func testPracticeRecords() {
+        let defaults = InMemoryKeyValueStore()
+        let store = DinoProgressStore(defaults: defaults)
+        let player = DinoPlayer(store: store)
+        let config = DinoPracticeConfiguration(time: .half, order: .specific(.chooseAnalog))
+        let session = DinoSession(level: config.level, player: player, practice: config)
+        expect(session.practiceQuestionNumber == 1 && session.practiceStreak == 0, "new combination begins at question one without a streak")
+        session.submit(session.question.expectedAnswer)
+        session.submit(session.question.expectedAnswer)
+        expect(session.practiceStreak == 1 && session.practiceBestStreak == 1 && session.practiceQuestionNumber == 1, "accepted answer updates the record once and preserves the displayed question")
+        session.advance()
+        expect(session.practiceQuestionNumber == 2, "only advancing displays the next lifetime question")
+        session.submit(session.question.expectedAnswer); session.advance()
+        expect(session.practiceStreak == 2 && session.practiceBestStreak == 2, "a new record rises with every consecutive correct answer")
+        session.submit(wrongAnswer(for: session.question)); session.advance()
+        expect(session.practiceStreak == 0 && session.practiceBestStreak == 2 && session.practiceQuestionNumber == 4, "wrong answers reset the streak, retain the record and count as practiced")
+        expect(player.practiceRecord(time: .whole, question: .chooseAnalog) == DinoPracticeRecord(), "different time families have independent records")
+        expect(player.practiceRecord(time: .half, question: .chooseDigital) == DinoPracticeRecord(), "different question types have independent records")
+        let restarted = DinoPlayer(store: store)
+        let resumed = DinoSession(level: config.level, player: restarted, practice: config)
+        expect(resumed.practiceStreak == 0 && resumed.practiceBestStreak == 2 && resumed.practiceQuestionNumber == 4, "records and lifetime counts survive relaunch while a session streak starts fresh")
+        let beforeHelp = restarted.practiceRecords
+        let example = DinoSession(level: config.level, player: restarted, practice: config, example: session.question)
+        example.submit(example.question.expectedAnswer)
+        expect(restarted.practiceRecords == beforeHelp, "interactive examples cannot set records or increase lifetime counters")
+
+        let ascending = DinoPracticeConfiguration(time: .quarter, order: .ascending)
+        let mixedSession = DinoSession(level: ascending.level, player: restarted, practice: ascending)
+        for _ in DinoPracticeQuestion.allCases {
+            expect(mixedSession.practiceQuestionNumber == 1, "ascending tracks the current question type independently")
+            mixedSession.submit(mixedSession.question.expectedAnswer); mixedSession.advance()
+        }
+        expect(mixedSession.practiceQuestionType == .chooseAnalog && mixedSession.practiceStreak == 1 && mixedSession.practiceQuestionNumber == 2, "ascending restores the per-type streak and count on its next cycle")
+        mixedSession.submit(wrongAnswer(for: mixedSession.question)); mixedSession.advance()
+        expect(mixedSession.practiceStreak == 1, "one type's wrong answer does not reset another type's streak")
+        let mixed = DinoPracticeConfiguration(time: .quarter, order: .mix)
+        let shuffled = DinoSession(level: mixed.level, player: restarted, practice: mixed)
+        for _ in DinoPracticeQuestion.allCases {
+            let type = shuffled.practiceQuestionType!
+            let saved = restarted.practiceRecord(time: .quarter, question: type)
+            expect(shuffled.practiceQuestionNumber == saved.questionsAnswered + 1 && shuffled.practiceBestStreak == saved.bestStreak,
+                   "mix shares the same lifetime records as specific and ascending practice")
+            shuffled.submit(shuffled.question.expectedAnswer); shuffled.advance()
+        }
+
+        for (value, digits, thousands) in [(999, "999", nil), (1_000, "0", "1k"), (1_999, "999", "1k"), (999_999, "999", "999k"), (1_000_000, "0", nil)] {
+            let counter = DinoPracticeCounter(value: value)
+            expect(counter.digits == digits && counter.thousands == thousands, "counter carries thousands without showing four large digits")
+        }
+        let key = DinoPracticeRecord.key(time: .mix, question: .setAnalog)
+        store.savePracticeRecords([key: .init(bestStreak: 20, questionsAnswered: 999), "unknown": .init(bestStreak: 10, questionsAnswered: 10)])
+        let nearThousand = DinoPlayer(store: store)
+        let thousandConfig = DinoPracticeConfiguration(time: .mix, order: .specific(.setAnalog))
+        let thousandSession = DinoSession(level: thousandConfig.level, player: nearThousand, practice: thousandConfig)
+        expect(thousandSession.practiceQuestionNumber == 1_000 && nearThousand.practiceRecords.count == 1, "stored counters resume at the thousand boundary and discard unknown combinations")
+        store.savePracticeRecords([key: .init(bestStreak: -1, questionsAnswered: -20)])
+        expect(store.loadPracticeRecords()[key] == DinoPracticeRecord(), "invalid negative records are sanitized")
+        restarted.resetProgress()
+        expect(restarted.practiceRecords.isEmpty && store.loadPracticeRecords().isEmpty, "progress reset removes practice records")
+        nearThousand.resetAllData()
+        expect(nearThousand.practiceRecords.isEmpty && store.loadPracticeRecords().isEmpty, "full reset removes practice records")
     }
 
     static func testClocks() {
@@ -157,6 +222,63 @@ struct DinoCoreTests {
         case .ordering(let times): return .ordering(Array(times.reversed()))
         case .pairs(let times): return .pairs(Array(times.reversed()))
         }
+    }
+
+    static func testDemonstrationExamples() {
+        expect(DinoDemonstrationExamples.time(index: 0, minutes: [0]) == ClockTime(hour: 3), "whole-hour example starts at three")
+        expect(DinoDemonstrationExamples.time(index: 1, minutes: [0]) == ClockTime(hour: 4), "another whole-hour example advances one hour")
+        expect(DinoDemonstrationExamples.time(index: 2, minutes: [0]) == ClockTime(hour: 5), "whole-hour examples keep advancing")
+        expect(DinoDemonstrationExamples.time(index: 9, minutes: [0]) == ClockTime(hour: 12), "examples retain twelve instead of zero on a twelve-hour clock")
+        expect(DinoDemonstrationExamples.time(index: 10, minutes: [0]) == ClockTime(hour: 1), "examples wrap past twelve")
+        expect(DinoDemonstrationExamples.time(index: 1, minutes: [30]) == ClockTime(hour: 4, minute: 30), "half-hour examples retain thirty minutes")
+        expect(DinoDemonstrationExamples.time(index: 1, minutes: [15, 45]) == ClockTime(hour: 3, minute: 45), "quarter-hour examples advance to quarter to")
+        expect(DinoDemonstrationExamples.time(index: 2, minutes: [15, 45]) == ClockTime(hour: 4, minute: 15), "quarter-hour examples advance to the next hour")
+        expect(DinoDemonstrationExamples.time(index: 5, minutes: DinoPracticeTime.tenMinutes.minutes) == ClockTime(hour: 4, minute: 10), "ten-minute examples skip disallowed whole hours")
+        let families = DinoPracticeTime.allCases.map { ($0.minutes, $0.minuteStep) }
+            + DinoWorldCatalog.worlds.map { ($0.minutes, $0.minuteStep) }
+        let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+        let profile = player.profile
+        let records = player.practiceRecords
+        for (minutes, step) in families {
+            var previousTime: ClockTime?
+            for index in 0..<(12 * minutes.count + 1) {
+                let time = DinoDemonstrationExamples.time(index: index, minutes: minutes)
+                expect(minutes.contains(time.minute) && (1...12).contains(time.hour), "simple examples always match the selected time family")
+                expect(time != previousTime, "another example changes the clock position")
+                previousTime = time
+            }
+            for kind in ClockQuestionKind.allCases where kind.isExpanded {
+                var previous: ClockTime?
+                for index in 0..<30 {
+                    let q = DinoDemonstrationExamples.question(kind: kind, minutes: minutes, minuteStep: step,
+                                                              index: index, previousTarget: previous)
+                    expect(q.kind == kind && minutes.contains(q.target.minute), "expanded examples retain question type and minute family")
+                    expect(q.target != previous, "expanded examples do not repeat their previous target")
+                    expect(AnswerValidator.isCorrect(q.expectedAnswer, for: q), "each refreshed example has a valid worked answer")
+                    switch kind {
+                    case .addTime, .advanceAnalog, .schoolEnd, .flightArrival, .timeSequence:
+                        expect(q.relatedTimes.last!.adding(minutes: q.durationMinutes) == q.target, "example addition and sequence answers agree with their context")
+                    case .subtractTime:
+                        expect(q.relatedTimes[0].adding(minutes: -q.durationMinutes) == q.target, "example subtraction answer agrees with its context")
+                    case .elapsedTime:
+                        expect(q.relatedTimes[0].adding(minutes: q.durationMinutes) == q.relatedTimes[1], "example duration agrees with both times")
+                    case .timeZone:
+                        expect(q.relatedTimes[0].adding(minutes: q.offsetHours * 60) == q.target, "example zone answer agrees with the stated offset")
+                    default: break
+                    }
+                    previous = q.target
+                    if index < 2 {
+                        let config = DinoPracticeConfiguration(time: .whole, order: .specific(DinoPracticeQuestion(rawValue: kind.rawValue)!))
+                        let sample = DinoSession(level: config.level, player: player, practice: config, example: q, exampleMinuteStep: step)
+                        sample.submit(q.expectedAnswer)
+                        expect(sample.correctFeedback && sample.minuteStep == step, "replacement example has fresh answer state and correct controls")
+                    }
+                }
+            }
+        }
+        expect(player.profile == profile && player.practiceRecords == records, "refreshing and answering examples preserves saved progress and practice records")
+        expect(DinoDemonstrationExamples.activity(index: 0).hour == 3, "activity example starts with fruit at three")
+        expect(Set((0..<5).map { DinoDemonstrationExamples.activity(index: $0) }).count == 5, "activity examples cycle all real activities")
     }
 
     static func testExpandedQuestions() {

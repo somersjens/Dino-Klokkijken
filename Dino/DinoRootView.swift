@@ -19,7 +19,7 @@ struct DinoRootView: View {
         ZStack {
             scene
                 .transition(.opacity)
-                .disabled(startCard != nil).accessibilityHidden(startCard != nil)
+                .disabled(startCard != nil || showsPractice).accessibilityHidden(startCard != nil || showsPractice)
             if let startCard {
                 LevelStartOverlay(level: startCard, hudHeight: mapHUDHeight, start: { start(startCard) }, close: closeStartCard)
                     .zIndex(2)

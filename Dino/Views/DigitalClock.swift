@@ -5,30 +5,52 @@ struct DigitalClock: View {
     let time: ClockTime
     let theme: ClockTheme
     var fontSize: CGFloat = 42
+    var showHandHints = false
     var body: some View {
-        Group {
+        HStack(spacing: theme.numerals == .digital ? fontSize * 0.1 : 0) {
+            pair(String(time.digitalText.prefix(2)), number: 1, ink: theme.hourInk)
             if theme.numerals == .digital {
-                HStack(spacing: fontSize * 0.1) {
-                    ForEach(Array(time.digitalText.enumerated()), id: \.offset) { _, character in
-                        SevenSegmentDigit(character: character)
-                            .frame(width: character == ":" ? fontSize * 0.15 : fontSize * 0.5, height: fontSize * 0.86)
-                    }
-                }
-                .padding(.vertical, fontSize * 0.08)
+                SevenSegmentDigit(character: ":").frame(width: fontSize * 0.15, height: fontSize * 0.86)
             } else {
-                Text(verbatim: time.digitalText)
-                    .font(.system(size: fontSize, weight: .bold,
-                                  design: theme.numerals == .rounded ? .rounded : .monospaced))
-                    .monospacedDigit()
+                Text(verbatim: ":")
             }
+            pair(String(time.digitalText.suffix(2)), number: 2, ink: theme.minuteInk)
         }
+        .font(.system(size: fontSize, weight: .bold, design: theme.numerals == .rounded ? .rounded : .monospaced))
+        .monospacedDigit()
+        .padding(.vertical, theme.numerals == .digital ? fontSize * 0.08 : 0)
         .foregroundStyle(theme.display.isDark ? .white : DinoStyle.ink)
         .padding(.horizontal, fontSize * 0.38).padding(.vertical, fontSize * 0.22)
         .background(Color(dinoHex: theme.display.hex), in: RoundedRectangle(cornerRadius: fontSize * 0.35))
         .overlay(RoundedRectangle(cornerRadius: fontSize * 0.35).stroke(DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: highContrast ? 3 : 2))
+        .padding(.top, showHandHints ? 48 : 0)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(time.digitalText)
         .environment(\.layoutDirection, .leftToRight)
+    }
+
+    private func pair(_ text: String, number: Int, ink: ClockInk) -> some View {
+        Group {
+            if theme.numerals == .digital {
+                HStack(spacing: fontSize * 0.1) {
+                    ForEach(Array(text.enumerated()), id: \.offset) { _, character in
+                        SevenSegmentDigit(character: character).frame(width: fontSize * 0.5, height: fontSize * 0.86)
+                    }
+                }
+            } else { Text(verbatim: text) }
+        }
+        .overlay(alignment: .top) {
+            if showHandHints {
+                VStack(spacing: 2) {
+                    Text(verbatim: "\(number)").font(.system(size: 16, weight: .heavy, design: .rounded))
+                        .frame(width: 24, height: 24).background(.white, in: Circle())
+                        .overlay(Circle().stroke(Color(dinoHex: ink.hex), lineWidth: 2))
+                    Image(systemName: "arrow.down").font(.system(size: 18, weight: .bold))
+                }.foregroundStyle(Color(dinoHex: ink.hex))
+                    .offset(y: -48 - fontSize * (theme.numerals == .digital ? 0.3 : 0.22))
+                    .accessibilityHidden(true)
+            }
+        }
     }
 }
 
@@ -74,12 +96,13 @@ struct DigitalClockControl: View {
     var onMinuteChange: ((Int) -> Void)? = nil
     var minuteStep = 1
     var valueIdentifier = "clock.value"
+    var showHandHints = false
     var body: some View {
         VStack(spacing: 16) {
             HStack(spacing: 14) {
                 DinoIconButton(icon: "minus", labelKey: "dino.hourLess") { hour = ClockTime.shiftedHour(hour, by: -1) }
                     .accessibilityIdentifier("clock.hour.less")
-                DigitalClock(time: ClockTime(hour: hour, minute: minute), theme: theme, fontSize: fontSize)
+                DigitalClock(time: ClockTime(hour: hour, minute: minute), theme: theme, fontSize: fontSize, showHandHints: showHandHints)
                     .accessibilityIdentifier(valueIdentifier)
                 DinoIconButton(icon: "plus", labelKey: "dino.hourMore") { hour = ClockTime.shiftedHour(hour, by: 1) }
                     .accessibilityIdentifier("clock.hour.more")

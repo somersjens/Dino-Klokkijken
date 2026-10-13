@@ -1,5 +1,55 @@
 import SwiftUI
 
+/// Noninteractive clocks in the practice picker have no per-tick layout or gestures.
+struct PracticeClockPreview: View {
+    @Environment(\.dinoHighContrast) private var highContrast
+    let time: ClockTime
+    let theme: ClockTheme
+
+    var body: some View {
+        Canvas { context, bounds in
+            let size = min(bounds.width, bounds.height)
+            let center = CGPoint(x: bounds.width / 2, y: bounds.height / 2)
+            func circle(_ diameter: CGFloat, _ color: Color) {
+                context.fill(Path(ellipseIn: CGRect(x: center.x - diameter / 2, y: center.y - diameter / 2,
+                                                   width: diameter, height: diameter)), with: .color(color))
+            }
+            circle(size, Color(dinoHex: theme.rimInk.hex))
+            circle(size * 0.932, Color(dinoHex: theme.face.hex))
+            for tick in 0..<60 {
+                let major = tick.isMultiple(of: 5)
+                var rotated = context
+                rotated.translateBy(x: center.x, y: center.y)
+                rotated.rotate(by: .degrees(Double(tick) * 6))
+                let width = size * (major ? 0.012 : 0.005)
+                let height = size * (major ? 0.045 : 0.023)
+                rotated.fill(Path(roundedRect: CGRect(x: -width / 2, y: -size * 0.425 - height / 2,
+                                                     width: width, height: height), cornerRadius: width / 2),
+                             with: .color(DinoStyle.ink.opacity(highContrast ? 1 : major ? 0.6 : 0.28)))
+            }
+            for hour in 1...12 {
+                let radians = Double(hour) * .pi / 6
+                context.draw(Text(verbatim: "\(hour)")
+                    .font(.system(size: size * 0.08, weight: .bold, design: .rounded)).foregroundStyle(DinoStyle.ink),
+                             at: CGPoint(x: center.x + CGFloat(sin(radians)) * size * 0.34,
+                                         y: center.y - CGFloat(cos(radians)) * size * 0.34))
+            }
+            func hand(length: CGFloat, width: CGFloat, color: ClockInk, angle: Double) {
+                var rotated = context
+                rotated.translateBy(x: center.x, y: center.y)
+                rotated.rotate(by: .degrees(angle))
+                rotated.fill(Path(roundedRect: CGRect(x: -width / 2, y: -length,
+                                                     width: width, height: length + size * 0.035),
+                                  cornerRadius: theme.hands == .straight ? 1 : width / 2), with: .color(Color(dinoHex: color.hex)))
+            }
+            hand(length: size * 0.23, width: size * (theme.hands == .playful ? 0.055 : 0.038), color: theme.hourInk, angle: time.hourAngle)
+            hand(length: size * 0.34, width: size * (theme.hands == .playful ? 0.036 : 0.024), color: theme.minuteInk, angle: time.minuteAngle)
+            circle(size * 0.085, Color(dinoHex: theme.rimInk.hex))
+            circle(size * 0.025, .white)
+        }.allowsHitTesting(false)
+    }
+}
+
 struct AnalogClock: View {
     @Environment(\.dinoHighContrast) private var highContrast
     let time: ClockTime
@@ -34,14 +84,6 @@ struct AnalogClock: View {
             hand(length: size * 0.34, width: minuteWidth, color: Color(dinoHex: theme.minuteInk.hex), angle: time.minuteAngle)
             Circle().fill(Color(dinoHex: theme.rimInk.hex)).frame(width: size * 0.085)
             Circle().fill(.white).frame(width: size * 0.025)
-            if showHandHints {
-                Image(systemName: "arrow.down").foregroundStyle(Color(dinoHex: theme.minuteInk.hex))
-                    .font(.system(size: size * 0.09, weight: .bold)).offset(x: size * 0.10, y: -size * 0.2)
-                    .rotationEffect(.degrees(time.minuteAngle))
-                Image(systemName: "arrow.down").foregroundStyle(Color(dinoHex: theme.hourInk.hex))
-                    .font(.system(size: size * 0.09, weight: .bold)).offset(y: -size * 0.29)
-                    .rotationEffect(.degrees(time.hourAngle))
-            }
         }
         .frame(width: size, height: size)
         .contentShape(Circle())
@@ -55,6 +97,20 @@ struct AnalogClock: View {
                 onHourChange?(ClockTime.snappedHour(x: Double(x), y: Double(y), minute: time.minute))
             }
         }, including: onHourChange == nil && onMinuteChange == nil ? .none : .all)
+        .overlay {
+            if showHandHints {
+                // Route through the gaps between numerals and keep both badges apart.
+                let minuteCallout = ceil((time.minuteAngle - 15) / 30) * 30 + 15
+                let firstHourCallout = floor((time.hourAngle - 15) / 30) * 30 + 15
+                let sharedCallout = abs((firstHourCallout - minuteCallout).truncatingRemainder(dividingBy: 360)) < 1
+                let hourCallout = firstHourCallout + (sharedCallout ? (time.hourAngle > firstHourCallout ? 30 : -30) : 0)
+                ClockHandHint(number: 1, angle: time.hourAngle, length: size * 0.23,
+                              ink: theme.hourInk, face: theme.face, size: size, calloutAngle: hourCallout)
+                ClockHandHint(number: 2, angle: time.minuteAngle, length: size * 0.34,
+                              ink: theme.minuteInk, face: theme.face, size: size, calloutAngle: minuteCallout)
+            }
+        }
+        .padding(showHandHints ? size * 0.24 : 0)
         .modifier(ClockAccessibility(time: time, onHourChange: onHourChange, onMinuteChange: onMinuteChange, minuteStep: minuteStep))
     }
 
@@ -66,6 +122,49 @@ struct AnalogClock: View {
             .frame(width: width, height: length + size * 0.035)
             .offset(y: -(length - size * 0.035) / 2)
             .rotationEffect(.degrees(angle))
+    }
+}
+
+private struct ClockHandHint: View {
+    let number: Int
+    let angle: Double
+    let length: CGFloat
+    let ink: ClockInk
+    let face: ClockFace
+    let size: CGFloat
+    let calloutAngle: Double
+
+    private func point(radius: CGFloat, angle: Double) -> CGPoint {
+        let radians = angle * .pi / 180
+        return CGPoint(x: size * 0.74 + CGFloat(sin(radians)) * radius,
+                       y: size * 0.74 - CGFloat(cos(radians)) * radius)
+    }
+
+    var body: some View {
+        let start = point(radius: size * 0.59, angle: calloutAngle)
+        let elbow = point(radius: size * 0.28, angle: calloutAngle)
+        let tip = point(radius: length * 0.85, angle: angle)
+        ZStack {
+            Canvas { context, _ in
+                var path = Path()
+                path.move(to: start); path.addLine(to: elbow); path.addLine(to: tip)
+                let direction = atan2(tip.y - elbow.y, tip.x - elbow.x)
+                for offset in [-Double.pi / 5, Double.pi / 5] {
+                    path.move(to: tip)
+                    path.addLine(to: CGPoint(x: tip.x - cos(direction + offset) * 7,
+                                            y: tip.y - sin(direction + offset) * 7))
+                }
+                context.stroke(path, with: .color(Color(dinoHex: face.hex)), style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+                context.stroke(path, with: .color(Color(dinoHex: ink.hex)), style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+            }
+            Text(verbatim: "\(number)")
+                .font(.system(size: 16, weight: .heavy, design: .rounded))
+                .foregroundStyle(Color(dinoHex: ink.hex))
+                .frame(width: 24, height: 24).background(.white, in: Circle())
+                .overlay(Circle().stroke(Color(dinoHex: ink.hex), lineWidth: 2))
+                .position(point(radius: size * 0.66, angle: calloutAngle))
+        }.frame(width: size * 1.48, height: size * 1.48)
+            .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 
@@ -91,6 +190,7 @@ private struct ClockAccessibility: ViewModifier {
                 }
         } else {
             content.accessibilityElement(children: .ignore).accessibilityLabel(Text("dino.analog"))
+                .accessibilityValue(time.digitalText)
         }
     }
 }

@@ -6,6 +6,8 @@
 	"archiveVersion" = "1";
 	"validationLevel" = "1";
 	"objects" = {
+        "DA132026BD01000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/WorldBossArt.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+        "DB132026BD01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA132026BD01000000000001"; };
 		"DA121026AC02000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/ExpandedQuestions.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
 		"DB121026AC02000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000001"; };
 		"DC121026AC02000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000001"; };
@@ -252,6 +254,7 @@
 				"473DC21F001264F04616DF0E",
 				"8E5A0AA250AB4AB292C0F112",
                 "DA1A20261011000000000002",
+                "DB132026BD01000000000001",
                 "DA1A20261011000000000004",
 				"F951E835307BE03500FF04C4",
 				"F951E834307BE03500FF04C4",
@@ -881,6 +884,7 @@
 				"DA121026AB12000000000003",
 				"DA121026AB12000000000002",
                 "DA1A20261011000000000001",
+                "DA132026BD01000000000001",
                 "DA1A20261011000000000003",
 				"EA69CB435385B9A4C726D862",
 				"0B80587E32D18C0831D8ACC9",

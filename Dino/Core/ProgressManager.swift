@@ -5,6 +5,7 @@ final class DinoProgressStore {
     static let profileKey = "dino.profile.v1"
     static let legacyNameKey = "profile.playerName"
     static let resetKey = "dino.profile.reset.v1"
+    static let practiceKey = "dino.practice.records.v1"
     private let defaults: KeyValueStore
 
     init(defaults: KeyValueStore = UserDefaults.standard) { self.defaults = defaults }
@@ -25,6 +26,21 @@ final class DinoProgressStore {
         defaults.set(data, forKey: Self.profileKey)
         defaults.set(profile.name, forKey: Self.legacyNameKey)
     }
+
+    func loadPracticeRecords() -> [String: DinoPracticeRecord] {
+        guard let data = defaults.object(forKey: Self.practiceKey) as? Data,
+              let records = try? JSONDecoder().decode([String: DinoPracticeRecord].self, from: data) else { return [:] }
+        return records.filter { DinoPracticeRecord.validKeys.contains($0.key) }.mapValues {
+            DinoPracticeRecord(bestStreak: max(0, $0.bestStreak), questionsAnswered: max(0, $0.questionsAnswered))
+        }
+    }
+
+    func savePracticeRecords(_ records: [String: DinoPracticeRecord]) {
+        guard let data = try? JSONEncoder().encode(records) else { return }
+        defaults.set(data, forKey: Self.practiceKey)
+    }
+
+    func resetPracticeRecords() { defaults.removeObject(forKey: Self.practiceKey) }
 
     func removeAllData(resetAt date: Date) {
         defaults.removeAllObjects()
