@@ -145,9 +145,19 @@ final class DinoSession: ObservableObject, Identifiable {
     @Published var pairSelections: [Int: ClockTime] = [:]
     @Published private(set) var practiceAnswered = 0
     @Published private(set) var practiceCorrect = 0
-    @Published private(set) var practiceStreak = 0
-    @Published private(set) var practiceBestStreak = 0
-    @Published private(set) var practiceQuestionNumber = 1
+
+    /// Displayed together for the current question; answers are saved immediately.
+    struct PracticeProgress: Equatable {
+        var streak = 0
+        var bestStreak = 0
+        var questionNumber = 1
+    }
+
+    @Published private(set) var practiceProgress = PracticeProgress()
+    var practiceStreak: Int { practiceProgress.streak }
+    var practiceBestStreak: Int { practiceProgress.bestStreak }
+    var practiceQuestionNumber: Int { practiceProgress.questionNumber }
+
     @Published var demonstration: ClockQuestionKind?
     @Published private(set) var result: DinoLevelResult?
     private let player: DinoPlayer
@@ -219,8 +229,9 @@ final class DinoSession: ObservableObject, Identifiable {
             if practiceGenerator != nil, let practice, let type = practiceQuestionType {
                 let saved = player.practiceRecord(time: practice.time, question: type)
                 let streak = correct ? min(Int.max - 1, saved.currentStreak) + 1 : 0
-                practiceStreak = streak
-                practiceBestStreak = player.recordPracticeAnswer(time: practice.time, question: type, streak: streak).bestStreak
+                // Persist immediately, while the HUD keeps this question's
+                // counters together until the next question is presented.
+                player.recordPracticeAnswer(time: practice.time, question: type, streak: streak)
             }
             answerFeedback?(correct)
         }
@@ -260,9 +271,8 @@ final class DinoSession: ObservableObject, Identifiable {
     private func refreshPracticeProgress() {
         guard practiceGenerator != nil, let practice, let type = practiceQuestionType else { return }
         let record = player.practiceRecord(time: practice.time, question: type)
-        practiceStreak = record.currentStreak
-        practiceBestStreak = record.bestStreak
-        practiceQuestionNumber = min(Int.max - 1, record.questionsAnswered) + 1
+        practiceProgress = PracticeProgress(streak: record.currentStreak, bestStreak: record.bestStreak,
+                                            questionNumber: min(Int.max - 1, record.questionsAnswered) + 1)
     }
 
     func dismissDemonstration() {

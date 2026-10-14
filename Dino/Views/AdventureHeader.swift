@@ -145,7 +145,8 @@ struct AdventureHeader: View {
             if practiceStreak != nil {
                 HUDRecordBadge(value: String(practiceRecord), trophy: true, palette: palette,
                                compact: compact, spacious: metrics.spacious, highContrast: highContrast)
-                    .offset(y: compact ? -16 : metrics.spacious ? -23 : -19)
+                    .frame(maxWidth: metrics.cellWidth + 8)
+                    .offset(y: compact ? -15 : metrics.spacious ? -23 : -21)
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(Text("dino.practice.bestStreak"))
                     .accessibilityValue(String(practiceRecord))
@@ -253,7 +254,7 @@ struct AdventureHeader: View {
     }
 }
 
-/// A small inset medal, using the HUD's paper, rim and world-colored outline.
+/// A medal attached to the HUD rim, using the chapter plaque's paper and outline.
 private struct HUDRecordBadge: View {
     let value: String
     let trophy: Bool
@@ -261,9 +262,12 @@ private struct HUDRecordBadge: View {
     let compact: Bool
     let spacious: Bool
     let highContrast: Bool
+    private var fontSize: CGFloat {
+        trophy ? (compact ? 11 : spacious ? 18 : 14) : (compact ? 8 : spacious ? 12 : 9)
+    }
 
     var body: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: trophy ? 4 : 3) {
             if trophy {
                 Image(systemName: "trophy.fill")
                     .foregroundStyle(LinearGradient(colors: [Color(dinoHex: 0xD4AF5D), Color(dinoHex: 0x876128)],
@@ -272,14 +276,15 @@ private struct HUDRecordBadge: View {
             }
             Text(verbatim: value).foregroundStyle(highContrast ? palette.contrastInk : palette.ink)
                 .monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
-                .offset(x: HUDNumberAlignment.offset(for: value, fontSize: compact ? 8 : spacious ? 12 : 9))
+                .offset(x: HUDNumberAlignment.offset(for: value, fontSize: fontSize))
         }
-        .font(.system(size: compact ? 8 : spacious ? 12 : 9, weight: .heavy, design: .rounded))
-        .padding(.horizontal, compact ? 4 : 6).padding(.vertical, 2)
+        .font(.system(size: fontSize, weight: .heavy, design: .rounded))
+        .padding(.horizontal, trophy ? (compact ? 6 : 8) : (compact ? 4 : 6))
+        .padding(.vertical, trophy ? (compact ? 2 : 3) : 2)
         .background {
             Capsule().fill(palette.outline.opacity(0.18)).offset(y: 1.5)
             Capsule().fill(LinearGradient(colors: [.white, palette.paperBottom], startPoint: .top, endPoint: .bottom))
-                .overlay(Capsule().strokeBorder(highContrast ? palette.outline : palette.borderLight, lineWidth: 1))
+                .overlay(Capsule().strokeBorder(highContrast ? palette.outline : palette.borderLight, lineWidth: trophy ? 1.5 : 1))
         }
     }
 }
@@ -658,64 +663,17 @@ private struct HUDLeafArt: View {
     let palette: HUDPalette
     var dark = false
     var body: some View {
-        HUDLeaf()
+        DinoFoliageLeaf()
             .fill(LinearGradient(colors: dark
                                  ? [palette.leafDarkLight, palette.outline, palette.leafDark]
                                  : [palette.leafLight, palette.accent, palette.outline],
                                  startPoint: .topLeading, endPoint: .bottomTrailing))
-            .overlay(HUDLeafFold().fill(LinearGradient(colors: [.white.opacity(dark ? 0.05 : 0.2), .clear],
+            .overlay(DinoFoliageFold().fill(LinearGradient(colors: [.white.opacity(dark ? 0.05 : 0.2), .clear],
                                                        startPoint: .topTrailing, endPoint: .bottomLeading)))
-            .overlay(HUDLeaf().stroke(palette.veins.opacity(dark ? 0.45 : 0.8), lineWidth: 0.8))
-            .overlay(HUDLeafVeins().stroke(palette.veins.opacity(dark ? 0.45 : 0.7),
+            .overlay(DinoFoliageLeaf().stroke(palette.veins.opacity(dark ? 0.45 : 0.8), lineWidth: 0.8))
+            .overlay(DinoFoliageVeins().stroke(palette.veins.opacity(dark ? 0.45 : 0.7),
                                            style: StrokeStyle(lineWidth: 0.6, lineCap: .round)))
             .shadow(color: palette.outline.opacity(0.12), radius: 0.6, y: 0.5)
-    }
-}
-
-private struct HUDLeafFold: Shape {
-    func path(in rect: CGRect) -> Path {
-        Path { path in
-            path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
-            path.addQuadCurve(to: CGPoint(x: rect.width * 0.66, y: 0),
-                              control: CGPoint(x: rect.width * 0.43, y: rect.height * 0.42))
-            path.addCurve(to: CGPoint(x: rect.midX, y: rect.maxY),
-                          control1: CGPoint(x: rect.width * 1.18, y: rect.height * 0.35),
-                          control2: CGPoint(x: rect.width * 0.93, y: rect.height * 0.73))
-            path.closeSubpath()
-        }
-    }
-}
-
-private struct HUDLeafVeins: Shape {
-    func path(in rect: CGRect) -> Path {
-        Path { path in
-            func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
-                CGPoint(x: rect.width * x, y: rect.height * y)
-            }
-            path.move(to: point(0.5, 0.97))
-            path.addQuadCurve(to: point(0.66, 0.06), control: point(0.43, 0.42))
-            for (center, left, right) in [(0.72, 0.58, 0.57), (0.52, 0.39, 0.38), (0.32, 0.23, 0.23)] {
-                path.move(to: point(0.51, center))
-                path.addQuadCurve(to: point(0.19, left), control: point(0.31, center - 0.025))
-                path.move(to: point(0.54, center))
-                path.addQuadCurve(to: point(0.85, right), control: point(0.72, center - 0.015))
-            }
-        }
-    }
-}
-
-private struct HUDLeaf: Shape {
-    func path(in rect: CGRect) -> Path {
-        Path { path in
-            path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
-            path.addCurve(to: CGPoint(x: rect.width * 0.66, y: 0),
-                          control1: CGPoint(x: -rect.width * 0.28, y: rect.height * 0.62),
-                          control2: CGPoint(x: rect.width * 0.14, y: rect.height * 0.08))
-            path.addCurve(to: CGPoint(x: rect.midX, y: rect.maxY),
-                          control1: CGPoint(x: rect.width * 1.18, y: rect.height * 0.35),
-                          control2: CGPoint(x: rect.width * 0.93, y: rect.height * 0.73))
-            path.closeSubpath()
-        }
     }
 }
 

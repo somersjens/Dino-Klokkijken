@@ -36,231 +36,737 @@ struct WorldRouteTrail: View {
     }
 }
 
-/// A single layered sign: chapter tab, sculpted title plaque and attached skill label.
+/// Chapter lettering and description share one sculpted, theme-specific sign.
 struct WorldTitleBanner: View {
     let world: DinoWorld
     var highContrast = false
-    private var ink: UInt32 {
-        if highContrast { return world.id == 3 ? 0xFFFFFF : 0x153C48 }
-        switch world.id {
-        case 1: return 0x235C34
-        case 3: return 0xFFF2CD
-        case 5: return 0x425981
-        case 6: return 0x256879
-        case 9: return 0x6A4935
-        default: return 0x294959
-        }
-    }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Text("dino.worldNumber \(world.id)")
-                .textCase(.uppercase)
-                .font(.system(size: 12, weight: .heavy, design: .rounded)).tracking(1.5)
-                .foregroundStyle(Color(dinoHex: 0x573C2A))
-                .padding(.horizontal, 24).frame(height: 34)
-                .background {
-                    Capsule().fill(Color(dinoHex: 0x9D754B)).offset(y: 4)
-                    Capsule().fill(LinearGradient(colors: [Color(dinoHex: 0xFFDEA0), Color(dinoHex: 0xE5AB65)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .overlay(Capsule().strokeBorder(Color(dinoHex: 0xFFF0C3), lineWidth: 1.5))
-                        .overlay(alignment: .leading) { Circle().fill(Color(dinoHex: 0xFFF3CD)).frame(width: 3, height: 3).padding(.leading, 9) }
-                        .overlay(alignment: .trailing) { Circle().fill(Color(dinoHex: 0xA97943)).frame(width: 3, height: 3).padding(.trailing, 9) }
-                }.zIndex(2)
-            Text(LocalizedStringKey(world.titleKey))
-                .font(.system(size: 33, weight: .heavy, design: .rounded))
-                .foregroundStyle(Color(dinoHex: ink))
-                .shadow(color: Color(dinoHex: world.id == 3 ? 0x433640 : 0xEBCB73).opacity(0.55), radius: 0, y: 1.5)
-                .lineLimit(1).minimumScaleFactor(0.62)
-                .padding(.horizontal, 32).frame(maxWidth: .infinity).frame(height: 84)
-                .background { WorldSignFace(world: world) }
-                .padding(.top, -5)
-            Label(LocalizedStringKey(world.skillKey), systemImage: "clock")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundStyle(Color(dinoHex: 0x345565))
-                .lineLimit(1).minimumScaleFactor(0.70)
-                .padding(.horizontal, 16).frame(height: 36)
-                .background {
-                    Capsule().fill(Color(dinoHex: 0x8C8967).opacity(0.35)).offset(y: 3)
-                    Capsule().fill(LinearGradient(colors: [Color(dinoHex: 0xFFFEF1), Color(dinoHex: 0xF1F1D9)], startPoint: .top, endPoint: .bottom))
-                        .overlay(Capsule().strokeBorder(.white.opacity(0.85), lineWidth: 1.5))
-                }.padding(.top, -10).padding(.horizontal, 22).zIndex(2)
-        }.padding(.top, 12).padding(.bottom, 16)
-            .frame(maxWidth: .infinity)
+        GeometryReader { geometry in
+            let layout = WorldBannerLayout(width: geometry.size.width)
+            let palette = WorldBannerPalette(worldID: world.id)
+            ZStack(alignment: .topLeading) {
+                Canvas { context, size in
+                    WorldBannerPainter(context: context, world: world).draw(in: size)
+                }.allowsHitTesting(false).accessibilityHidden(true)
+                Text("dino.worldNumber \(world.id)")
+                    .textCase(.uppercase)
+                    .font(.system(size: 12, weight: .heavy, design: .rounded)).tracking(1.3)
+                    .foregroundStyle(Color(dinoHex: palette.tabInk))
+                    .frame(width: layout.tab.width - 20, height: layout.tab.height)
+                    .position(x: layout.tab.midX, y: layout.tab.midY)
+                Text(LocalizedStringKey(world.titleKey))
+                    .font(.system(size: 33, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Color(dinoHex: highContrast ? (world.id == 3 ? 0xFFFFFF : 0x153C48) : palette.ink))
+                    .shadow(color: Color(dinoHex: palette.titleShadow).opacity(0.55), radius: 0, y: 1.4)
+                    .lineLimit(world.id == 7 ? 2 : 1).minimumScaleFactor(0.58)
+                    .multilineTextAlignment(.center).lineSpacing(-1)
+                    .frame(width: layout.titleWidth, height: 82)
+                    .position(x: layout.titlePanel.midX, y: layout.titlePanel.midY)
+                Text(LocalizedStringKey(world.skillKey))
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color(dinoHex: palette.subtitleInk))
+                    .lineLimit(2).minimumScaleFactor(0.82)
+                    .multilineTextAlignment(.center).lineSpacing(-1)
+                    .frame(width: layout.subtitle.width - 36, height: 27)
+                    .position(x: layout.subtitle.midX + 10, y: layout.subtitle.midY)
+            }
+        }.frame(height: 212)
             .accessibilityElement(children: .combine)
     }
 }
 
-private struct WorldSignFace: View {
-    let world: DinoWorld
-    var body: some View {
-        Canvas { context, size in
-            let p = WorldSignPainter(context: context, world: world)
-            p.draw(in: size)
-        }.allowsHitTesting(false).accessibilityHidden(true)
+private struct WorldBannerLayout {
+    let width: CGFloat
+    let scale: CGFloat
+    let plate: CGRect
+    let titlePanel: CGRect
+    let tab: CGRect
+    let subtitle: CGRect
+    let titleWidth: CGFloat
+    init(width: CGFloat) {
+        self.width = width
+        scale = min(1.26, max(0.82, width / 354))
+        plate = CGRect(x: 29 * scale, y: 42, width: width - 58 * scale, height: 142)
+        titlePanel = CGRect(x: 62 * scale, y: 58, width: width - 124 * scale, height: 83)
+        tab = CGRect(x: width / 2 - 62, y: 20, width: 124, height: 32)
+        subtitle = CGRect(x: 70 * scale, y: 146, width: width - 140 * scale, height: 29)
+        titleWidth = width - 146 * scale
     }
 }
 
-private struct WorldSignPainter {
+private struct WorldBannerPalette {
+    var ink: UInt32 = 0x294959
+    var titleShadow: UInt32 = 0xDAB867
+    var light: UInt32 = 0xFFF4D1
+    var face: UInt32 = 0xF2E7BE
+    var dark: UInt32 = 0xC9B17C
+    var rim: UInt32 = 0xA78650
+    var accent: UInt32 = 0x79A45E
+    var shade: UInt32 = 0x38694B
+    var tabInk: UInt32 = 0x573D29
+    var tabLight: UInt32 = 0xFFE5AB
+    var tabFace: UInt32 = 0xEABD7B
+    var subtitleLight: UInt32 = 0xFFFADE
+    var subtitleFace: UInt32 = 0xE9E8BB
+    var subtitleDark: UInt32 = 0xB6C18A
+    var subtitleInk: UInt32 = 0x345346
+    init(worldID: Int) {
+        switch worldID {
+        case 1: ink = 0x235C34; accent = 0x7BB341; shade = 0x2C653A
+        case 2:
+            accent = 0x9FACC9; shade = 0x586F92; light = 0xF5F0FF; face = 0xE5DBF0; dark = 0xB4AACB; rim = 0x978EAA
+            tabLight = 0xEFE8FF; tabFace = 0xCBBEE0; tabInk = 0x53617E
+            subtitleLight = 0xF6F2FC; subtitleFace = 0xE6E0F2; subtitleDark = 0xB4AEC8; subtitleInk = 0x52627D
+        case 3:
+            ink = 0xFFF1CA; titleShadow = 0x40343F; light = 0x9B8791; face = 0x716371; dark = 0x494957; rim = 0xBE8351; accent = 0xF5A064; shade = 0x585363
+            tabLight = 0xFFDEAC; tabFace = 0xD79B67
+            subtitleLight = 0xFFEBCB; subtitleFace = 0xE8B98E; subtitleDark = 0xBD8667; subtitleInk = 0x6C443C
+        case 4: accent = 0xC0835B; shade = 0x6B7852; subtitleFace = 0xF0DAB0; subtitleDark = 0xCDAE79; subtitleInk = 0x6C5542
+        case 5:
+            ink = 0x455984; accent = 0x83CFCB; shade = 0x527A9F; light = 0xEFFAFF; face = 0xCCE5F0; dark = 0x98B4CE; rim = 0x77A0B9
+            tabLight = 0xE5F9F4; tabFace = 0xA9D8DE; tabInk = 0x41647A
+            subtitleLight = 0xF0FCFB; subtitleFace = 0xD3EDF1; subtitleDark = 0xA1CADB; subtitleInk = 0x41617F
+        case 6:
+            ink = 0x256879; accent = 0x63C7CC; shade = 0x3A7185; light = 0xE4F9F6; face = 0xBBDCDD; dark = 0x81ADB8; rim = 0x6798A9
+            tabLight = 0xD3EDF0; tabFace = 0x93C6CC; tabInk = 0x2A6679
+            subtitleLight = 0xEBFBFA; subtitleFace = 0xC0E2E4; subtitleDark = 0x88B5C1; subtitleInk = 0x2E6278
+        case 7:
+            accent = 0x9CB68E; shade = 0x5D7790; subtitleLight = 0xF7E9BC; subtitleFace = 0xECE5D0; subtitleDark = 0xB9BBD5; subtitleInk = 0x4A6172
+        case 8:
+            accent = 0xD6B46A; shade = 0x747D86; rim = 0xA88B55; tabFace = 0xD4B579
+            subtitleLight = 0xFCEDCA; subtitleFace = 0xE6D1A0; subtitleDark = 0xBBA36F; subtitleInk = 0x5B5D56
+        case 9:
+            ink = 0x674731; accent = 0x72BABC; shade = 0x667D75; face = 0xEFDEB3; dark = 0xC5A878; rim = 0x967147
+            tabFace = 0xDBAF70; subtitleLight = 0xFFF1CF; subtitleFace = 0xEAD1A0; subtitleDark = 0xC4A575; subtitleInk = 0x705038
+        default:
+            ink = 0x36577A; accent = 0x8EADD0; shade = 0x536E99; face = 0xEEE6C7; rim = 0xB59455
+            tabFace = 0xE2C482
+            subtitleLight = 0x8EACD0; subtitleFace = 0x5D7CA9; subtitleDark = 0x3E577D; subtitleInk = 0xFFF4D7
+        }
+    }
+}
+
+private struct WorldBannerPainter {
     let context: GraphicsContext
     let world: DinoWorld
-    private var colors: WorldThemeColors { WorldThemeColors(world) }
+    private var palette: WorldBannerPalette { .init(worldID: world.id) }
 
-    private func material(_ path: Path, light: UInt32, middle: UInt32, dark: UInt32) {
+    private func material(_ path: Path, light: UInt32, face: UInt32, dark: UInt32) {
         let r = path.boundingRect
-        context.fill(path, with: .linearGradient(Gradient(colors: [Color(dinoHex: light), Color(dinoHex: middle), Color(dinoHex: dark)]),
-                                               startPoint: CGPoint(x: r.minX, y: r.minY), endPoint: CGPoint(x: r.maxX, y: r.maxY)))
+        context.fill(path, with: .linearGradient(Gradient(stops: [
+            .init(color: Color(dinoHex: light), location: 0),
+            .init(color: Color(dinoHex: face), location: 0.46),
+            .init(color: Color(dinoHex: dark), location: 1)
+        ]), startPoint: CGPoint(x: r.minX, y: r.minY), endPoint: CGPoint(x: r.maxX, y: r.maxY)))
     }
-    private func line(_ points: [CGPoint], color: UInt32, width: CGFloat, opacity: Double = 1) {
-        var p = Path(); p.addLines(points)
-        context.stroke(p, with: .color(Color(dinoHex: color).opacity(opacity)), style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
+    private func line(_ points: [CGPoint], color: UInt32, width: CGFloat = 1, opacity: Double = 1) {
+        var path = Path(); path.addLines(points)
+        context.stroke(path, with: .color(Color(dinoHex: color).opacity(opacity)),
+                       style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
     }
-    private func ellipse(_ r: CGRect, color: UInt32) {
-        material(Path(ellipseIn: r), light: 0xFFF0C4, middle: color, dark: colors.shade)
+    private func polygon(_ points: [CGPoint], light: UInt32, face: UInt32, dark: UInt32) {
+        var path = Path(); path.addLines(points); path.closeSubpath()
+        material(path, light: light, face: face, dark: dark)
     }
+    private func oval(_ r: CGRect, light: UInt32, face: UInt32, dark: UInt32) {
+        let center = CGPoint(x: r.minX + r.width * 0.3, y: r.minY + r.height * 0.2)
+        context.fill(Path(ellipseIn: r), with: .radialGradient(Gradient(colors: [Color(dinoHex: light), Color(dinoHex: face), Color(dinoHex: dark)]),
+                                                               center: center, startRadius: 0, endRadius: max(r.width, r.height) * 0.8))
+    }
+    private func glow(at point: CGPoint, radius: CGFloat, color: UInt32, opacity: Double) {
+        context.fill(Path(ellipseIn: CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)),
+                     with: .radialGradient(Gradient(colors: [Color(dinoHex: color).opacity(opacity), .clear]), center: point, startRadius: 0, endRadius: radius))
+    }
+    private func transformed(at point: CGPoint, scale: CGFloat = 1, mirror: Bool = false, draw: (WorldBannerPainter) -> Void) {
+        var layer = context
+        layer.translateBy(x: point.x, y: point.y); layer.scaleBy(x: mirror ? -scale : scale, y: scale)
+        draw(.init(context: layer, world: world))
+    }
+
     func draw(in size: CGSize) {
-        let w = size.width, h = size.height
-        let r = CGRect(x: 10, y: 4, width: w - 20, height: h - 11)
-        let outline = Path(roundedRect: r, cornerRadius: 29)
-        var shadow = context
-        shadow.translateBy(x: 0, y: 6)
-        shadow.fill(outline, with: .color(Color(dinoHex: colors.shade).opacity(0.25)))
-        let light: UInt32 = world.id == 3 ? 0x9B8790 : world.id == 5 ? 0xF0F8FF : world.id == 6 ? 0xDBF7F4 : 0xFFF4C9
-        let middle: UInt32 = world.id == 3 ? 0x736775 : world.id == 5 ? 0xD3E7EE : world.id == 6 ? 0xBEE3E2 : 0xF2E8BF
-        let dark: UInt32 = world.id == 3 ? 0x514D60 : world.id == 5 ? 0x9FBBCF : world.id == 6 ? 0x82B6BC : 0xC6B484
-        material(outline, light: light, middle: middle, dark: dark)
-        context.stroke(outline, with: .color(Color(dinoHex: world.id == 3 ? 0xE8A166 : 0xBDA674)), lineWidth: 2)
-        let inner = Path(roundedRect: r.insetBy(dx: 4, dy: 4), cornerRadius: 25)
-        context.stroke(inner, with: .color(Color(dinoHex: light).opacity(0.85)), lineWidth: 1.5)
-        // Tiny material details stay out of the text area.
-        for side: CGFloat in [20, w - 20] {
-            ellipse(CGRect(x: side - 2, y: h * 0.45, width: 4, height: 4), color: 0xD5B46E)
-        }
-        if [1, 4, 9].contains(world.id) {
-            for i in 0..<3 {
-                let y = 16 + CGFloat(i) * 19
-                line([CGPoint(x: 37, y: y), CGPoint(x: 50, y: y - 1), CGPoint(x: 65, y: y + 1)], color: 0xC3A46C, width: 0.7, opacity: 0.22)
-                line([CGPoint(x: w - 70, y: y + 7), CGPoint(x: w - 40, y: y + 5)], color: 0xC3A46C, width: 0.7, opacity: 0.22)
+        let layout = WorldBannerLayout(width: size.width)
+        // One continuous silhouette owns the chapter tab, shoulders and base.
+        foundation(layout: layout)
+        connectedRim(layout: layout)
+        for side in 0..<2 {
+            transformed(at: CGPoint(x: side == 0 ? 54 * layout.scale : size.width - 54 * layout.scale, y: side == 0 ? 105 : 109),
+                        scale: layout.scale, mirror: side == 1) {
+                $0.endcap(front: false, variation: side)
             }
         }
-        for side: CGFloat in [-1, 1] {
-            let x: CGFloat = side < 0 ? 32 : w - 32
-            switch world.id {
-            case 1:
-                for i in 0..<3 {
-                    leaf(at: CGPoint(x: x, y: 18 + CGFloat(i) * 21), length: 30, angle: Double(side) * Double(48 + i * 22), color: i == 1 ? 0x6CA93F : 0x4C8B46)
-                }
-            case 2:
-                leaf(at: CGPoint(x: x, y: 61), length: 32, angle: Double(side) * 42, color: 0x8CB7A8)
-                moon(at: CGPoint(x: x + side * 3, y: 18), radius: 12)
-                star(at: CGPoint(x: x - side * 9, y: 47), radius: 4)
-            case 3:
-                var rock = Path()
-                rock.addLines([CGPoint(x: x - 13, y: 56), CGPoint(x: x - 8, y: 18), CGPoint(x: x + 6, y: 6), CGPoint(x: x + 15, y: 48), CGPoint(x: x + 8, y: 69)])
-                rock.closeSubpath(); material(rock, light: 0xBFA493, middle: 0x826E75, dark: 0x4E5368)
-                line([CGPoint(x: x, y: 14), CGPoint(x: x - 3, y: 31), CGPoint(x: x + 4, y: 42), CGPoint(x: x + 1, y: 60)], color: 0xFFB570, width: 3)
-            case 4:
-                leaf(at: CGPoint(x: x, y: 64), length: 29, angle: Double(side) * 40, color: 0x7FAC62)
-                for i in 0..<3 {
-                    let px = x + side * CGFloat(i * 7)
-                    var flag = Path()
-                    flag.addLines([CGPoint(x: px - 3, y: 12), CGPoint(x: px + 6, y: 14), CGPoint(x: px + 1, y: 25)]); flag.closeSubpath()
-                    material(flag, light: 0xFBE1A5, middle: i == 1 ? 0x77B7AA : 0xDE9576, dark: 0xA56F65)
-                }
-            case 5:
-                for i in 0..<3 {
-                    let px = x + CGFloat(i - 1) * 9
-                    var crystal = Path()
-                    crystal.addLines([CGPoint(x: px - 7, y: 66), CGPoint(x: px - 6, y: 27 - CGFloat(i) * 7),
-                                      CGPoint(x: px + 1, y: 14 - CGFloat(i) * 7), CGPoint(x: px + 8, y: 29 - CGFloat(i) * 7), CGPoint(x: px + 7, y: 66)])
-                    crystal.closeSubpath()
-                    material(crystal, light: 0xDCFFF6, middle: i == 1 ? 0x9A9FDA : 0x7BCACB, dark: 0x627EAD)
-                    line([CGPoint(x: px + 1, y: 18 - CGFloat(i) * 7), CGPoint(x: px + 1, y: 61)], color: 0xF0FFEF, width: 1, opacity: 0.7)
-                }
-            case 6:
-                line([CGPoint(x: x - side * 5, y: 19), CGPoint(x: x + side * 7, y: 19),
-                      CGPoint(x: x + side * 7, y: 49), CGPoint(x: x - side * 4, y: 49)], color: 0x44A9AD, width: 3)
-                for y: CGFloat in [19, 49] { ellipse(CGRect(x: x - side * 5 - 3, y: y - 3, width: 6, height: 6), color: 0x9AEDE0) }
-                for y: CGFloat in [12, 63] { ellipse(CGRect(x: x - 3, y: y, width: 6, height: 6), color: 0x99B6B3) }
-            case 7:
-                leaf(at: CGPoint(x: x, y: 63), length: 32, angle: Double(side) * 42, color: side < 0 ? 0x8DB468 : 0x8397B7)
-                if side < 0 {
-                    ellipse(CGRect(x: x - 10, y: 8, width: 20, height: 20), color: 0xEACB72)
-                    for i in 0..<8 {
-                        let a = Double(i) * .pi / 4
-                        line([CGPoint(x: x + CGFloat(cos(a)) * 13, y: 18 + CGFloat(sin(a)) * 13),
-                              CGPoint(x: x + CGFloat(cos(a)) * 16, y: 18 + CGFloat(sin(a)) * 16)], color: 0xE5BC6E, width: 1.2)
-                    }
-                } else { moon(at: CGPoint(x: x, y: 18), radius: 11); star(at: CGPoint(x: x - 7, y: 41), radius: 3) }
-            case 8:
-                gear(at: CGPoint(x: x, y: 35), radius: 18)
-                star(at: CGPoint(x: x - side * 7, y: 66), radius: 4)
-            case 9:
-                var rope = Path()
-                rope.addRoundedRect(in: CGRect(x: 16, y: 9, width: w - 32, height: h - 24), cornerSize: CGSize(width: 23, height: 23))
-                context.stroke(rope, with: .color(Color(dinoHex: 0xC49C59)), style: StrokeStyle(lineWidth: 3, dash: [3, 2]))
-                line([CGPoint(x: x, y: 22), CGPoint(x: x, y: 59)], color: 0x527F89, width: 3)
-                line([CGPoint(x: x - 8, y: 36), CGPoint(x: x + 8, y: 36)], color: 0x527F89, width: 2)
-                var arc = Path()
-                arc.addArc(center: CGPoint(x: x, y: 46), radius: 12, startAngle: .degrees(15), endAngle: .degrees(165), clockwise: false)
-                context.stroke(arc, with: .color(Color(dinoHex: 0x527F89)), style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                context.stroke(Path(ellipseIn: CGRect(x: x - 4, y: 17, width: 8, height: 8)), with: .color(Color(dinoHex: 0x527F89)), lineWidth: 2)
-            default:
-                var pennant = Path()
-                pennant.addLines([CGPoint(x: x - 9, y: 22), CGPoint(x: x + 9, y: 22), CGPoint(x: x + 9, y: 65),
-                                 CGPoint(x: x, y: 58), CGPoint(x: x - 9, y: 65)]); pennant.closeSubpath()
-                material(pennant, light: 0xB2D4E4, middle: 0x789BCF, dark: 0x4B698F)
-                var crown = Path()
-                crown.addLines([CGPoint(x: x - 9, y: 31), CGPoint(x: x - 11, y: 15), CGPoint(x: x - 4, y: 21),
-                                CGPoint(x: x, y: 10), CGPoint(x: x + 4, y: 21), CGPoint(x: x + 11, y: 15), CGPoint(x: x + 9, y: 31)])
-                crown.closeSubpath(); material(crown, light: 0xFFF1AA, middle: 0xE0B764, dark: 0xB58E53)
+        // The quiet lettering surface occludes the inward parts of the ornaments.
+        // They grow out of the frame instead of sitting over the lettering.
+        board(in: layout.titlePanel)
+        subtitle(in: layout.subtitle)
+        tab(in: layout.tab)
+        for side in 0..<2 {
+            transformed(at: CGPoint(x: side == 0 ? 54 * layout.scale : size.width - 54 * layout.scale, y: side == 0 ? 105 : 109),
+                        scale: layout.scale, mirror: side == 1) {
+                // Only small edge details cross the face; never redraw the whole
+                // assembly or cover the inset description panel.
+                $0.endcap(front: true, variation: side)
             }
         }
     }
 
-    private func leaf(at point: CGPoint, length: CGFloat, angle: Double, color: UInt32) {
-        var layer = context
-        layer.translateBy(x: point.x, y: point.y); layer.rotate(by: .degrees(angle))
-        let path = Path { p in
-            p.move(to: .zero)
-            p.addCurve(to: CGPoint(x: 0, y: -length), control1: CGPoint(x: -15, y: -length * 0.35), control2: CGPoint(x: -10, y: -length * 0.86))
-            p.addCurve(to: .zero, control1: CGPoint(x: 10, y: -length * 0.8), control2: CGPoint(x: 13, y: -length * 0.24))
+    private func outline(plate r: CGRect, tab t: CGRect, inset: CGFloat = 0) -> Path {
+        let r = r.insetBy(dx: inset, dy: inset)
+        let t = t.insetBy(dx: inset, dy: inset)
+        let corner = max(16, 28 - inset)
+        return Path { p in
+            p.move(to: CGPoint(x: r.minX + corner, y: r.minY))
+            p.addLine(to: CGPoint(x: t.minX - 9, y: r.minY))
+            p.addCurve(to: CGPoint(x: t.minX + 12, y: t.minY),
+                       control1: CGPoint(x: t.minX + 1, y: r.minY),
+                       control2: CGPoint(x: t.minX - 4, y: t.minY))
+            p.addLine(to: CGPoint(x: t.maxX - 12, y: t.minY))
+            p.addCurve(to: CGPoint(x: t.maxX + 9, y: r.minY),
+                       control1: CGPoint(x: t.maxX + 4, y: t.minY),
+                       control2: CGPoint(x: t.maxX - 1, y: r.minY))
+            p.addLine(to: CGPoint(x: r.maxX - corner, y: r.minY))
+            p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.minY + corner), control: CGPoint(x: r.maxX, y: r.minY))
+            p.addLine(to: CGPoint(x: r.maxX, y: r.maxY - corner))
+            p.addQuadCurve(to: CGPoint(x: r.maxX - corner, y: r.maxY), control: CGPoint(x: r.maxX, y: r.maxY))
+            p.addLine(to: CGPoint(x: r.minX + corner, y: r.maxY))
+            p.addQuadCurve(to: CGPoint(x: r.minX, y: r.maxY - corner), control: CGPoint(x: r.minX, y: r.maxY))
+            p.addLine(to: CGPoint(x: r.minX, y: r.minY + corner))
+            p.addQuadCurve(to: CGPoint(x: r.minX + corner, y: r.minY), control: CGPoint(x: r.minX, y: r.minY))
+            p.closeSubpath()
         }
-        layer.fill(path, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xB5D96F), Color(dinoHex: color), Color(dinoHex: 0x38734A)]), startPoint: CGPoint(x: -10, y: -length), endPoint: CGPoint(x: 12, y: 0)))
-        var vein = Path(); vein.move(to: .zero); vein.addLine(to: CGPoint(x: 0, y: -length * 0.85))
-        layer.stroke(vein, with: .color(Color(dinoHex: 0xD3E7A0).opacity(0.65)), lineWidth: 0.8)
-        for i in 1...3 {
-            var branch = Path(); let y = -length * CGFloat(i) / 5
-            branch.addLines([CGPoint(x: -7, y: y - 4), CGPoint(x: 0, y: y), CGPoint(x: 6, y: y - 5)])
-            layer.stroke(branch, with: .color(Color(dinoHex: 0xC7E18C).opacity(0.4)), lineWidth: 0.6)
+    }
+
+    private func foundation(layout: WorldBannerLayout) {
+        let shape = outline(plate: layout.plate, tab: layout.tab)
+        var shadow = context; shadow.translateBy(x: 0, y: 6)
+        shadow.fill(shape, with: .color(Color(dinoHex: palette.shade).opacity(0.29)))
+        material(shape, light: palette.tabLight, face: palette.dark, dark: palette.rim)
+        context.stroke(shape, with: .color(Color(dinoHex: palette.shade).opacity(0.6)), lineWidth: 1.2)
+        context.stroke(outline(plate: layout.plate, tab: layout.tab, inset: 3),
+                       with: .linearGradient(Gradient(colors: [Color(dinoHex: palette.light), Color(dinoHex: palette.rim)]),
+                                             startPoint: CGPoint(x: 0, y: 20), endPoint: CGPoint(x: layout.width, y: 184)), lineWidth: 2)
+        context.stroke(outline(plate: layout.plate, tab: layout.tab, inset: 8),
+                       with: .color(Color(dinoHex: palette.shade).opacity(0.22)), lineWidth: 1)
+    }
+
+    private func connectedRim(layout: WorldBannerLayout) {
+        let r = layout.plate
+        let rim = outline(plate: r, tab: layout.tab, inset: 6)
+        if [1, 2, 4, 7].contains(world.id) {
+            context.stroke(rim, with: .color(Color(dinoHex: palette.shade).opacity(0.72)),
+                           style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
+            context.stroke(rim, with: .color(Color(dinoHex: palette.accent).opacity(0.85)), lineWidth: 1)
+            // A few leaves sprout from the shared top branch, joining the two fans.
+            for side in 0..<2 {
+                let x = side == 0 ? r.minX + 52 : r.maxX - 52
+                transformed(at: CGPoint(x: x, y: r.minY + 7), scale: 0.56, mirror: side == 1) {
+                    $0.leaf(at: .zero, length: 27, width: 17, angle: -76,
+                            light: palette.light, face: palette.accent, dark: palette.shade)
+                }
+            }
+        } else if world.id == 3 {
+            context.stroke(rim, with: .color(Color(dinoHex: 0x6A606A)), lineWidth: 5)
+            context.stroke(rim, with: .color(Color(dinoHex: 0xEEBA7A)), lineWidth: 1.3)
+            for x in stride(from: r.minX + 26, to: r.maxX - 14, by: 28) {
+                line([CGPoint(x: x, y: r.maxY - 14), CGPoint(x: x + 3, y: r.maxY - 4)], color: 0x77707D, width: 1)
+            }
+        } else if world.id == 5 {
+            context.stroke(rim, with: .color(Color(dinoHex: 0xBEE4E4)), lineWidth: 4)
+            context.stroke(rim, with: .color(Color(dinoHex: 0xE9FFF5)), lineWidth: 1.2)
+            for x in stride(from: r.minX + 31, to: r.maxX - 20, by: 34) {
+                polygon([CGPoint(x: x, y: r.maxY - 13), CGPoint(x: x + 14, y: r.maxY - 15),
+                         CGPoint(x: x + 23, y: r.maxY - 7), CGPoint(x: x + 6, y: r.maxY - 6)],
+                        light: 0xE9FFF5, face: 0xA8CED8, dark: 0x8FAAC8)
+            }
+        } else if world.id == 6 || world.id == 8 {
+            context.stroke(rim, with: .color(Color(dinoHex: palette.rim)), lineWidth: 4)
+            context.stroke(rim, with: .color(Color(dinoHex: palette.tabLight)), lineWidth: 1.3)
+            for x in [r.minX + 16, r.maxX - 16] {
+                for y in [r.minY + 17, r.maxY - 17] { rivet(at: CGPoint(x: x, y: y), radius: 2.1) }
+            }
+        } else if world.id == 9 {
+            context.stroke(rim, with: .color(Color(dinoHex: 0x967247)), lineWidth: 4.6)
+            context.stroke(rim, with: .color(Color(dinoHex: 0xEACF94)), lineWidth: 2.8)
+            context.stroke(rim, with: .color(Color(dinoHex: 0xB58D58)), style: StrokeStyle(lineWidth: 2.6, dash: [1, 3]))
+        } else {
+            context.stroke(rim, with: .color(Color(dinoHex: 0xCDB170)), lineWidth: 4)
+            context.stroke(rim, with: .color(Color(dinoHex: 0xFFF0BC)), lineWidth: 1.1)
+            for x in stride(from: r.minX + 27, to: r.maxX - 22, by: 34) {
+                line([CGPoint(x: x, y: r.maxY - 14), CGPoint(x: x, y: r.maxY - 4)], color: 0xA6A28B, width: 0.7)
+            }
         }
+    }
+
+    private func board(in r: CGRect) {
+        let shape = Path(roundedRect: r, cornerRadius: 18)
+        // Recess the name surface into the continuous frame.
+        context.fill(Path(roundedRect: r.insetBy(dx: -2, dy: -2), cornerRadius: 20),
+                     with: .color(Color(dinoHex: palette.shade).opacity(0.28)))
+        material(shape, light: palette.light, face: palette.face, dark: palette.dark)
+        context.stroke(shape, with: .color(Color(dinoHex: palette.rim).opacity(0.6)), lineWidth: 1)
+        context.stroke(Path(roundedRect: r.insetBy(dx: 2, dy: 2), cornerRadius: 16),
+                       with: .linearGradient(Gradient(colors: [Color(dinoHex: palette.light), Color(dinoHex: palette.rim).opacity(0.5)]),
+                                             startPoint: CGPoint(x: r.minX, y: r.minY), endPoint: CGPoint(x: r.maxX, y: r.maxY)), lineWidth: 0.8)
+        if [1, 4, 8, 9].contains(world.id) {
+            for i in 0..<4 {
+                var grain = Path()
+                let y = r.minY + 16 + CGFloat(i) * 21
+                grain.move(to: CGPoint(x: r.minX + 18, y: y))
+                grain.addCurve(to: CGPoint(x: r.maxX - 18, y: y + 2),
+                               control1: CGPoint(x: r.midX - 40, y: y - 6), control2: CGPoint(x: r.midX + 33, y: y + 6))
+                context.stroke(grain, with: .color(Color(dinoHex: palette.rim).opacity(0.12)), lineWidth: 0.75)
+            }
+            for x in [r.minX + 24, r.maxX - 24] {
+                context.stroke(Path(ellipseIn: CGRect(x: x - 3, y: r.maxY - 21, width: 6, height: 2)),
+                               with: .color(Color(dinoHex: palette.rim).opacity(0.3)), lineWidth: 0.7)
+            }
+        } else if [5, 6].contains(world.id) {
+            for i in 0..<3 {
+                line([CGPoint(x: r.minX + 19, y: r.minY + 14 + CGFloat(i) * 3),
+                      CGPoint(x: r.maxX - 25, y: r.minY + 14 + CGFloat(i) * 3)], color: 0xFFFFFF, width: 0.65, opacity: 0.20)
+            }
+        }
+        if world.id == 9 {
+            let rope = Path(roundedRect: r.insetBy(dx: 8, dy: 8), cornerRadius: 21)
+            context.stroke(rope, with: .color(Color(dinoHex: 0xB78B4D)), lineWidth: 3.2)
+            context.stroke(rope, with: .color(Color(dinoHex: 0xFCE3A6)), style: StrokeStyle(lineWidth: 1.5, dash: [2, 3]))
+        }
+        if world.id == 2 {
+            context.stroke(Path(roundedRect: r.insetBy(dx: 9, dy: 9), cornerRadius: 20),
+                           with: .color(Color(dinoHex: 0xF8F0DA).opacity(0.8)), style: StrokeStyle(lineWidth: 0.9, dash: [2, 4]))
+        }
+    }
+
+    private func tab(in r: CGRect) {
+        let inset = r.insetBy(dx: 5, dy: 3)
+        let shape = Path(roundedRect: inset, cornerRadius: 8)
+        material(shape, light: palette.tabLight, face: palette.tabFace, dark: palette.rim)
+        context.stroke(shape, with: .color(Color(dinoHex: palette.tabLight).opacity(0.75)), lineWidth: 0.8)
+        for x in [inset.minX + 5, inset.maxX - 5] { rivet(at: CGPoint(x: x, y: inset.midY), radius: 1.3) }
+    }
+
+    private func subtitle(in r: CGRect) {
+        // A compact inset in the shared base leaves the side ornaments unobscured.
+        let shape = Path(roundedRect: r, cornerRadius: 9)
+        context.fill(Path(roundedRect: r.insetBy(dx: -1, dy: -1), cornerRadius: 10),
+                     with: .color(Color(dinoHex: palette.shade).opacity(0.28)))
+        material(shape, light: palette.subtitleLight, face: palette.subtitleFace, dark: palette.subtitleDark)
+        context.stroke(shape, with: .linearGradient(Gradient(colors: [Color(dinoHex: palette.shade).opacity(0.55),
+                                                                      Color(dinoHex: palette.subtitleLight)]),
+                                                   startPoint: CGPoint(x: r.minX, y: r.minY), endPoint: CGPoint(x: r.maxX, y: r.maxY)),
+                       lineWidth: 0.9)
+        var hem = Path()
+        hem.move(to: CGPoint(x: r.minX + 9, y: r.maxY - 3))
+        hem.addQuadCurve(to: CGPoint(x: r.maxX - 9, y: r.maxY - 3), control: CGPoint(x: r.midX, y: r.maxY - 2))
+        context.stroke(hem, with: .color(Color(dinoHex: palette.subtitleLight).opacity(0.65)),
+                       style: StrokeStyle(lineWidth: 0.6, dash: world.id == 2 ? [1.5, 3] : []))
+        clock(at: CGPoint(x: r.minX + 15, y: r.midY), radius: 8, time: WorldBossClock.time(in: world.id))
+        if [6, 8, 10].contains(world.id) {
+            for x in [r.minX + 6, r.maxX - 6] { rivet(at: CGPoint(x: x, y: r.minY + 5), radius: 1.1) }
+        }
+    }
+
+    private func endcap(front: Bool, variation: Int) {
+        switch world.id {
+        case 1:
+            if !front {
+                foliage(light: 0xB7D967, face: 0x73AB3C, dark: 0x2F683A)
+                vine(from: CGPoint(x: -25, y: -43), to: CGPoint(x: -25, y: 55), color: 0x648843)
+            } else {
+                leaf(at: CGPoint(x: -11, y: -40), length: 29, width: 19, angle: -78, light: 0xD1E98C, face: 0x8DBD42, dark: 0x4C7D36)
+                leaf(at: CGPoint(x: -14, y: 36), length: 31, width: 20, angle: -107, light: 0xAED269, face: 0x5F9B41, dark: 0x316C3A)
+                blossom(at: CGPoint(x: -17, y: 53), size: 0.7, pink: false)
+            }
+        case 2:
+            if !front {
+                foliage(light: 0xCDE3CF, face: 0x94B9B5, dark: 0x557C91, count: 6)
+                vine(from: CGPoint(x: -28, y: -42), to: CGPoint(x: -31, y: 49), color: 0x9AAEB8)
+                moon(at: CGPoint(x: -12, y: -43), radius: 18)
+                let stars: [(CGFloat, CGFloat, CGFloat)] = [(-32, -58, 3), (-35, -15, 4), (-25, 37, 3)]
+                for (x, y, r) in stars {
+                    star(at: CGPoint(x: x, y: y), radius: r)
+                }
+            } else {
+                leaf(at: CGPoint(x: -15, y: 35), length: 28, width: 19, angle: -92, light: 0xD8E9DC, face: 0xA5C6C0, dark: 0x6D929F)
+                for i in 0..<3 { pearl(at: CGPoint(x: -25 + CGFloat(i) * 5, y: 45 + CGFloat(i % 2) * 4), radius: 2.5) }
+            }
+        case 3:
+            if !front {
+                let rocks: [(CGFloat, CGFloat, CGFloat, CGFloat)] = [(-29, 28, 22, 73), (-9, 26, 26, 90), (-40, 40, 20, 55), (6, 35, 24, 56)]
+                for (x, y, w, h) in rocks {
+                    rock(at: CGPoint(x: x, y: y), width: w, height: h)
+                }
+                glow(at: CGPoint(x: -28, y: 28), radius: 29, color: 0xFFB26C, opacity: 0.3)
+            } else {
+                rock(at: CGPoint(x: -19, y: 39), width: 23, height: 36)
+                for i in 0..<3 { shard(at: CGPoint(x: -33 + CGFloat(i) * 8, y: 54), width: 10, height: CGFloat(20 + i * 8), color: 0xD98E5D) }
+                rivet(at: CGPoint(x: -4, y: -24), radius: 2)
+            }
+        case 4:
+            if !front {
+                foliage(light: 0xD0DF9A, face: 0x94B36C, dark: 0x50794B, count: 6)
+                roof(at: CGPoint(x: -20, y: -18))
+                bunting(from: CGPoint(x: -39, y: -39), to: CGPoint(x: 9, y: -44))
+            } else {
+                leaf(at: CGPoint(x: -13, y: 34), length: 28, width: 20, angle: -97, light: 0xC2DC86, face: 0x8CAE5D, dark: 0x5A7C42)
+                for i in 0..<3 { blossom(at: CGPoint(x: -30 + CGFloat(i) * 12, y: 47 + CGFloat(i % 2) * 7), size: 0.65, pink: i == 1) }
+            }
+        case 5:
+            if !front {
+                glow(at: CGPoint(x: -21, y: -6), radius: 48, color: 0xA2F5E4, opacity: 0.32)
+                for i in 0..<6 {
+                    transformed(at: CGPoint(x: -26 + CGFloat(i % 3) * 14, y: 39 + CGFloat(i / 3) * 11)) { p in
+                        var c = p.context; c.rotate(by: .degrees(Double(i - 2) * 7))
+                        WorldBannerPainter(context: c, world: world).shard(at: .zero, width: CGFloat(16 + i % 2 * 4),
+                                                                         height: CGFloat(66 + (i * 17) % 29), color: i.isMultiple(of: 2) ? 0x80C6D0 : 0xA6A3D8)
+                    }
+                }
+            } else {
+                shard(at: CGPoint(x: -25, y: 53), width: 17, height: 29, color: 0xA5DCCC)
+                shard(at: CGPoint(x: -11, y: 55), width: 13, height: 22, color: 0xA9AFE0)
+                star(at: CGPoint(x: -31, y: -33), radius: 4); star(at: CGPoint(x: -6, y: 25), radius: 3)
+            }
+        case 6:
+            if !front {
+                for i in 0..<3 { cityFin(at: CGPoint(x: -32 + CGFloat(i) * 15, y: 42), height: CGFloat(70 + i % 2 * 21)) }
+                line([CGPoint(x: -32, y: -26), CGPoint(x: -45, y: -26), CGPoint(x: -45, y: 26),
+                      CGPoint(x: -31, y: 26)], color: 0x69BDC4, width: 4)
+                for y: CGFloat in [-26, 26] { pearl(at: CGPoint(x: -32, y: y), radius: 3) }
+            } else {
+                let r = CGRect(x: -35, y: -15, width: 19, height: 43)
+                material(Path(roundedRect: r, cornerRadius: 6), light: 0xDBF5ED, face: 0x8EBDC6, dark: 0x507F93)
+                for i in 0..<3 { oval(CGRect(x: -30, y: -9 + CGFloat(i) * 11, width: 8, height: 6), light: 0xE2FFF0, face: 0x90E9D7, dark: 0x4D999E) }
+                for y: CGFloat in [-23, 36] { rivet(at: CGPoint(x: -12, y: y), radius: 2.6) }
+                line([CGPoint(x: -29, y: 37), CGPoint(x: -16, y: 37), CGPoint(x: -16, y: 49), CGPoint(x: -5, y: 49)], color: 0x91D5CF, width: 2)
+            }
+        case 7:
+            if !front {
+                foliage(light: variation == 0 ? 0xDAE697 : 0xCCDBE6, face: variation == 0 ? 0x9DBA6C : 0x91AAC1,
+                        dark: variation == 0 ? 0x587F51 : 0x506E98, count: 7)
+                if variation == 0 { sun(at: CGPoint(x: -12, y: -41), radius: 17) }
+                else { moon(at: CGPoint(x: -14, y: -42), radius: 18); star(at: CGPoint(x: -35, y: -11), radius: 3) }
+            } else {
+                leaf(at: CGPoint(x: -15, y: 38), length: 28, width: 21, angle: -97,
+                     light: variation == 0 ? 0xCDD995 : 0xC3D6DF, face: variation == 0 ? 0x91AA66 : 0x819FBC,
+                     dark: variation == 0 ? 0x527751 : 0x486B8D)
+                for i in 0..<3 { glow(at: CGPoint(x: -29 + CGFloat(i) * 11, y: 54 + CGFloat(i % 2) * 5), radius: 5, color: 0xFFF2B3, opacity: 0.6) }
+            }
+        case 8:
+            if !front {
+                line([CGPoint(x: -21, y: -55), CGPoint(x: -21, y: 40), CGPoint(x: -38, y: 40)], color: 0x927345, width: 7)
+                line([CGPoint(x: -23, y: -52), CGPoint(x: -23, y: 38)], color: 0xE8CA88, width: 1.5)
+                gear(at: CGPoint(x: -23, y: -30), radius: 19)
+                gear(at: CGPoint(x: -38, y: 1), radius: 13)
+                gear(at: CGPoint(x: -22, y: 28), radius: 16)
+                for y: CGFloat in [-49, 48] { rivet(at: CGPoint(x: -21, y: y), radius: 3) }
+            } else {
+                clock(at: CGPoint(x: -23, y: -30), radius: 11, time: WorldBossClock.time(in: 8))
+                gear(at: CGPoint(x: -9, y: 45), radius: 10)
+                for i in 0..<2 { star(at: CGPoint(x: -39 + CGFloat(i) * 25, y: -57 + CGFloat(i) * 67), radius: 3.5) }
+            }
+        case 9:
+            if !front {
+                rope(from: CGPoint(x: -20, y: -48), to: CGPoint(x: -28, y: 47))
+                for i in 0..<3 {
+                    var wave = Path()
+                    wave.move(to: CGPoint(x: -46, y: 28 + CGFloat(i) * 10))
+                    wave.addCurve(to: CGPoint(x: 3, y: 27 + CGFloat(i) * 10), control1: CGPoint(x: -27, y: 6 + CGFloat(i) * 10),
+                                  control2: CGPoint(x: -17, y: 42 + CGFloat(i) * 10))
+                    context.stroke(wave, with: .color(Color(dinoHex: i == 1 ? 0x8DCECA : 0x6FAEAC)),
+                                   style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                }
+                anchor(at: CGPoint(x: -23, y: -9))
+            } else {
+                rope(from: CGPoint(x: -35, y: 25), to: CGPoint(x: -15, y: 53))
+                shell(at: CGPoint(x: -26, y: 49))
+                pearl(at: CGPoint(x: -10, y: 52), radius: 3)
+            }
+        default:
+            if !front {
+                for i in 0..<2 { turret(at: CGPoint(x: -32 + CGFloat(i) * 19, y: 39), height: CGFloat(70 + i * 14)) }
+                foliage(light: 0xEFDA9D, face: 0xC6AB67, dark: 0x94794F, count: 4)
+            } else {
+                pennant(at: CGPoint(x: -24, y: 14))
+                crown(at: CGPoint(x: -24, y: -26))
+                for y: CGFloat in [-40, 42] { pearl(at: CGPoint(x: -12, y: y), radius: 2.7) }
+            }
+        }
+    }
+
+    private func foliage(light: UInt32, face: UInt32, dark: UInt32, count: Int = 8) {
+        let leaves: [(CGFloat, CGFloat, CGFloat, CGFloat, Double, Bool)] = [
+            (-2, -14, 49, 26, -24, true), (-7, -8, 47, 25, -59, false),
+            (-5, 9, 43, 28, -101, true), (-4, 28, 47, 27, -136, false),
+            (1, 31, 43, 25, -164, true), (-16, -12, 38, 22, -40, false),
+            (-15, 13, 38, 24, -108, false), (-10, 32, 37, 23, -151, false)
+        ]
+        for value in leaves.prefix(count) {
+            leaf(at: CGPoint(x: value.0, y: value.1), length: value.2, width: value.3, angle: value.4,
+                 light: value.5 ? face : light, face: value.5 ? dark : face, dark: dark)
+        }
+    }
+    private func leaf(at point: CGPoint, length: CGFloat, width: CGFloat, angle: Double, light: UInt32, face: UInt32, dark: UInt32) {
+        var layer = context; layer.translateBy(x: point.x, y: point.y); layer.rotate(by: .degrees(angle))
+        let r = CGRect(x: -width / 2, y: -length, width: width, height: length)
+        // Shared with the player portrait: silhouette, asymmetric fold and curved veins.
+        let leaf = DinoFoliageLeaf().path(in: CGRect(origin: .zero, size: r.size)).offsetBy(dx: r.minX, dy: r.minY)
+        let fold = DinoFoliageFold().path(in: CGRect(origin: .zero, size: r.size)).offsetBy(dx: r.minX, dy: r.minY)
+        let veins = DinoFoliageVeins().path(in: CGRect(origin: .zero, size: r.size)).offsetBy(dx: r.minX, dy: r.minY)
+        var shadow = layer; shadow.translateBy(x: 0.7, y: 1.4)
+        shadow.fill(leaf, with: .color(Color(dinoHex: dark).opacity(0.25)))
+        layer.fill(leaf, with: .linearGradient(Gradient(colors: [Color(dinoHex: light), Color(dinoHex: face), Color(dinoHex: dark)]),
+                                             startPoint: CGPoint(x: r.minX, y: r.minY), endPoint: CGPoint(x: r.maxX, y: r.maxY)))
+        layer.fill(fold, with: .linearGradient(Gradient(colors: [.white.opacity(0.26), .clear]),
+                                             startPoint: CGPoint(x: r.maxX, y: r.minY), endPoint: CGPoint(x: r.minX, y: r.maxY)))
+        layer.stroke(leaf, with: .color(Color(dinoHex: light).opacity(0.55)), lineWidth: 0.7)
+        layer.stroke(veins, with: .color(Color(dinoHex: light).opacity(0.75)), style: StrokeStyle(lineWidth: 0.7, lineCap: .round))
+    }
+    private func vine(from a: CGPoint, to b: CGPoint, color: UInt32) {
+        var path = Path(); path.move(to: a)
+        path.addCurve(to: b, control1: CGPoint(x: a.x - 24, y: a.y + 34), control2: CGPoint(x: b.x + 19, y: b.y - 24))
+        context.stroke(path, with: .color(Color(dinoHex: color)), style: StrokeStyle(lineWidth: 2.4, lineCap: .round))
+        context.stroke(path, with: .color(Color(dinoHex: 0xDBE4B4).opacity(0.7)), style: StrokeStyle(lineWidth: 0.65, lineCap: .round))
+    }
+    private func blossom(at point: CGPoint, size: CGFloat, pink: Bool) {
+        for i in 0..<5 {
+            let a = Double(i) * .pi * 2 / 5
+            oval(CGRect(x: point.x + CGFloat(cos(a)) * 5 * size - 4 * size, y: point.y + CGFloat(sin(a)) * 5 * size - 4 * size, width: 8 * size, height: 8 * size),
+                 light: 0xFFF9E7, face: pink ? 0xEFC6CB : 0xF5EFD9, dark: pink ? 0xC894A6 : 0xCFC9AC)
+        }
+        oval(CGRect(x: point.x - 3 * size, y: point.y - 3 * size, width: 6 * size, height: 6 * size),
+             light: 0xFFF0A8, face: 0xEEC866, dark: 0xB2944A)
+    }
+    private func rivet(at point: CGPoint, radius: CGFloat) {
+        oval(CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2),
+             light: palette.tabLight, face: palette.rim, dark: palette.shade)
+        line([CGPoint(x: point.x - radius * 0.4, y: point.y), CGPoint(x: point.x + radius * 0.4, y: point.y)],
+             color: palette.shade, width: 0.5, opacity: 0.7)
+    }
+    private func pearl(at point: CGPoint, radius: CGFloat) {
+        oval(CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2),
+             light: 0xFFFAE2, face: 0xD6E3D9, dark: 0x819DB1)
     }
     private func star(at point: CGPoint, radius: CGFloat) {
-        var path = Path()
-        path.addLines((0..<8).map { i in
-            let angle = Double(i) * .pi / 4 - .pi / 2, r = i.isMultiple(of: 2) ? radius : radius * 0.30
-            return CGPoint(x: point.x + CGFloat(cos(angle)) * r, y: point.y + CGFloat(sin(angle)) * r)
-        }); path.closeSubpath()
-        material(path, light: 0xFFF6CB, middle: 0xE9D694, dark: 0xC6B484)
+        polygon((0..<8).map { i in
+            let a = Double(i) * .pi / 4 - .pi / 2, r = i.isMultiple(of: 2) ? radius : radius * 0.3
+            return CGPoint(x: point.x + CGFloat(cos(a)) * r, y: point.y + CGFloat(sin(a)) * r)
+        }, light: 0xFFF9D9, face: 0xF0D394, dark: 0xC5B477)
     }
     private func moon(at point: CGPoint, radius: CGFloat) {
-        var path = Path(ellipseIn: CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2))
-        path.addEllipse(in: CGRect(x: point.x - radius + 7, y: point.y - radius - 3, width: radius * 1.7, height: radius * 1.7))
-        var moon = context
-        moon.clip(to: Path(ellipseIn: CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)))
-        moon.fill(path, with: .color(Color(dinoHex: 0xEADDAE)), style: FillStyle(eoFill: true))
+        glow(at: point, radius: radius * 1.6, color: 0xFDE5AF, opacity: 0.25)
+        let r = CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)
+        var cut = Path(ellipseIn: r)
+        cut.addEllipse(in: r.offsetBy(dx: radius * 0.48, dy: -radius * 0.28).insetBy(dx: radius * 0.08, dy: radius * 0.08))
+        var moon = context; moon.clip(to: Path(ellipseIn: r)); moon.clip(to: cut, style: FillStyle(eoFill: true))
+        WorldBannerPainter(context: moon, world: world).material(Path(ellipseIn: r), light: 0xFFF5CC, face: 0xE3C687, dark: 0xA89877)
+        for i in 0..<3 { pearl(at: CGPoint(x: point.x - radius * 0.43 + CGFloat(i % 2) * 3, y: point.y - radius * 0.35 + CGFloat(i) * 5), radius: 1.3) }
+    }
+    private func sun(at point: CGPoint, radius: CGFloat) {
+        glow(at: point, radius: radius * 1.7, color: 0xFFE5A6, opacity: 0.28)
+        for i in 0..<12 {
+            let a = Double(i) * .pi / 6
+            line([CGPoint(x: point.x + CGFloat(cos(a)) * (radius + 3), y: point.y + CGFloat(sin(a)) * (radius + 3)),
+                  CGPoint(x: point.x + CGFloat(cos(a)) * (radius + 7), y: point.y + CGFloat(sin(a)) * (radius + 7))],
+                 color: 0xE6C278, width: 1.8)
+        }
+        oval(CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2),
+             light: 0xFFF3B6, face: 0xE8C875, dark: 0xB49D60)
+        context.stroke(Path(ellipseIn: CGRect(x: point.x - radius + 3, y: point.y - radius + 3, width: radius * 2 - 6, height: radius * 2 - 6)),
+                       with: .color(Color(dinoHex: 0xFFF2C3).opacity(0.7)), lineWidth: 1)
+    }
+    private func rock(at point: CGPoint, width: CGFloat, height: CGFloat) {
+        let pts = [CGPoint(x: point.x - width / 2, y: point.y), CGPoint(x: point.x - width * 0.62, y: point.y - height * 0.53),
+                   CGPoint(x: point.x - width * 0.25, y: point.y - height), CGPoint(x: point.x + width * 0.26, y: point.y - height * 0.91),
+                   CGPoint(x: point.x + width * 0.53, y: point.y - height * 0.24), CGPoint(x: point.x + width / 2, y: point.y)]
+        polygon(pts, light: 0xB7A59E, face: 0x817780, dark: 0x575A6C)
+        polygon([pts[2], CGPoint(x: point.x - 1, y: point.y - height * 0.41), pts[0], pts[1]], light: 0xB5A49E, face: 0x9A8B8E, dark: 0x767280)
+        let lava = [CGPoint(x: point.x - 2, y: point.y - height * 0.84), CGPoint(x: point.x - 5, y: point.y - height * 0.55),
+                    CGPoint(x: point.x + 2, y: point.y - height * 0.38), CGPoint(x: point.x - 1, y: point.y - height * 0.1)]
+        line(lava, color: 0xD7815A, width: 4); line(lava, color: 0xFFD294, width: 1.7)
+    }
+    private func shard(at point: CGPoint, width: CGFloat, height: CGFloat, color: UInt32) {
+        let top = CGPoint(x: point.x + width * 0.13, y: point.y - height)
+        let left = CGPoint(x: point.x - width * 0.48, y: point.y - height * 0.78)
+        let right = CGPoint(x: point.x + width * 0.48, y: point.y - height * 0.79)
+        polygon([CGPoint(x: point.x - width / 2, y: point.y), left, top, right, CGPoint(x: point.x + width / 2, y: point.y)],
+                light: 0xE7FFF0, face: color, dark: 0x5D7CA2)
+        polygon([left, top, CGPoint(x: point.x + 1, y: point.y - 2), CGPoint(x: point.x - width / 2, y: point.y)],
+                light: 0xEEFFF1, face: color, dark: 0x9ABECF)
+        line([top, CGPoint(x: point.x + 1, y: point.y - 3)], color: 0xEFFFF1, width: 0.8, opacity: 0.9)
+        line([left, right], color: 0xD8FAE9, width: 0.6, opacity: 0.7)
+    }
+    private func roof(at point: CGPoint) {
+        material(Path(roundedRect: CGRect(x: point.x - 11, y: point.y, width: 25, height: 35), cornerRadius: 4),
+                 light: 0xF6E2B7, face: 0xD8C093, dark: 0xAB986D)
+        polygon([CGPoint(x: point.x - 18, y: point.y + 2), CGPoint(x: point.x, y: point.y - 19), CGPoint(x: point.x + 19, y: point.y + 2)],
+                light: 0xEFBF9E, face: 0xBF866A, dark: 0x8B6957)
+        line([CGPoint(x: point.x - 15, y: point.y + 2), CGPoint(x: point.x, y: point.y - 14), CGPoint(x: point.x + 16, y: point.y + 2)],
+             color: 0xF5DCAC, width: 1.3)
+        material(Path(roundedRect: CGRect(x: point.x - 4, y: point.y + 7, width: 9, height: 12), cornerRadius: 2),
+                 light: 0xE2EDDC, face: 0xA7C9C7, dark: 0x6E9B9A)
+        line([CGPoint(x: point.x, y: point.y + 8), CGPoint(x: point.x, y: point.y + 18)], color: 0xF7E4BC, width: 1)
+        line([CGPoint(x: point.x - 4, y: point.y + 13), CGPoint(x: point.x + 4, y: point.y + 13)], color: 0xF7E4BC, width: 1)
+    }
+    private func bunting(from a: CGPoint, to b: CGPoint) {
+        var cord = Path(); cord.move(to: a); cord.addQuadCurve(to: b, control: CGPoint(x: (a.x + b.x) / 2, y: a.y + 13))
+        context.stroke(cord, with: .color(Color(dinoHex: 0x8D805C)), lineWidth: 1)
+        for i in 0..<4 {
+            let x = a.x + 8 + CGFloat(i) * 11, y = a.y + 3 + CGFloat(i % 2) * 3
+            polygon([CGPoint(x: x - 4, y: y), CGPoint(x: x + 5, y: y + 1), CGPoint(x: x + 1, y: y + 12)],
+                    light: 0xF8E9C6, face: i.isMultiple(of: 2) ? 0xDBA283 : 0x82B6A5, dark: 0x8B8268)
+            line([CGPoint(x: x, y: y + 2), CGPoint(x: x + 1, y: y + 9)], color: 0xFAEBD1, width: 0.55)
+        }
+    }
+    private func cityFin(at point: CGPoint, height: CGFloat) {
+        let r = CGRect(x: point.x - 8, y: point.y - height, width: 16, height: height)
+        material(Path(roundedRect: r, cornerRadius: 4), light: 0xD9F2EA, face: 0x87B7C4, dark: 0x547A96)
+        line([CGPoint(x: r.minX + 3, y: r.maxY - 4), CGPoint(x: r.minX + 3, y: r.minY + 5)], color: 0xD6F6E8, width: 1.2)
+        for i in 0..<4 { line([CGPoint(x: r.minX + 7, y: r.minY + 11 + CGFloat(i) * 11), CGPoint(x: r.maxX - 3, y: r.minY + 11 + CGFloat(i) * 11)], color: 0xAAF2D9, width: 2.3) }
+        rivet(at: CGPoint(x: point.x, y: r.maxY - 7), radius: 2)
     }
     private func gear(at point: CGPoint, radius: CGFloat) {
-        var path = Path()
-        path.addLines((0..<48).map { i in
-            let a = Double(i) * .pi / 24
-            let r = i % 4 < 2 ? radius : radius * 0.78
+        let pts = (0..<48).map { i -> CGPoint in
+            let a = Double(i) * .pi / 24, r = i % 4 < 2 ? radius : radius * 0.78
             return CGPoint(x: point.x + CGFloat(cos(a)) * r, y: point.y + CGFloat(sin(a)) * r)
-        }); path.closeSubpath()
-        material(path, light: 0xFFF0BD, middle: 0xD9B46C, dark: 0xAA894F)
-        ellipse(CGRect(x: point.x - 9, y: point.y - 9, width: 18, height: 18), color: 0xBCBAA0)
-        context.stroke(Path(ellipseIn: CGRect(x: point.x - 12, y: point.y - 12, width: 24, height: 24)), with: .color(Color(dinoHex: 0xFAE2A6)), lineWidth: 1)
+        }
+        polygon(pts.map { CGPoint(x: $0.x, y: $0.y + 2) }, light: 0xBFA368, face: 0xA88C58, dark: 0x716C55)
+        polygon(pts, light: 0xFFE8AA, face: 0xD9B76C, dark: 0xA08E5B)
+        context.stroke(Path(ellipseIn: CGRect(x: point.x - radius * 0.6, y: point.y - radius * 0.6, width: radius * 1.2, height: radius * 1.2)),
+                       with: .color(Color(dinoHex: 0xF9E0A2)), lineWidth: 1.3)
+        oval(CGRect(x: point.x - radius * 0.4, y: point.y - radius * 0.4, width: radius * 0.8, height: radius * 0.8),
+             light: 0xDCD8B4, face: 0xA8B4A9, dark: 0x697F85)
+        rivet(at: point, radius: 2.4)
+    }
+    private func clock(at point: CGPoint, radius: CGFloat, time: ClockTime) {
+        oval(CGRect(x: point.x - radius - 2, y: point.y - radius - 2, width: radius * 2 + 4, height: radius * 2 + 4),
+             light: palette.tabLight, face: palette.rim, dark: palette.shade)
+        oval(CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2),
+             light: 0xFFFEEC, face: 0xF0EACD, dark: 0xD2CFAF)
+        for i in 0..<12 {
+            let a = Double(i) * .pi / 6
+            line([CGPoint(x: point.x + CGFloat(sin(a)) * radius * 0.79, y: point.y - CGFloat(cos(a)) * radius * 0.79),
+                  CGPoint(x: point.x + CGFloat(sin(a)) * radius * 0.9, y: point.y - CGFloat(cos(a)) * radius * 0.9)],
+                 color: 0x537B7F, width: i.isMultiple(of: 3) ? 0.9 : 0.5)
+        }
+        for (angle, reach, weight) in [(Double(time.hour % 12) * .pi / 6 + Double(time.minute) * .pi / 360, CGFloat(0.48), CGFloat(1.2)),
+                                       (Double(time.minute) * .pi / 30, CGFloat(0.68), CGFloat(0.9))] {
+            line([point, CGPoint(x: point.x + CGFloat(sin(angle)) * radius * reach, y: point.y - CGFloat(cos(angle)) * radius * reach)],
+                 color: 0x345E6B, width: weight)
+        }
+        pearl(at: point, radius: 1.1)
+    }
+    private func rope(from a: CGPoint, to b: CGPoint) {
+        var path = Path(); path.move(to: a)
+        path.addCurve(to: b, control1: CGPoint(x: a.x - 22, y: a.y + 22), control2: CGPoint(x: b.x + 17, y: b.y - 18))
+        context.stroke(path, with: .color(Color(dinoHex: 0x9D7B4F)), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+        context.stroke(path, with: .color(Color(dinoHex: 0xE6CC95)), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+        context.stroke(path, with: .color(Color(dinoHex: 0xB19465)), style: StrokeStyle(lineWidth: 4, dash: [1.2, 3]))
+        context.stroke(path, with: .color(Color(dinoHex: 0xFFF0BA).opacity(0.75)), style: StrokeStyle(lineWidth: 1, lineCap: .round))
+    }
+    private func anchor(at point: CGPoint) {
+        var path = Path()
+        path.move(to: CGPoint(x: point.x, y: point.y - 27)); path.addLine(to: CGPoint(x: point.x, y: point.y + 23))
+        path.move(to: CGPoint(x: point.x - 12, y: point.y - 7)); path.addLine(to: CGPoint(x: point.x + 12, y: point.y - 7))
+        path.move(to: CGPoint(x: point.x - 17, y: point.y + 7))
+        path.addCurve(to: CGPoint(x: point.x + 17, y: point.y + 7), control1: CGPoint(x: point.x - 16, y: point.y + 30), control2: CGPoint(x: point.x + 16, y: point.y + 30))
+        context.stroke(path, with: .color(Color(dinoHex: 0x4B757D)), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+        context.stroke(path, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xB4D6C5), Color(dinoHex: 0x77A7A4)]), startPoint: CGPoint(x: point.x - 15, y: point.y - 30),
+                                                 endPoint: CGPoint(x: point.x + 15, y: point.y + 30)), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+        context.stroke(Path(ellipseIn: CGRect(x: point.x - 5, y: point.y - 38, width: 10, height: 10)),
+                       with: .color(Color(dinoHex: 0x7EA9A6)), lineWidth: 3)
+        for side: CGFloat in [-1, 1] { polygon([CGPoint(x: point.x + side * 18, y: point.y + 5), CGPoint(x: point.x + side * 11, y: point.y + 10),
+                                              CGPoint(x: point.x + side * 19, y: point.y + 14)], light: 0xD3E5D2, face: 0x8DB3AB, dark: 0x597D80) }
+    }
+    private func shell(at point: CGPoint) {
+        var path = Path(); path.move(to: CGPoint(x: point.x, y: point.y + 7))
+        path.addCurve(to: CGPoint(x: point.x - 12, y: point.y - 8), control1: CGPoint(x: point.x - 9, y: point.y + 3), control2: CGPoint(x: point.x - 15, y: point.y - 4))
+        path.addQuadCurve(to: CGPoint(x: point.x + 12, y: point.y - 8), control: CGPoint(x: point.x, y: point.y - 20))
+        path.addCurve(to: CGPoint(x: point.x, y: point.y + 7), control1: CGPoint(x: point.x + 15, y: point.y - 4), control2: CGPoint(x: point.x + 9, y: point.y + 3))
+        path.closeSubpath(); material(path, light: 0xFFF1D8, face: 0xE6C6A8, dark: 0xBA9781)
+        for i in -2...2 { line([CGPoint(x: point.x, y: point.y + 5), CGPoint(x: point.x + CGFloat(i) * 4, y: point.y - 9 + CGFloat(abs(i)) * 2)],
+                              color: 0xFFF0D6, width: 0.8) }
+    }
+    private func turret(at point: CGPoint, height: CGFloat) {
+        let r = CGRect(x: point.x - 9, y: point.y - height, width: 18, height: height)
+        material(Path(roundedRect: r, cornerRadius: 4), light: 0xF7EACD, face: 0xD8CCAD, dark: 0xA9AA96)
+        for i in 1..<5 {
+            let y = r.minY + CGFloat(i) * height / 5
+            line([CGPoint(x: r.minX + 1, y: y), CGPoint(x: r.maxX - 1, y: y)], color: 0xA7A792, width: 0.65)
+            line([CGPoint(x: point.x + CGFloat(i % 2) * 4 - 2, y: y), CGPoint(x: point.x + CGFloat(i % 2) * 4 - 2, y: y + height / 5)], color: 0xB8B39B, width: 0.6)
+        }
+        for i in 0..<3 {
+            material(Path(roundedRect: CGRect(x: r.minX - 2 + CGFloat(i) * 7, y: r.minY - 6, width: 6, height: 12), cornerRadius: 1.5),
+                     light: 0xFFF0D2, face: 0xDFD3B3, dark: 0xBAB399)
+        }
+        rivet(at: CGPoint(x: point.x, y: r.minY + 18), radius: 2)
+    }
+    private func pennant(at point: CGPoint) {
+        polygon([CGPoint(x: point.x - 13, y: point.y - 27), CGPoint(x: point.x + 12, y: point.y - 27), CGPoint(x: point.x + 10, y: point.y + 36),
+                 CGPoint(x: point.x, y: point.y + 26), CGPoint(x: point.x - 12, y: point.y + 36)],
+                light: 0xAEC5E1, face: 0x6A89B8, dark: 0x3E5885)
+        line([CGPoint(x: point.x - 10, y: point.y - 24), CGPoint(x: point.x - 10, y: point.y + 31)], color: 0xEBD397, width: 1)
+        line([CGPoint(x: point.x + 8, y: point.y - 24), CGPoint(x: point.x + 7, y: point.y + 31)], color: 0xEBD397, width: 1)
+        polygon([CGPoint(x: point.x, y: point.y - 12), CGPoint(x: point.x + 4, y: point.y - 4), CGPoint(x: point.x, y: point.y + 4),
+                 CGPoint(x: point.x - 4, y: point.y - 4)], light: 0xFBE6B3, face: 0xD4B675, dark: 0xA38B5C)
+        line([CGPoint(x: point.x + 1, y: point.y + 10), CGPoint(x: point.x + 3, y: point.y + 24)], color: 0xBDD1E8, width: 1, opacity: 0.5)
+    }
+    private func crown(at point: CGPoint) {
+        polygon([CGPoint(x: point.x - 13, y: point.y + 7), CGPoint(x: point.x - 15, y: point.y - 14), CGPoint(x: point.x - 7, y: point.y - 6),
+                 CGPoint(x: point.x, y: point.y - 20), CGPoint(x: point.x + 7, y: point.y - 6), CGPoint(x: point.x + 15, y: point.y - 14),
+                 CGPoint(x: point.x + 13, y: point.y + 7)], light: 0xFFF0B6, face: 0xDBBC74, dark: 0xAD9358)
+        line([CGPoint(x: point.x - 12, y: point.y + 4), CGPoint(x: point.x + 12, y: point.y + 4)], color: 0xFFEDAE, width: 2)
+        for x: CGFloat in [-7, 0, 7] { oval(CGRect(x: point.x + x - 2, y: point.y - 2, width: 4, height: 5), light: 0xCBF3D3, face: 0x77B6AF, dark: 0x4E817E) }
     }
 }
+
+// Shared foliage geometry keeps the banners and HUD portrait in one art style.
+struct DinoFoliageFold: Shape {
+    func path(in rect: CGRect) -> Path {
+        Path { path in
+            path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
+            path.addQuadCurve(to: CGPoint(x: rect.width * 0.66, y: 0),
+                              control: CGPoint(x: rect.width * 0.43, y: rect.height * 0.42))
+            path.addCurve(to: CGPoint(x: rect.midX, y: rect.maxY),
+                          control1: CGPoint(x: rect.width * 1.18, y: rect.height * 0.35),
+                          control2: CGPoint(x: rect.width * 0.93, y: rect.height * 0.73))
+            path.closeSubpath()
+        }
+    }
+}
+
+struct DinoFoliageVeins: Shape {
+    func path(in rect: CGRect) -> Path {
+        Path { path in
+            func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+                CGPoint(x: rect.width * x, y: rect.height * y)
+            }
+            path.move(to: point(0.5, 0.97))
+            path.addQuadCurve(to: point(0.66, 0.06), control: point(0.43, 0.42))
+            for (center, left, right) in [(0.72, 0.58, 0.57), (0.52, 0.39, 0.38), (0.32, 0.23, 0.23)] {
+                path.move(to: point(0.51, center))
+                path.addQuadCurve(to: point(0.19, left), control: point(0.31, center - 0.025))
+                path.move(to: point(0.54, center))
+                path.addQuadCurve(to: point(0.85, right), control: point(0.72, center - 0.015))
+            }
+        }
+    }
+}
+
+struct DinoFoliageLeaf: Shape {
+    func path(in rect: CGRect) -> Path {
+        Path { path in
+            path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
+            path.addCurve(to: CGPoint(x: rect.width * 0.66, y: 0),
+                          control1: CGPoint(x: -rect.width * 0.28, y: rect.height * 0.62),
+                          control2: CGPoint(x: rect.width * 0.14, y: rect.height * 0.08))
+            path.addCurve(to: CGPoint(x: rect.midX, y: rect.maxY),
+                          control1: CGPoint(x: rect.width * 1.18, y: rect.height * 0.35),
+                          control2: CGPoint(x: rect.width * 0.93, y: rect.height * 0.73))
+            path.closeSubpath()
+        }
+    }
+}
+
 
 /// Each ten-level section can supply its own palette. The last part blends into
 /// the next section's palette, so adjoining worlds share the same horizon.

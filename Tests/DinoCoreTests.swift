@@ -1,6 +1,7 @@
 import Foundation
 import CoreGraphics
 import ImageIO
+import Combine
 
 private var checks = 0
 private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
@@ -41,12 +42,19 @@ struct DinoCoreTests {
         let player = DinoPlayer(store: store)
         let config = DinoPracticeConfiguration(time: .half, order: .specific(.chooseAnalog))
         let session = DinoSession(level: config.level, player: player, practice: config)
+        var displayedProgress: [DinoSession.PracticeProgress] = []
+        let observation = session.$practiceProgress.sink { displayedProgress.append($0) }
+        defer { observation.cancel() }
         expect(session.practiceQuestionNumber == 1 && session.practiceStreak == 0, "new combination begins at question one without a streak")
         session.submit(session.question.expectedAnswer)
         session.submit(session.question.expectedAnswer)
-        expect(session.practiceStreak == 1 && session.practiceBestStreak == 1 && session.practiceQuestionNumber == 1, "accepted answer updates the record once and preserves the displayed question")
+        expect(session.practiceProgress == .init() && displayedProgress.count == 1,
+               "feedback leaves all HUD counters unchanged, including after duplicate submission")
+        expect(player.practiceRecord(time: .half, question: .chooseAnalog) == .init(bestStreak: 1, questionsAnswered: 1, currentStreak: 1),
+               "the accepted answer is still persisted immediately and exactly once")
         session.advance()
-        expect(session.practiceQuestionNumber == 2, "only advancing displays the next lifetime question")
+        expect(displayedProgress == [.init(), .init(streak: 1, bestStreak: 1, questionNumber: 2)],
+               "streak, record and question number change in one published update at the next question")
         session.submit(session.question.expectedAnswer); session.advance()
         expect(session.practiceStreak == 2 && session.practiceBestStreak == 2, "a new record rises with every consecutive correct answer")
         let pausedPlayer = DinoPlayer(store: store)
@@ -60,18 +68,33 @@ struct DinoCoreTests {
         let carriedPlayer = DinoPlayer(store: carriedStore)
         let carriedSession = DinoSession(level: config.level, player: carriedPlayer, practice: config)
         carriedSession.submit(carriedSession.question.expectedAnswer)
+        expect(carriedSession.practiceStreak == 2 && carriedSession.practiceQuestionNumber == 3 &&
+               carriedPlayer.practiceRecord(time: .half, question: .chooseAnalog).currentStreak == 3,
+               "resumed feedback holds both counters while immediately saving the extended streak")
+        carriedSession.advance()
         expect(carriedSession.practiceStreak == 3 && carriedSession.practiceBestStreak == 3,
                "a correct answer after resuming extends the saved streak and its record")
-        session.submit(wrongAnswer(for: session.question)); session.advance()
+        let beforeWrong = session.practiceProgress
+        let updateCount = displayedProgress.count
+        session.submit(wrongAnswer(for: session.question))
+        expect(session.practiceProgress == beforeWrong && displayedProgress.count == updateCount &&
+               store.loadPracticeRecords()[DinoPracticeRecord.key(time: .half, question: .chooseAnalog)]?.currentStreak == 0,
+               "wrong feedback holds both displayed counters while persisting the broken streak")
+        session.advance()
         expect(session.practiceStreak == 0 && session.practiceBestStreak == 2 && session.practiceQuestionNumber == 4, "wrong answers reset the streak, retain the record and count as practiced")
+        expect(displayedProgress.count == updateCount + 1 && displayedProgress.last == .init(streak: 0, bestStreak: 2, questionNumber: 4),
+               "Next resets the streak and advances the counter in the same update")
         expect(player.practiceRecord(time: .whole, question: .chooseAnalog) == DinoPracticeRecord(), "different time families have independent records")
         expect(player.practiceRecord(time: .half, question: .chooseDigital) == DinoPracticeRecord(), "different question types have independent records")
         let restarted = DinoPlayer(store: store)
         let resumed = DinoSession(level: config.level, player: restarted, practice: config)
         expect(resumed.practiceStreak == 0 && resumed.practiceBestStreak == 2 && resumed.practiceQuestionNumber == 4, "a broken streak also stays broken after relaunch")
         resumed.submit(resumed.question.expectedAnswer)
-        expect(resumed.practiceStreak == 1 && store.loadPracticeRecords()[DinoPracticeRecord.key(time: .half, question: .chooseAnalog)]?.currentStreak == 1,
-               "new answers persist the active streak immediately")
+        expect(resumed.practiceStreak == 0 && resumed.practiceQuestionNumber == 4 &&
+               store.loadPracticeRecords()[DinoPracticeRecord.key(time: .half, question: .chooseAnalog)]?.currentStreak == 1,
+               "new answers persist immediately without separating the two displayed counters")
+        resumed.advance()
+        expect(resumed.practiceStreak == 1 && resumed.practiceQuestionNumber == 5, "resumed counters also advance together")
         let beforeHelp = restarted.practiceRecords
         let example = DinoSession(level: config.level, player: restarted, practice: config, example: session.question)
         example.submit(example.question.expectedAnswer)
