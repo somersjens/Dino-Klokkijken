@@ -1,0 +1,395 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -configuration Debug -destination "platform=iOS Simulator,id=65115D97-F0BD-401A-9660-B9816A670731" -derivedDataPath /tmp/dino-personalizer-layout-build -resultBundlePath /tmp/dino-welcome-isolated-iphone-final.xcresult -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testWelcomeTopTitlesDeviceLanguageAndPreviewSwipes" CODE_SIGNING_ALLOWED=NO test
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Writing result bundle at path:
+	/tmp/dino-welcome-isolated-iphone-final.xcresult
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (2 targets)
+    Target 'DinoUITests' in project 'Dino Klokkijken'
+        ➜ Explicit dependency on target 'Dino Klokkijken' in project 'Dino Klokkijken'
+    Target 'Dino Klokkijken' in project 'Dino Klokkijken' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/xcstringstool compile --dry-run --output-directory /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build /Users/jenssomers/Desktop/Dino Klokkijken/InfoPlist.xcstrings
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/xcstringstool compile --dry-run --output-directory /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build /Users/jenssomers/Desktop/Dino Klokkijken/Localizable.xcstrings
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+Build description signature: e917c90ad4596632784a11ea690dd14e
+Build description path: /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/XCBuildData/e917c90ad4596632784a11ea690dd14e.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk /tmp/dino-personalizer-layout-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino\ Klokkijken.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -o /tmp/dino-personalizer-layout-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache
+
+note: Disabling hardened runtime with ad-hoc codesigning. (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+SwiftDriver Dino\ Klokkijken normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Dino_Time -Onone @/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios26.0-simulator -g -module-cache-path /tmp/dino-personalizer-layout-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-personalizer-layout-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator -F /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-personalizer-layout-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-personalizer-layout-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-personalizer-layout-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-personalizer-layout-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-generated-files.hmap -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-own-target-headers.hmap -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-project-headers.hmap -Xcc -I/tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources-normal/arm64 -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/arm64 -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ Dino_Time (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    
+
+SwiftCompile normal arm64 Compiling\ JungleLandscape.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/JungleLandscape.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/JungleLandscape.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile JungleLandscape.swift
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for Dino_Time (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriver\ Compilation\ Requirements Dino\ Klokkijken normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Dino_Time -Onone @/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios26.0-simulator -g -module-cache-path /tmp/dino-personalizer-layout-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-personalizer-layout-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator -F /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-personalizer-layout-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-personalizer-layout-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-personalizer-layout-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-personalizer-layout-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-generated-files.hmap -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-own-target-headers.hmap -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-project-headers.hmap -Xcc -I/tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources-normal/arm64 -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/arm64 -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+Copy /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftsourceinfo (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftsourceinfo /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo
+
+Copy /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/arm64-apple-ios-simulator.abi.json /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.abi.json (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.abi.json /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/arm64-apple-ios-simulator.abi.json
+
+SwiftDriverJobDiscovery normal arm64 Compiling JungleLandscape.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriver\ Compilation Dino\ Klokkijken normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Dino_Time -Onone @/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios26.0-simulator -g -module-cache-path /tmp/dino-personalizer-layout-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-personalizer-layout-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator -F /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-personalizer-layout-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-personalizer-layout-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-personalizer-layout-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-personalizer-layout-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-generated-files.hmap -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-own-target-headers.hmap -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-project-headers.hmap -Xcc -I/tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources-normal/arm64 -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/arm64 -Xcc -I/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+Ld /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time.debug.dylib normal (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios26.0-simulator -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -L/tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator -F/tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -F/tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator -filelist /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.LinkFileList -install_name @rpath/Dino\ Time.debug.dylib -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -o /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time.debug.dylib
+
+ConstructStubExecutorLinkFileList /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-ExecutorLinkFileList-normal-arm64.txt (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    construct-stub-executor-link-file-list /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+Ld /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time normal (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios26.0-simulator -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator -F/tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-ExecutorLinkFileList-normal-arm64.txt /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time.debug.dylib -o /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time
+
+ExtractAppIntentsMetadata (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name Dino_Time --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk --xcode-version 27A266a --platform-family iOS --deployment-target 26.0 --bundle-identifier Hakketjak.Dino-Klokkijken --output /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app --target-triple arm64-apple-ios26.0-simulator --binary-file /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time --dependency-file /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time_dependency_info.dat --stringsdata-file /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftFileList --metadata-file-list /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time.DependencyMetadataFileList --static-metadata-file-list /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --no-app-shortcuts-localization
+2026-10-14 21:47:27.885 appintentsmetadataprocessor[19043:23860482] Starting appintentsmetadataprocessor export
+2026-10-14 21:47:27.886 appintentsmetadataprocessor[19043:23860482] warning: Metadata extraction skipped, no AppIntents.framework dependency found
+
+ProcessInfoPlistFile /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Info.plist /Users/jenssomers/Desktop/Dino\ Klokkijken/DinoInfo.plist (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-infoPlistUtility /Users/jenssomers/Desktop/Dino\ Klokkijken/DinoInfo.plist -producttype com.apple.product-type.application -genpkginfo /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/PkgInfo -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_generated_info.plist -o /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Info.plist
+
+AppIntentsSSUTraining (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Info.plist --temp-dir-path /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/ssu --bundle-id Hakketjak.Dino-Klokkijken --product-path /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app --extracted-metadata-path /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Metadata.appintents --metadata-file-list /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time.DependencyMetadataFileList --source-file /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Info.plist --archive-ssu-assets
+2026-10-14 21:47:27.913 appintentsnltrainingprocessor[19044:23860483] Parsing options for appintentsnltrainingprocessor
+2026-10-14 21:47:27.913 appintentsnltrainingprocessor[19044:23860483] Starting AppIntents SSU YAML Generation
+2026-10-14 21:47:27.914 appintentsnltrainingprocessor[19044:23860483] No AppShortcuts found - Skipping.
+
+CopySwiftLibs /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time.debug.dylib --scan-folder /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Frameworks --scan-folder /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/PlugIns --scan-folder /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/SystemExtensions --scan-folder /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Extensions --platform iphonesimulator --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+Ignoring --strip-bitcode because --sign was not passed
+
+Validate /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-validationUtility /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app -shallow-bundle -infoplist-subpath Info.plist
+
+ProcessInfoPlistFile /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/Info.plist /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/empty-DinoUITests.plist (in target 'DinoUITests' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-infoPlistUtility /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/empty-DinoUITests.plist -producttype com.apple.product-type.bundle.ui-testing -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/ProductTypeInfoPlistAdditions.plist -o /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/Info.plist
+
+CopySwiftLibs /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest (in target 'DinoUITests' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/DinoUITests --scan-folder /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/Frameworks --scan-folder /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/PlugIns --scan-folder /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/SystemExtensions --scan-folder /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/Extensions --platform iphonesimulator --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/dino-personalizer-layout-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/Frameworks --strip-bitcode --scan-executable /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+Ignoring --strip-bitcode because --sign was not passed
+
+PruneExplicitPrecompiledModules /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/dino-personalizer-layout-build/SDKExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/dino-personalizer-layout-build/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+2026-10-14 21:47:48.367999+0200 DinoUITests-Runner[19403:23865139] [Default] Running tests...
+objc[19403]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x108d5c310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x108cbc398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+Test Suite 'Selected tests' started at 2026-10-14 21:47:51.116.
+Test Suite 'DinoUITests.xctest' started at 2026-10-14 21:47:51.117.
+Test Suite 'DinoUITests' started at 2026-10-14 21:47:51.117.
+Test Case '-[DinoUITests.DinoUITests testWelcomeTopTitlesDeviceLanguageAndPreviewSwipes]' started.
+    t =     0.00s Start Test at 2026-10-14 21:47:51.119
+    t =     0.60s Set Up
+    t =     0.60s     Setting device orientation to Portrait
+    t =     0.61s         Device orientation changed to Portrait
+    t =     0.63s         Wait for com.apple.springboard to idle
+    t =     0.66s     Open Hakketjak.Dino-Klokkijken
+    t =     0.66s         Launch Hakketjak.Dino-Klokkijken
+2026-10-14 21:47:51.906 xcodebuild[19015:23860109] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-14 21:47:51.906 xcodebuild[19015:23860109] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.82s             Setting up automation session
+    t =     2.87s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.60s Terminate Hakketjak.Dino-Klokkijken:19467
+    t =     5.68s Open Hakketjak.Dino-Klokkijken
+    t =     5.68s     Launch Hakketjak.Dino-Klokkijken
+2026-10-14 21:47:56.800 xcodebuild[19015:23860109] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-14 21:47:56.800 xcodebuild[19015:23860109] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     5.90s         Setting up automation session
+    t =     6.89s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     8.32s Find the "onboarding.title" StaticText
+    t =     8.39s Checking existence of `"language.picker" Button`
+    t =     8.57s Added attachment named 'welcome-device-language-english'
+    t =     8.58s Terminate Hakketjak.Dino-Klokkijken:19527
+    t =     9.64s Open Hakketjak.Dino-Klokkijken
+    t =     9.65s     Launch Hakketjak.Dino-Klokkijken
+2026-10-14 21:48:00.764 xcodebuild[19015:23860109] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-14 21:48:00.764 xcodebuild[19015:23860109] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     9.86s         Setting up automation session
+    t =    10.75s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    12.12s Find the "onboarding.title" StaticText
+    t =    12.18s Find the "onboarding.title" StaticText
+    t =    12.21s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.23s Find the "onboarding.title" StaticText
+    t =    12.27s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.28s Checking existence of `"onboarding.back" Button`
+    t =    12.31s Checking existence of `"language.picker" Button`
+    t =    12.34s Find the "personalize.bandana.label" StaticText
+    t =    12.37s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.67s Added attachment named 'welcome-top-title-dino'
+    t =    12.67s Waiting 5.0s for "personalize.preview" Any to exist
+    t =    13.71s     Checking `Expect predicate `existsNoRetry == 1` for object "personalize.preview" Any`
+    t =    13.71s         Checking existence of `"personalize.preview" Any`
+    t =    13.74s Find the "personalize.preview" Any
+    t =    13.78s Press "personalize.preview" Other[0.50, 0.50] -> (54.0, 0.0) for 0.1 seconds, then drag to "personalize.preview" Other[0.50, 0.50] -> (-54.0, 0.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    13.78s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    13.78s     Find the "personalize.preview" Other
+    t =    13.82s     Check for interrupting elements affecting "personalize.preview" Other
+    t =    13.84s     Synthesize event
+    t =    13.84s         Find the "personalize.preview" Other
+    t =    13.88s         Find the "personalize.preview" Other
+    t =    13.91s         Find the "personalize.preview" Other
+    t =    13.95s         Find the "personalize.preview" Other
+    t =    13.99s         Find the "personalize.preview" Other
+    t =    14.63s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    14.64s Find the "onboarding.title" StaticText
+    t =    14.68s Find the "onboarding.title" StaticText
+    t =    14.72s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.74s Checking existence of `"Vorm" StaticText`
+    t =    14.77s Find the "theme.dino.hourHand.label" StaticText
+    t =    14.80s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.82s Find the "theme.dino.minuteHand.label" StaticText
+    t =    14.86s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.88s Find the "theme.dino.face.label" StaticText
+    t =    14.91s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.93s Find the "theme.dino.rim.label" StaticText
+    t =    14.96s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.98s Checking existence of `"theme.options.both" ScrollView`
+    t =    15.01s Checking existence of `"theme.options.analog" ScrollView`
+    t =    15.04s Find the "theme.options.analog" ScrollView
+    t =    15.08s Checking existence of `ScrollView (First Match)`
+    t =    15.12s Checking existence of `ScrollView (First Match)`
+    t =    15.15s Checking existence of `"onboarding.next" Button`
+    t =    15.18s Find the ScrollView (First Match)
+    t =    15.22s Checking existence of `NavigationBar (First Match)`
+    t =    15.26s Find the "theme.options.analog" ScrollView
+    t =    15.30s Checking existence of `"onboarding.next" Button`
+    t =    15.33s Find the "onboarding.next" Button
+    t =    15.36s Checking existence of `"theme.dino.face.black" Any`
+    t =    15.42s Find the "theme.dino.face.black" Any
+    t =    15.50s Find the "theme.dino.face.black" Button
+    t =    15.57s Find the "theme.dino.face.black" Button
+    t =    15.63s Checking existence of `"theme.dino.face.black" Any`
+    t =    15.69s Tap "theme.dino.face.black" Any[0.50, 0.50]
+    t =    15.69s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    15.69s     Find the "theme.dino.face.black" Any
+    t =    15.75s     Check for interrupting elements affecting "theme.dino.face.black" Button
+    t =    15.79s     Synthesize event
+    t =    15.79s         Find the "theme.dino.face.black" Button
+    t =    15.85s         Find the "theme.dino.face.black" Button
+    t =    15.91s         Find the "theme.dino.face.black" Button
+    t =    16.26s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    16.41s Added attachment named 'welcome-top-title-analog'
+    t =    16.41s Waiting 5.0s for "theme.analog.preview" Any to exist
+    t =    17.45s     Checking `Expect predicate `existsNoRetry == 1` for object "theme.analog.preview" Any`
+    t =    17.45s         Checking existence of `"theme.analog.preview" Any`
+    t =    17.48s Find the "theme.analog.preview" Any
+    t =    17.52s Press "theme.analog.preview" Other[0.50, 0.50] -> (-54.0, 0.0) for 0.1 seconds, then drag to "theme.analog.preview" Other[0.50, 0.50] -> (54.0, 0.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    17.52s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    17.52s     Find the "theme.analog.preview" Other
+    t =    17.55s     Check for interrupting elements affecting "theme.analog.preview" Other
+    t =    17.58s     Synthesize event
+    t =    17.58s         Find the "theme.analog.preview" Other
+    t =    17.61s         Find the "theme.analog.preview" Other
+    t =    17.65s         Find the "theme.analog.preview" Other
+    t =    17.68s         Find the "theme.analog.preview" Other
+    t =    17.82s         Find the "theme.analog.preview" Other
+    t =    18.36s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.36s Find the "onboarding.title" StaticText
+    t =    18.39s Waiting 5.0s for "personalize.preview" Any to exist
+    t =    19.42s     Checking `Expect predicate `existsNoRetry == 1` for object "personalize.preview" Any`
+    t =    19.42s         Checking existence of `"personalize.preview" Any`
+    t =    19.45s Find the "personalize.preview" Any
+    t =    19.47s Press "personalize.preview" Other[0.50, 0.50] -> (54.0, 0.0) for 0.1 seconds, then drag to "personalize.preview" Other[0.50, 0.50] -> (-54.0, 0.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    19.47s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    19.47s     Find the "personalize.preview" Other
+    t =    19.50s     Check for interrupting elements affecting "personalize.preview" Other
+    t =    19.52s     Synthesize event
+    t =    19.52s         Find the "personalize.preview" Other
+    t =    19.54s         Find the "personalize.preview" Other
+    t =    19.57s         Find the "personalize.preview" Other
+    t =    19.59s         Find the "personalize.preview" Other
+    t =    19.62s         Find the "personalize.preview" Other
+    t =    20.14s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    20.15s Find the "theme.dino.face.black" Button
+    t =    20.17s Waiting 5.0s for "theme.analog.preview" Any to exist
+    t =    21.21s     Checking `Expect predicate `existsNoRetry == 1` for object "theme.analog.preview" Any`
+    t =    21.21s         Checking existence of `"theme.analog.preview" Any`
+    t =    21.24s Find the "theme.analog.preview" Any
+    t =    21.27s Press "theme.analog.preview" Other[0.50, 0.50] -> (54.0, 0.0) for 0.1 seconds, then drag to "theme.analog.preview" Other[0.50, 0.50] -> (-54.0, 0.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    21.27s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.27s     Find the "theme.analog.preview" Other
+    t =    21.29s     Check for interrupting elements affecting "theme.analog.preview" Other
+    t =    21.31s     Synthesize event
+    t =    21.32s         Find the "theme.analog.preview" Other
+    t =    21.35s         Find the "theme.analog.preview" Other
+    t =    21.38s         Find the "theme.analog.preview" Other
+    t =    21.41s         Find the "theme.analog.preview" Other
+    t =    21.44s         Find the "theme.analog.preview" Other
+    t =    21.97s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.97s Find the "onboarding.title" StaticText
+    t =    22.00s Find the "onboarding.title" StaticText
+    t =    22.02s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    22.03s Checking existence of `"Vorm" StaticText`
+    t =    22.06s Checking existence of `"theme.options.both" ScrollView`
+    t =    22.08s Checking existence of `"theme.options.analog" ScrollView`
+    t =    22.10s Checking existence of `"theme.options.digital" ScrollView`
+    t =    22.12s Find the "theme.options.digital" ScrollView
+    t =    22.15s Checking existence of `ScrollView (First Match)`
+    t =    22.17s Checking existence of `ScrollView (First Match)`
+    t =    22.19s Checking existence of `"onboarding.next" Button`
+    t =    22.21s Checking existence of `"onboarding.customClock" Button`
+    t =    22.23s Find the ScrollView (First Match)
+    t =    22.26s Checking existence of `NavigationBar (First Match)`
+    t =    22.29s Find the "theme.options.digital" ScrollView
+    t =    22.31s Checking existence of `"onboarding.customClock" Button`
+    t =    22.33s Find the "onboarding.customClock" Button
+    t =    22.36s Checking existence of `"theme.dino.display.white" Any`
+    t =    22.39s Find the "theme.dino.display.white" Any
+    t =    22.43s Find the "theme.dino.display.white" Button
+    t =    22.46s Find the "theme.dino.display.white" Button
+    t =    22.49s Checking existence of `"theme.dino.display.white" Any`
+    t =    22.52s Tap "theme.dino.display.white" Any[0.50, 0.50]
+    t =    22.52s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    22.52s     Find the "theme.dino.display.white" Any
+    t =    22.55s     Check for interrupting elements affecting "theme.dino.display.white" Button
+    t =    22.58s     Synthesize event
+    t =    22.58s         Find the "theme.dino.display.white" Button
+    t =    22.61s         Find the "theme.dino.display.white" Button
+    t =    22.64s         Find the "theme.dino.display.white" Button
+    t =    22.96s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    22.96s Waiting 5.0s for "theme.digital.sameColors" StaticText to exist
+    t =    23.99s     Checking `Expect predicate `existsNoRetry == 1` for object "theme.digital.sameColors" StaticText`
+    t =    23.99s         Checking existence of `"theme.digital.sameColors" StaticText`
+    t =    24.02s Find the "theme.digital.sameColors" StaticText
+    t =    24.04s Find the "theme.digital.sameColors" StaticText
+    t =    24.06s Find the "theme.digital.preview" Any
+    t =    24.08s Find the "theme.digital.sameColors" StaticText
+    t =    24.11s Find the "theme.options.digital" ScrollView
+    t =    24.13s Checking existence of `"onboarding.next" Button`
+    t =    24.14s Checking existence of `"onboarding.customClock" Button`
+    t =    24.16s Checking existence of `"onboarding.customClock" Button`
+    t =    24.18s Find the "theme.options.digital" ScrollView
+    t =    24.20s Find the "onboarding.customClock" Button
+    t =    24.33s Added attachment named 'welcome-top-title-digital-red-warning'
+    t =    24.33s Waiting 5.0s for "theme.digital.preview" Any to exist
+    t =    25.37s     Checking `Expect predicate `existsNoRetry == 1` for object "theme.digital.preview" Any`
+    t =    25.37s         Checking existence of `"theme.digital.preview" Any`
+    t =    25.39s Find the "theme.digital.preview" Any
+    t =    25.42s Press "theme.digital.preview" Other[0.50, 0.50] -> (-54.0, 0.0) for 0.1 seconds, then drag to "theme.digital.preview" Other[0.50, 0.50] -> (54.0, 0.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    25.42s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    25.42s     Find the "theme.digital.preview" Other
+    t =    25.44s     Check for interrupting elements affecting "theme.digital.preview" Other
+    t =    25.46s     Synthesize event
+    t =    25.46s         Find the "theme.digital.preview" Other
+    t =    25.48s         Find the "theme.digital.preview" Other
+    t =    25.51s         Find the "theme.digital.preview" Other
+    t =    25.53s         Find the "theme.digital.preview" Other
+    t =    25.56s         Find the "theme.digital.preview" Other
+    t =    26.09s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    26.09s Find the "onboarding.title" StaticText
+    t =    26.12s Checking existence of `"onboarding.next" Any`
+    t =    26.13s Checking existence of `"onboarding.next" Button`
+    t =    26.16s Find the "onboarding.next" Any
+    t =    26.18s Tap "onboarding.next" Button
+    t =    26.18s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    26.18s     Find the "onboarding.next" Button
+    t =    26.19s     Check for interrupting elements affecting "onboarding.next" Button
+    t =    26.22s     Synthesize event
+    t =    26.51s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    26.52s Find the "theme.dino.display.white" Button
+    t =    26.54s Setting device orientation to Landscape Left
+    t =    26.54s     Device orientation changed to Landscape Left
+    t =    26.58s     Interface orientation changed to Landscape Right
+    t =    26.58s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    27.64s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    27.67s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    28.38s Find the "onboarding.customClock" Button
+    t =    28.55s Added attachment named 'welcome-top-title-landscape'
+    t =    28.55s Checking existence of `"onboarding.customClock" Any`
+    t =    28.58s Checking existence of `"onboarding.next" Button`
+    t =    28.60s Checking existence of `"onboarding.customClock" Button`
+    t =    28.62s Find the "onboarding.customClock" Any
+    t =    28.64s Tap "onboarding.customClock" Button
+    t =    28.64s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    28.65s     Find the "onboarding.customClock" Button
+    t =    28.66s     Check for interrupting elements affecting "onboarding.customClock" Button
+    t =    28.69s     Synthesize event
+    t =    28.98s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    29.87s Waiting 5.0s for "header.settings" Button to exist
+    t =    30.90s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    30.90s         Checking existence of `"header.settings" Button`
+    t =    31.46s Tear Down
+Test Case '-[DinoUITests.DinoUITests testWelcomeTopTitlesDeviceLanguageAndPreviewSwipes]' passed (31.813 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-14 21:48:22.932.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.813 (31.814) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-14 21:48:22.932.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.813 (31.815) seconds
+Test Suite 'Selected tests' passed at 2026-10-14 21:48:22.932.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.813 (31.816) seconds
+2026-10-14 21:48:23.285 xcodebuild[19015:23860109] [MT] IDETestOperationsObserverDebug: 55.334 elapsed -- Testing started completed.
+2026-10-14 21:48:23.285 xcodebuild[19015:23860109] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-14 21:48:23.285 xcodebuild[19015:23860109] [MT] IDETestOperationsObserverDebug: 55.334 sec, +55.334 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-welcome-isolated-iphone-final.xcresult
+
+** TEST SUCCEEDED **
+
+Testing started

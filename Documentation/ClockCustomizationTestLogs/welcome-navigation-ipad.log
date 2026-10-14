@@ -1,0 +1,272 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -configuration Debug -destination "platform=iOS Simulator,id=0F76FE91-CC6E-40EE-9107-BCEBBFA965F6" -derivedDataPath /tmp/dino-personalizer-layout-build -resultBundlePath /tmp/dino-welcome-swipes-ipad-final.xcresult -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testWelcomeTopTitlesDeviceLanguageAndPreviewSwipes" CODE_SIGNING_ALLOWED=NO test-without-building
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Writing result bundle at path:
+	/tmp/dino-welcome-swipes-ipad-final.xcresult
+
+2026-10-14 21:32:46.873366+0200 DinoUITests-Runner[12948:23793691] [Default] Running tests...
+2026-10-14 21:32:46.893013+0200 DinoUITests-Runner[12948:23793691] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-14 21:32:48.577.
+Test Suite 'DinoUITests.xctest' started at 2026-10-14 21:32:48.578.
+Test Suite 'DinoUITests' started at 2026-10-14 21:32:48.578.
+Test Case '-[DinoUITests.DinoUITests testWelcomeTopTitlesDeviceLanguageAndPreviewSwipes]' started.
+    t =     0.00s Start Test at 2026-10-14 21:32:48.581
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.03s         Wait for com.apple.springboard to idle
+    t =     0.03s     Open Hakketjak.Dino-Klokkijken
+    t =     0.03s         Launch Hakketjak.Dino-Klokkijken
+2026-10-14 21:32:48.659 xcodebuild[12947:23793433] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-14 21:32:48.659 xcodebuild[12947:23793433] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[12948]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_24A434/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1031dc398) and /Library/Developer/CoreSimulator/Volumes/iOS_24A434/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x1062e8310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.49s             Setting up automation session
+    t =     2.01s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.43s Terminate Hakketjak.Dino-Klokkijken:12961
+    t =     4.48s Open Hakketjak.Dino-Klokkijken
+    t =     4.48s     Launch Hakketjak.Dino-Klokkijken
+2026-10-14 21:32:53.058 xcodebuild[12947:23793433] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-14 21:32:53.058 xcodebuild[12947:23793433] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     4.69s         Setting up automation session
+    t =     6.13s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     7.48s Find the "onboarding.title" StaticText
+    t =     7.56s Checking existence of `"language.picker" Button`
+    t =     7.69s Added attachment named 'welcome-device-language-english'
+    t =     7.69s Terminate Hakketjak.Dino-Klokkijken:12985
+    t =     8.74s Open Hakketjak.Dino-Klokkijken
+    t =     8.74s     Launch Hakketjak.Dino-Klokkijken
+2026-10-14 21:32:57.324 xcodebuild[12947:23793433] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-14 21:32:57.324 xcodebuild[12947:23793433] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     8.95s         Setting up automation session
+    t =    10.40s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    11.77s Find the "onboarding.title" StaticText
+    t =    11.84s Find the "onboarding.title" StaticText
+    t =    11.86s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    11.88s Find the "onboarding.title" StaticText
+    t =    11.90s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    11.91s Checking existence of `"onboarding.back" Button`
+    t =    11.93s Checking existence of `"language.picker" Button`
+    t =    11.95s Find the "personalize.bandana.label" StaticText
+    t =    11.98s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.09s Added attachment named 'welcome-top-title-dino'
+    t =    12.09s Waiting 5.0s for "personalize.preview" Any to exist
+    t =    13.13s     Checking `Expect predicate `existsNoRetry == 1` for object "personalize.preview" Any`
+    t =    13.13s         Checking existence of `"personalize.preview" Any`
+    t =    13.16s Find the "personalize.preview" Any
+    t =    13.19s Press "personalize.preview" Other[0.50, 0.50] -> (54.0, 0.0) for 0.1 seconds, then drag to "personalize.preview" Other[0.50, 0.50] -> (-54.0, 0.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    13.19s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    13.19s     Find the "personalize.preview" Other
+    t =    13.22s     Check for interrupting elements affecting "personalize.preview" Other
+    t =    13.23s         Wait for com.apple.springboard to idle
+    t =    13.25s     Synthesize event
+    t =    13.25s         Find the "personalize.preview" Other
+    t =    13.28s         Find the "personalize.preview" Other
+    t =    13.31s         Find the "personalize.preview" Other
+    t =    13.33s         Find the "personalize.preview" Other
+    t =    13.36s         Find the "personalize.preview" Other
+    t =    13.89s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    13.90s Find the "onboarding.title" StaticText
+    t =    13.94s Find the "onboarding.title" StaticText
+    t =    14.00s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.03s Checking existence of `"Vorm" StaticText`
+    t =    14.07s Find the "theme.dino.hourHand.label" StaticText
+    t =    14.11s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.14s Find the "theme.dino.minuteHand.label" StaticText
+    t =    14.19s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.21s Find the "theme.dino.face.label" StaticText
+    t =    14.26s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.29s Find the "theme.dino.rim.label" StaticText
+    t =    14.33s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.36s Checking existence of `"theme.options.both" ScrollView`
+    t =    14.40s Checking existence of `"theme.options.analog" ScrollView`
+    t =    14.44s Find the "theme.options.analog" ScrollView
+    t =    14.50s Checking existence of `ScrollView (First Match)`
+    t =    14.53s Checking existence of `ScrollView (First Match)`
+    t =    14.56s Checking existence of `"onboarding.next" Button`
+    t =    14.60s Find the ScrollView (First Match)
+    t =    14.64s Checking existence of `NavigationBar (First Match)`
+    t =    14.68s Find the "theme.options.analog" ScrollView
+    t =    14.71s Checking existence of `"onboarding.next" Button`
+    t =    14.75s Find the "onboarding.next" Button
+    t =    14.79s Checking existence of `"theme.dino.face.black" Any`
+    t =    14.83s Find the "theme.dino.face.black" Any
+    t =    14.88s Find the "theme.dino.face.black" Button
+    t =    14.92s Find the "theme.dino.face.black" Button
+    t =    14.97s Checking existence of `"theme.dino.face.black" Any`
+    t =    15.01s Tap "theme.dino.face.black" Any[0.50, 0.50]
+    t =    15.01s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    15.01s     Find the "theme.dino.face.black" Any
+    t =    15.05s     Check for interrupting elements affecting "theme.dino.face.black" Button
+    t =    15.08s         Wait for com.apple.springboard to idle
+    t =    15.10s     Synthesize event
+    t =    15.10s         Find the "theme.dino.face.black" Button
+    t =    15.14s         Find the "theme.dino.face.black" Button
+    t =    15.19s         Find the "theme.dino.face.black" Button
+    t =    15.52s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    15.63s Added attachment named 'welcome-top-title-analog'
+    t =    15.63s Waiting 5.0s for "theme.analog.preview" Any to exist
+    t =    16.67s     Checking `Expect predicate `existsNoRetry == 1` for object "theme.analog.preview" Any`
+    t =    16.67s         Checking existence of `"theme.analog.preview" Any`
+    t =    16.71s Find the "theme.analog.preview" Any
+    t =    16.75s Press "theme.analog.preview" Other[0.50, 0.50] -> (-54.0, 0.0) for 0.1 seconds, then drag to "theme.analog.preview" Other[0.50, 0.50] -> (54.0, 0.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    16.75s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    16.75s     Find the "theme.analog.preview" Other
+    t =    16.79s     Check for interrupting elements affecting "theme.analog.preview" Other
+    t =    16.81s         Wait for com.apple.springboard to idle
+    t =    16.83s     Synthesize event
+    t =    16.83s         Find the "theme.analog.preview" Other
+    t =    16.86s         Find the "theme.analog.preview" Other
+    t =    16.90s         Find the "theme.analog.preview" Other
+    t =    16.94s         Find the "theme.analog.preview" Other
+    t =    16.97s         Find the "theme.analog.preview" Other
+    t =    17.51s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    17.51s Find the "onboarding.title" StaticText
+    t =    17.54s Waiting 5.0s for "personalize.preview" Any to exist
+    t =    18.58s     Checking `Expect predicate `existsNoRetry == 1` for object "personalize.preview" Any`
+    t =    18.58s         Checking existence of `"personalize.preview" Any`
+    t =    18.61s Find the "personalize.preview" Any
+    t =    18.63s Press "personalize.preview" Other[0.50, 0.50] -> (54.0, 0.0) for 0.1 seconds, then drag to "personalize.preview" Other[0.50, 0.50] -> (-54.0, 0.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    18.63s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.64s     Find the "personalize.preview" Other
+    t =    18.66s     Check for interrupting elements affecting "personalize.preview" Other
+    t =    18.68s         Wait for com.apple.springboard to idle
+    t =    18.69s     Synthesize event
+    t =    18.69s         Find the "personalize.preview" Other
+    t =    18.72s         Find the "personalize.preview" Other
+    t =    18.74s         Find the "personalize.preview" Other
+    t =    18.77s         Find the "personalize.preview" Other
+    t =    18.79s         Find the "personalize.preview" Other
+    t =    19.32s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    19.32s Find the "theme.dino.face.black" Button
+    t =    19.37s Waiting 5.0s for "theme.analog.preview" Any to exist
+    t =    20.41s     Checking `Expect predicate `existsNoRetry == 1` for object "theme.analog.preview" Any`
+    t =    20.41s         Checking existence of `"theme.analog.preview" Any`
+    t =    20.45s Find the "theme.analog.preview" Any
+    t =    20.49s Press "theme.analog.preview" Other[0.50, 0.50] -> (54.0, 0.0) for 0.1 seconds, then drag to "theme.analog.preview" Other[0.50, 0.50] -> (-54.0, 0.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    20.49s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    20.49s     Find the "theme.analog.preview" Other
+    t =    20.53s     Check for interrupting elements affecting "theme.analog.preview" Other
+    t =    20.55s         Wait for com.apple.springboard to idle
+    t =    20.56s     Synthesize event
+    t =    20.57s         Find the "theme.analog.preview" Other
+    t =    20.60s         Find the "theme.analog.preview" Other
+    t =    20.64s         Find the "theme.analog.preview" Other
+    t =    20.68s         Find the "theme.analog.preview" Other
+    t =    20.71s         Find the "theme.analog.preview" Other
+    t =    21.25s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.25s Find the "onboarding.title" StaticText
+    t =    21.29s Find the "onboarding.title" StaticText
+    t =    21.32s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    21.34s Checking existence of `"Vorm" StaticText`
+    t =    21.36s Checking existence of `"theme.options.both" ScrollView`
+    t =    21.39s Checking existence of `"theme.options.analog" ScrollView`
+    t =    21.41s Checking existence of `"theme.options.digital" ScrollView`
+    t =    21.44s Find the "theme.options.digital" ScrollView
+    t =    21.47s Checking existence of `ScrollView (First Match)`
+    t =    21.49s Checking existence of `ScrollView (First Match)`
+    t =    21.50s Checking existence of `"onboarding.next" Button`
+    t =    21.53s Checking existence of `"onboarding.customClock" Button`
+    t =    21.55s Find the ScrollView (First Match)
+    t =    21.57s Checking existence of `NavigationBar (First Match)`
+    t =    21.60s Find the "theme.options.digital" ScrollView
+    t =    21.62s Checking existence of `"onboarding.customClock" Button`
+    t =    21.64s Find the "onboarding.customClock" Button
+    t =    21.67s Checking existence of `"theme.dino.display.white" Any`
+    t =    21.70s Find the "theme.dino.display.white" Any
+    t =    21.73s Find the "theme.dino.display.white" Button
+    t =    21.76s Find the "theme.dino.display.white" Button
+    t =    21.78s Checking existence of `"theme.dino.display.white" Any`
+    t =    21.81s Tap "theme.dino.display.white" Any[0.50, 0.50]
+    t =    21.81s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.81s     Find the "theme.dino.display.white" Any
+    t =    21.83s     Check for interrupting elements affecting "theme.dino.display.white" Button
+    t =    21.86s         Wait for com.apple.springboard to idle
+    t =    21.87s     Synthesize event
+    t =    21.87s         Find the "theme.dino.display.white" Button
+    t =    21.90s         Find the "theme.dino.display.white" Button
+    t =    21.93s         Find the "theme.dino.display.white" Button
+    t =    22.23s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    22.24s Waiting 5.0s for "theme.digital.sameColors" StaticText to exist
+    t =    23.27s     Checking `Expect predicate `existsNoRetry == 1` for object "theme.digital.sameColors" StaticText`
+    t =    23.27s         Checking existence of `"theme.digital.sameColors" StaticText`
+    t =    23.31s Find the "theme.digital.sameColors" StaticText
+    t =    23.34s Find the "theme.digital.sameColors" StaticText
+    t =    23.37s Find the "theme.digital.preview" Any
+    t =    23.40s Find the "theme.digital.sameColors" StaticText
+    t =    23.43s Find the "theme.options.digital" ScrollView
+    t =    23.46s Checking existence of `"onboarding.next" Button`
+    t =    23.49s Checking existence of `"onboarding.customClock" Button`
+    t =    23.51s Checking existence of `"onboarding.customClock" Button`
+    t =    23.54s Find the "theme.options.digital" ScrollView
+    t =    23.57s Find the "onboarding.customClock" Button
+    t =    23.70s Added attachment named 'welcome-top-title-digital-red-warning'
+    t =    23.70s Waiting 5.0s for "theme.digital.preview" Any to exist
+    t =    24.74s     Checking `Expect predicate `existsNoRetry == 1` for object "theme.digital.preview" Any`
+    t =    24.74s         Checking existence of `"theme.digital.preview" Any`
+    t =    24.78s Find the "theme.digital.preview" Any
+    t =    24.81s Press "theme.digital.preview" Other[0.50, 0.50] -> (-54.0, 0.0) for 0.1 seconds, then drag to "theme.digital.preview" Other[0.50, 0.50] -> (54.0, 0.0) with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    24.81s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    24.81s     Find the "theme.digital.preview" Other
+    t =    24.84s     Check for interrupting elements affecting "theme.digital.preview" Other
+    t =    24.87s         Wait for com.apple.springboard to idle
+    t =    24.88s     Synthesize event
+    t =    24.88s         Find the "theme.digital.preview" Other
+    t =    24.91s         Find the "theme.digital.preview" Other
+    t =    24.94s         Find the "theme.digital.preview" Other
+    t =    24.97s         Find the "theme.digital.preview" Other
+    t =    25.00s         Find the "theme.digital.preview" Other
+    t =    25.52s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    25.53s Find the "onboarding.title" StaticText
+    t =    25.56s Checking existence of `"onboarding.next" Any`
+    t =    25.57s Checking existence of `"onboarding.next" Button`
+    t =    25.60s Find the "onboarding.next" Any
+    t =    25.62s Tap "onboarding.next" Button
+    t =    25.62s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    25.62s     Find the "onboarding.next" Button
+    t =    25.63s     Check for interrupting elements affecting "onboarding.next" Button
+    t =    25.66s         Wait for com.apple.springboard to idle
+    t =    25.67s     Synthesize event
+    t =    25.96s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    25.97s Find the "theme.dino.display.white" Button
+    t =    26.00s Setting device orientation to Landscape Left
+    t =    26.00s     Device orientation changed to Landscape Left
+    t =    26.09s     Interface orientation changed to Landscape Right
+    t =    26.09s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    26.10s     Wait for com.apple.springboard to idle
+    t =    26.10s Find the "onboarding.customClock" Button
+    t =    26.28s Added attachment named 'welcome-top-title-landscape'
+    t =    26.29s Checking existence of `"onboarding.customClock" Any`
+    t =    26.30s Checking existence of `"onboarding.next" Button`
+    t =    26.33s Checking existence of `"onboarding.customClock" Button`
+    t =    26.36s Find the "onboarding.customClock" Any
+    t =    26.38s Tap "onboarding.customClock" Button
+    t =    26.38s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    26.53s     Find the "onboarding.customClock" Button
+    t =    26.55s     Check for interrupting elements affecting "onboarding.customClock" Button
+    t =    26.57s         Wait for com.apple.springboard to idle
+    t =    26.82s     Synthesize event
+    t =    27.11s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    27.38s Waiting 5.0s for "header.settings" Button to exist
+    t =    28.41s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    28.42s         Checking existence of `"header.settings" Button`
+    t =    28.74s Tear Down
+Test Case '-[DinoUITests.DinoUITests testWelcomeTopTitlesDeviceLanguageAndPreviewSwipes]' passed (29.072 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-14 21:33:17.653.
+	 Executed 1 test, with 0 failures (0 unexpected) in 29.072 (29.076) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-14 21:33:17.654.
+	 Executed 1 test, with 0 failures (0 unexpected) in 29.072 (29.076) seconds
+Test Suite 'Selected tests' passed at 2026-10-14 21:33:17.655.
+	 Executed 1 test, with 0 failures (0 unexpected) in 29.072 (29.078) seconds
+2026-10-14 21:33:17.962 xcodebuild[12947:23793433] [MT] IDETestOperationsObserverDebug: 31.959 elapsed -- Testing started completed.
+2026-10-14 21:33:17.962 xcodebuild[12947:23793433] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-14 21:33:17.962 xcodebuild[12947:23793433] [MT] IDETestOperationsObserverDebug: 31.959 sec, +31.959 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-welcome-swipes-ipad-final.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

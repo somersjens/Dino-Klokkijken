@@ -1,0 +1,14 @@
+struct WorldMapLandscape: unchanged
+struct JungleWorldPainter: unchanged
+struct SleepValleyPainter: unchanged
+struct VolcanoWorldPainter: unchanged
+struct JunglePainter: unchanged
+struct WorldThemePreview: unchanged
+struct WorldMap: View: unchanged
+struct JungleLevelStone: unchanged
+struct SleepValleyLevelStone: unchanged
+struct VolcanoLevelStone: unchanged
+Shared ThemePainter outside village preview: unchanged
+Shared landscape outside world 4: unchanged
+Chapter layout outside world-4 entry spacing: unchanged
+Level nodes outside world-4 material and occupied glaze: unchanged

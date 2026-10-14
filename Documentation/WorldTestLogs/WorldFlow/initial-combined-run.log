@@ -1,0 +1,91 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -destination id=C52CEAA1-9B58-4446-9A39-93DBC1FA3B1F -derivedDataPath /private/tmp/dino-boss-polish-build -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testNativeWorldChaptersAndMinuteQuestions" "-only-testing:DinoUITests/DinoUITests/testComingSoonOnlyAfterLevelHundred" CODE_SIGNING_ALLOWED=NO test-without-building
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+2026-10-13 18:53:36.094768+0200 DinoUITests-Runner[66988:20035247] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-13 18:53:36.481.
+Test Suite 'DinoUITests.xctest' started at 2026-10-13 18:53:36.482.
+Test Suite 'DinoUITests' started at 2026-10-13 18:53:36.482.
+Test Case '-[DinoUITests.DinoUITests testComingSoonOnlyAfterLevelHundred]' started.
+    t =     0.00s Start Test at 2026-10-13 18:53:36.482
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.02s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     0.03s     Open Hakketjak.Dino-Klokkijken
+    t =     0.03s         Launch Hakketjak.Dino-Klokkijken
+    t =     0.03s             Terminate Hakketjak.Dino-Klokkijken:66668
+objc[66988]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x107e90310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x107ddc398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+2026-10-13 18:53:37.616 xcodebuild[66986:20034937] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-13 18:53:37.616 xcodebuild[66986:20034937] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.55s             Setting up automation session
+    t =     2.15s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.43s Terminate Hakketjak.Dino-Klokkijken:67000
+    t =     4.49s Open Hakketjak.Dino-Klokkijken
+    t =     4.49s     Launch Hakketjak.Dino-Klokkijken
+2026-10-13 18:53:40.972 xcodebuild[66986:20034937] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-13 18:53:40.972 xcodebuild[66986:20034937] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     4.70s         Setting up automation session
+    t =     5.23s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     6.64s Waiting 8.0s for "header.settings" Button to exist
+    t =     7.68s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =     7.68s         Checking existence of `"header.settings" Button`
+    t =     8.21s Find the "header.settings" Button
+    t =     8.63s Find the "map.level.100" Button
+    t =     9.06s Checking existence of `"map.level.100" Button`
+    t =     9.49s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =     9.86s Checking existence of `"map.level.100" Button`
+    t =    10.29s Find the "map.level.100" Button
+    t =    10.72s Find the "map.level.100" Button
+    t =    11.15s Find the "header.settings" Button
+    t =    11.58s Find the "map.level.100" Button
+    t =    12.01s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.38s Find the "map.level.100" Button
+    t =    12.81s Checking existence of `"map.level.101" Button`
+    t =    13.24s Find the "map.comingSoon" Any
+    t =    14.01s Find the "map.comingSoon" StaticText
+    t =    14.78s Checking existence of `"Coming soon" StaticText`
+    t =    15.21s Find the "map.comingSoon" StaticText
+    t =    15.64s Find the "map.level.100" Button
+    t =    16.07s Checking existence of `"Wereld 2 · binnenkort" StaticText`
+    t =    16.59s Added attachment named 'native-world-10-coming-soon'
+    t =    16.59s Tear Down
+Test Case '-[DinoUITests.DinoUITests testComingSoonOnlyAfterLevelHundred]' passed (16.843 seconds).
+Test Case '-[DinoUITests.DinoUITests testNativeWorldChaptersAndMinuteQuestions]' started.
+    t =     0.00s Start Test at 2026-10-13 18:53:53.326
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.03s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     0.03s     Open Hakketjak.Dino-Klokkijken
+    t =     0.03s         Launch Hakketjak.Dino-Klokkijken
+    t =     0.03s             Terminate Hakketjak.Dino-Klokkijken:67010
+2026-10-13 18:53:54.406 xcodebuild[66986:20034937] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-13 18:53:54.406 xcodebuild[66986:20034937] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.29s             Setting up automation session
+    t =     1.84s             Wait for Hakketjak.Dino-Klokkijken to idle
+2026-10-13 18:54:16.823608+0200 DinoUITests-Runner[67170:20037957] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+
+Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches.
+
+Test Suite 'Selected tests' started at 2026-10-13 18:54:17.449.
+Test Suite 'DinoUITests.xctest' started at 2026-10-13 18:54:17.450.
+Test Suite 'DinoUITests.xctest' passed at 2026-10-13 18:54:17.450.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-13 18:54:17.450.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+2026-10-13 18:54:25.459 xcodebuild[66986:20034937] [MT] IDETestOperationsObserverDebug: 49.981 elapsed -- Testing started completed.
+2026-10-13 18:54:25.459 xcodebuild[66986:20034937] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-13 18:54:25.459 xcodebuild[66986:20034937] [MT] IDETestOperationsObserverDebug: 49.981 sec, +49.981 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-boss-polish-build/Logs/Test/Test-Dino Klokkijken-2026.10.13_18-53-35-+0200.xcresult
+
+Failing tests:
+	DinoUITests.testNativeWorldChaptersAndMinuteQuestions()
+
+** TEST EXECUTE FAILED **
+
+Testing started

@@ -1,0 +1,6 @@
+struct WorldMapLandscape:: unchanged
+private struct JungleWorldPainter: unchanged
+private struct SleepValleyPainter: unchanged
+private struct JungleLevelStone: unchanged
+private struct SleepValleyLevelStone: unchanged
+Shared scenery outside the world-three preview: unchanged

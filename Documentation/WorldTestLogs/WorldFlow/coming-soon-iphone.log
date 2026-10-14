@@ -1,0 +1,70 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -destination id=C52CEAA1-9B58-4446-9A39-93DBC1FA3B1F -derivedDataPath /private/tmp/dino-boss-polish-build -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testComingSoonOnlyAfterLevelHundred" CODE_SIGNING_ALLOWED=NO test-without-building
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+2026-10-13 20:21:44.079510+0200 DinoUITests-Runner[83855:20245837] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-13 20:21:44.481.
+Test Suite 'DinoUITests.xctest' started at 2026-10-13 20:21:44.481.
+Test Suite 'DinoUITests' started at 2026-10-13 20:21:44.481.
+Test Case '-[DinoUITests.DinoUITests testComingSoonOnlyAfterLevelHundred]' started.
+    t =     0.00s Start Test at 2026-10-13 20:21:44.482
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.03s         Wait for com.apple.springboard to idle
+    t =     0.04s     Open Hakketjak.Dino-Klokkijken
+    t =     0.04s         Launch Hakketjak.Dino-Klokkijken
+2026-10-13 20:21:44.578 xcodebuild[83851:20245542] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-13 20:21:44.578 xcodebuild[83851:20245542] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[83855]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x10a5f8310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10778c398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.50s             Setting up automation session
+    t =     1.12s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     2.42s Terminate Hakketjak.Dino-Klokkijken:83897
+    t =     3.48s Open Hakketjak.Dino-Klokkijken
+    t =     3.48s     Launch Hakketjak.Dino-Klokkijken
+2026-10-13 20:21:47.966 xcodebuild[83851:20245542] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-13 20:21:47.966 xcodebuild[83851:20245542] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     3.69s         Setting up automation session
+    t =     4.24s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     5.64s Waiting 8.0s for "header.settings" Button to exist
+    t =     6.68s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =     6.68s         Checking existence of `"header.settings" Button`
+    t =     7.17s Find the "header.settings" Button
+    t =     7.60s Find the "map.level.100" Button
+    t =     8.03s Checking existence of `"map.level.100" Button`
+    t =     8.47s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =     8.83s Checking existence of `"map.level.100" Button`
+    t =     9.25s Find the "map.level.100" Button
+    t =     9.68s Find the "map.level.100" Button
+    t =    10.11s Find the "header.settings" Button
+    t =    10.54s Find the "map.level.100" Button
+    t =    10.97s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    11.33s Find the "map.level.100" Button
+    t =    11.76s Checking existence of `"map.level.101" Button`
+    t =    12.18s Find the "map.comingSoon" Any
+    t =    12.95s Find the "map.comingSoon" StaticText
+    t =    13.72s Checking existence of `"Coming soon" StaticText`
+    t =    14.14s Find the "map.comingSoon" StaticText
+    t =    14.58s Find the "map.level.100" Button
+    t =    15.01s Checking existence of `"Wereld 2 · binnenkort" StaticText`
+    t =    15.56s Added attachment named 'native-world-10-coming-soon'
+    t =    15.58s Tear Down
+Test Case '-[DinoUITests.DinoUITests testComingSoonOnlyAfterLevelHundred]' passed (15.823 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-13 20:22:00.305.
+	 Executed 1 test, with 0 failures (0 unexpected) in 15.823 (15.824) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-13 20:22:00.306.
+	 Executed 1 test, with 0 failures (0 unexpected) in 15.823 (15.825) seconds
+Test Suite 'Selected tests' passed at 2026-10-13 20:22:00.307.
+	 Executed 1 test, with 0 failures (0 unexpected) in 15.823 (15.826) seconds
+2026-10-13 20:22:00.600 xcodebuild[83851:20245542] [MT] IDETestOperationsObserverDebug: 17.180 elapsed -- Testing started completed.
+2026-10-13 20:22:00.600 xcodebuild[83851:20245542] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-13 20:22:00.600 xcodebuild[83851:20245542] [MT] IDETestOperationsObserverDebug: 17.180 sec, +17.180 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-boss-polish-build/Logs/Test/Test-Dino Klokkijken-2026.10.13_20-21-43-+0200.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

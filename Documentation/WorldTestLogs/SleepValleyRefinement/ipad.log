@@ -1,0 +1,457 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -configuration Debug -destination "platform=iOS Simulator,id=CD5048F9-F217-4BE9-8A78-37A684D8710B" -derivedDataPath /tmp/dino-jungle-refinement-build -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testDirectPerfectBoss" -resultBundlePath /tmp/dino-sleepvalley-ipad.xcresult CODE_SIGNING_ALLOWED=NO
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Writing result bundle at path:
+	/tmp/dino-sleepvalley-ipad.xcresult
+
+2026-10-14 17:16:57.476181+0200 DinoUITests-Runner[82508:23454140] [Default] Running tests...
+2026-10-14 17:16:57.493541+0200 DinoUITests-Runner[82508:23454140] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+objc[82508]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x108aa0310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x108a00398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-14 17:16:58.923.
+Test Suite 'DinoUITests.xctest' started at 2026-10-14 17:16:58.923.
+Test Suite 'DinoUITests' started at 2026-10-14 17:16:58.923.
+Test Case '-[DinoUITests.DinoUITests testDirectPerfectBoss]' started.
+    t =     0.00s Start Test at 2026-10-14 17:16:58.924
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.02s         Device orientation changed to Portrait
+    t =     0.04s         Wait for com.apple.DocumentManager.DockFolderViewService to idle
+    t =     0.05s         Wait for com.apple.springboard to idle
+    t =     0.08s     Open Hakketjak.Dino-Klokkijken
+    t =     0.08s         Launch Hakketjak.Dino-Klokkijken
+2026-10-14 17:16:59.059 xcodebuild[82478:23453549] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-14 17:16:59.059 xcodebuild[82478:23453549] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.76s             Setting up automation session
+    t =     1.57s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     2.94s Waiting 5.0s for "onboarding.next" Button to exist
+    t =     3.97s     Checking `Expect predicate `existsNoRetry == 1` for object "onboarding.next" Button`
+    t =     3.98s         Checking existence of `"onboarding.next" Button`
+    t =     4.03s Find the "onboarding.next" Button
+    t =     4.05s Checking existence of `"onboarding.name" TextField`
+    t =     4.07s Checking existence of `"personalize.bandana.red" Button`
+    t =     4.09s Checking existence of `"onboarding.next" Any`
+    t =     4.11s Checking existence of `"onboarding.next" Button`
+    t =     4.13s Find the "onboarding.next" Any
+    t =     4.15s Tap "onboarding.next" Button
+    t =     4.15s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.16s     Find the "onboarding.next" Button
+    t =     4.17s     Check for interrupting elements affecting "onboarding.next" Button
+    t =     4.19s         Wait for com.apple.springboard to idle
+    t =     4.22s     Synthesize event
+    t =     4.52s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.52s Checking existence of `"onboarding.next" Any`
+    t =     4.54s Checking existence of `"onboarding.next" Button`
+    t =     4.57s Find the "onboarding.next" Any
+    t =     4.60s Tap "onboarding.next" Button
+    t =     4.60s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.60s     Find the "onboarding.next" Button
+    t =     4.62s     Check for interrupting elements affecting "onboarding.next" Button
+    t =     4.65s         Wait for com.apple.springboard to idle
+    t =     4.67s     Synthesize event
+    t =     4.96s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.97s Checking existence of `"onboarding.customClock" Any`
+    t =     4.98s Checking existence of `"onboarding.next" Button`
+    t =     5.01s Find the "onboarding.customClock" Any
+    t =     5.04s Tap "onboarding.customClock" Button
+    t =     5.04s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     5.04s     Find the "onboarding.customClock" Button
+    t =     5.06s     Check for interrupting elements affecting "onboarding.customClock" Button
+    t =     5.08s         Wait for com.apple.springboard to idle
+    t =     5.11s     Synthesize event
+    t =     5.40s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     6.33s Waiting 5.0s for "map.bossShortcut" Button to exist
+    t =     7.37s     Checking `Expect predicate `existsNoRetry == 1` for object "map.bossShortcut" Button`
+    t =     7.37s         Checking existence of `"map.bossShortcut" Button`
+    t =     7.90s Checking existence of `"header.dino" Any`
+    t =     8.39s Find the "map.bossShortcut" Button
+    t =     9.28s Tap "map.bossShortcut" Button
+    t =     9.28s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     9.28s     Find the "map.bossShortcut" Button
+    t =     9.78s     Check for interrupting elements affecting "map.bossShortcut" Button
+    t =    10.21s         Wait for com.apple.springboard to idle
+    t =    10.23s     Synthesize event
+    t =    10.89s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    10.89s Checking existence of `"level.play" Any`
+    t =    10.96s Checking existence of `"onboarding.next" Button`
+    t =    10.98s Find the "level.play" Any
+    t =    11.06s Tap "level.play" Button
+    t =    11.06s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    11.06s     Find the "level.play" Button
+    t =    11.12s     Check for interrupting elements affecting "level.play" Button
+    t =    11.17s         Wait for com.apple.springboard to idle
+    t =    11.19s     Synthesize event
+    t =    11.48s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    12.52s Checking `Expect predicate `BLOCKPREDICATE(0x11450c3f0)` for object Target Application 'Hakketjak.Dino-Klokkijken'`
+    t =    12.52s     Checking existence of `"question.title" StaticText`
+    t =    12.57s     Find the "question.example" Button
+    t =    12.61s     Checking existence of `"level.play" Button`
+    t =    12.65s Checking existence of `"demo.ready" Button`
+    t =    12.88s Added attachment named 'level-10-question'
+    t =    12.88s Checking existence of `"question.option.2" Any`
+    t =    12.95s Checking existence of `"onboarding.next" Button`
+    t =    13.00s Find the "question.option.2" Any
+    t =    13.08s Tap "question.option.2" Button
+    t =    13.08s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    13.08s     Find the "question.option.2" Button
+    t =    13.16s     Check for interrupting elements affecting "question.option.2" Button
+    t =    13.19s         Wait for com.apple.springboard to idle
+    t =    13.21s     Synthesize event
+    t =    13.51s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    14.55s Checking existence of `"2/10" StaticText`
+    t =    14.60s Checking existence of `"demo.ready" Button`
+    t =    14.64s Checking existence of `"question.option.3" Any`
+    t =    14.70s Checking existence of `"onboarding.next" Button`
+    t =    14.74s Find the "question.option.3" Any
+    t =    14.81s Tap "question.option.3" Button
+    t =    14.81s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    14.82s     Find the "question.option.3" Button
+    t =    14.91s     Check for interrupting elements affecting "question.option.3" Button
+    t =    14.94s         Wait for com.apple.springboard to idle
+    t =    14.97s     Synthesize event
+    t =    15.26s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    16.30s Checking existence of `"3/10" StaticText`
+    t =    16.33s Checking existence of `"demo.ready" Button`
+    t =    16.35s Checking existence of `"question.option.0" Any`
+    t =    16.42s Checking existence of `"onboarding.next" Button`
+    t =    16.44s Find the "question.option.0" Any
+    t =    16.51s Tap "question.option.0" Button
+    t =    16.51s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    16.52s     Find the "question.option.0" Button
+    t =    16.58s     Check for interrupting elements affecting "question.option.0" Button
+    t =    16.60s         Wait for com.apple.springboard to idle
+    t =    16.63s     Synthesize event
+    t =    16.92s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    17.96s Checking existence of `"4/10" StaticText`
+    t =    17.99s Checking existence of `"demo.ready" Button`
+    t =    18.01s Checking existence of `"question.option.1" Any`
+    t =    18.07s Checking existence of `"onboarding.next" Button`
+    t =    18.09s Find the "question.option.1" Any
+    t =    18.16s Tap "question.option.1" Button
+    t =    18.16s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.17s     Find the "question.option.1" Button
+    t =    18.24s     Check for interrupting elements affecting "question.option.1" Button
+    t =    18.26s         Wait for com.apple.springboard to idle
+    t =    18.28s     Synthesize event
+    t =    18.57s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    19.62s Checking existence of `"5/10" StaticText`
+    t =    19.69s Checking existence of `"demo.ready" Button`
+    t =    19.74s Checking existence of `"question.option.2" Any`
+    t =    19.81s Checking existence of `"onboarding.next" Button`
+    t =    19.85s Find the "question.option.2" Any
+    t =    19.92s Tap "question.option.2" Button
+    t =    19.93s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    19.93s     Find the "question.option.2" Button
+    t =    20.00s     Check for interrupting elements affecting "question.option.2" Button
+    t =    20.03s         Wait for com.apple.springboard to idle
+    t =    20.06s     Synthesize event
+    t =    20.35s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.39s Checking existence of `"6/10" StaticText`
+    t =    21.42s Checking existence of `"demo.ready" Button`
+    t =    21.45s Checking existence of `"question.option.3" Any`
+    t =    21.53s Checking existence of `"onboarding.next" Button`
+    t =    21.56s Find the "question.option.3" Any
+    t =    21.65s Tap "question.option.3" Button
+    t =    21.65s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.66s     Find the "question.option.3" Button
+    t =    21.73s     Check for interrupting elements affecting "question.option.3" Button
+    t =    21.75s         Wait for com.apple.springboard to idle
+    t =    21.78s     Synthesize event
+    t =    22.07s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    23.11s Checking existence of `"7/10" StaticText`
+    t =    23.14s Checking existence of `"demo.ready" Button`
+    t =    23.16s Waiting 5.0s for "question.analogControl" Any to exist
+    t =    24.19s     Checking `Expect predicate `existsNoRetry == 1` for object "question.analogControl" Any`
+    t =    24.19s         Checking existence of `"question.analogControl" Any`
+    t =    24.25s Tap "question.analogControl" Any[0.79, 0.67]
+    t =    24.25s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    24.25s     Find the "question.analogControl" Any
+    t =    24.30s     Check for interrupting elements affecting "question.analogControl" Other
+    t =    24.32s         Wait for com.apple.springboard to idle
+    t =    24.34s     Synthesize event
+    t =    24.34s         Find the "question.analogControl" Other
+    t =    24.42s         Find the "question.analogControl" Other
+    t =    24.48s         Find the "question.analogControl" Other
+    t =    24.82s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    24.82s Checking existence of `"question.confirm" Any`
+    t =    24.87s Checking existence of `"onboarding.next" Button`
+    t =    24.90s Find the "question.confirm" Any
+    t =    24.95s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    24.96s Find the "question.confirm" Button
+    t =    25.02s Tap "question.confirm" Button
+    t =    25.02s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    25.02s     Find the "question.confirm" Button
+    t =    25.07s     Check for interrupting elements affecting "question.confirm" Button
+    t =    25.09s         Wait for com.apple.springboard to idle
+    t =    25.11s     Synthesize event
+    t =    25.40s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    26.44s Checking existence of `"8/10" StaticText`
+    t =    26.47s Checking existence of `"demo.ready" Button`
+    t =    26.49s Waiting 5.0s for "Een uur vooruit" Button to exist
+    t =    27.52s     Checking `Expect predicate `existsNoRetry == 1` for object "Een uur vooruit" Button`
+    t =    27.53s         Checking existence of `"Een uur vooruit" Button`
+    t =    27.56s Tap "Een uur vooruit" Button
+    t =    27.56s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    27.57s     Find the "Een uur vooruit" Button
+    t =    27.60s     Check for interrupting elements affecting "clock.hour.more" Button
+    t =    27.62s         Wait for com.apple.springboard to idle
+    t =    27.64s     Synthesize event
+    t =    27.93s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    27.93s Tap "clock.hour.more" Button
+    t =    27.93s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    27.94s     Find the "clock.hour.more" Button
+    t =    27.97s     Check for interrupting elements affecting "clock.hour.more" Button
+    t =    27.99s         Wait for com.apple.springboard to idle
+    t =    28.00s     Synthesize event
+    t =    28.29s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    28.29s Tap "clock.hour.more" Button
+    t =    28.30s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    28.30s     Find the "clock.hour.more" Button
+    t =    28.33s     Check for interrupting elements affecting "clock.hour.more" Button
+    t =    28.35s         Wait for com.apple.springboard to idle
+    t =    28.37s     Synthesize event
+    t =    28.67s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    28.67s Tap "clock.hour.more" Button
+    t =    28.67s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    28.67s     Find the "clock.hour.more" Button
+    t =    28.70s     Check for interrupting elements affecting "clock.hour.more" Button
+    t =    28.72s         Wait for com.apple.springboard to idle
+    t =    28.73s     Synthesize event
+    t =    29.03s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    29.03s Tap "clock.hour.more" Button
+    t =    29.03s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    29.03s     Find the "clock.hour.more" Button
+    t =    29.06s     Check for interrupting elements affecting "clock.hour.more" Button
+    t =    29.08s         Wait for com.apple.springboard to idle
+    t =    29.09s     Synthesize event
+    t =    29.38s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    29.38s Tap "clock.hour.more" Button
+    t =    29.39s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    29.39s     Find the "clock.hour.more" Button
+    t =    29.42s     Check for interrupting elements affecting "clock.hour.more" Button
+    t =    29.43s         Wait for com.apple.springboard to idle
+    t =    29.45s     Synthesize event
+    t =    29.75s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    29.75s Tap "clock.hour.more" Button
+    t =    29.75s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    29.75s     Find the "clock.hour.more" Button
+    t =    29.78s     Check for interrupting elements affecting "clock.hour.more" Button
+    t =    29.80s         Wait for com.apple.springboard to idle
+    t =    29.81s     Synthesize event
+    t =    30.10s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    30.10s Checking existence of `"question.confirm" Any`
+    t =    30.17s Checking existence of `"onboarding.next" Button`
+    t =    30.19s Find the "question.confirm" Any
+    t =    30.26s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.27s Find the "question.confirm" Button
+    t =    30.34s Tap "question.confirm" Button
+    t =    30.34s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    30.34s     Find the "question.confirm" Button
+    t =    30.40s     Check for interrupting elements affecting "question.confirm" Button
+    t =    30.42s         Wait for com.apple.springboard to idle
+    t =    30.45s     Synthesize event
+    t =    30.74s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    31.77s Checking existence of `"9/10" StaticText`
+    t =    31.82s Checking existence of `"demo.ready" Button`
+    t =    31.86s Checking existence of `"question.match.clock.0" Any`
+    t =    31.91s Checking existence of `"onboarding.next" Button`
+    t =    31.94s Find the "question.match.clock.0" Any
+    t =    32.01s Tap "question.match.clock.0" Button
+    t =    32.01s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    32.01s     Find the "question.match.clock.0" Button
+    t =    32.06s     Check for interrupting elements affecting "question.match.clock.0" Button
+    t =    32.09s         Wait for com.apple.springboard to idle
+    t =    32.11s     Synthesize event
+    t =    32.40s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    32.40s Checking existence of `"question.match.time.1" Any`
+    t =    32.46s Checking existence of `"onboarding.next" Button`
+    t =    32.50s Find the "question.match.time.1" Any
+    t =    32.56s Tap "question.match.time.1" Button
+    t =    32.56s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    32.56s     Find the "question.match.time.1" Button
+    t =    32.62s     Check for interrupting elements affecting "question.match.time.1" Button
+    t =    32.65s         Wait for com.apple.springboard to idle
+    t =    32.67s     Synthesize event
+    t =    32.96s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    32.97s Checking existence of `"question.match.clock.1" Any`
+    t =    33.02s Checking existence of `"onboarding.next" Button`
+    t =    33.05s Find the "question.match.clock.1" Any
+    t =    33.11s Tap "question.match.clock.1" Button
+    t =    33.11s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    33.12s     Find the "question.match.clock.1" Button
+    t =    33.17s     Check for interrupting elements affecting "question.match.clock.1" Button
+    t =    33.20s         Wait for com.apple.springboard to idle
+    t =    33.23s     Synthesize event
+    t =    33.52s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    33.52s Checking existence of `"question.match.time.2" Any`
+    t =    33.58s Checking existence of `"onboarding.next" Button`
+    t =    33.63s Find the "question.match.time.2" Any
+    t =    33.71s Tap "question.match.time.2" Button
+    t =    33.71s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    33.71s     Find the "question.match.time.2" Button
+    t =    33.77s     Check for interrupting elements affecting "question.match.time.2" Button
+    t =    33.80s         Wait for com.apple.springboard to idle
+    t =    33.82s     Synthesize event
+    t =    34.11s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    34.12s Checking existence of `"question.match.clock.2" Any`
+    t =    34.17s Checking existence of `"onboarding.next" Button`
+    t =    34.21s Find the "question.match.clock.2" Any
+    t =    34.28s Tap "question.match.clock.2" Button
+    t =    34.28s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    34.28s     Find the "question.match.clock.2" Button
+    t =    34.34s     Check for interrupting elements affecting "question.match.clock.2" Button
+    t =    34.37s         Wait for com.apple.springboard to idle
+    t =    34.39s     Synthesize event
+    t =    34.68s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    34.69s Checking existence of `"question.match.time.0" Any`
+    t =    34.74s Checking existence of `"onboarding.next" Button`
+    t =    34.78s Find the "question.match.time.0" Any
+    t =    34.85s Tap "question.match.time.0" Button
+    t =    34.85s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    34.85s     Find the "question.match.time.0" Button
+    t =    34.91s     Check for interrupting elements affecting "question.match.time.0" Button
+    t =    34.94s         Wait for com.apple.springboard to idle
+    t =    34.97s     Synthesize event
+    t =    35.26s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    35.27s Checking existence of `"question.confirm" Any`
+    t =    35.34s Checking existence of `"onboarding.next" Button`
+    t =    35.38s Find the "question.confirm" Any
+    t =    35.46s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    35.48s Find the "question.confirm" Button
+    t =    35.56s Tap "question.confirm" Button
+    t =    35.56s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    35.56s     Find the "question.confirm" Button
+    t =    35.63s     Check for interrupting elements affecting "question.confirm" Button
+    t =    35.66s         Wait for com.apple.springboard to idle
+    t =    35.70s     Synthesize event
+    t =    36.00s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    37.04s Checking existence of `"10/10" StaticText`
+    t =    37.10s Checking existence of `"demo.ready" Button`
+    t =    37.14s Waiting 5.0s for "question.analogControl" Any to exist
+    t =    38.18s     Checking `Expect predicate `existsNoRetry == 1` for object "question.analogControl" Any`
+    t =    38.18s         Checking existence of `"question.analogControl" Any`
+    t =    38.29s Tap "question.analogControl" Any[0.16, 0.50]
+    t =    38.29s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    38.29s     Find the "question.analogControl" Any
+    t =    38.35s     Check for interrupting elements affecting "question.analogControl" Other
+    t =    38.37s         Wait for com.apple.springboard to idle
+    t =    38.39s     Synthesize event
+    t =    38.40s         Find the "question.analogControl" Other
+    t =    38.45s         Find the "question.analogControl" Other
+    t =    38.51s         Find the "question.analogControl" Other
+    t =    38.86s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    38.86s Checking existence of `"question.confirm" Any`
+    t =    38.92s Checking existence of `"onboarding.next" Button`
+    t =    38.95s Find the "question.confirm" Any
+    t =    39.01s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.02s Find the "question.confirm" Button
+    t =    39.10s Tap "question.confirm" Button
+    t =    39.10s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    39.10s     Find the "question.confirm" Button
+    t =    39.16s     Check for interrupting elements affecting "question.confirm" Button
+    t =    39.18s         Wait for com.apple.springboard to idle
+    t =    39.21s     Synthesize event
+    t =    39.51s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    40.54s Checking existence of `"result.map" Button`
+    t =    40.62s Waiting 5.0s for "result.map" Button to exist
+    t =    41.64s     Checking `Expect predicate `existsNoRetry == 1` for object "result.map" Button`
+    t =    41.64s         Checking existence of `"result.map" Button`
+    t =    41.67s Checking existence of `"10/10" StaticText`
+    t =    41.69s Checking existence of `"dino.backflip" Image`
+    t =    41.71s Checking existence of `"Perfecte boss-overwinning!" StaticText`
+    t =    41.73s Checking existence of `"result.next" Any`
+    t =    41.77s Checking existence of `"onboarding.next" Button`
+    t =    41.79s Find the "result.next" Any
+    t =    41.86s Tap "result.next" Button
+    t =    41.86s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    41.86s     Find the "result.next" Button
+    t =    41.89s     Check for interrupting elements affecting "result.next" Button
+    t =    41.94s         Wait for com.apple.springboard to idle
+    t =    41.99s     Synthesize event
+    t =    42.30s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    42.30s Checking existence of `"Wereld voltooid!" StaticText`
+    t =    42.32s Checking existence of `"Slaapvallei" StaticText`
+    t =    42.33s Checking existence of `"Coming soon" StaticText`
+    t =    42.35s Checking existence of `"completion.nextWorld" Any`
+    t =    42.38s Checking existence of `"onboarding.next" Button`
+    t =    42.40s Find the "completion.nextWorld" Any
+    t =    42.44s Tap "completion.nextWorld" Button
+    t =    42.44s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    42.44s     Find the "completion.nextWorld" Button
+    t =    42.47s     Check for interrupting elements affecting "completion.nextWorld" Button
+    t =    42.49s         Wait for com.apple.springboard to idle
+    t =    42.52s     Synthesize event
+    t =    42.84s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    42.84s Waiting 5.0s for "1/5" StaticText to exist
+    t =    43.85s     Checking `Expect predicate `existsNoRetry == 1` for object "1/5" StaticText`
+    t =    43.86s         Checking existence of `"1/5" StaticText`
+    t =    43.89s Checking existence of `"question.option.1" Any`
+    t =    43.96s Checking existence of `"onboarding.next" Button`
+    t =    43.99s Find the "question.option.1" Any
+    t =    44.06s Tap "question.option.1" Button
+    t =    44.06s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    44.06s     Find the "question.option.1" Button
+    t =    44.12s     Check for interrupting elements affecting "question.option.1" Button
+    t =    44.14s         Wait for com.apple.springboard to idle
+    t =    44.17s     Synthesize event
+    t =    44.47s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    44.47s Waiting 8.0s for "2/5" StaticText to exist
+    t =    45.49s     Checking `Expect predicate `existsNoRetry == 1` for object "2/5" StaticText`
+    t =    45.49s         Checking existence of `"2/5" StaticText`
+    t =    45.52s Checking existence of `"header.pause" Any`
+    t =    45.54s Checking existence of `"onboarding.next" Button`
+    t =    45.56s Find the "header.pause" Any
+    t =    45.59s Tap "header.pause" Button
+    t =    45.59s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    45.59s     Find the "header.pause" Button
+    t =    45.61s     Check for interrupting elements affecting "header.pause" Button
+    t =    45.63s         Wait for com.apple.springboard to idle
+    t =    45.65s     Synthesize event
+    t =    45.94s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    45.94s Checking existence of `"game.exit.confirm" Any`
+    t =    46.01s Checking existence of `"onboarding.next" Button`
+    t =    46.04s Find the "game.exit.confirm" Any
+    t =    46.10s Tap "game.exit.confirm" Button
+    t =    46.10s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    46.11s     Find the "game.exit.confirm" Button
+    t =    46.16s     Check for interrupting elements affecting "game.exit.confirm" Button
+    t =    46.18s         Wait for com.apple.springboard to idle
+    t =    46.21s     Synthesize event
+    t =    46.50s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    46.83s Terminate Hakketjak.Dino-Klokkijken:82535
+    t =    47.86s Open Hakketjak.Dino-Klokkijken
+    t =    47.86s     Launch Hakketjak.Dino-Klokkijken
+2026-10-14 17:17:46.789 xcodebuild[82478:23453549] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-14 17:17:46.789 xcodebuild[82478:23453549] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    48.07s         Setting up automation session
+    t =    48.83s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    51.26s Checking existence of `"onboarding.name" TextField`
+    t =    51.88s Checking existence of `"map.level.9" Button`
+    t =    52.42s Find the "map.level.9" Button
+    t =    52.96s Checking existence of `"map.dino.10" Any`
+    t =    53.47s Find the "map.dino.10" Any
+    t =    54.03s Find the "map.dino.10" Image
+    t =    54.55s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    54.96s Find the "map.dino.10" Image
+    t =    55.65s Added attachment named 'perfect-boss'
+    t =    55.65s Tear Down
+Test Case '-[DinoUITests.DinoUITests testDirectPerfectBoss]' passed (56.039 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-14 17:17:54.964.
+	 Executed 1 test, with 0 failures (0 unexpected) in 56.039 (56.040) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-14 17:17:54.964.
+	 Executed 1 test, with 0 failures (0 unexpected) in 56.039 (56.041) seconds
+Test Suite 'Selected tests' passed at 2026-10-14 17:17:54.965.
+	 Executed 1 test, with 0 failures (0 unexpected) in 56.039 (56.042) seconds
+2026-10-14 17:17:55.283 xcodebuild[82478:23453549] [MT] IDETestOperationsObserverDebug: 58.702 elapsed -- Testing started completed.
+2026-10-14 17:17:55.283 xcodebuild[82478:23453549] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-14 17:17:55.283 xcodebuild[82478:23453549] [MT] IDETestOperationsObserverDebug: 58.702 sec, +58.702 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-sleepvalley-ipad.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

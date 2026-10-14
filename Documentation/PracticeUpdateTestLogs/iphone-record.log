@@ -1,0 +1,276 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -scheme "Dino Klokkijken" -destination "platform=iOS Simulator,id=568FDEF6-FCAF-4BE9-B99B-E0C1836E03A6" -derivedDataPath /tmp/dino-practice-01a1367e-final -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testPracticeHUDRecordsAndPersistentCounter" -resultBundlePath /tmp/dino-practice-01a1367e-iphone-record-results
+
+Writing result bundle at path:
+	/tmp/dino-practice-01a1367e-iphone-record-results
+
+2026-10-13 20:51:43.846794+0200 DinoUITests-Runner[97221:20418004] [Default] Running tests...
+2026-10-13 20:51:43.903722+0200 DinoUITests-Runner[97221:20418103] [General] Failed to send CA Event for app launch measurements for ca_event_type: 0 event_name: com.apple.app_launch_measurement.FirstFramePresentationMetric
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-13 20:51:44.711.
+Test Suite 'DinoUITests.xctest' started at 2026-10-13 20:51:44.712.
+Test Suite 'DinoUITests' started at 2026-10-13 20:51:44.712.
+Test Case '-[DinoUITests.DinoUITests testPracticeHUDRecordsAndPersistentCounter]' started.
+    t =     0.00s Start Test at 2026-10-13 20:51:44.713
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.03s         Wait for com.apple.springboard to idle
+    t =     0.04s     Open Hakketjak.Dino-Klokkijken
+    t =     0.04s         Launch Hakketjak.Dino-Klokkijken
+2026-10-13 20:51:44.827 xcodebuild[97211:20417418] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-13 20:51:44.827 xcodebuild[97211:20417418] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-13 20:51:44.762026+0200 DinoUITests-Runner[97221:20418102] [General] Failed to send CA Event for app launch measurements for ca_event_type: 1 event_name: com.apple.app_launch_measurement.ExtendedLaunchMetrics
+objc[97221]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x108500310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10844c398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.73s             Setting up automation session
+    t =     1.51s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     2.84s Waiting 5.0s for "onboarding.next" Button to exist
+    t =     3.88s     Checking `Expect predicate `existsNoRetry == 1` for object "onboarding.next" Button`
+    t =     3.88s         Checking existence of `"onboarding.next" Button`
+    t =     3.93s Find the "onboarding.next" Button
+    t =     3.96s Checking existence of `"onboarding.name" TextField`
+    t =     3.98s Checking existence of `"personalize.bandana.red" Button`
+    t =     4.00s Checking existence of `"onboarding.next" Any`
+    t =     4.02s Find the "onboarding.next" Any
+    t =     4.04s Tap "onboarding.next" Button
+    t =     4.04s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.04s     Find the "onboarding.next" Button
+    t =     4.06s     Check for interrupting elements affecting "onboarding.next" Button
+    t =     4.08s     Synthesize event
+    t =     4.37s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.38s Checking existence of `"onboarding.standardClock" Any`
+    t =     4.39s Find the "onboarding.standardClock" Any
+    t =     4.41s Tap "onboarding.standardClock" Button
+    t =     4.41s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.41s     Find the "onboarding.standardClock" Button
+    t =     4.43s     Check for interrupting elements affecting "onboarding.standardClock" Button
+    t =     4.46s     Synthesize event
+    t =     4.75s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.79s Waiting 5.0s for "map.bossShortcut" Button to exist
+    t =     5.83s     Checking `Expect predicate `existsNoRetry == 1` for object "map.bossShortcut" Button`
+    t =     5.83s         Checking existence of `"map.bossShortcut" Button`
+    t =     6.32s Checking existence of `"header.dino" Any`
+    t =     6.75s Checking existence of `"header.practice" Any`
+    t =     6.76s Find the "header.practice" Any
+    t =     6.78s Tap "header.practice" Button
+    t =     6.78s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     6.78s     Find the "header.practice" Button
+    t =     6.79s     Check for interrupting elements affecting "header.practice" Button
+    t =     7.17s     Synthesize event
+    t =     7.46s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     7.48s Waiting 5.0s for "practice.start" Button to exist
+    t =     8.51s     Checking `Expect predicate `existsNoRetry == 1` for object "practice.start" Button`
+    t =     8.52s         Checking existence of `"practice.start" Button`
+    t =     8.62s Find the "practice.time.whole" Button
+    t =     8.69s Find the "practice.time.half" Button
+    t =     8.76s Find the "practice.time.quarter" Button
+    t =     8.83s Find the "practice.time.tenMinutes" Button
+    t =     8.91s Find the "practice.time.fiveMinutes" Button
+    t =     8.98s Find the "practice.time.mix" Button
+    t =     9.06s Find the "practice.time.whole" Button
+    t =     9.13s Find the "practice.time.whole" Button
+    t =     9.20s Find the "practice.time.half" Button
+    t =     9.27s Find the "practice.time.quarter" Button
+    t =     9.33s Find the "practice.time.tenMinutes" Button
+    t =     9.40s Find the "practice.time.fiveMinutes" Button
+    t =     9.48s Find the "practice.time.mix" Button
+    t =     9.55s Find the "practice.time.whole" Button
+    t =     9.62s Find the "practice.time.whole" Button
+    t =     9.69s Find the "practice.time.whole" Button
+    t =     9.76s Find the "practice.time.whole" Button
+    t =     9.83s Find the "practice.time.half" Button
+    t =     9.90s Find the "practice.time.whole" Button
+    t =     9.97s Find the "practice.time.half" Button
+    t =    10.04s Find the "practice.time.half" Button
+    t =    10.11s Find the "practice.time.quarter" Button
+    t =    10.18s Find the "practice.time.whole" Button
+    t =    10.24s Find the "practice.time.quarter" Button
+    t =    10.31s Find the "practice.time.quarter" Button
+    t =    10.38s Find the "practice.time.tenMinutes" Button
+    t =    10.44s Find the "practice.time.tenMinutes" Button
+    t =    10.51s Find the "practice.time.tenMinutes" Button
+    t =    10.58s Find the "practice.time.whole" Button
+    t =    10.64s Find the "practice.time.fiveMinutes" Button
+    t =    10.71s Find the "practice.time.tenMinutes" Button
+    t =    10.77s Find the "practice.time.fiveMinutes" Button
+    t =    10.84s Find the "practice.time.half" Button
+    t =    10.91s Find the "practice.time.mix" Button
+    t =    10.98s Find the "practice.time.tenMinutes" Button
+    t =    11.05s Find the "practice.time.mix" Button
+    t =    11.11s Find the "practice.time.quarter" Button
+    t =    11.18s Find the "practice.time.tenMinutes" Button
+    t =    11.25s Find the "practice.time.whole" Button
+    t =    11.31s Checking existence of `"practice.type.chooseAnalog2" Button`
+    t =    11.38s Checking existence of `"practice.type.chooseDigital4" Button`
+    t =    11.54s Added attachment named 'practice-grid-and-types'
+    t =    11.54s Checking existence of `"Van makkelijk naar moeilijk" StaticText`
+    t =    11.60s Find the "practice.options" ScrollView
+    t =    11.67s Find the "practice.options" ScrollView
+    t =    11.73s Find the "practice.start" Button
+    t =    11.80s Checking existence of `"practice.type.chooseAnalog" Button`
+    t =    11.86s Find the "practice.type.chooseAnalog" Button
+    t =    11.92s Checking existence of `"practice.type.chooseAnalog" Button`
+    t =    11.98s Find the "practice.type.chooseAnalog" Button
+    t =    12.05s Tap "practice.type.chooseAnalog" Button
+    t =    12.05s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    12.05s     Find the "practice.type.chooseAnalog" Button
+    t =    12.11s     Check for interrupting elements affecting "practice.type.chooseAnalog" Button
+    t =    12.14s     Synthesize event
+    t =    12.43s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    12.43s Find the "practice.type.chooseAnalog" Button
+    t =    12.50s Find the "practice.type.chooseAnalog" Button
+    t =    12.64s Added attachment named 'practice-update-overview'
+    t =    12.64s Checking existence of `"practice.start" Any`
+    t =    12.69s Find the "practice.start" Any
+    t =    12.75s Tap "practice.start" Button
+    t =    12.75s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    12.75s     Find the "practice.start" Button
+    t =    12.80s     Check for interrupting elements affecting "practice.start" Button
+    t =    12.85s     Synthesize event
+    t =    13.13s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    13.51s Checking existence of `"header.dino" Any`
+    t =    13.61s Checking existence of `"header.streak" Any`
+    t =    13.71s Checking existence of `"header.questions" Any`
+    t =    13.81s Find the "header.level" Any
+    t =    13.91s Find the "practice.streak" StaticText
+    t =    13.99s Checking existence of `"question.option.2" Any`
+    t =    14.07s Find the "question.option.2" Any
+    t =    14.16s Tap "question.option.2" Button
+    t =    14.16s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    14.16s     Find the "question.option.2" Button
+    t =    14.24s     Check for interrupting elements affecting "question.option.2" Button
+    t =    14.30s     Synthesize event
+    t =    14.59s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    14.59s Waiting 6.0s for "practice.questionNumber" StaticText to exist
+    t =    15.63s     Checking `Expect predicate `existsNoRetry == 1` for object "practice.questionNumber" StaticText`
+    t =    15.63s         Checking existence of `"practice.questionNumber" StaticText`
+    t =    15.65s Find the "practice.streak" StaticText
+    t =    15.75s Find the "practice.bestStreak" Any
+    t =    15.86s Checking existence of `"question.option.2" Any`
+    t =    15.95s Find the "question.option.2" Any
+    t =    16.03s Tap "question.option.2" Button
+    t =    16.03s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    16.03s     Find the "question.option.2" Button
+    t =    16.11s     Check for interrupting elements affecting "question.option.2" Button
+    t =    16.17s     Synthesize event
+    t =    16.46s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    16.46s Waiting 6.0s for "practice.questionNumber" StaticText to exist
+    t =    17.50s     Checking `Expect predicate `existsNoRetry == 1` for object "practice.questionNumber" StaticText`
+    t =    17.50s         Checking existence of `"practice.questionNumber" StaticText`
+    t =    17.54s Find the "practice.streak" StaticText
+    t =    17.62s Find the "practice.bestStreak" Any
+    t =    17.82s Added attachment named 'practice-update-hud-record'
+    t =    17.82s Get number of matches for: Elements matching predicate 'identifier BEGINSWITH "question.option."'
+    t =    17.87s Checking existence of `"question.option.1" Any`
+    t =    17.94s Find the "question.option.1" Any
+    t =    18.02s Tap "question.option.1" Button
+    t =    18.02s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.02s     Find the "question.option.1" Button
+    t =    18.09s     Check for interrupting elements affecting "question.option.1" Button
+    t =    18.14s     Synthesize event
+    t =    18.43s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.43s Waiting 5.0s for "question.next" Button to exist
+    t =    19.46s     Checking `Expect predicate `existsNoRetry == 1` for object "question.next" Button`
+    t =    19.46s         Checking existence of `"question.next" Button`
+    t =    19.56s Find the "practice.streak" StaticText
+    t =    19.64s Find the "practice.bestStreak" Any
+    t =    19.73s Checking existence of `"question.next" Any`
+    t =    19.75s Find the "question.next" Any
+    t =    19.78s Tap "question.next" Button
+    t =    19.78s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    19.78s     Find the "question.next" Button
+    t =    19.81s     Check for interrupting elements affecting "question.next" Button
+    t =    19.86s     Synthesize event
+    t =    20.15s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    20.15s Checking existence of `"header.pause" Any`
+    t =    20.17s Find the "header.pause" Any
+    t =    20.20s Tap "header.pause" Button
+    t =    20.20s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    20.21s     Find the "header.pause" Button
+    t =    20.23s     Check for interrupting elements affecting "header.pause" Button
+    t =    20.29s     Synthesize event
+    t =    20.58s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    20.58s Checking existence of `"game.exit.confirm" Any`
+    t =    20.66s Find the "game.exit.confirm" Any
+    t =    20.75s Tap "game.exit.confirm" Button
+    t =    20.75s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    20.75s     Find the "game.exit.confirm" Button
+    t =    20.82s     Check for interrupting elements affecting "game.exit.confirm" Button
+    t =    20.86s     Synthesize event
+    t =    21.15s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.48s Find the "practice.type.chooseAnalog" Button
+    t =    21.54s Checking existence of `"practice.time.half" Any`
+    t =    21.60s Find the "practice.time.half" Any
+    t =    21.66s Tap "practice.time.half" Button
+    t =    21.66s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.66s     Find the "practice.time.half" Button
+    t =    21.72s     Check for interrupting elements affecting "practice.time.half" Button
+    t =    21.77s     Synthesize event
+    t =    22.05s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    22.06s Find the "practice.type.chooseAnalog" Button
+    t =    22.12s Checking existence of `"practice.close" Any`
+    t =    22.17s Find the "practice.close" Any
+    t =    22.22s Tap "practice.close" Other
+    t =    22.22s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    22.22s     Find the "practice.close" Other
+    t =    22.27s     Check for interrupting elements affecting "practice.close" Other
+    t =    22.31s     Synthesize event
+    t =    22.60s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    23.38s Terminate Hakketjak.Dino-Klokkijken:97233
+    t =    24.44s Open Hakketjak.Dino-Klokkijken
+    t =    24.44s     Launch Hakketjak.Dino-Klokkijken
+2026-10-13 20:52:09.155 xcodebuild[97211:20417418] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-13 20:52:09.155 xcodebuild[97211:20417418] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    24.65s         Setting up automation session
+    t =    25.26s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    26.71s Checking existence of `"header.practice" Any`
+    t =    26.75s Find the "header.practice" Any
+    t =    26.77s Tap "header.practice" Button
+    t =    26.77s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    26.78s     Find the "header.practice" Button
+    t =    26.79s     Check for interrupting elements affecting "header.practice" Button
+    t =    27.23s     Synthesize event
+    t =    27.53s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    27.63s Find the "practice.options" ScrollView
+    t =    27.73s Find the "practice.options" ScrollView
+    t =    27.80s Find the "practice.start" Button
+    t =    27.88s Checking existence of `"practice.type.chooseAnalog" Button`
+    t =    27.95s Find the "practice.type.chooseAnalog" Button
+    t =    28.03s Checking existence of `"practice.type.chooseAnalog" Button`
+    t =    28.11s Find the "practice.type.chooseAnalog" Button
+    t =    28.19s Tap "practice.type.chooseAnalog" Button
+    t =    28.19s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    28.20s     Find the "practice.type.chooseAnalog" Button
+    t =    28.27s     Check for interrupting elements affecting "practice.type.chooseAnalog" Button
+    t =    28.32s     Synthesize event
+    t =    28.61s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    28.62s Find the "practice.type.chooseAnalog" Button
+    t =    28.71s Checking existence of `"practice.start" Any`
+    t =    28.78s Find the "practice.start" Any
+    t =    28.87s Tap "practice.start" Button
+    t =    28.87s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    28.88s     Find the "practice.start" Button
+    t =    28.97s     Check for interrupting elements affecting "practice.start" Button
+    t =    29.04s     Synthesize event
+    t =    29.33s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    29.76s Find the "practice.questionNumber" StaticText
+    t =    29.95s Find the "practice.streak" StaticText
+    t =    30.11s Find the "practice.bestStreak" Any
+    t =    30.63s Added attachment named 'practice-update-hud-resumed'
+    t =    30.64s Tear Down
+Test Case '-[DinoUITests.DinoUITests testPracticeHUDRecordsAndPersistentCounter]' passed (31.150 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-13 20:52:15.863.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.150 (31.151) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-13 20:52:15.864.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.150 (31.152) seconds
+Test Suite 'Selected tests' passed at 2026-10-13 20:52:15.864.
+	 Executed 1 test, with 0 failures (0 unexpected) in 31.150 (31.153) seconds
+2026-10-13 20:52:16.192 xcodebuild[97211:20417418] [MT] IDETestOperationsObserverDebug: 34.245 elapsed -- Testing started completed.
+2026-10-13 20:52:16.192 xcodebuild[97211:20417418] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-13 20:52:16.192 xcodebuild[97211:20417418] [MT] IDETestOperationsObserverDebug: 34.245 sec, +34.245 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-practice-01a1367e-iphone-record-results
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

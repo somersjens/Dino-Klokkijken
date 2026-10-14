@@ -1,0 +1,361 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -destination "platform=iOS Simulator,id=E406A105-3FA5-4130-A09F-CD8138242955" -derivedDataPath /tmp/dino-hud-palette-derived -resultBundlePath /tmp/dino-hud-palette-ipad.xcresult "-only-testing:DinoUITests/DinoUITests/testContextualHUDAndFirstQuestionExit" -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Writing result bundle at path:
+	/tmp/dino-hud-palette-ipad.xcresult
+
+2026-10-13 21:31:07.284789+0200 DinoUITests-Runner[13218:20587915] [Default] Running tests...
+2026-10-13 21:31:07.314205+0200 DinoUITests-Runner[13218:20587915] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+objc[13218]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x10aa60310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10a9c0398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-13 21:31:10.542.
+Test Suite 'DinoUITests.xctest' started at 2026-10-13 21:31:10.542.
+Test Suite 'DinoUITests' started at 2026-10-13 21:31:10.543.
+Test Case '-[DinoUITests.DinoUITests testContextualHUDAndFirstQuestionExit]' started.
+    t =     0.00s Start Test at 2026-10-13 21:31:10.543
+    t =     0.22s Set Up
+    t =     0.22s     Setting device orientation to Portrait
+    t =     0.23s         Device orientation changed to Portrait
+    t =     0.26s         Wait for com.apple.DocumentManager.DockFolderViewService to idle
+    t =     0.29s         Wait for com.apple.springboard to idle
+    t =     0.33s     Open Hakketjak.Dino-Klokkijken
+    t =     0.33s         Launch Hakketjak.Dino-Klokkijken
+2026-10-13 21:31:10.987 xcodebuild[12796:20583000] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-13 21:31:10.987 xcodebuild[12796:20583000] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.68s             Setting up automation session
+    t =     2.83s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.82s Waiting 5.0s for "onboarding.next" Button to exist
+    t =     5.87s     Checking `Expect predicate `existsNoRetry == 1` for object "onboarding.next" Button`
+    t =     5.87s         Checking existence of `"onboarding.next" Button`
+    t =     6.00s Find the "onboarding.next" Button
+    t =     6.04s Checking existence of `"onboarding.name" TextField`
+    t =     6.08s Checking existence of `"personalize.bandana.red" Button`
+    t =     6.12s Checking existence of `"onboarding.next" Any`
+    t =     6.15s Find the "onboarding.next" Any
+    t =     6.20s Tap "onboarding.next" Button
+    t =     6.20s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     6.20s     Find the "onboarding.next" Button
+    t =     6.23s     Check for interrupting elements affecting "onboarding.next" Button
+    t =     6.26s         Wait for com.apple.springboard to idle
+    t =     6.31s     Synthesize event
+    t =     6.72s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     6.73s Checking existence of `"onboarding.standardClock" Any`
+    t =     6.75s Find the "onboarding.standardClock" Any
+    t =     6.79s Tap "onboarding.standardClock" Button
+    t =     6.79s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     6.79s     Find the "onboarding.standardClock" Button
+    t =     6.82s     Check for interrupting elements affecting "onboarding.standardClock" Button
+    t =     6.87s         Wait for com.apple.springboard to idle
+    t =     6.91s     Synthesize event
+    t =     7.21s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     8.31s Waiting 5.0s for "map.bossShortcut" Button to exist
+    t =     9.35s     Checking `Expect predicate `existsNoRetry == 1` for object "map.bossShortcut" Button`
+    t =     9.35s         Checking existence of `"map.bossShortcut" Button`
+    t =    10.05s Checking existence of `"header.dino" Any`
+    t =    10.76s Find the "header.level" Any
+    t =    11.54s Find the "header.level" Other
+    t =    12.29s Find the "header.level" Other
+    t =    13.01s Find the "header.level" Other
+    t =    13.65s Find the "header.level" Other
+    t =    14.29s Find the "header.stars" Any
+    t =    14.93s Find the "header.level" Other
+    t =    15.63s Find the "header.stars" Other
+    t =    16.34s Find the "header.level" Other
+    t =    16.99s Find the "header.stars" Other
+    t =    17.63s Find the "header.practice" Any
+    t =    18.29s Find the "header.level" Other
+    t =    18.80s Find the "header.practice" Button
+    t =    19.35s Find the "header.level" Other
+    t =    19.86s Find the "header.practice" Button
+    t =    20.34s Find the "header.settings" Any
+    t =    20.83s Find the "header.level" Other
+    t =    21.30s Find the "header.settings" Button
+    t =    21.78s Find the "header.level" Other
+    t =    22.26s Find the "header.settings" Button
+    t =    22.73s Find the "header.level" Other
+    t =    23.19s Find the "header.stars" Other
+    t =    23.64s Find the "header.stars" Other
+    t =    24.09s Find the "header.practice" Button
+    t =    24.58s Find the "header.practice" Button
+    t =    25.08s Find the "header.settings" Button
+    t =    25.73s Added attachment named 'hud-map-practice'
+    t =    25.73s Checking existence of `"header.practice" Any`
+    t =    25.75s Find the "header.practice" Any
+    t =    25.78s Tap "header.practice" Button
+    t =    25.78s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    25.78s     Find the "header.practice" Button
+    t =    25.80s     Check for interrupting elements affecting "header.practice" Button
+    t =    26.24s         Wait for com.apple.springboard to idle
+    t =    26.26s     Synthesize event
+    t =    26.55s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    26.94s Waiting 5.0s for "practice.start" Button to exist
+    t =    27.98s     Checking `Expect predicate `existsNoRetry == 1` for object "practice.start" Button`
+    t =    27.98s         Checking existence of `"practice.start" Button`
+    t =    28.05s Checking existence of `"practice.close" Any`
+    t =    28.14s Find the "practice.close" Any
+    t =    28.22s Tap "practice.close" Other
+    t =    28.22s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    28.22s     Find the "practice.close" Other
+    t =    28.28s     Check for interrupting elements affecting "practice.close" Other
+    t =    28.31s         Wait for com.apple.springboard to idle
+    t =    28.34s     Synthesize event
+    t =    28.64s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    29.43s Checking existence of `"header.settings" Any`
+    t =    29.45s Find the "header.settings" Any
+    t =    29.47s Tap "header.settings" Button
+    t =    29.47s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    29.47s     Find the "header.settings" Button
+    t =    29.49s     Check for interrupting elements affecting "header.settings" Button
+    t =    29.92s         Wait for com.apple.springboard to idle
+    t =    29.94s     Synthesize event
+    t =    30.24s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    30.50s Checking existence of `"settings.practice" Button`
+    t =    31.07s Tap "Klaar" Button
+    t =    31.07s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    31.68s     Find the "Klaar" Button
+    t =    32.26s     Check for interrupting elements affecting "Klaar" Button
+    t =    32.67s         Wait for com.apple.springboard to idle
+    t =    32.68s     Synthesize event
+    t =    32.97s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    33.75s Find the "header.settings" Button
+    t =    34.19s Find the "map.level.1" Button
+    t =    34.62s Checking existence of `"map.level.1" Button`
+    t =    35.07s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    35.46s Checking existence of `"map.level.1" Button`
+    t =    35.90s Find the "map.level.1" Button
+    t =    36.36s Find the "map.level.1" Button
+    t =    36.80s Find the "header.settings" Button
+    t =    37.23s Find the "map.level.1" Button
+    t =    37.68s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    38.08s Tap "map.level.1" Button
+    t =    38.08s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    38.08s     Find the "map.level.1" Button
+    t =    38.54s     Check for interrupting elements affecting "map.level.1" Button
+    t =    38.93s         Wait for com.apple.springboard to idle
+    t =    38.95s     Synthesize event
+    t =    39.58s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    39.58s Checking existence of `"level.play" Any`
+    t =    39.62s Find the "level.play" Any
+    t =    39.67s Tap "level.play" Button
+    t =    39.67s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    39.67s     Find the "level.play" Button
+    t =    39.72s     Check for interrupting elements affecting "level.play" Button
+    t =    39.76s         Wait for com.apple.springboard to idle
+    t =    39.78s     Synthesize event
+    t =    40.06s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    40.07s Waiting 5.0s for "header.pause" Button to exist
+    t =    41.10s     Checking `Expect predicate `existsNoRetry == 1` for object "header.pause" Button`
+    t =    41.10s         Checking existence of `"header.pause" Button`
+    t =    41.13s Checking existence of `"header.questions" Any`
+    t =    41.15s Find the "header.questions" Any
+    t =    41.18s Checking existence of `"header.stars" Any`
+    t =    41.20s Get number of matches for: Elements matching predicate 'label == "1/5"'
+    t =    41.23s Find the "header.questions" Any
+    t =    41.26s Find the "question.example" Button
+    t =    41.28s Find the "question.example" Button
+    t =    41.31s Find the "header.pause" Button
+    t =    41.34s Find the "header.questions" Other
+    t =    41.37s Find the "header.pause" Button
+    t =    41.39s Find the "question.example" Button
+    t =    41.42s Find the "header.pause" Button
+    t =    41.58s Added attachment named 'hud-game-questions'
+    t =    41.59s Checking existence of `"question.example" Any`
+    t =    41.60s Find the "question.example" Any
+    t =    41.62s Tap "question.example" Button
+    t =    41.62s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    41.62s     Find the "question.example" Button
+    t =    41.64s     Check for interrupting elements affecting "question.example" Button
+    t =    41.65s         Wait for com.apple.springboard to idle
+    t =    41.67s     Synthesize event
+    t =    41.96s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    41.96s Waiting 5.0s for "demo.ready" Button to exist
+    t =    42.99s     Checking `Expect predicate `existsNoRetry == 1` for object "demo.ready" Button`
+    t =    42.99s         Checking existence of `"demo.ready" Button`
+    t =    43.04s Checking existence of `"demo.ready" Any`
+    t =    43.09s Find the "demo.ready" Any
+    t =    43.14s Tap "demo.ready" Button
+    t =    43.14s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    43.14s     Find the "demo.ready" Button
+    t =    43.19s     Check for interrupting elements affecting "demo.ready" Button
+    t =    43.21s         Wait for com.apple.springboard to idle
+    t =    43.23s     Synthesize event
+    t =    43.52s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    43.53s Checking existence of `"header.pause" Any`
+    t =    43.55s Find the "header.pause" Any
+    t =    43.58s Tap "header.pause" Button
+    t =    43.58s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    43.58s     Find the "header.pause" Button
+    t =    43.60s     Check for interrupting elements affecting "header.pause" Button
+    t =    43.61s         Wait for com.apple.springboard to idle
+    t =    43.63s     Synthesize event
+    t =    43.92s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    44.09s Waiting 5.0s for "header.settings" Button to exist
+    t =    45.12s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    45.12s         Checking existence of `"header.settings" Button`
+    t =    45.62s Checking existence of `"game.exit.confirm" Button`
+    t =    46.07s Find the "header.settings" Button
+    t =    46.50s Find the "map.level.1" Button
+    t =    46.92s Checking existence of `"map.level.1" Button`
+    t =    47.35s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    47.73s Checking existence of `"map.level.1" Button`
+    t =    48.20s Find the "map.level.1" Button
+    t =    48.69s Find the "map.level.1" Button
+    t =    49.11s Find the "header.settings" Button
+    t =    49.65s Find the "map.level.1" Button
+    t =    50.17s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    50.54s Tap "map.level.1" Button
+    t =    50.54s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    50.54s     Find the "map.level.1" Button
+    t =    50.97s     Check for interrupting elements affecting "map.level.1" Button
+    t =    51.41s         Wait for com.apple.springboard to idle
+    t =    51.43s     Synthesize event
+    t =    52.07s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    52.07s Checking existence of `"level.play" Any`
+    t =    52.12s Find the "level.play" Any
+    t =    52.16s Tap "level.play" Button
+    t =    52.16s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    52.16s     Find the "level.play" Button
+    t =    52.20s     Check for interrupting elements affecting "level.play" Button
+    t =    52.24s         Wait for com.apple.springboard to idle
+    t =    52.25s     Synthesize event
+    t =    52.54s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    52.55s Checking existence of `"question.option.1" Any`
+    t =    52.60s Find the "question.option.1" Any
+    t =    52.66s Tap "question.option.1" Button
+    t =    52.66s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    52.66s     Find the "question.option.1" Button
+    t =    52.71s     Check for interrupting elements affecting "question.option.1" Button
+    t =    52.73s         Wait for com.apple.springboard to idle
+    t =    52.75s     Synthesize event
+    t =    53.04s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    53.05s Waiting 5.0s for "question.next" Button to exist
+    t =    54.08s     Checking `Expect predicate `existsNoRetry == 1` for object "question.next" Button`
+    t =    54.08s         Checking existence of `"question.next" Button`
+    t =    54.11s Checking existence of `"header.pause" Any`
+    t =    54.13s Find the "header.pause" Any
+    t =    54.15s Tap "header.pause" Button
+    t =    54.15s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    54.15s     Find the "header.pause" Button
+    t =    54.17s     Check for interrupting elements affecting "header.pause" Button
+    t =    54.19s         Wait for com.apple.springboard to idle
+    t =    54.21s     Synthesize event
+    t =    54.49s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    54.65s Waiting 5.0s for "header.settings" Button to exist
+    t =    55.68s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    55.68s         Checking existence of `"header.settings" Button`
+    t =    56.17s Checking existence of `"game.exit.confirm" Button`
+    t =    56.63s Find the "header.settings" Button
+    t =    57.08s Find the "map.level.1" Button
+    t =    57.51s Checking existence of `"map.level.1" Button`
+    t =    57.95s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    58.33s Checking existence of `"map.level.1" Button`
+    t =    58.77s Find the "map.level.1" Button
+    t =    59.22s Find the "map.level.1" Button
+    t =    59.67s Find the "header.settings" Button
+    t =    60.20s Find the "map.level.1" Button
+    t =    60.66s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    61.05s Tap "map.level.1" Button
+    t =    61.05s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    61.05s     Find the "map.level.1" Button
+    t =    61.50s     Check for interrupting elements affecting "map.level.1" Button
+    t =    61.87s         Wait for com.apple.springboard to idle
+    t =    61.89s     Synthesize event
+    t =    62.49s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    62.49s Checking existence of `"level.play" Any`
+    t =    62.54s Find the "level.play" Any
+    t =    62.59s Tap "level.play" Button
+    t =    62.59s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    62.59s     Find the "level.play" Button
+    t =    62.64s     Check for interrupting elements affecting "level.play" Button
+    t =    62.68s         Wait for com.apple.springboard to idle
+    t =    62.70s     Synthesize event
+    t =    62.99s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    62.99s Checking existence of `"question.option.1" Any`
+    t =    63.04s Find the "question.option.1" Any
+    t =    63.10s Tap "question.option.1" Button
+    t =    63.10s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    63.11s     Find the "question.option.1" Button
+    t =    63.16s     Check for interrupting elements affecting "question.option.1" Button
+    t =    63.18s         Wait for com.apple.springboard to idle
+    t =    63.20s     Synthesize event
+    t =    63.50s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    63.50s Waiting 5.0s for "question.next" Button to exist
+    t =    64.53s     Checking `Expect predicate `existsNoRetry == 1` for object "question.next" Button`
+    t =    64.53s         Checking existence of `"question.next" Button`
+    t =    64.56s Checking existence of `"question.next" Any`
+    t =    64.60s Find the "question.next" Any
+    t =    64.62s Tap "question.next" Button
+    t =    64.62s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    64.62s     Find the "question.next" Button
+    t =    64.64s     Check for interrupting elements affecting "question.next" Button
+    t =    64.66s         Wait for com.apple.springboard to idle
+    t =    64.68s     Synthesize event
+    t =    64.97s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    64.97s Waiting 5.0s for "2/5" StaticText to exist
+    t =    66.00s     Checking `Expect predicate `existsNoRetry == 1` for object "2/5" StaticText`
+    t =    66.00s         Checking existence of `"2/5" StaticText`
+    t =    66.03s Checking existence of `"header.pause" Any`
+    t =    66.05s Find the "header.pause" Any
+    t =    66.07s Tap "header.pause" Button
+    t =    66.07s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    66.07s     Find the "header.pause" Button
+    t =    66.09s     Check for interrupting elements affecting "header.pause" Button
+    t =    66.11s         Wait for com.apple.springboard to idle
+    t =    66.13s     Synthesize event
+    t =    66.42s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    66.42s Waiting 5.0s for "game.exit.cancel" Button to exist
+    t =    67.44s     Checking `Expect predicate `existsNoRetry == 1` for object "game.exit.cancel" Button`
+    t =    67.44s         Checking existence of `"game.exit.cancel" Button`
+    t =    67.62s Added attachment named 'hud-later-question-exit'
+    t =    67.62s Checking existence of `"game.exit.cancel" Any`
+    t =    67.66s Find the "game.exit.cancel" Any
+    t =    67.70s Tap "game.exit.cancel" Button
+    t =    67.70s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    67.71s     Find the "game.exit.cancel" Button
+    t =    67.75s     Check for interrupting elements affecting "game.exit.cancel" Button
+    t =    67.77s         Wait for com.apple.springboard to idle
+    t =    67.78s     Synthesize event
+    t =    68.07s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    68.08s Checking existence of `"2/5" StaticText`
+    t =    68.10s Checking existence of `"header.pause" Any`
+    t =    68.12s Find the "header.pause" Any
+    t =    68.14s Tap "header.pause" Button
+    t =    68.14s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    68.14s     Find the "header.pause" Button
+    t =    68.16s     Check for interrupting elements affecting "header.pause" Button
+    t =    68.18s         Wait for com.apple.springboard to idle
+    t =    68.20s     Synthesize event
+    t =    68.49s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    68.49s Checking existence of `"game.exit.confirm" Any`
+    t =    68.54s Find the "game.exit.confirm" Any
+    t =    68.59s Tap "game.exit.confirm" Button
+    t =    68.59s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    68.59s     Find the "game.exit.confirm" Button
+    t =    68.63s     Check for interrupting elements affecting "game.exit.confirm" Button
+    t =    68.65s         Wait for com.apple.springboard to idle
+    t =    68.67s     Synthesize event
+    t =    68.96s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    69.13s Waiting 5.0s for "header.settings" Button to exist
+    t =    70.14s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    70.14s         Checking existence of `"header.settings" Button`
+    t =    70.63s Tear Down
+Test Case '-[DinoUITests.DinoUITests testContextualHUDAndFirstQuestionExit]' passed (70.979 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-13 21:32:21.523.
+	 Executed 1 test, with 0 failures (0 unexpected) in 70.979 (70.981) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-13 21:32:21.524.
+	 Executed 1 test, with 0 failures (0 unexpected) in 70.979 (70.981) seconds
+Test Suite 'Selected tests' passed at 2026-10-13 21:32:21.524.
+	 Executed 1 test, with 0 failures (0 unexpected) in 70.979 (70.982) seconds
+2026-10-13 21:32:21.871 xcodebuild[12796:20583000] [MT] IDETestOperationsObserverDebug: 98.683 elapsed -- Testing started completed.
+2026-10-13 21:32:21.871 xcodebuild[12796:20583000] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-13 21:32:21.871 xcodebuild[12796:20583000] [MT] IDETestOperationsObserverDebug: 98.683 sec, +98.683 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-hud-palette-ipad.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
