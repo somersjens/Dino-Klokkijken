@@ -99,15 +99,13 @@ struct AnalogClock: View {
         }, including: onHourChange == nil && onMinuteChange == nil ? .none : .all)
         .overlay {
             if showHandHints {
-                // Route through the gaps between numerals and keep both badges apart.
-                let minuteCallout = ceil((time.minuteAngle - 15) / 30) * 30 + 15
-                let firstHourCallout = floor((time.hourAngle - 15) / 30) * 30 + 15
-                let sharedCallout = abs((firstHourCallout - minuteCallout).truncatingRemainder(dividingBy: 360)) < 1
-                let hourCallout = firstHourCallout + (sharedCallout ? (time.hourAngle > firstHourCallout ? 30 : -30) : 0)
+                // Straight pointers follow each hand; only nearby badges need separation.
+                let difference = (time.hourAngle - time.minuteAngle + 540).truncatingRemainder(dividingBy: 360) - 180
+                let spread: Double = abs(difference) < 22 ? (difference > 0 ? 15 : -15) : 0
                 ClockHandHint(number: 1, angle: time.hourAngle, length: size * 0.23,
-                              ink: theme.hourInk, face: theme.face, size: size, calloutAngle: hourCallout)
+                              ink: theme.hourInk, face: theme.face, size: size, calloutAngle: time.hourAngle + spread)
                 ClockHandHint(number: 2, angle: time.minuteAngle, length: size * 0.34,
-                              ink: theme.minuteInk, face: theme.face, size: size, calloutAngle: minuteCallout)
+                              ink: theme.minuteInk, face: theme.face, size: size, calloutAngle: time.minuteAngle - spread)
             }
         }
         .padding(showHandHints ? size * 0.24 : 0)
@@ -142,13 +140,12 @@ private struct ClockHandHint: View {
 
     var body: some View {
         let start = point(radius: size * 0.59, angle: calloutAngle)
-        let elbow = point(radius: size * 0.28, angle: calloutAngle)
         let tip = point(radius: length * 0.85, angle: angle)
         ZStack {
             Canvas { context, _ in
                 var path = Path()
-                path.move(to: start); path.addLine(to: elbow); path.addLine(to: tip)
-                let direction = atan2(tip.y - elbow.y, tip.x - elbow.x)
+                path.move(to: start); path.addLine(to: tip)
+                let direction = atan2(tip.y - start.y, tip.x - start.x)
                 for offset in [-Double.pi / 5, Double.pi / 5] {
                     path.move(to: tip)
                     path.addLine(to: CGPoint(x: tip.x - cos(direction + offset) * 7,

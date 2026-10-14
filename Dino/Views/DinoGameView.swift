@@ -6,12 +6,18 @@ struct DinoGameView: View {
     @StateObject var session: DinoSession
     let onExit: () -> Void
     let onResult: (DinoLevelResult) -> Void
+    var onCompanionReaction: (DinoAnimation.Clip) -> Void = { _ in }
     @State private var confirmExit = false
     @State private var personalizing = false
+    @State private var questionContentHeight: CGFloat = 0
+    @State private var questionViewportHeight: CGFloat = 0
 
     var body: some View {
         GeometryReader { g in
             let width = min(520, max(280, g.size.width - 36))
+            let dockHeight: CGFloat = g.size.height < 430 ? 64 : 80
+            let companionSize = min(min(160, g.size.width * 0.38, g.size.height * 0.25),
+                                    max(56, max(0, questionViewportHeight - questionContentHeight) + dockHeight + g.safeAreaInsets.bottom - 12))
             let clockSize = min(210, width * 0.54, max(160, g.size.height * 0.28))
             ZStack {
                 JungleBackground(quiet: true)
@@ -25,12 +31,12 @@ struct DinoGameView: View {
                                         practiceStreak: session.practice == nil ? nil : session.practiceStreak,
                                         practiceRecord: session.practiceBestStreak,
                                         practiceQuestionNumber: session.practice == nil ? nil : session.practiceQuestionNumber,
+                                        practiceConfiguration: session.practice,
                                         helpEnabled: !session.hasFeedback,
                                         help: showExample, action: pause)
                     ScrollViewReader { proxy in
                         ScrollView {
                             VStack(spacing: 18) {
-                                if session.practice != nil { questionProgress.id("question.progress") }
                                 if session.level.isBoss { crystals }
                                 Text(LocalizedStringKey(session.instructionKey))
                                     .font(.system(size: 21, weight: .heavy, design: .rounded))
@@ -40,7 +46,9 @@ struct DinoGameView: View {
                                 QuestionRenderer(session: session, theme: player.profile.clockTheme, width: width, clockSize: clockSize)
                                     .id(session.question.id)
                             }.padding(.vertical, 20).frame(width: width).frame(maxWidth: .infinity)
+                                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { questionContentHeight = $0 }
                         }
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { questionViewportHeight = $0 }
                         .onChange(of: session.hasFeedback) { _, visible in
                             if visible && !session.correctFeedback {
                                 withAnimation(.easeOut(duration: 0.25)) {
@@ -49,9 +57,10 @@ struct DinoGameView: View {
                             }
                         }
                         .onChange(of: session.question.id) { _, _ in
-                            proxy.scrollTo(session.practice == nil ? "question.top" : "question.progress", anchor: .top)
+                            proxy.scrollTo("question.top", anchor: .top)
                         }
                     }
+                    companionDock(height: dockHeight, size: companionSize)
                 }.disabled(confirmExit || session.demonstration != nil).accessibilityHidden(confirmExit || session.demonstration != nil)
                 if let kind = session.demonstration {
                     Color.black.opacity(0.28).ignoresSafeArea()
@@ -75,17 +84,12 @@ struct DinoGameView: View {
                         .transition(.scale(scale: 0.94).combined(with: .opacity))
                 }
             }
-            .safeAreaInset(edge: .bottom) {
-                if session.hasFeedback && !session.correctFeedback {
-                    Button { session.advance() } label: {
-                        Label("dino.next", systemImage: "arrow.right")
-                    }.buttonStyle(DinoButtonStyle(compact: true))
-                        .accessibilityIdentifier("question.next")
-                        .padding(12).frame(maxWidth: 520).frame(maxWidth: .infinity)
-                        .background(.ultraThinMaterial)
-                        .disabled(confirmExit).accessibilityHidden(confirmExit)
-                }
+            .overlay(alignment: .bottomTrailing) {
+                DinoCompanionAnchor(placement: .game, size: companionSize)
+                    .padding(.trailing, 8)
+                    .offset(y: g.safeAreaInsets.bottom - 6)
             }
+
         }.foregroundStyle(DinoStyle.ink)
             .transformPreference(DinoCompanionPreference.self) { anchors in
                 if confirmExit || session.demonstration != nil { anchors = [:] }
@@ -96,10 +100,35 @@ struct DinoGameView: View {
                 guard !Task.isCancelled else { return }
                 session.advance()
             }
+            .onChange(of: session.hasFeedback, initial: true) { _, hasFeedback in
+                onCompanionReaction(hasFeedback ? (session.correctFeedback ? .thumbsUp : .wrongAnswer) : .idle)
+            }
             .onChange(of: session.result != nil) { _, hasResult in
                 if hasResult, let result = session.result { onResult(result) }
             }
             .animation(.easeOut(duration: 0.18), value: confirmExit)
+    }
+
+    private func companionDock(height: CGFloat, size: CGFloat) -> some View {
+        // Reserve the same small area before and after answering. An explicit
+        // VStack row also clips scrolling answers above the standing companion.
+        Color.clear.frame(height: height)
+            .overlay {
+                if session.hasFeedback && !session.correctFeedback {
+                    HStack(spacing: 8) {
+                        Button { session.advance() } label: {
+                            Label("dino.next", systemImage: "arrow.right")
+                        }.buttonStyle(DinoButtonStyle(compact: true))
+                            .accessibilityIdentifier("question.next")
+                        Color.clear.frame(width: size)
+                    }.padding(.horizontal, 12).frame(maxWidth: 700).frame(maxWidth: .infinity)
+                }
+            }
+            .background {
+                if session.hasFeedback && !session.correctFeedback {
+                    Rectangle().fill(.ultraThinMaterial).ignoresSafeArea(edges: .bottom)
+                }
+            }
     }
 
     private func exitCard(compact: Bool) -> some View {
@@ -122,21 +151,6 @@ struct DinoGameView: View {
                 .buttonStyle(DinoButtonStyle(color: Color(dinoHex: 0xC74343), compact: true))
                 .accessibilityIdentifier("game.exit.confirm")
         }.padding(4).dinoCard().accessibilityAddTraits(.isModal)
-    }
-
-    @ViewBuilder private var questionProgress: some View {
-        if let practice = session.practice {
-            VStack(alignment: .leading, spacing: 7) {
-                HStack {
-                    Text(LocalizedStringKey(practice.time.titleKey)).font(.system(size: 13, weight: .bold, design: .rounded))
-                    Spacer()
-                    if let type = session.practiceQuestionType {
-                        Text(LocalizedStringKey(type.titleKey)).font(.system(size: 13, weight: .bold, design: .rounded))
-                            .multilineTextAlignment(.trailing).accessibilityIdentifier("practice.currentType")
-                    }
-                }
-            }.padding(12).background(.white.opacity(0.65), in: RoundedRectangle(cornerRadius: 22))
-        }
     }
 
     private func showExample() { session.demonstration = session.question.kind }
@@ -208,12 +222,6 @@ struct InteractionDemonstration: View {
                 DigitalClock(time: ClockTime(hour: exampleHour, minute: exampleMinute), theme: theme, fontSize: 30, showHandHints: true)
                     .accessibilityIdentifier("demo.digital")
             }
-            HStack(spacing: 24) {
-                Text("dino.example.hours").foregroundStyle(Color(dinoHex: theme.hourInk.hex))
-                Text("dino.example.minutes").foregroundStyle(Color(dinoHex: theme.minuteInk.hex))
-            }.font(.system(size: 14, weight: .bold, design: .rounded))
-            Text(LocalizedStringKey(kind == .setAnalog || kind == .setDigital ? "dino.demoSet" : "dino.demoTap"))
-                .font(.system(size: 14, weight: .medium, design: .rounded)).multilineTextAlignment(.center)
             DinoDemonstrationActions(done: done, another: nextExample)
         }.frame(width: width).dinoCard()
             .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
@@ -242,9 +250,8 @@ struct DinoDemonstrationActions: View {
             Button(action: done) { Label("dino.ready", systemImage: "checkmark") }
                 .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("demo.ready")
             Button(action: another) { Label("dino.example.another", systemImage: "arrow.clockwise") }
-                .font(.system(size: 15, weight: .bold, design: .rounded))
-                .multilineTextAlignment(.center).frame(maxWidth: .infinity, minHeight: 44)
-                .contentShape(Rectangle()).buttonStyle(.plain)
+                .multilineTextAlignment(.center).buttonStyle(DinoSecondaryButtonStyle())
+                .overlay(RoundedRectangle(cornerRadius: 18).stroke(DinoStyle.ink, lineWidth: 2))
                 .accessibilityIdentifier("demo.nextExample")
         }
     }

@@ -119,6 +119,7 @@ final class DinoPlayer: ObservableObject {
         var record = practiceRecords[key] ?? DinoPracticeRecord()
         record.questionsAnswered = min(Int.max - 1, record.questionsAnswered) + 1
         record.bestStreak = max(record.bestStreak, streak)
+        record.currentStreak = max(0, streak)
         practiceRecords[key] = record
         store.savePracticeRecords(practiceRecords)
         return record
@@ -154,7 +155,6 @@ final class DinoSession: ObservableObject, Identifiable {
     private let now: () -> TimeInterval
     private var questionStartedAt: TimeInterval
     private var practiceGenerator: DinoPracticeGenerator?
-    private var practiceStreaks: [DinoPracticeQuestion: Int] = [:]
     private let exampleMinuteStep: Int?
 
     init(level: LevelConfiguration, player: DinoPlayer, practice: DinoPracticeConfiguration? = nil, example: ClockQuestion? = nil, exampleMinuteStep: Int? = nil, now: @escaping () -> TimeInterval = DinoQuestionTiming.now, answerFeedback: ((Bool) -> Void)? = nil) {
@@ -196,7 +196,7 @@ final class DinoSession: ObservableObject, Identifiable {
 
     var question: ClockQuestion { attempt.current }
     var hasFeedback: Bool { attempt.submittedResponse != nil }
-    var canExitWithoutConfirmation: Bool { question.id == 0 }
+    var canExitWithoutConfirmation: Bool { practice != nil || question.id == 0 }
     var practiceQuestionType: DinoPracticeQuestion? { DinoPracticeQuestion(rawValue: question.kind.rawValue) }
     var correctFeedback: Bool { attempt.answers.last == true }
     var minuteStep: Int { exampleMinuteStep ?? practice?.time.minuteStep ?? level.minuteStep }
@@ -217,8 +217,8 @@ final class DinoSession: ObservableObject, Identifiable {
         if let correct = attempt.submit(answer, elapsed: now() - questionStartedAt) {
             if practice != nil { practiceAnswered += 1; if correct { practiceCorrect += 1 } }
             if practiceGenerator != nil, let practice, let type = practiceQuestionType {
-                let streak = correct ? min(Int.max - 1, practiceStreaks[type] ?? 0) + 1 : 0
-                practiceStreaks[type] = streak
+                let saved = player.practiceRecord(time: practice.time, question: type)
+                let streak = correct ? min(Int.max - 1, saved.currentStreak) + 1 : 0
                 practiceStreak = streak
                 practiceBestStreak = player.recordPracticeAnswer(time: practice.time, question: type, streak: streak).bestStreak
             }
@@ -260,7 +260,7 @@ final class DinoSession: ObservableObject, Identifiable {
     private func refreshPracticeProgress() {
         guard practiceGenerator != nil, let practice, let type = practiceQuestionType else { return }
         let record = player.practiceRecord(time: practice.time, question: type)
-        practiceStreak = practiceStreaks[type] ?? 0
+        practiceStreak = record.currentStreak
         practiceBestStreak = record.bestStreak
         practiceQuestionNumber = min(Int.max - 1, record.questionsAnswered) + 1
     }

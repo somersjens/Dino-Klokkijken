@@ -31,7 +31,8 @@ final class DinoProgressStore {
         guard let data = defaults.object(forKey: Self.practiceKey) as? Data,
               let records = try? JSONDecoder().decode([String: DinoPracticeRecord].self, from: data) else { return [:] }
         return records.filter { DinoPracticeRecord.validKeys.contains($0.key) }.mapValues {
-            DinoPracticeRecord(bestStreak: max(0, $0.bestStreak), questionsAnswered: max(0, $0.questionsAnswered))
+            DinoPracticeRecord(bestStreak: max(0, max($0.bestStreak, $0.currentStreak)),
+                               questionsAnswered: max(0, $0.questionsAnswered), currentStreak: max(0, $0.currentStreak))
         }
     }
 

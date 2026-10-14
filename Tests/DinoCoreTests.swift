@@ -1,4 +1,6 @@
 import Foundation
+import CoreGraphics
+import ImageIO
 
 private var checks = 0
 private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
@@ -24,6 +26,7 @@ struct DinoCoreTests {
         testStorage()
         testDinoAppearance()
         testDinoAvatarMask()
+        testDinoSpriteColors()
         testPlayerModel()
         testSettingsAndFeedback()
         testCloudSync()
@@ -46,13 +49,29 @@ struct DinoCoreTests {
         expect(session.practiceQuestionNumber == 2, "only advancing displays the next lifetime question")
         session.submit(session.question.expectedAnswer); session.advance()
         expect(session.practiceStreak == 2 && session.practiceBestStreak == 2, "a new record rises with every consecutive correct answer")
+        let pausedPlayer = DinoPlayer(store: store)
+        let pausedSession = DinoSession(level: config.level, player: pausedPlayer, practice: config)
+        expect(pausedSession.practiceStreak == 2 && pausedSession.practiceBestStreak == 2 && pausedSession.practiceQuestionNumber == 3,
+               "active streak survives pausing and a full app relaunch")
+        expect(pausedSession.canExitWithoutConfirmation, "practice can always pause directly")
+        let carriedStore = DinoProgressStore(defaults: InMemoryKeyValueStore([
+            DinoProgressStore.practiceKey: try! JSONEncoder().encode(pausedPlayer.practiceRecords)
+        ]))
+        let carriedPlayer = DinoPlayer(store: carriedStore)
+        let carriedSession = DinoSession(level: config.level, player: carriedPlayer, practice: config)
+        carriedSession.submit(carriedSession.question.expectedAnswer)
+        expect(carriedSession.practiceStreak == 3 && carriedSession.practiceBestStreak == 3,
+               "a correct answer after resuming extends the saved streak and its record")
         session.submit(wrongAnswer(for: session.question)); session.advance()
         expect(session.practiceStreak == 0 && session.practiceBestStreak == 2 && session.practiceQuestionNumber == 4, "wrong answers reset the streak, retain the record and count as practiced")
         expect(player.practiceRecord(time: .whole, question: .chooseAnalog) == DinoPracticeRecord(), "different time families have independent records")
         expect(player.practiceRecord(time: .half, question: .chooseDigital) == DinoPracticeRecord(), "different question types have independent records")
         let restarted = DinoPlayer(store: store)
         let resumed = DinoSession(level: config.level, player: restarted, practice: config)
-        expect(resumed.practiceStreak == 0 && resumed.practiceBestStreak == 2 && resumed.practiceQuestionNumber == 4, "records and lifetime counts survive relaunch while a session streak starts fresh")
+        expect(resumed.practiceStreak == 0 && resumed.practiceBestStreak == 2 && resumed.practiceQuestionNumber == 4, "a broken streak also stays broken after relaunch")
+        resumed.submit(resumed.question.expectedAnswer)
+        expect(resumed.practiceStreak == 1 && store.loadPracticeRecords()[DinoPracticeRecord.key(time: .half, question: .chooseAnalog)]?.currentStreak == 1,
+               "new answers persist the active streak immediately")
         let beforeHelp = restarted.practiceRecords
         let example = DinoSession(level: config.level, player: restarted, practice: config, example: session.question)
         example.submit(example.question.expectedAnswer)
@@ -69,6 +88,9 @@ struct DinoCoreTests {
         expect(mixedSession.practiceStreak == 1, "one type's wrong answer does not reset another type's streak")
         let mixed = DinoPracticeConfiguration(time: .quarter, order: .mix)
         let shuffled = DinoSession(level: mixed.level, player: restarted, practice: mixed)
+        let initialMixedType = shuffled.practiceQuestionType!
+        expect(shuffled.practiceStreak == restarted.practiceRecord(time: .quarter, question: initialMixedType).currentStreak,
+               "switching practice modes preserves the active per-type streak")
         for _ in DinoPracticeQuestion.allCases {
             let type = shuffled.practiceQuestionType!
             let saved = restarted.practiceRecord(time: .quarter, question: type)
@@ -87,8 +109,11 @@ struct DinoCoreTests {
         let thousandConfig = DinoPracticeConfiguration(time: .mix, order: .specific(.setAnalog))
         let thousandSession = DinoSession(level: thousandConfig.level, player: nearThousand, practice: thousandConfig)
         expect(thousandSession.practiceQuestionNumber == 1_000 && nearThousand.practiceRecords.count == 1, "stored counters resume at the thousand boundary and discard unknown combinations")
-        store.savePracticeRecords([key: .init(bestStreak: -1, questionsAnswered: -20)])
+        store.savePracticeRecords([key: .init(bestStreak: -1, questionsAnswered: -20, currentStreak: -2)])
         expect(store.loadPracticeRecords()[key] == DinoPracticeRecord(), "invalid negative records are sanitized")
+        let oldSave = Data("{\"\(key)\":{\"bestStreak\":12,\"questionsAnswered\":80}}".utf8)
+        defaults.set(oldSave, forKey: DinoProgressStore.practiceKey)
+        expect(store.loadPracticeRecords()[key] == .init(bestStreak: 12, questionsAnswered: 80), "old saves retain their record and question count without inventing a streak")
         restarted.resetProgress()
         expect(restarted.practiceRecords.isEmpty && store.loadPracticeRecords().isEmpty, "progress reset removes practice records")
         nearThousand.resetAllData()
@@ -689,6 +714,82 @@ struct DinoCoreTests {
         expect(DinoAvatarMask.part(hue: 0.01, saturation: 0.80, lightness: 0.45,
                                   x: 710.0 / 1254, y: 529.0 / 1254) == nil,
                "tongue is independent of bandana color")
+    }
+
+    static func testDinoSpriteColors() {
+        let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
+        let bitmapInfo = CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
+        let size = 384
+        func pixels(_ image: CGImage) -> [UInt8] {
+            var bytes = [UInt8](repeating: 0, count: size * size * 4)
+            bytes.withUnsafeMutableBytes { buffer in
+                let context = CGContext(data: buffer.baseAddress, width: size, height: size, bitsPerComponent: 8,
+                                        bytesPerRow: size * 4, space: colorSpace, bitmapInfo: bitmapInfo)!
+                context.interpolationQuality = .high
+                context.draw(image, in: CGRect(x: 0, y: 0, width: size, height: size))
+            }
+            return bytes
+        }
+        func hsl(_ bytes: [UInt8], _ index: Int) -> (h: Double, s: Double, l: Double) {
+            let alpha = Double(bytes[index + 3]) / 255
+            let r = min(1, Double(bytes[index]) / 255 / alpha)
+            let g = min(1, Double(bytes[index + 1]) / 255 / alpha)
+            let b = min(1, Double(bytes[index + 2]) / 255 / alpha)
+            let high = max(r, g, b), low = min(r, g, b), delta = high - low
+            let l = (high + low) / 2
+            guard delta > 0.00001 else { return (0, 0, l) }
+            let hue = high == r ? (g - b) / delta : high == g ? (b - r) / delta + 2 : (r - g) / delta + 4
+            return (((hue / 6 + 1).truncatingRemainder(dividingBy: 1)), delta / (1 - abs(2 * l - 1)), l)
+        }
+        let appearances = [DinoAppearance.standard,
+                           DinoAppearance(bandana: 0xA77BE0, spikes: 0xA77BE0, body: 0xF48EB6),
+                           DinoAppearance(bandana: 0x459CDF, spikes: 0xF59A32, body: 0xFF1493, belly: 0x459CDF)]
+        for appearance in appearances {
+            var idleLightness = [DinoAppearance.Part: [Double]]()
+            var idleSaturation = [DinoAppearance.Part: Double]()
+            for asset in DinoAnimation.spriteAssets {
+                let url = URL(fileURLWithPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
+                let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
+                let original = pixels(source)
+                let context = CGContext(data: nil, width: size, height: size, bitsPerComponent: 8,
+                                        bytesPerRow: size * 4, space: colorSpace, bitmapInfo: bitmapInfo)!
+                context.interpolationQuality = .high
+                context.draw(source, in: CGRect(x: 0, y: 0, width: size, height: size))
+                let output = pixels(DinoSpriteColorRenderer.recolored(context.makeImage()!, appearance: appearance, asset: asset)!)
+                var lightness = [DinoAppearance.Part: [Double]](), saturation = [DinoAppearance.Part: [Double]]()
+                var alphaPreserved = true, facePreserved = true
+                let regions = DinoAvatarMask.spriteRegions(for: asset)
+                for y in 0..<size {
+                    for x in 0..<size {
+                        let index = (y * size + x) * 4
+                        alphaPreserved = alphaPreserved && original[index + 3] == output[index + 3]
+                        guard original[index + 3] > 250 else { continue }
+                        let before = hsl(original, index), after = hsl(output, index)
+                        if let part = DinoAvatarMask.part(hue: before.h, saturation: before.s, lightness: before.l,
+                                                         x: Double(x) / Double(size), y: Double(y) / Double(size), regions: regions) {
+                            lightness[part, default: []].append(after.l)
+                            saturation[part, default: []].append(after.s)
+                        } else {
+                            facePreserved = facePreserved && (0..<3).allSatisfy { abs(Int(original[index + $0]) - Int(output[index + $0])) <= 1 }
+                        }
+                    }
+                }
+                expect(alphaPreserved, "\(asset) keeps its original transparency")
+                expect(facePreserved, "\(asset) preserves eyes, lettering and mouth")
+                for part in DinoAppearance.Part.allCases {
+                    let l = lightness[part]!.sorted(), s = saturation[part]!.sorted()
+                    let quantiles = [0.1, 0.5, 0.9].map { l[Int(Double(l.count - 1) * $0)] }
+                    if asset == "dino-idle" {
+                        idleLightness[part] = quantiles; idleSaturation[part] = s[s.count / 2]
+                    } else {
+                        expect(zip(quantiles, idleLightness[part]!).allSatisfy { abs($0 - $1) < 0.015 },
+                               "\(asset) matches idle \(part) shadows, base color and highlights: \(quantiles) vs \(idleLightness[part]!)")
+                        expect(abs(s[s.count / 2] - idleSaturation[part]!) < 0.025,
+                               "\(asset) keeps idle \(part) saturation instead of becoming pastel: \(s[s.count / 2]) vs \(idleSaturation[part]!)")
+                    }
+                }
+            }
+        }
     }
 
     static func testSettingsAndFeedback() {

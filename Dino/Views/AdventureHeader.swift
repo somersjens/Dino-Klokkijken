@@ -1,7 +1,8 @@
 import SwiftUI
 import UIKit
+import CoreText
 
-/// One jungle HUD shared by the map and the running level.
+/// One world-themed HUD shared by the map and the running level.
 struct AdventureHeader: View {
     @EnvironmentObject private var player: DinoPlayer
     @Environment(\.dinoHighContrast) private var highContrast
@@ -26,6 +27,7 @@ struct AdventureHeader: View {
     var practiceStreak: Int?
     var practiceRecord = 0
     var practiceQuestionNumber: Int?
+    var practiceConfiguration: DinoPracticeConfiguration?
     var helpEnabled = true
     var help: () -> Void = {}
     var action: () -> Void
@@ -58,7 +60,7 @@ struct AdventureHeader: View {
                 }
                 .padding(.trailing, metrics.spacious ? 18 : 8)
             }
-            .foregroundStyle(highContrast ? HUDColors.contrastInk : HUDColors.ink)
+            .foregroundStyle(highContrast ? palette.contrastInk : palette.ink)
             .padding(.leading, metrics.leadingMargin)
             .padding(.trailing, metrics.trailingMargin)
             .padding(.top, compact ? 6 : 12)
@@ -79,8 +81,19 @@ struct AdventureHeader: View {
                         .padding(.trailing, metrics.trailingMargin)
                 }.offset(y: compact ? -1 : -2)
             }
+            .overlay(alignment: .bottom) {
+                if let practiceConfiguration {
+                    HUDPracticeSubtitle(configuration: practiceConfiguration, palette: palette,
+                                        compact: compact, spacious: metrics.spacious, highContrast: highContrast)
+                        .padding(.leading, metrics.leadingMargin + metrics.portraitFootprint * 0.48)
+                        .padding(.trailing, metrics.trailingMargin)
+                        .offset(y: (compact ? 9 : -6) + HUDPracticeSubtitle.addedHeight(compact: compact, spacious: metrics.spacious))
+                }
+            }
         }
         .frame(height: compact ? 82 : horizontalSizeClass == .regular ? 160 : 128)
+        .padding(.top, compact && practiceConfiguration != nil ? 4 : 0)
+        .padding(.bottom, practiceConfiguration == nil ? 0 : compact ? 26 : 11)
         .frame(maxWidth: 780).frame(maxWidth: .infinity)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: worldID)
         .sheet(isPresented: $showsPersonalizer) {
@@ -125,16 +138,14 @@ struct AdventureHeader: View {
         VStack(spacing: metrics.labelGap) {
             title(practiceStreak == nil ? "dino.levelLabel" : "dino.practice.streak", metrics: metrics)
             number("\(practiceStreak ?? level)", metrics: metrics)
-                .offset(y: practiceStreak == nil ? 0 : -3)
                 .accessibilityIdentifier(practiceStreak == nil ? "header.levelCount" : "practice.streak")
         }
         .frame(width: metrics.cellWidth, height: metrics.cell)
-        .overlay(alignment: .bottom) {
+        .overlay(alignment: .top) {
             if practiceStreak != nil {
-                Label { Text(verbatim: "\(practiceRecord)") } icon: { Image(systemName: "trophy.fill") }
-                    .font(.system(size: compact ? 8 : metrics.spacious ? 12 : 9, weight: .bold, design: .rounded))
-                    .monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
-                    .foregroundStyle(highContrast ? HUDColors.contrastInk : Color(dinoHex: 0x92702E))
+                HUDRecordBadge(value: String(practiceRecord), trophy: true, palette: palette,
+                               compact: compact, spacious: metrics.spacious, highContrast: highContrast)
+                    .offset(y: compact ? -16 : metrics.spacious ? -23 : -19)
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(Text("dino.practice.bestStreak"))
                     .accessibilityValue(String(practiceRecord))
@@ -151,15 +162,15 @@ struct AdventureHeader: View {
         VStack(spacing: metrics.labelGap) {
             title(questionCounter == nil ? "dino.starsLabel" : "dino.questionsLabel", metrics: metrics)
             number(questionCounter ?? "\(stars)", metrics: metrics)
-                .offset(y: practiceQuestionNumber == nil ? 0 : -3)
                 .accessibilityIdentifier(practiceQuestionNumber != nil ? "practice.questionNumber" : questionCounter == nil ? "header.starCount" : "header.questionCounter")
         }
         .frame(width: metrics.cellWidth, height: metrics.cell)
-        .overlay(alignment: .bottom) {
+        .overlay(alignment: .top) {
             if let practiceQuestionNumber, let thousands = DinoPracticeCounter(value: practiceQuestionNumber).thousands {
-                Text(verbatim: thousands)
-                    .font(.system(size: compact ? 8 : metrics.spacious ? 12 : 9, weight: .bold, design: .rounded))
-                    .monospacedDigit().accessibilityIdentifier("practice.questionThousands")
+                HUDRecordBadge(value: thousands, trophy: false, palette: palette,
+                               compact: compact, spacious: metrics.spacious, highContrast: highContrast)
+                    .offset(y: compact ? -16 : metrics.spacious ? -23 : -19)
+                    .accessibilityIdentifier("practice.questionThousands")
             }
         }
         .contentShape(Rectangle())
@@ -173,16 +184,18 @@ struct AdventureHeader: View {
             VStack(spacing: metrics.labelGap) {
                 title(control == .settings ? "dino.practice.shortTitle" : "dino.example", metrics: metrics)
                 if control == .settings {
-                    HUDLevelGrid().frame(width: metrics.icon, height: metrics.icon)
+                    HUDLevelGrid(palette: palette, highContrast: highContrast)
+                        .frame(width: metrics.mapIcon, height: metrics.mapIcon)
+                        .frame(width: metrics.icon, height: metrics.icon)
                 } else {
-                    HUDActionIcon(symbol: "questionmark", size: metrics.icon, highContrast: highContrast)
+                    HUDActionIcon(symbol: "questionmark", size: metrics.icon, palette: palette, highContrast: highContrast)
                 }
             }
             .frame(width: metrics.cellWidth, height: metrics.cell)
             .contentShape(Rectangle())
         }
         .buttonStyle(HUDPressStyle()).disabled(!helpEnabled)
-        .opacity(helpEnabled ? 1 : 0.45)
+        // Feedback still blocks the action; it no longer fades the icon between questions.
         .accessibilityLabel(Text(LocalizedStringKey(control == .settings ? "dino.practice.title" : "dino.example")))
         .accessibilityIdentifier(control == .settings ? "header.practice" : "question.example")
     }
@@ -194,15 +207,16 @@ struct AdventureHeader: View {
                 if control == .settings {
                     Image(systemName: control.icon)
                         .resizable().scaledToFit()
-                        .foregroundStyle(LinearGradient(colors: [Color(dinoHex: 0x2C6476), DinoStyle.ink],
+                        .foregroundStyle(LinearGradient(colors: [highContrast ? palette.contrastInk : palette.iconLight,
+                                                               highContrast ? palette.contrastInk : palette.ink],
                                                         startPoint: .top, endPoint: .bottom))
                         .shadow(color: .white.opacity(0.9), radius: 0, y: -1)
-                        .shadow(color: DinoStyle.ink.opacity(0.2), radius: 1, y: 2)
+                        .shadow(color: palette.ink.opacity(0.2), radius: 1, y: 2)
                         // SF Symbols include padding around their painted shape.
-                        .frame(width: metrics.icon * 1.1, height: metrics.icon * 1.1)
+                        .frame(width: metrics.mapIcon * 1.1, height: metrics.mapIcon * 1.1)
                         .frame(width: metrics.icon, height: metrics.icon)
                 } else {
-                    HUDActionIcon(symbol: control.icon, size: metrics.icon, highContrast: highContrast)
+                    HUDActionIcon(symbol: control.icon, size: metrics.icon, palette: palette, highContrast: highContrast)
                 }
             }
             .frame(width: metrics.cellWidth, height: metrics.cell)
@@ -227,7 +241,7 @@ struct AdventureHeader: View {
             .monospacedDigit().lineLimit(1).fixedSize()
             .shadow(color: .white.opacity(0.9), radius: 0, y: 1)
             .frame(height: metrics.icon)
-            .offset(y: metrics.numberOffset)
+            .offset(x: HUDNumberAlignment.offset(for: value, fontSize: metrics.number), y: metrics.numberOffset)
             .padding(.horizontal, 3)
     }
 
@@ -236,6 +250,144 @@ struct AdventureHeader: View {
             .frame(width: highContrast ? 2 : 1, height: metrics.cell * 0.74)
             .padding(.horizontal, metrics.gap)
             .accessibilityHidden(true)
+    }
+}
+
+/// A small inset medal, using the HUD's paper, rim and world-colored outline.
+private struct HUDRecordBadge: View {
+    let value: String
+    let trophy: Bool
+    let palette: HUDPalette
+    let compact: Bool
+    let spacious: Bool
+    let highContrast: Bool
+
+    var body: some View {
+        HStack(spacing: 3) {
+            if trophy {
+                Image(systemName: "trophy.fill")
+                    .foregroundStyle(LinearGradient(colors: [Color(dinoHex: 0xD4AF5D), Color(dinoHex: 0x876128)],
+                                                    startPoint: .top, endPoint: .bottom))
+                    .accessibilityHidden(true)
+            }
+            Text(verbatim: value).foregroundStyle(highContrast ? palette.contrastInk : palette.ink)
+                .monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
+                .offset(x: HUDNumberAlignment.offset(for: value, fontSize: compact ? 8 : spacious ? 12 : 9))
+        }
+        .font(.system(size: compact ? 8 : spacious ? 12 : 9, weight: .heavy, design: .rounded))
+        .padding(.horizontal, compact ? 4 : 6).padding(.vertical, 2)
+        .background {
+            Capsule().fill(palette.outline.opacity(0.18)).offset(y: 1.5)
+            Capsule().fill(LinearGradient(colors: [.white, palette.paperBottom], startPoint: .top, endPoint: .bottom))
+                .overlay(Capsule().strokeBorder(highContrast ? palette.outline : palette.borderLight, lineWidth: 1))
+        }
+    }
+}
+
+/// A chapter-style plaque attached to the lower edge of the practice HUD.
+private struct HUDPracticeSubtitle: View {
+    let configuration: DinoPracticeConfiguration
+    let palette: HUDPalette
+    let compact: Bool
+    let spacious: Bool
+    let highContrast: Bool
+    private static let enlargement: CGFloat = 1.2
+
+    static func addedHeight(compact: Bool, spacious: Bool) -> CGFloat {
+        let marker: CGFloat = compact ? 18 : spacious ? 24 : 21
+        return (marker + 10) * enlargement - (marker + 6)
+    }
+
+    private var markerTitle: String {
+        switch configuration.order {
+        case .specific(let type): return String(type.number)
+        case .ascending: return L("dino.practice.ascending")
+        case .mix: return L("dino.practice.mix")
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: (compact ? 5 : 8) * Self.enlargement) {
+            Group {
+                switch configuration.order {
+                case .specific(let type):
+                    Text(verbatim: String(type.number)).monospacedDigit()
+                        .offset(x: HUDNumberAlignment.offset(for: String(type.number), fontSize: (compact ? 10 : spacious ? 14 : 12) * Self.enlargement))
+                case .ascending: Image(systemName: "arrow.up.right")
+                case .mix: Image(systemName: "shuffle")
+                }
+            }
+            .font(.system(size: (compact ? 10 : spacious ? 14 : 12) * Self.enlargement, weight: .heavy, design: .rounded))
+            .frame(width: (compact ? 18 : spacious ? 24 : 21) * Self.enlargement,
+                   height: (compact ? 18 : spacious ? 24 : 21) * Self.enlargement)
+            .background(palette.accent.opacity(0.22), in: Circle())
+            .overlay(Circle().strokeBorder(palette.borderLight, lineWidth: 0.8 * Self.enlargement))
+            Text(LocalizedStringKey(configuration.time.titleKey))
+                .font(.system(size: (compact ? 10 : spacious ? 15 : 12) * Self.enlargement, weight: .heavy, design: .rounded))
+                .lineLimit(1).fixedSize()
+        }
+        .foregroundStyle(highContrast ? palette.contrastInk : palette.ink)
+        .padding(.leading, 8 * Self.enlargement)
+        .padding(.trailing, (compact ? 10 : 14) * Self.enlargement)
+        .padding(.vertical, 5 * Self.enlargement)
+        .background {
+            Capsule().fill(palette.outline.opacity(0.35)).offset(y: 2 * Self.enlargement)
+            Capsule().fill(LinearGradient(colors: [palette.paperTop, palette.paperBottom], startPoint: .top, endPoint: .bottom))
+                .overlay(Capsule().strokeBorder(palette.outline, lineWidth: (highContrast ? 2 : 1.5) * Self.enlargement))
+                .overlay(Capsule().strokeBorder(.white.opacity(0.7), lineWidth: 0.7 * Self.enlargement).padding(2 * Self.enlargement))
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: "\(markerTitle) · \(L(key: configuration.time.titleKey))"))
+        .accessibilityIdentifier("practice.hudSubtitle")
+    }
+}
+
+/// Center the visible weight of narrow 1s while retaining fixed digit widths.
+@MainActor
+private enum HUDNumberAlignment {
+    private static let referenceSize: CGFloat = 100
+    private static let referenceFont: UIFont = {
+        let descriptor = UIFont.monospacedDigitSystemFont(ofSize: referenceSize, weight: .heavy).fontDescriptor
+        return UIFont(descriptor: descriptor.withDesign(.rounded) ?? descriptor, size: referenceSize)
+    }()
+    private static var corrections: [String: CGFloat] = [:]
+
+    static func offset(for value: String, fontSize: CGFloat) -> CGFloat {
+        guard value.contains("1") else { return 0 }
+        if let correction = corrections[value] { return correction * fontSize }
+
+        let line = CTLineCreateWithAttributedString(NSAttributedString(string: value,
+            attributes: [.font: referenceFont, .foregroundColor: UIColor.white]))
+        let advance = CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil))
+        let bounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
+        let padding: CGFloat = 2
+        let width = Int(ceil(advance + padding * 2))
+        let height = Int(ceil(bounds.height + padding * 2))
+        guard width > 0, height > 0,
+              let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
+                                      bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: CGImageAlphaInfo.none.rawValue),
+              let data = context.data else { return 0 }
+
+        context.setFillColor(gray: 0, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: CGFloat(width), height: CGFloat(height)))
+        context.textPosition = CGPoint(x: padding, y: padding - bounds.minY)
+        CTLineDraw(line, context)
+        let pixels = data.assumingMemoryBound(to: UInt8.self)
+        var ink: Double = 0
+        var weightedX: Double = 0
+        for y in 0..<height {
+            for x in 0..<width {
+                let alpha = Double(pixels[y * context.bytesPerRow + x])
+                ink += alpha
+                weightedX += alpha * (Double(x) + 0.5)
+            }
+        }
+        guard ink > 0 else { return 0 }
+        let center = CGFloat(weightedX / ink) - padding
+        // Keep the adjustment subtle for mixed counters such as 1/10.
+        let correction = min(0.06, max(-0.06, (advance / 2 - center) / referenceSize))
+        corrections[value] = correction
+        return correction * fontSize
     }
 }
 
@@ -293,6 +445,9 @@ private struct HUDMetrics {
     let gap: CGFloat
     let labelGap: CGFloat
 
+    // Shrink the map artwork without moving labels or reducing tap targets.
+    var mapIcon: CGFloat { icon * 0.9 }
+
     init(width: CGFloat, compact: Bool, level: Int, stars: Int, questionCounter: String?, titles: [String]) {
         spacious = width >= 600 && !compact
         avatar = compact ? 52 : spacious ? 104 : 78
@@ -329,13 +484,11 @@ private struct HUDMetrics {
     }
 }
 
-private enum HUDColors {
-    static let ink = Color(dinoHex: 0x2C6476)
-    static let contrastInk = Color(dinoHex: 0x214D60)
-}
-
-/// Derives the HUD ornament from the same colors used to draw each world.
+/// Derives the HUD ornament, text and icons from the same world colors.
 private struct HUDPalette {
+    let ink: Color
+    let contrastInk: Color
+    let iconLight: Color
     let accent: Color
     let outline: Color
     let strongOutline: Color
@@ -354,6 +507,11 @@ private struct HUDPalette {
         let world = DinoWorldCatalog.world(worldID) ?? DinoWorldCatalog.worlds[0]
         let colors = WorldThemeColors(world)
         let edge = Self.mix(colors.accent, colors.shade, amount: 0.6)
+        // Darken each world's hue to keep small labels readable on the paper.
+        let textInk = Self.mix(edge, 0x102535, amount: 0.32)
+        ink = Color(dinoHex: textInk)
+        contrastInk = Color(dinoHex: Self.mix(textInk, 0x102535, amount: 0.40))
+        iconLight = Color(dinoHex: Self.mix(textInk, colors.accent, amount: 0.25))
         accent = Color(dinoHex: colors.accent)
         outline = Color(dinoHex: edge)
         strongOutline = Color(dinoHex: Self.mix(edge, 0x102535, amount: 0.25))
@@ -400,24 +558,30 @@ private struct HUDPlate: View {
 }
 
 private struct HUDLevelGrid: View {
+    @Environment(\.displayScale) private var displayScale
+    let palette: HUDPalette
+    let highContrast: Bool
+
     var body: some View {
         GeometryReader { geometry in
-            let gap: CGFloat = 1.4
-            let side = (geometry.size.width - gap) / 2
+            // Align straight edges and spacing to physical pixels at every size.
+            let gap = (1.4 * displayScale).rounded() / displayScale
+            let side = ((geometry.size.width - gap) * displayScale / 2).rounded(.down) / displayScale
             VStack(spacing: gap) {
                 HStack(spacing: gap) { tile(bright: true, side: side); tile(bright: false, side: side) }
                 HStack(spacing: gap) { tile(bright: false, side: side); tile(bright: true, side: side) }
             }
-        }.shadow(color: HUDColors.ink.opacity(0.12), radius: 0.5, y: 1)
-            .accessibilityHidden(true)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }.accessibilityHidden(true)
     }
 
     private func tile(bright: Bool, side: CGFloat) -> some View {
         RoundedRectangle(cornerRadius: side * 0.23)
-            .fill(LinearGradient(colors: bright ? [Color(dinoHex: 0x6DA7BA), Color(dinoHex: 0x39768B)]
-                                               : [Color(dinoHex: 0x4D849B), Color(dinoHex: 0x28576F)],
+            .fill(LinearGradient(colors: highContrast ? [palette.contrastInk, palette.contrastInk]
+                                    : bright ? [palette.iconLight, palette.ink] : [palette.ink, palette.contrastInk],
                                  startPoint: .topLeading, endPoint: .bottomTrailing))
-            .overlay(RoundedRectangle(cornerRadius: side * 0.23).strokeBorder(.white.opacity(0.55), lineWidth: 0.7))
+            .overlay(RoundedRectangle(cornerRadius: side * 0.23)
+                .strokeBorder(highContrast ? palette.contrastInk : palette.ink, lineWidth: 1 / displayScale))
             .frame(width: side, height: side)
     }
 }
@@ -425,15 +589,16 @@ private struct HUDLevelGrid: View {
 private struct HUDActionIcon: View {
     let symbol: String
     let size: CGFloat
+    let palette: HUDPalette
     let highContrast: Bool
     private var isHelp: Bool { symbol == "questionmark" }
 
     var body: some View {
         RoundedRectangle(cornerRadius: isHelp ? size / 2 : size * 0.29)
-            .strokeBorder(highContrast ? HUDColors.contrastInk : HUDColors.ink, lineWidth: highContrast ? 2.5 : 1.8)
+            .strokeBorder(highContrast ? palette.contrastInk : palette.ink, lineWidth: highContrast ? 2.5 : 1.8)
             .overlay {
                 Image(systemName: symbol).font(.system(size: size * 0.58, weight: .heavy, design: .rounded))
-                    .foregroundStyle(highContrast ? HUDColors.contrastInk : HUDColors.ink)
+                    .foregroundStyle(highContrast ? palette.contrastInk : palette.ink)
             }
             .frame(width: size, height: size)
             .accessibilityHidden(true)

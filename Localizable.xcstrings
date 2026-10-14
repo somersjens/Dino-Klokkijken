@@ -4953,13 +4953,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Questions"
+            "value" : "Question"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vragen"
+            "value" : "Vraag"
           }
         }
       }

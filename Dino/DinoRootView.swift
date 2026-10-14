@@ -14,6 +14,7 @@ struct DinoRootView: View {
     @State private var showsFriends = false
     @State private var showsPractice = false
     @State private var mapHUDHeight: CGFloat = 103
+    @State private var gameCompanionClip: DinoAnimation.Clip = .idle
 
     var body: some View {
         ZStack {
@@ -57,8 +58,7 @@ struct DinoRootView: View {
     private var companionClip: DinoAnimation.Clip {
         if showsCompletion { return .idle }
         if let result { return result.correct == result.level.questionCount ? .backflip : .idle }
-        guard let session, session.hasFeedback else { return .idle }
-        return session.correctFeedback ? .thumbsUp : .wrongAnswer
+        return gameCompanionClip
     }
 
     @ViewBuilder private var scene: some View {
@@ -79,7 +79,7 @@ struct DinoRootView: View {
                     withAnimation(.easeOut(duration: 0.24)) {
                         self.result = value; self.session = nil
                     }
-                }).id(ObjectIdentifier(session))
+                }, onCompanionReaction: { gameCompanionClip = $0 }).id(ObjectIdentifier(session))
             } else {
                 WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true }, openPractice: { showsPractice = true }, openCompletion: { completedWorldID = 10; showsCompletion = true }, openFriends: { showsFriends = true }, hudHeightChanged: { mapHUDHeight = $0 })
             }
@@ -94,7 +94,7 @@ struct DinoRootView: View {
         })
         withAnimation(.easeOut(duration: 0.24)) {
             startCard = nil; result = nil; showsCompletion = false
-            session = nextSession
+            gameCompanionClip = .idle; session = nextSession
         }
     }
     private var nextWorld: (() -> Void)? {

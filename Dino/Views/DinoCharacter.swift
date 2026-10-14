@@ -43,7 +43,6 @@ struct DinoCharacter: View {
         .accessibilityAddTraits(.isImage)
         .accessibilityIdentifier(animationIdentifier)
         .task(id: appearance) {
-            guard appearance != .standard else { return }
             let colors = appearance
             // Prepare every pose between reactions, so a short animation never
             // flashes back to green while its next frame is being recolored.
@@ -85,7 +84,7 @@ struct DinoCompanionPreference: PreferenceKey {
     }
 }
 
-/// Screens reserve a place; the character itself lives above the changing scene.
+/// Screens provide a destination; the character itself lives above the changing scene.
 struct DinoCompanionAnchor: View {
     let placement: DinoCompanionPlacement
     let size: CGFloat
@@ -132,7 +131,7 @@ struct DinoCompanionLayer: View {
                 if arriving {
                     withAnimation(.easeInOut(duration: clip == .backflip ? 1.22 : 0.42)) { placement = target }
                 } else {
-                    // Follow scrolling immediately; only the journey between screens moves independently.
+                    // Track the dock or result anchor immediately; only the journey between screens animates.
                     var transaction = Transaction()
                     transaction.disablesAnimations = true
                     withTransaction(transaction) { placement = target }

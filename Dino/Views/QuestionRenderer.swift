@@ -10,8 +10,7 @@ struct QuestionRenderer: View {
     let clockSize: CGFloat
     private var comparing: Bool { session.hasFeedback && !session.correctFeedback }
     private var question: ClockQuestion { session.question }
-    private var dinoSize: CGFloat { min(140, width * 0.34) }
-    private var targetSize: CGFloat { min(clockSize, width - dinoSize * 1.42) }
+    private var targetSize: CGFloat { min(clockSize, width - 20) }
 
     var body: some View {
         VStack(spacing: 22) {
@@ -82,9 +81,6 @@ struct QuestionRenderer: View {
                 }.transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
             }
         }.frame(width: width)
-            .overlay(alignment: .trailing) {
-                if !comparing && session.demonstration == nil { DinoCompanionAnchor(placement: .game, size: dinoSize).offset(x: dinoSize * 0.18) }
-            }
     }
 
     @ViewBuilder private var digitalInput: some View {
@@ -126,7 +122,7 @@ struct QuestionRenderer: View {
                 Label(LocalizedStringKey(activity.titleKey), systemImage: activity.symbol)
                     .font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(DinoStyle.deepGreen)
             }
-            clockStage(height: 64, showsDino: question.kind != .setAnalog) {
+            clockStage(height: 64) {
                 DigitalClock(time: question.target, theme: theme, fontSize: width < 350 ? 32 : 38)
                     .accessibilityIdentifier("question.targetClock")
             }
@@ -140,16 +136,9 @@ struct QuestionRenderer: View {
         }
     }
 
-    /// The clock owns the center. The fixed companion overlay never participates in layout.
-    private func clockStage<Content: View>(height: CGFloat, showsDino: Bool = true,
+    private func clockStage<Content: View>(height: CGFloat,
                                           @ViewBuilder content: () -> Content) -> some View {
-        content().frame(width: width, height: showsDino ? max(height, dinoSize) : height)
-            .overlay(alignment: .trailing) {
-                if showsDino && session.demonstration == nil {
-                    DinoCompanionAnchor(placement: .game, size: dinoSize)
-                        .offset(x: dinoSize * 0.18).allowsHitTesting(false).transition(.identity)
-                }
-            }
+        content().frame(width: width, height: height)
     }
 
     private var analogOptions: some View {
