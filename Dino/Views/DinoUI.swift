@@ -25,11 +25,71 @@ extension Color {
 }
 
 enum DinoStyle {
+    static let editorFont = Font.system(size: 17, weight: .bold, design: .rounded)
     static let ink = Color(dinoHex: 0x193B53)
     static let green = Color(dinoHex: 0x81D349)
     static let deepGreen = Color(dinoHex: 0x365B20)
     static let paper = Color(dinoHex: 0xF6FAF1)
     static let muted = Color(dinoHex: 0x657E80)
+    static let warning = Color(dinoHex: 0x8F2435)
+}
+
+/// The welcome flow navigates by dragging its noninteractive Dino or clock preview.
+struct PersonalizationPreviewNavigation: ViewModifier {
+    var onNavigate: ((Int) -> Void)?
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if let onNavigate {
+            content.contentShape(Rectangle())
+                .simultaneousGesture(DragGesture(minimumDistance: 24).onEnded { value in
+                    let movement = value.translation
+                    guard abs(movement.width) >= 50, abs(movement.width) > abs(movement.height) * 1.25 else { return }
+                    onNavigate(movement.width < 0 ? 1 : -1)
+                })
+                .accessibilityAction(named: Text("dino.back")) { onNavigate(-1) }
+                .accessibilityAction(named: Text("dino.next")) { onNavigate(1) }
+        } else {
+            content
+        }
+    }
+}
+
+/// A joined badge and pointer, with black numbers independent of clock colors.
+struct ClockHintBadgeArrow: View {
+    let number: Int
+    let badge: CGPoint
+    let tip: CGPoint
+    let wings: [CGPoint]
+    let ink: UInt32
+    let bounds: CGSize
+
+    var body: some View {
+        ZStack {
+            Canvas { context, _ in
+                var arrow = Path()
+                // Starting inside the badge removes the gap and the seam at its edge.
+                arrow.move(to: badge); arrow.addLine(to: tip)
+                for wing in wings {
+                    arrow.move(to: tip); arrow.addLine(to: wing)
+                }
+                func disk(_ radius: CGFloat) -> Path {
+                    Path(ellipseIn: CGRect(x: badge.x - radius, y: badge.y - radius,
+                                           width: radius * 2, height: radius * 2))
+                }
+                // Each layer covers both parts, giving one continuous outline.
+                context.stroke(arrow, with: .color(.white), style: StrokeStyle(lineWidth: 7.5, lineCap: .round, lineJoin: .round))
+                context.fill(disk(14.5), with: .color(.white))
+                context.stroke(arrow, with: .color(.black), style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+                context.fill(disk(13.25), with: .color(.black))
+                context.stroke(arrow, with: .color(Color(dinoHex: ink)), style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                context.fill(disk(12), with: .color(.white))
+            }
+            Text(verbatim: "\(number)")
+                .font(.system(size: 16, weight: .heavy, design: .rounded)).foregroundStyle(.black)
+                .frame(width: 24, height: 24).position(badge)
+        }.frame(width: bounds.width, height: bounds.height)
+            .allowsHitTesting(false).accessibilityHidden(true)
+    }
 }
 
 struct DinoButtonStyle: ButtonStyle {

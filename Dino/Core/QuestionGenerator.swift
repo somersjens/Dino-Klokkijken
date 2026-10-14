@@ -6,7 +6,7 @@ struct ClockQuestion: Identifiable, Equatable, Sendable {
     let target: ClockTime
     var options: [ClockTime]
     let activity: DinoActivity?
-    /// Other cards on the matching board; the target is visibly selected.
+    /// Two additional faces for the three-pair matching board.
     let companionClocks: [ClockTime]
     var relatedTimes: [ClockTime] = []
     var durationMinutes = 0
@@ -16,6 +16,17 @@ struct ClockQuestion: Identifiable, Equatable, Sendable {
     var answer: ClockAnswer? = nil
     var expectedAnswer: ClockAnswer { answer ?? .time(target) }
     var responses: [ClockAnswer] { answerChoices.isEmpty ? options.map(ClockAnswer.time) : answerChoices }
+}
+
+enum DinoMatchingQuestions {
+    static func configure<R: RandomNumberGenerator>(_ question: ClockQuestion, using rng: inout R) -> ClockQuestion {
+        guard question.kind == .match else { return question }
+        var question = question
+        question.relatedTimes = [question.target] + question.companionClocks
+        question.options = question.relatedTimes.shuffled(using: &rng)
+        question.answer = .pairs(question.relatedTimes)
+        return question
+    }
 }
 
 enum DinoQuestionGenerator {
@@ -53,8 +64,9 @@ enum DinoQuestionGenerator {
             }
             let companions = Array(1...12).filter { $0 != hour }.shuffled(using: &rng)
                 .prefix(2).map { ClockTime(hour: $0) }
-            return ClockQuestion(id: index, kind: recipe.kind, target: target,
-                                 options: options, activity: activity, companionClocks: companions)
+            let question = ClockQuestion(id: index, kind: recipe.kind, target: target,
+                                         options: options, activity: activity, companionClocks: companions)
+            return DinoMatchingQuestions.configure(question, using: &rng)
         }
     }
 
@@ -77,8 +89,9 @@ enum DinoQuestionGenerator {
             let others = pool.filter { $0 != target }.shuffled(using: &rng)
             var options = recipe.kind.usesOptions ? Array(others.prefix(recipe.optionCount - 1)) : []
             if recipe.kind.usesOptions { options.insert(target, at: Int.random(in: 0..<recipe.optionCount, using: &rng)) }
-            return ClockQuestion(id: index, kind: recipe.kind, target: target, options: options,
-                                 activity: nil, companionClocks: Array(others.prefix(2)))
+            let question = ClockQuestion(id: index, kind: recipe.kind, target: target, options: options,
+                                         activity: nil, companionClocks: Array(others.prefix(2)))
+            return DinoMatchingQuestions.configure(question, using: &rng)
         }
     }
 }

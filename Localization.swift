@@ -1,6 +1,7 @@
 import SwiftUI
 import Combine
 import ObjectiveC
+import UIKit
 
 struct AppLanguage: Identifiable, Hashable, Sendable {
     let code: String
@@ -22,6 +23,7 @@ final class LanguageManager: ObservableObject {
     static let shared = LanguageManager()
     private static let overrideKey = "settings.languageOverride"
     private let defaults: UserDefaults
+    private var systemLanguageUpdates: AnyCancellable?
     @Published var override: AppLanguage? {
         didSet {
             if let override { defaults.set(override.code, forKey: Self.overrideKey) }
@@ -41,10 +43,22 @@ final class LanguageManager: ObservableObject {
         defaults = .standard
 #endif
         if let saved = defaults.string(forKey: Self.overrideKey) {
-            override = AppLanguage.named(saved) ?? .english
-            if saved != override?.code { defaults.set(override?.code, forKey: Self.overrideKey) }
+            override = AppLanguage.named(saved)
+            if let override {
+                if saved != override.code { defaults.set(override.code, forKey: Self.overrideKey) }
+            } else {
+                defaults.removeObject(forKey: Self.overrideKey)
+            }
         }
         apply()
+        systemLanguageUpdates = NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)
+            .merge(with: NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification))
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self, self.override == nil else { return }
+                self.objectWillChange.send()
+                self.apply()
+            }
     }
     var effective: AppLanguage {
         override ?? Locale.preferredLanguages.compactMap(AppLanguage.named).first ?? .english

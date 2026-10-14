@@ -14,10 +14,12 @@ private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
 struct DinoCoreTests {
     static func main() async {
         testClocks()
+        testHandHintClearance()
         testAnimation()
         testQuestions()
         testWorlds()
         testAttempt()
+        testAnswerRetries()
         testTiming()
         testPractice()
         testPracticeRecords()
@@ -25,10 +27,12 @@ struct DinoCoreTests {
         testDemonstrationExamples()
         testProgress()
         testStorage()
+        testClockThemes()
         testDinoAppearance()
         testDinoAvatarMask()
         testDinoSpriteColors()
         testPlayerModel()
+        testLiveClockChanges()
         testSettingsAndFeedback()
         testCloudSync()
         testFullReset()
@@ -80,7 +84,7 @@ struct DinoCoreTests {
         expect(session.practiceProgress == beforeWrong && displayedProgress.count == updateCount &&
                store.loadPracticeRecords()[DinoPracticeRecord.key(time: .half, question: .chooseAnalog)]?.currentStreak == 0,
                "wrong feedback holds both displayed counters while persisting the broken streak")
-        session.advance()
+        session.showAnswer(); session.advance()
         expect(session.practiceStreak == 0 && session.practiceBestStreak == 2 && session.practiceQuestionNumber == 4, "wrong answers reset the streak, retain the record and count as practiced")
         expect(displayedProgress.count == updateCount + 1 && displayedProgress.last == .init(streak: 0, bestStreak: 2, questionNumber: 4),
                "Next resets the streak and advances the counter in the same update")
@@ -107,7 +111,7 @@ struct DinoCoreTests {
             mixedSession.submit(mixedSession.question.expectedAnswer); mixedSession.advance()
         }
         expect(mixedSession.practiceQuestionType == .chooseAnalog && mixedSession.practiceStreak == 1 && mixedSession.practiceQuestionNumber == 2, "ascending restores the per-type streak and count on its next cycle")
-        mixedSession.submit(wrongAnswer(for: mixedSession.question)); mixedSession.advance()
+        mixedSession.submit(wrongAnswer(for: mixedSession.question)); mixedSession.showAnswer(); mixedSession.advance()
         expect(mixedSession.practiceStreak == 1, "one type's wrong answer does not reset another type's streak")
         let mixed = DinoPracticeConfiguration(time: .quarter, order: .mix)
         let shuffled = DinoSession(level: mixed.level, player: restarted, practice: mixed)
@@ -144,6 +148,14 @@ struct DinoCoreTests {
     }
 
     static func testClocks() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 3600)!
+        expect(ClockTime(date: Date(timeIntervalSince1970: 0), calendar: calendar) == ClockTime(hour: 1),
+               "clock previews use the calendar's local time zone")
+        expect(ClockTime(date: Date(timeIntervalSince1970: 82_799), calendar: calendar) == ClockTime(hour: 23, minute: 59),
+               "current-time conversion keeps minutes through the end of a day")
+        expect(ClockTime(date: Date(timeIntervalSince1970: 82_800), calendar: calendar) == ClockTime(hour: 0),
+               "current-time conversion rolls over at local midnight")
         expect(ClockTime(hour: 3).hourAngle == 90, "03:00 short hand")
         expect(ClockTime(hour: 3, minute: 30).hourAngle == 105, "03:30 short hand")
         expect(ClockTime(hour: 3, minute: 45).hourAngle == 112.5, "03:45 short hand")
@@ -163,10 +175,92 @@ struct DinoCoreTests {
         }
         expect(ClockTime.shiftedHour(12, by: 1) == 1, "plus wraps")
         expect(ClockTime.shiftedHour(1, by: -1) == 12, "minus wraps")
+        expect(ClockTime(hour: 5, minute: 55).shiftingMinutes(by: 5) == ClockTime(hour: 6), "five minutes forward carries into the next hour")
+        expect(ClockTime(hour: 6).shiftingMinutes(by: -5) == ClockTime(hour: 5, minute: 55), "five minutes backward borrows from the previous hour")
+        for hour in 1...12 {
+            expect(ClockTime(hour: hour, minute: 55).settingMinute(0) == ClockTime(hour: ClockTime.shiftedHour(hour, by: 1)), "dragging forward across twelve moves the hour hand")
+            expect(ClockTime(hour: hour).settingMinute(55) == ClockTime(hour: ClockTime.shiftedHour(hour, by: -1), minute: 55), "dragging backward across twelve moves the hour hand")
+            for step in [1, 5, 10, 15, 30, 60] {
+                for minute in 0..<60 {
+                    let time = ClockTime(hour: hour, minute: minute)
+                    for delta in [-step, step] {
+                        let moved = time.shiftingMinutes(by: delta)
+                        expect((1...12).contains(moved.hour), "interactive minute controls retain a twelve-hour display")
+                        expect(moved.shiftingMinutes(by: -delta) == time, "minute adjustments reverse through every hour boundary")
+                        expect((moved.minutesOfDay - time.minutesOfDay - delta) % 720 == 0, "minute adjustments preserve the full time delta")
+                    }
+                }
+            }
+        }
+    }
+
+    static func testHandHintClearance() {
+        let direction = ClockHandHintGeometry.point(radius: 1, angle: 176.5)
+        func alongHand(_ radius: Double) -> CGPoint {
+            CGPoint(x: direction.x * radius, y: direction.y * radius)
+        }
+        expect(abs(ClockHandHintGeometry.segmentDistance(alongHand(0.57), alongHand(0.289), alongHand(-0.035), alongHand(0.23)) - 0.059) < 0.000_001,
+               "separate collinear arrows and hands do not intersect through floating-point rounding")
+        expect(ClockHandHintGeometry.segmentDistance(CGPoint(x: -1, y: 0), CGPoint(x: 1, y: 0),
+                                                    CGPoint(x: 0, y: -1), CGPoint(x: 0, y: 1)) == 0,
+               "crossing pointer segments still have zero clearance")
+        for widths in [(0.038, 0.024), (0.055, 0.036)] {
+            for hour in 1...12 {
+                for minute in 0..<60 {
+                    let time = ClockTime(hour: hour, minute: minute)
+                    let pointers = ClockHandHintGeometry.pointers(time: time, hourWidth: widths.0, minuteWidth: widths.1)
+                    let hands = [(time.hourAngle, 0.23, widths.0), (time.minuteAngle, 0.34, widths.1)]
+                    let difference = abs((time.hourAngle - time.minuteAngle + 540).truncatingRemainder(dividingBy: 360) - 180)
+                    for (index, pointer) in pointers.enumerated() {
+                        let direction = ClockHandHintGeometry.point(radius: 1, angle: hands[index].0)
+                        let alignment = [pointer.start, pointer.tip, pointer.badge].map {
+                            abs($0.x * direction.y - $0.y * direction.x)
+                        }
+                        if difference >= 22 {
+                            expect(alignment.allSatisfy { $0 < 0.000_001 },
+                                   "arrows and number badges follow their hand at \(time.digitalText)")
+                            let arrow = CGPoint(x: pointer.tip.x - pointer.start.x, y: pointer.tip.y - pointer.start.y)
+                            expect(arrow.x * direction.x + arrow.y * direction.y < 0,
+                                   "aligned arrows point inward toward their hand at \(time.digitalText)")
+                        } else {
+                            expect(alignment.contains { $0 > 0.01 },
+                                   "nearby hands retain the side pointers at \(time.digitalText)")
+                        }
+                    }
+                    for pointer in pointers {
+                        for hand in hands {
+                            let start = ClockHandHintGeometry.point(radius: -0.035, angle: hand.0)
+                            let end = ClockHandHintGeometry.point(radius: hand.1, angle: hand.0)
+                            for edge in [pointer.start] + pointer.arrowWings {
+                                let clearance = ClockHandHintGeometry.segmentDistance(edge, pointer.tip, start, end) - hand.2 / 2
+                                expect(clearance > 0.015, "arrows stay clear of both hands at \(time.digitalText), including their heads")
+                            }
+                        }
+                    }
+                    expect(hypot(pointers[0].badge.x - pointers[1].badge.x, pointers[0].badge.y - pointers[1].badge.y) > 0.2,
+                           "number badges remain separate at \(time.digitalText)")
+                }
+            }
+        }
+    }
+
+    static func checkMatchingQuestion(_ question: ClockQuestion) {
+        expect(question.relatedTimes.count == 3 && question.options.count == 3, "matching has three clocks and three times")
+        expect(Set(question.relatedTimes) == Set(question.options), "every clock has exactly one matching time")
+        expect(Set(question.relatedTimes.map { ($0.hour % 12) * 60 + $0.minute }).count == 3, "matching faces are distinct")
+        expect(question.expectedAnswer == .pairs(question.relatedTimes), "matching validates all three pairs")
+        expect(!AnswerValidator.isCorrect(.pairs(Array(question.relatedTimes.dropLast())), for: question), "incomplete pairs cannot answer the question")
+        expect(!AnswerValidator.isCorrect(.pairs(Array(question.relatedTimes.reversed())), for: question), "wrong pairs cannot answer the question")
     }
 
     static func testPractice() {
-        expect(Set(DinoPracticeQuestion.allCases.map { $0.recipe.kind }) == Set(ClockQuestionKind.allCases), "practice covers every interaction")
+        expect(DinoPracticeQuestion.allCases.count == 19, "practice contains nineteen distinct question types")
+        expect(DinoPracticeQuestion.match.number == 7, "matching remains question type seven")
+        expect(DinoPracticeQuestion.read24Hour.number == 10 && DinoPracticeQuestion.timeZone.number == 19,
+               "question numbers close the gap after the removed duplicate")
+        expect(DinoPracticeQuestion(rawValue: "pairClocks") == nil && ClockQuestionKind(rawValue: "pairClocks") == nil,
+               "the duplicate pairing exercise is retired from practice and levels")
+        expect(Set(DinoPracticeQuestion.allCases.map { $0.recipe.kind }) == Set(ClockQuestionKind.allCases).subtracting([.activity]), "practice omits the duplicate activity type")
         let orders = DinoPracticeQuestion.allCases.map { DinoPracticeOrder.specific($0) } + [.ascending, .mix]
         for time in DinoPracticeTime.allCases {
             for order in orders {
@@ -207,6 +301,7 @@ struct DinoCoreTests {
                     if [.setAnalog, .setDigital, .advanceAnalog].contains(question.kind) {
                         expect(question.options.isEmpty, "setting a clock has no options")
                     }
+                    if question.kind == .match { checkMatchingQuestion(question) }
                     if let activity = question.activity { expect(activity.hour == question.target.hour, "practice activity time remains consistent") }
                     expect(question.companionClocks.count == 2 && !question.companionClocks.contains(question.target), "matching companions differ from selected clock")
                     expect(AnswerValidator.isCorrect(question.expectedAnswer, for: question), "every practice question can be answered")
@@ -250,6 +345,7 @@ struct DinoCoreTests {
             session.submit(answer)
             expect(session.practiceAnswered == index + 1, "practice ignores duplicate submissions")
             expect(session.attempt.questionSeconds == [60], "practice answer timing remains bounded")
+            session.showAnswer()
             session.advance()
             expect(session.attempt.answers.isEmpty && session.attempt.questions.count == 1, "endless practice retains only current question")
             let expectedMinute = session.question.kind == .advanceAnalog ? session.question.relatedTimes[0].minute : 0
@@ -377,10 +473,6 @@ struct DinoCoreTests {
                         guard case .ordering(let ordered) = q.expectedAnswer else { fatalError("sorting answer") }
                         expect(ordered.count == 4 && Set(ordered) == Set(q.options), "sorting uses exactly the displayed clocks")
                         expect(ordered.map(\.minutesOfDay) == ordered.map(\.minutesOfDay).sorted(), "sorting is chronological on one day")
-                    case .pairClocks:
-                        expect(Set(q.relatedTimes) == Set(q.options) && q.relatedTimes.count == 4, "four unique pairs")
-                        expect(Set(q.relatedTimes.map { ($0.hour % 12) * 60 + $0.minute }).count == 4, "distinct analog faces avoid ambiguous pairs")
-                        expect(q.expectedAnswer == .pairs(q.relatedTimes), "pairs preserve row order")
                     case .trueFalse:
                         expect(q.expectedAnswer == .truth(q.statement == q.target), "truth judgement matches statement")
                     case .dayPart:
@@ -463,7 +555,8 @@ struct DinoCoreTests {
                         if index > 0, questions[index - 1].options.count == q.options.count {
                             expect(q.options.firstIndex(of: q.target) != questions[index - 1].options.firstIndex(of: questions[index - 1].target), "correct position changes")
                         }
-                    } else { expect(q.options.isEmpty, "no options for controls") }
+                    } else if q.kind == .match { checkMatchingQuestion(q) }
+                    else { expect(q.options.isEmpty, "no options for controls") }
                     if let activity = q.activity { expect(activity.hour == q.target.hour, "explicit activity time") }
                 }
                 if level.isBoss && seed % 3 == 0 {
@@ -519,9 +612,7 @@ struct DinoCoreTests {
                         expect(Set(q.responses).count == q.responses.count, "distinct responses")
                         expect(q.responses.filter { AnswerValidator.isCorrect($0, for: q) }.count == 1, "one correct response")
                     }
-                    if q.kind == .pairClocks {
-                        expect(Set(q.relatedTimes.map { ($0.hour % 12) * 60 + $0.minute }).count == 4, "pair clocks have distinct analog faces")
-                    }
+                    if q.kind == .match { checkMatchingQuestion(q) }
                     if q.kind == .elapsedTime {
                         expect(q.relatedTimes[0].adding(minutes: q.durationMinutes) == q.relatedTimes[1], "elapsed duration matches endpoints")
                     }
@@ -551,6 +642,88 @@ struct DinoCoreTests {
     }
 
     @MainActor
+    static func testAnswerRetries() {
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        let player = DinoPlayer(store: store)
+        for type in DinoPracticeQuestion.allCases where type.recipe.kind.usesOptions {
+            let config = DinoPracticeConfiguration(time: .mix, order: .specific(type))
+            var generator = DinoPracticeGenerator(configuration: config, seed: 42)
+            var question = generator.next(index: 0)
+            // Choose a four-option variation for the original clock questions.
+            for index in 1..<20 where question.responses.count <= 2 && type != .trueFalse {
+                question = generator.next(index: index)
+            }
+            var feedback: [Bool] = []
+            var now = 10.0
+            let session = DinoSession(level: config.level, player: player, practice: config, example: question,
+                                      now: { now }, answerFeedback: { feedback.append($0) })
+            session.showAnswer()
+            expect(!session.answerRevealed && !session.canRetry, "unanswered questions cannot reveal their answer")
+            let wrong = question.responses.filter { $0 != question.expectedAnswer }
+            now += 3
+            session.submit(wrong[0])
+            let allowsRetry = question.responses.count > 2
+            expect(session.canRetry == allowsRetry && session.showsCorrectResponse != allowsRetry, "only multiple choice with more than two options allows retries")
+            expect(!session.responseIsEnabled(wrong[0]), "a rejected option cannot be selected again")
+            session.submit(wrong[0])
+            expect(feedback == [false], "repeated taps on a rejected answer are ignored")
+            if allowsRetry {
+                session.advance()
+                expect(session.attempt.index == 0, "the player must solve or reveal a failed multiple-choice question before Next")
+                expect(session.responseIsEnabled(question.expectedAnswer), "the correct answer stays available without being highlighted")
+                now += 100
+                session.submit(wrong[1])
+                expect(session.rejectedResponses == Set(wrong.prefix(2)) && session.canRetry, "additional wrong choices stay marked while retries remain available")
+                session.submit(question.expectedAnswer)
+                expect(session.correctFeedback && !session.canRetry && session.showsCorrectResponse && !session.shouldAutoAdvance,
+                       "a correct retry reveals the answer and waits for Next")
+                expect(feedback == [false, false, true], "retries emit the appropriate answer reaction")
+            } else {
+                session.submit(question.expectedAnswer)
+                expect(!session.correctFeedback && feedback == [false], "two-option questions keep their existing final feedback")
+            }
+            session.submit(question.expectedAnswer)
+            expect(session.attempt.answers == [false] && session.attempt.correctCount == 0 && session.attempt.questionSeconds == [3],
+                   "retries never change the first score or the original answer time")
+            expect(session.practiceAnswered == 1 && session.practiceCorrect == 0, "practice retries never add a question or a point")
+            expect(question.responses.allSatisfy { !session.responseIsEnabled($0) }, "all choices close after correction or final feedback")
+
+            let revealed = DinoSession(level: config.level, player: player, practice: config, example: question)
+            revealed.submit(wrong[0]); revealed.showAnswer(); revealed.showAnswer()
+            revealed.submit(question.expectedAnswer)
+            expect(revealed.answerRevealed == allowsRetry && revealed.showsCorrectResponse && !revealed.canRetry && !revealed.correctFeedback,
+                   "Show answer reveals the correct choice and closes retries without awarding points")
+        }
+
+        let level = DinoLevelCatalog.level(10)!
+        let session = DinoSession(level: level, player: player)
+        session.submit(session.question.responses.first { $0 != session.question.expectedAnswer }!)
+        session.submit(session.question.expectedAnswer)
+        session.advance()
+        expect(session.attempt.index == 1 && session.attempt.answers == [false] && session.rejectedResponses.isEmpty &&
+               !session.retryAnsweredCorrectly && !session.answerRevealed && !session.hasFeedback,
+               "Next clears retry state for the following level question")
+        for _ in 1..<level.questionCount { session.submit(session.question.expectedAnswer); session.advance() }
+        expect(session.result?.correct == 9 && player.profile.record(10).bestCorrect == 9, "completed levels preserve the lost point after a correct retry")
+
+        let config = DinoPracticeConfiguration(time: .whole, order: .specific(.dayPart))
+        for streak in 1...3 { player.recordPracticeAnswer(time: .whole, question: .dayPart, streak: streak) }
+        let practice = DinoSession(level: config.level, player: player, practice: config)
+        practice.submit(practice.question.responses.first { $0 != practice.question.expectedAnswer }!)
+        let savedAfterWrong = player.practiceRecords
+        practice.submit(practice.question.expectedAnswer)
+        expect(player.practiceRecords == savedAfterWrong && practice.practiceStreak == 3 && practice.practiceQuestionNumber == 4,
+               "a correct retry neither restores the saved streak nor changes held HUD counters")
+        practice.advance()
+        expect(practice.practiceStreak == 0 && practice.practiceQuestionNumber == 5 && practice.practiceCorrect == 0 &&
+               player.practiceRecord(time: .whole, question: .dayPart).questionsAnswered == 4,
+               "practice counts a retried question once and keeps the streak broken")
+        practice.setInputTime(ClockTime(hour: 5, minute: 55)); practice.adjustInputMinutes(by: 5)
+        expect(practice.inputTime == ClockTime(hour: 6), "session minute controls advance the hour")
+        practice.adjustInputMinutes(by: -5)
+        expect(practice.inputTime == ClockTime(hour: 5, minute: 55), "session minute controls reverse the hour")
+    }
+
     static func testTiming() {
         for (elapsed, seconds) in [(0.0, 1), (0.9, 1), (1.1, 2), (59.5, 60), (60, 60), (86_400, 60), (-3_600, 1), (Double.infinity, 60), (Double.nan, 1)] {
             expect(DinoQuestionTiming.scoredSeconds(elapsed) == seconds, "bounded timing including long inactivity and clock anomalies")
@@ -627,7 +800,7 @@ struct DinoCoreTests {
         var p = store.load()
         expect(p.name == "Sam" && !p.onboardingComplete, "preserve old name, show new onboarding")
         p.onboardingComplete = true
-        p.clockTheme.face = .blue; p.clockTheme.hands = .playful; p.clockTheme.numerals = .digital
+        p.clockTheme.face = .blue; p.clockTheme.hands = .rounded; p.clockTheme.numerals = .digital
         p.clockTheme.hourInk = .purple; p.clockTheme.minuteInk = .red; p.clockTheme.display = .green
         p.recordCompletedAttempt(levelID: 1, correct: 5)
         p.recordCompletedAttempt(levelID: 10, correct: 10)
@@ -644,6 +817,98 @@ struct DinoCoreTests {
         expect(DinoProgressStore(defaults: UserDefaults(suiteName: suite)!).load() == p, "actual disk-backed UserDefaults restart")
         defaults.removePersistentDomain(forName: suite)
     }
+    static func testClockThemes() {
+        let romanLabels = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
+        for hour in 1...12 {
+            expect(AnalogNumerals.normal.label(for: hour) == String(hour), "normal clock numerals preserve the hour")
+            expect(AnalogNumerals.roman.label(for: hour) == romanLabels[hour - 1], "Roman clock numerals cover all twelve hours")
+        }
+        expect(ClockTheme.standard.face == .white && ClockTheme.standard.analogNumerals == .normal,
+               "white and normal numerals remain the defaults")
+        expect(ClockFace.allCases.first == .black && ClockFace.allCases.count == ClockInk.allCases.count,
+               "the black face comes before white and matches the number of hand and rim presets")
+        for hex: UInt32 in [0x000000, 0x193B53, 0x303A40, 0x0000FF, 0x6945A0] {
+            expect(ClockColorContrast.markingHex(on: hex) == 0xFFFFFF, "dark faces use white markings")
+        }
+        for hex: UInt32 in [0xFFFFFF, 0xFFF1D6, 0xE2F3FD, 0xE5F6DC, 0xFFFF00, 0x00FF00] {
+            expect(ClockColorContrast.markingHex(on: hex) == 0x000000, "light faces use black markings")
+        }
+        let legacy = Data(#"{"face":"blue","hourInk":"purple","minuteInk":"red","rimInk":"green","hands":"playful","display":"green","numerals":"digital"}"#.utf8)
+        let migrated = try! JSONDecoder().decode(ClockTheme.self, from: legacy)
+        expect(migrated.face == .blue && migrated.hourInk == .purple && migrated.minuteInk == .red && migrated.rimInk == .green,
+               "legacy clock palettes survive migration")
+        expect(migrated.hands == .rounded && migrated.numerals == .digital && migrated.analogNumerals == .normal, "retired hands migrate to rounded and keep the numeral style")
+        expect(migrated.analogShape == .circle && migrated.digitalShape == .roundedRectangle && migrated.digitalInkHex == 0x193B53,
+               "legacy light displays keep dark digits and default shapes")
+        let oldShape = try! JSONDecoder().decode(ClockTheme.self, from: Data(#"{"analogShape":"pentagon","customFaceHex":526612}"#.utf8))
+        expect(oldShape.analogShape == .octagon && oldShape.customFaceHex == 526612, "saved pentagons migrate to octagons and retain custom colors")
+        let oldDark = try! JSONDecoder().decode(ClockTheme.self, from: Data(#"{"display":"charcoal"}"#.utf8))
+        expect(oldDark.digitalInkHex == 0xFFFFFF, "legacy dark displays keep white digits")
+        var theme = ClockTheme.standard
+        theme.analogShape = .octagon; theme.digitalShape = .oval; theme.numerals = .classic; theme.analogNumerals = .roman
+        theme.customFaceHex = 0x080914; theme.customHourHex = 0xFEDD22; theme.customMinuteHex = 0xC6EFDA
+        theme.customRimHex = 0xCA71C5; theme.customDisplayHex = 0x280A37; theme.digitalInkHex = 0xF4F188
+        let memory = InMemoryKeyValueStore()
+        let store = DinoProgressStore(defaults: memory)
+        var profile = PlayerProfile(); profile.clockTheme = theme
+        profile.recordCompletedAttempt(levelID: 1, correct: 5)
+        store.save(profile)
+        expect(DinoProgressStore(defaults: memory).load() == profile, "all custom colors, shapes, fonts and progress survive restart")
+        expect(theme.faceHex == 0x080914 && theme.markingHex == 0xFFFFFF && theme.hourHex == 0xFEDD22 && theme.minuteHex == 0xC6EFDA && theme.rimHex == 0xCA71C5,
+               "analog custom colors override presets")
+        let digitalInk = theme.digitalInkHex
+        theme.customDisplayHex = digitalInk
+        expect(theme.digitalColorsMatch, "identical custom digital colors need a default clock on completion")
+        theme.customDisplayHex = digitalInk - 1
+        expect(!theme.digitalColorsMatch && theme.digitalInkHex == digitalInk, "different digital colors are allowed without changing digit ink")
+        theme.customDisplayHex = nil; theme.display = .white; theme.digitalInkHex = 0xFFFFFF
+        expect(theme.digitalColorsMatch, "matching preset digital colors also need a default clock")
+        theme.resetDigital()
+        expect(!theme.digitalColorsMatch && theme.customFaceHex == 0x080914 && theme.analogShape == .octagon && theme.analogNumerals == .roman,
+               "using the standard digital clock preserves analog choices")
+        theme.digitalInkHex = 0xF4F188; theme.digitalShape = .rectangle
+        theme.resetAnalog()
+        expect(theme.faceHex == 0xFFFFFF && theme.analogShape == .circle && theme.customHourHex == nil && theme.customMinuteHex == nil && theme.customRimHex == nil && theme.hands == .rounded && theme.analogNumerals == .normal,
+               "using the standard analog clock resets its custom colors and shape")
+        expect(theme.digitalInkHex == 0xF4F188 && theme.digitalShape == .rectangle, "resetting analog preserves digital choices")
+
+        var designed = ClockTheme.standard
+        designed.analogShape = .octagon; designed.hands = .straight; designed.analogNumerals = .roman
+        designed.digitalShape = .oval; designed.numerals = .classic
+        designed.customFaceHex = 0x090B11; designed.customHourHex = 0xFFEEDD
+        designed.customMinuteHex = 0xA1EEE9; designed.customRimHex = 0x148B83
+        designed.customDisplayHex = 0x112233; designed.digitalInkHex = 0xFFD166
+        var restored = designed
+        restored.restoreAnalogColors(); restored.restoreDigitalColors()
+        expect(restored.faceHex == ClockTheme.standard.faceHex && restored.hourHex == ClockTheme.standard.hourHex &&
+               restored.minuteHex == ClockTheme.standard.minuteHex && restored.rimHex == ClockTheme.standard.rimHex &&
+               restored.displayHex == ClockTheme.standard.displayHex && restored.digitalInkHex == ClockTheme.standard.digitalInkHex,
+               "bottom restore actions recover every original color")
+        expect(restored.analogShape == .octagon && restored.hands == .straight && restored.analogNumerals == .roman &&
+               restored.digitalShape == .oval && restored.numerals == .classic,
+               "restoring colors preserves shapes, hands and numeral styles")
+        expect(designed.replacingUnreadableClocks() == designed, "readable clocks retain every customization on completion")
+        for hand in [\ClockTheme.customHourHex, \ClockTheme.customMinuteHex] {
+            var unreadable = designed
+            unreadable[keyPath: hand] = unreadable.faceHex
+            expect(unreadable.analogColorsMatch, "either matching hand makes the analog clock unreadable")
+            var expected = designed; expected.resetAnalog()
+            expect(unreadable.replacingUnreadableClocks() == expected,
+                   "an unreadable analog clock becomes standard while the digital clock is preserved")
+        }
+        var unreadable = designed
+        unreadable.digitalInkHex = unreadable.displayHex
+        var expected = designed; expected.resetDigital()
+        expect(unreadable.replacingUnreadableClocks() == expected,
+               "an unreadable digital clock becomes standard while the analog clock is preserved")
+        unreadable.customFaceHex = unreadable.hourHex
+        expect(unreadable.replacingUnreadableClocks() == .standard, "both unreadable clocks resolve independently")
+        let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+        player.completeOnboarding(theme: unreadable)
+        expect(player.profile.onboardingComplete && player.profile.clockTheme == .standard,
+               "matching colors still allow onboarding to complete with default clocks")
+    }
+
     static func testPlayerModel() {
         let memory = InMemoryKeyValueStore()
         let player = DinoPlayer(store: DinoProgressStore(defaults: memory))
@@ -677,6 +942,58 @@ struct DinoCoreTests {
         let restored = DinoProgressStore(defaults: memory).load()
         expect(restored.levels.isEmpty && restored.bossResults.isEmpty && !restored.worldOneComplete, "reset clears only progress")
         expect(restored.name.isEmpty && restored.onboardingComplete && restored.clockTheme == .standard, "reset preserves nameless onboarding and clocks")
+    }
+
+    static func testLiveClockChanges() {
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        let player = DinoPlayer(store: store)
+        player.completeOnboarding(theme: .standard)
+        let session = DinoSession(level: DinoLevelCatalog.level(1)!, player: player)
+        session.inputHour = 9
+        let questionID = session.question.id
+        let input = session.inputTime
+        var latest: PlayerProfile?
+        let subscription = player.profileChanges.sink { latest = $0 }
+        var theme = player.profile.clockTheme
+        theme.face = .black; theme.analogShape = .octagon; theme.analogNumerals = .roman
+        player.setTheme(theme)
+        expect(player.profile.clockTheme == theme && store.load().clockTheme == theme && latest?.clockTheme == theme,
+               "clock edits publish and persist immediately")
+        expect(session.question.id == questionID && session.inputTime == input && session.attempt.index == 0,
+               "live personalization preserves the current question and answer")
+        var draft = theme
+        draft.digitalInkHex = draft.displayHex
+        draft.numerals = .digital; draft.digitalShape = .oval; draft.hourInk = .purple
+        player.setTheme(draft)
+        expect(!player.profile.clockTheme.digitalColorsMatch && player.profile.clockTheme.digitalInkHex == theme.digitalInkHex,
+               "matching draft colors cannot make the game clock disappear")
+        expect(player.profile.clockTheme.numerals == .digital && player.profile.clockTheme.digitalShape == .oval && player.profile.clockTheme.hourInk == .purple,
+               "other style edits still apply while duplicate digital colors are being corrected")
+        draft.display = .charcoal
+        player.setTheme(draft)
+        expect(player.profile.clockTheme == draft && store.load().clockTheme == draft,
+               "corrected digital colors are applied immediately")
+        expect(session.question.id == questionID && session.inputTime == input,
+               "digital edits also preserve the running question and input")
+        draft.customFaceHex = draft.hourHex
+        draft.analogShape = .square; draft.analogNumerals = .normal
+        player.setTheme(draft)
+        expect(!player.profile.clockTheme.analogColorsMatch && player.profile.clockTheme.face == .black &&
+               player.profile.clockTheme.analogShape == .square && player.profile.clockTheme.analogNumerals == .normal,
+               "matching analog draft colors keep visible hands while other changes apply live")
+        var completed = draft; completed.resetAnalog()
+        player.completeClockCustomization(theme: draft)
+        expect(player.profile.clockTheme == completed && store.load().clockTheme == completed && latest?.clockTheme == completed,
+               "finishing an unreadable analog draft publishes and persists the default analog clock")
+        draft = completed
+        draft.digitalInkHex = draft.displayHex
+        player.completeClockCustomization(theme: draft)
+        completed.resetDigital()
+        expect(player.profile.clockTheme == completed && store.load().clockTheme == completed,
+               "finishing an unreadable digital draft saves the default digital clock")
+        expect(session.question.id == questionID && session.inputTime == input && session.attempt.index == 0,
+               "default clock fallback preserves the running question, answer and progress")
+        subscription.cancel()
     }
 
     static func testDinoAppearance() {

@@ -2,7 +2,7 @@ import Foundation
 
 enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
     case chooseAnalog, chooseDigital, activity, setAnalog, setDigital, match
-    case readDigital, spokenTime, trueFalse, dayPart, pairClocks, read24Hour, sortTimes, timeSequence
+    case readDigital, spokenTime, trueFalse, dayPart, read24Hour, sortTimes, timeSequence
     case addTime, advanceAnalog, elapsedTime, subtractTime, schoolEnd, flightArrival, timeZone
     var instructionKey: String { "dino.question.\(rawValue)" }
     var symbol: String {
@@ -17,7 +17,6 @@ enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
         case .spokenTime: return "quote.bubble.fill"
         case .trueFalse: return "checkmark.circle.fill"
         case .dayPart: return "sun.horizon.fill"
-        case .pairClocks: return "arrow.triangle.branch"
         case .sortTimes: return "list.number"
         case .timeSequence: return "ellipsis"
         case .addTime, .advanceAnalog: return "clock.arrow.2.circlepath"
@@ -28,7 +27,7 @@ enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
         case .timeZone: return "globe.europe.africa.fill"
         }
     }
-    var usesOptions: Bool { ![.setAnalog, .setDigital, .advanceAnalog, .sortTimes, .pairClocks].contains(self) }
+    var usesOptions: Bool { ![.setAnalog, .setDigital, .match, .advanceAnalog, .sortTimes].contains(self) }
     var isExpanded: Bool { ![.chooseAnalog, .chooseDigital, .activity, .setAnalog, .setDigital, .match].contains(self) }
 }
 
@@ -134,16 +133,16 @@ enum DinoLevelCatalog {
                          .spokenTime, .trueFalse, .sortTimes, .setDigital, .timeSequence]
             case 7:
                 kinds = [.dayPart, .read24Hour, .dayPart, .read24Hour,
-                         .pairClocks, .sortTimes, .read24Hour, .pairClocks, .timeSequence]
+                         .match, .sortTimes, .read24Hour, .match, .timeSequence]
             case 8:
-                kinds = [.match, .pairClocks, .chooseDigital, .setAnalog,
-                         .setDigital, .trueFalse, .pairClocks, .match, .spokenTime]
+                kinds = [.match, .match, .chooseDigital, .setAnalog,
+                         .setDigital, .trueFalse, .match, .match, .spokenTime]
             case 9:
                 kinds = [.elapsedTime, .addTime, .elapsedTime, .advanceAnalog,
                          .subtractTime, .schoolEnd, .timeSequence, .flightArrival, .elapsedTime]
             default:
                 kinds = [.chooseAnalog, .spokenTime, .readDigital, .setAnalog,
-                         .read24Hour, .pairClocks, .elapsedTime, .addTime, .sortTimes]
+                         .read24Hour, .match, .elapsedTime, .addTime, .sortTimes]
             }
             let boss = position == 10
             let selected = boss ? kinds + [worldID == 9 ? .elapsedTime : .setDigital] : [kinds[position - 1]]

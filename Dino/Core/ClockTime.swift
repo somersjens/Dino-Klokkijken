@@ -10,6 +10,11 @@ struct ClockTime: Codable, Equatable, Hashable, Sendable {
         self.minute = min(59, max(0, minute))
     }
 
+    init(date: Date, calendar: Calendar = .current) {
+        let components = calendar.dateComponents([.hour, .minute], from: date)
+        self.init(hour: components.hour ?? 0, minute: components.minute ?? 0)
+    }
+
     var hourAngle: Double { Double(hour % 12) * 30 + Double(minute) * 0.5 }
     var minuteAngle: Double { Double(minute) * 6 }
     var digitalText: String { String(format: "%02d:%02d", hour, minute) }
@@ -39,5 +44,116 @@ struct ClockTime: Codable, Equatable, Hashable, Sendable {
 
     static func shiftedMinute(_ minute: Int, by delta: Int) -> Int {
         ((minute + delta) % 60 + 60) % 60
+    }
+
+    /// Interactive clock controls keep hours in 1...12 and carry minutes across the hour.
+    func shiftingMinutes(by delta: Int) -> ClockTime {
+        let shifted = adding(minutes: delta)
+        return ClockTime(hour: (shifted.hour + 11) % 12 + 1, minute: shifted.minute)
+    }
+
+    /// Follow the shortest movement of the minute hand, including across twelve.
+    func settingMinute(_ newMinute: Int) -> ClockTime {
+        var delta = newMinute - minute
+        if delta < -30 { delta += 60 }
+        else if delta > 30 { delta -= 60 }
+        return shiftingMinutes(by: delta)
+    }
+}
+
+/// Coordinates are relative to the centre of a face with diameter 1.
+enum ClockHandHintGeometry {
+    struct Pointer {
+        let start: CGPoint
+        let tip: CGPoint
+        let badge: CGPoint
+        var arrowWings: [CGPoint] {
+            let direction = atan2(tip.y - start.y, tip.x - start.x)
+            return [-Double.pi / 5, Double.pi / 5].map { offset in
+                CGPoint(x: tip.x - cos(direction + offset) * 0.045,
+                        y: tip.y - sin(direction + offset) * 0.045)
+            }
+        }
+    }
+
+    static func pointers(time: ClockTime, hourWidth: Double, minuteWidth: Double) -> [Pointer] {
+        let angles = [time.hourAngle, time.minuteAngle]
+        let lengths = [0.23, 0.34]
+        let widths = [hourWidth, minuteWidth]
+        let difference = (time.hourAngle - time.minuteAngle + 540).truncatingRemainder(dividingBy: 360) - 180
+        // Follow the hands unless the number badges would sit almost on top of each other.
+        if abs(difference) >= 22 {
+            return (0..<2).map { index in
+                Pointer(start: point(radius: 0.57, angle: angles[index]),
+                        tip: point(radius: lengths[index] + widths[index] / 2 + 0.04, angle: angles[index]),
+                        badge: point(radius: 0.66, angle: angles[index]))
+            }
+        }
+        let candidates = (0..<2).map { index in
+            [-1.0, 1.0].flatMap { side in
+                [35.0, 55.0, 75.0].map { spread in
+                    let radians = angles[index] * .pi / 180
+                    let handPoint = point(radius: lengths[index] * 0.83, angle: angles[index])
+                    let gap = widths[index] / 2 + 0.04
+                    let tip = CGPoint(x: handPoint.x + cos(radians) * gap * side,
+                                      y: handPoint.y + sin(radians) * gap * side)
+                    let badge = point(radius: 0.66, angle: angles[index] + spread * side)
+                    let distance = hypot(badge.x - tip.x, badge.y - tip.y)
+                    let start = CGPoint(x: badge.x + (tip.x - badge.x) * 0.09 / distance,
+                                        y: badge.y + (tip.y - badge.y) * 0.09 / distance)
+                    return Pointer(start: start, tip: tip, badge: badge)
+                }
+            }
+        }
+        var best = [candidates[0][0], candidates[1][0]]
+        var bestScore = -Double.infinity
+        for hour in candidates[0] {
+            for minute in candidates[1] {
+                let pointers = [hour, minute]
+                var clearance = Double.infinity
+                for pointer in pointers {
+                    for index in 0..<2 {
+                        let handStart = point(radius: -0.035, angle: angles[index])
+                        let handEnd = point(radius: lengths[index], angle: angles[index])
+                        for start in [pointer.start] + pointer.arrowWings {
+                            clearance = min(clearance, segmentDistance(start, pointer.tip, handStart, handEnd) - widths[index] / 2)
+                        }
+                    }
+                }
+                let separation = hypot(hour.badge.x - minute.badge.x, hour.badge.y - minute.badge.y)
+                var routeSeparation = Double.infinity
+                for hourStart in [hour.start] + hour.arrowWings {
+                    for minuteStart in [minute.start] + minute.arrowWings {
+                        routeSeparation = min(routeSeparation, segmentDistance(hourStart, hour.tip, minuteStart, minute.tip))
+                    }
+                }
+                let score = clearance - max(0, 0.23 - separation) - max(0, 0.04 - routeSeparation)
+                if score > bestScore { bestScore = score; best = pointers }
+            }
+        }
+        return best
+    }
+
+    static func point(radius: Double, angle: Double) -> CGPoint {
+        let radians = angle * .pi / 180
+        return CGPoint(x: sin(radians) * radius, y: -cos(radians) * radius)
+    }
+
+    static func segmentDistance(_ a: CGPoint, _ b: CGPoint, _ c: CGPoint, _ d: CGPoint) -> Double {
+        func cross(_ p: CGPoint, _ q: CGPoint, _ r: CGPoint) -> Double {
+            (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x)
+        }
+        func oppositeSides(_ first: Double, _ second: Double) -> Bool {
+            // Collinear segments can acquire tiny, opposite signs through rounding.
+            let epsilon = 1e-12
+            return (first > epsilon && second < -epsilon) || (first < -epsilon && second > epsilon)
+        }
+        if oppositeSides(cross(a, b, c), cross(a, b, d)) && oppositeSides(cross(c, d, a), cross(c, d, b)) { return 0 }
+        func distance(_ p: CGPoint, _ a: CGPoint, _ b: CGPoint) -> Double {
+            let dx = b.x - a.x, dy = b.y - a.y
+            let t = min(1, max(0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy)))
+            return hypot(p.x - a.x - t * dx, p.y - a.y - t * dy)
+        }
+        return min(distance(a, c, d), distance(b, c, d), distance(c, a, b), distance(d, a, b))
     }
 }

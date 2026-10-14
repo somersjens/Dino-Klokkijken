@@ -7,12 +7,185 @@
     "?" : {
 
     },
+    "%@ → %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ → %2$@"
+          }
+        }
+      }
+    },
     "%@: %lld" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@: %2$lld"
+          }
+        }
+      }
+    },
+    "%@%@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@%2$@%3$@"
+          }
+        }
+      }
+    },
+    "dino.analogNumerals" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numbers"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cijfers"
+          }
+        }
+      }
+    },
+    "dino.analogNumerals.normal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normaal"
+          }
+        }
+      }
+    },
+    "dino.analogNumerals.roman" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roman"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Romeins"
+          }
+        }
+      }
+    },
+    "dino.clock.colors" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colors"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kleuren"
+          }
+        }
+      }
+    },
+    "dino.clock.design" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Design"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontwerp"
+          }
+        }
+      }
+    },
+    "dino.color.black" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Black"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwart"
+          }
+        }
+      }
+    },
+    "dino.personalize.dino" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino"
+          }
+        }
+      }
+    },
+    "dino.personalize.analog" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analog"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analoog"
+          }
+        }
+      }
+    },
+    "dino.personalize.digital" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digital"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digitaal"
           }
         }
       }
@@ -149,6 +322,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Analoge klok"
+          }
+        }
+      }
+    },
+    "dino.analog.sameColors" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oh no, now you can't see the time!"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O nee, nu kun je de tijd niet zien!"
           }
         }
       }
@@ -363,13 +553,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Change your dino’s colors"
+            "value" : "Personalize your dino and clocks"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verander de kleuren van jouw dino"
+            "value" : "Pas jouw dino en klokken aan"
           }
         }
       }
@@ -612,6 +802,74 @@
         }
       }
     },
+    "dino.clock.switchField" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the clock to switch between hours and minutes."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tik op het klokje om te wisselen tussen uren en minuten."
+          }
+        }
+      }
+    },
+    "dino.clock.resetAnalog" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset analog clock"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analoge klok resetten"
+          }
+        }
+      }
+    },
+    "dino.clock.resetDigital" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset digital clock"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digitale klok resetten"
+          }
+        }
+      }
+    },
+    "dino.clockCase" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clock face & rim"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wijzerplaat en rand"
+          }
+        }
+      }
+    },
     "dino.color.beige" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -833,6 +1091,23 @@
         }
       }
     },
+    "dino.customColor" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose your own color"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies zelf een kleur"
+          }
+        }
+      }
+    },
     "dino.dayPart.afternoon" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -952,19 +1227,53 @@
         }
       }
     },
+    "dino.digital.sameColors" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oh no, now you can't see the time!"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O nee, nu kun je de tijd niet zien!"
+          }
+        }
+      }
+    },
+    "dino.digitColor" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digit color"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kleur van de cijfers"
+          }
+        }
+      }
+    },
     "dino.display" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Display"
+            "value" : "Background"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Display"
+            "value" : "Achtergrond"
           }
         }
       }
@@ -1135,23 +1444,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tel de vluchtduur bij de vertrektijd op. Deze tijden gebruiken dezelfde tijdzone."
-          }
-        }
-      }
-    },
-    "dino.example.rule.pairClocks" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Read each clock and its part of day. Use 00–11 before noon and 12–23 after noon. Match all four digital times."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lees elke klok en het dagdeel. Vóór de middag gebruik je 00–11, vanaf de middag 12–23. Koppel alle vier digitale tijden."
           }
         }
       }
@@ -1577,23 +1869,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Een dag heeft 24 uur. Bij 00:00 reken je verder op de vorige of volgende dag."
-          }
-        }
-      }
-    },
-    "dino.expanded.pairHint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use the clock and its part of day. Choose each digital time once."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gebruik de klok én het dagdeel. Kies elke digitale tijd één keer."
           }
         }
       }
@@ -3349,6 +3624,23 @@
         }
       }
     },
+    "dino.makeAnalogClock" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make your analog clock"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak jouw analoge klok"
+          }
+        }
+      }
+    },
     "dino.makeClock" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3366,6 +3658,23 @@
         }
       }
     },
+    "dino.makeDigitalClock" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make your digital clock"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak jouw digitale klok"
+          }
+        }
+      }
+    },
     "dino.map" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3379,6 +3688,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Levelkaart"
+          }
+        }
+      }
+    },
+    "dino.match.demo.clock" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Tap a clock."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Tik op een klok."
+          }
+        }
+      }
+    },
+    "dino.match.demo.connected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The lines connect each clock to its matching time. Try it yourself!"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De lijnen verbinden elke klok met de juiste tijd. Probeer het zelf!"
+          }
+        }
+      }
+    },
+    "dino.match.demo.time" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Tap the matching time to draw a line."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Tik op de bijbehorende tijd om een lijn te trekken."
+          }
+        }
+      }
+    },
+    "dino.match.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap a clock, then its matching time. You can also start with a time."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tik op een klok en daarna op de bijbehorende tijd. Je mag ook met een tijd beginnen."
           }
         }
       }
@@ -3519,6 +3896,23 @@
         }
       }
     },
+    "dino.showAnswer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show answer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon antwoord"
+          }
+        }
+      }
+    },
     "dino.next" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3583,6 +3977,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cijferstijl"
+          }
+        }
+      }
+    },
+    "dino.numerals.classic" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Classic"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klassiek"
           }
         }
       }
@@ -4086,30 +4497,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Read the highlighted clock"
+            "value" : "Connect clocks and times"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "De aangewezen klok aflezen"
-          }
-        }
-      }
-    },
-    "dino.practice.question.pairClocks" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connect the clocks"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbind de klokken"
+            "value" : "Verbind klokken en tijden"
           }
         }
       }
@@ -4715,30 +5109,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Match the selected clock"
+            "value" : "Connect the clocks to the times"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Koppel de gekozen klok"
-          }
-        }
-      }
-    },
-    "dino.question.pairClocks" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connect each clock to its digital time"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbind elke klok met de digitale tijd"
+            "value" : "Verbind de klokken met de tijden"
           }
         }
       }
@@ -4817,13 +5194,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Set the right hour"
+            "value" : "Set the correct time"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stel het juiste uur in"
+            "value" : "Stel de juiste tijd in"
           }
         }
       }
@@ -4858,6 +5235,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Welke klok laat deze tijd zien?"
+          }
+        }
+      }
+    },
+    "dino.question.spokenTime.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which clock shows %@?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welke klok laat %@ zien?"
           }
         }
       }
@@ -4926,6 +5320,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Past de zin bij de klok?"
+          }
+        }
+      }
+    },
+    "dino.question.trueFalse.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is now %@."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het is nu %@."
           }
         }
       }
@@ -5321,6 +5732,125 @@
         }
       }
     },
+    "dino.shape" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shape"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorm"
+          }
+        }
+      }
+    },
+    "dino.shape.circle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Round"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rond"
+          }
+        }
+      }
+    },
+    "dino.shape.oval" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oval"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ovaal"
+          }
+        }
+      }
+    },
+    "dino.shape.octagon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Octagon"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Achthoek"
+          }
+        }
+      }
+    },
+    "dino.shape.rectangle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Square corners"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechte hoeken"
+          }
+        }
+      }
+    },
+    "dino.shape.roundedRectangle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rounded corners"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ronde hoeken"
+          }
+        }
+      }
+    },
+    "dino.shape.square" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Square"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vierkant"
+          }
+        }
+      }
+    },
     "dino.smallAdventure" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5497,13 +6027,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Use my clock"
+            "value" : "Use my clocks"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gebruik mijn klok"
+            "value" : "Gebruik mijn klokken"
           }
         }
       }

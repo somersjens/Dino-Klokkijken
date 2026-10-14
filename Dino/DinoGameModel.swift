@@ -60,13 +60,38 @@ final class DinoPlayer: ObservableObject {
         profileChanges.send(next)
     }
 
-    func setTheme(_ theme: ClockTheme) { update { $0.clockTheme = theme } }
+    func setTheme(_ theme: ClockTheme) {
+        var liveTheme = theme
+        if theme.analogColorsMatch {
+            // The editor shows the draft; the game keeps its last visible hands.
+            let previous = profile.clockTheme
+            liveTheme.face = previous.face
+            liveTheme.hourInk = previous.hourInk
+            liveTheme.minuteInk = previous.minuteInk
+            liveTheme.rimInk = previous.rimInk
+            liveTheme.customFaceHex = previous.customFaceHex
+            liveTheme.customHourHex = previous.customHourHex
+            liveTheme.customMinuteHex = previous.customMinuteHex
+            liveTheme.customRimHex = previous.customRimHex
+        }
+        if theme.digitalColorsMatch {
+            // Keep the game's digits visible while an editor corrects matching colors.
+            liveTheme.display = profile.clockTheme.display
+            liveTheme.customDisplayHex = profile.clockTheme.customDisplayHex
+            liveTheme.digitalInkHex = profile.clockTheme.digitalInkHex
+        }
+        guard liveTheme != profile.clockTheme else { return }
+        update { $0.clockTheme = liveTheme }
+    }
+    func completeClockCustomization(theme: ClockTheme) {
+        setTheme(theme.replacingUnreadableClocks())
+    }
     func setDinoAppearance(_ appearance: DinoAppearance) {
         guard appearance != (profile.dinoAppearance ?? .standard) else { return }
         update { $0.dinoAppearance = appearance }
     }
     func completeOnboarding(theme: ClockTheme) {
-        update { $0.clockTheme = theme; $0.onboardingComplete = true }
+        update { $0.clockTheme = theme.replacingUnreadableClocks(); $0.onboardingComplete = true }
     }
     func markDemonstrated(_ kind: ClockQuestionKind) { update { $0.demonstratedInteractions.insert(kind) } }
     func finish(_ attempt: LevelAttempt) -> DinoLevelResult? {
@@ -141,8 +166,12 @@ final class DinoSession: ObservableObject, Identifiable {
     @Published private(set) var attempt: LevelAttempt
     @Published var inputHour = 12
     @Published var inputMinute = 0
+    @Published var adjustingDigitalMinutes = false
     @Published var selectedOrder: [ClockTime] = []
     @Published var pairSelections: [Int: ClockTime] = [:]
+    @Published private(set) var rejectedResponses: Set<ClockAnswer> = []
+    @Published private(set) var answerRevealed = false
+    @Published private(set) var retryAnsweredCorrectly = false
     @Published private(set) var practiceAnswered = 0
     @Published private(set) var practiceCorrect = 0
 
@@ -208,7 +237,12 @@ final class DinoSession: ObservableObject, Identifiable {
     var hasFeedback: Bool { attempt.submittedResponse != nil }
     var canExitWithoutConfirmation: Bool { practice != nil || question.id == 0 }
     var practiceQuestionType: DinoPracticeQuestion? { DinoPracticeQuestion(rawValue: question.kind.rawValue) }
-    var correctFeedback: Bool { attempt.answers.last == true }
+    var correctFeedback: Bool { retryAnsweredCorrectly || attempt.answers.last == true }
+    var canRetry: Bool {
+        hasFeedback && !correctFeedback && !answerRevealed && question.kind.usesOptions && question.responses.count > 2
+    }
+    var showsCorrectResponse: Bool { hasFeedback && !canRetry }
+    var shouldAutoAdvance: Bool { hasFeedback && attempt.answers.last == true }
     var minuteStep: Int { exampleMinuteStep ?? practice?.time.minuteStep ?? level.minuteStep }
     var allowsMinutes: Bool { minuteStep < 60 }
     var inputTime: ClockTime { ClockTime(hour: inputHour, minute: inputMinute) }
@@ -224,7 +258,16 @@ final class DinoSession: ObservableObject, Identifiable {
     }
     func submit(_ answer: ClockAnswer) {
         guard demonstration == nil else { return }
+        if hasFeedback {
+            guard canRetry, question.responses.contains(answer), !rejectedResponses.contains(answer) else { return }
+            let correct = AnswerValidator.isCorrect(answer, for: question)
+            if correct { retryAnsweredCorrectly = true }
+            else { rejectedResponses.insert(answer) }
+            answerFeedback?(correct)
+            return
+        }
         if let correct = attempt.submit(answer, elapsed: now() - questionStartedAt) {
+            if !correct { rejectedResponses.insert(answer) }
             if practice != nil { practiceAnswered += 1; if correct { practiceCorrect += 1 } }
             if practiceGenerator != nil, let practice, let type = practiceQuestionType {
                 let saved = player.practiceRecord(time: practice.time, question: type)
@@ -237,8 +280,26 @@ final class DinoSession: ObservableObject, Identifiable {
         }
     }
 
+    func responseIsEnabled(_ answer: ClockAnswer) -> Bool {
+        !hasFeedback || (canRetry && !rejectedResponses.contains(answer))
+    }
+
+    func showAnswer() {
+        guard demonstration == nil, canRetry else { return }
+        answerRevealed = true
+    }
+
+    func setInputTime(_ time: ClockTime) {
+        inputHour = time.hour
+        inputMinute = time.minute
+    }
+
+    func adjustInputMinutes(by delta: Int) {
+        setInputTime(inputTime.shiftingMinutes(by: delta))
+    }
+
     func advance() {
-        guard hasFeedback else { return }
+        guard hasFeedback && !canRetry else { return }
         if var generator = practiceGenerator {
             attempt = LevelAttempt(levelID: 0, questions: [generator.next(index: question.id + 1)])
             practiceGenerator = generator
@@ -258,6 +319,7 @@ final class DinoSession: ObservableObject, Identifiable {
     }
 
     private func resetInputs() {
+        rejectedResponses = []; answerRevealed = false; retryAnsweredCorrectly = false
         if question.kind == .advanceAnalog, let start = question.relatedTimes.first {
             inputHour = start.hour % 12 == 0 ? 12 : start.hour % 12
             inputMinute = start.minute
@@ -265,7 +327,7 @@ final class DinoSession: ObservableObject, Identifiable {
             inputHour = question.target.hour == 12 ? 1 : 12
             inputMinute = 0
         }
-        selectedOrder = []; pairSelections = [:]
+        selectedOrder = []; pairSelections = [:]; adjustingDigitalMinutes = false
     }
 
     private func refreshPracticeProgress() {

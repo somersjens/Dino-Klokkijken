@@ -1,5 +1,39 @@
 import SwiftUI
 
+struct AnalogClockOutline: InsettableShape {
+    var shape: AnalogClockShape
+    var insetAmount: CGFloat = 0
+
+    func path(in rect: CGRect) -> Path {
+        let bounds = rect.insetBy(dx: insetAmount, dy: insetAmount)
+        switch shape {
+        case .circle: return Path(ellipseIn: bounds)
+        case .square: return Path(roundedRect: bounds, cornerRadius: min(bounds.width, bounds.height) * 0.025)
+        case .octagon:
+            var path = Path()
+            let corner = 1 / (2 + sqrt(2.0))
+            let vertices: [CGPoint] = [
+                CGPoint(x: corner, y: 0), CGPoint(x: 1 - corner, y: 0),
+                CGPoint(x: 1, y: corner), CGPoint(x: 1, y: 1 - corner),
+                CGPoint(x: 1 - corner, y: 1), CGPoint(x: corner, y: 1),
+                CGPoint(x: 0, y: 1 - corner), CGPoint(x: 0, y: corner)
+            ]
+            for (index, vertex) in vertices.enumerated() {
+                let point = CGPoint(x: bounds.minX + vertex.x * bounds.width, y: bounds.minY + vertex.y * bounds.height)
+                if index == 0 { path.move(to: point) } else { path.addLine(to: point) }
+            }
+            path.closeSubpath()
+            return path
+        }
+    }
+
+    func inset(by amount: CGFloat) -> Self {
+        var result = self
+        result.insetAmount += amount
+        return result
+    }
+}
+
 /// Noninteractive clocks in the practice picker have no per-tick layout or gestures.
 struct PracticeClockPreview: View {
     @Environment(\.dinoHighContrast) private var highContrast
@@ -14,8 +48,11 @@ struct PracticeClockPreview: View {
                 context.fill(Path(ellipseIn: CGRect(x: center.x - diameter / 2, y: center.y - diameter / 2,
                                                    width: diameter, height: diameter)), with: .color(color))
             }
-            circle(size, Color(dinoHex: theme.rimInk.hex))
-            circle(size * 0.932, Color(dinoHex: theme.face.hex))
+            let clockBounds = CGRect(x: center.x - size / 2, y: center.y - size / 2, width: size, height: size)
+            let outline = AnalogClockOutline(shape: theme.analogShape)
+            context.fill(outline.path(in: clockBounds), with: .color(Color(dinoHex: theme.rimHex)))
+            context.fill(outline.inset(by: size * 0.034).path(in: clockBounds), with: .color(Color(dinoHex: theme.faceHex)))
+            let markings = Color(dinoHex: theme.markingHex)
             for tick in 0..<60 {
                 let major = tick.isMultiple(of: 5)
                 var rotated = context
@@ -25,26 +62,26 @@ struct PracticeClockPreview: View {
                 let height = size * (major ? 0.045 : 0.023)
                 rotated.fill(Path(roundedRect: CGRect(x: -width / 2, y: -size * 0.425 - height / 2,
                                                      width: width, height: height), cornerRadius: width / 2),
-                             with: .color(DinoStyle.ink.opacity(highContrast ? 1 : major ? 0.6 : 0.28)))
+                             with: .color(markings.opacity(highContrast ? 1 : theme.markingHex == 0xFFFFFF ? (major ? 0.9 : 0.55) : (major ? 0.6 : 0.28))))
             }
             for hour in 1...12 {
                 let radians = Double(hour) * .pi / 6
-                context.draw(Text(verbatim: "\(hour)")
-                    .font(.system(size: size * 0.08, weight: .bold, design: .rounded)).foregroundStyle(DinoStyle.ink),
+                context.draw(Text(verbatim: theme.analogNumerals.label(for: hour))
+                    .font(.system(size: size * 0.08, weight: .bold, design: theme.analogNumerals == .roman ? .serif : .rounded)).foregroundStyle(markings),
                              at: CGPoint(x: center.x + CGFloat(sin(radians)) * size * 0.34,
                                          y: center.y - CGFloat(cos(radians)) * size * 0.34))
             }
-            func hand(length: CGFloat, width: CGFloat, color: ClockInk, angle: Double) {
+            func hand(length: CGFloat, width: CGFloat, color: UInt32, angle: Double) {
                 var rotated = context
                 rotated.translateBy(x: center.x, y: center.y)
                 rotated.rotate(by: .degrees(angle))
                 rotated.fill(Path(roundedRect: CGRect(x: -width / 2, y: -length,
                                                      width: width, height: length + size * 0.035),
-                                  cornerRadius: theme.hands == .straight ? 1 : width / 2), with: .color(Color(dinoHex: color.hex)))
+                                  cornerRadius: theme.hands == .straight ? 1 : width / 2), with: .color(Color(dinoHex: color)))
             }
-            hand(length: size * 0.23, width: size * (theme.hands == .playful ? 0.055 : 0.038), color: theme.hourInk, angle: time.hourAngle)
-            hand(length: size * 0.34, width: size * (theme.hands == .playful ? 0.036 : 0.024), color: theme.minuteInk, angle: time.minuteAngle)
-            circle(size * 0.085, Color(dinoHex: theme.rimInk.hex))
+            hand(length: size * 0.23, width: size * 0.038, color: theme.hourHex, angle: time.hourAngle)
+            hand(length: size * 0.34, width: size * 0.024, color: theme.minuteHex, angle: time.minuteAngle)
+            circle(size * 0.085, Color(dinoHex: theme.rimHex))
             circle(size * 0.025, .white)
         }.allowsHitTesting(false)
     }
@@ -57,16 +94,16 @@ struct AnalogClock: View {
     var size: CGFloat = 230
     var onHourChange: ((Int) -> Void)? = nil
     var showHandHints = false
-    var onMinuteChange: ((Int) -> Void)? = nil
+    var onMinuteChange: ((ClockTime) -> Void)? = nil
     var minuteStep = 1
     var body: some View {
         ZStack {
-            Circle().fill(Color(dinoHex: theme.rimInk.hex))
-                .shadow(color: Color(dinoHex: theme.rimInk.hex).opacity(0.2), radius: 8, y: 5)
-            Circle().fill(Color(dinoHex: theme.face.hex)).padding(size * 0.034)
-            Circle().stroke(.white.opacity(0.4), lineWidth: size * 0.008).padding(size * 0.015)
+            AnalogClockOutline(shape: theme.analogShape).fill(Color(dinoHex: theme.rimHex))
+                .shadow(color: Color(dinoHex: theme.rimHex).opacity(0.2), radius: 8, y: 5)
+            AnalogClockOutline(shape: theme.analogShape).inset(by: size * 0.034).fill(Color(dinoHex: theme.faceHex))
+            AnalogClockOutline(shape: theme.analogShape).inset(by: size * 0.015).stroke(.white.opacity(0.4), lineWidth: size * 0.008)
             ForEach(0..<60, id: \.self) { tick in
-                Capsule().fill(DinoStyle.ink.opacity(highContrast ? 1 : tick.isMultiple(of: 5) ? 0.6 : 0.28))
+                Capsule().fill(Color(dinoHex: theme.markingHex).opacity(highContrast ? 1 : theme.markingHex == 0xFFFFFF ? (tick.isMultiple(of: 5) ? 0.9 : 0.55) : (tick.isMultiple(of: 5) ? 0.6 : 0.28)))
                     .frame(width: tick.isMultiple(of: 5) ? size * 0.012 : size * 0.005,
                            height: tick.isMultiple(of: 5) ? size * 0.045 : size * 0.023)
                     .offset(y: -size * 0.425)
@@ -74,46 +111,42 @@ struct AnalogClock: View {
             }
             ForEach(1...12, id: \.self) { hour in
                 let radians = Double(hour) * .pi / 6
-                Text(verbatim: "\(hour)")
-                    .font(.system(size: size * 0.08, weight: .bold, design: .rounded))
-                    .foregroundStyle(DinoStyle.ink)
+                Text(verbatim: theme.analogNumerals.label(for: hour))
+                    .font(.system(size: size * 0.08, weight: .bold, design: theme.analogNumerals == .roman ? .serif : .rounded))
+                    .foregroundStyle(Color(dinoHex: theme.markingHex))
                     .position(x: size / 2 + CGFloat(sin(radians)) * size * 0.34,
                               y: size / 2 - CGFloat(cos(radians)) * size * 0.34)
             }
-            hand(length: size * 0.23, width: hourWidth, color: Color(dinoHex: theme.hourInk.hex), angle: time.hourAngle)
-            hand(length: size * 0.34, width: minuteWidth, color: Color(dinoHex: theme.minuteInk.hex), angle: time.minuteAngle)
-            Circle().fill(Color(dinoHex: theme.rimInk.hex)).frame(width: size * 0.085)
+            hand(length: size * 0.23, width: hourWidth, color: Color(dinoHex: theme.hourHex), angle: time.hourAngle)
+            hand(length: size * 0.34, width: minuteWidth, color: Color(dinoHex: theme.minuteHex), angle: time.minuteAngle)
+            Circle().fill(Color(dinoHex: theme.rimHex)).frame(width: size * 0.085)
             Circle().fill(.white).frame(width: size * 0.025)
         }
         .frame(width: size, height: size)
-        .contentShape(Circle())
+        .contentShape(AnalogClockOutline(shape: theme.analogShape))
         .gesture(DragGesture(minimumDistance: 0).onChanged { value in
             let x = value.location.x - size / 2
             let y = value.location.y - size / 2
             guard hypot(x, y) > size * 0.10 else { return }
             if let onMinuteChange {
-                onMinuteChange(ClockTime.snappedMinute(x: Double(x), y: Double(y), step: minuteStep))
+                onMinuteChange(time.settingMinute(ClockTime.snappedMinute(x: Double(x), y: Double(y), step: minuteStep)))
             } else {
                 onHourChange?(ClockTime.snappedHour(x: Double(x), y: Double(y), minute: time.minute))
             }
         }, including: onHourChange == nil && onMinuteChange == nil ? .none : .all)
         .overlay {
             if showHandHints {
-                // Straight pointers follow each hand; only nearby badges need separation.
-                let difference = (time.hourAngle - time.minuteAngle + 540).truncatingRemainder(dividingBy: 360) - 180
-                let spread: Double = abs(difference) < 22 ? (difference > 0 ? 15 : -15) : 0
-                ClockHandHint(number: 1, angle: time.hourAngle, length: size * 0.23,
-                              ink: theme.hourInk, face: theme.face, size: size, calloutAngle: time.hourAngle + spread)
-                ClockHandHint(number: 2, angle: time.minuteAngle, length: size * 0.34,
-                              ink: theme.minuteInk, face: theme.face, size: size, calloutAngle: time.minuteAngle - spread)
+                let pointers = ClockHandHintGeometry.pointers(time: time, hourWidth: hourWidth / size, minuteWidth: minuteWidth / size)
+                ClockHandHint(number: 1, pointer: pointers[0], ink: theme.hourHex, size: size)
+                ClockHandHint(number: 2, pointer: pointers[1], ink: theme.minuteHex, size: size)
             }
         }
         .padding(showHandHints ? size * 0.24 : 0)
         .modifier(ClockAccessibility(time: time, onHourChange: onHourChange, onMinuteChange: onMinuteChange, minuteStep: minuteStep))
     }
 
-    private var hourWidth: CGFloat { size * (theme.hands == .playful ? 0.055 : 0.038) }
-    private var minuteWidth: CGFloat { size * (theme.hands == .playful ? 0.036 : 0.024) }
+    private var hourWidth: CGFloat { size * 0.038 }
+    private var minuteWidth: CGFloat { size * 0.024 }
     private func hand(length: CGFloat, width: CGFloat, color: Color, angle: Double) -> some View {
         RoundedRectangle(cornerRadius: theme.hands == .straight ? 1 : width / 2)
             .fill(color)
@@ -125,50 +158,24 @@ struct AnalogClock: View {
 
 private struct ClockHandHint: View {
     let number: Int
-    let angle: Double
-    let length: CGFloat
-    let ink: ClockInk
-    let face: ClockFace
+    let pointer: ClockHandHintGeometry.Pointer
+    let ink: UInt32
     let size: CGFloat
-    let calloutAngle: Double
-
-    private func point(radius: CGFloat, angle: Double) -> CGPoint {
-        let radians = angle * .pi / 180
-        return CGPoint(x: size * 0.74 + CGFloat(sin(radians)) * radius,
-                       y: size * 0.74 - CGFloat(cos(radians)) * radius)
+    private func point(_ point: CGPoint) -> CGPoint {
+        CGPoint(x: size * (0.74 + point.x), y: size * (0.74 + point.y))
     }
 
     var body: some View {
-        let start = point(radius: size * 0.59, angle: calloutAngle)
-        let tip = point(radius: length * 0.85, angle: angle)
-        ZStack {
-            Canvas { context, _ in
-                var path = Path()
-                path.move(to: start); path.addLine(to: tip)
-                let direction = atan2(tip.y - start.y, tip.x - start.x)
-                for offset in [-Double.pi / 5, Double.pi / 5] {
-                    path.move(to: tip)
-                    path.addLine(to: CGPoint(x: tip.x - cos(direction + offset) * 7,
-                                            y: tip.y - sin(direction + offset) * 7))
-                }
-                context.stroke(path, with: .color(Color(dinoHex: face.hex)), style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
-                context.stroke(path, with: .color(Color(dinoHex: ink.hex)), style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
-            }
-            Text(verbatim: "\(number)")
-                .font(.system(size: 16, weight: .heavy, design: .rounded))
-                .foregroundStyle(Color(dinoHex: ink.hex))
-                .frame(width: 24, height: 24).background(.white, in: Circle())
-                .overlay(Circle().stroke(Color(dinoHex: ink.hex), lineWidth: 2))
-                .position(point(radius: size * 0.66, angle: calloutAngle))
-        }.frame(width: size * 1.48, height: size * 1.48)
-            .allowsHitTesting(false).accessibilityHidden(true)
+        ClockHintBadgeArrow(number: number, badge: point(pointer.badge), tip: point(pointer.tip),
+                           wings: pointer.arrowWings.map(point), ink: ink,
+                           bounds: CGSize(width: size * 1.48, height: size * 1.48))
     }
 }
 
 private struct ClockAccessibility: ViewModifier {
     let time: ClockTime
     let onHourChange: ((Int) -> Void)?
-    let onMinuteChange: ((Int) -> Void)?
+    let onMinuteChange: ((ClockTime) -> Void)?
     let minuteStep: Int
     @ViewBuilder func body(content: Content) -> some View {
         if let onMinuteChange {
@@ -176,7 +183,7 @@ private struct ClockAccessibility: ViewModifier {
                 .accessibilityLabel(Text("dino.minutes"))
                 .accessibilityValue(time.digitalText)
                 .accessibilityAdjustableAction { direction in
-                    onMinuteChange(ClockTime.shiftedMinute(time.minute, by: direction == .increment ? minuteStep : -minuteStep))
+                    onMinuteChange(time.shiftingMinutes(by: direction == .increment ? minuteStep : -minuteStep))
                 }
         } else if let onHourChange {
             content.accessibilityElement(children: .ignore)

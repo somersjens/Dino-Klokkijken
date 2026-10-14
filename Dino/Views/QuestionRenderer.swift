@@ -46,9 +46,17 @@ struct QuestionRenderer: View {
                 digitalInput.id("question.answers")
                 confirmButton
             case .match:
-                matchingBoard
-                Image(systemName: "arrow.down").font(.system(size: 22, weight: .heavy)).foregroundStyle(DinoStyle.green)
-                digitalOptions
+                ClockMatchingBoard(times: question.relatedTimes, options: question.options,
+                                   selections: $session.pairSelections, theme: theme, width: width,
+                                   hasFeedback: session.hasFeedback)
+                    .id("question.answers")
+                if !session.hasFeedback {
+                    Button { session.submit(.pairs(question.relatedTimes.indices.compactMap { session.pairSelections[$0] })) } label: {
+                        Image(systemName: "checkmark").font(.system(size: 25, weight: .heavy))
+                    }.buttonStyle(DinoButtonStyle()).frame(maxWidth: 260)
+                        .disabled(session.pairSelections.count != question.relatedTimes.count)
+                        .accessibilityLabel(Text("dino.confirm")).accessibilityIdentifier("question.confirm")
+                }
             default:
                 DinoExpandedQuestionView(session: session, theme: theme, width: width, clockSize: clockSize)
             }
@@ -60,11 +68,13 @@ struct QuestionRenderer: View {
         let cellWidth = (width - 14) / 2
         let scale = comparing ? min(1, (cellWidth - 12) / (targetSize + 20)) : 1
         let height = (targetSize + 20) * scale
+        let hourChange: ((Int) -> Void)? = session.hasFeedback || adjustingMinutes ? nil : { session.inputHour = $0 }
+        let minuteChange: ((ClockTime) -> Void)? = session.hasFeedback || !adjustingMinutes ? nil : { session.setInputTime($0) }
         return HStack(alignment: .top, spacing: 14) {
             VStack(spacing: 10) {
                 AnalogClock(time: session.attempt.submittedAnswer ?? session.inputTime, theme: theme, size: targetSize,
-                            onHourChange: session.hasFeedback || adjustingMinutes ? nil : { session.inputHour = $0 },
-                            onMinuteChange: session.hasFeedback || !adjustingMinutes ? nil : { session.inputMinute = $0 },
+                            onHourChange: hourChange,
+                            onMinuteChange: minuteChange,
                             minuteStep: session.minuteStep)
                     .accessibilityIdentifier("question.analogControl")
                     .padding(10).modifier(ClockAnswerOutline(visible: session.hasFeedback, correct: session.correctFeedback))
@@ -103,8 +113,9 @@ struct QuestionRenderer: View {
                 }
             }
         } else {
-            DigitalClockControl(hour: $session.inputHour, theme: theme, minute: session.inputMinute, fontSize: width < 350 ? 32 : 38,
-                                onMinuteChange: session.allowsMinutes ? { session.inputMinute = $0 } : nil,
+            DigitalClockControl(hour: $session.inputHour, adjustingMinutes: $session.adjustingDigitalMinutes,
+                                theme: theme, minute: session.inputMinute, fontSize: width < 350 ? 32 : 38,
+                                onMinuteChange: { session.inputMinute = $0 },
                                 minuteStep: session.minuteStep, valueIdentifier: "question.digitalControl")
         }
     }
@@ -164,25 +175,6 @@ struct QuestionRenderer: View {
         }.id("question.answers")
     }
 
-    private var matchingBoard: some View {
-        VStack(spacing: 8) {
-            clockStage(height: 120) {
-                VStack(spacing: 6) {
-                    AnalogClock(time: question.target, theme: theme, size: 94).allowsHitTesting(false)
-                        .accessibilityIdentifier("question.targetClock")
-                    Image(systemName: "arrow.up.circle.fill").foregroundStyle(DinoStyle.green).font(.system(size: 20))
-                }.padding(9).background(.white, in: RoundedRectangle(cornerRadius: 20))
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(DinoStyle.green, lineWidth: 3))
-            }
-            HStack(spacing: 110) {
-                ForEach(question.companionClocks, id: \.self) { time in
-                    AnalogClock(time: time, theme: theme, size: 52).allowsHitTesting(false)
-                        .padding(4).background(.white.opacity(0.5), in: RoundedRectangle(cornerRadius: 15)).opacity(0.6)
-                }
-            }
-        }.environment(\.layoutDirection, .leftToRight)
-    }
-
     private var confirmButton: some View {
         Group {
             if !session.hasFeedback {
@@ -195,13 +187,14 @@ struct QuestionRenderer: View {
     }
 
     private func adjustAnalog(by direction: Int) {
-        if adjustingMinutes { session.inputMinute = ClockTime.shiftedMinute(session.inputMinute, by: direction * session.minuteStep) }
+        if adjustingMinutes { session.adjustInputMinutes(by: direction * session.minuteStep) }
         else { session.inputHour = ClockTime.shiftedHour(session.inputHour, by: direction) }
     }
 
     private func answerButton<Content: View>(option: ClockTime, index: Int, @ViewBuilder content: () -> Content) -> some View {
-        let correct = session.hasFeedback && option == question.target
-        let wrong = session.hasFeedback && option == session.attempt.submittedAnswer && !correct
+        let response = ClockAnswer.time(option)
+        let correct = session.showsCorrectResponse && response == question.expectedAnswer
+        let wrong = session.hasFeedback && session.rejectedResponses.contains(response)
         return Button { session.submit(option) } label: {
             content().frame(maxWidth: .infinity)
                 .background(.white, in: RoundedRectangle(cornerRadius: 22))
@@ -213,8 +206,258 @@ struct QuestionRenderer: View {
                             .background(.white, in: Circle()).offset(x: 5, y: -5)
                     }
                 }.shadow(color: DinoStyle.ink.opacity(0.06), radius: 7, y: 4)
-                .opacity(!highContrast && session.hasFeedback && !correct && !wrong ? 0.55 : 1)
-        }.buttonStyle(DinoAnswerButtonStyle()).disabled(session.hasFeedback).accessibilityIdentifier("question.option.\(index)")
+                .opacity(!highContrast && session.showsCorrectResponse && !correct && !wrong ? 0.55 : 1)
+        }.buttonStyle(DinoAnswerButtonStyle()).disabled(!session.responseIsEnabled(response)).accessibilityIdentifier("question.option.\(index)")
+    }
+}
+
+/// Connect a face and a digital time with two taps or a drag, starting on either side.
+struct ClockMatchingBoard: View {
+    @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let times: [ClockTime]
+    let options: [ClockTime]
+    @Binding var selections: [Int: ClockTime]
+    let theme: ClockTheme
+    let width: CGFloat
+    var hasFeedback = false
+    var isDemonstration = false
+    @State private var pending: Endpoint?
+    @GestureState private var drag: ConnectionDrag?
+    @State private var demonstrationStep = -1
+    @State private var demonstrationStopped = false
+
+    private enum Endpoint: Equatable {
+        case clock(Int), time(Int)
+    }
+    private struct ConnectionDrag {
+        let source: Endpoint
+        let location: CGPoint
+    }
+    private var prefix: String { isDemonstration ? "demo.match" : "question.match" }
+    private var leftWidth: CGFloat { width * 0.36 }
+    private var rightWidth: CGFloat { width * 0.40 }
+    private var faceSize: CGFloat { min(94, leftWidth - 18) }
+    private var rowHeight: CGFloat { faceSize + 18 }
+    private let spacing: CGFloat = 16
+
+    var body: some View {
+        VStack(spacing: 14) {
+            Text(LocalizedStringKey(isDemonstration ? demonstrationHint : "dino.match.hint"))
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .multilineTextAlignment(.center)
+                .accessibilityIdentifier("\(prefix).hint")
+            ZStack {
+                Canvas { context, _ in
+                    for index in times.indices {
+                        if let time = selections[index], let option = options.firstIndex(of: time) {
+                            let color = hasFeedback ? (time == times[index] ? DinoStyle.deepGreen : Color(dinoHex: 0xB54343)) : linkColor(index)
+                            context.stroke(line(from: index, to: option), with: .color(color),
+                                           style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                            if hasFeedback, time != times[index], let correct = options.firstIndex(of: times[index]) {
+                                context.stroke(line(from: index, to: correct), with: .color(DinoStyle.deepGreen),
+                                               style: StrokeStyle(lineWidth: 2.5, lineCap: .round, dash: [5, 4]))
+                            }
+                        }
+                    }
+                    if let drag {
+                        let color: Color
+                        switch drag.source {
+                        case .clock(let index): color = linkColor(index)
+                        case .time: color = DinoStyle.muted
+                        }
+                        let path = Path { path in
+                            path.move(to: connectionPoint(for: drag.source))
+                            path.addLine(to: drag.location)
+                        }
+                        context.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    }
+                }.allowsHitTesting(false).accessibilityHidden(true)
+                VStack(spacing: spacing) {
+                    ForEach(times.indices, id: \.self) { index in
+                        HStack(spacing: 0) {
+                            clockButton(index)
+                            Spacer(minLength: 0)
+                            timeButton(index)
+                        }.frame(height: rowHeight)
+                    }
+                }
+                ForEach(times.indices, id: \.self) { index in
+                    if let time = selections[index], let option = options.firstIndex(of: time) {
+                        Color.clear.frame(width: 4, height: 4)
+                            .position(x: (leftWidth + width - rightWidth) / 2,
+                                      y: (rowY(index) + rowY(option)) / 2)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel("\(times[index].digitalText) → \(time.digitalText)")
+                            .accessibilityIdentifier("\(prefix).line.\(index)")
+                    }
+                }.allowsHitTesting(false)
+            }.frame(width: width, height: CGFloat(times.count) * rowHeight + CGFloat(max(0, times.count - 1)) * spacing)
+                .coordinateSpace(name: "clockMatchingBoard")
+        }.environment(\.layoutDirection, .leftToRight)
+            .task {
+                guard isDemonstration else { return }
+                do {
+                    try await Task.sleep(for: .seconds(0.8))
+                    for index in times.indices {
+                        guard !demonstrationStopped, let option = options.firstIndex(of: times[index]) else { return }
+                        demonstrationStep = index * 2
+                        pending = .clock(index)
+                        try await Task.sleep(for: .seconds(1.2))
+                        guard !demonstrationStopped else { return }
+                        demonstrationStep += 1
+                        try await Task.sleep(for: .seconds(0.7))
+                        guard !demonstrationStopped else { return }
+                        select(.time(option))
+                        try await Task.sleep(for: .seconds(1.0))
+                    }
+                    demonstrationStep = times.count * 2
+                } catch { return }
+            }
+    }
+
+    private var demonstrationHint: String {
+        if demonstrationStep >= times.count * 2 { return "dino.match.demo.connected" }
+        return demonstrationStep >= 0 && !demonstrationStep.isMultiple(of: 2) ? "dino.match.demo.time" : "dino.match.demo.clock"
+    }
+
+    private func clockButton(_ index: Int) -> some View {
+        let selected = selections[index]
+        let color = hasFeedback && selected != times[index] ? Color(dinoHex: 0xB54343) : linkColor(index)
+        return Button { tapped(.clock(index)) } label: {
+            AnalogClock(time: times[index], theme: theme, size: faceSize).allowsHitTesting(false)
+                .frame(width: leftWidth, height: rowHeight)
+                .background(.white, in: RoundedRectangle(cornerRadius: 20))
+                .overlay(RoundedRectangle(cornerRadius: 20).stroke(isSelected(.clock(index)) ? DinoStyle.ink : color,
+                                                                                lineWidth: isSelected(.clock(index)) || selected != nil ? 3 : highContrast ? 2 : 0))
+                .overlay(alignment: .trailing) { connectionDot(selected == nil ? DinoStyle.muted : color).offset(x: 4) }
+                .overlay(alignment: .topTrailing) {
+                    if isDemonstration, demonstrationStep == index * 2 { tapCue(1) }
+                }
+        }.buttonStyle(DinoAnswerButtonStyle()).disabled(hasFeedback)
+            .highPriorityGesture(connectionDrag(from: .clock(index)))
+            .accessibilityLabel(times[index].digitalText)
+            .accessibilityValue(selected?.digitalText ?? L("dino.expanded.choose"))
+            .accessibilityAddTraits(pending == .clock(index) ? .isSelected : [])
+            .accessibilityIdentifier("\(prefix).clock.\(index)")
+    }
+
+    private func timeButton(_ index: Int) -> some View {
+        let owner = times.indices.first { selections[$0] == options[index] }
+        let color = owner.map { hasFeedback && times[$0] != options[index] ? Color(dinoHex: 0xB54343) : linkColor($0) } ?? DinoStyle.muted
+        return Button { tapped(.time(index)) } label: {
+            DigitalClock(time: options[index], theme: theme, fontSize: min(26, width * 0.067))
+                .frame(width: rightWidth, height: rowHeight * 0.72)
+                .background(.white, in: RoundedRectangle(cornerRadius: 18))
+                .overlay(RoundedRectangle(cornerRadius: 18).stroke(isSelected(.time(index)) ? DinoStyle.ink : color,
+                                                                                lineWidth: isSelected(.time(index)) || owner != nil ? 3 : highContrast ? 2 : 0))
+                .overlay(alignment: .leading) { connectionDot(color).offset(x: -4) }
+                .overlay(alignment: .topTrailing) {
+                    if isDemonstration, demonstrationStep >= 0, !demonstrationStep.isMultiple(of: 2),
+                       demonstrationStep / 2 < times.count, options[index] == times[demonstrationStep / 2] { tapCue(2) }
+                }
+        }.buttonStyle(DinoAnswerButtonStyle()).disabled(hasFeedback)
+            .highPriorityGesture(connectionDrag(from: .time(index)))
+            .accessibilityLabel(options[index].digitalText)
+            .accessibilityAddTraits(pending == .time(index) ? .isSelected : [])
+            .accessibilityIdentifier("\(prefix).time.\(index)")
+    }
+
+    private func connectionDot(_ color: Color) -> some View {
+        Circle().fill(color).frame(width: 9, height: 9).accessibilityHidden(true)
+    }
+    private func tapCue(_ number: Int) -> some View {
+        HStack(spacing: 3) {
+            Text(verbatim: "\(number)")
+            Image(systemName: "hand.tap.fill")
+        }.font(.system(size: 15, weight: .heavy, design: .rounded)).foregroundStyle(DinoStyle.ink)
+            .padding(6).background(DinoStyle.green, in: Capsule()).offset(x: 5, y: -8)
+            .accessibilityHidden(true)
+    }
+    private func linkColor(_ index: Int) -> Color {
+        Color(dinoHex: [0x377C95, 0x76539A, 0x27734C][index % 3])
+    }
+    private func rowY(_ index: Int) -> CGFloat { rowHeight / 2 + CGFloat(index) * (rowHeight + spacing) }
+    private func isSelected(_ endpoint: Endpoint) -> Bool { pending == endpoint || drag?.source == endpoint }
+    private func connectionPoint(for endpoint: Endpoint) -> CGPoint {
+        switch endpoint {
+        case .clock(let index): return CGPoint(x: leftWidth, y: rowY(index))
+        case .time(let index): return CGPoint(x: width - rightWidth, y: rowY(index))
+        }
+    }
+    private func endpoint(at point: CGPoint) -> Endpoint? {
+        for index in times.indices {
+            let centerY = rowY(index)
+            if CGRect(x: 0, y: centerY - rowHeight / 2, width: leftWidth, height: rowHeight).contains(point) {
+                return .clock(index)
+            }
+        }
+        for index in options.indices {
+            let height = rowHeight * 0.72
+            if CGRect(x: width - rightWidth, y: rowY(index) - height / 2, width: rightWidth, height: height).contains(point) {
+                return .time(index)
+            }
+        }
+        return nil
+    }
+    private func pair(from source: Endpoint?, to destination: Endpoint) -> (Int, Int)? {
+        switch (source, destination) {
+        case (.clock(let clock), .time(let time)), (.time(let time), .clock(let clock)): return (clock, time)
+        default: return nil
+        }
+    }
+    private func connectionDrag(from source: Endpoint) -> some Gesture {
+        DragGesture(minimumDistance: 10, coordinateSpace: .named("clockMatchingBoard"))
+            .updating($drag) { value, state, _ in
+                guard !hasFeedback else { return }
+                state = ConnectionDrag(source: source, location: value.location)
+            }
+            .onChanged { _ in
+                guard !hasFeedback else { return }
+                demonstrationStopped = true
+                demonstrationStep = -1
+                pending = nil
+            }
+            .onEnded { value in
+                guard !hasFeedback, let destination = endpoint(at: value.location),
+                      let (clock, option) = pair(from: source, to: destination) else { return }
+                connect(clock: clock, to: option)
+            }
+    }
+    private func line(from clock: Int, to time: Int) -> Path {
+        Path { path in
+            path.move(to: CGPoint(x: leftWidth, y: rowY(clock)))
+            path.addLine(to: CGPoint(x: width - rightWidth, y: rowY(time)))
+        }
+    }
+    private func tapped(_ endpoint: Endpoint) {
+        demonstrationStopped = true
+        demonstrationStep = -1
+        select(endpoint)
+    }
+    private func select(_ endpoint: Endpoint) {
+        let connectedClock: Int?
+        switch endpoint {
+        case .clock(let clock): connectedClock = selections[clock] == nil ? nil : clock
+        case .time(let time): connectedClock = times.indices.first { selections[$0] == options[time] }
+        }
+        if let connectedClock {
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                selections.removeValue(forKey: connectedClock)
+                pending = nil
+            }
+            return
+        }
+        if pending == endpoint { pending = nil; return }
+        guard let (clock, option) = pair(from: pending, to: endpoint) else { pending = endpoint; return }
+        connect(clock: clock, to: option)
+    }
+    private func connect(clock: Int, to option: Int) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+            for key in selections.keys.filter({ selections[$0] == options[option] }) { selections.removeValue(forKey: key) }
+            selections[clock] = options[option]
+            pending = nil
+        }
     }
 }
 
