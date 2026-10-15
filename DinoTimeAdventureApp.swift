@@ -1,7 +1,16 @@
 import SwiftUI
+import UIKit
+
+/// Keep the device policy explicit for every presented controller and window.
+final class DinoOrientationDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+        UIDevice.current.userInterfaceIdiom == .pad ? .all : .portrait
+    }
+}
 
 @main
 struct DinoTimeAdventureApp: App {
+    @UIApplicationDelegateAdaptor(DinoOrientationDelegate.self) private var orientationDelegate
     @StateObject private var player = DinoPlayer()
     @StateObject private var language = LanguageManager.shared
     @StateObject private var friends = FriendsManager()

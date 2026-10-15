@@ -4,14 +4,13 @@ import SwiftUI
 struct OnboardingFlow: View {
     @ObservedObject private var language = LanguageManager.shared
     @EnvironmentObject private var player: DinoPlayer
-    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var step = 0
     @State private var theme = ClockTheme.standard
 
     var body: some View {
         VStack(spacing: 0) {
             Text(LocalizedStringKey(step == 0 ? "dino.appearance.welcome" : step == 1 ? "dino.makeAnalogClock" : "dino.makeDigitalClock"))
-                .font(.system(size: verticalSizeClass == .compact ? 24 : 29, weight: .heavy, design: .rounded))
+                .modifier(CustomizationTitle())
                 .multilineTextAlignment(.center).padding(.horizontal, 20).padding(.vertical, 8)
                 .accessibilityIdentifier("onboarding.title")
             Group {
@@ -25,6 +24,7 @@ struct OnboardingFlow: View {
         }
         .background(JungleBackground())
         .foregroundStyle(DinoStyle.ink)
+        .modifier(CustomizationTypography())
         .onAppear { theme = player.profile.clockTheme }
     }
 
@@ -35,10 +35,10 @@ struct OnboardingFlow: View {
                     navigate(1)
                 } label: {
                     HStack { Text("dino.next"); Image(systemName: "arrow.right") }
-                }.buttonStyle(DinoButtonStyle()).accessibilityIdentifier("onboarding.next")
+                }.buttonStyle(DinoButtonStyle(customization: true)).accessibilityIdentifier("onboarding.next")
             } else {
                 Button("dino.useMyClock") { player.completeOnboarding(theme: theme) }
-                    .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("onboarding.customClock")
+                    .buttonStyle(DinoButtonStyle(customization: true)).accessibilityIdentifier("onboarding.customClock")
             }
         }.padding(16).frame(maxWidth: 540).frame(maxWidth: .infinity)
     }

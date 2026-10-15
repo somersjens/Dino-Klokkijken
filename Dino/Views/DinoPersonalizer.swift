@@ -32,16 +32,17 @@ struct DinoPersonalizer: View {
                 HStack(spacing: 8) {
                     ForEach(PersonalizationPage.allCases, id: \.self) { choice in
                         Button { withAnimation { page = choice } } label: {
-                            Text(LocalizedStringKey(choice.labelKey)).font(DinoStyle.editorFont)
+                            Text(LocalizedStringKey(choice.labelKey)).modifier(CustomizationText())
                                 .frame(maxWidth: .infinity, minHeight: 44)
                                 .background(page == choice ? DinoStyle.green.opacity(0.22) : .white.opacity(0.7),
                                             in: RoundedRectangle(cornerRadius: 12))
                                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(page == choice ? DinoStyle.deepGreen : DinoStyle.ink.opacity(0.12), lineWidth: page == choice ? 2 : 1))
+                                .contentShape(Rectangle())
                         }.buttonStyle(.plain)
                             .accessibilityIdentifier("personalize.page." + choice.identifier)
                             .accessibilityAddTraits(page == choice ? .isSelected : [])
                     }
-                }.padding(.horizontal, 16).padding(.vertical, 8)
+                }.padding(.horizontal, 16).padding(.top, 32).padding(.bottom, 8)
                     .frame(maxWidth: 520).frame(maxWidth: .infinity)
                 TabView(selection: $page) {
                     DinoAppearanceEditor().tag(PersonalizationPage.dino)
@@ -51,9 +52,10 @@ struct DinoPersonalizer: View {
                 Button("dino.done") {
                     player.completeClockCustomization(theme: theme)
                     dismiss()
-                }.buttonStyle(DinoButtonStyle()).accessibilityIdentifier("personalize.done")
+                }.buttonStyle(DinoButtonStyle(customization: true)).accessibilityIdentifier("personalize.done")
                     .padding(16).frame(maxWidth: 540).frame(maxWidth: .infinity)
             }
+            .modifier(CustomizationTypography())
             .background(JungleBackground(quiet: true))
             .toolbar(.hidden, for: .navigationBar)
         }.foregroundStyle(DinoStyle.ink)
@@ -89,7 +91,7 @@ struct DinoAppearanceEditor: View {
                         player.setDinoAppearance(.standard)
                     } label: {
                         Label("dino.appearance.reset", systemImage: "arrow.counterclockwise")
-                            .font(DinoStyle.editorFont)
+                            .modifier(CustomizationText())
                             .frame(maxWidth: .infinity, minHeight: 44)
                     }.buttonStyle(.plain).foregroundStyle(DinoStyle.deepGreen)
                         .accessibilityIdentifier("personalize.resetColors")
@@ -116,7 +118,7 @@ struct DinoAppearanceEditor: View {
     private func colorChoice(_ part: DinoAppearance.Part) -> some View {
         VStack(spacing: 4) {
             Text(LocalizedStringKey(part.labelKey))
-                .font(DinoStyle.editorFont).multilineTextAlignment(.center)
+                .modifier(CustomizationText()).multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity).accessibilityIdentifier("personalize.\(part.rawValue).label")
             HStack(spacing: 0) {
                 ForEach(swatches, id: \.name) { swatch in

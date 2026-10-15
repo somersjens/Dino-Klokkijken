@@ -28,6 +28,7 @@ struct DinoCoreTests {
         testProgress()
         testStorage()
         testClockThemes()
+        testFixedClockStyles()
         testDinoAppearance()
         testDinoAvatarMask()
         testDinoSpriteColors()
@@ -883,7 +884,7 @@ struct DinoCoreTests {
         expect(restored.faceHex == ClockTheme.standard.faceHex && restored.hourHex == ClockTheme.standard.hourHex &&
                restored.minuteHex == ClockTheme.standard.minuteHex && restored.rimHex == ClockTheme.standard.rimHex &&
                restored.displayHex == ClockTheme.standard.displayHex && restored.digitalInkHex == ClockTheme.standard.digitalInkHex,
-               "bottom restore actions recover every original color")
+               "color helpers recover every original color")
         expect(restored.analogShape == .octagon && restored.hands == .straight && restored.analogNumerals == .roman &&
                restored.digitalShape == .oval && restored.numerals == .classic,
                "restoring colors preserves shapes, hands and numeral styles")
@@ -909,11 +910,48 @@ struct DinoCoreTests {
                "matching colors still allow onboarding to complete with default clocks")
     }
 
+    static func testFixedClockStyles() {
+        let oldDisplays: [(String, UInt32)] = [("charcoal", 0x303A40), ("green", 0xE5F6DC)]
+        for (name, hex) in oldDisplays {
+            let legacy = try! JSONDecoder().decode(ClockTheme.self, from: Data("{\"display\":\"\(name)\"}".utf8))
+            expect(legacy.displayHex == hex, "retired digital presets keep their saved background colors")
+        }
+        let black = try! JSONDecoder().decode(ClockTheme.self, from: Data(#"{"display":"black"}"#.utf8))
+        expect(black.digitalInkHex == 0xFFFFFF && !black.digitalColorsMatch,
+               "a black digital background gets visible white digits when no ink was saved")
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        var old = PlayerProfile()
+        old.clockTheme.hands = .straight; old.clockTheme.digitalShape = .oval
+        old.clockTheme.analogShape = .octagon; old.clockTheme.analogNumerals = .roman
+        old.clockTheme.numerals = .classic; old.clockTheme.customFaceHex = 0x080914
+        old.clockTheme.customDisplayHex = 0x234567; old.clockTheme.digitalInkHex = 0xF4F188
+        store.save(old)
+        let player = DinoPlayer(store: store)
+        let expected = old.clockTheme.applyingFixedStyles()
+        expect(player.profile.clockTheme == expected && store.load().clockTheme == expected,
+               "old hand styles and digital shapes migrate and persist without losing other design choices")
+        player.setTheme(old.clockTheme)
+        expect(player.profile.clockTheme == expected, "live edits keep rounded hands and the fixed digital shape")
+        player.completeOnboarding(theme: old.clockTheme)
+        expect(player.profile.clockTheme == expected && player.profile.onboardingComplete,
+               "onboarding uses the same fixed styles")
+        var reset = expected
+        reset.resetAnalog()
+        var preserved = ClockTheme.standard
+        preserved.customDisplayHex = expected.customDisplayHex; preserved.digitalInkHex = expected.digitalInkHex
+        preserved.numerals = .classic
+        expect(reset == preserved, "restoring analog style resets shape, numbers and all colors while preserving digital style")
+        reset = expected; reset.resetDigital()
+        preserved = expected; preserved.display = .navy; preserved.customDisplayHex = nil
+        preserved.digitalInkHex = 0xFFFFFF; preserved.numerals = .rounded
+        expect(reset == preserved, "restoring digital style resets font and both colors while preserving analog style")
+    }
+
     static func testPlayerModel() {
         let memory = InMemoryKeyValueStore()
         let player = DinoPlayer(store: DinoProgressStore(defaults: memory))
         var theme = ClockTheme.standard
-        theme.face = .green; theme.display = .charcoal; theme.hands = .straight
+        theme.face = .green; theme.display = .charcoal; theme.hands = .rounded
         player.completeOnboarding(theme: theme)
         expect(player.profile.name.isEmpty && player.profile.onboardingComplete, "onboarding completes without entering a local name")
         expect(player.profile.clockTheme == theme, "model chosen clocks")
@@ -963,11 +1001,11 @@ struct DinoCoreTests {
                "live personalization preserves the current question and answer")
         var draft = theme
         draft.digitalInkHex = draft.displayHex
-        draft.numerals = .digital; draft.digitalShape = .oval; draft.hourInk = .purple
+        draft.numerals = .digital; draft.digitalShape = .roundedRectangle; draft.hourInk = .purple
         player.setTheme(draft)
         expect(!player.profile.clockTheme.digitalColorsMatch && player.profile.clockTheme.digitalInkHex == theme.digitalInkHex,
                "matching draft colors cannot make the game clock disappear")
-        expect(player.profile.clockTheme.numerals == .digital && player.profile.clockTheme.digitalShape == .oval && player.profile.clockTheme.hourInk == .purple,
+        expect(player.profile.clockTheme.numerals == .digital && player.profile.clockTheme.digitalShape == .roundedRectangle && player.profile.clockTheme.hourInk == .purple,
                "other style edits still apply while duplicate digital colors are being corrected")
         draft.display = .charcoal
         player.setTheme(draft)

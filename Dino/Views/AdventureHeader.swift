@@ -6,10 +6,10 @@ import CoreText
 struct AdventureHeader: View {
     @EnvironmentObject private var player: DinoPlayer
     @Environment(\.dinoHighContrast) private var highContrast
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.locale) private var locale
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showsPersonalizer = false
+    @State private var availableWidth: CGFloat = 390
     var personalizerChanged: (Bool) -> Void = { _ in }
     enum Control {
         case settings, pause
@@ -22,6 +22,7 @@ struct AdventureHeader: View {
     let stars: Int
     var worldID = 1
     var compact = false
+    var viewportHeight: CGFloat = 900
     var control: Control = .pause
     var questionCounter: String?
     var practiceStreak: Int?
@@ -44,7 +45,9 @@ struct AdventureHeader: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let metrics = HUDMetrics(width: geometry.size.width, compact: compact,
+            let scale = headerScale(width: geometry.size.width)
+            let designWidth = min(390, geometry.size.width)
+            let metrics = HUDMetrics(width: designWidth, compact: compact,
                                      level: practiceStreak ?? level, stars: stars, questionCounter: questionCounter,
                                      titles: localizedTitles)
             HStack(spacing: metrics.gap) {
@@ -65,7 +68,7 @@ struct AdventureHeader: View {
             .padding(.trailing, metrics.trailingMargin)
             .padding(.top, compact ? 6 : 12)
             .padding(.bottom, compact ? 8 : 16)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .frame(width: designWidth, height: compact ? 82 : 128, alignment: .leading)
             .background {
                 HStack(spacing: 0) {
                     Color.clear.frame(width: metrics.leadingMargin + metrics.portraitFootprint * 0.48)
@@ -90,17 +93,31 @@ struct AdventureHeader: View {
                         .offset(y: (compact ? 9 : -6) + HUDPracticeSubtitle.addedHeight(compact: compact, spacious: metrics.spacious))
                 }
             }
+            .padding(.top, compact && practiceConfiguration != nil ? 4 : 0)
+            .padding(.bottom, practiceConfiguration == nil ? 0 : compact ? 26 : 11)
+            // Scale the complete composition, including its rim, leaves and badges.
+            // Extra tablet width surrounds the HUD instead of stretching its cells.
+            .scaleEffect(scale, anchor: .top)
+            .frame(width: geometry.size.width, height: headerHeight * scale, alignment: .top)
         }
-        .frame(height: compact ? 82 : horizontalSizeClass == .regular ? 160 : 128)
-        .padding(.top, compact && practiceConfiguration != nil ? 4 : 0)
-        .padding(.bottom, practiceConfiguration == nil ? 0 : compact ? 26 : 11)
-        .frame(maxWidth: 780).frame(maxWidth: .infinity)
+        .frame(height: headerHeight * headerScale(width: availableWidth))
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { availableWidth = $0 }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: worldID)
         .sheet(isPresented: $showsPersonalizer) {
             DinoPersonalizer().environmentObject(player).gameEnvironment()
                 .presentationDetents([.large]).presentationDragIndicator(.visible)
         }
         .onChange(of: showsPersonalizer) { _, shown in personalizerChanged(shown) }
+    }
+
+    private var headerHeight: CGFloat {
+        (compact ? 82 : 128) + (practiceConfiguration == nil ? 0 : compact ? 30 : 11)
+    }
+
+    private func headerScale(width: CGFloat) -> CGFloat {
+        guard !compact else { return 1 }
+        // Preserve phone tap targets; shorter tablet windows reserve room for play.
+        return min(1.9, max(1, width / 390), max(1, viewportHeight / 480))
     }
 
     private func portrait(_ metrics: HUDMetrics) -> some View {
@@ -472,7 +489,7 @@ private struct HUDMetrics {
         let labelBase = UIFont.systemFont(ofSize: nominalLabel, weight: .heavy).fontDescriptor
         let labelFont = UIFont(descriptor: labelBase.withDesign(.rounded) ?? labelBase, size: nominalLabel)
         let widestTitle = titles.map { ($0 as NSString).size(withAttributes: [.font: labelFont]).width }.max() ?? 1
-        label = nominalLabel * min(1, availableWidth / max(1, widestTitle)) * 0.98
+        label = nominalLabel * min(1, availableWidth / max(1, widestTitle)) * 0.86
 
         // Text point sizes include space above/below the digits. Use cap height
         // to keep the visible digits slightly smaller than the action icons.

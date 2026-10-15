@@ -18,6 +18,8 @@ struct WorldMap: View {
 
     var body: some View {
         GeometryReader { geometry in
+            let landscape = geometry.size.width > geometry.size.height
+            let routeTopClearance = max(0, min(200, (min(600, geometry.size.width) - 36) * 0.37) - 82)
             ZStack {
                 Color(dinoHex: DinoWorldCatalog.worlds.last!.ground).ignoresSafeArea()
                 VStack(spacing: 0) {
@@ -26,7 +28,10 @@ struct WorldMap: View {
                             VStack(spacing: 0) {
                                 VStack(spacing: 0) {
                                     VStack(spacing: 12) {
-                                        mapHeading.padding(.top, 32)
+                                        mapHeading
+                                            .scaleEffect(landscape ? 0.82 : 1)
+                                            .frame(height: landscape ? 174 : 212)
+                                            .padding(.top, landscape ? 16 : 32)
                                         Button(action: openFriends) {
                                             HStack(spacing: 10) {
                                                 Label("dino.friends.title", systemImage: "person.2.fill")
@@ -44,12 +49,12 @@ struct WorldMap: View {
                                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { landscapeRouteOffset = $0 }
                                     mapRoute
                                 }.padding(.top, floatingHUDHeight + geometry.safeAreaInsets.top)
-                                    .background { WorldMapLandscape(routeOffset: landscapeRouteOffset + floatingHUDHeight + geometry.safeAreaInsets.top) }
+                                    .background { WorldMapLandscape(routeOffset: landscapeRouteOffset + floatingHUDHeight + geometry.safeAreaInsets.top + routeTopClearance) }
                                     .onGeometryChange(for: Bool.self) {
                                         $0.frame(in: .named("adventure.map.viewport")).minY <= floatingHUDHeight + 24
                                     } action: { updateVisibleWorld(1, aboveHUD: $0) }
                                 ForEach(DinoWorldCatalog.worlds.dropFirst()) { world in
-                                    WorldChapter(world: world, openLevel: openLevel)
+                                    WorldChapter(world: world, topClearance: routeTopClearance, openLevel: openLevel)
                                         .onGeometryChange(for: Bool.self) {
                                             $0.frame(in: .named("adventure.map.viewport")).minY <= floatingHUDHeight + 24
                                         } action: { updateVisibleWorld(world.id, aboveHUD: $0) }
@@ -63,16 +68,17 @@ struct WorldMap: View {
                                 }
                             }.padding(.bottom, 24)
                         }
+                        .accessibilityIdentifier("map.route")
                         .onAppear {
                             if player.profile.dinoLevel > 0 {
                                 proxy.scrollTo("node-\(player.profile.dinoLevel)", anchor: .center)
                             }
                         }
-                    }.ignoresSafeArea(edges: .top)
+                    }.ignoresSafeArea(edges: [.top, .bottom, .horizontal])
                 }.overlay(alignment: .top) {
                     AdventureHeader(level: max(1, player.profile.dinoLevel),
                                     stars: player.profile.totalStars, worldID: worldsAboveHUD.max() ?? 1,
-                                    compact: verticalSizeClass == .compact,
+                                    compact: verticalSizeClass == .compact, viewportHeight: geometry.size.height,
                                     control: .settings, help: openPractice, action: openSettings)
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                             floatingHUDHeight = $0
@@ -139,8 +145,9 @@ struct WorldMap: View {
 
     private var routeNodes: some View {
         GeometryReader { g in
-            let points = (0...10).map { routePoint($0, width: g.size.width) }
-            let dinoSize = min(144, g.size.width * 0.37) * 0.85
+            let dinoSize = min(200, g.size.width * 0.37)
+            let topClearance = max(0, dinoSize - 82)
+            let points = (0...10).map { routePoint($0, width: g.size.width, topClearance: topClearance) }
             ZStack(alignment: .topLeading) {
                 WorldRouteTrail(points: points, exitY: g.size.height)
                 // Real rows provide accurate scroll anchors; positioned artwork alone does not.
@@ -176,7 +183,7 @@ struct WorldMap: View {
                             }
                         }.frame(width: g.size.width, height: 175).id("node-\(index)")
                     }
-                }.padding(.top, -17.5)
+                }.padding(.top, topClearance - 17.5)
             }
         }.frame(height: 2050).environment(\.layoutDirection, .leftToRight)
     }
@@ -196,9 +203,9 @@ struct WorldMap: View {
             .accessibilityLabel(Text("dino.startPoint")).accessibilityIdentifier("map.start")
     }
 
-    private func routePoint(_ index: Int, width: CGFloat) -> CGPoint {
+    private func routePoint(_ index: Int, width: CGFloat, topClearance: CGFloat) -> CGPoint {
         let positions: [CGFloat] = [0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5]
-        return CGPoint(x: width * positions[index], y: 70 + CGFloat(index) * 175)
+        return CGPoint(x: width * positions[index], y: topClearance + 70 + CGFloat(index) * 175)
     }
 
 }
@@ -223,6 +230,8 @@ struct LevelNode: View {
                         VolcanoLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
                     } else if level.worldID == 4 {
                         VillageLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
+                    } else if level.worldID == 5 {
+                        CrystalLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
                     } else {
                         if current { Circle().stroke(highContrast ? DinoStyle.deepGreen : DinoStyle.green.opacity(0.5), lineWidth: 3).padding(-9) }
                         Circle().fill(color.opacity(0.55)).offset(y: 6)
@@ -234,7 +243,7 @@ struct LevelNode: View {
                         if unlocked { Text(verbatim: "\(level.id)").font(.system(size: level.isBoss ? 23 : 30, weight: .heavy, design: .rounded)) }
                         else { Image(systemName: "lock.fill").font(.system(size: 23, weight: .bold)) }
                     }.foregroundStyle(level.isBoss ? .white : DinoStyle.ink)
-                        .opacity(current && (level.worldID == 1 || ((2...4).contains(level.worldID) && !highContrast)) ? 0.55 : 1)
+                        .opacity(current && (level.worldID == 1 || ((2...5).contains(level.worldID) && !highContrast)) ? 0.55 : 1)
                 }.frame(width: level.isBoss ? 90 : 72, height: level.isBoss ? 90 : 72)
             }
             .buttonStyle(DinoAnswerButtonStyle()).disabled(!unlocked)
@@ -426,11 +435,59 @@ private struct VillageLevelStone: View {
     }
 }
 
+/// A cool mineral rim and mint face echo the cave's illuminated stone terraces.
+private struct CrystalLevelStone: View {
+    let unlocked: Bool
+    let occupied: Bool
+    let boss: Bool
+    let highContrast: Bool
+
+    private var face: Color { Color(dinoHex: boss ? 0x475C7C : unlocked ? 0xA1D0B9 : 0xB0BEC0) }
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                Circle().fill(Color(dinoHex: 0x697F99)).offset(y: 6)
+                Circle().fill(LinearGradient(colors: [Color(dinoHex: 0xE1E6E7), Color(dinoHex: 0xA9B7CD), Color(dinoHex: 0x7586A8)],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing))
+                Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x8D9BBF : unlocked ? 0xE0F0CB : 0xDCE4DA), face],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing)).padding(8)
+                Circle().strokeBorder(Color(dinoHex: highContrast ? 0x445E7A : 0xE2FFF2), lineWidth: highContrast ? 3 : 2).padding(3)
+                Circle().strokeBorder(Color(dinoHex: 0x547F81).opacity(0.35), lineWidth: 1).padding(10)
+                Canvas { context, size in
+                    let center = CGPoint(x: size.width / 2, y: size.height / 2)
+                    func point(_ angle: Double, _ fraction: CGFloat) -> CGPoint {
+                        CGPoint(x: center.x + CGFloat(cos(angle)) * size.width * fraction,
+                                y: center.y + CGFloat(sin(angle)) * size.height * fraction)
+                    }
+                    for i in 0..<8 {
+                        let angle = Double(i) * .pi / 4 + 0.12
+                        var facet = Path()
+                        facet.addLines([point(angle - 0.12, 0.44), point(angle, 0.47), point(angle + 0.12, 0.44), point(angle, 0.40)])
+                        facet.closeSubpath()
+                        let color = Color(dinoHex: i % 2 == 0 ? 0xD6C3EF : 0xB1EAE0)
+                        context.fill(facet, with: .color(color.opacity(unlocked ? 0.9 : 0.4)))
+                        var glint = Path(); glint.addLines([point(angle - 0.1, 0.44), point(angle, 0.47), point(angle + 0.08, 0.44)])
+                        context.stroke(glint, with: .color(Color(dinoHex: 0xF7FFF8).opacity(0.85)),
+                                       style: StrokeStyle(lineWidth: 0.75, lineCap: .round))
+                    }
+                }
+                if occupied {
+                    Circle().fill(Color(dinoHex: 0xF3F9EF).opacity(highContrast ? 0.18 : 0.46)).padding(10)
+                    Circle().stroke(Color(dinoHex: 0xE5FFF2).opacity(0.9), lineWidth: 2).padding(-5)
+                    Circle().stroke(Color(dinoHex: 0xB7E5E5).opacity(0.27), lineWidth: 5).padding(-10)
+                }
+            }.shadow(color: Color(dinoHex: 0x536F84).opacity(0.22), radius: 5, y: 9)
+        }.allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
 /// Each chapter uses the same shape-drawn route and spacing as the jungle.
 private struct WorldChapter: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @EnvironmentObject private var player: DinoPlayer
     let world: DinoWorld
+    let topClearance: CGFloat
     var openLevel: (LevelConfiguration) -> Void
     @State private var routeOffset: CGFloat = 196
     private let positions: [CGFloat] = [0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5]
@@ -438,16 +495,17 @@ private struct WorldChapter: View {
     var body: some View {
         VStack(spacing: 0) {
             WorldTitleBanner(world: world, highContrast: highContrast)
-                .padding(.horizontal, 18).padding(.top, world.id == 4 ? 126 : world.id == 3 ? 106 : world.id == 2 ? 88 : 18).padding(.bottom, 10)
+                .padding(.horizontal, 18).padding(.top, world.id == 5 ? 136 : world.id == 4 ? 126 : world.id == 3 ? 106 : world.id == 2 ? 88 : 18).padding(.bottom, 10)
                 .frame(maxWidth: 600).frame(maxWidth: .infinity)
-                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { routeOffset = $0 }
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { routeOffset = $0 + topClearance }
                 .accessibilityIdentifier("map.world.\(world.id)")
+            Color.clear.frame(height: topClearance)
             GeometryReader { geometry in
                 ZStack(alignment: .top) {
                 VStack(spacing: 0) {
                     ForEach(Array(world.levels.enumerated()), id: \.element) { index, id in
                         let level = DinoLevelCatalog.level(id)!
-                        let dinoSize = min(144, geometry.size.width * 0.37) * 0.85
+                        let dinoSize = min(200, geometry.size.width * 0.37)
                         ZStack {
                             LevelNode(level: level, record: player.profile.record(id),
                                       unlocked: player.profile.isUnlocked(id),

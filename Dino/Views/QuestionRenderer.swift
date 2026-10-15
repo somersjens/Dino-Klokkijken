@@ -8,12 +8,15 @@ struct QuestionRenderer: View {
     let theme: ClockTheme
     let width: CGFloat
     let clockSize: CGFloat
+    var wideLayout = false
+    var compactLayout = false
+    var answerClockSize: CGFloat = 210
     private var comparing: Bool { session.hasFeedback && !session.correctFeedback }
     private var question: ClockQuestion { session.question }
     private var targetSize: CGFloat { min(clockSize, width - 20) }
 
     var body: some View {
-        VStack(spacing: 22) {
+        VStack(spacing: compactLayout ? 14 : 22) {
             switch question.kind {
             case .chooseAnalog, .activity:
                 targetCard
@@ -133,7 +136,7 @@ struct QuestionRenderer: View {
                 Label(LocalizedStringKey(activity.titleKey), systemImage: activity.symbol)
                     .font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(DinoStyle.deepGreen)
             }
-            clockStage(height: 64) {
+            clockStage(height: compactLayout ? 50 : 64) {
                 DigitalClock(time: question.target, theme: theme, fontSize: width < 350 ? 32 : 38)
                     .accessibilityIdentifier("question.targetClock")
             }
@@ -153,8 +156,8 @@ struct QuestionRenderer: View {
     }
 
     private var analogOptions: some View {
-        let columns = 2
-        let size = min(150, (width - CGFloat(columns - 1) * 12) / CGFloat(columns) - 18)
+        let columns = wideLayout && question.options.count == 4 ? 4 : 2
+        let size = min(answerClockSize, width >= 600 ? 210 : 150, (width - CGFloat(columns - 1) * 12) / CGFloat(columns) - 18)
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 14) {
             ForEach(Array(question.options.enumerated()), id: \.offset) { index, option in
                 answerButton(option: option, index: index) {
@@ -165,7 +168,8 @@ struct QuestionRenderer: View {
     }
 
     private var digitalOptions: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 14) {
+        let columns = wideLayout && question.options.count == 4 ? 4 : 2
+        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 14) {
             ForEach(Array(question.options.enumerated()), id: \.offset) { index, option in
                 answerButton(option: option, index: index) {
                     DigitalClock(time: option, theme: theme, fontSize: width < 350 ? 25 : 31)
@@ -215,6 +219,7 @@ struct QuestionRenderer: View {
 struct ClockMatchingBoard: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.locale) private var locale
     let times: [ClockTime]
     let options: [ClockTime]
     @Binding var selections: [Int: ClockTime]
@@ -235,17 +240,28 @@ struct ClockMatchingBoard: View {
         let location: CGPoint
     }
     private var prefix: String { isDemonstration ? "demo.match" : "question.match" }
-    private var leftWidth: CGFloat { width * 0.36 }
-    private var rightWidth: CGFloat { width * 0.40 }
-    private var faceSize: CGFloat { min(94, leftWidth - 18) }
-    private var rowHeight: CGFloat { faceSize + 18 }
+    private var leftWidth: CGFloat { width * 0.42 }
+    private var rightWidth: CGFloat { leftWidth }
+    private var faceSize: CGFloat {
+        min(width >= 600 ? min(180, width * 0.20) : 104, leftWidth - 18)
+    }
+    private var rowHeight: CGFloat { faceSize + 24 }
     private let spacing: CGFloat = 16
+
+    private var hintText: String {
+        let key = isDemonstration ? demonstrationHint : "dino.match.hint"
+        return String(localized: String.LocalizationValue(key), bundle: LanguageManager.shared.bundle, locale: locale)
+            .replacingOccurrences(of: ". ", with: ".\n")
+    }
 
     var body: some View {
         VStack(spacing: 14) {
-            Text(LocalizedStringKey(isDemonstration ? demonstrationHint : "dino.match.hint"))
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+            Text(verbatim: hintText)
+                .font(.system(size: width >= 600 ? 16 : 14, weight: .semibold, design: .rounded))
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: min(520, width - 24))
+                .frame(width: width)
                 .accessibilityIdentifier("\(prefix).hint")
             ZStack {
                 Canvas { context, _ in
@@ -346,8 +362,8 @@ struct ClockMatchingBoard: View {
         let owner = times.indices.first { selections[$0] == options[index] }
         let color = owner.map { hasFeedback && times[$0] != options[index] ? Color(dinoHex: 0xB54343) : linkColor($0) } ?? DinoStyle.muted
         return Button { tapped(.time(index)) } label: {
-            DigitalClock(time: options[index], theme: theme, fontSize: min(26, width * 0.067))
-                .frame(width: rightWidth, height: rowHeight * 0.72)
+            DigitalClock(time: options[index], theme: theme, fontSize: min(width >= 600 ? 40 : 26, width * 0.067))
+                .frame(width: rightWidth, height: rowHeight)
                 .background(.white, in: RoundedRectangle(cornerRadius: 18))
                 .overlay(RoundedRectangle(cornerRadius: 18).stroke(isSelected(.time(index)) ? DinoStyle.ink : color,
                                                                                 lineWidth: isSelected(.time(index)) || owner != nil ? 3 : highContrast ? 2 : 0))
@@ -393,7 +409,7 @@ struct ClockMatchingBoard: View {
             }
         }
         for index in options.indices {
-            let height = rowHeight * 0.72
+            let height = rowHeight
             if CGRect(x: width - rightWidth, y: rowY(index) - height / 2, width: rightWidth, height: height).contains(point) {
                 return .time(index)
             }

@@ -22,8 +22,12 @@ final class DinoPlayer: ObservableObject {
         resolved = store ?? DinoProgressStore()
 #endif
         self.store = resolved
-        profile = resolved.load()
+        var loaded = resolved.load()
+        let previousTheme = loaded.clockTheme
+        loaded.clockTheme = previousTheme.applyingFixedStyles()
+        profile = loaded
         practiceRecords = resolved.loadPracticeRecords()
+        if loaded.clockTheme != previousTheme { resolved.save(loaded) }
 #if DEBUG
         if ProcessInfo.processInfo.environment["DINO_TEST_SUITE"] != nil,
            let raw = ProcessInfo.processInfo.environment["DINO_TEST_PRACTICE_ANSWERS"],
@@ -61,7 +65,7 @@ final class DinoPlayer: ObservableObject {
     }
 
     func setTheme(_ theme: ClockTheme) {
-        var liveTheme = theme
+        var liveTheme = theme.applyingFixedStyles()
         if theme.analogColorsMatch {
             // The editor shows the draft; the game keeps its last visible hands.
             let previous = profile.clockTheme
@@ -91,7 +95,7 @@ final class DinoPlayer: ObservableObject {
         update { $0.dinoAppearance = appearance }
     }
     func completeOnboarding(theme: ClockTheme) {
-        update { $0.clockTheme = theme.replacingUnreadableClocks(); $0.onboardingComplete = true }
+        update { $0.clockTheme = theme.replacingUnreadableClocks().applyingFixedStyles(); $0.onboardingComplete = true }
     }
     func markDemonstrated(_ kind: ClockQuestionKind) { update { $0.demonstratedInteractions.insert(kind) } }
     func finish(_ attempt: LevelAttempt) -> DinoLevelResult? {

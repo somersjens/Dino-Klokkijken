@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 private struct DinoHighContrastKey: EnvironmentKey { static let defaultValue = false }
 extension EnvironmentValues {
@@ -25,13 +26,77 @@ extension Color {
 }
 
 enum DinoStyle {
-    static let editorFont = Font.system(size: 17, weight: .bold, design: .rounded)
     static let ink = Color(dinoHex: 0x193B53)
     static let green = Color(dinoHex: 0x81D349)
     static let deepGreen = Color(dinoHex: 0x365B20)
     static let paper = Color(dinoHex: 0xF6FAF1)
     static let muted = Color(dinoHex: 0x657E80)
     static let warning = Color(dinoHex: 0x8F2435)
+}
+
+private struct CustomizationTypeScaleKey: EnvironmentKey { static let defaultValue: CGFloat = 1 }
+extension EnvironmentValues {
+    var customizationTypeScale: CGFloat {
+        get { self[CustomizationTypeScaleKey.self] }
+        set { self[CustomizationTypeScaleKey.self] = newValue }
+    }
+}
+
+/// Fit every editor's labels together, including labels on pages that are offscreen.
+/// No individual choice may shrink independently when a translated label is longer.
+struct CustomizationTypography: ViewModifier {
+    @ObservedObject private var language = LanguageManager.shared
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    var optionsInset: CGFloat = 64
+
+    func body(content: Content) -> some View {
+        GeometryReader { geometry in
+            content.environment(\.customizationTypeScale, scale(for: geometry.size.width))
+        }
+    }
+
+    private func scale(for width: CGFloat) -> CGFloat {
+        let card = max(1, min(520, width) - optionsInset)
+        var scale: CGFloat = 1
+        func fit(_ keys: [String], in available: CGFloat, size: CGFloat = 17, weight: UIFont.Weight = .bold) {
+            let base = UIFont.systemFont(ofSize: size, weight: weight)
+            let font = UIFont(descriptor: base.fontDescriptor.withDesign(.rounded) ?? base.fontDescriptor, size: size)
+            let longest = keys.map { (L(key: $0) as NSString).size(withAttributes: [.font: font]).width }.max() ?? 1
+            scale = min(scale, max(1, available) / max(1, longest))
+        }
+        fit(["dino.shape.circle", "dino.shape.square", "dino.shape.octagon"], in: (card - 16) / 3 - 12)
+        fit(["dino.analogNumerals.normal", "dino.analogNumerals.roman"], in: (card - 8) / 2 - 16)
+        fit(DigitalNumerals.allCases.map { "dino.numerals." + $0.rawValue }, in: (card - 10) / 2 - 16)
+        fit(["dino.appearance.bandana", "dino.appearance.spikes", "dino.appearance.body", "dino.appearance.belly",
+             "dino.hourHand", "dino.minuteHand", "dino.face", "dino.rim", "dino.digitColor", "dino.display", "dino.numerals"], in: card)
+        fit(["dino.appearance.reset", "dino.clock.restoreStyle"], in: card - 28)
+        fit(["dino.personalize.dino", "dino.personalize.analog", "dino.personalize.digital"],
+            in: (min(520, width) - 48) / 3 - 16)
+        fit(["dino.next", "dino.useMyClock", "dino.done"], in: min(540, width) - 100)
+        fit(["dino.appearance.welcome", "dino.makeAnalogClock", "dino.makeDigitalClock"], in: width - 40,
+            size: verticalSizeClass == .compact ? 24 : 29, weight: .heavy)
+        return scale
+    }
+}
+
+struct CustomizationText: ViewModifier {
+    @Environment(\.customizationTypeScale) private var scale
+    var multiline = false
+
+    func body(content: Content) -> some View {
+        content.font(.system(size: 17 * scale, weight: .bold, design: .rounded))
+            .multilineTextAlignment(.center).lineLimit(multiline ? nil : 1)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+struct CustomizationTitle: ViewModifier {
+    @Environment(\.customizationTypeScale) private var scale
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    func body(content: Content) -> some View {
+        content.font(.system(size: (verticalSizeClass == .compact ? 24 : 29) * scale, weight: .heavy, design: .rounded))
+            .multilineTextAlignment(.center).lineLimit(1)
+    }
 }
 
 /// The welcome flow navigates by dragging its noninteractive Dino or clock preview.
@@ -94,11 +159,13 @@ struct ClockHintBadgeArrow: View {
 
 struct DinoButtonStyle: ButtonStyle {
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.customizationTypeScale) private var customizationScale
     var color = DinoStyle.green
     var compact = false
+    var customization = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: compact ? 17 : 20, weight: .bold, design: .rounded))
+            .font(.system(size: customization ? 17 * customizationScale : compact ? 17 : 20, weight: .bold, design: .rounded))
             .foregroundStyle(color == DinoStyle.green ? DinoStyle.ink : .white)
             .padding(.horizontal, compact ? 16 : 24)
             .frame(minHeight: compact ? 48 : 58)

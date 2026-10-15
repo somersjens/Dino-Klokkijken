@@ -14,7 +14,9 @@ struct DinoExpandedQuestionView: View {
 
     var body: some View {
         VStack(spacing: 18) {
-            context
+            VStack(spacing: 12) { context }
+                .frame(maxWidth: min(600, width))
+                .frame(maxWidth: .infinity)
             switch q.kind {
             case .sortTimes: sorting
             case .advanceAnalog: analogAdvance
@@ -22,7 +24,7 @@ struct DinoExpandedQuestionView: View {
                 if isDemonstration { demonstrationAnswer }
                 else { responses }
             }
-        }.frame(width: width)
+        }.frame(width: width).multilineTextAlignment(.center)
     }
 
     @ViewBuilder private var context: some View {
@@ -116,7 +118,7 @@ struct DinoExpandedQuestionView: View {
                 Button { session.submit(response) } label: {
                     Group {
                         if q.kind == .spokenTime, case .time(let time) = response {
-                            AnalogClock(time: time, theme: theme, size: min(125, (width - 60) / 2)).allowsHitTesting(false)
+                            AnalogClock(time: time, theme: theme, size: min(width >= 600 ? 210 : 125, (width - 60) / 2)).allowsHitTesting(false)
                         } else {
                             Text(verbatim: responseText(response))
                                 .font(.system(size: 17, weight: .bold, design: .rounded)).multilineTextAlignment(.center)
@@ -161,7 +163,7 @@ struct DinoExpandedQuestionView: View {
                         else { session.selectedOrder.append(time) }
                     } label: {
                         VStack(spacing: 8) {
-                            AnalogClock(time: time, theme: theme, size: min(96, (width - 48) / 2)).allowsHitTesting(false)
+                            AnalogClock(time: time, theme: theme, size: min(width >= 600 ? 180 : 96, (width - 48) / 2)).allowsHitTesting(false)
                             Text(verbatim: time.digitalText).font(.system(size: 17, weight: .bold, design: .rounded)).monospacedDigit()
                         }.padding(12).frame(maxWidth: .infinity).background(.white, in: RoundedRectangle(cornerRadius: 22))
                             .overlay(RoundedRectangle(cornerRadius: 22).stroke(position == nil ? .clear : DinoStyle.deepGreen, lineWidth: 3))

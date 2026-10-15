@@ -61,16 +61,22 @@ enum DigitalClockShape: String, Codable, CaseIterable, Sendable {
 }
 
 enum DigitalDisplay: String, Codable, CaseIterable, Sendable {
-    case white, navy, green, charcoal
+    case black, navy, teal, yellow, white
+    // Decode older profiles without changing their saved background color.
+    case charcoal, green
+    static let allCases: [Self] = [.black, .navy, .teal, .yellow, .white]
     var hex: UInt32 {
         switch self {
+        case .black: return 0x000000
         case .white: return 0xFFFFFF
         case .navy: return 0x193B53
+        case .teal: return 0x127F88
+        case .yellow: return 0xF4C95D
         case .green: return 0xE5F6DC
         case .charcoal: return 0x303A40
         }
     }
-    var isDark: Bool { self == .navy || self == .charcoal }
+    var isDark: Bool { self == .black || self == .navy || self == .teal || self == .charcoal }
 }
 
 enum DigitalNumerals: String, Codable, CaseIterable, Sendable {
@@ -124,6 +130,15 @@ struct ClockTheme: Codable, Equatable, Sendable {
     var markingHex: UInt32 { ClockColorContrast.markingHex(on: faceHex) }
     var analogColorsMatch: Bool { hourHex == faceHex || minuteHex == faceHex }
     var digitalColorsMatch: Bool { digitalInkHex == displayHex }
+
+    /// Keep the stored options for compatibility and later re-enabling of controls.
+    /// While those controls are hidden, all player clocks use these fixed styles.
+    func applyingFixedStyles() -> ClockTheme {
+        var result = self
+        result.hands = .rounded
+        result.digitalShape = .roundedRectangle
+        return result
+    }
 
     mutating func restoreAnalogColors() {
         face = .white; hourInk = .navy; minuteInk = .orange; rimInk = .navy

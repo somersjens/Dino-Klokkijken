@@ -88,6 +88,23 @@
         }
       }
     },
+    "dino.clock.restoreStyle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore original style"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herstel oorspronkelijke stijl"
+          }
+        }
+      }
+    },
     "dino.clock.colors" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -900,6 +917,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lichtblauw"
+          }
+        }
+      }
+    },
+    "dino.color.teal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turquoise"
+          }
+        }
+      }
+    },
+    "dino.color.yellow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warm yellow"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warmgeel"
           }
         }
       }

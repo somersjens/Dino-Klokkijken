@@ -167,7 +167,8 @@
 				"INFOPLIST_KEY_CFBundleDisplayName" = "Dino Time";
 				"XROS_DEPLOYMENT_TARGET" = "27.0";
 				"ENABLE_HARDENED_RUNTIME" = "YES";
-				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone" = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone" = "UIInterfaceOrientationPortrait";
 				"DEVELOPMENT_TEAM" = "4283ACUG4Y";
 				"IPHONEOS_DEPLOYMENT_TARGET" = "26.0";
 				"LOCALIZATION_PREFERS_STRING_CATALOG" = "YES";
@@ -332,7 +333,8 @@
 				"INFOPLIST_KEY_CFBundleDisplayName" = "Dino Time";
 				"XROS_DEPLOYMENT_TARGET" = "27.0";
 				"ENABLE_HARDENED_RUNTIME" = "YES";
-				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone" = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone" = "UIInterfaceOrientationPortrait";
 				"DEVELOPMENT_TEAM" = "4283ACUG4Y";
 				"IPHONEOS_DEPLOYMENT_TARGET" = "26.0";
 				"LOCALIZATION_PREFERS_STRING_CATALOG" = "YES";

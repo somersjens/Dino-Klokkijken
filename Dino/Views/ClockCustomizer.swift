@@ -48,6 +48,7 @@ struct ClockCustomizer: View {
                 }.frame(maxWidth: compact ? 760 : .infinity).frame(maxWidth: .infinity)
             }
         }.foregroundStyle(DinoStyle.ink)
+            .onAppear { theme = theme.applyingFixedStyles() }
     }
 
     private var analogPreview: some View {
@@ -73,7 +74,11 @@ struct ClockCustomizer: View {
     }
 
     private var analogOptions: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 10) {
+            analogNumeralChoices
+            Divider()
+            analogShapeChoices
+            Divider()
             colorChoices(title: "dino.hourHand", color: analogColor(\.customHourHex, preset: \.hourInk), values: inkSwatches)
             Divider()
             colorChoices(title: "dino.minuteHand", color: analogColor(\.customMinuteHex, preset: \.minuteInk), values: inkSwatches)
@@ -82,15 +87,10 @@ struct ClockCustomizer: View {
             Divider()
             colorChoices(title: "dino.rim", color: analogColor(\.customRimHex, preset: \.rimInk), values: inkSwatches)
             Divider()
-            analogShapeChoices
-            Divider()
-            styleChoice(title: "dino.hands", selection: $theme.hands, values: ClockHandStyle.allCases,
-                        keyPrefix: "dino.hands.", identifier: "theme.hands")
-            Divider()
-            styleChoice(title: "dino.analogNumerals", selection: $theme.analogNumerals, values: AnalogNumerals.allCases,
-                        keyPrefix: "dino.analogNumerals.", identifier: "theme.analogNumerals")
-            Divider()
-            ClockRestoreColorsButton(theme: $theme, analog: true)
+            // Re-enable alongside ClockTheme.applyingFixedStyles() if hand styles return.
+            // styleChoice(title: "dino.hands", selection: $theme.hands, values: ClockHandStyle.allCases,
+            //             keyPrefix: "dino.hands.", identifier: "theme.hands")
+            ClockRestoreStyleButton(theme: $theme, analog: true)
         }
     }
 
@@ -100,9 +100,7 @@ struct ClockCustomizer: View {
             Divider()
             colorChoices(title: "dino.display", color: displayColor, values: displaySwatches)
             Divider()
-            digitalShapeChoices
-            Divider()
-            Text("dino.numerals").font(DinoStyle.editorFont).multilineTextAlignment(.center)
+            Text("dino.numerals").modifier(CustomizationText()).multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
             VStack(spacing: 10) {
                 ForEach(0..<2, id: \.self) { row in
@@ -114,7 +112,7 @@ struct ClockCustomizer: View {
                 }
             }
             Divider()
-            ClockRestoreColorsButton(theme: $theme, analog: false)
+            ClockRestoreStyleButton(theme: $theme, analog: false)
         }
     }
 
@@ -124,7 +122,7 @@ struct ClockCustomizer: View {
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     DigitalClock(time: ClockTime(date: context.date), theme: fontPreview(style), fontSize: 22)
                 }.accessibilityHidden(true)
-                Text(verbatim: L(key: "dino.numerals." + style.rawValue)).font(DinoStyle.editorFont)
+                Text(verbatim: L(key: "dino.numerals." + style.rawValue)).modifier(CustomizationText())
             }.padding(.vertical, 10).frame(maxWidth: .infinity)
                 .background(theme.numerals == style ? DinoStyle.green.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 14))
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(theme.numerals == style ? DinoStyle.deepGreen : DinoStyle.ink.opacity(0.15), lineWidth: theme.numerals == style ? 2 : 1))
@@ -140,17 +138,19 @@ struct ClockCustomizer: View {
         return preview
     }
 
-    private func styleChoice<T: RawRepresentable & Hashable>(title: String, selection: Binding<T>, values: [T],
+    private func styleChoice<T: RawRepresentable & Hashable>(title: String? = nil, selection: Binding<T>, values: [T],
                                                             keyPrefix: String, identifier: String) -> some View where T.RawValue == String {
         HStack(spacing: 12) {
-            Text(LocalizedStringKey(title)).font(DinoStyle.editorFont)
-                .multilineTextAlignment(.center).frame(maxWidth: .infinity)
-                .accessibilityIdentifier(identifier + ".label")
+            if let title {
+                Text(LocalizedStringKey(title)).modifier(CustomizationText())
+                    .multilineTextAlignment(.center).frame(maxWidth: .infinity)
+                    .accessibilityIdentifier(identifier + ".label")
+            }
             HStack(spacing: 3) {
                 ForEach(values, id: \.self) { value in
                     Button { selection.wrappedValue = value } label: {
                         Text(verbatim: L(key: keyPrefix + value.rawValue))
-                            .font(DinoStyle.editorFont).padding(.horizontal, 8)
+                            .modifier(CustomizationText()).padding(.horizontal, 8)
                             .frame(maxWidth: .infinity, minHeight: 40)
                             .background(selection.wrappedValue == value ? DinoStyle.green.opacity(0.22) : .clear,
                                         in: RoundedRectangle(cornerRadius: 10))
@@ -161,7 +161,7 @@ struct ClockCustomizer: View {
             }.padding(3).background(DinoStyle.ink.opacity(0.06), in: RoundedRectangle(cornerRadius: 13))
                 .frame(maxWidth: 240).accessibilityElement(children: .contain)
                 .accessibilityIdentifier(identifier)
-        }.frame(minHeight: 44)
+        }.frame(maxWidth: .infinity, minHeight: 44)
     }
 
     private var analogShapeChoices: some View {
@@ -175,15 +175,24 @@ struct ClockCustomizer: View {
         }.accessibilityElement(children: .contain).accessibilityIdentifier("theme.analogShape")
     }
 
-    private var digitalShapeChoices: some View {
+    private var analogNumeralChoices: some View {
         HStack(spacing: 8) {
-            ForEach(DigitalClockShape.allCases, id: \.self) { shape in
-                shapeChoice(title: "dino.shape." + shape.rawValue, selected: theme.digitalShape == shape,
-                            identifier: "theme.digitalShape." + shape.rawValue) { theme.digitalShape = shape } icon: {
-                    DigitalClockOutline(shape: shape).stroke(DinoStyle.ink, lineWidth: 2.5).frame(width: 42, height: 26)
-                }
+            ForEach(AnalogNumerals.allCases, id: \.self) { numerals in
+                Button { theme.analogNumerals = numerals } label: {
+                    Text(verbatim: L(key: "dino.analogNumerals." + numerals.rawValue))
+                        .modifier(CustomizationText()).padding(.horizontal, 8)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(theme.analogNumerals == numerals ? DinoStyle.green.opacity(0.18) : .clear,
+                                    in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12)
+                            .stroke(theme.analogNumerals == numerals ? DinoStyle.deepGreen : DinoStyle.ink.opacity(0.15),
+                                    lineWidth: theme.analogNumerals == numerals ? 2 : 1))
+                        .contentShape(Rectangle())
+                }.buttonStyle(.plain)
+                    .accessibilityIdentifier("theme.analogNumerals." + numerals.rawValue)
+                    .accessibilityAddTraits(theme.analogNumerals == numerals ? .isSelected : [])
             }
-        }.accessibilityElement(children: .contain).accessibilityIdentifier("theme.digitalShape")
+        }.accessibilityElement(children: .contain).accessibilityIdentifier("theme.analogNumerals")
     }
 
     private func shapeChoice<Icon: View>(title: String, selected: Bool, identifier: String,
@@ -191,9 +200,8 @@ struct ClockCustomizer: View {
         Button(action: action) {
             VStack(spacing: 7) {
                 icon().frame(height: 30)
-                Text(verbatim: L(key: title)).font(DinoStyle.editorFont)
-                    .multilineTextAlignment(.center).lineLimit(2).frame(minHeight: 44)
-            }.padding(.vertical, 10).frame(maxWidth: .infinity)
+                Text(verbatim: L(key: title)).modifier(CustomizationText())
+            }.padding(.horizontal, 6).padding(.vertical, 8).frame(maxWidth: .infinity)
                 .background(selected ? DinoStyle.green.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 12))
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(selected ? DinoStyle.deepGreen : DinoStyle.ink.opacity(0.15), lineWidth: selected ? 2 : 1))
         }.buttonStyle(.plain).accessibilityIdentifier(identifier)
@@ -201,8 +209,8 @@ struct ClockCustomizer: View {
     }
 
     private func colorChoices(title: String, color: Binding<UInt32>, values: [(name: String, hex: UInt32)]) -> some View {
-        VStack(spacing: 6) {
-            Text(LocalizedStringKey(title)).font(DinoStyle.editorFont)
+        VStack(spacing: 4) {
+            Text(LocalizedStringKey(title)).modifier(CustomizationText())
                 .multilineTextAlignment(.center).frame(maxWidth: .infinity)
                 .accessibilityIdentifier("theme." + title + ".label")
             HStack(spacing: 0) {
@@ -269,25 +277,24 @@ struct ClockColorWarning: View {
 
     var body: some View {
         Text(LocalizedStringKey(analog ? "dino.analog.sameColors" : "dino.digital.sameColors"))
-            .font(DinoStyle.editorFont)
-            .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+            .modifier(CustomizationText(multiline: true))
             .foregroundStyle(DinoStyle.warning).frame(maxWidth: .infinity)
             .accessibilityIdentifier(analog ? "theme.analog.sameColors" : "theme.digital.sameColors")
     }
 }
 
-struct ClockRestoreColorsButton: View {
+struct ClockRestoreStyleButton: View {
     @Binding var theme: ClockTheme
     let analog: Bool
 
     var body: some View {
         Button {
-            if analog { theme.restoreAnalogColors() } else { theme.restoreDigitalColors() }
+            if analog { theme.resetAnalog() } else { theme.resetDigital() }
         } label: {
-            Label("dino.appearance.reset", systemImage: "arrow.counterclockwise")
-                .font(DinoStyle.editorFont).frame(maxWidth: .infinity, minHeight: 44)
+            Label("dino.clock.restoreStyle", systemImage: "arrow.counterclockwise")
+                .modifier(CustomizationText()).frame(maxWidth: .infinity, minHeight: 44)
         }.buttonStyle(.plain).foregroundStyle(DinoStyle.deepGreen)
-            .accessibilityIdentifier(analog ? "theme.restoreAnalogColors" : "theme.restoreDigitalColors")
+            .accessibilityIdentifier(analog ? "theme.resetAnalogStyle" : "theme.resetDigitalStyle")
     }
 }
 
@@ -305,10 +312,11 @@ struct MyClocksView: View {
             Button("dino.done") {
                 player.completeClockCustomization(theme: theme)
                 dismiss()
-            }.buttonStyle(DinoButtonStyle()).accessibilityIdentifier("theme.done")
+            }.buttonStyle(DinoButtonStyle(customization: true)).accessibilityIdentifier("theme.done")
                 .padding(16).frame(maxWidth: 540).frame(maxWidth: .infinity)
         }
         .background(JungleBackground(quiet: true))
+        .modifier(CustomizationTypography(optionsInset: 80))
         .toolbar(.hidden, for: .navigationBar)
         .onAppear { theme = player.profile.clockTheme }
         .onChange(of: theme) { _, updated in

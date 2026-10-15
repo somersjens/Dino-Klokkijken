@@ -980,7 +980,7 @@ struct WorldMapLandscape: View {
     var body: some View {
         Canvas { context, size in
             let w = size.width
-            let left = max(0, (w - 650) / 2)
+            let left: CGFloat = 0
             let right = w - left
             let height = size.height - routeOffset
             let scale = min(1.35, max(0.82, w / 390))
@@ -1940,7 +1940,7 @@ private struct SleepValleyPainter {
 
     func landscape(in size: CGSize, routeOffset: CGFloat) {
         let w = size.width, h = size.height
-        let left = max(0, (w - 650) / 2), right = w - left
+        let left: CGFloat = 0, right = w - left
         let scale = min(1.30, max(0.82, w / 390))
         let skyEnd = (routeOffset + 185) / h
         context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
@@ -2331,7 +2331,7 @@ private struct VolcanoWorldPainter {
 
     func landscape(in size: CGSize, routeOffset: CGFloat) {
         let w = size.width, h = size.height
-        let left = max(0, (w - 650) / 2), right = w - left
+        let left: CGFloat = 0, right = w - left
         let scale = min(1.30, max(0.82, w / 390))
         let horizon = (routeOffset + 135) / h
         context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
@@ -2734,7 +2734,7 @@ private struct VillageWorldPainter {
 
     func landscape(in size: CGSize, routeOffset: CGFloat) {
         let w = size.width, h = size.height
-        let left = max(0, (w - 650) / 2), right = w - left
+        let left: CGFloat = 0, right = w - left
         let scale = min(1.30, max(0.82, w / 390))
         context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
             .init(color: Color(dinoHex: 0xC7E8BE), location: 0),
@@ -3194,6 +3194,397 @@ private struct VillageWorldPainter {
     }
 }
 
+/// The cave's illuminated facets and rocky enclosure are exclusive to world five.
+private struct CrystalCavePainter {
+    let context: GraphicsContext
+
+    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, draw: (CrystalCavePainter) -> Void) {
+        var c = context
+        c.translateBy(x: point.x, y: point.y)
+        c.scaleBy(x: mirror ? -size : size, y: size)
+        draw(.init(context: c))
+    }
+    private func material(_ path: Path, colors: [UInt32]) {
+        let r = path.boundingRect
+        context.fill(path, with: .linearGradient(Gradient(colors: colors.map { Color(dinoHex: $0) }),
+                                                startPoint: CGPoint(x: r.minX, y: r.minY), endPoint: CGPoint(x: r.maxX, y: r.maxY)))
+    }
+    private func polygon(_ points: [CGPoint], colors: [UInt32]) {
+        var p = Path(); p.addLines(points); p.closeSubpath(); material(p, colors: colors)
+    }
+    private func rounded(_ r: CGRect, radius: CGFloat, colors: [UInt32]) {
+        material(Path(roundedRect: r, cornerRadius: radius), colors: colors)
+    }
+    private func oval(_ r: CGRect, colors: [UInt32]) {
+        context.fill(Path(ellipseIn: r), with: .radialGradient(Gradient(colors: colors.map { Color(dinoHex: $0) }),
+                                                            center: CGPoint(x: r.minX + r.width * 0.3, y: r.minY + r.height * 0.2),
+                                                            startRadius: 0, endRadius: max(r.width, r.height) * 0.85))
+    }
+    private func line(_ points: [CGPoint], color: UInt32, width: CGFloat, opacity: Double = 1) {
+        var p = Path(); p.addLines(points)
+        context.stroke(p, with: .color(Color(dinoHex: color).opacity(opacity)), style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
+    }
+    private func glow(_ point: CGPoint, radius: CGFloat, color: UInt32, opacity: Double) {
+        context.fill(Path(ellipseIn: CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)),
+                     with: .radialGradient(Gradient(colors: [Color(dinoHex: color).opacity(opacity), Color(dinoHex: color).opacity(0)]),
+                                           center: point, startRadius: 0, endRadius: radius))
+    }
+    private func sparkle(at point: CGPoint, radius: CGFloat) {
+        glow(point, radius: radius * 4, color: 0xE2FFF8, opacity: 0.35)
+        let shape = Path { p in
+            p.addLines([.init(x: point.x, y: point.y - radius), .init(x: point.x + radius * 0.25, y: point.y - radius * 0.25),
+                        .init(x: point.x + radius, y: point.y), .init(x: point.x + radius * 0.25, y: point.y + radius * 0.25),
+                        .init(x: point.x, y: point.y + radius), .init(x: point.x - radius * 0.25, y: point.y + radius * 0.25),
+                        .init(x: point.x - radius, y: point.y), .init(x: point.x - radius * 0.25, y: point.y - radius * 0.25)])
+            p.closeSubpath()
+        }
+        context.fill(shape, with: .color(Color(dinoHex: 0xF2FFF7).opacity(0.92)))
+    }
+
+    func landscape(in size: CGSize, routeOffset: CGFloat) {
+        let w = size.width, h = size.height
+        let scale = min(1.30, max(0.82, w / 390))
+        let horizon = (routeOffset + 130) / h
+        context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
+            .init(color: Color(dinoHex: 0xD8EEF0), location: 0),
+            .init(color: Color(dinoHex: 0x758AB7), location: 0.035),
+            .init(color: Color(dinoHex: 0x9FC9D9), location: horizon * 0.5),
+            .init(color: Color(dinoHex: 0xD1E6DF), location: horizon),
+            .init(color: Color(dinoHex: 0xBED7D5), location: 0.40),
+            .init(color: Color(dinoHex: 0xBFD2DC), location: 0.68),
+            .init(color: Color(dinoHex: 0xC4DCE4), location: 0.88),
+            .init(color: Color(dinoHex: 0xB8E4F5), location: 1)
+        ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
+        entrance(width: w, height: routeOffset + 115, scale: scale)
+        var c = context; c.translateBy(x: 0, y: routeOffset)
+        let p = CrystalCavePainter(context: c)
+        for i in 0..<5 {
+            let y = 90 + CGFloat(i) * 350
+            p.glow(CGPoint(x: w * (i % 2 == 0 ? 0.23 : 0.77), y: y), radius: w * 0.42, color: i % 2 == 0 ? 0xC9F9E4 : 0xDEE0FF, opacity: 0.19)
+        }
+        for side in 0..<2 {
+            p.at(CGPoint(x: side == 0 ? 0 : w, y: 0), size: scale, mirror: side == 1) { bank in
+                bank.wall(length: 1720 / scale)
+                bank.stream(length: 1710 / scale)
+                for i in 0..<12 {
+                    let y = 45 + CGFloat(i) * 142 / scale
+                    bank.rock(at: CGPoint(x: 42 + CGFloat(i % 3) * 4, y: y), size: 0.48 + CGFloat(i % 2) * 0.18)
+                    bank.plants(at: CGPoint(x: 51, y: y + 20), size: 0.48)
+                    if i % 3 == 0 { bank.crystal(at: CGPoint(x: 19, y: y - 7), height: 25, tint: side == 0 ? 1 : 0) }
+                }
+            }
+        }
+        // Pools, waterfalls and the small crossings stay behind the destinations.
+        p.cascade(at: CGPoint(x: 3, y: 760), size: scale)
+        p.cascade(at: CGPoint(x: w - 2, y: 1110), size: scale, mirror: true)
+        p.bridge(at: CGPoint(x: 10 * scale, y: 885), size: scale * 0.85)
+        p.bridge(at: CGPoint(x: w - 8 * scale, y: 1240), size: scale * 0.85)
+        for index in 0..<9 {
+            let onRight = index % 4 == 0 || index % 4 == 3
+            let point = CGPoint(x: onRight ? w - 34 * scale : 34 * scale, y: 184 + CGFloat(index) * 175)
+            p.scene(at: point, size: scale * 0.94, variation: index)
+            p.garden(at: CGPoint(x: onRight ? 8 * scale : w - 8 * scale, y: point.y + 88), size: scale, variation: index)
+        }
+        // A rock arch frames the guardian without covering his face or clock.
+        p.arch(at: CGPoint(x: w - 80 * scale, y: 1740), size: scale * 0.98)
+        context.fill(Path(CGRect(x: 0, y: h - 180, width: w, height: 180)),
+                     with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xB8E4F5).opacity(0), Color(dinoHex: 0xB8E4F5)]),
+                                           startPoint: CGPoint(x: 0, y: h - 180), endPoint: CGPoint(x: 0, y: h)))
+    }
+
+    private func entrance(width: CGFloat, height: CGFloat, scale: CGFloat) {
+        let center = CGPoint(x: width * 0.52, y: height * 0.39)
+        glow(center, radius: width * 0.63, color: 0xDCF7EB, opacity: 0.64)
+        context.drawLayer { c in
+            c.addFilter(.blur(radius: 8))
+            for i in 0..<3 {
+                let x = width * (0.18 + CGFloat(i) * 0.26)
+                var beam = Path()
+                beam.addLines([.init(x: x - 24, y: 35), .init(x: x + 2, y: 35),
+                               .init(x: x + width * 0.15, y: height * 0.86), .init(x: x - 9, y: height * 0.85)])
+                beam.closeSubpath()
+                c.fill(beam, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xF2FFF5).opacity(0.04),
+                                                                    Color(dinoHex: 0xE8FFF0).opacity(0.23),
+                                                                    Color(dinoHex: 0xE8FFF0).opacity(0)]),
+                                                   startPoint: CGPoint(x: x, y: 35), endPoint: CGPoint(x: x, y: height * 0.86)))
+            }
+        }
+        var distant = context; distant.opacity = 0.50
+        distant.clipToLayer { mask in
+            mask.fill(Path(CGRect(x: 0, y: 0, width: width, height: height + 80)),
+                      with: .linearGradient(Gradient(stops: [.init(color: .white, location: 0), .init(color: .white, location: 0.55), .init(color: .white.opacity(0), location: 1)]),
+                                            startPoint: CGPoint(x: 0, y: 100 * scale), endPoint: CGPoint(x: 0, y: 260 * scale)))
+        }
+        let far = CrystalCavePainter(context: distant)
+        for i in 0..<5 {
+            far.at(CGPoint(x: CGFloat(i) * width / 4, y: (178 + CGFloat(i % 2) * 25) * scale), size: scale * 1.0) { p in
+                p.polygon([.init(x: -58, y: 35), .init(x: -42, y: -110), .init(x: -30, y: -127), .init(x: 9, y: -138), .init(x: 38, y: -94), .init(x: 59, y: 35)], colors: [0x899FC6, 0x637DA6, 0x557C94])
+                p.polygon([.init(x: -30, y: -127), .init(x: 9, y: -138), .init(x: -3, y: -65), .init(x: -18, y: 27), .init(x: -49, y: 32)], colors: [0xBED1DA, 0x8BAEC5])
+                p.crystal(at: CGPoint(x: -12, y: -111), height: 39, tint: i % 2)
+                if i == 1 || i == 3 {
+                    p.rounded(CGRect(x: 14, y: -107, width: 19, height: 122), radius: 4, colors: [0xDFF9ED, 0x8BDADE, 0xBCEDE1])
+                    p.line([.init(x: 20, y: -104), .init(x: 19, y: 11)], color: 0xF0FFF5, width: 2, opacity: 0.8)
+                    p.glow(CGPoint(x: 23, y: 13), radius: 34, color: 0xD5F9EA, opacity: 0.6)
+                }
+            }
+        }
+        // Irregular roof stones form a vault, with a bright opening in the middle.
+        let roof = Path { p in
+            p.addLines([.init(x: 0, y: 0), .init(x: width, y: 0), .init(x: width, y: 190 * scale),
+                        .init(x: width - 37 * scale, y: 118 * scale), .init(x: width - 72 * scale, y: 103 * scale),
+                        .init(x: width * 0.74, y: 63 * scale), .init(x: width * 0.60, y: 46 * scale),
+                        .init(x: width * 0.44, y: 66 * scale), .init(x: width * 0.28, y: 53 * scale),
+                        .init(x: 70 * scale, y: 110 * scale), .init(x: 29 * scale, y: 142 * scale), .init(x: 0, y: 230 * scale)])
+            p.closeSubpath()
+        }
+        context.drawLayer { c in
+            c.clipToLayer { mask in
+                mask.fill(Path(CGRect(x: 0, y: 0, width: width, height: 250 * scale)),
+                          with: .linearGradient(Gradient(colors: [.white.opacity(0), .white]),
+                                                startPoint: .zero, endPoint: CGPoint(x: 0, y: 28 * scale)))
+            }
+            let p = CrystalCavePainter(context: c)
+            p.material(roof, colors: [0x657796, 0x4B5E82, 0x364D70])
+            for i in 0..<9 {
+                let x = CGFloat(i) * width / 8
+                let depth = (i < 2 || i > 6 ? 109 : 56) + CGFloat(i % 3) * 15
+                p.polygon([.init(x: x - 27 * scale, y: 2), .init(x: x + 25 * scale, y: 3), .init(x: x + 17 * scale, y: depth * scale * 0.60),
+                         .init(x: x + 5 * scale, y: depth * scale), .init(x: x - 10 * scale, y: depth * scale * 0.71)], colors: [0x8190A8, 0x526B8D, 0x405878])
+                p.line([.init(x: x - 9 * scale, y: 5), .init(x: x + 2 * scale, y: depth * scale * 0.76)], color: 0xA8B4C3, width: 1, opacity: 0.5)
+            }
+        }
+        for side in 0..<2 {
+            at(CGPoint(x: side == 0 ? 0 : width, y: 185 * scale), size: scale, mirror: side == 1) { p in
+                p.rock(at: CGPoint(x: -20, y: 8), size: 2.4)
+                p.rock(at: CGPoint(x: -14, y: 110), size: 2.0)
+                p.plants(at: CGPoint(x: 15, y: 134), size: 1.0)
+                p.cluster(at: CGPoint(x: 13, y: 121), size: 0.67, variation: side)
+            }
+        }
+        for (fraction, y, height, tint): (CGFloat, CGFloat, CGFloat, Int) in [(0.11, 37, 63, 1), (0.86, 27, 81, 0), (0.69, 40, 35, 2)] {
+            var hanging = context
+            hanging.translateBy(x: width * fraction, y: y * scale)
+            hanging.scaleBy(x: scale, y: -scale)
+            CrystalCavePainter(context: hanging).crystal(at: .zero, height: height, tint: tint)
+        }
+        for i in 0..<12 {
+            let x = width * (0.17 + CGFloat((i * 17) % 69) / 100), y = 95 + CGFloat((i * 23) % 137)
+            glow(CGPoint(x: x, y: y), radius: 3, color: 0xF5FFE5, opacity: 0.55)
+            oval(CGRect(x: x, y: y, width: 1.3, height: 1.3), colors: [0xFFFFE4, 0xDAECE4])
+        }
+    }
+
+    private func wall(length: CGFloat) {
+        let outline = Path { p in
+            p.move(to: CGPoint(x: -120, y: -20))
+            p.addLine(to: CGPoint(x: 25, y: -20))
+            for i in 0..<12 {
+                let y = CGFloat(i) * length / 11
+                p.addLine(to: CGPoint(x: 27 + CGFloat(i % 3) * 9, y: y))
+                p.addLine(to: CGPoint(x: 20 + CGFloat(i % 2) * 11, y: y + 42))
+            }
+            p.addLine(to: CGPoint(x: -120, y: length + 90)); p.closeSubpath()
+        }
+        material(outline, colors: [0x8595AD, 0x647C98, 0x58788B])
+        for i in 0..<11 {
+            let y = CGFloat(i) * length / 10 + 23
+            polygon([.init(x: -25, y: y - 55), .init(x: 20, y: y - 40), .init(x: 33, y: y + 32), .init(x: 9, y: y + 61), .init(x: -23, y: y + 42)], colors: [0xA5B3BF, 0x7B93A5, 0x637D95])
+            line([.init(x: 25, y: y - 16), .init(x: 10, y: y - 5), .init(x: 17, y: y + 24)], color: 0x435D7F, width: 1.2, opacity: 0.65)
+            line([.init(x: -15, y: y - 37), .init(x: 14, y: y - 26)], color: 0xD1D8D2, width: 1, opacity: 0.55)
+        }
+    }
+    private func stream(length: CGFloat) {
+        var water = Path(); water.move(to: CGPoint(x: 34, y: -20))
+        for i in 0..<6 {
+            let y = CGFloat(i) * length / 6
+            water.addCurve(to: CGPoint(x: i % 2 == 0 ? 27 : 42, y: y + length / 6),
+                           control1: CGPoint(x: 61, y: y + 70), control2: CGPoint(x: 5, y: y + 165))
+        }
+        context.stroke(water, with: .color(Color(dinoHex: 0x8FA7AF)), style: StrokeStyle(lineWidth: 35, lineCap: .round))
+        context.stroke(water, with: .color(Color(dinoHex: 0xA9E4DD)), style: StrokeStyle(lineWidth: 26, lineCap: .round))
+        context.stroke(water, with: .color(Color(dinoHex: 0x66BDC8)), style: StrokeStyle(lineWidth: 17, lineCap: .round))
+        context.stroke(water, with: .color(Color(dinoHex: 0xE4FFF0).opacity(0.8)), style: StrokeStyle(lineWidth: 1.3, lineCap: .round, dash: [11, 26, 3, 22]))
+    }
+    private func rock(at point: CGPoint, size: CGFloat) {
+        at(point, size: size) { p in
+            p.oval(CGRect(x: -33, y: -6, width: 66, height: 19), colors: [0x8499A1, 0xB1C9C4])
+            p.polygon([.init(x: -29, y: 4), .init(x: -23, y: -25), .init(x: -7, y: -42), .init(x: 15, y: -37), .init(x: 30, y: -16), .init(x: 34, y: 4), .init(x: 9, y: 13)], colors: [0xA8B1C1, 0x7C8CA9, 0x586E90])
+            p.polygon([.init(x: -23, y: -25), .init(x: -7, y: -42), .init(x: 15, y: -37), .init(x: 2, y: -17), .init(x: -16, y: -8)], colors: [0xD3D2D0, 0xA2B2C1, 0x8C9FB4])
+            p.polygon([.init(x: 15, y: -37), .init(x: 30, y: -16), .init(x: 34, y: 4), .init(x: 9, y: 13), .init(x: 2, y: -17)], colors: [0x899DB5, 0x536A8C])
+            p.line([.init(x: -17, y: -4), .init(x: -6, y: -7), .init(x: 0, y: -1)], color: 0x536D8C, width: 0.8, opacity: 0.65)
+        }
+    }
+    private func crystal(at point: CGPoint, height: CGFloat, tint: Int) {
+        at(point) { p in
+            let r = height * 0.19
+            let colors: [UInt32] = tint % 3 == 0 ? [0xD4FFF0, 0x8EE5E0, 0x43ADCB, 0x4985B3] : tint % 3 == 1 ? [0xF0E3FF, 0xCDB0F4, 0x9788D4, 0x716FB0] : [0xFFDEF7, 0xE6B7E8, 0xBD8ACE, 0x8E7EAD]
+            p.glow(CGPoint(x: 0, y: -height * 0.45), radius: height * 0.65, color: colors[1], opacity: 0.30)
+            p.polygon([.init(x: -r, y: -height * 0.69), .init(x: 0, y: -height), .init(x: r, y: -height * 0.72), .init(x: r * 0.86, y: -5), .init(x: 0, y: 0), .init(x: -r * 0.82, y: -7)], colors: [colors[0], colors[1], colors[2]])
+            p.polygon([.init(x: 0, y: -height), .init(x: r, y: -height * 0.72), .init(x: r * 0.86, y: -5), .init(x: 0, y: 0)], colors: [colors[1], colors[2], colors[3]])
+            p.polygon([.init(x: -r, y: -height * 0.69), .init(x: 0, y: -height), .init(x: 0, y: -height * 0.68), .init(x: -r * 0.82, y: -7)], colors: [0xF1FFF9, colors[0], colors[2]])
+            p.polygon([.init(x: -r, y: -height * 0.69), .init(x: 0, y: -height * 0.68), .init(x: r, y: -height * 0.72), .init(x: r * 0.4, y: -height * 0.58)], colors: [colors[0], colors[1]])
+            p.line([.init(x: -r + 1, y: -height * 0.69), .init(x: 0, y: -height + 1), .init(x: r - 1, y: -height * 0.72)], color: 0xEEFFF7, width: 1.1, opacity: 0.85)
+            p.line([.init(x: 0, y: -height * 0.68), .init(x: 0, y: -5)], color: colors[0], width: 1.3, opacity: 0.85)
+            p.line([.init(x: -r * 0.58, y: -height * 0.62), .init(x: -r * 0.54, y: -height * 0.30)], color: 0xFFFFFF, width: max(1, height * 0.023), opacity: 0.78)
+            p.sparkle(at: CGPoint(x: -r * 0.53, y: -height * 0.63), radius: max(1.8, height * 0.043))
+        }
+    }
+    private func cluster(at point: CGPoint, size: CGFloat, variation: Int) {
+        at(point, size: size) { p in
+            p.oval(CGRect(x: -48, y: -12, width: 100, height: 29), colors: [0xABD4CE, 0x8EACA9])
+            for i in 0..<5 {
+                let x = CGFloat(i - 2) * 17, height = CGFloat(37 + (i * 23 + variation * 13) % 55)
+                p.at(CGPoint(x: x, y: CGFloat(i % 2) * 3)) { shard in
+                    var c = shard.context; c.rotate(by: .degrees(Double(i - 2) * 7))
+                    CrystalCavePainter(context: c).crystal(at: .zero, height: height, tint: (i + variation) % 3)
+                }
+            }
+            p.rock(at: CGPoint(x: -34, y: 7), size: 0.38)
+            p.rock(at: CGPoint(x: 31, y: 13), size: 0.27)
+            p.plants(at: CGPoint(x: 41, y: 8), size: 0.58)
+        }
+    }
+    private func plants(at point: CGPoint, size: CGFloat) {
+        at(point, size: size) { p in
+            for i in 0..<5 {
+                var c = p.context; c.rotate(by: .degrees(Double(i - 2) * 31))
+                let leaf = Path { l in
+                    l.move(to: .zero)
+                    l.addCurve(to: .init(x: 0, y: -29 - CGFloat(i % 2) * 9), control1: .init(x: -12, y: -6), control2: .init(x: -8, y: -26))
+                    l.addCurve(to: .zero, control1: .init(x: 9, y: -25), control2: .init(x: 12, y: -6))
+                }
+                let f = CrystalCavePainter(context: c); f.material(leaf, colors: [0xB4DCB4, 0x70B4A1, 0x4B8A92])
+                f.line([.zero, .init(x: 0, y: -25)], color: 0xD6ECD1, width: 0.7, opacity: 0.6)
+            }
+        }
+    }
+    private func blossoms(at point: CGPoint, size: CGFloat) {
+        at(point, size: size) { p in
+            for i in 0..<3 {
+                let x = CGFloat(i - 1) * 9, y = -5 - CGFloat(i % 2) * 8
+                p.line([.init(x: x, y: 3), .init(x: x, y: y)], color: 0x6FA898, width: 1.2)
+                for j in 0..<5 {
+                    let angle = Double(j) * .pi * 0.4
+                    p.oval(CGRect(x: x + CGFloat(cos(angle)) * 3 - 2.5, y: y + CGFloat(sin(angle)) * 3 - 2.5, width: 5, height: 5), colors: [0xF6E6F8, 0xBEACDA])
+                }
+                p.oval(CGRect(x: x - 1.5, y: y - 1.5, width: 3, height: 3), colors: [0xFFF4BE, 0xDECEA2])
+            }
+        }
+    }
+    private func lantern(at point: CGPoint, size: CGFloat) {
+        at(point, size: size) { p in
+            p.glow(CGPoint(x: 0, y: -22), radius: 49, color: 0xFFE5A4, opacity: 0.32)
+            p.rounded(CGRect(x: -9, y: -33, width: 18, height: 25), radius: 3, colors: [0xBBA26F, 0x8B815D])
+            p.rounded(CGRect(x: -6, y: -30, width: 12, height: 18), radius: 2, colors: [0xFFF6CC, 0xF6D28B, 0xE9AE62])
+            p.line([.init(x: 0, y: -29), .init(x: 0, y: -12)], color: 0xD4B57D, width: 1)
+            p.polygon([.init(x: -12, y: -33), .init(x: 0, y: -40), .init(x: 12, y: -33)], colors: [0xD9C492, 0x8D8766])
+            p.rounded(CGRect(x: -12, y: -9, width: 24, height: 4), radius: 1, colors: [0xD3BE8E, 0x96906F])
+            p.line([.init(x: -3, y: -40), .init(x: -3, y: -44), .init(x: 3, y: -44), .init(x: 3, y: -40)], color: 0xA7A280, width: 1.3)
+        }
+    }
+    private func cascade(at point: CGPoint, size: CGFloat, mirror: Bool = false) {
+        at(point, size: size, mirror: mirror) { p in
+            for i in 0..<4 { p.rock(at: CGPoint(x: CGFloat(i) * 19 - 38, y: CGFloat(i % 2) * 7), size: 1.20) }
+            p.rounded(CGRect(x: -12, y: -31, width: 32, height: 86), radius: 5, colors: [0xD9FFF1, 0x96DDE0, 0x65B8CD, 0xB5ECE7])
+            for i in 0..<4 { p.line([.init(x: CGFloat(i) * 7 - 9, y: -26), .init(x: CGFloat(i) * 7 - 12, y: 40 + CGFloat(i % 2) * 8)], color: 0xE9FFF7, width: i % 2 == 0 ? 2 : 1, opacity: 0.9) }
+            p.oval(CGRect(x: -39, y: 39, width: 82, height: 25), colors: [0xE1FFF1, 0x9BDCDD, 0x67B6C2])
+            for i in 0..<5 { p.oval(CGRect(x: CGFloat(i) * 12 - 30, y: 45 + CGFloat(i % 2) * 3, width: 14, height: 4), colors: [0xF5FFF8, 0xC3F0E6]) }
+            p.crystal(at: CGPoint(x: 30, y: -7), height: 37, tint: 0)
+            p.plants(at: CGPoint(x: -26, y: 20), size: 0.76)
+        }
+    }
+    private func bridge(at point: CGPoint, size: CGFloat) {
+        at(point, size: size) { p in
+            p.polygon([.init(x: -42, y: -13), .init(x: 34, y: -20), .init(x: 45, y: 7), .init(x: -34, y: 19)], colors: [0xBCC0C7, 0x8F9CB2, 0x70849E])
+            for i in 0..<6 {
+                let x = CGFloat(i) * 13 - 32
+                p.line([.init(x: x, y: -11), .init(x: x + 9, y: 11)], color: 0x546C8B, width: 1.3)
+                p.line([.init(x: x + 2, y: -11), .init(x: x + 11, y: 9)], color: 0xE0DECE, width: 0.8, opacity: 0.8)
+            }
+            for x: CGFloat in [-38, 35] {
+                p.rounded(CGRect(x: x - 4, y: -37, width: 10, height: 41), radius: 2, colors: [0xBFC3C4, 0x7D90A8, 0x526C8B])
+                p.rounded(CGRect(x: x - 6, y: -40, width: 15, height: 5), radius: 1, colors: [0xE0DAC8, 0x91A3B2])
+                p.crystal(at: CGPoint(x: x + 1, y: -40), height: 17, tint: 1)
+            }
+            p.line([.init(x: -37, y: -25), .init(x: 38, y: -32)], color: 0x9DAEBB, width: 4)
+        }
+    }
+    private func geode(at point: CGPoint, size: CGFloat) {
+        at(point, size: size) { p in
+            p.rock(at: CGPoint(x: 0, y: 0), size: 1.85)
+            p.oval(CGRect(x: -35, y: -69, width: 70, height: 64), colors: [0x747399, 0x455C83, 0x374C71])
+            p.oval(CGRect(x: -28, y: -64, width: 56, height: 53), colors: [0x6E789D, 0x324D74])
+            p.glow(CGPoint(x: 0, y: -39), radius: 32, color: 0xBFA5EB, opacity: 0.44)
+            for i in 0..<5 { p.crystal(at: CGPoint(x: CGFloat(i - 2) * 11, y: -15 + CGFloat(i % 2) * 2), height: 22 + CGFloat(i % 3) * 8, tint: i % 3) }
+            p.crystal(at: CGPoint(x: -36, y: 1), height: 23, tint: 0)
+            p.plants(at: CGPoint(x: 39, y: 10), size: 0.64)
+        }
+    }
+    private func clockStone(at point: CGPoint, size: CGFloat, late: Bool) {
+        at(point, size: size) { p in
+            p.rock(at: CGPoint(x: 0, y: 7), size: 1.36)
+            p.rounded(CGRect(x: -39, y: -61, width: 78, height: 45), radius: 12, colors: [0xB6B7C3, 0x8395B0, 0x596F92])
+            p.rounded(CGRect(x: -32, y: -55, width: 64, height: 29), radius: 6, colors: [0x384A69, 0x29445C])
+            p.glow(CGPoint(x: 0, y: -40), radius: 36, color: 0xFFE3A4, opacity: 0.17)
+            p.context.draw(Text(verbatim: late ? "08:43" : "02:17").font(.system(size: 17, weight: .bold, design: .monospaced))
+                .foregroundStyle(Color(dinoHex: 0xFFE4A7)), at: CGPoint(x: 0, y: -40))
+            p.line([.init(x: -27, y: -57), .init(x: 26, y: -57)], color: 0xDCDAC4, width: 1, opacity: 0.65)
+            for x: CGFloat in [-29, 29] { p.oval(CGRect(x: x - 1, y: -22, width: 2, height: 2), colors: [0xF0E4C8, 0xA2A1A1]) }
+            p.crystal(at: CGPoint(x: -43, y: 8), height: 38, tint: 1)
+            p.crystal(at: CGPoint(x: 44, y: 13), height: 28, tint: 0)
+        }
+    }
+    private func arch(at point: CGPoint, size: CGFloat) {
+        at(point, size: size) { p in
+            let arch = Path { a in
+                a.move(to: CGPoint(x: -69, y: 4)); a.addCurve(to: CGPoint(x: 68, y: 4), control1: CGPoint(x: -71, y: -204), control2: CGPoint(x: 77, y: -201))
+                a.addLine(to: CGPoint(x: 44, y: 2)); a.addCurve(to: CGPoint(x: -44, y: 2), control1: CGPoint(x: 47, y: -146), control2: CGPoint(x: -47, y: -142))
+                a.closeSubpath()
+            }
+            p.material(arch, colors: [0xA8ADC1, 0x778DA8, 0x536C91])
+            p.context.stroke(arch, with: .color(Color(dinoHex: 0x536B8D).opacity(0.65)), lineWidth: 1.5)
+            for i in 0..<7 {
+                let angle = Double(i) * .pi / 6
+                let x = CGFloat(cos(angle)), y = CGFloat(sin(angle))
+                p.line([.init(x: x * 65, y: -y * 147), .init(x: x * 45, y: -y * 106)], color: 0x4F6485, width: 1.3)
+            }
+            p.cluster(at: CGPoint(x: -50, y: 8), size: 0.55, variation: 0)
+            p.cluster(at: CGPoint(x: 54, y: 12), size: 0.48, variation: 1)
+            p.crystal(at: CGPoint(x: 0, y: -138), height: 42, tint: 1)
+            p.plants(at: CGPoint(x: -61, y: 14), size: 0.68)
+        }
+    }
+    private func garden(at point: CGPoint, size: CGFloat, variation: Int) {
+        at(point, size: size) { p in
+            p.rock(at: CGPoint(x: -8, y: 0), size: 1.05)
+            p.cluster(at: CGPoint(x: 20, y: 15), size: 0.62, variation: variation + 1)
+            p.plants(at: CGPoint(x: -25, y: 13), size: 0.75)
+            p.blossoms(at: CGPoint(x: 41, y: 22), size: 0.65)
+        }
+    }
+    func scene(at point: CGPoint, size: CGFloat, variation: Int) {
+        at(point, size: size) { p in
+            p.oval(CGRect(x: -71, y: -16, width: 145, height: 44), colors: [0xB2D5CF, 0x96B3B7, 0x8EA4B1])
+            p.rock(at: CGPoint(x: -33, y: -3), size: 1.3)
+            p.rock(at: CGPoint(x: 35, y: 12), size: 0.75)
+            switch variation % 4 {
+            case 0: p.cluster(at: CGPoint(x: -9, y: 4), size: 1.1, variation: variation)
+            case 1: p.geode(at: CGPoint(x: -4, y: 3), size: 1.03)
+            case 2:
+                p.cluster(at: CGPoint(x: -31, y: 7), size: 0.67, variation: variation)
+                // Draw the display last so crystal facets cannot cover its digits.
+                p.clockStone(at: CGPoint(x: 10, y: 4), size: 0.92, late: variation > 3)
+            default:
+                p.cascade(at: CGPoint(x: 0, y: 4), size: 0.95)
+                p.cluster(at: CGPoint(x: 35, y: 28), size: 0.53, variation: variation)
+            }
+            p.plants(at: CGPoint(x: -48, y: 19), size: 0.74)
+            p.blossoms(at: CGPoint(x: 40, y: 24), size: 0.67)
+            if variation % 3 == 0 { p.lantern(at: CGPoint(x: -39, y: 24), size: 0.71) }
+        }
+    }
+}
+
 /// All scenery is native Canvas geometry. Generated concepts are documentation only.
 struct ThemedWorldLandscape: View {
     let world: DinoWorld
@@ -3207,7 +3598,7 @@ struct ThemedWorldLandscape: View {
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
-                let right = size.width - max(0, (size.width - 650) / 2)
+                let right = size.width
                 let point = CGPoint(x: right - 79 * scale, y: 1728)
                 boss.bossClearing(worldID: 2, at: point, size: scale)
                 boss.boss(worldID: 2, at: point, size: scale * 0.88)
@@ -3219,7 +3610,7 @@ struct ThemedWorldLandscape: View {
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
-                let right = size.width - max(0, (size.width - 650) / 2)
+                let right = size.width
                 let point = CGPoint(x: right - 79 * scale, y: 1728)
                 boss.bossClearing(worldID: 3, at: point, size: scale)
                 boss.boss(worldID: 3, at: point, size: scale * 0.88)
@@ -3231,15 +3622,26 @@ struct ThemedWorldLandscape: View {
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
-                let right = size.width - max(0, (size.width - 650) / 2)
+                let right = size.width
                 let point = CGPoint(x: right - 79 * scale, y: 1728)
                 boss.bossClearing(worldID: 4, at: point, size: scale)
                 boss.boss(worldID: 4, at: point, size: scale * 0.88)
                 return
             }
+            if world.id == 5 {
+                CrystalCavePainter(context: context).landscape(in: size, routeOffset: routeOffset)
+                var routeContext = context
+                routeContext.translateBy(x: 0, y: routeOffset)
+                let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
+                let scale = min(1.30, max(0.82, size.width / 390))
+                let point = CGPoint(x: size.width - 79 * scale, y: 1728)
+                boss.bossClearing(worldID: 5, at: point, size: scale)
+                boss.boss(worldID: 5, at: point, size: scale * 0.88)
+                return
+            }
             let colors = WorldThemeColors(world)
             let w = size.width
-            let left = max(0, (w - 650) / 2)
+            let left: CGFloat = 0
             let right = w - left
             let scale = min(1.30, max(0.82, w / 390))
             let nextGround = DinoWorldCatalog.world(world.id + 1)?.ground ?? world.ground
@@ -3462,13 +3864,7 @@ private struct ThemePainter {
             case 4:
                 VillageWorldPainter(context: p.context).scene(at: .zero, size: 0.9, variation: variation)
             case 5:
-                p.rock(at: CGPoint(x: -14, y: 1), size: 1.02, color: 0x89A9B8)
-                p.glow(at: CGPoint(x: 14, y: -38), radius: 67, color: 0x8EEDD8, opacity: 0.25)
-                p.crystals(at: CGPoint(x: 0, y: 10), size: 1.16, variation: variation)
-                p.crystals(at: CGPoint(x: 40, y: 25), size: 0.42, variation: variation + 1)
-                if variation == 2 { p.clockPost(at: CGPoint(x: 18, y: -47), time: .init(hour: 2, minute: 17), size: 0.65) }
-                p.rock(at: CGPoint(x: -37, y: 21), size: 0.30, color: 0x8CA6AF)
-                for i in 0..<3 { p.star(at: CGPoint(x: CGFloat(i) * 23 - 25, y: -30 - CGFloat(i % 2) * 62), radius: 3, color: 0xECFFF4) }
+                CrystalCavePainter(context: p.context).scene(at: .zero, size: 0.9, variation: variation)
             case 6:
                 p.building(at: CGPoint(x: -25, y: -16), size: 0.79, city: true, tower: variation.isMultiple(of: 2))
                 p.building(at: CGPoint(x: 26, y: 3), size: 0.62, city: true)

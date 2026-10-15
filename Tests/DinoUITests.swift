@@ -575,7 +575,6 @@ final class DinoUITests: XCTestCase {
         chooseClockCustomColor("hourHand", hex: "FFFFFF")
         chooseClockCustomColor("minuteHand", hex: "FFFFFF")
         tap("personalize.page.digital")
-        tap("theme.digitalShape.rectangle")
         tap("personalize.done")
         begin(1)
         tap("question.example")
@@ -592,7 +591,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["1/5"].exists)
         tap("header.dino")
         tap("personalize.page.analog")
-        tap("theme.restoreAnalogColors")
+        tap("theme.resetAnalogStyle")
         tap("personalize.done")
         tap("question.example")
         XCTAssertTrue(app.buttons["demo.ready"].waitForExistence(timeout: 5))
@@ -903,13 +902,27 @@ final class DinoUITests: XCTestCase {
         let question = generator.next(index: 0)
         let clocks = (0..<3).map { app.buttons["question.match.clock.\($0)"] }
         let times = (0..<3).map { app.buttons["question.match.time.\($0)"] }
-        func drag(_ source: XCUIElement, to destination: XCUIElement) {
+        func drag(_ source: XCUIElement, to destination: XCUIElement, targetY: CGFloat = 0.5) {
+            let viewport = app.scrollViews["game.questions"]
+            for _ in 0..<8 {
+                let centers = (clocks + times).map { $0.frame.midY }
+                let destinationY = destination.frame.minY + destination.frame.height * targetY
+                let highest = min(centers.min()!, destinationY)
+                let lowest = max(centers.max()!, destinationY)
+                let top = viewport.frame.minY + 16, bottom = viewport.frame.maxY - 16
+                if highest >= top && lowest <= bottom { break }
+                let down = highest < top
+                viewport.coordinate(withNormalizedOffset: CGVector(dx: 0.50, dy: down ? 0.35 : 0.70))
+                    .press(forDuration: 0.05, thenDragTo: viewport.coordinate(withNormalizedOffset: CGVector(dx: 0.50, dy: down ? 0.50 : 0.55)),
+                           withVelocity: .slow, thenHoldForDuration: 0.05)
+            }
             source.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-                .press(forDuration: 0.1, thenDragTo: destination.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)))
+                .press(forDuration: 0.1, thenDragTo: destination.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: targetY)))
         }
 
         let first = question.options.firstIndex(of: question.relatedTimes[0])!
-        drag(clocks[0], to: times[first])
+        // A connection can land near the rim of the entire enlarged time card.
+        drag(clocks[0], to: times[first], targetY: 0.08)
         XCTAssertEqual(clocks[0].value as? String, question.relatedTimes[0].digitalText)
         XCTAssertTrue(app.descendants(matching: .any)["question.match.line.0"].exists)
         XCTAssertFalse(app.buttons["question.confirm"].isEnabled)
@@ -1620,7 +1633,6 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["theme.digital.sameColors"].exists)
         chooseClockCustomColor("display", hex: "112233")
         XCTAssertTrue(app.buttons["onboarding.customClock"].isEnabled)
-        tap("theme.digitalShape.oval")
         saveScreenshot("welcome-digital-custom-colors")
         tap("onboarding.customClock")
         XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 5))
@@ -1638,7 +1650,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["theme.dino.face.white"].isSelected)
         XCTAssertLessThan(app.buttons["theme.dino.face.black"].frame.minX, app.buttons["theme.dino.face.white"].frame.minX)
         let labels = ["theme.dino.hourHand.label", "theme.dino.minuteHand.label", "theme.dino.face.label",
-                      "theme.dino.rim.label", "theme.hands.label", "theme.analogNumerals.label"]
+                      "theme.dino.rim.label"]
         for (first, second) in zip(labels, labels.dropFirst()) {
             XCTAssertLessThan(app.staticTexts[first].frame.minY, app.staticTexts[second].frame.minY)
         }
@@ -1649,14 +1661,9 @@ final class DinoUITests: XCTestCase {
         tap("theme.dino.face.black")
         XCTAssertTrue(app.buttons["theme.dino.face.black"].isSelected)
         tap("theme.analogShape.octagon")
-        revealThemeChoice("theme.hands")
-        let hands = app.descendants(matching: .any)["theme.hands"]
-        XCTAssertLessThan(app.staticTexts["theme.hands.label"].frame.maxX, hands.frame.minX)
-        tap("theme.hands.straight")
-        XCTAssertTrue(app.buttons["theme.hands.straight"].isSelected)
+        XCTAssertFalse(app.descendants(matching: .any)["theme.hands"].exists)
         revealThemeChoice("theme.analogNumerals")
-        let numbers = app.descendants(matching: .any)["theme.analogNumerals"]
-        XCTAssertLessThan(app.staticTexts["theme.analogNumerals.label"].frame.maxX, numbers.frame.minX)
+        XCTAssertFalse(app.staticTexts["theme.analogNumerals.label"].exists)
         tap("theme.analogNumerals.roman")
         XCTAssertTrue(app.buttons["theme.analogNumerals.roman"].isSelected)
         let preview = app.descendants(matching: .any)["theme.analog.preview"]
@@ -1681,9 +1688,9 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["theme.dino.face.black"].isSelected)
         revealThemeChoice("theme.analogNumerals")
         XCTAssertTrue(app.buttons["theme.analogNumerals.roman"].isSelected)
-        tap("theme.restoreAnalogColors")
+        tap("theme.resetAnalogStyle")
         XCTAssertTrue(app.buttons["theme.dino.face.white"].isSelected)
-        XCTAssertTrue(app.buttons["theme.analogNumerals.roman"].isSelected)
+        XCTAssertTrue(app.buttons["theme.analogNumerals.normal"].isSelected)
         revealThemeChoice("theme.numerals.classic")
         XCTAssertTrue(app.buttons["theme.numerals.classic"].isSelected)
         tap("theme.done")
@@ -1704,7 +1711,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["personalize.page.digital"].isSelected)
         tap("theme.dino.digitColor.navy")
         XCTAssertTrue(app.buttons["personalize.done"].isEnabled)
-        tap("theme.dino.display.green")
+        tap("theme.dino.display.yellow")
         XCTAssertTrue(app.buttons["personalize.done"].isEnabled)
         tap("theme.numerals.classic")
         saveScreenshot("personalize-digital-page")
@@ -1729,7 +1736,7 @@ final class DinoUITests: XCTestCase {
         tap("theme.dino.face.white")
         tap("personalize.page.digital")
         tap("theme.numerals.digital")
-        tap("theme.dino.display.charcoal")
+        tap("theme.dino.display.teal")
         tap("theme.dino.digitColor.white")
         tap("personalize.done")
         XCTAssertTrue(app.staticTexts["1/5"].exists)
@@ -1744,43 +1751,149 @@ final class DinoUITests: XCTestCase {
         tap("personalize.done")
     }
 
-    func testWelcomeClockRestoreOriginalColors() {
+    func testWelcomeClockRestoreOriginalStyle() {
         tap("onboarding.next")
-        XCTAssertFalse(app.buttons["onboarding.resetAnalogClock"].exists)
-        XCTAssertFalse(app.buttons["onboarding.standardAnalogClock"].exists)
-        tap("theme.analogShape.octagon")
-        tap("theme.hands.straight")
         tap("theme.analogNumerals.roman")
+        tap("theme.analogShape.octagon")
         tap("theme.dino.face.blue")
-        tap("theme.restoreAnalogColors")
-        XCTAssertTrue(app.staticTexts["Maak jouw analoge klok"].exists)
+        tap("theme.dino.hourHand.red")
+        tap("theme.resetAnalogStyle")
+        XCTAssertEqual(app.buttons["theme.resetAnalogStyle"].label, "Herstel oorspronkelijke stijl")
         XCTAssertTrue(app.buttons["theme.dino.face.white"].isSelected)
-        XCTAssertTrue(app.buttons["theme.analogShape.octagon"].isSelected)
-        XCTAssertTrue(app.buttons["theme.hands.straight"].isSelected)
-        XCTAssertTrue(app.buttons["theme.analogNumerals.roman"].isSelected)
-        saveScreenshot("welcome-analog-restore-colors")
+        XCTAssertTrue(app.buttons["theme.dino.hourHand.navy"].isSelected)
+        XCTAssertTrue(app.buttons["theme.analogShape.circle"].isSelected)
+        XCTAssertTrue(app.buttons["theme.analogNumerals.normal"].isSelected)
+        XCTAssertFalse(app.descendants(matching: .any)["theme.hands"].exists)
+        tap("theme.analogNumerals.roman")
+        tap("theme.analogShape.octagon")
+        tap("theme.dino.face.blue")
         tap("onboarding.next")
-        XCTAssertFalse(app.buttons["onboarding.resetDigitalClock"].exists)
-        XCTAssertFalse(app.buttons["onboarding.standardClock"].exists)
-        tap("theme.dino.display.white")
-        XCTAssertTrue(app.buttons["onboarding.customClock"].isEnabled)
-        tap("theme.digitalShape.oval")
-        tap("theme.numerals.classic")
-        tap("theme.restoreDigitalColors")
-        XCTAssertTrue(app.staticTexts["Maak jouw digitale klok"].exists)
+        for part in ["digitColor", "display"] {
+            let prefix = "theme.dino.\(part)."
+            let presets = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND NOT identifier ENDSWITH %@", prefix, ".custom"))
+            XCTAssertEqual(presets.count, 5)
+            let colors = ["black", "navy", "teal", "yellow", "white"].map { app.buttons[prefix + $0] }
+            for (first, second) in zip(colors, colors.dropFirst()) {
+                XCTAssertLessThan(first.frame.minX, second.frame.minX)
+            }
+        }
         XCTAssertTrue(app.buttons["theme.dino.display.navy"].isSelected)
         XCTAssertTrue(app.buttons["theme.dino.digitColor.white"].isSelected)
-        XCTAssertTrue(app.buttons["theme.digitalShape.oval"].isSelected)
-        XCTAssertTrue(app.buttons["theme.numerals.classic"].isSelected)
-        XCTAssertTrue(app.buttons["onboarding.customClock"].isEnabled)
-        XCTAssertFalse(app.staticTexts["theme.digital.sameColors"].exists)
-        saveScreenshot("welcome-digital-restore-colors")
+        XCTAssertFalse(app.descendants(matching: .any)["theme.digitalShape"].exists)
+        tap("theme.dino.display.teal")
+        tap("theme.dino.digitColor.yellow")
+        tap("theme.numerals.classic")
+        saveScreenshot("digital-five-shades-fixed-shape")
+        tap("theme.resetDigitalStyle")
+        XCTAssertEqual(app.buttons["theme.resetDigitalStyle"].label, "Herstel oorspronkelijke stijl")
+        XCTAssertTrue(app.buttons["theme.dino.display.navy"].isSelected)
+        XCTAssertTrue(app.buttons["theme.dino.digitColor.white"].isSelected)
+        XCTAssertTrue(app.buttons["theme.numerals.rounded"].isSelected)
+        saveScreenshot("digital-original-style-restored")
         swipeWelcomePreview("theme.digital.preview", forward: false)
         XCTAssertTrue(app.buttons["theme.analogShape.octagon"].isSelected)
-        XCTAssertTrue(app.buttons["theme.dino.face.white"].isSelected)
+        XCTAssertTrue(app.buttons["theme.analogNumerals.roman"].isSelected)
+        XCTAssertTrue(app.buttons["theme.dino.face.blue"].isSelected)
         tap("onboarding.next")
         tap("onboarding.customClock")
         XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 5))
+        app.terminate(); app.launch()
+        tap("header.dino")
+        tap("personalize.page.analog")
+        XCTAssertTrue(app.buttons["theme.analogShape.octagon"].isSelected)
+        tap("theme.resetAnalogStyle")
+        XCTAssertTrue(app.buttons["theme.analogShape.circle"].isSelected)
+        XCTAssertTrue(app.buttons["theme.analogNumerals.normal"].isSelected)
+        XCTAssertTrue(app.buttons["theme.dino.face.white"].isSelected)
+        tap("personalize.done")
+    }
+
+    func testCompactClockOptionsAndSafeTabs() {
+        let dinoSpacing = app.staticTexts["personalize.spikes.label"].frame.minY - app.staticTexts["personalize.bandana.label"].frame.minY
+        tap("onboarding.next")
+        let numbers = app.descendants(matching: .any)["theme.analogNumerals"]
+        let shapes = app.descendants(matching: .any)["theme.analogShape"]
+        let hour = app.staticTexts["theme.dino.hourHand.label"]
+        let minute = app.staticTexts["theme.dino.minuteHand.label"]
+        XCTAssertLessThan(numbers.frame.maxY, shapes.frame.minY)
+        XCTAssertLessThan(shapes.frame.maxY, hour.frame.minY)
+        XCTAssertLessThanOrEqual(shapes.frame.height, 82)
+        XCTAssertEqual(minute.frame.minY - hour.frame.minY, dinoSpacing, accuracy: 2)
+        XCTAssertFalse(app.staticTexts["theme.analogNumerals.label"].exists)
+        XCTAssertFalse(app.descendants(matching: .any)["theme.hands"].exists)
+        tap("theme.analogNumerals.roman")
+        tap("theme.analogShape.octagon")
+        saveScreenshot("analog-compact-options-order")
+        tap("onboarding.next"); tap("onboarding.customClock")
+        tap("header.dino")
+        for page in ["dino", "analog", "digital", "analog"] {
+            let button = app.buttons["personalize.page." + page]
+            XCTAssertTrue(button.isHittable)
+            // The top of each tab must remain tappable below the sheet grabber.
+            button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.1)).tap()
+            XCTAssertTrue(button.isSelected)
+            XCTAssertTrue(app.buttons["personalize.done"].isHittable)
+        }
+        saveScreenshot("personalize-tabs-safe-top-margin")
+        tap("personalize.done")
+        begin(1)
+        tap("header.dino")
+        tap("personalize.page.analog")
+        XCTAssertTrue(app.buttons["theme.analogNumerals.roman"].isSelected)
+        tap("theme.resetAnalogStyle")
+        tap("personalize.done")
+        XCTAssertTrue(app.staticTexts["1/5"].exists)
+        XCTAssertFalse(app.staticTexts["XII"].exists)
+    }
+
+    func testCustomizationButtonsColorsAndTypography() {
+        for code in ["nl", "en"] {
+            launchUsingDeviceLanguage(code, locale: code == "nl" ? "nl_NL" : "en_GB")
+            let labelHeight = app.staticTexts["personalize.bandana.label"].frame.height
+            let titleHeight = app.staticTexts["onboarding.title"].frame.height
+            for part in ["spikes", "body", "belly"] {
+                XCTAssertEqual(app.staticTexts["personalize.\(part).label"].frame.height, labelHeight, accuracy: 0.5)
+            }
+            saveScreenshot("customization-typography-dino-" + code)
+            tap("onboarding.next")
+            let normal = app.buttons["theme.analogNumerals.normal"].frame
+            let roman = app.buttons["theme.analogNumerals.roman"].frame
+            let circle = app.buttons["theme.analogShape.circle"].frame
+            let square = app.buttons["theme.analogShape.square"].frame
+            let octagon = app.buttons["theme.analogShape.octagon"].frame
+            // AX includes the selected outline; allow its one-point edge rounding.
+            XCTAssertEqual(normal.minX, circle.minX, accuracy: 2)
+            XCTAssertEqual(roman.maxX, octagon.maxX, accuracy: 2)
+            XCTAssertEqual(normal.width, roman.width, accuracy: 2)
+            XCTAssertEqual(roman.minX - normal.maxX, square.minX - circle.maxX, accuracy: 2)
+            XCTAssertEqual(app.staticTexts["onboarding.title"].frame.height, titleHeight, accuracy: 0.5)
+            for part in ["hourHand", "minuteHand", "face", "rim"] {
+                XCTAssertEqual(app.staticTexts["theme.dino.\(part).label"].frame.height, labelHeight, accuracy: 0.5)
+            }
+            tap("theme.analogNumerals.roman")
+            XCTAssertTrue(app.buttons["theme.analogNumerals.roman"].isSelected)
+            saveScreenshot("customization-typography-analog-" + code)
+            tap("onboarding.next")
+            XCTAssertEqual(app.staticTexts["onboarding.title"].frame.height, titleHeight, accuracy: 0.5)
+            for part in ["digitColor", "display"] {
+                XCTAssertEqual(app.staticTexts["theme.dino.\(part).label"].frame.height, labelHeight, accuracy: 0.5)
+                let colors = ["black", "navy", "teal", "yellow", "white"].map { app.buttons["theme.dino.\(part)." + $0].frame }
+                for (first, second) in zip(colors, colors.dropFirst()) { XCTAssertLessThan(first.minX, second.minX) }
+            }
+            tap("theme.dino.display.teal")
+            tap("theme.dino.digitColor.yellow")
+            saveScreenshot("customization-typography-digital-" + code)
+            tap("onboarding.customClock")
+            tap("header.dino")
+            let gameHeight = app.staticTexts["personalize.bandana.label"].frame.height
+            for page in ["analog", "digital"] {
+                tap("personalize.page." + page)
+                let label = page == "analog" ? "hourHand" : "digitColor"
+                XCTAssertEqual(app.staticTexts["theme.dino.\(label).label"].frame.height, gameHeight, accuracy: 0.5)
+            }
+            saveScreenshot("customization-typography-game-" + code)
+            tap("personalize.done")
+        }
     }
 
     private func assertPreviewShowsCurrentTime(_ analog: Bool) {
@@ -1848,7 +1961,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["theme.dino.display.white"].isSelected)
         XCUIDevice.shared.orientation = .landscapeLeft
         let landscape = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            self.app.frame.width > self.app.frame.height
+            (UIDevice.current.userInterfaceIdiom == .pad ? self.app.frame.width > self.app.frame.height : self.app.frame.width < self.app.frame.height)
         }, object: nil)
         wait(for: [landscape], timeout: 8)
         RunLoop.current.run(until: Date().addingTimeInterval(0.7))
@@ -1905,7 +2018,6 @@ final class DinoUITests: XCTestCase {
         tap("onboarding.next")
         assertPreviewShowsCurrentTime(false)
         tap("theme.dino.display.white") // Same as the digits.
-        tap("theme.digitalShape.oval")
         tap("theme.numerals.classic")
         assertClockWarningBelowPreview(false)
         XCTAssertTrue(app.buttons["onboarding.customClock"].isEnabled)
@@ -1928,11 +2040,10 @@ final class DinoUITests: XCTestCase {
         assertPreviewShowsCurrentTime(false)
         XCTAssertTrue(app.buttons["theme.dino.display.navy"].isSelected)
         XCTAssertTrue(app.buttons["theme.dino.digitColor.white"].isSelected)
-        XCTAssertTrue(app.buttons["theme.digitalShape.roundedRectangle"].isSelected)
+        XCTAssertFalse(app.descendants(matching: .any)["theme.digitalShape"].exists)
         XCTAssertTrue(app.buttons["theme.numerals.rounded"].isSelected)
         XCTAssertFalse(app.buttons["personalize.resetDigitalClock"].exists)
         tap("theme.dino.display.white")
-        tap("theme.digitalShape.rectangle")
         assertClockWarningBelowPreview(false)
         XCTAssertTrue(app.buttons["personalize.done"].isEnabled)
         saveScreenshot("personalize-matching-colors")
@@ -1944,7 +2055,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["theme.analogShape.circle"].isSelected)
         tap("personalize.page.digital")
         XCTAssertTrue(app.buttons["theme.dino.display.navy"].isSelected)
-        XCTAssertTrue(app.buttons["theme.digitalShape.roundedRectangle"].isSelected)
+        XCTAssertFalse(app.descendants(matching: .any)["theme.digitalShape"].exists)
         tap("personalize.done")
         XCTAssertTrue(app.staticTexts["1/5"].exists)
     }
@@ -1976,11 +2087,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["theme.digital.sameColors"].exists)
         XCTAssertTrue(app.buttons["onboarding.customClock"].isEnabled)
         XCTAssertTrue(app.buttons["theme.dino.digitColor.white"].isSelected)
-        for shape in ["oval", "roundedRectangle", "rectangle"] {
-            tap("theme.digitalShape.\(shape)")
-            XCTAssertTrue(app.buttons["theme.digitalShape.\(shape)"].isSelected)
-            saveScreenshot("welcome-digital-\(shape)")
-        }
+        XCTAssertFalse(app.descendants(matching: .any)["theme.digitalShape"].exists)
         for font in ["rounded", "digital", "modern", "classic"] {
             tap("theme.numerals.\(font)")
             XCTAssertTrue(app.buttons["theme.numerals.\(font)"].isSelected)
@@ -2007,11 +2114,11 @@ final class DinoUITests: XCTestCase {
         openSettings(); tap("settings.clocks")
         XCTAssertTrue(app.buttons["theme.dino.face.blue"].isSelected)
         XCTAssertTrue(app.buttons["theme.analogShape.octagon"].isSelected)
-        XCTAssertTrue(app.buttons["theme.digitalShape.rectangle"].isSelected)
+        XCTAssertFalse(app.descendants(matching: .any)["theme.digitalShape"].exists)
         revealThemeChoice("theme.numerals.classic")
         XCTAssertTrue(app.buttons["theme.numerals.classic"].isSelected)
         tap("theme.dino.display.white")
-        XCTAssertFalse(app.buttons["theme.done"].isEnabled)
+        XCTAssertTrue(app.buttons["theme.done"].isEnabled)
         tap("theme.dino.digitColor.navy")
         XCTAssertTrue(app.buttons["theme.done"].isEnabled)
         tap("theme.done")
@@ -2183,7 +2290,7 @@ final class DinoUITests: XCTestCase {
         tap("practice.start")
         XCTAssertTrue(idle.waitForExistence(timeout: 5), "Expanded questions also show Dino")
         assertCompanionAtBottom(idle)
-        XCTAssertLessThanOrEqual(idle.frame.width, smallQuestionSize + 2, "A larger question keeps the companion compact")
+        XCTAssertLessThanOrEqual(idle.frame.width, smallQuestionSize + 2, "Dense questions retain the same recognizable companion")
         saveScreenshot("companion-large-pair-question")
         // The practice cover uses its presenter's orientation on iPhone. Rotate
         // the main game scene to verify the same dock at a short viewport height.
@@ -2191,12 +2298,12 @@ final class DinoUITests: XCTestCase {
         tap("practice.close")
         begin(10)
         XCUIDevice.shared.orientation = .landscapeLeft
-        let landscape = NSPredicate { _, _ in self.app.frame.width > self.app.frame.height && idle.exists && idle.frame.maxY <= self.app.frame.maxY }
+        let landscape = NSPredicate { _, _ in (UIDevice.current.userInterfaceIdiom == .pad ? self.app.frame.width > self.app.frame.height : self.app.frame.width < self.app.frame.height) && idle.exists && idle.frame.maxY <= self.app.frame.maxY + 1 }
         expectation(for: landscape, evaluatedWith: nil)
         waitForExpectations(timeout: 8)
         assertCompanionAtBottom(idle)
         if UIDevice.current.userInterfaceIdiom == .phone {
-            XCTAssertLessThan(idle.frame.width, smallQuestionSize, "Short screens shrink Dino while keeping him visible")
+            XCTAssertEqual(idle.frame.width, smallQuestionSize, accuracy: 2, "iPhone keeps the portrait companion when the device rotates")
         }
         saveScreenshot("companion-question-landscape")
         XCUIDevice.shared.orientation = .portrait
@@ -2208,7 +2315,140 @@ final class DinoUITests: XCTestCase {
         XCTAssertLessThanOrEqual(companion.frame.maxX, app.frame.maxX + 1)
         XCTAssertLessThanOrEqual(companion.frame.maxY, app.frame.maxY + 1)
         XCTAssertGreaterThanOrEqual(companion.frame.maxY, app.frame.maxY - 24, "Dino stands at the screen's bottom edge")
-        XCTAssertGreaterThanOrEqual(companion.frame.width, 56, "Dino stays recognizable on dense questions")
+        XCTAssertGreaterThanOrEqual(companion.frame.width, 88, "Dino stays recognizable on dense questions")
+        XCTAssertEqual(companion.frame.midX, app.frame.midX, accuracy: 1, "Dino is centred below the question")
+        let viewport = app.scrollViews["game.questions"]
+        if viewport.exists {
+            XCTAssertEqual(viewport.frame.midX, app.frame.midX, accuracy: 1)
+            XCTAssertLessThanOrEqual(viewport.frame.maxY, companion.frame.minY + 1, "The question ends above Dino")
+        }
+    }
+
+    func testResponsiveOrientationsAndProportionalHUD() {
+        onboard()
+        let tablet = UIDevice.current.userInterfaceIdiom == .pad
+        let mapScroll = app.scrollViews["map.route"]
+        XCTAssertEqual(mapScroll.frame.minX, app.frame.minX, accuracy: 1)
+        XCTAssertEqual(mapScroll.frame.maxX, app.frame.maxX, accuracy: 1)
+        let mapCompanion = app.descendants(matching: .any)["map.dino.0"]
+        XCTAssertTrue(mapCompanion.waitForExistence(timeout: 5))
+        XCTAssertGreaterThanOrEqual(mapCompanion.frame.width, tablet ? 180 : 112)
+        saveScreenshot("responsive-map-portrait")
+        let settings = app.buttons["header.settings"]
+        let portraitRatio = settings.frame.width / settings.frame.height
+        let portraitPortraitSize = app.buttons["header.dino"].frame.height
+        for orientation in [UIDeviceOrientation.landscapeLeft, .landscapeRight] {
+            XCUIDevice.shared.orientation = orientation
+            RunLoop.current.run(until: Date().addingTimeInterval(1))
+            let settled = NSPredicate { _, _ in
+                (tablet ? self.app.frame.width > self.app.frame.height : self.app.frame.width < self.app.frame.height)
+                    && settings.exists && settings.frame.maxX <= self.app.frame.maxX
+            }
+            expectation(for: settled, evaluatedWith: nil)
+            waitForExpectations(timeout: 8)
+            RunLoop.current.run(until: Date().addingTimeInterval(0.7))
+            XCTAssertEqual(settings.frame.width / settings.frame.height, portraitRatio, accuracy: 0.04,
+                           "HUD cells preserve their proportions on rotation")
+            XCTAssertGreaterThanOrEqual(app.buttons["header.dino"].frame.height, portraitPortraitSize * 0.75)
+            XCTAssertEqual(mapScroll.frame.minX, app.frame.minX, accuracy: 1)
+            XCTAssertEqual(mapScroll.frame.maxX, app.frame.maxX, accuracy: 1)
+            saveScreenshot("responsive-map-\(orientation == .landscapeLeft ? "left" : "right")")
+        }
+        XCUIDevice.shared.orientation = .portrait
+        let portrait = NSPredicate { _, _ in self.app.frame.width < self.app.frame.height }
+        expectation(for: portrait, evaluatedWith: nil)
+        waitForExpectations(timeout: 8)
+        begin(10)
+        let companion = app.images["dino.character"]
+        XCTAssertTrue(companion.waitForExistence(timeout: 5))
+        let portraitCompanionSize = companion.frame.width
+        assertCompanionAtBottom(companion)
+        XCTAssertGreaterThanOrEqual(portraitCompanionSize, tablet ? 104 : 88)
+        saveScreenshot("responsive-game-portrait")
+        for orientation in [UIDeviceOrientation.landscapeLeft, .landscapeRight] {
+            XCUIDevice.shared.orientation = orientation
+            let settled = NSPredicate { _, _ in
+                (tablet ? self.app.frame.width > self.app.frame.height : self.app.frame.width < self.app.frame.height)
+                    && companion.exists && companion.frame.maxX <= self.app.frame.maxX + 1
+            }
+            expectation(for: settled, evaluatedWith: nil)
+            waitForExpectations(timeout: 8)
+            RunLoop.current.run(until: Date().addingTimeInterval(0.7))
+            assertCompanionAtBottom(companion)
+            XCTAssertGreaterThanOrEqual(companion.frame.width, tablet ? 104 : 88)
+            XCTAssertTrue(app.staticTexts["1/10"].exists, "Rotation preserves the running question")
+            if tablet {
+                let options = (0..<4).map { app.buttons["question.option.\($0)"] }
+                XCTAssertTrue(options.allSatisfy { $0.isHittable })
+                XCTAssertEqual((options[0].frame.minX + options[3].frame.maxX) / 2, app.frame.midX, accuracy: 1)
+                XCTAssertEqual(app.staticTexts["question.title"].frame.midX, app.frame.midX, accuracy: 1)
+                XCTAssertEqual(app.descendants(matching: .any)["question.targetClock"].frame.midX, app.frame.midX, accuracy: 1)
+                for option in options {
+                    XCTAssertEqual(option.frame.midY, options[0].frame.midY, accuracy: 1)
+                    XCTAssertLessThanOrEqual(option.frame.maxY, companion.frame.minY)
+                    XCTAssertLessThanOrEqual(option.frame.maxX, app.frame.maxX)
+                    XCTAssertGreaterThanOrEqual(option.frame.minX, app.frame.minX)
+                }
+            }
+            saveScreenshot("responsive-game-\(orientation == .landscapeLeft ? "left" : "right")")
+        }
+        XCUIDevice.shared.orientation = .portrait
+        expectation(for: portrait, evaluatedWith: nil)
+        waitForExpectations(timeout: 8)
+        answerFirstQuestionWrong(10, advance: true)
+        tap("header.pause")
+        XCTAssertTrue(app.buttons["game.exit.cancel"].waitForExistence(timeout: 5))
+        tap("game.exit.cancel")
+        XCTAssertTrue(app.staticTexts["2/10"].exists)
+        saveScreenshot("responsive-game-resumed")
+    }
+
+    func testCenteredPracticeClocksAndCompanionBelowQuestions() {
+        openPractice()
+        selectPractice("practice.type.match")
+        tap("practice.start")
+        let tablet = UIDevice.current.userInterfaceIdiom == .pad
+        let companion = app.images["dino.character"]
+        XCTAssertTrue(companion.waitForExistence(timeout: 5))
+        func checkBoard(_ name: String) {
+            assertCompanionAtBottom(companion)
+            let first = app.buttons["question.match.clock.0"]
+            let right = app.buttons["question.match.time.0"]
+            XCTAssertTrue(first.waitForExistence(timeout: 5))
+            XCTAssertEqual(first.frame.width, right.frame.width, accuracy: 1)
+            XCTAssertEqual(first.frame.height, right.frame.height, accuracy: 1)
+            XCTAssertGreaterThanOrEqual(first.frame.height, tablet ? 170 : 108, "Practice clocks grow with the available width")
+            XCTAssertEqual((first.frame.minX + right.frame.maxX) / 2, app.frame.midX, accuracy: 1)
+            let hint = app.staticTexts["question.match.hint"]
+            XCTAssertEqual(hint.frame.midX, app.frame.midX, accuracy: 1)
+            XCTAssertEqual(app.staticTexts["question.title"].frame.midX, app.frame.midX, accuracy: 1)
+            saveScreenshot(name)
+        }
+        checkBoard("centered-practice-portrait")
+        if tablet {
+            for orientation in [UIDeviceOrientation.landscapeLeft, .landscapeRight] {
+                XCUIDevice.shared.orientation = orientation
+                let settled = NSPredicate { _, _ in self.app.frame.width > self.app.frame.height }
+                expectation(for: settled, evaluatedWith: nil)
+                waitForExpectations(timeout: 8)
+                RunLoop.current.run(until: Date().addingTimeInterval(0.7))
+                checkBoard("centered-practice-\(orientation == .landscapeLeft ? "left" : "right")")
+            }
+            XCUIDevice.shared.orientation = .portrait
+        }
+        // Scroll in the clear connection space, preserving all clock gestures.
+        let scroll = app.scrollViews["game.questions"]
+        let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.50, dy: 0.85))
+        let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.50, dy: 0.25))
+        start.press(forDuration: 0.05, thenDragTo: end)
+        assertCompanionAtBottom(companion)
+        tap("header.pause")
+        selectPractice("practice.type.sortTimes")
+        tap("practice.start")
+        XCTAssertTrue(app.buttons["question.sort.0"].waitForExistence(timeout: 5))
+        assertCompanionAtBottom(companion)
+        XCTAssertGreaterThanOrEqual(app.buttons["question.sort.0"].frame.height, tablet ? 200 : 110)
+        saveScreenshot("centered-practice-sorting")
     }
 
     func testLayoutAndLanguage() {
@@ -2220,7 +2460,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["header.pause"].waitForExistence(timeout: 5))
         let settled = NSPredicate { _, _ in
             let lastOption = self.app.buttons["question.option.2"]
-            return self.app.frame.width > self.app.frame.height && lastOption.exists &&
+            return (UIDevice.current.userInterfaceIdiom == .pad ? self.app.frame.width > self.app.frame.height : self.app.frame.width < self.app.frame.height) && lastOption.exists &&
                 lastOption.frame.maxX <= self.app.frame.maxX + 1 && lastOption.frame.minX >= self.app.frame.minX
         }
         expectation(for: settled, evaluatedWith: nil)
@@ -2309,7 +2549,7 @@ final class DinoUITests: XCTestCase {
         let marker = app.descendants(matching: .any)["map.dino.0"]
         XCTAssertTrue(marker.exists)
         XCTAssertGreaterThan(marker.frame.height, 95)
-        XCTAssertLessThanOrEqual(marker.frame.height, 123)
+        XCTAssertLessThanOrEqual(marker.frame.height, 200)
         let start = app.descendants(matching: .any)["map.start"]
         XCTAssertTrue(start.exists)
         XCTAssertEqual(marker.frame.midX, start.frame.midX, accuracy: 1)
