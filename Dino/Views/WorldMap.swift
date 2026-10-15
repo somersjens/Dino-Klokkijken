@@ -770,14 +770,14 @@ private struct WorldChapter: View {
     let viewportHeight: CGFloat
     var openLevel: (LevelConfiguration) -> Void
     private let titleTopPadding = WorldRouteTrail.bannerTopPadding
-    private var routeOffset: CGFloat { 212 + titleTopPadding + 10 + topClearance }
+    private var routeOffset: CGFloat { WorldRouteTrail.bannerHeight + titleTopPadding + WorldRouteTrail.bannerBottomPadding + topClearance }
     private let positions = WorldRouteTrail.chapterPositions
 
     var body: some View {
         VStack(spacing: 0) {
             WorldTitleBanner(world: world, highContrast: highContrast)
                 .equatable()
-                .padding(.horizontal, 18).padding(.top, titleTopPadding).padding(.bottom, 10)
+                .padding(.horizontal, 18).padding(.top, titleTopPadding).padding(.bottom, WorldRouteTrail.bannerBottomPadding)
                 .frame(maxWidth: 600).frame(maxWidth: .infinity)
                 .accessibilityIdentifier("map.world.\(world.id)")
             Color.clear.frame(height: topClearance)
@@ -810,7 +810,7 @@ private struct WorldChapter: View {
                     }
                 }.padding(.top, -7.5)
                 }
-            }.frame(height: WorldRouteTrail.chapterRouteHeight).padding(.horizontal, 18)
+            }.frame(height: WorldRouteTrail.chapterRouteHeight(topClearance: topClearance)).padding(.horizontal, 18)
                 .frame(maxWidth: 600).frame(maxWidth: .infinity)
         }.background {
             MapScenery(viewportHeight: viewportHeight) {

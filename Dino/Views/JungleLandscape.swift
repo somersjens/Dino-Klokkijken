@@ -6,11 +6,21 @@ struct WorldRouteTrail: View, Equatable {
     static let levelSpacing: CGFloat = 175
     static let bannerTopPadding: CGFloat = 12
     static let bannerHeight: CGFloat = 212
-    // Boss → next banner uses the same centre-to-centre step as two levels.
-    static let chapterTail = levelSpacing - bannerTopPadding - bannerHeight / 2
-    static let chapterRouteHeight = 80 + 9 * levelSpacing + chapterTail
+    static let bannerFaceCenterY: CGFloat = 99.5
+    static let bannerBottomPadding: CGFloat = 10
+    static let chapterFirstNodeY: CGFloat = 80
+    static func chapterTail(topClearance: CGFloat) -> CGFloat {
+        let below = bannerHeight - bannerFaceCenterY + bannerBottomPadding + topClearance + chapterFirstNodeY
+        // Boss stones are 90pt, ordinary stones 72pt. Match the clear space
+        // between their rims and the banner, including room for Dino below it.
+        let above = below + (90 - 72) / 2
+        return above - bannerTopPadding - bannerFaceCenterY
+    }
+    static func chapterRouteHeight(topClearance: CGFloat) -> CGFloat {
+        chapterFirstNodeY + 9 * levelSpacing + chapterTail(topClearance: topClearance)
+    }
     static func jungleRouteHeight(topClearance: CGFloat) -> CGFloat {
-        topClearance + 70 + 10 * levelSpacing + chapterTail
+        topClearance + 70 + 10 * levelSpacing + chapterTail(topClearance: topClearance)
     }
     static let chapterPositions: [CGFloat] = [0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5]
     let points: [CGPoint]
@@ -43,7 +53,12 @@ struct WorldRouteTrail: View, Equatable {
             trail.stroke(Color(dinoHex: 0xC9BB83), style: StrokeStyle(lineWidth: 40, lineCap: .butt))
             trail.stroke(Color(dinoHex: 0xF4E6B6), style: StrokeStyle(lineWidth: 34, lineCap: .butt))
             trail.stroke(Color(dinoHex: 0xFFF9D8).opacity(0.95), style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [2, 12]))
-        }.allowsHitTesting(false).accessibilityHidden(true)
+        }
+        // Each section owns exactly its own strip. Allowing the offset shadow
+        // above/below it darkens the neighbouring road and exposes a flat cap.
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .clipped()
+        .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 
@@ -151,8 +166,28 @@ private struct WorldSceneryLayout {
         return palette
     }
 
+    func drawBoundaryGround(in context: GraphicsContext, worldID: Int, size: CGSize) {
+        let world = DinoWorldCatalog.world(worldID)!
+        context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(dinoHex: world.ground)))
+        let bank = palette(for: worldID)
+        let inset = 122 * scale
+        for right in [false, true] {
+            let edge = width / 2 + (right ? inset : -inset)
+            let rect = right ? CGRect(x: edge, y: 0, width: max(0, width - edge), height: size.height)
+                             : CGRect(x: 0, y: 0, width: max(0, edge), height: size.height)
+            context.fill(Path(rect), with: .color(Color(dinoHex: bank.ground).opacity(worldID == 5 ? 0.88 : 0.22)))
+        }
+    }
+
     func drawBanks(in context: GraphicsContext, worldID: Int) {
         let palette = palette(for: worldID)
+        let nextID = min(10, worldID + 1)
+        let next = self.palette(for: nextID)
+        let bankShading = GraphicsContext.Shading.linearGradient(Gradient(stops: [
+            .init(color: Color(dinoHex: palette.ground).opacity(worldID == 5 ? 0.88 : 0.22), location: 0),
+            .init(color: Color(dinoHex: palette.ground).opacity(worldID == 5 ? 0.88 : 0.22), location: max(0, (height - 180) / height)),
+            .init(color: Color(dinoHex: next.ground).opacity(nextID == 5 ? 0.88 : 0.22), location: 1)
+        ]), startPoint: CGPoint(x: 0, y: -routeOffset), endPoint: CGPoint(x: 0, y: height - routeOffset))
         for right in [false, true] {
             let bank = bankPath(right: right, inset: 43)
             let outside: CGFloat = right ? width + 400 : -400
@@ -163,7 +198,7 @@ private struct WorldSceneryLayout {
                 area.closeSubpath()
                 return area
             }
-            context.fill(outerArea(bank), with: .color(Color(dinoHex: palette.ground).opacity(worldID == 5 ? 0.88 : 0.22)))
+            context.fill(outerArea(bank), with: bankShading)
             guard [4, 6, 9].contains(worldID) else { continue }
             let water = bankPath(right: right, inset: 34, exitsAtSides: true)
             if worldID == 9 {
@@ -187,6 +222,20 @@ private struct WorldSceneryLayout {
                                style: StrokeStyle(lineWidth: 1.3 * scale, lineCap: .round, lineJoin: .round, dash: [11 * scale, 26 * scale, 3 * scale, 22 * scale]))
             }
         }
+    }
+}
+
+/// A short terrain-only join removes sun/glow colour steps at chapter edges.
+/// Water has already left through the sides before these 32pt strips begin.
+private struct WorldTerrainTransition: View, Equatable {
+    let worldID: Int
+    var entering = false
+    var body: some View {
+        Canvas { context, size in
+            WorldSceneryLayout(width: size.width, height: size.height, routeOffset: 0)
+                .drawBoundaryGround(in: context, worldID: worldID, size: size)
+        }.mask(LinearGradient(colors: entering ? [.white, .clear] : [.clear, .white], startPoint: .top, endPoint: .bottom))
+            .frame(height: 32).allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 
@@ -266,7 +315,7 @@ private struct WorldBannerLayout {
         self.width = width
         scale = min(1.26, max(0.82, width / 354))
         plate = CGRect(x: 29 * scale, y: 42, width: width - 58 * scale, height: 142)
-        titlePanel = CGRect(x: 62 * scale, y: 58, width: width - 124 * scale, height: 83)
+        titlePanel = CGRect(x: 62 * scale, y: WorldRouteTrail.bannerFaceCenterY - 83 / 2, width: width - 124 * scale, height: 83)
         tab = CGRect(x: width / 2 - 62, y: 20, width: 124, height: 32)
         subtitle = CGRect(x: 70 * scale, y: 146, width: width - 140 * scale, height: 29)
         titleWidth = width - 146 * scale
@@ -1246,6 +1295,8 @@ struct WorldMapLandscape: View, Equatable {
             bossScene.bossClearing(worldID: 1, at: bossPoint, size: scale)
             bossScene.boss(worldID: 1, at: bossPoint, size: scale * 0.88)
         }
+        .clipped()
+        .overlay(alignment: .bottom) { WorldTerrainTransition(worldID: 2).equatable() }
         .allowsHitTesting(false).accessibilityHidden(true)
     }
 
@@ -4587,7 +4638,7 @@ private struct TimeMachinePainter {
         let p = TimeMachinePainter(context: c, scenery: scenery)
         // Glass channels and masonry sit behind the individual workshop terraces.
         for side in 0..<2 {
-            for i in 0..<12 {
+            for i in 0..<11 {
                 let y = CGFloat(i) * 158
                 p.at(CGPoint(x: side == 0 ? 0 : w, y: y), size: scale, mirror: side == 1) { local in
                     local.rounded(CGRect(x: -25, y: -21, width: 65, height: 103), 13, [0xB7BFBC, 0x7E9299, 0x607983])
@@ -6015,7 +6066,10 @@ struct ThemedWorldLandscape: View, Equatable {
                                                endPoint: CGPoint(x: 0, y: size.height)))
             p.bossClearing(worldID: world.id, at: bossPoint, size: scale)
             p.boss(worldID: world.id, at: bossPoint, size: scale * 0.88)
-        }.allowsHitTesting(false).accessibilityHidden(true)
+        }.clipped()
+            .overlay(alignment: .top) { WorldTerrainTransition(worldID: world.id, entering: true).equatable() }
+            .overlay(alignment: .bottom) { WorldTerrainTransition(worldID: min(10, world.id + 1)).equatable() }
+            .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 

@@ -209,6 +209,27 @@ final class DinoUITests: XCTestCase {
         }
     }
 
+    func testWorldBannersHaveBalancedClearance() {
+        let requested = ProcessInfo.processInfo.environment["DINO_TEST_WORLD_IDS"]?
+            .split(separator: ",").compactMap { Int($0) }.filter { (2...10).contains($0) } ?? []
+        for world in requested.isEmpty ? [2, 4, 5, 6, 9, 10] : requested {
+            app.terminate()
+            app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.banner-spacing.\(UUID().uuidString)"
+            app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = String(world - 1)
+            app.launch()
+            XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 8))
+            let first = revealMapNode((world - 1) * 10 + 1)
+            let boss = app.buttons["map.level.\((world - 1) * 10)"]
+            let banner = app.descendants(matching: .any)["map.world.\(world)"]
+            XCTAssertTrue(boss.exists && banner.exists)
+            let above = banner.frame.minY - boss.frame.maxY
+            let below = first.frame.minY - banner.frame.maxY
+            XCTAssertGreaterThan(above, 40, "Boss leaves room above world \(world)")
+            XCTAssertEqual(above, below, accuracy: 4, "World \(world) has equal space above and below its banner")
+            saveScreenshot("world-banner-spacing-\(world)")
+        }
+    }
+
     func testComingSoonOnlyAfterLevelHundred() {
         app.terminate()
         app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "10"
