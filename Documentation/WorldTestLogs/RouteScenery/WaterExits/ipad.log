@@ -1,0 +1,318 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/dino-water-exits-build/Build/Products/WaterExits-iPad.xctestrun -destination id=CD5048F9-F217-4BE9-8A78-37A684D8710B "-only-testing:DinoUITests/DinoUITests/testNativeWorldChaptersAndMinuteQuestions" "-only-testing:DinoUITests/DinoUITests/testComingSoonOnlyAfterLevelHundred" -parallel-testing-enabled NO -resultBundlePath /tmp/dino-water-exits-ipad.xcresult
+
+Writing result bundle at path:
+	/tmp/dino-water-exits-ipad.xcresult
+
+2026-10-15 13:55:48.970584+0200 DinoUITests-Runner[73225:25643891] [Default] Running tests...
+2026-10-15 13:55:48.982785+0200 DinoUITests-Runner[73225:25643891] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-15 13:55:49.384.
+Test Suite 'DinoUITests.xctest' started at 2026-10-15 13:55:49.385.
+Test Suite 'DinoUITests' started at 2026-10-15 13:55:49.385.
+Test Case '-[DinoUITests.DinoUITests testComingSoonOnlyAfterLevelHundred]' started.
+    t =     0.00s Start Test at 2026-10-15 13:55:49.385
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.03s         Wait for com.apple.DocumentManager.DockFolderViewService to idle
+    t =     0.03s         Wait for com.apple.springboard to idle
+    t =     0.04s     Open Hakketjak.Dino-Klokkijken
+    t =     0.04s         Launch Hakketjak.Dino-Klokkijken
+2026-10-15 13:55:49.468 xcodebuild[73218:25643342] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-15 13:55:49.468 xcodebuild[73218:25643342] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[73225]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x10a8c0310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10a80c398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.69s             Setting up automation session
+    t =     1.24s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     2.57s Terminate Hakketjak.Dino-Klokkijken:73235
+    t =     3.58s Open Hakketjak.Dino-Klokkijken
+    t =     3.59s     Launch Hakketjak.Dino-Klokkijken
+2026-10-15 13:55:52.972 xcodebuild[73218:25643342] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-15 13:55:52.972 xcodebuild[73218:25643342] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     3.80s         Setting up automation session
+    t =     4.38s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     6.48s Waiting 8.0s for "header.settings" Button to exist
+    t =     7.55s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =     7.55s         Checking existence of `"header.settings" Button`
+    t =     8.06s Find the "header.settings" Button
+    t =     8.52s Find the "map.level.100" Button
+    t =     8.99s Checking existence of `"map.level.100" Button`
+    t =     9.43s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =     9.78s Checking existence of `"map.level.100" Button`
+    t =    10.22s Find the "map.level.100" Button
+    t =    10.68s Find the "map.level.100" Button
+    t =    11.12s Find the "header.settings" Button
+    t =    11.57s Find the "map.level.100" Button
+    t =    12.02s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.35s Find the "map.level.100" Button
+    t =    12.81s Checking existence of `"map.level.101" Button`
+    t =    13.24s Find the "map.comingSoon" Any
+    t =    13.96s Find the "map.comingSoon" StaticText
+    t =    14.67s Checking existence of `"Coming soon" StaticText`
+    t =    15.13s Find the "map.comingSoon" StaticText
+    t =    15.56s Find the "map.level.100" Button
+    t =    16.00s Checking existence of `"Wereld 2 · binnenkort" StaticText`
+    t =    16.55s Added attachment named 'native-world-10-coming-soon'
+    t =    16.56s Tear Down
+Test Case '-[DinoUITests.DinoUITests testComingSoonOnlyAfterLevelHundred]' passed (16.792 seconds).
+Test Case '-[DinoUITests.DinoUITests testNativeWorldChaptersAndMinuteQuestions]' started.
+    t =     0.00s Start Test at 2026-10-15 13:56:06.178
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.03s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     0.03s         Wait for com.apple.springboard to idle
+    t =     0.03s     Open Hakketjak.Dino-Klokkijken
+    t =     0.03s         Launch Hakketjak.Dino-Klokkijken
+    t =     0.03s             Terminate Hakketjak.Dino-Klokkijken:73252
+2026-10-15 13:56:07.238 xcodebuild[73218:25643342] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-15 13:56:07.238 xcodebuild[73218:25643342] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.27s             Setting up automation session
+    t =     1.86s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.13s Terminate Hakketjak.Dino-Klokkijken:73304
+    t =     4.14s Open Hakketjak.Dino-Klokkijken
+    t =     4.14s     Launch Hakketjak.Dino-Klokkijken
+2026-10-15 13:56:10.321 xcodebuild[73218:25643342] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-15 13:56:10.321 xcodebuild[73218:25643342] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     4.35s         Setting up automation session
+    t =     4.96s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     6.82s Waiting 8.0s for "header.settings" Button to exist
+    t =     7.89s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =     7.89s         Checking existence of `"header.settings" Button`
+    t =     8.37s Checking existence of `"map.bossShortcut" Button`
+    t =     8.92s Added attachment named 'jungle-native-entrance'
+    t =     8.93s Terminate Hakketjak.Dino-Klokkijken:73318
+    t =     9.95s Open Hakketjak.Dino-Klokkijken
+    t =     9.95s     Launch Hakketjak.Dino-Klokkijken
+2026-10-15 13:56:16.132 xcodebuild[73218:25643342] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-15 13:56:16.133 xcodebuild[73218:25643342] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    10.16s         Setting up automation session
+    t =    10.79s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    12.93s Waiting 8.0s for "header.settings" Button to exist
+    t =    13.99s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    13.99s         Checking existence of `"header.settings" Button`
+    t =    14.48s Find the "header.settings" Button
+    t =    14.90s Find the "map.level.31" Button
+    t =    15.32s Checking existence of `"map.level.31" Button`
+    t =    15.75s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    16.07s Checking existence of `"map.level.31" Button`
+    t =    16.50s Find the "map.level.31" Button
+    t =    16.93s Find the "map.level.31" Button
+    t =    17.36s Find the "header.settings" Button
+    t =    17.77s Find the "map.level.31" Button
+    t =    18.20s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.53s Find the "map.level.31" Button
+    t =    18.96s Find the "map.level.31" Button
+    t =    19.39s Checking existence of `"map.world.4" Any`
+    t =    19.81s Checking existence of `"map.bossShortcut.4" Button`
+    t =    20.36s Added attachment named 'native-world-4'
+    t =    20.36s Tap "map.level.31" Button[0.50, 0.50]
+    t =    20.36s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    20.36s     Find the "map.level.31" Button
+    t =    20.79s     Check for interrupting elements affecting "map.level.31" Button
+    t =    21.12s         Wait for com.apple.springboard to idle
+    t =    21.13s     Synthesize event
+    t =    21.13s         Find the "map.level.31" Button
+    t =    21.57s         Find the "map.level.31" Button
+    t =    22.00s         Find the "map.level.31" Button
+    t =    22.69s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    22.69s Waiting 5.0s for "level.play" Button to exist
+    t =    23.76s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =    23.76s         Checking existence of `"level.play" Button`
+    t =    23.78s Checking existence of `"level.play" Any`
+    t =    23.81s Checking existence of `"onboarding.next" Button`
+    t =    23.83s Checking existence of `"onboarding.customClock" Button`
+    t =    23.84s Checking existence of `"personalize.done" Button`
+    t =    23.86s Checking existence of `"theme.done" Button`
+    t =    23.87s Find the "level.play" Any
+    t =    23.91s Tap "level.play" Button
+    t =    23.91s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    23.92s     Find the "level.play" Button
+    t =    23.95s     Check for interrupting elements affecting "level.play" Button
+    t =    23.99s         Wait for com.apple.springboard to idle
+    t =    24.01s     Synthesize event
+    t =    24.30s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    24.33s Waiting 5.0s for "question.option.0" Button to exist
+    t =    25.39s     Checking `Expect predicate `existsNoRetry == 1` for object "question.option.0" Button`
+    t =    25.39s         Checking existence of `"question.option.0" Button`
+    t =    25.42s Find the "header.world" Any
+    t =    25.45s Checking existence of `"question.option.0" Any`
+    t =    25.49s Checking existence of `"onboarding.next" Button`
+    t =    25.51s Checking existence of `"onboarding.customClock" Button`
+    t =    25.53s Checking existence of `"personalize.done" Button`
+    t =    25.55s Checking existence of `"theme.done" Button`
+    t =    25.58s Find the "question.option.0" Any
+    t =    25.63s Tap "question.option.0" Button
+    t =    25.63s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    25.63s     Find the "question.option.0" Button
+    t =    25.68s     Check for interrupting elements affecting "question.option.0" Button
+    t =    25.70s         Wait for com.apple.springboard to idle
+    t =    25.72s     Synthesize event
+    t =    26.01s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    26.01s Waiting 8.0s for "2/5" StaticText to exist
+    t =    27.07s     Checking `Expect predicate `existsNoRetry == 1` for object "2/5" StaticText`
+    t =    27.07s         Checking existence of `"2/5" StaticText`
+    t =    27.10s Find the "header.world" Other
+    t =    27.26s Added attachment named 'native-world-4-question'
+    t =    27.26s Terminate Hakketjak.Dino-Klokkijken:73343
+    t =    28.27s Open Hakketjak.Dino-Klokkijken
+    t =    28.27s     Launch Hakketjak.Dino-Klokkijken
+2026-10-15 13:56:34.449 xcodebuild[73218:25643342] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-15 13:56:34.449 xcodebuild[73218:25643342] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    28.48s         Setting up automation session
+    t =    29.06s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    31.06s Waiting 8.0s for "header.settings" Button to exist
+    t =    32.14s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    32.14s         Checking existence of `"header.settings" Button`
+    t =    32.65s Find the "header.settings" Button
+    t =    33.09s Find the "map.level.51" Button
+    t =    33.51s Checking existence of `"map.level.51" Button`
+    t =    33.93s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    34.24s Checking existence of `"map.level.51" Button`
+    t =    34.66s Find the "map.level.51" Button
+    t =    35.07s Find the "map.level.51" Button
+    t =    35.51s Find the "header.settings" Button
+    t =    35.93s Find the "map.level.51" Button
+    t =    36.36s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    36.69s Find the "map.level.51" Button
+    t =    37.11s Find the "map.level.51" Button
+    t =    37.55s Checking existence of `"map.world.6" Any`
+    t =    37.97s Checking existence of `"map.bossShortcut.6" Button`
+    t =    38.55s Added attachment named 'native-world-6'
+    t =    38.56s Tap "map.level.51" Button[0.50, 0.50]
+    t =    38.56s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    38.56s     Find the "map.level.51" Button
+    t =    39.00s     Check for interrupting elements affecting "map.level.51" Button
+    t =    39.33s         Wait for com.apple.springboard to idle
+    t =    39.34s     Synthesize event
+    t =    39.34s         Find the "map.level.51" Button
+    t =    39.78s         Find the "map.level.51" Button
+    t =    40.21s         Find the "map.level.51" Button
+    t =    40.92s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    40.92s Waiting 5.0s for "level.play" Button to exist
+    t =    41.99s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =    41.99s         Checking existence of `"level.play" Button`
+    t =    42.01s Checking existence of `"level.play" Any`
+    t =    42.04s Checking existence of `"onboarding.next" Button`
+    t =    42.06s Checking existence of `"onboarding.customClock" Button`
+    t =    42.07s Checking existence of `"personalize.done" Button`
+    t =    42.09s Checking existence of `"theme.done" Button`
+    t =    42.10s Find the "level.play" Any
+    t =    42.14s Tap "level.play" Button
+    t =    42.14s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    42.15s     Find the "level.play" Button
+    t =    42.18s     Check for interrupting elements affecting "level.play" Button
+    t =    42.21s         Wait for com.apple.springboard to idle
+    t =    42.23s     Synthesize event
+    t =    42.52s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    42.52s Waiting 5.0s for "question.option.0" Button to exist
+    t =    43.59s     Checking `Expect predicate `existsNoRetry == 1` for object "question.option.0" Button`
+    t =    43.59s         Checking existence of `"question.option.0" Button`
+    t =    43.61s Find the "header.world" Any
+    t =    43.62s Checking existence of `"question.option.2" Any`
+    t =    43.66s Checking existence of `"onboarding.next" Button`
+    t =    43.67s Checking existence of `"onboarding.customClock" Button`
+    t =    43.69s Checking existence of `"personalize.done" Button`
+    t =    43.70s Checking existence of `"theme.done" Button`
+    t =    43.71s Find the "question.option.2" Any
+    t =    43.76s Tap "question.option.2" Button
+    t =    43.76s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    43.76s     Find the "question.option.2" Button
+    t =    43.80s     Check for interrupting elements affecting "question.option.2" Button
+    t =    43.81s         Wait for com.apple.springboard to idle
+    t =    43.83s     Synthesize event
+    t =    44.12s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    44.12s Waiting 8.0s for "2/5" StaticText to exist
+    t =    45.17s     Checking `Expect predicate `existsNoRetry == 1` for object "2/5" StaticText`
+    t =    45.17s         Checking existence of `"2/5" StaticText`
+    t =    45.19s Find the "header.world" Other
+    t =    45.30s Added attachment named 'native-world-6-question'
+    t =    45.30s Terminate Hakketjak.Dino-Klokkijken:73427
+    t =    46.40s Open Hakketjak.Dino-Klokkijken
+    t =    46.40s     Launch Hakketjak.Dino-Klokkijken
+2026-10-15 13:56:52.579 xcodebuild[73218:25643342] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-15 13:56:52.579 xcodebuild[73218:25643342] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    46.61s         Setting up automation session
+    t =    47.17s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    49.32s Waiting 8.0s for "header.settings" Button to exist
+    t =    50.39s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    50.39s         Checking existence of `"header.settings" Button`
+    t =    50.88s Find the "header.settings" Button
+    t =    51.32s Find the "map.level.81" Button
+    t =    51.75s Checking existence of `"map.level.81" Button`
+    t =    52.18s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    52.49s Checking existence of `"map.level.81" Button`
+    t =    52.91s Find the "map.level.81" Button
+    t =    53.33s Find the "map.level.81" Button
+    t =    53.74s Find the "header.settings" Button
+    t =    54.19s Find the "map.level.81" Button
+    t =    54.61s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    54.92s Find the "map.level.81" Button
+    t =    55.36s Find the "map.level.81" Button
+    t =    55.78s Checking existence of `"map.world.9" Any`
+    t =    56.21s Checking existence of `"map.bossShortcut.9" Button`
+    t =    56.79s Added attachment named 'native-world-9'
+    t =    56.80s Tap "map.level.81" Button[0.50, 0.50]
+    t =    56.80s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    56.80s     Find the "map.level.81" Button
+    t =    57.25s     Check for interrupting elements affecting "map.level.81" Button
+    t =    57.57s         Wait for com.apple.springboard to idle
+    t =    57.59s     Synthesize event
+    t =    57.59s         Find the "map.level.81" Button
+    t =    58.00s         Find the "map.level.81" Button
+    t =    58.41s         Find the "map.level.81" Button
+    t =    59.12s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    59.13s Waiting 5.0s for "level.play" Button to exist
+    t =    60.17s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =    60.17s         Checking existence of `"level.play" Button`
+    t =    60.19s Checking existence of `"level.play" Any`
+    t =    60.23s Checking existence of `"onboarding.next" Button`
+    t =    60.24s Checking existence of `"onboarding.customClock" Button`
+    t =    60.26s Checking existence of `"personalize.done" Button`
+    t =    60.27s Checking existence of `"theme.done" Button`
+    t =    60.28s Find the "level.play" Any
+    t =    60.33s Tap "level.play" Button
+    t =    60.33s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    60.33s     Find the "level.play" Button
+    t =    60.36s     Check for interrupting elements affecting "level.play" Button
+    t =    60.39s         Wait for com.apple.springboard to idle
+    t =    60.41s     Synthesize event
+    t =    60.70s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    60.71s Waiting 5.0s for "question.option.0" Button to exist
+    t =    61.77s     Checking `Expect predicate `existsNoRetry == 1` for object "question.option.0" Button`
+    t =    61.77s         Checking existence of `"question.option.0" Button`
+    t =    61.80s Find the "header.world" Any
+    t =    61.81s Checking existence of `"question.option.0" Any`
+    t =    61.86s Checking existence of `"onboarding.next" Button`
+    t =    61.87s Checking existence of `"onboarding.customClock" Button`
+    t =    61.89s Checking existence of `"personalize.done" Button`
+    t =    61.90s Checking existence of `"theme.done" Button`
+    t =    61.92s Find the "question.option.0" Any
+    t =    61.97s Tap "question.option.0" Button
+    t =    61.97s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    61.97s     Find the "question.option.0" Button
+    t =    62.02s     Check for interrupting elements affecting "question.option.0" Button
+    t =    62.04s         Wait for com.apple.springboard to idle
+    t =    62.06s     Synthesize event
+    t =    62.36s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    62.36s Waiting 8.0s for "2/5" StaticText to exist
+    t =    63.41s     Checking `Expect predicate `existsNoRetry == 1` for object "2/5" StaticText`
+    t =    63.41s         Checking existence of `"2/5" StaticText`
+    t =    63.44s Find the "header.world" Other
+    t =    63.56s Added attachment named 'native-world-9-question'
+    t =    63.56s Tear Down
+Test Case '-[DinoUITests.DinoUITests testNativeWorldChaptersAndMinuteQuestions]' passed (63.960 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-15 13:57:10.138.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 80.752 (80.753) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-15 13:57:10.139.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 80.752 (80.754) seconds
+Test Suite 'Selected tests' passed at 2026-10-15 13:57:10.140.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 80.752 (80.755) seconds
+2026-10-15 13:57:10.441 xcodebuild[73218:25643342] [MT] IDETestOperationsObserverDebug: 82.043 elapsed -- Testing started completed.
+2026-10-15 13:57:10.441 xcodebuild[73218:25643342] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-15 13:57:10.441 xcodebuild[73218:25643342] [MT] IDETestOperationsObserverDebug: 82.043 sec, +82.043 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-water-exits-ipad.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

@@ -1,0 +1,256 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -configuration Debug -destination "platform=iOS Simulator,id=C52CEAA1-9B58-4446-9A39-93DBC1FA3B1F" -derivedDataPath /tmp/dino-jungle-final-verification -resultBundlePath /tmp/dino-jungle-scroll-before.xcresult test-without-building "-only-testing:DinoUITests/DinoUITests/testMapScrollPerformance" CODE_SIGNING_ALLOWED=NO
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Writing result bundle at path:
+	/tmp/dino-jungle-scroll-before.xcresult
+
+2026-10-15 22:04:25.083455+0200 DinoUITests-Runner[63537:26720294] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-15 22:04:26.136.
+Test Suite 'DinoUITests.xctest' started at 2026-10-15 22:04:26.136.
+Test Suite 'DinoUITests' started at 2026-10-15 22:04:26.136.
+Test Case '-[DinoUITests.DinoUITests testMapScrollPerformance]' started.
+    t =     0.00s Start Test at 2026-10-15 22:04:26.137
+    t =     0.03s Set Up
+    t =     0.03s     Setting device orientation to Portrait
+    t =     0.06s         Wait for com.apple.springboard to idle
+    t =     0.06s     Open Hakketjak.Dino-Klokkijken
+    t =     0.06s         Launch Hakketjak.Dino-Klokkijken
+2026-10-15 22:04:26.253 xcodebuild[63526:26719892] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-15 22:04:26.253 xcodebuild[63526:26719892] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[63537]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x105ba8310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10600c398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.53s             Setting up automation session
+    t =     1.33s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     2.72s Terminate Hakketjak.Dino-Klokkijken:63547
+    t =     3.78s Open Hakketjak.Dino-Klokkijken
+    t =     3.78s     Launch Hakketjak.Dino-Klokkijken
+2026-10-15 22:04:29.922 xcodebuild[63526:26719892] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-15 22:04:29.922 xcodebuild[63526:26719892] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     3.99s         Setting up automation session
+    t =     4.61s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     6.41s Waiting 8.0s for "map.bossShortcut" Button to exist
+    t =     7.45s     Checking `Expect predicate `existsNoRetry == 1` for object "map.bossShortcut" Button`
+    t =     7.45s         Checking existence of `"map.bossShortcut" Button`
+    t =     8.02s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =     8.02s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     8.02s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =     8.37s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =     8.73s     Synthesize event
+    t =     9.12s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    11.44s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    11.44s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    11.44s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    11.79s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    12.17s     Synthesize event
+    t =    12.56s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    14.87s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.87s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    14.87s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    15.24s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    15.62s     Synthesize event
+    t =    16.01s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.32s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.32s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.32s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.69s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    19.07s     Synthesize event
+    t =    19.46s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.72s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    21.72s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.72s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    22.09s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    22.46s     Synthesize event
+    t =    22.85s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    25.14s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    25.14s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    25.14s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    25.51s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    25.90s     Synthesize event
+    t =    26.29s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    28.55s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    28.55s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    28.55s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    28.92s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    29.30s     Synthesize event
+    t =    29.69s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    31.92s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    31.92s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    31.92s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    32.31s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    32.70s     Synthesize event
+    t =    33.09s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    37.45s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    37.45s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    37.46s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    37.86s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    38.24s     Synthesize event
+    t =    38.63s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    41.11s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    41.11s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    41.11s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    41.50s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    41.89s     Synthesize event
+    t =    42.28s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    44.63s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    44.63s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    44.64s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    45.03s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    45.42s     Synthesize event
+    t =    45.81s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    48.05s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    48.05s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    48.05s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    48.44s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    48.84s     Synthesize event
+    t =    49.23s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    51.50s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    51.50s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    51.51s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    51.90s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    52.28s     Synthesize event
+    t =    52.67s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    54.93s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    54.93s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    54.94s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    55.33s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    55.72s     Synthesize event
+    t =    56.11s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    58.35s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    58.35s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    58.35s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    58.75s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    59.16s     Synthesize event
+    t =    59.54s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    61.87s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    61.87s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    61.87s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    62.27s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    62.66s     Synthesize event
+    t =    63.05s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    67.48s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    67.48s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    67.48s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    68.00s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    68.51s     Synthesize event
+    t =    68.90s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    71.09s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    71.09s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    71.09s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    71.54s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    72.01s     Synthesize event
+    t =    72.41s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    74.74s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    74.74s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    74.74s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    75.26s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    75.78s     Synthesize event
+    t =    76.18s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    78.52s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    78.52s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    78.52s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    79.06s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    79.59s     Synthesize event
+    t =    79.99s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    82.27s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    82.27s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    82.27s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    82.73s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    83.15s     Synthesize event
+    t =    83.53s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    85.82s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    85.82s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    85.82s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    86.34s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    86.87s     Synthesize event
+    t =    87.26s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    89.54s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    89.54s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    89.55s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    90.22s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    90.80s     Synthesize event
+    t =    91.19s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    93.47s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    93.47s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    93.47s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    94.11s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    94.73s     Synthesize event
+    t =    95.12s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   100.07s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   100.07s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   100.28s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   100.96s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =   101.63s     Synthesize event
+    t =   102.02s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   104.26s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   104.26s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   104.26s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   104.84s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =   105.43s     Synthesize event
+    t =   105.83s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   108.28s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   108.28s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   108.29s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   109.21s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =   110.05s     Synthesize event
+    t =   110.45s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   112.80s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   112.81s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   112.81s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   113.39s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =   113.97s     Synthesize event
+    t =   114.37s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   116.65s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   116.65s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   116.66s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   117.51s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =   118.21s     Synthesize event
+    t =   118.61s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   120.89s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   120.89s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   120.89s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   121.49s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =   122.08s     Synthesize event
+    t =   122.47s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   124.76s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   124.76s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   124.76s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   125.39s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =   126.21s     Synthesize event
+    t =   126.61s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   129.11s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   129.11s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   129.17s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   129.98s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =   130.91s     Synthesize event
+    t =   131.31s     Wait for Hakketjak.Dino-Klokkijken to idle
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:446: Test Case '-[DinoUITests.DinoUITests testMapScrollPerformance]' measured [Absolute Memory Physical (Dino-Klokkijken), kB] average: 135525.555, relative standard deviation: 0.011%, values: [135514.632000, 135547.400000, 135514.632000], performanceMetricID:com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical_absolute, baselineName: "", baselineAverage: , polarity: prefers smaller, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.000, maxStandardDeviation: 0.000
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:446: Test Case '-[DinoUITests.DinoUITests testMapScrollPerformance]' measured [Duration (Scroll_DraggingAndDeceleration), s] average: 2.594, relative standard deviation: 2.546%, values: [2.684219, 2.527671, 2.570507], performanceMetricID:com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration, baselineName: "", baselineAverage: , polarity: prefers smaller, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.000, maxStandardDeviation: 0.000
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:446: Test Case '-[DinoUITests.DinoUITests testMapScrollPerformance]' measured [CPU Time (Dino-Klokkijken), s] average: 14.054, relative standard deviation: 18.519%, values: [10.995044, 13.810094, 17.356021], performanceMetricID:com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.time, baselineName: "", baselineAverage: , polarity: prefers smaller, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.000, maxStandardDeviation: 0.000
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:446: Test Case '-[DinoUITests.DinoUITests testMapScrollPerformance]' measured [Clock Monotonic Time, s] average: 30.110, relative standard deviation: 7.492%, values: [27.575626, 29.698190, 33.054704], performanceMetricID:com.apple.dt.XCTMetric_Clock.time.monotonic, baselineName: "", baselineAverage: , polarity: prefers smaller, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.000, maxStandardDeviation: 0.000
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:446: Test Case '-[DinoUITests.DinoUITests testMapScrollPerformance]' measured [CPU Instructions Retired (Dino-Klokkijken), kI] average: 162519141.504, relative standard deviation: 1.200%, values: [165180821.395000, 161811958.649000, 160564644.467000], performanceMetricID:com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.instructions_retired, baselineName: "", baselineAverage: , polarity: prefers smaller, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.000, maxStandardDeviation: 0.000
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:446: Test Case '-[DinoUITests.DinoUITests testMapScrollPerformance]' measured [Memory Physical (Dino-Klokkijken), kB] average: 3336.867, relative standard deviation: 141.769%, values: [10026.984000, 0.000000, -16.384000], performanceMetricID:com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical, baselineName: "", baselineAverage: , polarity: prefers smaller, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.000, maxStandardDeviation: 0.000
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:446: Test Case '-[DinoUITests.DinoUITests testMapScrollPerformance]' measured [CPU Cycles (Dino-Klokkijken), kC] average: 41393835.892, relative standard deviation: 3.489%, values: [42650521.209000, 39371080.646000, 42159905.822000], performanceMetricID:com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.cycles, baselineName: "", baselineAverage: , polarity: prefers smaller, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.000, maxStandardDeviation: 0.000
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:446: Test Case '-[DinoUITests.DinoUITests testMapScrollPerformance]' measured [Memory Peak Physical (Dino-Klokkijken), kB] average: 141063.347, relative standard deviation: 2.269%, values: [145394.184000, 137759.240000, 140036.616000], performanceMetricID:com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical_peak, baselineName: "", baselineAverage: , polarity: prefers smaller, maxPercentRegression: 10.000%, maxPercentRelativeStandardDeviation: 10.000%, maxRegression: 0.000, maxStandardDeviation: 0.000
+    t =   135.94s Find the "header.settings" Button
+    t =   137.17s Added attachment named 'performance-map-after-fast-scroll'
+    t =   137.17s Tear Down
+Test Case '-[DinoUITests.DinoUITests testMapScrollPerformance]' passed (137.937 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-15 22:06:44.075.
+	 Executed 1 test, with 0 failures (0 unexpected) in 137.937 (137.939) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-15 22:06:44.076.
+	 Executed 1 test, with 0 failures (0 unexpected) in 137.937 (137.940) seconds
+Test Suite 'Selected tests' passed at 2026-10-15 22:06:44.078.
+	 Executed 1 test, with 0 failures (0 unexpected) in 137.937 (137.942) seconds
+2026-10-15 22:06:44.402 xcodebuild[63526:26719892] [MT] IDETestOperationsObserverDebug: 140.474 elapsed -- Testing started completed.
+2026-10-15 22:06:44.402 xcodebuild[63526:26719892] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-15 22:06:44.402 xcodebuild[63526:26719892] [MT] IDETestOperationsObserverDebug: 140.474 sec, +140.474 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-jungle-scroll-before.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

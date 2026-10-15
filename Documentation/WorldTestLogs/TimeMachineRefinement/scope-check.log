@@ -1,0 +1,25 @@
+struct WorldMapLandscape: unchanged
+struct JungleWorldPainter: unchanged
+struct SleepValleyPainter: unchanged
+struct VolcanoWorldPainter: unchanged
+struct VillageWorldPainter: unchanged
+struct CrystalCavePainter: unchanged
+struct CityWorldPainter: unchanged
+struct DayNightForestPainter: unchanged
+struct JunglePainter: unchanged
+struct WorldThemePreview: unchanged
+struct WorldMap: View: unchanged
+struct JungleLevelStone: unchanged
+struct SleepValleyLevelStone: unchanged
+struct VolcanoLevelStone: unchanged
+struct VillageLevelStone: unchanged
+struct CrystalLevelStone: unchanged
+struct CityLevelStone: unchanged
+struct DayNightLevelStone: unchanged
+Shared ThemePainter outside time-machine preview: unchanged
+Shared landscape outside world 8: unchanged
+Chapter layout outside world-8 entry spacing: unchanged
+Level nodes outside world-8 material and occupied glaze: unchanged
+Existing UI tests outside matching support in chapter check: unchanged
+Complete landscape source outside world-8 additions: unchanged
+Complete map source outside world-8 material and spacing: unchanged

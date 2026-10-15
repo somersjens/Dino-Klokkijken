@@ -1,0 +1,27 @@
+struct WorldMapLandscape: unchanged
+struct JungleWorldPainter: unchanged
+struct SleepValleyPainter: unchanged
+struct VolcanoWorldPainter: unchanged
+struct VillageWorldPainter: unchanged
+struct CrystalCavePainter: unchanged
+struct CityWorldPainter: unchanged
+struct DayNightForestPainter: unchanged
+struct TimeMachinePainter: unchanged
+struct PirateCoastPainter: unchanged
+struct JunglePainter: unchanged
+struct WorldThemePreview: unchanged
+struct WorldMap: View: unchanged
+struct JungleLevelStone: unchanged
+struct SleepValleyLevelStone: unchanged
+struct VolcanoLevelStone: unchanged
+struct VillageLevelStone: unchanged
+struct CrystalLevelStone: unchanged
+struct CityLevelStone: unchanged
+struct DayNightLevelStone: unchanged
+struct TimeMachineLevelStone: unchanged
+struct PirateLevelStone: unchanged
+Complete landscape source outside world-10 additions: unchanged
+Chapter layout outside world-10 entry spacing: unchanged
+Level nodes outside world-10 material and occupied glaze: unchanged
+Complete map source outside world-10 material and spacing: unchanged
+All existing UI tests: unchanged

@@ -1,0 +1,311 @@
+{
+  "date": "2026-10-15",
+  "reference_commit": "6780dba9bdeede3f2ff366beba9b5223b3c2adca",
+  "rendering": {
+    "before": {
+      "median_seconds": {
+        "8962609": 0.256496,
+        "16027318": 0.25217
+      },
+      "runs": {
+        "8962609": [
+          0.283272,
+          0.256496,
+          0.251243
+        ],
+        "16027318": [
+          0.264947,
+          0.25217,
+          0.251577
+        ]
+      },
+      "hashes": {
+        "dino-idle-8962609": "a788134bc9ae073a882e809b00ae71013c3d227634d5ec0e96a8546f8901d6ba",
+        "dino-thumbs-up-08-8962609": "8e466c2b56631490787ef7bef0cdd879563b1b355e8571a3f5ec425a56a045bc",
+        "dino-wrong-answer-04-8962609": "e8eba1dafbc356f4fa9a02fa00af30e3258a4f4b662425b774e9d55ebdd60dc6",
+        "dino-backflip-01-8962609": "ec56512acac4ca7a272d81fdaeec472ecb45508673c12aab0152e2945149f80f",
+        "dino-backflip-03-8962609": "6a019b9ea490afa7be694dc3e91cbe20bd171623374c7e66302627d903b70e19",
+        "dino-backflip-07-8962609": "b905840a8f4acab46fd3109abf300e6b6e2292c829be5c0087b94095f77c33ed",
+        "dino-backflip-08-8962609": "f710ded2064b3f6801966ce7ff2f158ebbf877f3df56ad6623e5a197b0b89e65",
+        "dino-idle-16027318": "c1b13c0fb668f2e0c61d8305ffa0d14463c39ee0e58a20e95fd537cb1753b26c",
+        "dino-thumbs-up-08-16027318": "3d06f1c329e030f306876afc2340479b1ff03bc57ddcfa66c16c4190f5df3859",
+        "dino-wrong-answer-04-16027318": "744d226096234a4e1687e93797014dfcaa1cada1434b248dcc60a180e753c8f9",
+        "dino-backflip-01-16027318": "639d95d79492876ca14110816c7df3a3f5ec4bd432afb0bcfae644a2cdcfc2bc",
+        "dino-backflip-03-16027318": "81e3382f4ffd46012c4b0395652557f6f958c7ad8a8702d9c1b06392cb555740",
+        "dino-backflip-07-16027318": "abf373ab031c0bbf0a5ca375651244d3c60aabad6d1c9fcdc742677e5533bf15",
+        "dino-backflip-08-16027318": "bec20b09e822fc73b12c98b54826c5a65b36d141de4f645cadb4060b5fa307e4"
+      }
+    },
+    "after": {
+      "median_seconds": {
+        "8962609": 0.172339,
+        "16027318": 0.168435
+      },
+      "runs": {
+        "8962609": [
+          0.167223,
+          0.172339,
+          0.172954
+        ],
+        "16027318": [
+          0.167991,
+          0.183694,
+          0.168435
+        ]
+      },
+      "hashes": {
+        "dino-idle-8962609": "a788134bc9ae073a882e809b00ae71013c3d227634d5ec0e96a8546f8901d6ba",
+        "dino-thumbs-up-08-8962609": "8e466c2b56631490787ef7bef0cdd879563b1b355e8571a3f5ec425a56a045bc",
+        "dino-wrong-answer-04-8962609": "e8eba1dafbc356f4fa9a02fa00af30e3258a4f4b662425b774e9d55ebdd60dc6",
+        "dino-backflip-01-8962609": "ec56512acac4ca7a272d81fdaeec472ecb45508673c12aab0152e2945149f80f",
+        "dino-backflip-03-8962609": "6a019b9ea490afa7be694dc3e91cbe20bd171623374c7e66302627d903b70e19",
+        "dino-backflip-07-8962609": "b905840a8f4acab46fd3109abf300e6b6e2292c829be5c0087b94095f77c33ed",
+        "dino-backflip-08-8962609": "f710ded2064b3f6801966ce7ff2f158ebbf877f3df56ad6623e5a197b0b89e65",
+        "dino-idle-16027318": "c1b13c0fb668f2e0c61d8305ffa0d14463c39ee0e58a20e95fd537cb1753b26c",
+        "dino-thumbs-up-08-16027318": "3d06f1c329e030f306876afc2340479b1ff03bc57ddcfa66c16c4190f5df3859",
+        "dino-wrong-answer-04-16027318": "744d226096234a4e1687e93797014dfcaa1cada1434b248dcc60a180e753c8f9",
+        "dino-backflip-01-16027318": "639d95d79492876ca14110816c7df3a3f5ec4bd432afb0bcfae644a2cdcfc2bc",
+        "dino-backflip-03-16027318": "81e3382f4ffd46012c4b0395652557f6f958c7ad8a8702d9c1b06392cb555740",
+        "dino-backflip-07-16027318": "abf373ab031c0bbf0a5ca375651244d3c60aabad6d1c9fcdc742677e5533bf15",
+        "dino-backflip-08-16027318": "bec20b09e822fc73b12c98b54826c5a65b36d141de4f645cadb4060b5fa307e4"
+      }
+    }
+  },
+  "map_visual_comparison": {
+    "map": {
+      "changed_pixels": 94463,
+      "total_pixels": 2969172,
+      "bounds": [
+        331,
+        97,
+        875,
+        384
+      ],
+      "mean_absolute_channel_difference": 0.01881253988205017
+    },
+    "map-late": {
+      "changed_pixels": 0,
+      "total_pixels": 2969172,
+      "bounds": null,
+      "mean_absolute_channel_difference": 0.0
+    }
+  },
+  "scrolling": {
+    "device": "iPhone 18 Pro simulator, iOS 27.0",
+    "configuration": "Debug",
+    "iterations": 3,
+    "gestures_per_iteration": 8,
+    "before": {
+      "Absolute Memory Physical (Dino-Klokkijken), kB": {
+        "average": 155967.613,
+        "values": [
+          150588.2,
+          158976.808,
+          158337.832
+        ]
+      },
+      "Duration (Scroll_DraggingAndDeceleration), s": {
+        "average": 2.706,
+        "values": [
+          2.733379,
+          2.649825,
+          2.733574
+        ]
+      },
+      "CPU Time (Dino-Klokkijken), s": {
+        "average": 6.741,
+        "values": [
+          6.57736,
+          6.927139,
+          6.717301
+        ]
+      },
+      "Clock Monotonic Time, s": {
+        "average": 25.027,
+        "values": [
+          24.919104,
+          24.990259,
+          25.170167
+        ]
+      },
+      "CPU Instructions Retired (Dino-Klokkijken), kI": {
+        "average": 104568525.393,
+        "values": [
+          104749921.178,
+          104369718.885,
+          104585936.115
+        ]
+      },
+      "Memory Physical (Dino-Klokkijken), kB": {
+        "average": 2544.981,
+        "values": [
+          -114.688,
+          8388.608,
+          -638.976
+        ]
+      },
+      "CPU Cycles (Dino-Klokkijken), kC": {
+        "average": 28362781.643,
+        "values": [
+          28012406.24,
+          28985535.989,
+          28090402.701
+        ]
+      },
+      "Memory Peak Physical (Dino-Klokkijken), kB": {
+        "average": 160860.968,
+        "values": [
+          152406.824,
+          170003.24,
+          160172.84
+        ]
+      }
+    },
+    "after": {
+      "Absolute Memory Physical (Dino-Klokkijken), kB": {
+        "average": 150222.315,
+        "values": [
+          150211.392,
+          150244.16,
+          150211.392
+        ]
+      },
+      "Duration (Scroll_DraggingAndDeceleration), s": {
+        "average": 2.733,
+        "values": [
+          2.749453,
+          2.733155,
+          2.716727
+        ]
+      },
+      "CPU Time (Dino-Klokkijken), s": {
+        "average": 6.511,
+        "values": [
+          6.490014,
+          6.59536,
+          6.448214
+        ]
+      },
+      "Clock Monotonic Time, s": {
+        "average": 24.43,
+        "values": [
+          24.778676,
+          24.432497,
+          24.079223
+        ]
+      },
+      "CPU Instructions Retired (Dino-Klokkijken), kI": {
+        "average": 101265837.946,
+        "values": [
+          100936995.003,
+          101632387.245,
+          101228131.59
+        ]
+      },
+      "Memory Physical (Dino-Klokkijken), kB": {
+        "average": -60.075,
+        "values": [
+          -180.224,
+          32.768,
+          -32.768
+        ]
+      },
+      "CPU Cycles (Dino-Klokkijken), kC": {
+        "average": 26716990.612,
+        "values": [
+          26418686.112,
+          26664733.037,
+          27067552.688
+        ]
+      },
+      "Memory Peak Physical (Dino-Klokkijken), kB": {
+        "average": 152248.469,
+        "values": [
+          152226.624,
+          151997.248,
+          152521.536
+        ]
+      }
+    }
+  },
+  "practice_ui_automation_seconds": {
+    "before": [
+      17.088497,
+      17.154471,
+      17.682643
+    ],
+    "after": [
+      16.986333,
+      16.924965,
+      16.907871
+    ]
+  },
+  "verification": {
+    "core_checks": 437244,
+    "debug_build": "passed",
+    "release_build": "passed",
+    "ui_tests": [
+      {
+        "device": "iPhone 18 Pro / iOS 27",
+        "name": "testHeaderPersonalizerHasLiveClockPages",
+        "status": "passed",
+        "duration_seconds": 177.981
+      },
+      {
+        "device": "iPhone 18 Pro / iOS 27",
+        "name": "testHUDThemeFollowsScrollInsteadOfPlayerLevel",
+        "status": "passed",
+        "duration_seconds": 39.723
+      },
+      {
+        "device": "iPhone 18 Pro / iOS 27",
+        "name": "testMapScrollPerformance",
+        "status": "passed",
+        "duration_seconds": 114.243
+      },
+      {
+        "device": "iPhone 18 Pro / iOS 27",
+        "name": "testPlayCardAndContinuousResultDino",
+        "status": "passed",
+        "duration_seconds": 63.97
+      },
+      {
+        "device": "iPhone 18 Pro / iOS 27",
+        "name": "testPracticeOpenAndScrollPerformance",
+        "status": "passed",
+        "duration_seconds": 78.484
+      },
+      {
+        "device": "iPhone 18 Pro / iOS 27",
+        "name": "testStartPointCleanCardAndExitCancel",
+        "status": "passed",
+        "duration_seconds": 33.754
+      },
+      {
+        "device": "iPad A16 / iOS 27",
+        "name": "testHeaderPersonalizerHasLiveClockPages",
+        "status": "passed",
+        "duration_seconds": 187.341
+      },
+      {
+        "device": "iPad A16 / iOS 27",
+        "name": "testResponsiveOrientationsAndProportionalHUD",
+        "status": "passed",
+        "duration_seconds": 54.198
+      },
+      {
+        "device": "iPad A16 / iOS 27",
+        "name": "testStartPointCleanCardAndExitCancel",
+        "status": "passed",
+        "duration_seconds": 33.293
+      },
+      {
+        "device": "iPhone 17 / iOS 26.5",
+        "name": "testContextualHUDAndFirstQuestionExit",
+        "status": "passed",
+        "duration_seconds": 90.224
+      }
+    ],
+    "ipad_result_bundle": "Finalization stalled after all three cases passed; stopped; results taken from test output."
+  }
+}

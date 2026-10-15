@@ -1,0 +1,21 @@
+struct WorldMapLandscape: unchanged
+struct JungleWorldPainter: unchanged
+struct SleepValleyPainter: unchanged
+struct VolcanoWorldPainter: unchanged
+struct VillageWorldPainter: unchanged
+struct CrystalCavePainter: unchanged
+struct CityWorldPainter: unchanged
+struct JunglePainter: unchanged
+struct WorldThemePreview: unchanged
+struct WorldMap: View: unchanged
+struct JungleLevelStone: unchanged
+struct SleepValleyLevelStone: unchanged
+struct VolcanoLevelStone: unchanged
+struct VillageLevelStone: unchanged
+struct CrystalLevelStone: unchanged
+struct CityLevelStone: unchanged
+Shared ThemePainter outside forest preview: unchanged
+Shared landscape outside world 7: unchanged
+Chapter layout outside world-7 entry spacing: unchanged
+Level nodes outside world-7 material and occupied glaze: unchanged
+Existing UI tests outside typed-response helper fix: unchanged

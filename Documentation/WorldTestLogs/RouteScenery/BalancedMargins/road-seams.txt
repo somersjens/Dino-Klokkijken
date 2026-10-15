@@ -1,0 +1,19 @@
+transition-3-4-320.png: road delta 0/255; side terrain join delta 0/255
+transition-3-4-393.png: road delta 0/255; side terrain join delta 0/255
+transition-3-4-834.png: road delta 0/255; side terrain join delta 0/255
+transition-4-5-320.png: road delta 0/255; side terrain join delta 0/255
+transition-4-5-393.png: road delta 0/255; side terrain join delta 0/255
+transition-4-5-834.png: road delta 0/255; side terrain join delta 0/255
+transition-5-6-320.png: road delta 0/255; side terrain join delta 1/255
+transition-5-6-393.png: road delta 0/255; side terrain join delta 1/255
+transition-5-6-834.png: road delta 0/255; side terrain join delta 0/255
+transition-6-7-320.png: road delta 0/255; side terrain join delta 0/255
+transition-6-7-393.png: road delta 0/255; side terrain join delta 0/255
+transition-6-7-834.png: road delta 0/255; side terrain join delta 0/255
+transition-8-9-320.png: road delta 0/255; side terrain join delta 0/255
+transition-8-9-393.png: road delta 0/255; side terrain join delta 0/255
+transition-8-9-834.png: road delta 0/255; side terrain join delta 0/255
+transition-9-10-320.png: road delta 0/255; side terrain join delta 1/255
+transition-9-10-393.png: road delta 0/255; side terrain join delta 0/255
+transition-9-10-834.png: road delta 0/255; side terrain join delta 0/255
+PASS: continuous road and terrain colour at 18 sampled chapter seams.

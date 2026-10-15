@@ -1,0 +1,377 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -configuration Debug -destination "platform=iOS Simulator,id=C52CEAA1-9B58-4446-9A39-93DBC1FA3B1F" -derivedDataPath /tmp/dino-jungle-polish -resultBundlePath /tmp/dino-jungle-polish-route.xcresult test-without-building "-only-testing:DinoUITests/DinoUITests/testJungleHeaderSettingsAndTransition" CODE_SIGNING_ALLOWED=NO
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Writing result bundle at path:
+	/tmp/dino-jungle-polish-route.xcresult
+
+2026-10-15 22:11:49.469665+0200 DinoUITests-Runner[65864:26744165] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-15 22:11:49.900.
+Test Suite 'DinoUITests.xctest' started at 2026-10-15 22:11:49.900.
+Test Suite 'DinoUITests' started at 2026-10-15 22:11:49.900.
+Test Case '-[DinoUITests.DinoUITests testJungleHeaderSettingsAndTransition]' started.
+    t =     0.00s Start Test at 2026-10-15 22:11:49.901
+    t =     0.01s Set Up
+    t =     0.01s     Setting device orientation to Portrait
+    t =     0.02s         Wait for com.apple.springboard to idle
+    t =     0.02s     Open Hakketjak.Dino-Klokkijken
+    t =     0.02s         Launch Hakketjak.Dino-Klokkijken
+2026-10-15 22:11:49.979 xcodebuild[65861:26743875] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-15 22:11:49.979 xcodebuild[65861:26743875] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[65864]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x108428310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x107f3c398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.49s             Setting up automation session
+    t =     1.12s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     2.44s Waiting 5.0s for "onboarding.next" Button to exist
+    t =     3.48s     Checking `Expect predicate `existsNoRetry == 1` for object "onboarding.next" Button`
+    t =     3.48s         Checking existence of `"onboarding.next" Button`
+    t =     3.54s Find the "onboarding.next" Button
+    t =     3.57s Checking existence of `"onboarding.name" TextField`
+    t =     3.59s Checking existence of `"personalize.bandana.red" Button`
+    t =     3.61s Checking existence of `"onboarding.next" Any`
+    t =     3.63s Checking existence of `"onboarding.next" Button`
+    t =     3.65s Find the "onboarding.next" Any
+    t =     3.70s Tap "onboarding.next" Button
+    t =     3.70s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.70s     Find the "onboarding.next" Button
+    t =     3.71s     Check for interrupting elements affecting "onboarding.next" Button
+    t =     3.74s     Synthesize event
+    t =     4.03s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.03s Checking existence of `"onboarding.next" Any`
+    t =     4.06s Checking existence of `"onboarding.next" Button`
+    t =     4.11s Find the "onboarding.next" Any
+    t =     4.15s Tap "onboarding.next" Button
+    t =     4.15s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.15s     Find the "onboarding.next" Button
+    t =     4.16s     Check for interrupting elements affecting "onboarding.next" Button
+    t =     4.20s     Synthesize event
+    t =     4.49s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.49s Checking existence of `"onboarding.customClock" Any`
+    t =     4.50s Checking existence of `"onboarding.next" Button`
+    t =     4.53s Checking existence of `"onboarding.customClock" Button`
+    t =     4.55s Find the "onboarding.customClock" Any
+    t =     4.57s Tap "onboarding.customClock" Button
+    t =     4.57s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.57s     Find the "onboarding.customClock" Button
+    t =     4.59s     Check for interrupting elements affecting "onboarding.customClock" Button
+    t =     4.62s     Synthesize event
+    t =     4.91s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     5.31s Waiting 5.0s for "map.bossShortcut" Button to exist
+    t =     6.35s     Checking `Expect predicate `existsNoRetry == 1` for object "map.bossShortcut" Button`
+    t =     6.35s         Checking existence of `"map.bossShortcut" Button`
+    t =     6.84s Checking existence of `"header.dino" Any`
+    t =     7.32s Find the "header.dino" Any
+    t =     7.82s Find the "header.level" Any
+    t =     8.32s Find the "header.stars" Any
+    t =     8.94s Checking existence of `"0/27" StaticText`
+    t =     9.66s Find the "header.level" Other
+    t =    10.45s Find the "header.dino" Button
+    t =    11.24s Find the "header.level" Other
+    t =    12.04s Find the "header.level" Other
+    t =    12.88s Find the "header.stars" Other
+    t =    14.12s Added attachment named 'jungle-header-start'
+    t =    14.13s Checking existence of `"header.pause" Button`
+    t =    14.97s Checking existence of `"header.settings" Any`
+    t =    15.01s Checking existence of `"onboarding.next" Button`
+    t =    15.77s Checking existence of `"onboarding.customClock" Button`
+    t =    16.44s Checking existence of `"personalize.done" Button`
+    t =    16.96s Checking existence of `"theme.done" Button`
+    t =    17.44s Find the "header.settings" Any
+    t =    17.46s Tap "header.settings" Button
+    t =    17.46s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    17.46s     Find the "header.settings" Button
+    t =    17.48s     Check for interrupting elements affecting "header.settings" Button
+    t =    17.88s     Synthesize event
+    t =    18.18s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.66s Waiting 5.0s for "Instellingen" StaticText to exist
+    t =    19.70s     Checking `Expect predicate `existsNoRetry == 1` for object "Instellingen" StaticText`
+    t =    19.70s         Checking existence of `"Instellingen" StaticText`
+    t =    20.62s Added attachment named 'jungle-direct-settings'
+    t =    20.62s Tap "Klaar" Button
+    t =    20.62s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    20.62s     Find the "Klaar" Button
+    t =    21.43s     Check for interrupting elements affecting "Klaar" Button
+    t =    21.97s     Synthesize event
+    t =    22.29s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    23.10s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.10s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    23.11s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.68s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    24.26s     Synthesize event
+    t =    24.70s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    27.05s Added attachment named 'jungle-section-1'
+    t =    27.05s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    27.05s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    27.07s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    27.65s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    28.34s     Synthesize event
+    t =    28.82s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    31.15s Added attachment named 'jungle-section-2'
+    t =    31.16s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    31.16s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    31.20s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    31.80s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    32.36s     Synthesize event
+    t =    32.79s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    35.11s Added attachment named 'jungle-section-3'
+    t =    35.12s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    35.12s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    35.12s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    35.70s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    36.37s     Synthesize event
+    t =    36.80s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    39.18s Added attachment named 'jungle-section-4'
+    t =    39.18s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.18s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    39.19s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.78s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    40.34s     Synthesize event
+    t =    40.76s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    43.07s Added attachment named 'jungle-section-5'
+    t =    43.07s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    43.07s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    43.07s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    43.47s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    43.90s     Synthesize event
+    t =    44.32s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    46.48s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    46.48s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    46.48s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    46.84s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    47.19s     Synthesize event
+    t =    47.61s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    49.72s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    49.72s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    49.72s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    50.05s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    50.38s     Synthesize event
+    t =    50.80s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    52.90s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    52.90s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    52.91s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    53.24s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    53.56s     Synthesize event
+    t =    53.98s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    56.14s Checking existence of `"map.world.2" Any`
+    t =    56.60s Find the "header.level" Other
+    t =    57.15s Added attachment named 'jungle-world-transition'
+    t =    57.15s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    57.15s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    57.38s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    57.71s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    58.04s     Synthesize event
+    t =    58.46s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    60.57s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    60.57s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    60.57s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    60.90s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    61.23s     Synthesize event
+    t =    61.65s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    63.79s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    63.79s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    63.79s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    64.12s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    64.45s     Synthesize event
+    t =    64.87s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    66.98s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    66.98s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    66.99s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    67.35s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    67.70s     Synthesize event
+    t =    68.12s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    70.26s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    70.26s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    70.26s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    70.65s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    71.04s     Synthesize event
+    t =    71.46s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    73.61s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    73.61s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    73.61s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    74.03s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    74.45s     Synthesize event
+    t =    74.87s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    77.06s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    77.06s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    77.07s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    77.61s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    78.12s     Synthesize event
+    t =    78.54s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    80.71s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    80.71s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    80.71s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    81.08s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    81.45s     Synthesize event
+    t =    81.87s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    84.00s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    84.00s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    84.00s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    84.45s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    84.88s     Synthesize event
+    t =    85.30s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    86.22s Swipe down Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    86.22s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    86.22s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    86.65s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    87.07s     Synthesize event
+    t =    87.50s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    87.98s Find the "header.settings" Button
+    t =    88.69s Find the "map.level.1" Button
+    t =    89.46s Checking existence of `"map.level.1" Button`
+    t =    90.24s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    90.80s Checking existence of `"map.level.1" Button`
+    t =    91.52s Find the "map.level.1" Button
+    t =    92.15s Find the "map.level.1" Button
+    t =    92.74s Find the "header.settings" Button
+    t =    93.25s Find the "map.level.1" Button
+    t =    93.72s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    94.09s Tap "map.level.1" Button
+    t =    94.09s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    94.10s     Find the "map.level.1" Button
+    t =    94.66s     Check for interrupting elements affecting "map.level.1" Button
+    t =    95.05s     Synthesize event
+    t =    95.67s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    95.67s Checking existence of `"level.play" Any`
+    t =    95.73s Checking existence of `"onboarding.next" Button`
+    t =    95.75s Checking existence of `"onboarding.customClock" Button`
+    t =    95.78s Checking existence of `"personalize.done" Button`
+    t =    95.80s Checking existence of `"theme.done" Button`
+    t =    95.83s Find the "level.play" Any
+    t =    95.89s Tap "level.play" Button
+    t =    95.89s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    95.89s     Find the "level.play" Button
+    t =    95.95s     Check for interrupting elements affecting "level.play" Button
+    t =    96.01s     Synthesize event
+    t =    96.30s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    97.34s Checking `Expect predicate `BLOCKPREDICATE(0x108b70900)` for object Target Application 'Hakketjak.Dino-Klokkijken'`
+    t =    97.34s     Checking existence of `"question.title" StaticText`
+    t =    97.37s     Find the "question.example" Button
+    t =    97.40s     Checking existence of `"level.play" Button`
+    t =    97.42s Checking existence of `"demo.ready" Button`
+    t =    97.54s Added attachment named 'level-1-question'
+    t =    97.54s Checking existence of `"question.option.0" Any`
+    t =    97.59s Checking existence of `"onboarding.next" Button`
+    t =    97.62s Checking existence of `"onboarding.customClock" Button`
+    t =    97.64s Checking existence of `"personalize.done" Button`
+    t =    97.67s Checking existence of `"theme.done" Button`
+    t =    97.69s Find the "question.option.0" Any
+    t =    97.74s Tap "question.option.0" Button
+    t =    97.74s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    97.75s     Find the "question.option.0" Button
+    t =    97.79s     Check for interrupting elements affecting "question.option.0" Button
+    t =    97.82s     Synthesize event
+    t =    98.10s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    99.14s Checking existence of `"2/5" StaticText`
+    t =    99.16s Checking existence of `"demo.ready" Button`
+    t =    99.19s Checking existence of `"question.option.1" Any`
+    t =    99.23s Checking existence of `"onboarding.next" Button`
+    t =    99.25s Checking existence of `"onboarding.customClock" Button`
+    t =    99.27s Checking existence of `"personalize.done" Button`
+    t =    99.30s Checking existence of `"theme.done" Button`
+    t =    99.32s Find the "question.option.1" Any
+    t =    99.36s Tap "question.option.1" Button
+    t =    99.36s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    99.37s     Find the "question.option.1" Button
+    t =    99.41s     Check for interrupting elements affecting "question.option.1" Button
+    t =    99.43s     Synthesize event
+    t =    99.72s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   100.76s Checking existence of `"3/5" StaticText`
+    t =   100.79s Checking existence of `"demo.ready" Button`
+    t =   100.81s Checking existence of `"question.option.0" Any`
+    t =   100.85s Checking existence of `"onboarding.next" Button`
+    t =   100.88s Checking existence of `"onboarding.customClock" Button`
+    t =   100.90s Checking existence of `"personalize.done" Button`
+    t =   100.92s Checking existence of `"theme.done" Button`
+    t =   100.95s Find the "question.option.0" Any
+    t =   100.99s Tap "question.option.0" Button
+    t =   100.99s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   100.99s     Find the "question.option.0" Button
+    t =   101.03s     Check for interrupting elements affecting "question.option.0" Button
+    t =   101.06s     Synthesize event
+    t =   101.34s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   102.37s Checking existence of `"4/5" StaticText`
+    t =   102.40s Checking existence of `"demo.ready" Button`
+    t =   102.43s Checking existence of `"question.option.1" Any`
+    t =   102.47s Checking existence of `"onboarding.next" Button`
+    t =   102.50s Checking existence of `"onboarding.customClock" Button`
+    t =   102.52s Checking existence of `"personalize.done" Button`
+    t =   102.54s Checking existence of `"theme.done" Button`
+    t =   102.56s Find the "question.option.1" Any
+    t =   102.61s Tap "question.option.1" Button
+    t =   102.61s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   102.61s     Find the "question.option.1" Button
+    t =   102.65s     Check for interrupting elements affecting "question.option.1" Button
+    t =   102.67s     Synthesize event
+    t =   102.96s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   103.99s Checking existence of `"5/5" StaticText`
+    t =   104.02s Checking existence of `"demo.ready" Button`
+    t =   104.04s Checking existence of `"question.option.0" Any`
+    t =   104.08s Checking existence of `"onboarding.next" Button`
+    t =   104.10s Checking existence of `"onboarding.customClock" Button`
+    t =   104.12s Checking existence of `"personalize.done" Button`
+    t =   104.14s Checking existence of `"theme.done" Button`
+    t =   104.17s Find the "question.option.0" Any
+    t =   104.22s Tap "question.option.0" Button
+    t =   104.22s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   104.22s     Find the "question.option.0" Button
+    t =   104.26s     Check for interrupting elements affecting "question.option.0" Button
+    t =   104.28s     Synthesize event
+    t =   104.57s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   105.60s Checking existence of `"result.map" Button`
+    t =   105.62s Waiting 5.0s for "result.map" Button to exist
+    t =   106.65s     Checking `Expect predicate `existsNoRetry == 1` for object "result.map" Button`
+    t =   106.65s         Checking existence of `"result.map" Button`
+    t =   106.67s Checking existence of `"5/5" StaticText`
+    t =   106.68s Checking existence of `"dino.backflip" Image`
+    t =   106.69s Checking existence of `"result.map" Any`
+    t =   106.71s Checking existence of `"onboarding.next" Button`
+    t =   106.72s Checking existence of `"onboarding.customClock" Button`
+    t =   106.73s Checking existence of `"personalize.done" Button`
+    t =   106.74s Checking existence of `"theme.done" Button`
+    t =   106.75s Find the "result.map" Any
+    t =   106.78s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   106.78s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   106.78s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   106.79s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =   106.80s     Synthesize event
+    t =   107.21s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   107.69s Checking existence of `"onboarding.next" Button`
+    t =   107.71s Checking existence of `"onboarding.customClock" Button`
+    t =   107.72s Checking existence of `"personalize.done" Button`
+    t =   107.73s Checking existence of `"theme.done" Button`
+    t =   107.74s Find the "result.map" Button
+    t =   107.77s Tap "result.map" Button
+    t =   107.77s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   107.77s     Find the "result.map" Button
+    t =   107.79s     Check for interrupting elements affecting "result.map" Button
+    t =   107.81s     Synthesize event
+    t =   108.10s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   108.23s Find the "header.stars" Other
+    t =   108.74s Find the "header.level" Other
+    t =   109.22s Find the "map.dino.1" Any
+    t =   109.69s Find the "map.level.1" Button
+    t =   110.16s Find the "map.dino.1" Image
+    t =   110.64s Find the "map.level.1" Button
+    t =   111.11s Find the "map.dino.1" Image
+    t =   111.60s Find the "map.level.1" Button
+    t =   112.48s Added attachment named 'jungle-earned-stars'
+    t =   112.49s Tear Down
+Test Case '-[DinoUITests.DinoUITests testJungleHeaderSettingsAndTransition]' passed (113.171 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-15 22:13:43.072.
+	 Executed 1 test, with 0 failures (0 unexpected) in 113.171 (113.172) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-15 22:13:43.073.
+	 Executed 1 test, with 0 failures (0 unexpected) in 113.171 (113.173) seconds
+Test Suite 'Selected tests' passed at 2026-10-15 22:13:43.073.
+	 Executed 1 test, with 0 failures (0 unexpected) in 113.171 (113.174) seconds
+2026-10-15 22:13:43.393 xcodebuild[65861:26743875] [MT] IDETestOperationsObserverDebug: 114.513 elapsed -- Testing started completed.
+2026-10-15 22:13:43.393 xcodebuild[65861:26743875] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-15 22:13:43.393 xcodebuild[65861:26743875] [MT] IDETestOperationsObserverDebug: 114.513 sec, +114.513 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-jungle-polish-route.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

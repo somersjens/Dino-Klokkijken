@@ -1,0 +1,83 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/dino-banner-seams-build/Build/Products/BannerColourFinal.xctestrun -destination id=C52CEAA1-9B58-4446-9A39-93DBC1FA3B1F "-only-testing:DinoUITests/DinoUITests/testWorldBannersHaveBalancedClearance" -parallel-testing-enabled NO -resultBundlePath /tmp/dino-banner-colour-final-iphone.xcresult
+
+Writing result bundle at path:
+	/tmp/dino-banner-colour-final-iphone.xcresult
+
+2026-10-15 14:19:51.934861+0200 DinoUITests-Runner[80213:25727566] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-15 14:19:52.368.
+Test Suite 'DinoUITests.xctest' started at 2026-10-15 14:19:52.369.
+Test Suite 'DinoUITests' started at 2026-10-15 14:19:52.369.
+Test Case '-[DinoUITests.DinoUITests testWorldBannersHaveBalancedClearance]' started.
+    t =     0.00s Start Test at 2026-10-15 14:19:52.369
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.03s         Wait for com.apple.springboard to idle
+    t =     0.04s     Open Hakketjak.Dino-Klokkijken
+    t =     0.04s         Launch Hakketjak.Dino-Klokkijken
+2026-10-15 14:19:52.464 xcodebuild[80207:25727022] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-15 14:19:52.464 xcodebuild[80207:25727022] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[80213]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x1083c8310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x108328398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.70s             Setting up automation session
+    t =     1.35s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     2.65s Terminate Hakketjak.Dino-Klokkijken:80218
+    t =     3.74s Open Hakketjak.Dino-Klokkijken
+    t =     3.75s     Launch Hakketjak.Dino-Klokkijken
+2026-10-15 14:19:56.115 xcodebuild[80207:25727022] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-15 14:19:56.115 xcodebuild[80207:25727022] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     3.95s         Setting up automation session
+    t =     4.55s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     6.32s Waiting 8.0s for "header.settings" Button to exist
+    t =     7.39s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =     7.39s         Checking existence of `"header.settings" Button`
+    t =     7.94s Find the "header.settings" Button
+    t =     8.39s Find the "map.level.31" Button
+    t =     8.84s Checking existence of `"map.level.31" Button`
+    t =     9.27s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =     9.60s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.72] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.47] with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =     9.60s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     9.60s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =     9.94s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    10.27s     Synthesize event
+    t =    10.27s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    10.60s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    10.93s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    11.25s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    11.57s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.63s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    14.17s Find the "header.settings" Button
+    t =    14.65s Find the "map.level.31" Button
+    t =    15.10s Checking existence of `"map.level.31" Button`
+    t =    15.55s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    15.88s Checking existence of `"map.level.31" Button`
+    t =    16.34s Find the "map.level.31" Button
+    t =    16.79s Find the "map.level.31" Button
+    t =    17.23s Find the "header.settings" Button
+    t =    17.68s Find the "map.level.31" Button
+    t =    18.13s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.46s Checking existence of `"map.level.30" Button`
+    t =    18.91s Checking existence of `"map.world.4" Any`
+    t =    19.37s Find the "map.world.4" Any
+    t =    19.83s Find the "map.level.30" Button
+    t =    20.28s Find the "map.level.31" Button
+    t =    20.73s Find the "map.world.4" StaticText
+    t =    21.30s Added attachment named 'world-banner-spacing-4'
+    t =    21.30s Tear Down
+Test Case '-[DinoUITests.DinoUITests testWorldBannersHaveBalancedClearance]' passed (21.579 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-15 14:20:13.949.
+	 Executed 1 test, with 0 failures (0 unexpected) in 21.579 (21.580) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-15 14:20:13.949.
+	 Executed 1 test, with 0 failures (0 unexpected) in 21.579 (21.581) seconds
+Test Suite 'Selected tests' passed at 2026-10-15 14:20:13.950.
+	 Executed 1 test, with 0 failures (0 unexpected) in 21.579 (21.582) seconds
+2026-10-15 14:20:14.247 xcodebuild[80207:25727022] [MT] IDETestOperationsObserverDebug: 22.913 elapsed -- Testing started completed.
+2026-10-15 14:20:14.247 xcodebuild[80207:25727022] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-15 14:20:14.247 xcodebuild[80207:25727022] [MT] IDETestOperationsObserverDebug: 22.913 sec, +22.913 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-banner-colour-final-iphone.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

@@ -1,0 +1,9 @@
+# Generated UI-test captures stay on the developer's machine.
+**/[Ss]creenshots/
+**/test-screenshots/
+
+# Local build and test output.
+DerivedData/
+.build/
+*.xcresult/
+.DS_Store

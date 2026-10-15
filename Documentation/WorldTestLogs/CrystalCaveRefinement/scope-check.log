@@ -1,0 +1,17 @@
+Concurrent WorldMap layout updates (Dino headroom and landscape title sizing) detected and preserved.
+Chapter comparison includes the independent topClearance update; world-5 artwork is checked separately.
+struct WorldMapLandscape: unchanged
+struct JungleWorldPainter: unchanged
+struct SleepValleyPainter: unchanged
+struct VolcanoWorldPainter: unchanged
+struct VillageWorldPainter: unchanged
+struct JunglePainter: unchanged
+struct WorldThemePreview: unchanged
+struct JungleLevelStone: unchanged
+struct SleepValleyLevelStone: unchanged
+struct VolcanoLevelStone: unchanged
+struct VillageLevelStone: unchanged
+Shared ThemePainter outside cave preview: unchanged
+Shared landscape outside world 5: unchanged
+Chapter layout outside world-5 entry spacing: unchanged
+Level nodes outside world-5 material and occupied glaze: unchanged
