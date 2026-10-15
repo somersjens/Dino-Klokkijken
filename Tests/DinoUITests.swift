@@ -190,14 +190,19 @@ final class DinoUITests: XCTestCase {
             node.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
             XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5))
             tap("level.play")
-            XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 5))
-            let hudWorld = app.descendants(matching: .any)["header.world"]
-            XCTAssertEqual(hudWorld.label, "Wereld \(completed + 1)")
             var rng = SeededGenerator(seed: seed)
             let q = DinoQuestionGenerator.generate(level: DinoLevelCatalog.level(first)!, using: &rng)[0]
+            let firstAnswer = q.kind == .match ? "question.match.clock.0" : "question.option.0"
+            XCTAssertTrue(app.buttons[firstAnswer].waitForExistence(timeout: 5))
+            let hudWorld = app.descendants(matching: .any)["header.world"]
+            XCTAssertEqual(hudWorld.label, "Wereld \(completed + 1)")
             if completed == 1 { XCTAssertEqual(q.target.minute, 30) }
-            let option = q.responses.firstIndex(of: q.expectedAnswer)!
-            tap("question.option.\(option)")
+            if q.kind == .match {
+                connectMatchingQuestion(q, correct: true)
+            } else {
+                let option = q.responses.firstIndex(of: q.expectedAnswer)!
+                tap("question.option.\(option)")
+            }
             XCTAssertTrue(app.staticTexts["2/5"].waitForExistence(timeout: 8))
             XCTAssertEqual(hudWorld.label, "Wereld \(completed + 1)")
             saveScreenshot("native-world-\(completed + 1)-question")
@@ -1502,7 +1507,13 @@ final class DinoUITests: XCTestCase {
             case .match:
                 connectMatchingQuestion(question, correct: right)
             default:
-                let option = right ? question.options.firstIndex(of: question.target)! : question.options.firstIndex { $0 != question.target }!
+                let option = question.responses.firstIndex { response in
+                    right ? response == question.expectedAnswer : response != question.expectedAnswer
+                }
+                guard let option else {
+                    XCTFail("No selectable answer for \(question.kind)")
+                    return
+                }
                 tap("question.option.\(option)")
             }
             if !right {

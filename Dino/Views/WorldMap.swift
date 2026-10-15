@@ -232,6 +232,17 @@ struct LevelNode: View {
                         VillageLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
                     } else if level.worldID == 5 {
                         CrystalLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
+                    } else if level.worldID == 6 {
+                        CityLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
+                    } else if level.worldID == 7 {
+                        DayNightLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast,
+                                          night: Double(level.id - 61) / 9)
+                    } else if level.worldID == 8 {
+                        TimeMachineLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
+                    } else if level.worldID == 9 {
+                        PirateLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
+                    } else if level.worldID == 10 {
+                        CastleLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
                     } else {
                         if current { Circle().stroke(highContrast ? DinoStyle.deepGreen : DinoStyle.green.opacity(0.5), lineWidth: 3).padding(-9) }
                         Circle().fill(color.opacity(0.55)).offset(y: 6)
@@ -243,7 +254,7 @@ struct LevelNode: View {
                         if unlocked { Text(verbatim: "\(level.id)").font(.system(size: level.isBoss ? 23 : 30, weight: .heavy, design: .rounded)) }
                         else { Image(systemName: "lock.fill").font(.system(size: 23, weight: .bold)) }
                     }.foregroundStyle(level.isBoss ? .white : DinoStyle.ink)
-                        .opacity(current && (level.worldID == 1 || ((2...5).contains(level.worldID) && !highContrast)) ? 0.55 : 1)
+                        .opacity(current && (level.worldID == 1 || ((2...10).contains(level.worldID) && !highContrast)) ? 0.55 : 1)
                 }.frame(width: level.isBoss ? 90 : 72, height: level.isBoss ? 90 : 72)
             }
             .buttonStyle(DinoAnswerButtonStyle()).disabled(!unlocked)
@@ -482,6 +493,228 @@ private struct CrystalLevelStone: View {
     }
 }
 
+/// Turquoise metal and warm brass edging match the city's station and streetlights.
+private struct CityLevelStone: View {
+    let unlocked: Bool
+    let occupied: Bool
+    let boss: Bool
+    let highContrast: Bool
+
+    private var face: Color { Color(dinoHex: boss ? 0x376475 : unlocked ? 0xA5D08B : 0xAFBDA8) }
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                Circle().fill(Color(dinoHex: 0x568991)).offset(y: 6)
+                Circle().fill(LinearGradient(colors: [Color(dinoHex: 0xE3EFE0), Color(dinoHex: 0xA8CFC2), Color(dinoHex: 0x5D98A1)],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing))
+                Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x75A6A6 : unlocked ? 0xE7EEC0 : 0xDCE3C8), face],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing)).padding(8)
+                Circle().strokeBorder(Color(dinoHex: highContrast ? 0x3B6773 : 0xFFF1C7), lineWidth: highContrast ? 3 : 2).padding(3)
+                Circle().strokeBorder(Color(dinoHex: 0x598467).opacity(0.35), lineWidth: 1).padding(10)
+                Canvas { context, size in
+                    for i in 0..<6 {
+                        let angle = Double(i) * .pi / 3 + .pi / 6
+                        let point = CGPoint(x: size.width * (0.5 + CGFloat(cos(angle)) * 0.435),
+                                            y: size.height * (0.5 + CGFloat(sin(angle)) * 0.435))
+                        context.fill(Path(ellipseIn: CGRect(x: point.x - 1.7, y: point.y - 1, width: 3.4, height: 3.4)),
+                                     with: .color(Color(dinoHex: 0x66948D)))
+                        context.fill(Path(ellipseIn: CGRect(x: point.x - 1.4, y: point.y - 1.5, width: 2.8, height: 2.8)),
+                                     with: .color(Color(dinoHex: 0xF5DE9F)))
+                        context.fill(Path(ellipseIn: CGRect(x: point.x - 0.8, y: point.y - 1.1, width: 1.3, height: 1)),
+                                     with: .color(Color(dinoHex: 0xFFF8D6)))
+                    }
+                }
+                if occupied {
+                    Circle().fill(Color(dinoHex: 0xFFFAE1).opacity(highContrast ? 0.18 : 0.46)).padding(10)
+                    Circle().stroke(Color(dinoHex: 0xFFF6C9).opacity(0.9), lineWidth: 2).padding(-5)
+                    Circle().stroke(Color(dinoHex: 0xB9D8B5).opacity(0.25), lineWidth: 5).padding(-10)
+                }
+            }.shadow(color: Color(dinoHex: 0x587B6B).opacity(0.22), radius: 5, y: 9)
+        }.allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+/// Mossy rims gain a moonlit tint farther down the forest chapter.
+private struct DayNightLevelStone: View {
+    let unlocked: Bool
+    let occupied: Bool
+    let boss: Bool
+    let highContrast: Bool
+    let night: Double
+
+    private func tint(_ day: UInt32, _ moonlight: UInt32) -> Color {
+        let amount = min(1, max(0, night))
+        func channel(_ shift: UInt32) -> Double {
+            (Double((day >> shift) & 255) * (1 - amount) + Double((moonlight >> shift) & 255) * amount) / 255
+        }
+        return Color(.sRGB, red: channel(16), green: channel(8), blue: channel(0), opacity: 1)
+    }
+    private var face: Color {
+        boss ? Color(dinoHex: 0x415F7D) : unlocked ? tint(0xA8D282, 0xA4CDBE) : tint(0xAFBBA0, 0xA9BCC9)
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                Circle().fill(tint(0x828C5B, 0x5B7696)).offset(y: 6)
+                Circle().fill(LinearGradient(colors: [tint(0xF0DEAF, 0xD9E1DE), tint(0xC6C496, 0xAABBCB), tint(0x83986A, 0x718BA9)],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing))
+                Circle().fill(LinearGradient(colors: [boss ? Color(dinoHex: 0x83A4B6) : tint(0xE8EFBF, 0xE2F0DF), face],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing)).padding(8)
+                Circle().strokeBorder(highContrast ? Color(dinoHex: 0x415E69) : tint(0xFFF3C7, 0xE6FFF0), lineWidth: highContrast ? 3 : 2).padding(3)
+                Circle().strokeBorder(tint(0x68854D, 0x5D8393).opacity(0.4), lineWidth: 1).padding(10)
+                Canvas { context, size in
+                    for i in 0..<8 {
+                        let angle = Double(i) * .pi / 4 + 0.17
+                        let x = size.width * (0.5 + CGFloat(cos(angle)) * 0.435)
+                        let y = size.height * (0.5 + CGFloat(sin(angle)) * 0.435)
+                        context.fill(Path(ellipseIn: CGRect(x: x - 2, y: y - 1, width: 4, height: 2.5)),
+                                     with: .color(tint(0x88AB65, 0x93B9BA).opacity(unlocked ? 0.85 : 0.45)))
+                        context.fill(Path(ellipseIn: CGRect(x: x - 1.5, y: y - 1, width: 2, height: 1)),
+                                     with: .color(tint(0xE7EDAD, 0xE2F6E8).opacity(0.9)))
+                    }
+                }
+                if occupied {
+                    Circle().fill(tint(0xFFF9DD, 0xF0FBF1).opacity(highContrast ? 0.18 : 0.46)).padding(10)
+                    Circle().stroke(tint(0xFFF6C4, 0xE4FFF0).opacity(0.9), lineWidth: 2).padding(-5)
+                    Circle().stroke(tint(0xCDDE99, 0xB5D8D8).opacity(0.25), lineWidth: 5).padding(-10)
+                }
+            }.shadow(color: tint(0x54734A, 0x3E5B7B).opacity(0.23), radius: 5, y: 9)
+        }.allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+/// Machined brass surrounds an illuminated glass inset; Dino softens its center.
+private struct TimeMachineLevelStone: View {
+    let unlocked: Bool
+    let occupied: Bool
+    let boss: Bool
+    let highContrast: Bool
+
+    var body: some View {
+        ZStack {
+            Circle().fill(Color(dinoHex: 0x8F8766)).offset(y: 6)
+            Circle().fill(LinearGradient(colors: [Color(dinoHex: 0xFFE8AE), Color(dinoHex: 0xD4B16F), Color(dinoHex: 0x9B895D)],
+                                         startPoint: .topLeading, endPoint: .bottomTrailing))
+            Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x7EAFB8 : unlocked ? 0xDAF4C6 : 0xD7DED0),
+                                                  Color(dinoHex: boss ? 0x345F75 : unlocked ? 0x95C5AB : 0xA2B4AC)],
+                                         startPoint: .topLeading, endPoint: .bottomTrailing)).padding(9)
+            Circle().strokeBorder(Color(dinoHex: highContrast ? 0x526E73 : 0xFFF2C4), lineWidth: highContrast ? 3 : 2).padding(3)
+            Circle().strokeBorder(Color(dinoHex: 0x587F83).opacity(0.65), lineWidth: 1).padding(9)
+            Circle().trim(from: 0.05, to: 0.38).stroke(Color(dinoHex: 0xDAFFFF).opacity(unlocked ? 0.85 : 0.35), style: StrokeStyle(lineWidth: 2, lineCap: .round)).rotationEffect(.degrees(180)).padding(12)
+            Canvas { context, size in
+                for i in 0..<12 {
+                    let angle = Double(i) * .pi / 6
+                    let point = CGPoint(x: size.width * (0.5 + CGFloat(sin(angle)) * 0.435),
+                                        y: size.height * (0.5 - CGFloat(cos(angle)) * 0.435))
+                    if i % 2 == 0 {
+                        context.fill(Path(ellipseIn: CGRect(x: point.x - 1.8, y: point.y - 0.7, width: 3.6, height: 3.6)), with: .color(Color(dinoHex: 0x8E7A50)))
+                        context.fill(Path(ellipseIn: CGRect(x: point.x - 1.6, y: point.y - 1.6, width: 3.2, height: 3.2)),
+                                     with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xFFF6CC), Color(dinoHex: 0xC49F60)]), startPoint: point, endPoint: .init(x: point.x + 2, y: point.y + 2)))
+                    } else {
+                        var tick = Path(); tick.move(to: point)
+                        tick.addLine(to: .init(x: size.width * (0.5 + CGFloat(sin(angle)) * 0.40), y: size.height * (0.5 - CGFloat(cos(angle)) * 0.40)))
+                        context.stroke(tick, with: .color(Color(dinoHex: 0x937F52).opacity(0.8)), lineWidth: 1)
+                    }
+                }
+            }
+            if occupied {
+                Circle().fill(Color(dinoHex: 0xFFFBE6).opacity(highContrast ? 0.18 : 0.48)).padding(10)
+                Circle().stroke(Color(dinoHex: 0xD7FFFF).opacity(0.9), lineWidth: 2).padding(-5)
+                Circle().stroke(Color(dinoHex: 0x8EDDDD).opacity(0.25), lineWidth: 5).padding(-10)
+            }
+        }.shadow(color: Color(dinoHex: 0x697F7B).opacity(0.24), radius: 5, y: 9)
+            .allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+/// Rope edging and a sandstone rim surround the tide-green pirate stepping stones.
+private struct PirateLevelStone: View {
+    let unlocked: Bool
+    let occupied: Bool
+    let boss: Bool
+    let highContrast: Bool
+
+    var body: some View {
+        ZStack {
+            Circle().fill(Color(dinoHex: 0xA58C68)).offset(y: 6)
+            Circle().fill(LinearGradient(colors: [Color(dinoHex: 0xFFF0C4), Color(dinoHex: 0xE0BF86), Color(dinoHex: 0xB89C70)],
+                                         startPoint: .topLeading, endPoint: .bottomTrailing))
+            Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x75AFB8 : unlocked ? 0xE3F3BE : 0xE3E4CA),
+                                                  Color(dinoHex: boss ? 0x345F75 : unlocked ? 0x94CDB2 : 0xAABFB0)],
+                                         startPoint: .topLeading, endPoint: .bottomTrailing)).padding(9)
+            Circle().strokeBorder(Color(dinoHex: highContrast ? 0x5C7273 : 0xFFF2CB), lineWidth: highContrast ? 3 : 2).padding(3)
+            Circle().strokeBorder(Color(dinoHex: 0xB19564).opacity(0.8), lineWidth: 3).padding(6)
+            Circle().strokeBorder(Color(dinoHex: 0xF8E5B4), style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [1, 3])).padding(6)
+            Circle().strokeBorder(Color(dinoHex: 0x6E9B91).opacity(0.5), lineWidth: 1).padding(10)
+            Canvas { context, size in
+                for i in 0..<7 {
+                    let angle = Double(i) * .pi * 2 / 7 + 0.21
+                    let x = size.width * (0.5 + CGFloat(cos(angle)) * 0.46)
+                    let y = size.height * (0.5 + CGFloat(sin(angle)) * 0.46)
+                    context.fill(Path(ellipseIn: CGRect(x: x, y: y, width: 1.6, height: 1.1)), with: .color(Color(dinoHex: 0xC3A877).opacity(0.7)))
+                    context.fill(Path(ellipseIn: CGRect(x: x - 1.8, y: y - 0.5, width: 1.2, height: 1)), with: .color(Color(dinoHex: 0xFFFADE).opacity(0.9)))
+                }
+            }
+            if occupied {
+                Circle().fill(Color(dinoHex: 0xFFFBE4).opacity(highContrast ? 0.18 : 0.48)).padding(10)
+                Circle().stroke(Color(dinoHex: 0xEEFFF0).opacity(0.95), lineWidth: 2).padding(-5)
+                Circle().stroke(Color(dinoHex: 0x9EE2D5).opacity(0.28), lineWidth: 5).padding(-10)
+            }
+        }.shadow(color: Color(dinoHex: 0x8C916A).opacity(0.25), radius: 5, y: 9)
+            .allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+/// Pale royal stone, gold edging and blue inlays mark the final ten levels.
+private struct CastleLevelStone: View {
+    let unlocked: Bool
+    let occupied: Bool
+    let boss: Bool
+    let highContrast: Bool
+
+    var body: some View {
+        ZStack {
+            Circle().fill(Color(dinoHex: 0x9F9F82)).offset(y: 6)
+            Circle().fill(LinearGradient(colors: [Color(dinoHex: 0xFFF1C9), Color(dinoHex: 0xDCC796), Color(dinoHex: 0xAEB49D)],
+                                         startPoint: .topLeading, endPoint: .bottomTrailing))
+            Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x7CA3C1 : unlocked ? 0xE5F3D4 : 0xE2E6D0),
+                                                  Color(dinoHex: boss ? 0x365A7F : unlocked ? 0xA4C9BF : 0xAEBFB5)],
+                                         startPoint: .topLeading, endPoint: .bottomTrailing)).padding(9)
+            Circle().strokeBorder(Color(dinoHex: highContrast ? 0x4D6B7D : 0xFFF7D7), lineWidth: highContrast ? 3 : 2).padding(3)
+            Circle().strokeBorder(Color(dinoHex: 0xC8A96C), lineWidth: 2).padding(7)
+            Circle().strokeBorder(Color(dinoHex: 0x6D91A5).opacity(0.45), lineWidth: 1).padding(10)
+            Canvas { context, size in
+                for i in 0..<4 {
+                    let angle = Double(i) * .pi / 2
+                    let point = CGPoint(x: size.width * (0.5 + CGFloat(sin(angle)) * 0.44),
+                                        y: size.height * (0.5 - CGFloat(cos(angle)) * 0.44))
+                    let gem = Path { p in
+                        p.addLines([.init(x: point.x, y: point.y - 3), .init(x: point.x + 2.3, y: point.y),
+                                    .init(x: point.x, y: point.y + 3), .init(x: point.x - 2.3, y: point.y)])
+                        p.closeSubpath()
+                    }
+                    context.fill(gem, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xD0E6EA), Color(dinoHex: 0x638EB8)]), startPoint: .init(x: point.x - 2, y: point.y - 3), endPoint: .init(x: point.x + 2, y: point.y + 3)))
+                    context.stroke(gem, with: .color(Color(dinoHex: 0xFFF0BA)), lineWidth: 0.7)
+                }
+                for i in 0..<8 where i % 2 == 1 {
+                    let angle = Double(i) * .pi / 4
+                    let x = size.width * (0.5 + CGFloat(sin(angle)) * 0.44)
+                    let y = size.height * (0.5 - CGFloat(cos(angle)) * 0.44)
+                    context.fill(Path(ellipseIn: CGRect(x: x - 1.3, y: y - 1.3, width: 2.6, height: 2.6)), with: .color(Color(dinoHex: 0xFFF0BB)))
+                }
+            }
+            if occupied {
+                Circle().fill(Color(dinoHex: 0xFFFBE7).opacity(highContrast ? 0.18 : 0.48)).padding(10)
+                Circle().stroke(Color(dinoHex: 0xF3FFF0).opacity(0.95), lineWidth: 2).padding(-5)
+                Circle().stroke(Color(dinoHex: 0xBCDCE3).opacity(0.28), lineWidth: 5).padding(-10)
+            }
+        }.shadow(color: Color(dinoHex: 0x7C917E).opacity(0.25), radius: 5, y: 9)
+            .allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
 /// Each chapter uses the same shape-drawn route and spacing as the jungle.
 private struct WorldChapter: View {
     @Environment(\.dinoHighContrast) private var highContrast
@@ -495,7 +728,7 @@ private struct WorldChapter: View {
     var body: some View {
         VStack(spacing: 0) {
             WorldTitleBanner(world: world, highContrast: highContrast)
-                .padding(.horizontal, 18).padding(.top, world.id == 5 ? 136 : world.id == 4 ? 126 : world.id == 3 ? 106 : world.id == 2 ? 88 : 18).padding(.bottom, 10)
+                .padding(.horizontal, 18).padding(.top, world.id == 10 ? 156 : world.id == 9 ? 146 : world.id == 8 ? 136 : world.id == 7 ? 126 : world.id == 6 ? 126 : world.id == 5 ? 136 : world.id == 4 ? 126 : world.id == 3 ? 106 : world.id == 2 ? 88 : 18).padding(.bottom, 10)
                 .frame(maxWidth: 600).frame(maxWidth: .infinity)
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { routeOffset = $0 + topClearance }
                 .accessibilityIdentifier("map.world.\(world.id)")
