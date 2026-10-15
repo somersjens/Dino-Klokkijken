@@ -39,3 +39,15 @@ Ook de definitieve versie slaagt met twee tests per apparaat: **vier geslaagde s
 Bij een eerdere herhaling stopte de iPhone-testomgeving vóór de testverbinding met een signal kill en een timeout bij het verzamelen van diagnostiek. Die omgevingsfout is bewaard in [het opstartlog](WorldTestLogs/VolcanoRefinement/iphone-startup-timeout.log). De hercontrole op een aparte tijdelijke iPhone 17-simulator met iOS 26.5 slaagt met twee tests en nul fouten. De actuele iPhone-beelden zijn daarna bijgewerkt en de tijdelijke simulator is opgeruimd. De [bronvergelijking](WorldTestLogs/VolcanoRefinement/scope-check.log) bevestigt de afbakening tot wereld 3.
 
 Alle illustraties blijven native getekend. Er zijn geen bitmap-assets toegevoegd en echte spelersvoortgang is niet gewijzigd.
+
+## Verdere afwerking — 15 oktober 2026
+
+De basaltzuilen en losse rotsen hebben afgeronde contouren en gedeelde, onregelmatige voeten. De rotsfacetten worden binnen het silhouet getekend. Ook de basaltornamenten van het wereldbord hebben zachtere hoeken en gebogen lavanaden die achter de voet doorlopen.
+
+De vier lavavallen beginnen in een bron op de hoogste rots en waaieren onderaan uit in een aangesloten poel. De poelen hebben golvende oevers, een stenen rand, warme reflecties en zachte grondschaduwen. De zijstromen op de grote vulkaan lopen spits uit in de rots; de hoofdgeul eindigt in een poel. De afgeronde vulkaan staat zichtbaar naast de eerste bocht en verdwijnt aan de voet geleidelijk in de nevel. De verre, losstaande zuilen zijn vervangen door lage verbonden rotsruggen.
+
+De grotere scènes staan verder uit elkaar. Losse decorrotsjes en verspreide grassprietjes die voor een lavabron konden vallen zijn verwijderd. De kwartierklokken zijn in stenen behuizingen geplaatst; de planten en palmen hebben contactschaduwen. De zijbrug heeft een echte boog met een doorlopende lavageul en kleine poelen aan beide oevers.
+
+De hele landschapstekening is visueel gecontroleerd op breedtes van 320, 393, 834 en 1194 punten. De bestaande tests `testNativeWorldChaptersAndMinuteQuestions` en `testWorldBannersHaveBalancedClearance` zijn met `DINO_TEST_WORLD_IDS=3` uitgevoerd op iPhone 17 en iPad Pro 11-inch: vier geslaagde testuitvoeringen en nul fouten. De definitieve simulatorbuild en `git diff --check` slagen.
+
+Actuele appbeelden: [iPhone](Screenshots/VolcanoPolish/entrance-iphone.png) · [iPad](Screenshots/VolcanoPolish/entrance-ipad.png). De native kaart- en spelcode buiten de wereld-3-tekening en zijn basaltornamenten is gelijk gebleven.

@@ -27,31 +27,22 @@ struct WorldMap: View {
                         ScrollView {
                             VStack(spacing: 0) {
                                 VStack(spacing: 0) {
-                                    VStack(spacing: 12) {
+                                    VStack(spacing: 8) {
                                         mapHeading
                                             .scaleEffect(landscape ? 0.82 : 1)
-                                            .frame(height: landscape ? 174 : 212)
-                                            .padding(.top, landscape ? 16 : 32)
-                                        Button(action: openFriends) {
-                                            HStack(spacing: 10) {
-                                                Label("dino.friends.title", systemImage: "person.2.fill")
-                                                Image(systemName: "chevron.right").font(.system(size: 12, weight: .heavy))
-                                            }
-                                            .font(.system(size: 14, weight: .heavy, design: .rounded))
-                                            .padding(.horizontal, 24).frame(minHeight: 46)
-                                            .background(LinearGradient(colors: [Color(dinoHex: 0xFFFEEF), Color(dinoHex: 0xF1F2D6)], startPoint: .top, endPoint: .bottom), in: Capsule())
-                                            .overlay(Capsule().strokeBorder(.white.opacity(0.9), lineWidth: 2))
-                                            .shadow(color: DinoStyle.deepGreen.opacity(0.2), radius: 3, y: 4)
-                                        }.buttonStyle(.plain).accessibilityIdentifier("map.friends")
+                                            .frame(height: landscape ? 174 : 190, alignment: .top)
+                                            .padding(.top, landscape ? 0 : -16)
+                                        friendsShortcut
                                         bossShortcut
-                                    }.padding(.horizontal, 18).padding(.bottom, 12)
+                                    }.padding(.horizontal, 18).padding(.bottom, 2)
                                         .frame(maxWidth: 600).frame(maxWidth: .infinity)
                                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { landscapeRouteOffset = $0 }
                                     mapRoute(topClearance: routeTopClearance)
                                 }.padding(.top, floatingHUDHeight + geometry.safeAreaInsets.top)
                                     .background {
                                         MapScenery(viewportHeight: geometry.size.height) {
-                                            WorldMapLandscape(routeOffset: landscapeRouteOffset + floatingHUDHeight + geometry.safeAreaInsets.top + routeTopClearance)
+                                            WorldMapLandscape(routeOffset: landscapeRouteOffset + floatingHUDHeight + geometry.safeAreaInsets.top + routeTopClearance,
+                                                              viewportHeight: geometry.size.height)
                                                 .equatable()
                                         }
                                     }
@@ -109,6 +100,23 @@ struct WorldMap: View {
         WorldTitleBanner(world: DinoWorldCatalog.world(1)!, highContrast: highContrast)
             .equatable()
             .accessibilityIdentifier("map.world.1")
+    }
+
+    private var friendsShortcut: some View {
+        Button(action: openFriends) {
+            HStack(spacing: 10) {
+                Label("dino.friends.title", systemImage: "person.2.fill")
+                Image(systemName: "chevron.right").font(.system(size: 12, weight: .heavy))
+            }
+            .font(.system(size: 14, weight: .heavy, design: .rounded))
+            .padding(.horizontal, 24).frame(minHeight: 46)
+            .background(LinearGradient(colors: [Color(dinoHex: 0xFFFEEF), Color(dinoHex: 0xF1F2D6)], startPoint: .top, endPoint: .bottom), in: Capsule())
+            .background {
+                JungleFriendsLeaves().padding(.horizontal, -27).padding(.vertical, -5)
+            }
+            .overlay(Capsule().strokeBorder(.white.opacity(0.9), lineWidth: 2))
+            .shadow(color: DinoStyle.deepGreen.opacity(0.2), radius: 3, y: 4)
+        }.buttonStyle(.plain).accessibilityIdentifier("map.friends")
     }
 
     private var bossShortcut: some View {
