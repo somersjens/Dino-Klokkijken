@@ -66,7 +66,11 @@ Alle klokken gebruiken één `ClockTheme`. De urenwijzer volgt `30 × uur + 0,5 
 
 ## Verificatie
 
-`Tools/test-dino.sh` voert **437.239 controles** uit, inclusief alle honderd levels, wereldspecifieke minuten, unieke antwoordkeuzes, beide boss-routes in alle tien werelden, ontgrendeling, dubbele taps, herkansingen zonder extra score, uurovergangen tijdens klokbediening, opslag/herstart, voorkeuren en iCloud-merge/reset/offline-gedrag.
+`Tools/test-dino.sh` voert **437.244 controles** uit, inclusief alle honderd levels, wereldspecifieke minuten, unieke antwoordkeuzes, beide boss-routes in alle tien werelden, ontgrendeling, dubbele taps, herkansingen zonder extra score, uurovergangen tijdens klokbediening, opslag/herstart, voorkeuren en iCloud-merge/reset/offline-gedrag.
+
+[Performanceanalyse en metingen](Documentation/Performance.md) beschrijft de optimalisaties aan kaartweergave, klokmarkeringen, Dino-sprites, menu's en antwoordfeedback. `zsh Tools/benchmark-dino-rendering.sh` meet de spriteverwerking en print pixelhashes. `testMapScrollPerformance` meet daarnaast scrollanimaties, CPU en geheugen in de simulator.
+
+Test-screenshotmappen, waaronder `Documentation/Screenshots`, worden lokaal bewaard en door `.gitignore` uitgesloten van toekomstige Git-synchronisaties. Screenshotlinks in eerdere verificatieverslagen verwijzen naar deze lokale beelden; in een nieuwe checkout zijn ze niet automatisch aanwezig. Ontwerpconcepten en game-assets blijven onderdeel van de repository. Bestaande screenshots in de Git-geschiedenis worden hiermee niet uit eerdere commits verwijderd.
 
 Via **Product → Test** voert `DinoUITests` de scherminteracties uit. De tests gebruiken een eigen spelersopslag en vaste random seed, uitsluitend in debug-builds. Zie [het acceptatieverslag](Documentation/Acceptance.md) en [de screenshots](Documentation/Screenshots).
 

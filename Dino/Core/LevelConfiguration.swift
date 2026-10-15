@@ -75,7 +75,7 @@ struct LevelConfiguration: Identifiable, Sendable {
     var icon: String { isBoss ? "trophy.fill" : recipes[0].kind.symbol }
 }
 
-struct DinoWorld: Identifiable, Sendable {
+struct DinoWorld: Identifiable, Equatable, Sendable {
     let id: Int
     let ground: UInt32
     var titleKey: String { id == 1 ? "dino.jungle" : "dino.world.\(id).name" }

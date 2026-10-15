@@ -34,6 +34,7 @@ struct DinoCoreTests {
         testDinoSpriteColors()
         testPlayerModel()
         testLiveClockChanges()
+        testUnchangedInputsDoNotPublish()
         testSettingsAndFeedback()
         testCloudSync()
         testFullReset()
@@ -982,6 +983,28 @@ struct DinoCoreTests {
         expect(restored.name.isEmpty && restored.onboardingComplete && restored.clockTheme == .standard, "reset preserves nameless onboarding and clocks")
     }
 
+    static func testUnchangedInputsDoNotPublish() {
+        let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+        let session = DinoSession(level: DinoLevelCatalog.level(1)!, player: player)
+        var inputUpdates = 0
+        let inputSubscription = session.objectWillChange.sink { inputUpdates += 1 }
+        session.setInputTime(session.inputTime)
+        expect(inputUpdates == 0, "stationary clock drags do not invalidate the game view")
+        let next = session.inputTime.shiftingMinutes(by: 5)
+        session.setInputTime(next)
+        expect(inputUpdates == 1 && session.inputTime == next, "minute changes publish only the changed field")
+        session.setInputTime(next)
+        expect(inputUpdates == 1, "repeated snapped minute values do not publish again")
+        inputSubscription.cancel()
+
+        var profileUpdates = 0
+        let profileSubscription = player.profileChanges.sink { _ in profileUpdates += 1 }
+        player.markDemonstrated(.setAnalog)
+        player.markDemonstrated(.setAnalog)
+        expect(profileUpdates == 1, "reopening a known example does not save and publish an unchanged profile")
+        profileSubscription.cancel()
+    }
+
     static func testLiveClockChanges() {
         let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
         let player = DinoPlayer(store: store)
@@ -1286,6 +1309,15 @@ struct DinoCoreTests {
         let writes = cloud.writes
         secondSync.synchronize()
         expect(cloud.writes == writes, "unchanged sync does not upload again")
+        let personalizationReads = cloud.reads, personalizationSyncs = cloud.syncs
+        var customTheme = second.profile.clockTheme
+        customTheme.analogShape = .octagon
+        second.setTheme(customTheme)
+        var customDino = DinoAppearance.standard
+        customDino.body = 0xF48EB6
+        second.setDinoAppearance(customDino)
+        expect(cloud.reads == personalizationReads && cloud.syncs == personalizationSyncs && cloud.writes == writes,
+               "local clock and Dino color edits do not trigger cloud reads, writes or synchronization")
         let session = DinoSession(level: DinoLevelCatalog.level(2)!, player: second)
         if session.demonstration != nil { session.dismissDemonstration() }
         for _ in 0..<5 { session.submit(session.question.target); session.advance() }

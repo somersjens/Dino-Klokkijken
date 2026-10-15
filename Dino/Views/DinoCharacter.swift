@@ -8,8 +8,10 @@ struct DinoCharacter: View {
     var givesThumbsUp = false
     @EnvironmentObject private var player: DinoPlayer
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @State private var start = Date()
     @State private var finished = false
+    @State private var prepared: (appearance: DinoAppearance, images: [String: UIImage])?
 
     private var appearance: DinoAppearance { player.profile.dinoAppearance ?? .standard }
 
@@ -27,7 +29,7 @@ struct DinoCharacter: View {
     }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clip == .idle || finished || reduceMotion)) { context in
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clip == .idle || finished || reduceMotion || scenePhase != .active)) { context in
             let elapsed = finished ? DinoAnimation.duration(clip) : context.date.timeIntervalSince(start)
             let sample = DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reduceMotion)
             sprite(sample.pose, angle: sample.angle)
@@ -47,16 +49,9 @@ struct DinoCharacter: View {
             // Prepare every pose between reactions, so a short animation never
             // flashes back to green while its next frame is being recolored.
             do { try await Task.sleep(for: .milliseconds(35)) } catch { return }
-            let originals = DinoAnimation.spriteAssets.compactMap { asset in
-                UIImage(named: asset)?.cgImage.map { (asset, $0) }
-            }
-            let job = Task.detached(priority: .userInitiated) {
-                for (asset, original) in originals {
-                    guard !Task.isCancelled else { return }
-                    _ = DinoAvatarRenderer.render(original: original, appearance: colors, portrait: false, asset: asset)
-                }
-            }
-            await withTaskCancellationHandler { await job.value } onCancel: { job.cancel() }
+            let images = await DinoSpriteLoader.shared.images(for: colors)
+            guard !Task.isCancelled, !images.isEmpty else { return }
+            prepared = (colors, images)
         }
         .task(id: clip) {
             start = Date(); finished = false
@@ -67,7 +62,13 @@ struct DinoCharacter: View {
     }
 
     private func sprite(_ pose: DinoAnimation.Pose, angle: Double) -> some View {
-        DinoAvatar(appearance: appearance, asset: pose.asset).frame(width: size, height: size)
+        Group {
+            if let prepared, prepared.appearance == appearance, let image = prepared.images[pose.asset] {
+                Image(uiImage: image).resizable().scaledToFit().accessibilityHidden(true)
+            } else {
+                DinoAvatar(appearance: appearance, asset: pose.asset)
+            }
+        }.frame(width: size, height: size)
             .offset(x: size * pose.offsetX, y: size * pose.offsetY)
             .rotationEffect(.degrees(angle - pose.paintedAngle),
                             anchor: clip == .backflip ? UnitPoint(x: 0.5, y: 0.52) : .bottom)

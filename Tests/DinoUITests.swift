@@ -415,6 +415,23 @@ final class DinoUITests: XCTestCase {
         }
     }
 
+    func testMapScrollPerformance() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launch()
+        XCTAssertTrue(app.buttons["map.bossShortcut"].waitForExistence(timeout: 8))
+        let options = XCTMeasureOptions()
+        options.iterationCount = 3
+        measure(metrics: [XCTClockMetric(), XCTCPUMetric(application: app),
+                          XCTMemoryMetric(application: app), XCTOSSignpostMetric.scrollingAndDecelerationMetric],
+                options: options) {
+            for _ in 0..<4 { app.swipeUp(velocity: .fast) }
+            for _ in 0..<4 { app.swipeDown(velocity: .fast) }
+        }
+        XCTAssertTrue(app.buttons["header.settings"].isHittable)
+        saveScreenshot("performance-map-after-fast-scroll")
+    }
+
     func testPracticeHUDRecordsAndPersistentCounter() {
         openPractice()
         XCTAssertFalse(app.staticTexts["Van makkelijk naar moeilijk"].exists)

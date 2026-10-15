@@ -17,6 +17,7 @@ struct DinoAvatar: View {
     }
 
     private var image: UIImage? {
+        if let rendered, rendered.key == renderKey { return rendered.image }
         if let cached = DinoAvatarRenderer.cached(appearance: appearance, portrait: portrait, asset: asset) { return cached }
         if appearance == .standard { return standardImage }
         if let rendered, rendered.key.asset == asset, rendered.key.portrait == portrait { return rendered.image }
@@ -63,6 +64,36 @@ struct DinoAvatar: View {
         let appearance: DinoAppearance
         let portrait: Bool
         let asset: String
+    }
+}
+
+/// All visible characters share one preparation job and one retained sprite set.
+/// A new color selection cancels obsolete work; opening another menu reuses it.
+actor DinoSpriteLoader {
+    static let shared = DinoSpriteLoader()
+    private var appearance: DinoAppearance?
+    private var job: Task<[String: UIImage], Never>?
+
+    func images(for colors: DinoAppearance) async -> [String: UIImage] {
+        guard !Task.isCancelled else { return [:] }
+        if appearance != colors || job == nil {
+            job?.cancel()
+            appearance = colors
+            job = Task.detached(priority: .userInitiated) {
+                var images: [String: UIImage] = [:]
+                for asset in DinoAnimation.spriteAssets {
+                    guard !Task.isCancelled else { return [:] }
+                    if let cached = DinoAvatarRenderer.cached(appearance: colors, portrait: false, asset: asset) {
+                        images[asset] = cached
+                    } else {
+                        images[asset] = DinoAvatarRenderer.render(original: UIImage(named: asset)?.cgImage,
+                                                                appearance: colors, portrait: false, asset: asset)
+                    }
+                }
+                return images
+            }
+        }
+        return await job!.value
     }
 }
 

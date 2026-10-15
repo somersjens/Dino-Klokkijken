@@ -3,6 +3,7 @@ import SwiftUI
 struct DinoGameView: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @EnvironmentObject private var player: DinoPlayer
+    @EnvironmentObject private var settings: DinoSettings
     @StateObject var session: DinoSession
     let onExit: () -> Void
     let onResult: (DinoLevelResult) -> Void
@@ -105,6 +106,9 @@ struct DinoGameView: View {
             }
 
         }.foregroundStyle(DinoStyle.ink)
+            .task {
+                DinoAnswerFeedback.shared.prepare(sound: settings.soundEffectsEnabled, vibration: settings.hapticsEnabled)
+            }
             .transformPreference(DinoCompanionPreference.self) { anchors in
                 if confirmExit || session.demonstration != nil { anchors = [:] }
             }

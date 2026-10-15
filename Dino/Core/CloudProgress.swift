@@ -102,9 +102,12 @@ final class DinoCloudSync: ObservableObject {
         settings.$cloudDeviceID.sink { [weak self] id in
             self?.deviceKey = Self.progressKey + "." + id
         }.store(in: &subscriptions)
-        player.profileChanges.sink { [weak self] profile in
-            self?.synchronize(profile: profile)
-        }.store(in: &subscriptions)
+        player.profileChanges
+            .map(DinoCloudProgress.init)
+            .prepend(DinoCloudProgress(player.profile))
+            .removeDuplicates()
+            .sink { [weak self] _ in self?.synchronize() }
+            .store(in: &subscriptions)
         NotificationCenter.default.publisher(for: NSUbiquitousKeyValueStore.didChangeExternallyNotification)
             .receive(on: RunLoop.main)
             .sink { [weak self] notification in

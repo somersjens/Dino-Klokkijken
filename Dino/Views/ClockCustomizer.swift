@@ -1,6 +1,13 @@
 import SwiftUI
 import UIKit
 
+extension TimelineSchedule where Self == PeriodicTimelineSchedule {
+    /// These clocks display minutes, so refresh exactly at minute boundaries.
+    static var dinoMinute: PeriodicTimelineSchedule {
+        .init(from: Date(timeIntervalSinceReferenceDate: floor(Date().timeIntervalSinceReferenceDate / 60) * 60), by: 60)
+    }
+}
+
 enum ClockCustomizerPage {
     case analog, digital, both
 }
@@ -52,7 +59,7 @@ struct ClockCustomizer: View {
     }
 
     private var analogPreview: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
+        TimelineView(.dinoMinute) { context in
             VStack(spacing: 10) {
                 AnalogClock(time: ClockTime(date: context.date), theme: theme, size: compact ? 100 : 180)
                     .accessibilityIdentifier("theme.analog.preview")
@@ -63,7 +70,7 @@ struct ClockCustomizer: View {
     }
 
     private var digitalPreview: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
+        TimelineView(.dinoMinute) { context in
             VStack(spacing: 10) {
                 DigitalClock(time: ClockTime(date: context.date), theme: theme, fontSize: compact ? 36 : 48)
                     .accessibilityIdentifier("theme.digital.preview")
@@ -119,7 +126,7 @@ struct ClockCustomizer: View {
     private func fontChoice(_ style: DigitalNumerals) -> some View {
         Button { theme.numerals = style } label: {
             VStack(spacing: 6) {
-                TimelineView(.periodic(from: .now, by: 1)) { context in
+                TimelineView(.dinoMinute) { context in
                     DigitalClock(time: ClockTime(date: context.date), theme: fontPreview(style), fontSize: 22)
                 }.accessibilityHidden(true)
                 Text(verbatim: L(key: "dino.numerals." + style.rawValue)).modifier(CustomizationText())

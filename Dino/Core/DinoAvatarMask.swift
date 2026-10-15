@@ -212,6 +212,7 @@ enum DinoSpriteColorRenderer {
         var pixels = [UInt8](repeating: 0, count: width * height * 4)
         let references = DinoAppearance.Part.allCases.map { HSL(hex: DinoAppearance.standard[$0]) }
         let targets = DinoAppearance.Part.allCases.map { HSL(hex: appearance[$0]) }
+        let unchanged = DinoAppearance.Part.allCases.map { appearance[$0] == DinoAppearance.standard[$0] }
         let regions = DinoAvatarMask.spriteRegions(for: asset)
         let sourcePalette = palettes[asset] ?? idlePalette
         let success = pixels.withUnsafeMutableBytes { buffer -> Bool in
@@ -232,14 +233,20 @@ enum DinoSpriteColorRenderer {
                                     blue: min(1, Double(bytes[index + 2]) / 255 / alpha))
                     guard let part = DinoAvatarMask.part(hue: pixel.hue, saturation: pixel.saturation,
                                           lightness: pixel.lightness,
-                                          x: Double(x) / Double(width), y: Double(y) / Double(height), regions: regions),
-                          let partIndex = DinoAppearance.Part.allCases.firstIndex(of: part) else { continue }
+                                          x: Double(x) / Double(width), y: Double(y) / Double(height), regions: regions) else { continue }
+                    let partIndex: Int
+                    switch part {
+                    case .bandana: partIndex = 0
+                    case .spikes: partIndex = 1
+                    case .body: partIndex = 2
+                    case .belly: partIndex = 3
+                    }
                     let reference = references[partIndex], target = targets[partIndex]
                     let sourceTone = sourcePalette[partIndex], idleTone = idlePalette[partIndex]
                     let normalizedLightness = sourceTone.matchLightness(pixel.lightness, to: idleTone)
                     let normalizedSaturation = min(1, pixel.saturation * idleTone.saturation / sourceTone.saturation)
-                    let replacement: [Double]
-                    if appearance[part] == DinoAppearance.standard[part] {
+                    let replacement: (Double, Double, Double)
+                    if unchanged[partIndex] {
                         // Even unchanged colors use the idle artwork's lighting.
                         replacement = HSL(hue: pixel.hue, saturation: normalizedSaturation,
                                           lightness: normalizedLightness).rgb
@@ -252,9 +259,9 @@ enum DinoSpriteColorRenderer {
                         let saturation = min(1, normalizedSaturation * target.saturation / max(0.001, reference.saturation))
                         replacement = HSL(hue: target.hue, saturation: saturation, lightness: lightness).rgb
                     }
-                    for channel in 0..<3 {
-                        bytes[index + channel] = UInt8((min(1, max(0, replacement[channel])) * alpha * 255).rounded())
-                    }
+                    bytes[index] = UInt8((min(1, max(0, replacement.0)) * alpha * 255).rounded())
+                    bytes[index + 1] = UInt8((min(1, max(0, replacement.1)) * alpha * 255).rounded())
+                    bytes[index + 2] = UInt8((min(1, max(0, replacement.2)) * alpha * 255).rounded())
                 }
             }
             return true
@@ -291,21 +298,21 @@ enum DinoSpriteColorRenderer {
             }
             hue = (h / 6 + 1).truncatingRemainder(dividingBy: 1)
         }
-        var rgb: [Double] {
+        var rgb: (Double, Double, Double) {
             let c = (1 - abs(2 * lightness - 1)) * saturation
             let h = hue * 6
             let x = c * (1 - abs(h.truncatingRemainder(dividingBy: 2) - 1))
             let m = lightness - c / 2
-            let channels: [Double]
+            let channels: (Double, Double, Double)
             switch h {
-            case ..<1: channels = [c, x, 0]
-            case ..<2: channels = [x, c, 0]
-            case ..<3: channels = [0, c, x]
-            case ..<4: channels = [0, x, c]
-            case ..<5: channels = [x, 0, c]
-            default: channels = [c, 0, x]
+            case ..<1: channels = (c, x, 0)
+            case ..<2: channels = (x, c, 0)
+            case ..<3: channels = (0, c, x)
+            case ..<4: channels = (0, x, c)
+            case ..<5: channels = (x, 0, c)
+            default: channels = (c, 0, x)
             }
-            return channels.map { $0 + m }
+            return (channels.0 + m, channels.1 + m, channels.2 + m)
         }
     }
 

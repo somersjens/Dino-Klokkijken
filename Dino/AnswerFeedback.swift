@@ -5,20 +5,38 @@ import UIKit
 @MainActor
 final class DinoAnswerFeedback {
     static let shared = DinoAnswerFeedback()
-    private var audioPlayer: AVAudioPlayer?
+    private var correctPlayer: AVAudioPlayer?
+    private var incorrectPlayer: AVAudioPlayer?
     private let haptics = UINotificationFeedbackGenerator()
     private let correctTone = DinoAnswerFeedback.tone(frequencies: [659.25, 880])
     private let incorrectTone = DinoAnswerFeedback.tone(frequencies: [330, 261.63])
 
+    func prepare(sound: Bool, vibration: Bool) {
+        if vibration { haptics.prepare() }
+        guard sound, correctPlayer == nil || incorrectPlayer == nil else { return }
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
+            if correctPlayer == nil { correctPlayer = try makePlayer(data: correctTone) }
+            if incorrectPlayer == nil { incorrectPlayer = try makePlayer(data: incorrectTone) }
+        } catch { /* Try again on the next answer if audio is temporarily unavailable. */ }
+    }
+
     func play(correct: Bool, sound: Bool, vibration: Bool) {
         if vibration { haptics.notificationOccurred(correct ? .success : .warning) }
         guard sound else { return }
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
-            audioPlayer = try AVAudioPlayer(data: correct ? correctTone : incorrectTone)
-            audioPlayer?.volume = 0.45
-            audioPlayer?.play()
-        } catch { /* Feedback must never interrupt answering a question. */ }
+        prepare(sound: true, vibration: false)
+        correctPlayer?.stop()
+        incorrectPlayer?.stop()
+        let player = correct ? correctPlayer : incorrectPlayer
+        player?.currentTime = 0
+        player?.play()
+    }
+
+    private func makePlayer(data: Data) throws -> AVAudioPlayer {
+        let player = try AVAudioPlayer(data: data)
+        player.volume = 0.45
+        player.prepareToPlay()
+        return player
     }
 
     /// Small PCM WAVs generated once; no external audio files or dependencies.

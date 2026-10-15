@@ -59,6 +59,7 @@ final class DinoPlayer: ObservableObject {
     private func update(_ mutation: (inout PlayerProfile) -> Void) {
         var next = profile
         mutation(&next)
+        guard next != profile else { return }
         profile = next
         store.save(next)
         profileChanges.send(next)
@@ -294,8 +295,8 @@ final class DinoSession: ObservableObject, Identifiable {
     }
 
     func setInputTime(_ time: ClockTime) {
-        inputHour = time.hour
-        inputMinute = time.minute
+        if inputHour != time.hour { inputHour = time.hour }
+        if inputMinute != time.minute { inputMinute = time.minute }
     }
 
     func adjustInputMinutes(by delta: Int) {

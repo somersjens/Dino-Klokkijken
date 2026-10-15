@@ -47,26 +47,26 @@ struct WorldMap: View {
                                     }.padding(.horizontal, 18).padding(.bottom, 12)
                                         .frame(maxWidth: 600).frame(maxWidth: .infinity)
                                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { landscapeRouteOffset = $0 }
-                                    mapRoute
+                                    mapRoute(topClearance: routeTopClearance)
                                 }.padding(.top, floatingHUDHeight + geometry.safeAreaInsets.top)
-                                    .background { WorldMapLandscape(routeOffset: landscapeRouteOffset + floatingHUDHeight + geometry.safeAreaInsets.top + routeTopClearance) }
+                                    .background {
+                                        MapScenery(viewportHeight: geometry.size.height) {
+                                            WorldMapLandscape(routeOffset: landscapeRouteOffset + floatingHUDHeight + geometry.safeAreaInsets.top + routeTopClearance)
+                                                .equatable()
+                                        }
+                                    }
                                     .onGeometryChange(for: Bool.self) {
                                         $0.frame(in: .named("adventure.map.viewport")).minY <= floatingHUDHeight + 24
                                     } action: { updateVisibleWorld(1, aboveHUD: $0) }
                                 ForEach(DinoWorldCatalog.worlds.dropFirst()) { world in
-                                    WorldChapter(world: world, topClearance: routeTopClearance, openLevel: openLevel)
+                                    WorldChapter(world: world, topClearance: routeTopClearance,
+                                                 viewportHeight: geometry.size.height, openLevel: openLevel)
                                         .onGeometryChange(for: Bool.self) {
                                             $0.frame(in: .named("adventure.map.viewport")).minY <= floatingHUDHeight + 24
                                         } action: { updateVisibleWorld(world.id, aboveHUD: $0) }
                                 }
-                                comingSoon
-                                if player.profile.adventureComplete {
-                                    Button(action: openCompletion) {
-                                        Label("dino.worldComplete", systemImage: "trophy.fill")
-                                    }.buttonStyle(DinoButtonStyle(color: DinoStyle.green))
-                                        .padding(.horizontal, 18).frame(maxWidth: 600).frame(maxWidth: .infinity)
-                                }
-                            }.padding(.bottom, 24)
+                                comingSoon(bottomInset: geometry.safeAreaInsets.bottom)
+                            }
                         }
                         .accessibilityIdentifier("map.route")
                         .onAppear {
@@ -107,6 +107,7 @@ struct WorldMap: View {
 
     private var mapHeading: some View {
         WorldTitleBanner(world: DinoWorldCatalog.world(1)!, highContrast: highContrast)
+            .equatable()
             .accessibilityIdentifier("map.world.1")
     }
 
@@ -127,29 +128,50 @@ struct WorldMap: View {
         }.buttonStyle(.plain).accessibilityIdentifier("map.bossShortcut")
     }
 
-    private var mapRoute: some View {
+    private func mapRoute(topClearance: CGFloat) -> some View {
         routeNodes.padding(.horizontal, 18).frame(maxWidth: 600)
-            .frame(maxWidth: .infinity).frame(height: 2050)
+            .frame(maxWidth: .infinity)
+            .frame(height: WorldRouteTrail.jungleRouteHeight(topClearance: topClearance))
     }
 
-    private var comingSoon: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "sparkles").font(.system(size: 32)).foregroundStyle(DinoStyle.deepGreen)
-            Text("dino.comingSoon").font(.system(size: 28, weight: .heavy, design: .rounded))
-                .accessibilityIdentifier("map.comingSoon")
-            Text("dino.afterHundred").font(.system(size: 15, weight: .semibold, design: .rounded))
-                .multilineTextAlignment(.center)
-        }.padding(32).frame(maxWidth: .infinity)
-            .background(Color(dinoHex: DinoWorldCatalog.world(10)!.ground))
+    private func comingSoon(bottomInset: CGFloat) -> some View {
+        VStack(spacing: 18) {
+            VStack(spacing: 12) {
+                Image(systemName: "sparkles").font(.system(size: 30)).foregroundStyle(Color(dinoHex: 0xB38A40))
+                Text("dino.comingSoon").font(.system(size: 28, weight: .heavy, design: .rounded))
+                    .accessibilityIdentifier("map.comingSoon")
+                Text("dino.afterHundred").font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .multilineTextAlignment(.center)
+            }.padding(24).frame(maxWidth: .infinity, minHeight: WorldRouteTrail.bannerHeight)
+                .background {
+                    RoundedRectangle(cornerRadius: 34)
+                        .fill(LinearGradient(colors: [Color(dinoHex: 0xFFF4D4), Color(dinoHex: 0xE9D5A4)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .overlay(RoundedRectangle(cornerRadius: 34).strokeBorder(Color(dinoHex: 0xA88B55), lineWidth: 3))
+                        .overlay(RoundedRectangle(cornerRadius: 29).inset(by: 6).strokeBorder(Color(dinoHex: 0xFFF5D9), lineWidth: 2))
+                        .shadow(color: DinoStyle.ink.opacity(0.16), radius: 0, y: 6)
+                }
+                .padding(.horizontal, 30)
+                .frame(maxWidth: 600)
+            if player.profile.adventureComplete {
+                Button(action: openCompletion) {
+                    Label("dino.worldComplete", systemImage: "trophy.fill")
+                }.buttonStyle(DinoButtonStyle(color: DinoStyle.green))
+                    .padding(.horizontal, 30).frame(maxWidth: 600)
+            }
+        }.padding(.top, WorldRouteTrail.bannerTopPadding)
+            .padding(.bottom, max(40, bottomInset + 24))
+            .frame(maxWidth: .infinity)
+            .background { WorldMapEndingLandscape().equatable() }
     }
 
     private var routeNodes: some View {
         GeometryReader { g in
+            let dinoLevel = player.profile.dinoLevel
             let dinoSize = min(200, g.size.width * 0.37)
             let topClearance = max(0, dinoSize - 82)
             let points = (0...10).map { routePoint($0, width: g.size.width, topClearance: topClearance) }
             ZStack(alignment: .topLeading) {
-                WorldRouteTrail(points: points, exitY: g.size.height)
+                WorldRouteTrail(points: points, exitY: g.size.height).equatable()
                 // Real rows provide accurate scroll anchors; positioned artwork alone does not.
                 VStack(spacing: 0) {
                     ForEach(0...10, id: \.self) { index in
@@ -161,11 +183,11 @@ struct WorldMap: View {
                                 } else if let level = DinoLevelCatalog.level(index) {
                                     LevelNode(level: level, record: player.profile.record(index),
                                               unlocked: player.profile.isUnlocked(index),
-                                              current: player.profile.dinoLevel == index,
+                                              current: dinoLevel == index,
                                               bossComplete: player.profile.worldOneComplete) { openLevel(level) }
                                 }
                             }.offset(x: point.x - g.size.width / 2)
-                            if player.profile.dinoLevel == index {
+                            if dinoLevel == index {
                                 ZStack(alignment: .bottom) {
                                     Ellipse().fill(Color(dinoHex: 0x38552D).opacity(0.25))
                                         .frame(width: dinoSize * 0.48, height: dinoSize * 0.12)
@@ -185,7 +207,7 @@ struct WorldMap: View {
                     }
                 }.padding(.top, topClearance - 17.5)
             }
-        }.frame(height: 2050).environment(\.layoutDirection, .leftToRight)
+        }.environment(\.layoutDirection, .leftToRight)
     }
 
     private var startPoint: some View {
@@ -204,10 +226,34 @@ struct WorldMap: View {
     }
 
     private func routePoint(_ index: Int, width: CGFloat, topClearance: CGFloat) -> CGPoint {
-        let positions: [CGFloat] = [0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5]
+        let positions: [CGFloat] = [0.5] + WorldRouteTrail.chapterPositions
         return CGPoint(x: width * positions[index], y: topClearance + 70 + CGFloat(index) * 175)
     }
 
+}
+
+/// Keep every level's layout and scroll anchor alive, but retain landscape
+/// canvases only near the viewport. The two-screen margin prepares artwork
+/// before it enters view, including during fast scrolling and rotation.
+private struct MapScenery<Content: View>: View {
+    let viewportHeight: CGFloat
+    @ViewBuilder var content: () -> Content
+    @State private var isNearby = false
+
+    var body: some View {
+        Color.clear
+            .overlay { if isNearby { content() } }
+            .onGeometryChange(for: Bool.self) { geometry in
+                let frame = geometry.frame(in: .named("adventure.map.viewport"))
+                let margin = max(1200, viewportHeight * 2)
+                return frame.maxY >= -margin && frame.minY <= viewportHeight + margin
+            } action: { nearby in
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) { isNearby = nearby }
+            }
+            .allowsHitTesting(false).accessibilityHidden(true)
+    }
 }
 
 struct LevelNode: View {
@@ -721,19 +767,23 @@ private struct WorldChapter: View {
     @EnvironmentObject private var player: DinoPlayer
     let world: DinoWorld
     let topClearance: CGFloat
+    let viewportHeight: CGFloat
     var openLevel: (LevelConfiguration) -> Void
-    @State private var routeOffset: CGFloat = 196
-    private let positions: [CGFloat] = [0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5]
+    private let titleTopPadding = WorldRouteTrail.bannerTopPadding
+    private var routeOffset: CGFloat { 212 + titleTopPadding + 10 + topClearance }
+    private let positions = WorldRouteTrail.chapterPositions
 
     var body: some View {
         VStack(spacing: 0) {
             WorldTitleBanner(world: world, highContrast: highContrast)
-                .padding(.horizontal, 18).padding(.top, world.id == 10 ? 156 : world.id == 9 ? 146 : world.id == 8 ? 136 : world.id == 7 ? 126 : world.id == 6 ? 126 : world.id == 5 ? 136 : world.id == 4 ? 126 : world.id == 3 ? 106 : world.id == 2 ? 88 : 18).padding(.bottom, 10)
+                .equatable()
+                .padding(.horizontal, 18).padding(.top, titleTopPadding).padding(.bottom, 10)
                 .frame(maxWidth: 600).frame(maxWidth: .infinity)
-                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { routeOffset = $0 + topClearance }
                 .accessibilityIdentifier("map.world.\(world.id)")
             Color.clear.frame(height: topClearance)
             GeometryReader { geometry in
+                let dinoLevel = player.profile.dinoLevel
+                let bossComplete = player.profile.worldComplete(world.id)
                 ZStack(alignment: .top) {
                 VStack(spacing: 0) {
                     ForEach(Array(world.levels.enumerated()), id: \.element) { index, id in
@@ -742,9 +792,9 @@ private struct WorldChapter: View {
                         ZStack {
                             LevelNode(level: level, record: player.profile.record(id),
                                       unlocked: player.profile.isUnlocked(id),
-                                      current: player.profile.dinoLevel == id,
-                                      bossComplete: player.profile.worldComplete(world.id)) { openLevel(level) }
-                            if player.profile.dinoLevel == id {
+                                      current: dinoLevel == id,
+                                      bossComplete: bossComplete) { openLevel(level) }
+                            if dinoLevel == id {
                                 ZStack(alignment: .bottom) {
                                     Ellipse().fill(Color(dinoHex: 0x38552D).opacity(0.25))
                                         .frame(width: dinoSize * 0.48, height: dinoSize * 0.12)
@@ -760,18 +810,20 @@ private struct WorldChapter: View {
                     }
                 }.padding(.top, -7.5)
                 }
-            }.frame(height: 1850).padding(.horizontal, 18)
+            }.frame(height: WorldRouteTrail.chapterRouteHeight).padding(.horizontal, 18)
                 .frame(maxWidth: 600).frame(maxWidth: .infinity)
         }.background {
-            ZStack {
-                ThemedWorldLandscape(world: world, routeOffset: routeOffset)
-                GeometryReader { geometry in
-                    let points = positions.enumerated().map {
-                        CGPoint(x: geometry.size.width * $0.element, y: routeOffset + 80 + CGFloat($0.offset) * 175)
-                    }
-                    WorldRouteTrail(points: points, entryY: 0, exitY: geometry.size.height)
-                }.padding(.horizontal, 18).frame(maxWidth: 600).frame(maxWidth: .infinity)
-            }.allowsHitTesting(false).accessibilityHidden(true)
+            MapScenery(viewportHeight: viewportHeight) {
+                ZStack {
+                    ThemedWorldLandscape(world: world, routeOffset: routeOffset).equatable()
+                    GeometryReader { geometry in
+                        let points = positions.enumerated().map {
+                            CGPoint(x: geometry.size.width * $0.element, y: routeOffset + 80 + CGFloat($0.offset) * 175)
+                        }
+                        WorldRouteTrail(points: points, entryY: 0, exitY: geometry.size.height).equatable()
+                    }.padding(.horizontal, 18).frame(maxWidth: 600).frame(maxWidth: .infinity)
+                }
+            }
         }
             .background(Color(dinoHex: world.ground))
             .environment(\.layoutDirection, .leftToRight)

@@ -102,13 +102,8 @@ struct AnalogClock: View {
                 .shadow(color: Color(dinoHex: theme.rimHex).opacity(0.2), radius: 8, y: 5)
             AnalogClockOutline(shape: theme.analogShape).inset(by: size * 0.034).fill(Color(dinoHex: theme.faceHex))
             AnalogClockOutline(shape: theme.analogShape).inset(by: size * 0.015).stroke(.white.opacity(0.4), lineWidth: size * 0.008)
-            ForEach(0..<60, id: \.self) { tick in
-                Capsule().fill(Color(dinoHex: theme.markingHex).opacity(highContrast ? 1 : theme.markingHex == 0xFFFFFF ? (tick.isMultiple(of: 5) ? 0.9 : 0.55) : (tick.isMultiple(of: 5) ? 0.6 : 0.28)))
-                    .frame(width: tick.isMultiple(of: 5) ? size * 0.012 : size * 0.005,
-                           height: tick.isMultiple(of: 5) ? size * 0.045 : size * 0.023)
-                    .offset(y: -size * 0.425)
-                    .rotationEffect(.degrees(Double(tick) * 6))
-            }
+            AnalogClockTicks(size: size, markingHex: theme.markingHex, highContrast: highContrast)
+                .equatable()
             ForEach(1...12, id: \.self) { hour in
                 let radians = Double(hour) * .pi / 6
                 Text(verbatim: theme.analogNumerals.label(for: hour))
@@ -129,9 +124,11 @@ struct AnalogClock: View {
             let y = value.location.y - size / 2
             guard hypot(x, y) > size * 0.10 else { return }
             if let onMinuteChange {
-                onMinuteChange(time.settingMinute(ClockTime.snappedMinute(x: Double(x), y: Double(y), step: minuteStep)))
+                let next = time.settingMinute(ClockTime.snappedMinute(x: Double(x), y: Double(y), step: minuteStep))
+                if next != time { onMinuteChange(next) }
             } else {
-                onHourChange?(ClockTime.snappedHour(x: Double(x), y: Double(y), minute: time.minute))
+                let next = ClockTime.snappedHour(x: Double(x), y: Double(y), minute: time.minute)
+                if next != time.hour { onHourChange?(next) }
             }
         }, including: onHourChange == nil && onMinuteChange == nil ? .none : .all)
         .overlay {
@@ -153,6 +150,31 @@ struct AnalogClock: View {
             .frame(width: width, height: length + size * 0.035)
             .offset(y: -(length - size * 0.035) / 2)
             .rotationEffect(.degrees(angle))
+    }
+}
+
+/// Tick marks do not depend on the hands. One retained drawing replaces sixty
+/// separately laid-out shapes while preserving their exact sizes and positions.
+private struct AnalogClockTicks: View, Equatable {
+    let size: CGFloat
+    let markingHex: UInt32
+    let highContrast: Bool
+
+    var body: some View {
+        Canvas { context, _ in
+            for tick in 0..<60 {
+                let major = tick.isMultiple(of: 5)
+                let width = size * (major ? 0.012 : 0.005)
+                let height = size * (major ? 0.045 : 0.023)
+                let opacity = highContrast ? 1 : markingHex == 0xFFFFFF ? (major ? 0.9 : 0.55) : (major ? 0.6 : 0.28)
+                var rotated = context
+                rotated.translateBy(x: size / 2, y: size / 2)
+                rotated.rotate(by: .degrees(Double(tick) * 6))
+                rotated.fill(Path(roundedRect: CGRect(x: -width / 2, y: -size * 0.425 - height / 2,
+                                                     width: width, height: height), cornerRadius: width / 2),
+                             with: .color(Color(dinoHex: markingHex).opacity(opacity)))
+            }
+        }.frame(width: size, height: size).allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 
