@@ -1,9 +1,13 @@
 import SwiftUI
 
+extension EnvironmentValues {
+    @Entry var jungleMapIsScrolling = false
+}
+
 /// Every section meets its neighbour at the same centre line and vertical tangent.
 /// The sign is drawn over the trail, rather than leaving a blank break in it.
 struct WorldRouteTrail: View, Equatable {
-    static let levelSpacing: CGFloat = 175
+    static let levelSpacing = JungleMapLayout.levelSpacing
     static let bannerTopPadding: CGFloat = 12
     static let bannerHeight: CGFloat = 212
     static let bannerFaceCenterY: CGFloat = 99.5
@@ -22,7 +26,7 @@ struct WorldRouteTrail: View, Equatable {
     static func jungleRouteHeight(topClearance: CGFloat) -> CGFloat {
         topClearance + 70 + 10 * levelSpacing + chapterTail(topClearance: topClearance)
     }
-    static let chapterPositions: [CGFloat] = [0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5]
+    static let chapterPositions = JungleMapLayout.chapterPositions
     let points: [CGPoint]
     var entryY: CGFloat? = nil
     let exitY: CGFloat
@@ -80,6 +84,7 @@ private struct WorldSceneryLayout {
     }
 
     func centerX(at y: CGFloat) -> CGFloat {
+        if jungle { return JungleMapLayout(width: width).centerX(at: y) }
         let lastY = firstY + CGFloat(positions.count - 1) * 175
         if y >= lastY { return width / 2 }
         let startX: CGFloat, endX: CGFloat, startY: CGFloat, endY: CGFloat, c1Y: CGFloat, c2Y: CGFloat
@@ -1356,7 +1361,8 @@ struct WorldMapLandscape: View, Equatable {
     var body: some View {
         GeometryReader { geometry in
             let headroom = max(900, viewportHeight * 1.5)
-            Canvas { canvasContext, _ in
+            let scene = JungleMapLayout(width: geometry.size.width).scene()
+            Canvas(rendersAsynchronously: true) { canvasContext, _ in
                 var context = canvasContext
                 context.translateBy(x: 0, y: headroom)
                 let size = geometry.size
@@ -1385,8 +1391,8 @@ struct WorldMapLandscape: View, Equatable {
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let scenery = WorldSceneryLayout(width: w, height: size.height, routeOffset: routeOffset, jungle: true)
                 scenery.drawBanks(in: routeContext, worldID: 1)
-                let painter = JunglePainter(context: routeContext, scenery: scenery)
-                let detail = JungleWorldPainter(context: routeContext, scenery: scenery)
+                let painter = JunglePainter(context: routeContext)
+                let detail = JungleWorldPainter(context: routeContext)
 
                 // Rolling clearings alternate sides of the trail instead of repeating
                 // a decorative wallpaper behind every level.
@@ -1400,39 +1406,13 @@ struct WorldMapLandscape: View, Equatable {
                                  height: 290, color: distant.opacity(0.45))
                     painter.hill(x: left ? w * 0.6 : -w * 0.52, y: y + 115, width: w * 0.92,
                                  height: 230, color: foliage.opacity(0.17))
-                    // Small grasses and stone clusters sit inside the clearing.
-                    for tuft in 0..<5 {
-                        let x = w * (CGFloat(tuft) * 0.20 + 0.035)
-                        painter.grass(at: CGPoint(x: x, y: y + 210 + CGFloat(tuft % 2) * 32),
-                                      size: 9 * scale, color: foliage.opacity(0.5))
-                    }
                 }
 
-                detail.undergrowth(width: w, left: left, right: right, height: height, scale: scale)
-
-                // Tall trees, layered crowns and hanging vines frame the entrance.
-                detail.tree(at: CGPoint(x: left - 12, y: 355), size: 1.08 * scale, mirror: false)
-                detail.tree(at: CGPoint(x: right + 17, y: 420), size: 1.20 * scale, mirror: true)
-                detail.shrub(at: CGPoint(x: left + 5, y: 350), size: 0.7 * scale)
-                painter.fern(at: CGPoint(x: right - 15, y: 450), size: 0.9 * scale, flipped: true)
-                painter.flowers(at: CGPoint(x: left + 38, y: 405), size: scale)
-
-                // A rocky waterfall and a lagoon make the middle of the world a
-                // distinct destination. Water and plants follow the playable bends.
-                detail.waterfall(at: CGPoint(x: right - 24 * scale, y: 490), size: scale * 0.87)
-                detail.palm(at: CGPoint(x: left + 13, y: 785), size: 0.96 * scale, mirror: false)
-                painter.fern(at: CGPoint(x: left + 8, y: 885), size: 1.13 * scale, flipped: false)
-                painter.flowers(at: CGPoint(x: right - 42, y: 965), size: 0.9 * scale)
-
-                // Deeper jungle: buttress roots, large leaves, mossy boulders.
-                detail.tree(at: CGPoint(x: left - 25, y: 1250), size: 1.02 * scale, mirror: false)
-                detail.palm(at: CGPoint(x: right + 4, y: 1370), size: 1.05 * scale, mirror: true)
-                detail.rocks(at: CGPoint(x: right - 25, y: 1382), size: 0.92 * scale)
-                detail.shrub(at: CGPoint(x: left + 15, y: 1320), size: 0.8 * scale)
-                painter.fern(at: CGPoint(x: right - 8, y: 1470), size: 1.2 * scale, flipped: true)
-                painter.flowers(at: CGPoint(x: left + 40, y: 1475), size: scale)
-                detail.rocks(at: CGPoint(x: left + 14, y: 1635), size: 1.15 * scale)
-                detail.shrub(at: CGPoint(x: right - 6, y: 1720), size: 0.65 * scale)
+                // Ground objects sit behind trunks and shrubs. Cached placements
+                // are also used by the foreground tiles and animated wildlife.
+                for placement in scene.ground {
+                    detail.scenery(placement.item, at: placement.point)
+                }
 
                 // The boss clearing opens into mist. Low silhouettes and the soft
                 // color blend continue below level ten into the next world preview.
@@ -1442,12 +1422,8 @@ struct WorldMapLandscape: View, Equatable {
                                  y: y, width: w * 0.82, height: 195,
                                  color: palette.color(\.distant, toward: nextPalette, progress: CGFloat(i + 1) / 3).opacity(0.44))
                 }
-                painter.rocks(at: CGPoint(x: left + 29, y: 1840), size: scale * 0.9)
-                painter.fern(at: CGPoint(x: left + 45, y: 1846), size: scale * 0.45, flipped: false)
-                painter.rocks(at: CGPoint(x: right - 28, y: 1844), size: scale * 0.8)
-                painter.fern(at: CGPoint(x: right - 43, y: 1852), size: scale * 0.40, flipped: true)
                 // The jungle has its own guardian, just like every later chapter.
-                let bossPoint = CGPoint(x: right - 79 * scale, y: 1840)
+                let bossPoint = scene.bossPoint
                 let bossScene = ThemePainter(context: routeContext, colors: WorldThemeColors(DinoWorldCatalog.world(1)!))
                 bossScene.bossClearing(worldID: 1, at: bossPoint, size: scale)
                 bossScene.boss(worldID: 1, at: bossPoint, size: scale * 0.88)
@@ -1471,11 +1447,27 @@ struct WorldMapLandscape: View, Equatable {
                 JungleWaterfallFlow(scale: scale * 0.87, viewportHeight: viewportHeight)
                     .position(x: w - 34 * scale + waterBounds.midX * scale * 0.87,
                               y: entranceHeight * 0.65 + waterBounds.midY * scale * 0.87)
-                let scenery = WorldSceneryLayout(width: w, height: geometry.size.height, routeOffset: routeOffset, jungle: true)
-                let point = scenery.position(CGPoint(x: w - 24 * scale, y: 490))
-                JungleWaterfallFlow(scale: scale * 0.87, viewportHeight: viewportHeight)
-                    .position(x: point.x + waterBounds.midX * scale * 0.87,
-                              y: routeOffset + point.y + waterBounds.midY * scale * 0.87)
+                let scene = JungleMapLayout(width: w).scene()
+                let waterfall = scene.waterfall.item
+                let point = scene.waterfall.point
+                let bounds = JungleWaterfallGeometry.bounds(mirrored: waterfall.mirrored, heightScale: waterfall.heightScale)
+                JungleWaterfallFlow(scale: waterfall.size, mirrored: waterfall.mirrored,
+                                    heightScale: waterfall.heightScale, viewportHeight: viewportHeight)
+                    .position(x: point.x + bounds.midX * waterfall.size,
+                              y: routeOffset + point.y + bounds.midY * waterfall.size)
+                ForEach(scene.snakes) { placement in
+                    JungleWildlife(item: placement.item, viewportHeight: viewportHeight)
+                        .position(x: placement.bounds.midX, y: routeOffset + placement.bounds.midY)
+                }
+                ForEach(scene.canopyTiles.indices, id: \.self) { index in
+                    JungleCanopyTile(scene: scene, index: index, viewportHeight: viewportHeight)
+                        .equatable()
+                        .position(x: w / 2, y: routeOffset + scene.canopyTiles[index].bounds.midY)
+                }
+                ForEach(scene.leaves) { placement in
+                    JungleWildlife(item: placement.item, viewportHeight: viewportHeight)
+                        .position(x: placement.bounds.midX, y: routeOffset + placement.bounds.midY)
+                }
             }.clipped()
         }
         .overlay(alignment: .bottom) { WorldTerrainTransition(worldID: 2).equatable() }
@@ -1488,14 +1480,154 @@ struct WorldMapLandscape: View, Equatable {
     }
 }
 
+/// Small static textures cover wildlife and ground details in the correct order.
+/// Nearby tiles are prepared ahead of scrolling, distant ones release their art.
+private struct JungleCanopyTile: View, Equatable {
+    let scene: JungleMapLayout.Scene
+    let index: Int
+    let viewportHeight: CGFloat
+    @State private var nearby = false
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.scene === rhs.scene && lhs.index == rhs.index && lhs.viewportHeight == rhs.viewportHeight
+    }
+
+    var body: some View {
+        let tile = scene.canopyTiles[index]
+        Color.clear.overlay {
+            if nearby {
+                Canvas(rendersAsynchronously: true) { context, _ in
+                    var c = context
+                    c.translateBy(x: 0, y: -tile.bounds.minY)
+                    let painter = JungleWorldPainter(context: c)
+                    for placement in tile.placements {
+                        painter.scenery(placement.item, at: placement.point)
+                    }
+                }.clipped()
+            }
+        }
+        .frame(width: tile.bounds.width, height: tile.bounds.height)
+        .onGeometryChange(for: Bool.self) { geometry in
+            let frame = geometry.frame(in: .named("adventure.map.viewport"))
+            let margin = max(768, viewportHeight)
+            return frame.maxY > -margin && frame.minY < viewportHeight + margin
+        } action: { nearby = $0 }
+        .allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+/// Only visible bank wildlife ticks. Each snake and leaf drift has a small,
+/// explicit envelope which participates in the same road-clearance solver.
+private struct JungleWildlife: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.jungleMapIsScrolling) private var scrolling
+    @State private var visible = false
+    let item: JungleMapLayout.Item
+    let viewportHeight: CGFloat
+
+    var body: some View {
+        let bounds = item.kind.footprint[0]
+        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: !visible || scrolling || reduceMotion || scenePhase != .active)) { timeline in
+            Canvas { context, _ in
+                var c = context
+                c.translateBy(x: -bounds.minX * item.size, y: -bounds.minY * item.size)
+                c.scaleBy(x: item.mirrored ? -item.size : item.size, y: item.size)
+                let time = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate
+                if item.kind == .snake { snake(in: c, time: time) }
+                else { leaves(in: c, time: time) }
+            }
+        }
+        .frame(width: bounds.width * item.size, height: bounds.height * item.size)
+        .onGeometryChange(for: Bool.self) { geometry in
+            let frame = geometry.frame(in: .named("adventure.map.viewport"))
+            return frame.maxY > 0 && frame.minY < viewportHeight
+        } action: { visible = $0 }
+        .allowsHitTesting(false).accessibilityHidden(true)
+    }
+
+    private func leaves(in context: GraphicsContext, time: TimeInterval) {
+        for i in 0..<4 {
+            let seed = Double(i + item.variant)
+            let progress = (time / 9.5 + Double(i) * 0.25 + Double(item.variant) * 0.07).truncatingRemainder(dividingBy: 1)
+            let x = sin(progress * .pi * 2 + seed) * 18 + sin(time * 0.4 + seed) * 6 + Double(i % 2 == 0 ? -8 : 8)
+            let y = -7 + progress * 164
+            var c = context
+            c.opacity = min(1, min(progress, 1 - progress) * 9) * 0.9
+            c.translateBy(x: x, y: y)
+            c.rotate(by: .radians(sin(progress * .pi * 2 + seed) * 0.8 + seed))
+            let r = CGRect(x: 0, y: 0, width: 8, height: 14)
+            c.translateBy(x: -4, y: -7)
+            let leaf = DinoFoliageLeaf().path(in: r)
+            c.fill(leaf, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xD5DD6A), Color(dinoHex: i % 2 == 0 ? 0x91B64B : 0xB6BE53), Color(dinoHex: 0x5B8744)]),
+                                             startPoint: .zero, endPoint: CGPoint(x: 8, y: 14)))
+            c.fill(DinoFoliageFold().path(in: r), with: .color(.white.opacity(0.2)))
+            c.stroke(DinoFoliageVeins().path(in: r), with: .color(Color(dinoHex: 0xE8EBB0).opacity(0.75)), lineWidth: 0.55)
+        }
+    }
+
+    private func snake(in context: GraphicsContext, time: TimeInterval) {
+        let phase = time * 0.22 + Double(item.variant) * 2.1
+        let bodyColors: [UInt32] = [0x79A74F, 0x6CA986, 0xA3B659]
+        let outlines: [UInt32] = [0x3F6B3C, 0x3E7764, 0x687B3E]
+        let color = bodyColors[item.variant % 3], outline = outlines[item.variant % 3]
+        let points = (0...18).map { index -> CGPoint in
+            let t = Double(index) / 18
+            let angle = phase - (1 - t) * 1.75
+            return CGPoint(x: cos(angle) * 44,
+                           y: 8 + sin(angle) * 14 + sin(time * 2.4 - t * 7) * 2 * sin(t * .pi))
+        }
+        var left: [CGPoint] = [], right: [CGPoint] = []
+        for i in points.indices {
+            let before = points[max(0, i - 1)], after = points[min(18, i + 1)]
+            let length = max(0.1, hypot(after.x - before.x, after.y - before.y))
+            let radius = 0.5 + CGFloat(i) / 18 * 3.2
+            let nx = -(after.y - before.y) / length * radius
+            let ny = (after.x - before.x) / length * radius
+            left.append(CGPoint(x: points[i].x + nx, y: points[i].y + ny))
+            right.append(CGPoint(x: points[i].x - nx, y: points[i].y - ny))
+        }
+        var body = Path(); body.addLines(left + right.reversed()); body.closeSubpath()
+        context.fill(body.offsetBy(dx: 0, dy: 3), with: .color(Color(dinoHex: 0x496B3E).opacity(0.18)))
+        context.fill(body, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xBED58C), Color(dinoHex: color)]),
+                                               startPoint: CGPoint(x: 0, y: -8), endPoint: CGPoint(x: 0, y: 23)))
+        context.stroke(body, with: .color(Color(dinoHex: outline)), style: StrokeStyle(lineWidth: 0.9, lineJoin: .round))
+        for i in 0..<18 {
+            if i > 4 && i % 3 == 0 {
+                let p = points[i]
+                context.fill(Path(ellipseIn: CGRect(x: p.x - 1.5, y: p.y - 1.4, width: 3, height: 2)),
+                             with: .color(Color(dinoHex: outline).opacity(0.65)))
+            }
+        }
+        let head = points[18], previous = points[17]
+        var c = context
+        c.translateBy(x: head.x, y: head.y)
+        c.rotate(by: .radians(atan2(head.y - previous.y, head.x - previous.x)))
+        let face = Path(ellipseIn: CGRect(x: -4, y: -4.4, width: 12, height: 8.8))
+        c.fill(face, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xCDE09D), Color(dinoHex: color)]),
+                                         startPoint: CGPoint(x: 0, y: -4), endPoint: CGPoint(x: 0, y: 5)))
+        c.stroke(face, with: .color(Color(dinoHex: outline)), lineWidth: 0.8)
+        for side: CGFloat in [-1, 1] {
+            c.fill(Path(ellipseIn: CGRect(x: 2.8, y: side * 2.5 - 0.7, width: 1.6, height: 1.4)), with: .color(Color(dinoHex: 0x244738)))
+        }
+        if sin(time * 2.2) > 0.7 {
+            var tongue = Path()
+            tongue.addLines([CGPoint(x: 7, y: 0), CGPoint(x: 12, y: 0), CGPoint(x: 14, y: -1.7)])
+            tongue.move(to: CGPoint(x: 12, y: 0)); tongue.addLine(to: CGPoint(x: 14, y: 1.7))
+            c.stroke(tongue, with: .color(Color(dinoHex: 0xB87564)), style: StrokeStyle(lineWidth: 0.8, lineCap: .round))
+        }
+    }
+}
+
 private struct JungleFlyingBirds: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.jungleMapIsScrolling) private var scrolling
     @State private var visible = false
     let viewportHeight: CGFloat
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24, paused: !visible || reduceMotion || scenePhase != .active)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24, paused: !visible || scrolling || reduceMotion || scenePhase != .active)) { timeline in
             Canvas { context, size in
                 let time = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate
                 for i in 0..<9 {
@@ -1527,7 +1659,12 @@ private struct JungleFlyingBirds: View {
 private enum JungleWaterfallGeometry {
     static let flowBounds = CGRect(x: -72, y: -248, width: 144, height: 346)
 
-    static var curtain: Path {
+    static func bounds(mirrored: Bool, heightScale: CGFloat) -> CGRect {
+        let bounds = mirrored ? CGRect(x: -72, y: -274, width: 174, height: 372) : flowBounds
+        return bounds.applying(CGAffineTransform(scaleX: mirrored ? -1 : 1, y: heightScale)).standardized
+    }
+
+    static let curtain: Path = {
         Path { f in
             f.move(to: CGPoint(x: -9, y: -243))
             f.addCurve(to: CGPoint(x: -12, y: -88), control1: CGPoint(x: -8, y: -193), control2: CGPoint(x: -3, y: -133))
@@ -1537,6 +1674,15 @@ private enum JungleWaterfallGeometry {
             f.addCurve(to: CGPoint(x: 14, y: -243), control1: CGPoint(x: 18, y: -145), control2: CGPoint(x: 8, y: -192))
             f.closeSubpath()
         }
+    }()
+
+    static let streams: [Path] = (0..<8).map { i in
+        let x = CGFloat(i) * 5 - 17
+        var stream = Path()
+        stream.move(to: CGPoint(x: x, y: -257))
+        stream.addCurve(to: CGPoint(x: x * 1.6, y: 63),
+                        control1: CGPoint(x: x + 9, y: -137), control2: CGPoint(x: x - 10, y: -27))
+        return stream
     }
 }
 
@@ -1544,26 +1690,28 @@ private enum JungleWaterfallGeometry {
 private struct JungleWaterfallFlow: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.jungleMapIsScrolling) private var scrolling
     @State private var visible = false
     let scale: CGFloat
     var opacity: Double = 1
+    var mirrored = false
+    var heightScale: CGFloat = 1
     let viewportHeight: CGFloat
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: !visible || reduceMotion || scenePhase != .active)) { timeline in
+        let bounds = JungleWaterfallGeometry.bounds(mirrored: mirrored, heightScale: heightScale)
+        TimelineView(.animation(minimumInterval: 1.0 / 24, paused: !visible || scrolling || reduceMotion || scenePhase != .active)) { timeline in
             Canvas { context, _ in
                 if !reduceMotion {
                     var c = context
-                    let bounds = JungleWaterfallGeometry.flowBounds
                     c.translateBy(x: -bounds.minX * scale, y: -bounds.minY * scale)
-                    c.scaleBy(x: scale, y: scale)
+                    c.scaleBy(x: mirrored ? -scale : scale, y: scale * heightScale)
                     c.opacity = opacity
                     drawWater(in: c, time: timeline.date.timeIntervalSinceReferenceDate)
                 }
             }
         }
-        .frame(width: JungleWaterfallGeometry.flowBounds.width * scale,
-               height: JungleWaterfallGeometry.flowBounds.height * scale)
+        .frame(width: bounds.width * scale, height: bounds.height * scale)
         .onGeometryChange(for: Bool.self) { geometry in
             let r = geometry.frame(in: .named("adventure.map.viewport"))
             return r.maxY > 0 && r.minY < viewportHeight && r.maxX > 0
@@ -1575,15 +1723,18 @@ private struct JungleWaterfallFlow: View {
         var water = context
         water.clip(to: JungleWaterfallGeometry.curtain)
         // Dashed, curved filaments travel down continuously, with staggered phases.
-        for i in 0..<8 {
-            let x = CGFloat(i) * 5 - 17
-            var stream = Path()
-            stream.move(to: CGPoint(x: x, y: -257))
-            stream.addCurve(to: CGPoint(x: x * 1.6, y: 63),
-                            control1: CGPoint(x: x + 9, y: -137), control2: CGPoint(x: x - 10, y: -27))
+        for (i, stream) in JungleWaterfallGeometry.streams.enumerated() {
             let phase = CGFloat((time * (i.isMultiple(of: 2) ? 86 : 108) + Double(i) * 13).truncatingRemainder(dividingBy: 52))
             water.stroke(stream, with: .color(Color(dinoHex: i.isMultiple(of: 3) ? 0x2EAACD : 0xF3FFFD).opacity(i.isMultiple(of: 3) ? 0.35 : 0.82)),
                          style: StrokeStyle(lineWidth: i.isMultiple(of: 2) ? 2.2 : 1.2, lineCap: .round, dash: [18, 34], dashPhase: -phase))
+        }
+        if mirrored {
+            var source = Path()
+            source.move(to: CGPoint(x: 90, y: -263))
+            source.addCurve(to: CGPoint(x: 0, y: -241), control1: CGPoint(x: 56, y: -269), control2: CGPoint(x: 9, y: -268))
+            context.stroke(source, with: .color(.white.opacity(0.8)),
+                           style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [8, 14],
+                                              dashPhase: -CGFloat((time * 34).truncatingRemainder(dividingBy: 22))))
         }
         // Rings expand from the landing and fade; a few droplets arc into the pool.
         for i in 0..<3 {
@@ -1608,6 +1759,24 @@ private struct JungleWaterfallFlow: View {
 private struct JungleWorldPainter {
     let context: GraphicsContext
     var scenery: WorldSceneryLayout? = nil
+
+    func scenery(_ item: JungleMapLayout.Item, at point: CGPoint) {
+        let simple = JunglePainter(context: context)
+        switch item.kind {
+        case .tree: tree(at: point, size: item.size, mirror: item.mirrored)
+        case .palm: palm(at: point, size: item.size, mirror: item.mirrored)
+        case .waterfall: waterfall(at: point, size: item.size, mirror: item.mirrored, heightScale: item.heightScale)
+        case .shrub: shrub(at: point, size: item.size)
+        case .rocks: rocks(at: point, size: item.size)
+        case .fern: simple.fern(at: point, size: item.size, flipped: item.mirrored)
+        case .flowers: simple.flowers(at: point, size: item.size)
+        case .plant: plant(at: point, size: item.size, mirror: item.mirrored)
+        case .grass: simple.grass(at: point, size: item.size * 10, color: Color(dinoHex: 0x7FA34E).opacity(0.55))
+        case .mushrooms: mushrooms(at: point, size: item.size, variant: item.variant)
+        case .log: fallenLog(at: point, size: item.size, mirror: item.mirrored)
+        case .snake, .fallingLeaves: break
+        }
+    }
 
     private func layer(at point: CGPoint, size: CGFloat = 1, mirror: Bool = false, draw: (JungleWorldPainter) -> Void) {
         let point = scenery?.position(point) ?? point
@@ -1761,6 +1930,80 @@ private struct JungleWorldPainter {
         }
     }
 
+    func plant(at point: CGPoint, size: CGFloat, mirror: Bool) {
+        layer(at: point, size: size, mirror: mirror) { p in
+            for (i, angle) in [-63.0, -29, 5, 38, 70].enumerated() {
+                p.blade(at: CGPoint(x: CGFloat(i - 2) * 3, y: 0),
+                        length: i == 2 ? 87 : 59 + CGFloat(i % 2) * 12,
+                        width: i == 2 ? 19 : 16, angle: angle, light: i % 2 == 0)
+            }
+        }
+    }
+
+    private func mushrooms(at point: CGPoint, size: CGFloat, variant: Int) {
+        layer(at: point, size: size) { p in
+            for (x, y, s) in [(CGFloat(-18), CGFloat(0), CGFloat(0.85)), (12, 3, 1.1), (35, 8, 0.62)] {
+                p.layer(at: CGPoint(x: x, y: y), size: s) { m in
+                    m.material(Path(roundedRect: CGRect(x: -3, y: -24, width: 6, height: 25), cornerRadius: 2), [0xFFF0CD, 0xC5B783])
+                    let cap = Path { c in
+                        c.move(to: CGPoint(x: -15, y: -22))
+                        c.addQuadCurve(to: CGPoint(x: 15, y: -22), control: CGPoint(x: 0, y: -55))
+                        c.addQuadCurve(to: CGPoint(x: -15, y: -22), control: CGPoint(x: 0, y: -14))
+                        c.closeSubpath()
+                    }
+                    m.material(cap, variant == 1 ? [0xEBCB89, 0xB28A57] : [0xEAC18B, 0xBB8059])
+                    for (dx, dy) in [(CGFloat(-6), CGFloat(-27)), (3, -31), (8, -25)] {
+                        m.context.fill(Path(ellipseIn: CGRect(x: dx, y: dy, width: 3, height: 2.2)), with: .color(Color(dinoHex: 0xFFF1CD).opacity(0.85)))
+                    }
+                }
+            }
+        }
+    }
+
+    private func fallenLog(at point: CGPoint, size: CGFloat, mirror: Bool) {
+        layer(at: point, size: size, mirror: mirror) { p in
+            p.context.fill(Path(ellipseIn: CGRect(x: -62, y: 9, width: 128, height: 17)), with: .color(Color(dinoHex: 0x54723E).opacity(0.17)))
+            let trunk = Path { t in
+                t.move(to: CGPoint(x: -54, y: -14))
+                t.addQuadCurve(to: CGPoint(x: 51, y: -10), control: CGPoint(x: -6, y: -16))
+                t.addQuadCurve(to: CGPoint(x: 51, y: 24), control: CGPoint(x: 65, y: 7))
+                t.addQuadCurve(to: CGPoint(x: -54, y: 18), control: CGPoint(x: -8, y: 22))
+                t.addQuadCurve(to: CGPoint(x: -54, y: -14), control: CGPoint(x: -67, y: 2))
+                t.closeSubpath()
+            }
+            p.material(trunk, [0xCDA368, 0x9A744A, 0x745635])
+            p.context.stroke(trunk, with: .color(Color(dinoHex: 0x755635)), style: StrokeStyle(lineWidth: 1.3, lineJoin: .round))
+            let rearEnd = Path(ellipseIn: CGRect(x: -64, y: -14, width: 20, height: 32))
+            p.material(rearEnd, [0xD8BA80, 0xA07B4D])
+            p.context.stroke(rearEnd, with: .color(Color(dinoHex: 0x755635)), lineWidth: 1.4)
+            for inset: CGFloat in [4, 7] {
+                p.context.stroke(Path(ellipseIn: CGRect(x: -64 + inset, y: -14 + inset,
+                                                       width: 20 - inset * 2, height: 32 - inset * 2)),
+                                 with: .color(Color(dinoHex: 0x8D683F).opacity(0.7)), lineWidth: 0.8)
+            }
+            // Clip the grain to bark so it cannot run over either finished end.
+            var bark = p.context
+            bark.clip(to: trunk)
+            for i in 0..<4 {
+                var grain = Path()
+                grain.addLines([CGPoint(x: -43, y: -7 + CGFloat(i) * 6), CGPoint(x: -12, y: -3 + CGFloat(i) * 6), CGPoint(x: 40, y: -5 + CGFloat(i) * 7)])
+                bark.stroke(grain, with: .color(Color(dinoHex: i % 2 == 0 ? 0xE2BB7F : 0x634A31).opacity(0.65)),
+                            style: StrokeStyle(lineWidth: 1.1, lineCap: .round))
+            }
+            let end = Path(ellipseIn: CGRect(x: 39, y: -10, width: 25, height: 34))
+            p.material(end, [0xE8CF95, 0xBC985F])
+            p.context.stroke(end, with: .color(Color(dinoHex: 0x775B37)), lineWidth: 1.4)
+            for i in 0..<3 {
+                p.context.stroke(Path(ellipseIn: CGRect(x: 43 + CGFloat(i) * 2.7, y: -5 + CGFloat(i) * 4,
+                                                       width: 17 - CGFloat(i) * 5.4, height: 24 - CGFloat(i) * 8)),
+                                 with: .color(Color(dinoHex: 0x9B7847).opacity(0.65)), lineWidth: 0.8)
+            }
+            for (i, x) in [CGFloat(-33), -18, -2].enumerated() {
+                p.blade(at: CGPoint(x: x, y: -8), length: 21, width: 7, angle: Double(i * 47 - 57), light: true)
+            }
+        }
+    }
+
     func tree(at point: CGPoint, size: CGFloat, mirror: Bool) {
         layer(at: point, size: size, mirror: mirror) { p in
             p.glow(at: CGPoint(x: 12, y: -4), radius: 60, color: 0x4B753C, opacity: 0.17)
@@ -1857,8 +2100,11 @@ private struct JungleWorldPainter {
         }
     }
 
-    func waterfall(at point: CGPoint, size: CGFloat) {
-        layer(at: point, size: size) { p in
+    func waterfall(at point: CGPoint, size: CGFloat, mirror: Bool = false, heightScale: CGFloat = 1) {
+        layer(at: point, size: size, mirror: mirror) { original in
+            var compressed = original.context
+            compressed.scaleBy(x: 1, y: heightScale)
+            let p = JungleWorldPainter(context: compressed)
             let pool = Path(ellipseIn: CGRect(x: -106, y: 26, width: 230, height: 87))
             p.material(pool, [0x74CFD3, 0x32A9C0, 0xB2E4D7])
             p.context.stroke(pool, with: .color(Color(dinoHex: 0xDBF2CC).opacity(0.8)), lineWidth: 4)
@@ -1887,8 +2133,11 @@ private struct JungleWorldPainter {
                 p.shrub(at: CGPoint(x: x, y: y), size: s)
             }
             // The upper stream spills over a broad lip, then fans into a second cascade.
-            var source = Path(); source.move(to: CGPoint(x: 29, y: -257))
-            source.addQuadCurve(to: CGPoint(x: 0, y: -241), control: CGPoint(x: -1, y: -264))
+            var source = Path()
+            source.move(to: CGPoint(x: mirror ? 90 : 29, y: mirror ? -263 : -257))
+            source.addCurve(to: CGPoint(x: 0, y: -241),
+                            control1: CGPoint(x: mirror ? 56 : 16, y: mirror ? -269 : -264),
+                            control2: CGPoint(x: 9, y: -268))
             p.context.stroke(source, with: .color(Color(dinoHex: 0xB8F2ED)), style: StrokeStyle(lineWidth: 15, lineCap: .round))
             let fall = JungleWaterfallGeometry.curtain
             p.material(fall, [0xE1FFF7, 0x5CD1ED, 0x83DEF0, 0xD4FFF3])
@@ -1921,33 +2170,7 @@ private struct JungleWorldPainter {
         }
     }
 
-    func undergrowth(width: CGFloat, left: CGFloat, right: CGFloat, height: CGFloat, scale: CGFloat) {
-        let simple = JunglePainter(context: context, scenery: scenery)
-        for i in 0..<11 {
-            let y = 95 + CGFloat(i) * 166
-            let side = i % 2 == 0
-            let edge = side ? left : right
-            let inward: CGFloat = side ? 1 : -1
-            // Low banks create layers of jungle while keeping the route open.
-            simple.hill(x: side ? left - 125 * scale : right - 55 * scale, y: y - 30,
-                        width: 180 * scale, height: 155 * scale, color: Color(dinoHex: i % 3 == 0 ? 0x92BB60 : 0xAED16F).opacity(0.36))
-            shrub(at: CGPoint(x: edge + inward * 7, y: y + 68), size: (0.38 + CGFloat(i % 3) * 0.09) * scale)
-            if i % 3 == 0 { rocks(at: CGPoint(x: edge + inward * 33, y: y + 109), size: scale * 0.66) }
-            if i % 2 == 0 {
-                simple.flowers(at: CGPoint(x: edge + inward * 43, y: y + 57), size: scale * 0.7)
-            }
-            for j in 0..<4 {
-                blade(at: CGPoint(x: edge + inward * CGFloat(5 + j * 8), y: y + 142),
-                      length: CGFloat(35 + j * 9) * scale, width: 11 * scale, angle: Double(j * 31 - 48), light: j % 2 == 0)
-            }
-        }
-        // Small sunlit leaves and pebbles break up the large ground surfaces.
-        for i in 0..<28 {
-            let x = width * (i % 2 == 0 ? 0.13 : 0.87) + CGFloat(i % 3 - 1) * 13
-            let y = 170 + CGFloat(i) * 61
-            simple.grass(at: CGPoint(x: x, y: y), size: 5 * scale, color: Color(dinoHex: 0x7FA34E).opacity(0.55))
-        }
-    }
+
 }
 
 /// Lightweight, shape-only distant scenery for headings and quieter game screens.

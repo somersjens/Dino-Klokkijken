@@ -18,6 +18,7 @@ struct DinoCoreTests {
         testAnimation()
         testQuestions()
         testWorlds()
+        testJungleSceneryClearance()
         testAttempt()
         testAnswerRetries()
         testTiming()
@@ -40,6 +41,58 @@ struct DinoCoreTests {
         testFullReset()
         let socialChecks = await DinoSocialTests.run()
         print("PASS: \(checks + socialChecks) checks — gameplay, persistence, social progress, privacy guards, offline sync and international names.")
+    }
+
+    static func testJungleSceneryClearance() {
+        for width: CGFloat in [320, 375, 390, 402, 430, 600, 744, 834, 1024, 1194, 1366] {
+            let layout = JungleMapLayout(width: width)
+            let scene = layout.scene()
+            expect(scene === layout.scene(), "unchanged viewport reuses resolved jungle coordinates")
+            expect(scene.ground.contains { $0.item.kind == .mushrooms } &&
+                   scene.ground.allSatisfy { !$0.item.kind.occludesWildlife },
+                   "mushrooms and logs are behind wildlife and the canopy")
+            expect(scene.canopyTiles.flatMap(\.placements).allSatisfy { $0.item.kind.occludesWildlife },
+                   "static foreground tiles cover snakes with bushes and trunks")
+            let trailWidth = min(width, 600) - 36
+            for (index, fraction) in ([CGFloat(0.5)] + JungleMapLayout.chapterPositions).enumerated() {
+                let y = JungleMapLayout.firstNodeY + CGFloat(index) * JungleMapLayout.levelSpacing
+                let expected = (width - trailWidth) / 2 + trailWidth * fraction
+                expect(abs(layout.centerX(at: y) - expected) < 0.01, "jungle placement follows each real level centre")
+            }
+            for item in layout.items {
+                let point = layout.position(of: item)
+                for band in layout.footprint(of: item) {
+                    // Check more densely than the placement solver, including
+                    // corners between samples, curved road edges and level rims.
+                    for offset in 0...Int(ceil(band.height)) {
+                        let y = point.y + band.minY + min(band.height, CGFloat(offset))
+                        let road = layout.centerX(at: y)
+                        let clearance = layout.clearance(at: y)
+                        let outside = point.x < width / 2
+                            ? point.x + band.maxX < road - clearance
+                            : point.x + band.minX > road + clearance
+                        expect(outside, "every jungle silhouette clears the road at width \(width), y \(y)")
+                    }
+                }
+            }
+            let waterfall = layout.position(of: layout.waterfall)
+            expect(waterfall.x < layout.centerX(at: 595) && (590...640).contains(waterfall.y),
+                   "the waterfall stands on the left bank near level three")
+            expect(layout.waterfall.heightScale == 0.78 && layout.waterfall.mirrored &&
+                   layout.waterfall.preferred.x < width / 2 - min(width, 720) * 0.4,
+                   "level three waterfall is shorter, at the bank and fed from the left")
+            for placement in scene.placements where placement.item.kind.occludesWildlife && placement.bounds.intersects(CGRect(x: 0, y: -512, width: width, height: 2560)) {
+                expect(scene.canopyTiles.contains { $0.placements.contains { $0.id == placement.id } },
+                       "visible foliage is retained in the static tiles")
+            }
+            expect(layout.items.filter(\.foreground).count == 2,
+                   "the two entrance trees can occlude the upper waterfall pools")
+        }
+        let phone = JungleMapLayout(width: 402)
+        let oldTree = JungleMapLayout.Item(kind: .tree, preferred: CGPoint(x: 110, y: 1250), size: 1.02)
+        let moved = phone.position(of: oldTree)
+        expect(moved.x < oldTree.preferred.x - 100,
+               "the former tree crossing a higher bend is relocated using its crown, not only its trunk")
     }
 
     static func testPracticeRecords() {

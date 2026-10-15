@@ -2587,7 +2587,8 @@ final class DinoUITests: XCTestCase {
         let character = app.descendants(matching: .any)["map.dino.1"]
         let node = app.buttons["map.level.1"]
         XCTAssertEqual(character.frame.midX, node.frame.midX, accuracy: 1)
-        XCTAssertEqual(character.frame.maxY, node.frame.midY - 24, accuracy: 3)
+        // Match the shared foot baseline also checked by testDinoStandsOnCompletedLevel.
+        XCTAssertEqual(character.frame.maxY, node.frame.midY + 12, accuracy: 3)
         XCTAssertFalse(character.label.contains("Sam"))
         XCTAssertTrue(node.isHittable)
         saveScreenshot("jungle-earned-stars")
