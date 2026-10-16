@@ -778,11 +778,13 @@ private struct WorldChapter: View {
     let viewportHeight: CGFloat
     var openLevel: (LevelConfiguration) -> Void
     private let titleTopPadding = WorldRouteTrail.bannerTopPadding
-    private var routeOffset: CGFloat { WorldRouteTrail.bannerHeight + titleTopPadding + WorldRouteTrail.bannerBottomPadding + topClearance }
+    private var entranceHeight: CGFloat { WorldRouteTrail.entranceHeight(worldID: world.id) }
+    private var routeOffset: CGFloat { entranceHeight + WorldRouteTrail.bannerHeight + titleTopPadding + WorldRouteTrail.bannerBottomPadding + topClearance }
     private let positions = WorldRouteTrail.chapterPositions
 
     var body: some View {
         VStack(spacing: 0) {
+            Color.clear.frame(height: entranceHeight)
             WorldTitleBanner(world: world, highContrast: highContrast)
                 .equatable()
                 .padding(.horizontal, 18).padding(.top, titleTopPadding).padding(.bottom, WorldRouteTrail.bannerBottomPadding)
@@ -822,7 +824,7 @@ private struct WorldChapter: View {
                 .frame(maxWidth: 600).frame(maxWidth: .infinity)
         }.background {
             MapScenery(viewportHeight: viewportHeight) {
-                ZStack {
+                ZStack(alignment: .top) {
                     ThemedWorldLandscape(world: world, routeOffset: routeOffset).equatable()
                     GeometryReader { geometry in
                         let points = positions.enumerated().map {
@@ -830,6 +832,8 @@ private struct WorldChapter: View {
                         }
                         WorldRouteTrail(points: points, entryY: 0, exitY: geometry.size.height).equatable()
                     }.padding(.horizontal, 18).frame(maxWidth: 600).frame(maxWidth: .infinity)
+                    if world.id == 5 { CrystalCaveEntranceForeground().equatable() }
+                    if world.id == 6 { CrystalCaveExitForeground().equatable() }
                 }
             }
         }

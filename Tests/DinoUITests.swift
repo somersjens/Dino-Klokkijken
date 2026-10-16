@@ -225,7 +225,9 @@ final class DinoUITests: XCTestCase {
             let above = banner.frame.minY - boss.frame.maxY
             let below = first.frame.minY - banner.frame.maxY
             XCTAssertGreaterThan(above, 40, "Boss leaves room above world \(world)")
-            XCTAssertEqual(above, below, accuracy: 4, "World \(world) has equal space above and below its banner")
+            let entranceClearance: CGFloat = world == 5 ? 260 : world == 6 ? 250 : 0
+            XCTAssertEqual(above - entranceClearance, below, accuracy: 4,
+                           "World \(world) reserves its entrance clearing and balances the remaining banner space")
             saveScreenshot("world-banner-spacing-\(world)")
         }
     }
