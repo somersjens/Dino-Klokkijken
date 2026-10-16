@@ -5,6 +5,7 @@ import Combine
 final class DinoPlayer: ObservableObject {
     @Published private(set) var profile: PlayerProfile
     @Published private(set) var practiceRecords: [String: DinoPracticeRecord]
+    @Published private(set) var hasSelectedLevel: Bool
     @Published private(set) var resetGeneration = UUID()
     let profileChanges = PassthroughSubject<PlayerProfile, Never>()
     private let store: DinoProgressStore
@@ -22,7 +23,13 @@ final class DinoPlayer: ObservableObject {
         resolved = store ?? DinoProgressStore()
 #endif
         self.store = resolved
+        var loadedHasSelectedLevel = resolved.hasSelectedLevel
         var loaded = resolved.load()
+        if !loadedHasSelectedLevel && (loaded.dinoLevel > 0 || loaded.levels.values.contains { $0.attempts > 0 }) {
+            resolved.markLevelSelected()
+            loadedHasSelectedLevel = true
+        }
+        hasSelectedLevel = loadedHasSelectedLevel
         let previousTheme = loaded.clockTheme
         loaded.clockTheme = previousTheme.applyingFixedStyles()
         profile = loaded
@@ -99,6 +106,14 @@ final class DinoPlayer: ObservableObject {
         update { $0.clockTheme = theme.replacingUnreadableClocks().applyingFixedStyles(); $0.onboardingComplete = true }
     }
     func markDemonstrated(_ kind: ClockQuestionKind) { update { $0.demonstratedInteractions.insert(kind) } }
+    var needsFirstLevelHint: Bool {
+        !hasSelectedLevel && profile.dinoLevel == 0 && !profile.levels.values.contains { $0.attempts > 0 }
+    }
+    func markLevelSelected() {
+        guard !hasSelectedLevel else { return }
+        store.markLevelSelected()
+        hasSelectedLevel = true
+    }
     func finish(_ attempt: LevelAttempt) -> DinoLevelResult? {
         guard attempt.isComplete, let level = DinoLevelCatalog.level(attempt.levelID),
               attempt.answers.count == level.questionCount else { return nil }
@@ -118,6 +133,7 @@ final class DinoPlayer: ObservableObject {
     func resetAllData(at date: Date = Date()) {
         progressReset?()
         store.removeAllData(resetAt: date)
+        hasSelectedLevel = false
         var fresh = PlayerProfile()
         fresh.progressResetAt = date
         profile = fresh
@@ -140,19 +156,30 @@ final class DinoPlayer: ObservableObject {
     }
 
     func practiceRecord(time: DinoPracticeTime, question: DinoPracticeQuestion) -> DinoPracticeRecord {
-        practiceRecords[DinoPracticeRecord.key(time: time, question: question)] ?? DinoPracticeRecord()
+        practiceRecord(time: time, order: .specific(question))
+    }
+
+    func practiceRecord(time: DinoPracticeTime, order: DinoPracticeOrder) -> DinoPracticeRecord {
+        practiceRecords[DinoPracticeRecord.key(time: time, order: order)] ?? DinoPracticeRecord()
     }
 
     @discardableResult
-    func recordPracticeAnswer(time: DinoPracticeTime, question: DinoPracticeQuestion, streak: Int) -> DinoPracticeRecord {
-        let key = DinoPracticeRecord.key(time: time, question: question)
-        var record = practiceRecords[key] ?? DinoPracticeRecord()
-        record.questionsAnswered = min(Int.max - 1, record.questionsAnswered) + 1
-        record.bestStreak = max(record.bestStreak, streak)
-        record.currentStreak = max(0, streak)
-        practiceRecords[key] = record
-        store.savePracticeRecords(practiceRecords)
-        return record
+    func recordPracticeAnswer(configuration: DinoPracticeConfiguration, question: DinoPracticeQuestion,
+                              correct: Bool) -> DinoPracticeRecord {
+        let orderKey = DinoPracticeRecord.key(time: configuration.time, order: configuration.order)
+        let questionKey = DinoPracticeRecord.key(time: configuration.time, question: question)
+        var records = practiceRecords
+        // Mixed modes keep their own continuous series and also credit the individual exercise.
+        for key in Set([orderKey, questionKey]) {
+            var record = records[key] ?? DinoPracticeRecord()
+            record.questionsAnswered = min(Int.max - 1, record.questionsAnswered) + 1
+            record.currentStreak = correct ? min(Int.max - 1, record.currentStreak) + 1 : 0
+            record.bestStreak = max(record.bestStreak, record.currentStreak)
+            records[key] = record
+        }
+        practiceRecords = records
+        store.savePracticeRecords(records)
+        return records[orderKey]!
     }
 }
 
@@ -275,11 +302,9 @@ final class DinoSession: ObservableObject, Identifiable {
             if !correct { rejectedResponses.insert(answer) }
             if practice != nil { practiceAnswered += 1; if correct { practiceCorrect += 1 } }
             if practiceGenerator != nil, let practice, let type = practiceQuestionType {
-                let saved = player.practiceRecord(time: practice.time, question: type)
-                let streak = correct ? min(Int.max - 1, saved.currentStreak) + 1 : 0
                 // Persist immediately, while the HUD keeps this question's
                 // counters together until the next question is presented.
-                player.recordPracticeAnswer(time: practice.time, question: type, streak: streak)
+                player.recordPracticeAnswer(configuration: practice, question: type, correct: correct)
             }
             answerFeedback?(correct)
         }
@@ -336,8 +361,8 @@ final class DinoSession: ObservableObject, Identifiable {
     }
 
     private func refreshPracticeProgress() {
-        guard practiceGenerator != nil, let practice, let type = practiceQuestionType else { return }
-        let record = player.practiceRecord(time: practice.time, question: type)
+        guard practiceGenerator != nil, let practice else { return }
+        let record = player.practiceRecord(time: practice.time, order: practice.order)
         practiceProgress = PracticeProgress(streak: record.currentStreak, bestStreak: record.bestStreak,
                                             questionNumber: min(Int.max - 1, record.questionsAnswered) + 1)
     }

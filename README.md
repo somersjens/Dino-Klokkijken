@@ -4,7 +4,7 @@ Native SwiftUI-klokkijkgame voor iPhone en iPad met **tien werelden en honderd l
 
 De volledige appnaam is **Leer klokkijken met Dino** in het Nederlands en **Learn to Tell Time with Dino** in het Engels. Onder het appicoon op het beginscherm staat **Tijd Dino** in het Nederlands en **Dino Time** in het Engels. De naam op het beginscherm volgt de iOS-app-/systeemtaal; de taalkiezer in de game past de gameteksten aan.
 
-Tijdens **Levels oefenen** kies je één van zes tijdsoorten en 19 vraagtypen. Het overzicht toont per combinatie een trofee met de hoogste reeks. Oefenen gebruikt dezelfde HUD als een level, met **Reeks** en een blijvend doorlopende **Vraag**-teller (0–999 plus een kleine k-teller). Records, actieve reeksen en vragentellers worden lokaal bewaard; pauzeren en hervatten behouden de reeks. [Scherm, opslag en controles](Documentation/PracticeVerification.md). [Aanpassingen aan vragen en voorbeelden](Documentation/QuestionFeedbackVerification.md).
+Tijdens **Levels oefenen** kies je één van zes tijdsoorten en 19 vraagtypen. Het overzicht toont per combinatie een trofee met de hoogste reeks, ook voor **Oplopend** en **Mix**. Deze twee modi hebben elk een eigen doorlopende reeks en record per tijdsoort. Oefenen gebruikt dezelfde HUD als een level, met **Reeks** en een blijvend doorlopende **Vraag**-teller (0–999 plus een kleine k-teller). Records, actieve reeksen en vragentellers worden lokaal bewaard; pauzeren en hervatten behouden de reeks. [Scherm, opslag en controles](Documentation/PracticeVerification.md). [Aanpassingen aan vragen en voorbeelden](Documentation/QuestionFeedbackVerification.md).
 
 ## Starten
 
@@ -55,6 +55,8 @@ De app gebruikt Apples [iCloud Key-Value Storage](https://developer.apple.com/do
 Alle klokken gebruiken één `ClockTheme`. De urenwijzer volgt `30 × uur + 0,5 × minuten`, de minutenwijzer `6 × minuten`. Wereld 1 gebruikt uitsluitend 01:00–12:00. De volgende werelden oefenen achtereenvolgens halve uren, kwartieren, stappen van vijf minuten, exacte minuten, digitaal lezen, 12/24 uur, analoog/digitaal combineren en tijdsduur. Het kasteel combineert de vaardigheden. Invoer en voorbeelden volgen de minuutstap van de wereld.
 
 ## Spelregels
+
+Tik in het leveloverzicht op **Level** om naar de volgende speelbare stap te scrollen. Een bewegende aanwijsvinger markeert dat level vijf seconden; bij een voltooid avontuur verschijnt confetti. Na een nieuwe installatie wijst dezelfde vinger naar level 1 en blijft hij zichtbaar totdat een speelbaar level wordt geopend, ook als de speler het daarna direct sluit. Dit wordt lokaal onthouden na herstart. Een gewone voortgangsreset herhaalt deze eerste aanwijzing niet; alle gegevens wissen wel. De animaties respecteren Verminder beweging.
 
 - 0–2/5 = geen ster, 3/5 = één, 4/5 = twee, 5/5 = drie. Een ster ontgrendelt het volgende gewone level.
 - Per volledige poging worden ook de vraagtijden verzameld. Alleen de tijd vóór het antwoord telt; de score rekent 1–60 seconden per vraag zonder een tijdslimiet voor de speler. Een monotone klok voorkomt invloed van tijdzone- of kalenderwijzigingen.

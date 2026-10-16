@@ -31,6 +31,8 @@ struct AdventureHeader: View {
     var practiceConfiguration: DinoPracticeConfiguration?
     var helpEnabled = true
     var help: () -> Void = {}
+    var focusLevel: (() -> Void)?
+    var openStars: (() -> Void)?
     var action: () -> Void
 
     private var palette: HUDPalette { HUDPalette(worldID: worldID) }
@@ -53,9 +55,23 @@ struct AdventureHeader: View {
             HStack(spacing: metrics.gap) {
                 portrait(metrics)
                 HStack(spacing: 0) {
-                    levelCell(metrics)
+                    if let focusLevel {
+                        Button(action: focusLevel) { levelCell(metrics) }
+                            .buttonStyle(HUDPressStyle())
+                            .accessibilityLabel(Text("dino.levelNumber \(level)"))
+                            .accessibilityIdentifier("header.level")
+                    } else {
+                        levelCell(metrics)
+                    }
                     divider(metrics)
-                    progressCell(metrics)
+                    if let openStars, questionCounter == nil {
+                        Button(action: openStars) { progressCell(metrics) }
+                            .buttonStyle(HUDPressStyle())
+                            .accessibilityLabel(Text("dino.stars \(stars)"))
+                            .accessibilityIdentifier("header.stars")
+                    } else {
+                        progressCell(metrics)
+                    }
                     divider(metrics)
                     helpButton(metrics)
                     divider(metrics)

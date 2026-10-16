@@ -3,6 +3,7 @@ import SwiftUI
 struct WorldMap: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EnvironmentObject private var player: DinoPlayer
     @EnvironmentObject private var friends: FriendsManager
     var openLevel: (LevelConfiguration) -> Void
@@ -15,6 +16,12 @@ struct WorldMap: View {
     @State private var floatingHUDHeight: CGFloat = 128
     @State private var worldsAboveHUD: Set<Int> = [1]
     @State private var selectedFriend: FriendSelection?
+    @State private var showsStars = false
+    @State private var focusRequest = 0
+    @State private var hintedLevel: Int?
+    @State private var celebrationID: UUID?
+
+    private var guidedLevel: Int? { player.needsFirstLevelHint ? 1 : hintedLevel }
 
     var body: some View {
         GeometryReader { geometry in
@@ -51,7 +58,8 @@ struct WorldMap: View {
                                     } action: { updateVisibleWorld(1, aboveHUD: $0) }
                                 ForEach(DinoWorldCatalog.worlds.dropFirst()) { world in
                                     WorldChapter(world: world, topClearance: routeTopClearance,
-                                                 viewportHeight: geometry.size.height, openLevel: openLevel)
+                                                 viewportHeight: geometry.size.height, hintedLevel: guidedLevel,
+                                                 openLevel: selectLevel)
                                         .onGeometryChange(for: Bool.self) {
                                             $0.frame(in: .named("adventure.map.viewport")).minY <= floatingHUDHeight + 24
                                         } action: { updateVisibleWorld(world.id, aboveHUD: $0) }
@@ -60,21 +68,52 @@ struct WorldMap: View {
                             }
                         }
                         .accessibilityIdentifier("map.route")
-                        .onAppear {
-                            if player.profile.dinoLevel > 0 {
-                                proxy.scrollTo("node-\(player.profile.dinoLevel)", anchor: .center)
+                        .task(id: focusRequest) {
+                            hintedLevel = nil
+                            celebrationID = nil
+                            let requested = focusRequest > 0
+                            let target = requested || player.needsFirstLevelHint
+                                ? player.profile.nextAdventureLevel ?? player.profile.dinoLevel
+                                : player.profile.dinoLevel
+                            guard target > 0 else { return }
+                            // Center the next stone in the space beneath the floating HUD.
+                            let anchor = UnitPoint(x: 0.5, y: min(0.78, 0.5 + (floatingHUDHeight + geometry.safeAreaInsets.top) / (2 * max(1, geometry.size.height))))
+                            withAnimation(requested && !reduceMotion ? .easeInOut(duration: 0.55) : nil) {
+                                proxy.scrollTo("node-\(target)", anchor: anchor)
                             }
+                            guard requested else { return }
+                            do {
+                                try await Task.sleep(for: .milliseconds(reduceMotion ? 100 : 650))
+                                try Task.checkCancellation()
+                                if player.profile.adventureComplete {
+                                    celebrationID = UUID()
+                                } else {
+                                    withAnimation(.easeOut(duration: 0.2)) { hintedLevel = player.profile.nextAdventureLevel }
+                                }
+                                try await Task.sleep(for: .seconds(5))
+                                try Task.checkCancellation()
+                                withAnimation(.easeOut(duration: 0.25)) {
+                                    hintedLevel = nil
+                                    celebrationID = nil
+                                }
+                            } catch { /* A new tap or leaving the map cancels the previous cue. */ }
                         }
                     }.ignoresSafeArea(edges: [.top, .bottom, .horizontal])
                 }.overlay(alignment: .top) {
                     AdventureHeader(level: max(1, player.profile.dinoLevel),
                                     stars: player.profile.totalStars, worldID: worldsAboveHUD.max() ?? 1,
                                     compact: verticalSizeClass == .compact, viewportHeight: geometry.size.height,
-                                    control: .settings, help: openPractice, action: openSettings)
+                                    control: .settings, help: openPractice, focusLevel: { focusRequest += 1 },
+                                    openStars: { showsStars = true }, action: openSettings)
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                             floatingHUDHeight = $0
                             hudHeightChanged($0)
                         }
+                }
+                if let celebrationID {
+                    MapCompletionConfetti().id(celebrationID)
+                        .allowsHitTesting(false)
+                        .accessibilityIdentifier("map.completionConfetti")
                 }
             }.coordinateSpace(name: "adventure.map.viewport")
         }
@@ -87,6 +126,17 @@ struct WorldMap: View {
                     } }
             }.environmentObject(friends).gameEnvironment()
         }
+        .sheet(isPresented: $showsStars) {
+            DinoStarsOverview().gameEnvironment()
+                .presentationDetents([.large]).presentationDragIndicator(.visible)
+        }
+    }
+
+    private func selectLevel(_ level: LevelConfiguration) {
+        focusRequest = 0
+        hintedLevel = nil
+        celebrationID = nil
+        openLevel(level)
     }
 
     private func updateVisibleWorld(_ id: Int, aboveHUD: Bool) {
@@ -120,7 +170,7 @@ struct WorldMap: View {
     }
 
     private var bossShortcut: some View {
-        Button { if let boss = DinoLevelCatalog.level(10) { openLevel(boss) } } label: {
+        Button { if let boss = DinoLevelCatalog.level(10) { selectLevel(boss) } } label: {
             HStack(spacing: 13) {
                 Image(systemName: "trophy.fill").font(.system(size: 26)).foregroundStyle(DinoStyle.green)
                     .frame(width: 52, height: 52).background(DinoStyle.ink, in: RoundedRectangle(cornerRadius: 16))
@@ -192,7 +242,8 @@ struct WorldMap: View {
                                     LevelNode(level: level, record: player.profile.record(index),
                                               unlocked: player.profile.isUnlocked(index),
                                               current: dinoLevel == index,
-                                              bossComplete: player.profile.worldOneComplete) { openLevel(level) }
+                                              bossComplete: player.profile.worldOneComplete,
+                                              showsGuide: guidedLevel == index) { selectLevel(level) }
                                 }
                             }.offset(x: point.x - g.size.width / 2)
                             if dinoLevel == index {
@@ -240,6 +291,76 @@ struct WorldMap: View {
 
 }
 
+/// One small cue follows its stone, so scrolling and rotation keep it aligned.
+private struct MapLevelPointer: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    let levelID: Int
+    @State private var visible = false
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: !visible || reduceMotion || scenePhase != .active)) { timeline in
+            let wave = reduceMotion ? 0 : (sin(timeline.date.timeIntervalSinceReferenceDate * 2 * .pi / 1.3) + 1) / 2
+            ZStack {
+                Circle().strokeBorder(Color(dinoHex: 0xFFE29A).opacity(0.85 - wave * 0.35), lineWidth: 3)
+                    .padding(-8 - wave * 4)
+                    .shadow(color: DinoStyle.ink.opacity(0.25), radius: 2, y: 1)
+                Image(systemName: "hand.point.up.left.fill")
+                    .font(.system(size: 54, weight: .regular))
+                    .foregroundStyle(LinearGradient(colors: [.white, Color(dinoHex: 0xFFE5B3)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .shadow(color: Color(dinoHex: 0x775A32), radius: 0, x: 1.2, y: 1.2)
+                    .shadow(color: Color(dinoHex: 0x775A32), radius: 0, x: -1, y: -1)
+                    .shadow(color: DinoStyle.ink.opacity(0.28), radius: 4, y: 4)
+                    .rotationEffect(.degrees(-6 + wave * 5))
+                    .offset(x: 33 - wave * 5, y: 61 - wave * 7)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("dino.friends.nextLevel \(levelID)"))
+        .accessibilityIdentifier("map.levelPointer.\(levelID)")
+        .onAppear { visible = true }
+        .onDisappear { visible = false }
+    }
+}
+
+/// A finite burst drawn in one canvas; reduced motion uses a still celebration.
+private struct MapCompletionConfetti: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var startedAt = Date()
+    private let colors: [UInt32] = [0x80D64B, 0xFFD45B, 0xF483A2, 0x73CDE5, 0xB9A0ED, 0xFFF5CF]
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion || scenePhase != .active)) { timeline in
+            let elapsed = max(0, timeline.date.timeIntervalSince(startedAt))
+            Canvas { context, size in
+                drawConfetti(context: &context, size: size, elapsed: elapsed)
+            }
+        }
+        .ignoresSafeArea()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("dino.worldComplete"))
+    }
+
+    private func drawConfetti(context: inout GraphicsContext, size: CGSize, elapsed: TimeInterval) {
+        context.opacity = reduceMotion ? 0.9 : min(1, max(0, 5 - elapsed))
+        for i in 0..<96 {
+            let seed = Double(i)
+            let delay = Double(i % 8) * 0.07
+            let progress = reduceMotion ? Double(i % 12) / 12 : max(0, elapsed - delay) / 4.2
+            let drift: CGFloat = reduceMotion ? 0 : CGFloat(sin(seed * 1.7 + progress * 9)) * 24
+            let x = size.width * CGFloat((i * 37) % 101) / 100 + drift
+            let y = -30 + (size.height + 80) * CGFloat(progress)
+            var piece = context
+            piece.translateBy(x: x, y: y)
+            piece.rotate(by: .degrees(seed * 47 + (reduceMotion ? 0 : progress * 540)))
+            let rect = CGRect(x: -4, y: -6, width: i % 3 == 0 ? 7 : 10, height: i % 3 == 0 ? 7 : 5)
+            piece.fill(Path(roundedRect: rect, cornerRadius: 1.5), with: .color(Color(dinoHex: colors[i % colors.count])))
+        }
+    }
+}
+
 /// Keep every level's layout and scroll anchor alive, but retain landscape
 /// canvases only near the viewport. The two-screen margin prepares artwork
 /// before it enters view, including during fast scrolling and rotation.
@@ -271,6 +392,7 @@ struct LevelNode: View {
     let unlocked: Bool
     let current: Bool
     let bossComplete: Bool
+    var showsGuide = false
     var action: () -> Void
     private var color: Color { !unlocked ? Color(dinoHex: 0xA9B8A0) : level.isBoss ? DinoStyle.ink : DinoStyle.green }
     var body: some View {
@@ -323,6 +445,12 @@ struct LevelNode: View {
                         DinoStars(count: record.stars, size: 17, showEmpty: record.stars > 0).frame(height: 20)
                     }
                 }.offset(y: 32).allowsHitTesting(false)
+            }
+            .overlay {
+                if showsGuide {
+                    MapLevelPointer(levelID: level.id)
+                        .transition(.opacity)
+                }
             }
     }
 }
@@ -776,15 +904,14 @@ private struct WorldChapter: View {
     let world: DinoWorld
     let topClearance: CGFloat
     let viewportHeight: CGFloat
+    let hintedLevel: Int?
     var openLevel: (LevelConfiguration) -> Void
     private let titleTopPadding = WorldRouteTrail.bannerTopPadding
-    private var entranceHeight: CGFloat { WorldRouteTrail.entranceHeight(worldID: world.id) }
-    private var routeOffset: CGFloat { entranceHeight + WorldRouteTrail.bannerHeight + titleTopPadding + WorldRouteTrail.bannerBottomPadding + topClearance }
+    private var routeOffset: CGFloat { WorldRouteTrail.bannerHeight + titleTopPadding + WorldRouteTrail.bannerBottomPadding + topClearance }
     private let positions = WorldRouteTrail.chapterPositions
 
     var body: some View {
         VStack(spacing: 0) {
-            Color.clear.frame(height: entranceHeight)
             WorldTitleBanner(world: world, highContrast: highContrast)
                 .equatable()
                 .padding(.horizontal, 18).padding(.top, titleTopPadding).padding(.bottom, WorldRouteTrail.bannerBottomPadding)
@@ -803,7 +930,8 @@ private struct WorldChapter: View {
                             LevelNode(level: level, record: player.profile.record(id),
                                       unlocked: player.profile.isUnlocked(id),
                                       current: dinoLevel == id,
-                                      bossComplete: bossComplete) { openLevel(level) }
+                                      bossComplete: bossComplete,
+                                      showsGuide: hintedLevel == id) { openLevel(level) }
                             if dinoLevel == id {
                                 ZStack(alignment: .bottom) {
                                     Ellipse().fill(Color(dinoHex: 0x38552D).opacity(0.25))
@@ -826,12 +954,15 @@ private struct WorldChapter: View {
             MapScenery(viewportHeight: viewportHeight) {
                 ZStack(alignment: .top) {
                     ThemedWorldLandscape(world: world, routeOffset: routeOffset).equatable()
-                    GeometryReader { geometry in
-                        let points = positions.enumerated().map {
-                            CGPoint(x: geometry.size.width * $0.element, y: routeOffset + 80 + CGFloat($0.offset) * 175)
+                    if world.id != 5 {
+                        GeometryReader { geometry in
+                            let points = positions.enumerated().map {
+                                CGPoint(x: geometry.size.width * $0.element, y: routeOffset + 80 + CGFloat($0.offset) * 175)
+                            }
+                            WorldRouteTrail(points: points, entryY: 0, exitY: geometry.size.height).equatable()
                         }
-                        WorldRouteTrail(points: points, entryY: 0, exitY: geometry.size.height).equatable()
-                    }.padding(.horizontal, 18).frame(maxWidth: 600).frame(maxWidth: .infinity)
+                        .padding(.horizontal, 18).frame(maxWidth: 600).frame(maxWidth: .infinity)
+                    }
                     if world.id == 5 { CrystalCaveEntranceForeground().equatable() }
                     if world.id == 6 { CrystalCaveExitForeground().equatable() }
                 }

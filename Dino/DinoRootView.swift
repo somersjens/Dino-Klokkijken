@@ -42,12 +42,7 @@ struct DinoRootView: View {
                     .presentationDetents([.large]).presentationDragIndicator(.visible)
             }
             .sheet(isPresented: $showsPractice) {
-                NavigationStack {
-                    DinoPracticeView()
-                        .toolbar { ToolbarItem(placement: .confirmationAction) {
-                            Button("dino.done") { showsPractice = false }.accessibilityIdentifier("practice.close")
-                        } }
-                }.gameEnvironment()
+                DinoPracticeView().gameEnvironment()
             }
             .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
                 if friends.enabled { friends.refresh(); friends.scheduleSync() }
@@ -103,6 +98,8 @@ struct DinoRootView: View {
         return { start(level) }
     }
     private func presentStartCard(_ level: LevelConfiguration) {
+        guard player.profile.isUnlocked(level.id) else { return }
+        player.markLevelSelected()
         withAnimation(.easeOut(duration: 0.24)) { startCard = level }
     }
     private func closeStartCard() {

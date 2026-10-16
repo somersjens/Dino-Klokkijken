@@ -63,23 +63,25 @@ struct JungleMapLayout {
         let bounds: CGRect
     }
 
-    struct CanopyTile {
+    struct SceneryTile {
         let bounds: CGRect
         let placements: [Placement]
+        let includesBoss: Bool
     }
 
     /// Immutable coordinates are shared by the static art and small animations.
     /// Scrolling and timeline ticks never rerun the road-clearance solver.
     final class Scene {
+        let width: CGFloat
         let placements: [Placement]
         let waterfall: Placement
         let bossPoint: CGPoint
-        let ground: [Placement]
         let snakes: [Placement]
         let leaves: [Placement]
-        let canopyTiles: [CanopyTile]
+        let sceneryTiles: [SceneryTile]
 
         init(layout: JungleMapLayout) {
+            width = layout.width
             let placed = layout.items.enumerated().map { index, item in
                 let point = layout.position(of: item)
                 let bounds = layout.footprint(of: item).reduce(CGRect.null) { $0.union($1) }
@@ -88,19 +90,21 @@ struct JungleMapLayout {
             }
             placements = placed
             waterfall = placed.first { $0.item.kind == .waterfall }!
-            ground = placed.filter { !$0.item.kind.animated && !$0.item.kind.occludesWildlife }
             snakes = placed.filter { $0.item.kind == .snake }
             leaves = placed.filter { $0.item.kind == .fallingLeaves }
-            let canopy = placed.filter { $0.item.kind.occludesWildlife }
-            let extent = canopy.reduce(CGRect.null) { $0.union($1.bounds) }
-            let first = Int(floor(extent.minY / 512)), last = Int(floor(extent.maxY / 512))
-            canopyTiles = (first...last).map { row in
-                let bounds = CGRect(x: 0, y: CGFloat(row) * 512, width: layout.width, height: 512)
-                return CanopyTile(bounds: bounds, placements: canopy.filter { $0.bounds.intersects(bounds) })
-            }
             let scale = layout.artScale
             bossPoint = layout.position(preferred: CGPoint(x: layout.width - 60 * scale, y: 1840),
                 footprint: [CGRect(x: -88 * scale, y: -170 * scale, width: 176 * scale, height: 200 * scale)])
+            let staticItems = placed.filter { !$0.item.kind.animated }
+            let bossBounds = CGRect(x: bossPoint.x - 130 * scale, y: bossPoint.y - 270 * scale,
+                                    width: 260 * scale, height: 320 * scale)
+            let extent = staticItems.reduce(bossBounds) { $0.union($1.bounds) }
+            let first = Int(floor(extent.minY / 512)), last = Int(floor(extent.maxY / 512))
+            sceneryTiles = (first...last).map { row in
+                let bounds = CGRect(x: 0, y: CGFloat(row) * 512, width: layout.width, height: 512)
+                return SceneryTile(bounds: bounds, placements: staticItems.filter { $0.bounds.intersects(bounds) },
+                                  includesBoss: bossBounds.intersects(bounds))
+            }
         }
     }
 

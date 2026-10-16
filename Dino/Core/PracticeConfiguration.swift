@@ -54,7 +54,7 @@ struct DinoPracticeConfiguration: Equatable, Sendable {
     }
 }
 
-/// One bounded record per time family and question type, independent of level scores.
+/// One bounded record per time family and question type or practice order, independent of level scores.
 struct DinoPracticeRecord: Codable, Equatable, Sendable {
     var bestStreak = 0
     var questionsAnswered = 0
@@ -76,12 +76,23 @@ struct DinoPracticeRecord: Codable, Equatable, Sendable {
     }
 
     static func key(time: DinoPracticeTime, question: DinoPracticeQuestion) -> String {
-        "\(time.rawValue).\(question.rawValue)"
+        key(time: time, order: .specific(question))
+    }
+
+    static func key(time: DinoPracticeTime, order: DinoPracticeOrder) -> String {
+        let suffix: String
+        switch order {
+        case .specific(let question): suffix = question.rawValue
+        case .ascending: suffix = "ascending"
+        case .mix: suffix = "mix"
+        }
+        return "\(time.rawValue).\(suffix)"
     }
 
     static let validKeys = Set(DinoPracticeTime.allCases.flatMap { time in
         // Retain saved records of retired exercises without renumbering other records.
         DinoPracticeQuestion.allCases.map { key(time: time, question: $0) }
+            + [key(time: time, order: .ascending), key(time: time, order: .mix)]
             + ["\(time.rawValue).activity", "\(time.rawValue).pairClocks"]
     })
 }

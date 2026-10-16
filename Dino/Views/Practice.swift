@@ -3,10 +3,10 @@ import SwiftUI
 struct DinoPracticeView: View {
     @EnvironmentObject private var player: DinoPlayer
     @EnvironmentObject private var settings: DinoSettings
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.dinoHighContrast) private var highContrast
     @State private var configuration = DinoPracticeConfiguration()
     @State private var session: DinoSession?
-    @State private var showsAscendingExplanation = false
 
     var body: some View {
         ScrollView {
@@ -28,37 +28,28 @@ struct DinoPracticeView: View {
                                record: player.practiceRecord(time: configuration.time, question: type).bestStreak)
                     }
                     Divider().padding(.vertical, 4)
-                    HStack(spacing: 4) {
-                        choice(title: "dino.practice.ascending", symbol: "arrow.up.right", order: .ascending,
-                               identifier: "practice.order.ascending")
-                        Button { showsAscendingExplanation = true } label: {
-                            Image(systemName: "info.circle").font(.system(size: 21, weight: .semibold))
-                                .frame(width: 44, height: 52)
-                        }.buttonStyle(.plain).foregroundStyle(DinoStyle.deepGreen)
-                            .accessibilityLabel(Text("dino.practice.ascendingInfo"))
-                            .accessibilityIdentifier("practice.ascending.info")
-                    }
-                    choice(title: "dino.practice.mix", symbol: "shuffle", order: .mix, identifier: "practice.order.mix")
+                    choice(title: "dino.practice.ascending", symbol: "arrow.up.right", order: .ascending,
+                           identifier: "practice.order.ascending",
+                           record: player.practiceRecord(time: configuration.time, order: .ascending).bestStreak)
+                    choice(title: "dino.practice.mix", symbol: "shuffle", order: .mix, identifier: "practice.order.mix",
+                           record: player.practiceRecord(time: configuration.time, order: .mix).bestStreak)
                 }.padding(16).background(.white.opacity(0.75), in: RoundedRectangle(cornerRadius: 28))
-                Text("dino.practice.description").font(.subheadline).multilineTextAlignment(.center)
-                    .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted).frame(maxWidth: .infinity)
             }.padding(16).frame(maxWidth: 560).frame(maxWidth: .infinity)
         }.accessibilityIdentifier("practice.options")
             .background(JungleBackground(quiet: true)).foregroundStyle(DinoStyle.ink)
-            .navigationTitle(Text(verbatim: L("dino.practice.title"))).navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom) {
-                Button {
-                    session = DinoSession(level: configuration.level, player: player, practice: configuration,
-                                          answerFeedback: { [settings] correct in
-                        DinoAnswerFeedback.shared.play(correct: correct, sound: settings.soundEffectsEnabled, vibration: settings.hapticsEnabled)
-                    })
-                } label: { Label("dino.practice.start", systemImage: "play.fill") }
-                    .buttonStyle(DinoButtonStyle(compact: true)).accessibilityIdentifier("practice.start")
-                    .padding(16).frame(maxWidth: 520).frame(maxWidth: .infinity).background(.ultraThinMaterial)
+                VStack(spacing: 12) {
+                    Button {
+                        session = DinoSession(level: configuration.level, player: player, practice: configuration,
+                                              answerFeedback: { [settings] correct in
+                            DinoAnswerFeedback.shared.play(correct: correct, sound: settings.soundEffectsEnabled, vibration: settings.hapticsEnabled)
+                        })
+                    } label: { Label("dino.practice.start", systemImage: "play.fill") }
+                        .buttonStyle(DinoButtonStyle(compact: true)).accessibilityIdentifier("practice.start")
+                    Button("dino.practice.backToLevels") { dismiss() }
+                        .buttonStyle(DinoSecondaryButtonStyle()).accessibilityIdentifier("practice.close")
+                }.padding(16).frame(maxWidth: 520).frame(maxWidth: .infinity).background(.ultraThinMaterial)
             }
-            .alert("dino.practice.ascending", isPresented: $showsAscendingExplanation) {
-                Button("dino.done", role: .cancel) {}
-            } message: { Text("dino.practice.ascendingDescription") }
             .fullScreenCover(item: $session) { active in
                 DinoPracticeGame(session: active, exit: { session = nil }).gameEnvironment()
             }
@@ -90,7 +81,6 @@ struct DinoPracticeView: View {
         let tint = Color(dinoHex: [0xEDF5E5, 0xEAF3F8, 0xF4EFF8, 0xFBF2E3][((number ?? 1) - 1) % 4])
         return Button {
             configuration.order = order
-            if order == .ascending { showsAscendingExplanation = true }
         } label: {
             HStack(spacing: 10) {
                 if let number {

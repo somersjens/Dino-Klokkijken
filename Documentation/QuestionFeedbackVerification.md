@@ -70,3 +70,16 @@ De digitale verbindingslijnen zijn in het spel en het voorbeeld visueel gecontro
 Op iPhone 18 Pro en iPad Air 13-inch met iOS 27.0 slagen `testDayPartExampleActionsStayInPlace` en `testQuestionInstructionsAndWorkedBoards`: 22 opeenvolgende voorbeeldwissels zonder verschuiving van de onderknoppen, uitleg uitsluitend in voorbeelden, vier vooraf geselecteerde en chronologisch genummerde sorteerklokken zonder bevestigingsknop, en drie pijlen met de werkelijke tijdstap. De screenshots van de voorbeelden zijn visueel gecontroleerd.
 
 Ook `testThreePairMatchingAndTapDemonstration` slaagt op iPhone: verbinden in beide tikvolgordes, verbreken, opnieuw verbinden, geanimeerde voorbeeldverbindingen, behoud van echte selecties en foutfeedback. In totaal zijn twaalf gerichte schermtestuitvoeringen geslaagd, zonder fouten.
+
+## Tijdenreeksen en tijdrekenen — 16 oktober 2026
+
+- **Welke tijd komt hierna:** de digitale tijden staan groter onder elkaar, met neerwaartse pijlen tussen de stappen. De vraag eindigt met een vraagteken en behoudt de vier antwoordopties. Het voorbeeld toont het antwoord als laatste klok in dezelfde reeks. De 24-uursuitleg staat direct onder de vraagtitel. Rechts verbinden boogjes de opeenvolgende klokken; iedere tijdsprong staat naast het boogje, vrij van de pijl tussen de klokken. De boogjes volgen de werkelijke klokafmetingen, ook bij een andere cijferstijl.
+- **Hoe laat is het straks** en **Bereken een eerdere tijd:** de vraag toont alleen de titel, een grotere digitale begintijd, het tijdsverschil en de antwoordopties. De labels **Het spelen begint om** en **Begintijd** en de extra uitleg zijn verwijderd. Het voorbeeld gebruikt dezelfde compacte opbouw met de 24-uursuitleg onder de titel en één uitgewerkt antwoord.
+
+Deze weergaven worden gedeeld door oefenen en de levels, in Nederlands en Engels.
+
+De Debug-build voor iOS Simulator slaagt. `testExpandedMultipleChoiceExamplesShowOneAnswer` slaagt op iPhone 17 / iOS 26.5: alle uitgebreide meerkeuzevoorbeelden tonen precies één uitgewerkt antwoord, behouden de vier opties in de echte vraag en veranderen de oefenteller niet. Ook `testQuestionInstructionsAndWorkedBoards` slaagt op dit apparaat, inclusief de drie tijdsprongen in de reeks. De screenshots van de drie aangepaste vraagtypen en hun voorbeelden zijn visueel gecontroleerd.
+
+De iPad-schermcontrole kon niet worden afgerond: de testrunner op iPad Pro 11-inch / iOS 26.5 werd beëindigd met `signal kill`. Een afzonderlijke herhaling brak eveneens af. De iPad-weergave is hiermee niet bevestigd.
+
+Beelden: [tijdenreeks in het voorbeeld](Screenshots/QuestionFeedback/sequence-example-vertical-iphone.png), [vooruitrekenen](Screenshots/QuestionFeedback/add-time-question-clean-iphone.png), [voorbeeld vooruitrekenen](Screenshots/QuestionFeedback/add-time-example-clean-iphone.png), [terugrekenen](Screenshots/QuestionFeedback/subtract-time-question-clean-iphone.png) en [voorbeeld terugrekenen](Screenshots/QuestionFeedback/subtract-time-example-clean-iphone.png).

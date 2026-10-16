@@ -1,5 +1,21 @@
 import SwiftUI
 
+/// Sort every destination together by its ground contact, never by its kind.
+/// Equal baselines retain their composition order (e.g. a crystal on a ledge).
+private final class WorldSceneryDepth {
+    private var items: [(depth: CGFloat, draw: () -> Void)] = []
+
+    func add(at depth: CGFloat, _ draw: @escaping () -> Void) {
+        items.append((depth, draw))
+    }
+
+    func draw() {
+        for item in items.enumerated().sorted(by: {
+            $0.element.depth == $1.element.depth ? $0.offset < $1.offset : $0.element.depth < $1.element.depth
+        }) { item.element.draw() }
+    }
+}
+
 /// Every section meets its neighbour at the same centre line and vertical tangent.
 /// The sign is drawn over the trail, rather than leaving a blank break in it.
 struct WorldRouteTrail: View, Equatable {
@@ -9,10 +25,6 @@ struct WorldRouteTrail: View, Equatable {
     static let bannerFaceCenterY: CGFloat = 99.5
     static let bannerBottomPadding: CGFloat = 10
     static let chapterFirstNodeY: CGFloat = 80
-    /// Both cave thresholds have space after the preceding boss level.
-    static func entranceHeight(worldID: Int) -> CGFloat {
-        worldID == 5 ? 260 : worldID == 6 ? 250 : 0
-    }
     static func chapterTail(topClearance: CGFloat) -> CGFloat {
         let below = bannerHeight - bannerFaceCenterY + bannerBottomPadding + topClearance + chapterFirstNodeY
         // Boss stones are 90pt, ordinary stones 72pt. Match the clear space
@@ -47,6 +59,18 @@ struct WorldRouteTrail: View, Equatable {
             }
             path.addLine(to: CGPoint(x: last.x, y: exitY + 12))
         }
+    }
+
+    /// The cave paints its trail in the terrain Canvas so all scenery can share
+    /// one depth order above it, including the stone lip across the road.
+    func draw(in context: GraphicsContext) {
+        let trail = path
+        context.stroke(trail.offsetBy(dx: 0, dy: 5), with: .color(Color(dinoHex: 0x78995D).opacity(0.21)),
+                       style: StrokeStyle(lineWidth: 46, lineCap: .butt))
+        context.stroke(trail, with: .color(Color(dinoHex: 0xC9BB83)), style: StrokeStyle(lineWidth: 40, lineCap: .butt))
+        context.stroke(trail, with: .color(Color(dinoHex: 0xF4E6B6)), style: StrokeStyle(lineWidth: 34, lineCap: .butt))
+        context.stroke(trail, with: .color(Color(dinoHex: 0xFFF9D8).opacity(0.95)),
+                       style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [2, 12]))
     }
 
     var body: some View {
@@ -154,9 +178,20 @@ private struct WorldSceneryLayout {
         }
     }
 
+    private func passageEntry(right: Bool, inset: CGFloat, city: Bool) -> (start: CGPoint, c1: CGPoint, c2: CGPoint, end: CGPoint) {
+        let outside = right ? width + 110 * scale : -110 * scale
+        // The complete bank and quay stay outside until beyond the cave wall.
+        let mouthY = -routeOffset + (city ? 72 * scale : 8)
+        let end = CGPoint(x: centerX(at: firstY) + (right ? 1 : -1) * (165 - inset) * scale, y: firstY)
+        return (CGPoint(x: outside, y: mouthY),
+                CGPoint(x: outside + (end.x - outside) * (city ? 0.38 : 0.68),
+                        y: mouthY + (city ? (firstY - mouthY) * 0.10 : 0)),
+                CGPoint(x: end.x, y: firstY - (firstY - mouthY) * (city ? 0.34 : 0.46)), end)
+    }
+
     /// Join the river at vertical trail tangents, so a broad side entrance
     /// cannot overshoot the first bend and double back into a sharp elbow.
-    private func passageBankPath(right: Bool, inset: CGFloat, opensAtStart: Bool, opensAtEnd: Bool, endMouthY: CGFloat? = nil) -> Path {
+    private func passageBankPath(right: Bool, inset: CGFloat, opensAtStart: Bool, opensAtEnd: Bool, endMouthY: CGFloat? = nil, cityEntrance: Bool = false) -> Path {
         let startY = -routeOffset - 80, endY = height - routeOffset + 80
         let outside = right ? width + 110 * scale : -110 * scale
         let lastY = firstY + CGFloat(positions.count - 1) * 175
@@ -167,12 +202,10 @@ private struct WorldSceneryLayout {
         }
         return Path { p in
             if opensAtStart {
-                let entry = point(entryY), mouthY = -routeOffset + 8
+                let entry = passageEntry(right: right, inset: inset, city: cityEntrance)
                 p.move(to: CGPoint(x: outside, y: startY))
-                p.addLine(to: CGPoint(x: outside, y: mouthY))
-                p.addCurve(to: entry,
-                           control1: CGPoint(x: outside + (entry.x - outside) * 0.68, y: mouthY),
-                           control2: CGPoint(x: entry.x, y: entryY - (entryY - mouthY) * 0.46))
+                p.addLine(to: entry.start)
+                p.addCurve(to: entry.end, control1: entry.c1, control2: entry.c2)
             } else { p.move(to: point(entryY)) }
             let count = Int(ceil((exitY - entryY) / 8))
             for i in 0..<count {
@@ -205,12 +238,8 @@ private struct WorldSceneryLayout {
         func riverX(_ sampleY: CGFloat) -> CGFloat {
             let a: CGPoint, b: CGPoint, c: CGPoint, d: CGPoint
             if sampleY < firstY {
-                let mouthY = -routeOffset + 8
-                let x = centerX(at: firstY) + sign * 131 * scale
-                a = CGPoint(x: outside, y: mouthY)
-                b = CGPoint(x: outside + (x - outside) * 0.68, y: mouthY)
-                c = CGPoint(x: x, y: firstY - (firstY - mouthY) * 0.46)
-                d = CGPoint(x: x, y: firstY)
+                let entry = passageEntry(right: right, inset: 34, city: true)
+                a = entry.start; b = entry.c1; c = entry.c2; d = entry.end
             } else if sampleY > exitY {
                 let mouthY = cityCanalMouthY
                 let x = centerX(at: exitY) + sign * 131 * scale
@@ -287,7 +316,7 @@ private struct WorldSceneryLayout {
         for right in [false, true] {
             let bank = [4, 6].contains(worldID)
                 ? passageBankPath(right: right, inset: 43, opensAtStart: worldID == 6, opensAtEnd: true,
-                                  endMouthY: worldID == 6 ? cityCanalMouthY : nil)
+                                  endMouthY: worldID == 6 ? cityCanalMouthY : nil, cityEntrance: worldID == 6)
                 : bankPath(right: right, inset: 43)
             let outside: CGFloat = right ? width + 400 : -400
             func outerArea(_ boundary: Path) -> Path {
@@ -301,7 +330,7 @@ private struct WorldSceneryLayout {
             guard [4, 6, 9].contains(worldID) else { continue }
             let water = worldID == 9 ? bankPath(right: right, inset: 34, exitsAtSides: true)
                                     : passageBankPath(right: right, inset: 34, opensAtStart: true, opensAtEnd: true,
-                                                      endMouthY: worldID == 6 ? cityCanalMouthY : nil)
+                                                      endMouthY: worldID == 6 ? cityCanalMouthY : nil, cityEntrance: worldID == 6)
             if worldID == 9 {
                 // A solid coastal inlet, with both shoreline ends beyond the
                 // sides of the viewport. The sea never fades into the ground.
@@ -1361,7 +1390,6 @@ struct WorldMapLandscape: View, Equatable {
     var body: some View {
         GeometryReader { geometry in
             let headroom = max(900, viewportHeight * 1.5)
-            let scene = JungleMapLayout(width: geometry.size.width).scene()
             Canvas { canvasContext, _ in
                 var context = canvasContext
                 context.translateBy(x: 0, y: headroom)
@@ -1392,7 +1420,6 @@ struct WorldMapLandscape: View, Equatable {
                 let scenery = WorldSceneryLayout(width: w, height: size.height, routeOffset: routeOffset, jungle: true)
                 scenery.drawBanks(in: routeContext, worldID: 1)
                 let painter = JunglePainter(context: routeContext)
-                let detail = JungleWorldPainter(context: routeContext)
 
                 // Rolling clearings alternate sides of the trail instead of repeating
                 // a decorative wallpaper behind every level.
@@ -1408,12 +1435,6 @@ struct WorldMapLandscape: View, Equatable {
                                  height: 230, color: foliage.opacity(0.17))
                 }
 
-                // Ground objects sit behind trunks and shrubs. Cached placements
-                // are also used by the foreground tiles and animated wildlife.
-                for placement in scene.ground {
-                    detail.scenery(placement.item, at: placement.point)
-                }
-
                 // The boss clearing opens into mist. Low silhouettes and the soft
                 // color blend continue below level ten into the next world preview.
                 for i in 0..<3 {
@@ -1422,11 +1443,7 @@ struct WorldMapLandscape: View, Equatable {
                                  y: y, width: w * 0.82, height: 195,
                                  color: palette.color(\.distant, toward: nextPalette, progress: CGFloat(i + 1) / 3).opacity(0.44))
                 }
-                // The jungle has its own guardian, just like every later chapter.
-                let bossPoint = scene.bossPoint
-                let bossScene = ThemePainter(context: routeContext, colors: WorldThemeColors(DinoWorldCatalog.world(1)!))
-                bossScene.bossClearing(worldID: 1, at: bossPoint, size: scale)
-                bossScene.boss(worldID: 1, at: bossPoint, size: scale * 0.88)
+
             }
             .frame(width: geometry.size.width, height: geometry.size.height + headroom)
             .clipped()
@@ -1448,24 +1465,29 @@ struct WorldMapLandscape: View, Equatable {
                     .position(x: w - 34 * scale + waterBounds.midX * scale * 0.87,
                               y: entranceHeight * 0.65 + waterBounds.midY * scale * 0.87)
                 let scene = JungleMapLayout(width: w).scene()
+                ForEach(scene.sceneryTiles.indices, id: \.self) { index in
+                    JungleSceneryTile(scene: scene, index: index, viewportHeight: viewportHeight)
+                        .equatable()
+                        .position(x: w / 2, y: routeOffset + scene.sceneryTiles[index].bounds.midY)
+                }
                 let waterfall = scene.waterfall.item
                 let point = scene.waterfall.point
                 let bounds = JungleWaterfallGeometry.bounds(mirrored: waterfall.mirrored, heightScale: waterfall.heightScale)
                 JungleWaterfallFlow(scale: waterfall.size, mirrored: waterfall.mirrored,
                                     heightScale: waterfall.heightScale, viewportHeight: viewportHeight)
+                    .mask(JungleDepthOcclusion(scene: scene,
+                        frame: bounds.applying(CGAffineTransform(scaleX: waterfall.size, y: waterfall.size)).offsetBy(dx: point.x, dy: point.y),
+                        behindY: point.y))
                     .position(x: point.x + bounds.midX * waterfall.size,
                               y: routeOffset + point.y + bounds.midY * waterfall.size)
                 ForEach(scene.snakes) { placement in
                     JungleWildlife(item: placement.item, viewportHeight: viewportHeight)
+                        .mask(JungleDepthOcclusion(scene: scene, frame: placement.bounds, behindY: placement.point.y))
                         .position(x: placement.bounds.midX, y: routeOffset + placement.bounds.midY)
-                }
-                ForEach(scene.canopyTiles.indices, id: \.self) { index in
-                    JungleCanopyTile(scene: scene, index: index, viewportHeight: viewportHeight)
-                        .equatable()
-                        .position(x: w / 2, y: routeOffset + scene.canopyTiles[index].bounds.midY)
                 }
                 ForEach(scene.leaves) { placement in
                     JungleWildlife(item: placement.item, viewportHeight: viewportHeight)
+                        .mask(JungleDepthOcclusion(scene: scene, frame: placement.bounds, behindY: placement.point.y))
                         .position(x: placement.bounds.midX, y: routeOffset + placement.bounds.midY)
                 }
             }.clipped()
@@ -1483,7 +1505,7 @@ struct WorldMapLandscape: View, Equatable {
 /// Small static textures cover wildlife and ground details in the correct order.
 /// Tiles are prepared ahead of scrolling and retained until the chapter leaves
 /// the map's nearby-world window. Scrolling back never replaces them with clear.
-private struct JungleCanopyTile: View, Equatable {
+private struct JungleSceneryTile: View, Equatable {
     let scene: JungleMapLayout.Scene
     let index: Int
     let viewportHeight: CGFloat
@@ -1494,16 +1516,26 @@ private struct JungleCanopyTile: View, Equatable {
     }
 
     var body: some View {
-        let tile = scene.canopyTiles[index]
+        let tile = scene.sceneryTiles[index]
         Color.clear.overlay {
             if prepared {
                 Canvas { context, _ in
                     var c = context
                     c.translateBy(x: 0, y: -tile.bounds.minY)
                     let painter = JungleWorldPainter(context: c)
+                    let depth = WorldSceneryDepth()
                     for placement in tile.placements {
-                        painter.scenery(placement.item, at: placement.point)
+                        depth.add(at: placement.point.y) { painter.scenery(placement.item, at: placement.point) }
                     }
+                    if tile.includesBoss {
+                        let scale = min(1.35, max(0.82, tile.bounds.width / 390))
+                        let boss = ThemePainter(context: c, colors: WorldThemeColors(DinoWorldCatalog.world(1)!))
+                        depth.add(at: scene.bossPoint.y) {
+                            boss.bossClearing(worldID: 1, at: scene.bossPoint, size: scale)
+                            boss.boss(worldID: 1, at: scene.bossPoint, size: scale * 0.88)
+                        }
+                    }
+                    depth.draw()
                 }.clipped()
             }
         }
@@ -1519,6 +1551,31 @@ private struct JungleCanopyTile: View, Equatable {
             withTransaction(transaction) { prepared = true }
         }
         .allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+/// Animated items remain visible over higher scenery and behind lower roots.
+/// The mask is static; timeline frames only redraw the small animal/water layer.
+private struct JungleDepthOcclusion: View {
+    let scene: JungleMapLayout.Scene
+    let frame: CGRect
+    let behindY: CGFloat
+
+    var body: some View {
+        Canvas { context, size in
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.white))
+            var c = context
+            c.translateBy(x: -frame.minX, y: -frame.minY)
+            c.blendMode = .destinationOut
+            let p = JungleWorldPainter(context: c)
+            for item in scene.placements where !item.item.kind.animated && item.point.y > behindY && item.bounds.intersects(frame) {
+                p.scenery(item.item, at: item.point)
+            }
+            if scene.bossPoint.y > behindY {
+                let scale = min(1.35, max(0.82, scene.width / 390))
+                WorldBossPainter(context: c).draw(worldID: 1, at: scene.bossPoint, size: scale * 0.88)
+            }
+        }
     }
 }
 
@@ -2644,12 +2701,16 @@ struct WorldThemeColors {
 private struct SleepValleyPainter {
     let context: GraphicsContext
     var scenery: WorldSceneryLayout? = nil
+    var depth: WorldSceneryDepth? = nil
+    var depthOffset: CGFloat = 0
 
-    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: (SleepValleyPainter) -> Void) {
+    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: @escaping (SleepValleyPainter) -> Void) {
         let point = scenery?.position(point, radius: radius, rise: rise) ?? point
         var c = context; c.translateBy(x: point.x, y: point.y)
         c.scaleBy(x: mirror ? -size : size, y: size)
-        draw(.init(context: c))
+        if let depth {
+            depth.add(at: depthOffset + point.y) { draw(.init(context: c)) }
+        } else { draw(.init(context: c)) }
     }
     private func material(_ path: Path, colors: [UInt32]) {
         let r = path.boundingRect
@@ -2674,7 +2735,7 @@ private struct SleepValleyPainter {
                                            center: point, startRadius: 0, endRadius: radius))
     }
 
-    func landscape(in size: CGSize, routeOffset: CGFloat) {
+    func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let w = size.width, h = size.height
         let left: CGFloat = 0, right = w - left
         let scale = min(1.30, max(0.82, w / 390))
@@ -2692,7 +2753,7 @@ private struct SleepValleyPainter {
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         scenery.drawBanks(in: c, worldID: 2)
-        let p = SleepValleyPainter(context: c, scenery: scenery)
+        let p = SleepValleyPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset)
         let nature = JunglePainter(context: c, scenery: scenery)
         // Distant cliffs cover the stream's upper end, so it emerges naturally
         // below the waterfall rather than painting over the cascade.
@@ -3007,12 +3068,16 @@ private struct SleepValleyPainter {
 private struct VolcanoWorldPainter {
     let context: GraphicsContext
     var scenery: WorldSceneryLayout? = nil
+    var depth: WorldSceneryDepth? = nil
+    var depthOffset: CGFloat = 0
 
-    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: (VolcanoWorldPainter) -> Void) {
+    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: @escaping (VolcanoWorldPainter) -> Void) {
         let point = scenery?.position(point, radius: radius, rise: rise) ?? point
         var c = context; c.translateBy(x: point.x, y: point.y)
         c.scaleBy(x: mirror ? -size : size, y: size)
-        draw(.init(context: c))
+        if let depth {
+            depth.add(at: depthOffset + point.y) { draw(.init(context: c)) }
+        } else { draw(.init(context: c)) }
     }
     private func material(_ path: Path, colors: [UInt32]) {
         let r = path.boundingRect
@@ -3076,7 +3141,7 @@ private struct VolcanoWorldPainter {
         context.stroke(path, with: .color(Color(dinoHex: 0xFFE6A1).opacity(0.85)), style: StrokeStyle(lineWidth: max(1, width * 0.3), lineCap: .round, lineJoin: .round))
     }
 
-    func landscape(in size: CGSize, routeOffset: CGFloat) {
+    func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let w = size.width, h = size.height
         let left: CGFloat = 0, right = w - left
         let scale = min(1.30, max(0.82, w / 390))
@@ -3095,7 +3160,7 @@ private struct VolcanoWorldPainter {
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         scenery.drawBanks(in: c, worldID: 3)
-        let p = VolcanoWorldPainter(context: c, scenery: scenery)
+        let p = VolcanoWorldPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset)
         for i in 0..<6 {
             let y = CGFloat(i) * 290 + 20
             p.ground(at: CGPoint(x: i % 2 == 0 ? w * 0.04 : w * 0.96, y: y + 120),
@@ -3532,13 +3597,17 @@ private struct VolcanoWorldPainter {
 private struct VillageWorldPainter {
     let context: GraphicsContext
     var scenery: WorldSceneryLayout? = nil
+    var depth: WorldSceneryDepth? = nil
+    var depthOffset: CGFloat = 0
 
-    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: (VillageWorldPainter) -> Void) {
+    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: @escaping (VillageWorldPainter) -> Void) {
         let point = scenery?.position(point, radius: radius, rise: rise) ?? point
         var c = context
         c.translateBy(x: point.x, y: point.y)
         c.scaleBy(x: mirror ? -size : size, y: size)
-        draw(.init(context: c))
+        if let depth {
+            depth.add(at: depthOffset + point.y) { draw(.init(context: c)) }
+        } else { draw(.init(context: c)) }
     }
     private func material(_ path: Path, _ colors: [UInt32]) {
         let r = path.boundingRect
@@ -3566,7 +3635,7 @@ private struct VillageWorldPainter {
                                            center: point, startRadius: 0, endRadius: radius))
     }
 
-    func landscape(in size: CGSize, routeOffset: CGFloat) {
+    func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let w = size.width, h = size.height
         let left: CGFloat = 0, right = w - left
         let scale = min(1.30, max(0.82, w / 390))
@@ -3583,7 +3652,7 @@ private struct VillageWorldPainter {
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         scenery.drawBanks(in: c, worldID: 4)
-        let p = VillageWorldPainter(context: c, scenery: scenery)
+        let p = VillageWorldPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset)
         let nature = JunglePainter(context: c, scenery: scenery)
         for i in 0..<5 {
             nature.hill(x: i % 2 == 0 ? left - 220 : right - 100, y: CGFloat(i) * 370 + 15,
@@ -4006,15 +4075,36 @@ private struct VillageWorldPainter {
     }
 }
 
-/// The entrance lip is in front of the trail, while the cavern sits behind it.
-/// Keep this Canvas short: a second full-chapter texture is unnecessary.
+/// Threshold artwork borrows the existing chapter tail instead of adding space.
+private struct CrystalCaveThresholdLayout {
+    let width: CGFloat
+    var scale: CGFloat { min(1.30, max(0.82, width / 390)) }
+    private var tail: CGFloat {
+        let clearance = max(0, min(200, (min(width, 600) - 36) * 0.37) - 82)
+        return WorldRouteTrail.chapterTail(topClearance: clearance)
+    }
+    // Fit the stone crowns after the boss caption, including on a 320pt phone.
+    var entranceLift: CGFloat { min(100 * scale, tail - 85 + 34 * scale) }
+    // Include the new rock hood (-128), not only the masonry crown (-104).
+    // The whole silhouette must start below the boss caption on wide tablets.
+    var exitScale: CGFloat { min(scale * 0.8, (tail - 85 + 12) / (128 + 118)) }
+    var exitSpringY: CGFloat { 12 - 118 * exitScale }
+    static let headroom: CGFloat = 256
+}
+
+/// The entrance lip covers the trail; the world title stays in front of the rock.
 struct CrystalCaveEntranceForeground: View, Equatable {
     var body: some View {
         Canvas { context, size in
-            CrystalCavePainter(context: context).entranceForeground(width: size.width)
+            var c = context
+            c.translateBy(x: 0, y: CrystalCaveThresholdLayout.headroom)
+            // The rest of this roof joins the depth-sorted scenery in world 5.
+            c.clip(to: Path(CGRect(x: 0, y: -CrystalCaveThresholdLayout.headroom,
+                                  width: size.width, height: CrystalCaveThresholdLayout.headroom)))
+            CrystalCavePainter(context: c).entranceForeground(width: size.width)
         }
-        .frame(height: WorldRouteTrail.entranceHeight(worldID: 5) + 340)
-        .clipped().allowsHitTesting(false).accessibilityHidden(true)
+        .frame(height: 600).clipped().offset(y: -CrystalCaveThresholdLayout.headroom)
+        .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 
@@ -4022,9 +4112,11 @@ struct CrystalCaveEntranceForeground: View, Equatable {
 struct CrystalCaveExitForeground: View, Equatable {
     var body: some View {
         Canvas { context, size in
-            CrystalCavePainter(context: context).exitForeground(width: size.width)
+            var c = context
+            c.translateBy(x: 0, y: CrystalCaveThresholdLayout.headroom)
+            CrystalCavePainter(context: c).exitForeground(width: size.width)
         }
-        .frame(height: 420).clipped()
+        .frame(height: CrystalCaveThresholdLayout.headroom + 360).clipped().offset(y: -CrystalCaveThresholdLayout.headroom)
         .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
@@ -4033,6 +4125,8 @@ struct CrystalCaveExitForeground: View, Equatable {
 private struct CrystalCavePainter {
     let context: GraphicsContext
     var scenery: WorldSceneryLayout? = nil
+
+    private typealias DepthScene = WorldSceneryDepth
 
     private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: (CrystalCavePainter) -> Void) {
         let point = scenery?.position(point, radius: radius, rise: rise) ?? point
@@ -4156,20 +4250,26 @@ private struct CrystalCavePainter {
     /// The compact doorway reveals the city underneath its inner arch.
     /// Outside the pillars the cave retreats toward the edges of the screen.
     private func exitBoundaryY(x: CGFloat, width: CGFloat, scale: CGFloat) -> CGFloat {
-        let distance = abs(x - width / 2)
-        let radius = 82 * scale
-        if distance <= radius {
-            let t = distance / radius
-            return (142 - 76 * sqrt(max(0, 1 - t * t))) * scale
+        let threshold = CrystalCaveThresholdLayout(width: width)
+        let d = abs(x - width / 2), inner = 82 * threshold.exitScale
+        if d <= inner {
+            let t = d / inner
+            return threshold.exitSpringY - 76 * sqrt(max(0, 1 - t * t)) * threshold.exitScale
         }
-        let t = (distance - radius) / max(1, width / 2 - radius)
-        return (142 + 160 * smooth(t)) * scale
+        let foot = threshold.exitSpringY + 105 * threshold.exitScale
+        let shoulder = max(120 * threshold.exitScale, 57 * scale)
+        if d < shoulder {
+            return threshold.exitSpringY + (foot - threshold.exitSpringY) * smooth((d - inner) / (shoulder - inner))
+        }
+        // A shallow, broken footline replaces the descending banks.
+        // Both sides meet the city at essentially the same height.
+        return (8 + sin(x / (39 * scale)) * 1.8 + sin(x / (17 * scale)) * 0.9) * scale
     }
 
     private func exitCaveMask(width: CGFloat, height: CGFloat, scale: CGFloat) -> Path {
         Path { p in
-            p.move(to: CGPoint(x: 0, y: -20))
-            p.addLine(to: CGPoint(x: width, y: -20))
+            p.move(to: CGPoint(x: 0, y: -160))
+            p.addLine(to: CGPoint(x: width, y: -160))
             for i in (0...96).reversed() {
                 let x = width * CGFloat(i) / 96
                 let y = min(height, exitBoundaryY(x: x, width: width, scale: scale))
@@ -4179,10 +4279,310 @@ private struct CrystalCavePainter {
         }
     }
 
-    /// Drawn after the trail and before the world banner and level buttons.
+    /// The gate sits in one cliff face. Its foot stays level across the map;
+    /// the individual stone courses build upward into the existing cavern.
     func exitForeground(width: CGFloat) {
-        let scale = min(1.30, max(0.82, width / 390))
-        at(CGPoint(x: width / 2, y: 142 * scale), size: scale) { p in
+        exitArch(width: width)
+    }
+
+    func exitWall(width: CGFloat, boundaryY: CGFloat = 0) {
+        let threshold = CrystalCaveThresholdLayout(width: width)
+        let s = threshold.scale
+        var wallContext = context
+        wallContext.translateBy(x: 0, y: boundaryY)
+        let wall = CrystalCavePainter(context: wallContext)
+        for right in [false, true] {
+            let span = width / 2 - (right ? 130 : 134) * threshold.exitScale
+            let c: GraphicsContext = {
+                var transformed = wall.context
+                if right { transformed.translateBy(x: width, y: 0); transformed.scaleBy(x: -1, y: 1) }
+                return transformed
+            }()
+            let p = CrystalCavePainter(context: c)
+            // Separate, connected profiles: a high left shoulder and a deeper
+            // right buttress. There is no row of repeated boulder silhouettes.
+            let outline: [CGPoint] = right
+                ? [.init(x: -20, y: -313 * s), .init(x: span * 0.18, y: -304 * s),
+                   .init(x: span * 0.33, y: -256 * s), .init(x: span * 0.48, y: -251 * s),
+                   .init(x: span * 0.64, y: -200 * s), .init(x: span * 0.82, y: -179 * s),
+                   .init(x: span + 5 * s, y: -137 * s),
+                   .init(x: width / 2 - 100 * threshold.exitScale, y: threshold.exitSpringY - 116 * threshold.exitScale),
+                   .init(x: span + 4 * s, y: -78 * s), .init(x: span + 7 * s, y: 4 * s),
+                   .init(x: span * 0.74, y: 11 * s), .init(x: span * 0.42, y: 7 * s),
+                   .init(x: span * 0.16, y: 12 * s), .init(x: -20, y: 8 * s)]
+                : [.init(x: -20, y: -342 * s), .init(x: span * 0.17, y: -328 * s),
+                   .init(x: span * 0.29, y: -282 * s), .init(x: span * 0.49, y: -270 * s),
+                   .init(x: span * 0.64, y: -213 * s), .init(x: span * 0.79, y: -192 * s),
+                   .init(x: span + 4 * s, y: -142 * s),
+                   .init(x: width / 2 - 98 * threshold.exitScale, y: threshold.exitSpringY - 113 * threshold.exitScale),
+                   .init(x: span + 5 * s, y: -81 * s), .init(x: span + 8 * s, y: 7 * s),
+                   .init(x: span * 0.78, y: 10 * s), .init(x: span * 0.53, y: 5 * s),
+                   .init(x: span * 0.25, y: 12 * s), .init(x: -20, y: 9 * s)]
+            let cliff = p.contour(outline, radius: 4 * s)
+            p.ground(at: CGPoint(x: span * 0.46, y: 14 * s), width: span * 1.35,
+                     height: 42 * s, color: 0x4C6875, opacity: 0.23)
+            p.material(cliff, colors: [0x33496D, 0x293D5D, 0x1D304E])
+            let stones: GraphicsContext = {
+                var clipped = c; clipped.clip(to: cliff); return clipped
+            }()
+            let face = CrystalCavePainter(context: stones)
+            // The irregular joints only establish the rear positions. Each rock
+            // projects beyond them and covers the higher course beneath it.
+            let seeds: [(CGFloat, CGFloat)] = right
+                ? [(0.03,-18),(0.38,-24),(0.72,-13),(1.04,-27),
+                   (0.16,-67),(0.51,-57),(0.89,-73),
+                   (0.00,-113),(0.34,-122),(0.68,-104),(1.03,-117),
+                   (0.14,-164),(0.49,-170),(0.87,-157),
+                   (0.02,-211),(0.34,-222),(0.71,-207),(1.04,-224),
+                   (0.18,-268),(0.55,-264),(0.90,-277),
+                   (0.02,-317),(0.39,-330),(0.77,-315),(1.05,-339),
+                   (0.16,-375),(0.58,-373),(0.94,-388)]
+                : [(0.04,-22),(0.34,-13),(0.68,-25),(1.03,-16),
+                   (0.13,-65),(0.51,-61),(0.84,-72),
+                   (0.00,-111),(0.31,-116),(0.68,-107),(1.02,-121),
+                   (0.10,-161),(0.48,-168),(0.88,-162),
+                   (0.01,-211),(0.32,-222),(0.72,-213),(1.01,-226),
+                   (0.15,-268),(0.51,-272),(0.92,-264),
+                   (0.00,-323),(0.37,-330),(0.75,-319),(1.03,-334),
+                   (0.11,-382),(0.57,-375),(0.94,-387)]
+            let sites = seeds.map { CGPoint(x: $0.0 * span, y: $0.1 * s) }
+            for i in sites.indices.sorted(by: { sites[$0].y < sites[$1].y }) {
+                var cell = [CGPoint(x: -24, y: -420 * s), CGPoint(x: span + 24, y: -420 * s),
+                            CGPoint(x: span + 24, y: 24 * s), CGPoint(x: -24, y: 24 * s)]
+                let site = sites[i]
+                for j in sites.indices where i != j {
+                    let other = sites[j]
+                    let n = CGPoint(x: other.x - site.x, y: other.y - site.y)
+                    let limit = (other.x * other.x + other.y * other.y - site.x * site.x - site.y * site.y) / 2
+                    var clipped: [CGPoint] = []
+                    guard !cell.isEmpty else { break }
+                    for k in cell.indices {
+                        let a = cell[k], b = cell[(k + 1) % cell.count]
+                        let da = a.x * n.x + a.y * n.y - limit, db = b.x * n.x + b.y * n.y - limit
+                        if da <= 0 { clipped.append(a) }
+                        if (da <= 0) != (db <= 0) {
+                            let t = da / (da - db)
+                            clipped.append(CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t))
+                        }
+                    }
+                    cell = clipped
+                }
+                guard cell.count > 2 else { continue }
+                let centre = CGPoint(x: cell.map(\.x).reduce(0, +) / CGFloat(cell.count),
+                                     y: cell.map(\.y).reduce(0, +) / CGFloat(cell.count))
+                let reachX = 1.02 + CGFloat((i * 7 + (right ? 2 : 0)) % 5) * 0.019
+                let reachY = 1.08 + CGFloat((i * 3 + (right ? 1 : 0)) % 4) * 0.032
+                let shift = CGFloat((i * 11) % 7 - 3) * 0.65 * s
+                let overlap = cell.enumerated().map { index, point in
+                    let chip = CGFloat((index * 7 + i * 3) % 5 - 2) * 0.7 * s
+                    return CGPoint(x: centre.x + (point.x - centre.x) * reachX + shift + chip,
+                                   y: centre.y + (point.y - centre.y) * reachY + chip * 0.6)
+                }
+                let stone = face.contour(overlap, radius: (7 + CGFloat(i % 4)) * s)
+                face.context.fill(stone.offsetBy(dx: 1.2 * s, dy: (4 + CGFloat(i % 3)) * s),
+                                  with: .color(Color(dinoHex: 0x1D304B).opacity(0.64)))
+                let near = site.y > -114 * s
+                let palettes: [[UInt32]] = near
+                    ? [[0x9FA9B0,0x74849B,0x455B7C], [0x94A1B0,0x687B97,0x3F5779], [0xA8AFB3,0x7B8CA1,0x4D6380]]
+                    : [[0x7588A6,0x50688D,0x304B72], [0x6B80A1,0x475F86,0x2C456D], [0x8193AC,0x5A7395,0x355171]]
+                face.material(stone, colors: palettes[(i + (right ? 1 : 0)) % 3])
+                let facetContext: GraphicsContext = {
+                    var clipped = stones; clipped.clip(to: stone); return clipped
+                }()
+                let facet = CrystalCavePainter(context: facetContext)
+                let r = stone.boundingRect
+                let fold = CGPoint(x: r.minX + r.width * (i % 2 == 0 ? 0.34 : 0.65), y: r.minY + r.height * (i % 2 == 0 ? 0.26 : 0.34))
+                facet.polygon([.init(x: r.minX, y: r.minY), .init(x: r.maxX, y: r.minY), fold,
+                               .init(x: r.minX, y: r.minY + r.height * 0.48)],
+                              colors: near ? [0xB4BBB9,0x8F9DAA,0x778CA4] : [0x93A3B9,0x748DAA,0x566F91])
+                facet.polygon([fold, .init(x: r.maxX, y: r.minY + r.height * 0.17),
+                               .init(x: r.maxX, y: r.maxY), .init(x: r.minX + r.width * 0.58, y: r.maxY)],
+                              colors: near ? [0x70839F,0x425C81] : [0x4C6992,0x2A456F])
+                face.context.stroke(stone, with: .color(Color(dinoHex: 0x233A58).opacity(0.35)), lineWidth: 0.6 * s)
+                if i % 3 == 1 {
+                    facet.line([.init(x: r.minX + r.width * 0.21, y: r.minY + r.height * 0.20), fold,
+                                .init(x: fold.x - 5 * s, y: fold.y + r.height * 0.24)],
+                               color: 0x283D57, width: 1.1 * s, opacity: 0.75)
+                }
+                if near {
+                    facet.line([.init(x: r.minX + r.width * 0.13, y: r.minY + 3 * s),
+                                .init(x: r.minX + r.width * 0.51, y: r.minY + 2 * s)],
+                               color: 0xE1D7BD, width: 0.9 * s, opacity: 0.62)
+                }
+            }
+            // Larger exposed blocks project in front of the smaller rear joints.
+            // Their unequal heights and overlaps make the courses read as stacked rock.
+            let outcrops: [[CGPoint]] = right
+                ? [[.init(x: span * 0.14,y: 8*s),.init(x: span * 0.10,y: -25*s),.init(x: span * 0.22,y: -58*s),
+                    .init(x: span * 0.43,y: -62*s),.init(x: span * 0.58,y: -35*s),.init(x: span * 0.57,y: 3*s),.init(x: span * 0.36,y: 11*s)],
+                   [.init(x: span * 0.70,y: -13*s),.init(x: span * 0.66,y: -47*s),.init(x: span * 0.74,y: -89*s),
+                    .init(x: span * 0.91,y: -97*s),.init(x: span * 1.02,y: -64*s),.init(x: span * 1.03,y: -20*s),.init(x: span * 0.88,y: -6*s)],
+                   [.init(x: span * 0.57,y:-89*s),.init(x:span*0.53,y:-121*s),.init(x:span*0.66,y:-157*s),
+                    .init(x:span*0.83,y:-162*s),.init(x:span*0.99,y:-134*s),.init(x:span*1.01,y:-101*s),.init(x:span*0.80,y:-83*s)]]
+                : [[.init(x: -6*s,y: 5*s),.init(x: -11*s,y: -31*s),.init(x: span * 0.09,y: -65*s),
+                    .init(x: span * 0.28,y: -71*s),.init(x: span * 0.41,y: -42*s),.init(x: span * 0.37,y: 7*s),.init(x: span * 0.18,y: 12*s)],
+                   [.init(x: span * 0.39,y: -27*s),.init(x: span * 0.34,y: -62*s),.init(x: span * 0.46,y: -102*s),
+                    .init(x: span * 0.64,y: -112*s),.init(x: span * 0.79,y: -78*s),.init(x: span * 0.77,y: -41*s),.init(x: span * 0.60,y: -22*s)],
+                   [.init(x:span*0.05,y:-203*s),.init(x:span*0.02,y:-232*s),.init(x:span*0.15,y:-266*s),
+                    .init(x:span*0.33,y:-273*s),.init(x:span*0.52,y:-244*s),.init(x:span*0.50,y:-211*s),.init(x:span*0.25,y:-195*s)]]
+            for (index, points) in outcrops.enumerated().sorted(by: {
+                ($0.element.map(\.y).max() ?? 0) < ($1.element.map(\.y).max() ?? 0)
+            }) {
+                let block = p.contour(points, radius: 7*s)
+                p.context.fill(block.offsetBy(dx: 0,dy: 4*s), with: .color(Color(dinoHex: 0x1E3554).opacity(0.58)))
+                p.material(block, colors: [0x93A3B6,0x657D9B,0x3C577E])
+                let clipped: GraphicsContext = {
+                    var face = c; face.clip(to: block); return face
+                }()
+                let detail = CrystalCavePainter(context: clipped)
+                let r = block.boundingRect
+                detail.polygon([points[1],points[2],points[3],.init(x: r.midX,y: r.minY+r.height*0.44),
+                                .init(x: r.minX,y: r.minY+r.height*0.66)], colors: [0xC0C6C6,0x92A6BA,0x6B84A3])
+                detail.polygon([points[3],points[4],points[5],points[6],.init(x: r.midX,y: r.minY+r.height*0.44)],
+                               colors: [0x6A82A3,0x3B557C,0x2C466B])
+                detail.line([.init(x: r.minX+r.width*0.28,y: r.minY+r.height*0.45),
+                             .init(x: r.minX+r.width*0.48,y: r.minY+r.height*0.57),
+                             .init(x: r.minX+r.width*0.43,y: r.minY+r.height*0.84)],
+                            color: 0x344B6D,width: 1.2*s,opacity: 0.7)
+                if index == 1 { p.moss(at: CGPoint(x: r.midX,y: r.minY+8*s),size: 0.28*s) }
+            }
+            p.context.fill(cliff, with: .linearGradient(Gradient(colors: [
+                .clear, Color(dinoHex: 0xD2D2AE).opacity(0.2)
+            ]), startPoint: CGPoint(x: 0, y: -74 * s), endPoint: CGPoint(x: 0, y: 15 * s)))
+            // Two distinct planting compositions grow from joints and shelves.
+            // Each mineral root belongs to a ledge or crack, away from the passage.
+            if right {
+                p.cluster(at: CGPoint(x: span * 0.18, y: -68 * s), size: 0.23 * s, variation: 4)
+                p.cluster(at: CGPoint(x: span * 0.77, y: -150 * s), size: 0.28 * s, variation: 4)
+                p.exitMineralSeam(at: CGPoint(x: span * 0.39, y: -126 * s), size: 0.61 * s, tint: 3, mirror: true)
+                p.exitMineralSeam(at: CGPoint(x: span * 0.43, y: -223 * s), size: 0.47 * s, tint: 4)
+                p.moss(at: CGPoint(x: span * 0.91, y: -138 * s), size: 0.36 * s)
+                p.hangingVine(at: CGPoint(x: span * 0.89, y: -135 * s), length: 39, mirror: true, scale: 0.43 * s)
+                p.moss(at: CGPoint(x: span * 0.62, y: -41 * s), size: 0.61 * s)
+                p.hangingVine(at: CGPoint(x: span * 0.66, y: -91 * s), length: 71, mirror: true, scale: 0.53 * s)
+                p.plants(at: CGPoint(x: span * 0.87, y: 4 * s), size: 0.45 * s)
+                JunglePainter(context: c).fern(at: CGPoint(x: span * 0.13, y: 6 * s), size: 0.37 * s, flipped: true)
+                p.moss(at: CGPoint(x: span * 0.81, y: -55 * s), size: 0.33 * s)
+                JunglePainter(context: c).flowers(at: CGPoint(x: span * 0.81, y: -56 * s), size: 0.27 * s)
+                p.moss(at: CGPoint(x: span * 0.93, y: -81 * s), size: 0.47 * s)
+            } else {
+                p.cluster(at: CGPoint(x: span * 0.36, y: -143 * s), size: 0.34 * s, variation: 3)
+                p.cluster(at: CGPoint(x: span * 0.25, y: -257 * s), size: 0.26 * s, variation: 3)
+                p.exitMineralSeam(at: CGPoint(x: span * 0.09, y: -103 * s), size: 0.64 * s, tint: 4)
+                p.exitMineralSeam(at: CGPoint(x: span * 0.67, y: -176 * s), size: 0.49 * s, tint: 3)
+                p.moss(at: CGPoint(x: span * 0.45, y: -239 * s), size: 0.36 * s)
+                p.hangingVine(at: CGPoint(x: span * 0.47, y: -237 * s), length: 47, mirror: false, scale: 0.45 * s)
+                p.moss(at: CGPoint(x: span * 0.72, y: -83 * s), size: 0.63 * s)
+                p.hangingVine(at: CGPoint(x: span * 0.75, y: -72 * s), length: 78, mirror: false, scale: 0.61 * s)
+                p.moss(at: CGPoint(x: span * 0.20, y: -28 * s), size: 0.50 * s)
+                JunglePainter(context: c).fern(at: CGPoint(x: span * 0.62, y: 7 * s), size: 0.33 * s, flipped: false)
+                JunglePainter(context: c).flowers(at: CGPoint(x: span * 0.76, y: -79 * s), size: 0.34 * s)
+                p.plants(at: CGPoint(x: span * 0.92, y: 5 * s), size: 0.36 * s)
+            }
+            for i in 0..<5 {
+                let x = span * (CGFloat(i) + 0.35) / 5
+                p.rock(at: CGPoint(x: x, y: (8 + CGFloat((i + (right ? 1 : 0)) % 3)) * s),
+                       size: (0.09 + CGFloat((i * 3 + (right ? 1 : 0)) % 4) * 0.025) * s)
+            }
+        }
+        wall.exitShoulders(width: width)
+    }
+
+    /// Rock shoulders bridge the two small gaps above the outer gate stones.
+    /// They stay outside the inner opening and below the boss caption's centre lane.
+    private func exitShoulders(width: CGFloat) {
+        let threshold = CrystalCaveThresholdLayout(width: width)
+        at(CGPoint(x: width / 2, y: threshold.exitSpringY), size: threshold.exitScale) { p in
+            let layers: [[CGPoint]] = [
+                [.init(x:-360,y:-268),.init(x:-282,y:-286),.init(x:-199,y:-240),.init(x:-131,y:-195),
+                 .init(x:-115,y:-142),.init(x:-177,y:-112),.init(x:-280,y:-120),.init(x:-351,y:-164)],
+                [.init(x:349,y:-276),.init(x:264,y:-295),.init(x:188,y:-235),.init(x:117,y:-193),
+                 .init(x:108,y:-137),.init(x:180,y:-116),.init(x:296,y:-127),.init(x:356,y:-181)],
+                [.init(x:-309,y:-168),.init(x:-237,y:-191),.init(x:-167,y:-172),.init(x:-94,y:-116),
+                 .init(x:-112,y:-80),.init(x:-189,y:-64),.init(x:-286,y:-90)],
+                [.init(x:319,y:-173),.init(x:252,y:-209),.init(x:173,y:-177),.init(x:97,y:-120),
+                 .init(x:116,y:-83),.init(x:212,y:-64),.init(x:305,y:-103)]
+            ]
+            for (index, points) in layers.enumerated() {
+                let stone = p.contour(points, radius: index < 2 ? 9 : 7)
+                p.context.fill(stone.offsetBy(dx: 2,dy: 6), with: .color(Color(dinoHex:0x253D5F).opacity(0.65)))
+                p.material(stone, colors: index < 2 ? [0x94A3B5,0x6A809F,0x3D5679] : [0xA6B1BB,0x7D8FA5,0x4D6484])
+                let clipped: GraphicsContext = {
+                    var c = p.context; c.clip(to: stone); return c
+                }()
+                let facet = CrystalCavePainter(context: clipped)
+                let r = stone.boundingRect
+                let fold = CGPoint(x:r.midX + (index % 2 == 0 ? -8 : 12),y:r.minY+r.height*0.44)
+                facet.polygon([points[0],points[1],points[2],points[3],fold], colors:[0xC0C6C6,0x91A2B5,0x6C829F])
+                facet.polygon([fold,points[3],points[4],points[5],points[6]], colors:[0x758BA8,0x4B6488,0x354F73])
+                facet.line([.init(x:r.midX-17,y:r.minY+9),fold,.init(x:fold.x-9,y:fold.y+21)],
+                           color:0x3B5577,width:1.7,opacity:0.75)
+                p.line([points[0],points[1],points[2]],color:0xD3D5CB,width:1.5,opacity:0.42)
+            }
+            // Minerals grow from the shoulder's top ledge; moss roots in its lower seam.
+            p.cluster(at:CGPoint(x:-246,y:-184),size:0.43,variation:3)
+            p.moss(at:CGPoint(x:-180,y:-142),size:0.40)
+            p.hangingVine(at:CGPoint(x:-177,y:-142),length:39,mirror:false,scale:0.64)
+            p.crystal(at:CGPoint(x:198,y:-175),height:42,tint:4)
+            p.crystal(at:CGPoint(x:217,y:-168),height:28,tint:5)
+            p.moss(at:CGPoint(x:238,y:-166),size:0.40)
+            JunglePainter(context:p.context).flowers(at:CGPoint(x:228,y:-166),size:0.30)
+        }
+    }
+
+    /// Small mineral growth is anchored in an exposed crack, with a mossy lower lip.
+    private func exitMineralSeam(at point: CGPoint, size: CGFloat, tint: Int, mirror: Bool = false) {
+        at(point,size:size,mirror:mirror) { p in
+            p.line([.init(x:-17,y:-20),.init(x:-7,y:-9),.init(x:-10,y:1),.init(x:5,y:11),.init(x:23,y:8)],
+                   color:0x2B4568,width:2.3,opacity:0.82)
+            p.line([.init(x:-14,y:-18),.init(x:-5,y:-9),.init(x:-8,y:1)],
+                   color:tint % 3 == 0 ? 0x8FDBE4 : 0xC1A4E4,width:0.8,opacity:0.65)
+            for (x,y,h,angle):(CGFloat,CGFloat,CGFloat,Double) in [(-7,1,28,-18),(3,8,20,16),(13,9,12,30)] {
+                var c = p.context;c.translateBy(x:x,y:y);c.rotate(by:.degrees(angle))
+                CrystalCavePainter(context:c).crystal(at:.zero,height:h,tint:tint)
+            }
+            p.moss(at:CGPoint(x:19,y:11),size:0.24)
+        }
+    }
+
+    /// Preserve the original arch, pillars and ornaments with uniform scaling.
+    private func exitArch(width: CGFloat) {
+        let threshold = CrystalCaveThresholdLayout(width: width)
+        at(CGPoint(x: width / 2, y: threshold.exitSpringY), size: threshold.exitScale) { p in
+            // A broken mineral hood embeds the dressed arch in the cavern wall.
+            // Its opening matches the masonry, so the road still passes through.
+            let hood = Path { a in
+                a.addLines([.init(x: -193, y: 108), .init(x: -202, y: 55), .init(x: -185, y: -9),
+                            .init(x: -164, y: -58), .init(x: -119, y: -96), .init(x: -65, y: -119),
+                            .init(x: -18, y: -128), .init(x: 26, y: -124), .init(x: 71, y: -113),
+                            .init(x: 129, y: -83), .init(x: 172, y: -40), .init(x: 193, y: 18),
+                            .init(x: 184, y: 107), .init(x: 82, y: 107), .init(x: 82, y: 0)])
+                a.addCurve(to: .init(x: -82, y: 0), control1: .init(x: 82, y: -101.33), control2: .init(x: -82, y: -101.33))
+                a.addLine(to: .init(x: -82, y: 108)); a.closeSubpath()
+            }
+            p.material(hood, colors: [0xA3B1BD, 0x677D99, 0x2A4365])
+            var stoneContext = p.context; stoneContext.clip(to: hood)
+            let stone = CrystalCavePainter(context: stoneContext)
+            // Interlocking blocks tie the arch shoulders into the adjoining cliff.
+            // Their joints rise toward the crown instead of outlining a separate slab.
+            let blocks: [[CGPoint]] = [
+                [.init(x: -191,y: 105),.init(x: -198,y: 63),.init(x: -176,y: 30),.init(x: -112,y: 26),.init(x: -109,y: 104)],
+                [.init(x: -176,y: 30),.init(x: -185,y: -9),.init(x: -159,y: -53),.init(x: -111,y: -19),.init(x: -111,y: 26)],
+                [.init(x: -159,y: -53),.init(x: -163,y: -65),.init(x: -118,y: -99),.init(x: -78,y: -109),.init(x: -108,y: -56),.init(x: -111,y: -19)],
+                [.init(x: -78,y: -109),.init(x: -18,y: -128),.init(x: 24,y: -124),.init(x: 27,y: -103),.init(x: -34,y: -103)],
+                [.init(x: 184,y: 105),.init(x: 194,y: 57),.init(x: 168,y: 32),.init(x: 110,y: 36),.init(x: 110,y: 104)],
+                [.init(x: 168,y: 32),.init(x: 193,y: 18),.init(x: 172,y: -39),.init(x: 132,y: -70),.init(x: 111,y: -12),.init(x: 110,y: 36)],
+                [.init(x: 132,y: -70),.init(x: 129,y: -87),.init(x: 71,y: -116),.init(x: 24,y: -124),.init(x: 27,y: -103),.init(x: 102,y: -64),.init(x: 111,y: -12)]
+            ]
+            for (index, points) in blocks.enumerated() {
+                let boulder = stone.contour(points, radius: 6)
+                stone.material(boulder, colors: index % 2 == 0 ? [0xA3AEB8,0x7B8B9E,0x455D7A] : [0x96A4B2,0x6B819A,0x3D5675])
+                stone.context.stroke(boulder.offsetBy(dx: 0, dy: 1.5), with: .color(Color(dinoHex: 0x304765).opacity(0.62)), lineWidth: 2)
+                if let first = points.first, let last = points.last {
+                    stone.line([.init(x: first.x + 4,y: first.y - 4),.init(x: last.x + 3,y: last.y - 3)],
+                               color: 0xC0C5C0, width: 1.3, opacity: 0.43)
+                }
+            }
             p.ground(at: CGPoint(x: 0, y: 100), width: 280, height: 52, color: 0x31455F, opacity: 0.32)
             let frame = Path { a in
                 a.move(to: CGPoint(x: -110, y: 98)); a.addLine(to: CGPoint(x: -110, y: 0))
@@ -4195,6 +4595,26 @@ private struct CrystalCavePainter {
             p.context.stroke(frame.offsetBy(dx: 0, dy: 4), with: .color(Color(dinoHex: 0x223959).opacity(0.65)),
                              style: StrokeStyle(lineWidth: 7, lineJoin: .round))
             p.material(frame, colors: [0xD9D3BC, 0xA7AEA7, 0x6B7D8C])
+            let reveal = Path { a in
+                a.move(to: .init(x: -81, y: 97)); a.addLine(to: .init(x: -81, y: 0))
+                a.addCurve(to: .init(x: 81, y: 0), control1: .init(x: -81, y: -100), control2: .init(x: 81, y: -100))
+                a.addLine(to: .init(x: 81, y: 97))
+            }
+            p.context.stroke(reveal.offsetBy(dx: 3, dy: 3), with: .color(Color(dinoHex: 0x253C56).opacity(0.65)),
+                             style: StrokeStyle(lineWidth: 6, lineJoin: .round))
+            p.context.stroke(reveal, with: .color(Color(dinoHex: 0xEEE2BC).opacity(0.75)), lineWidth: 1.5)
+            // The inner lining exposes a thick, shadowed tunnel behind the cut stone.
+            let soffit = Path { a in
+                a.move(to: .init(x: -82, y: 97)); a.addLine(to: .init(x: -82, y: 0))
+                a.addCurve(to: .init(x: 82, y: 0), control1: .init(x: -82, y: -101.33), control2: .init(x: 82, y: -101.33))
+                a.addLine(to: .init(x: 82, y: 97)); a.addLine(to: .init(x: 73, y: 97))
+                a.addLine(to: .init(x: 73, y: 3))
+                a.addCurve(to: .init(x: -73, y: 3), control1: .init(x: 73, y: -76), control2: .init(x: -73, y: -76))
+                a.addLine(to: .init(x: -73, y: 97)); a.closeSubpath()
+            }
+            p.material(soffit, colors: [0x213048,0x344056,0x516076])
+            p.moss(at: CGPoint(x: -72, y: -101), size: 0.44)
+            p.moss(at: CGPoint(x: 69, y: -103), size: 0.35)
 
             // Wedge-shaped voussoirs follow the arch, rather than forming a fence.
             for i in 0..<9 {
@@ -4216,6 +4636,8 @@ private struct CrystalCavePainter {
                            color: 0x74878F, width: 0.9, opacity: 0.65)
                 }
             }
+            // A small mineral inlay belongs to the crown stone, below the hood.
+            p.crystal(at: CGPoint(x: 0, y: -90), height: 12, tint: 3)
             for sign: CGFloat in [-1, 1] {
                 for row in 0..<4 {
                     let x = sign < 0 ? -110.0 : 82.0
@@ -4251,6 +4673,77 @@ private struct CrystalCavePainter {
         }
     }
 
+    /// Cool cave light gives way to a shaded stone landing and then warm city ground.
+    func exitClearing(width: CGFloat, boundaryY: CGFloat) {
+        let threshold = CrystalCaveThresholdLayout(width: width)
+        let s = threshold.scale
+        var c = context; c.translateBy(x: 0, y: boundaryY)
+        let ambient = CrystalCavePainter(context: c)
+        ambient.ground(at: CGPoint(x: width / 2, y: -38 * s), width: min(width * 1.3, 840),
+                       height: 240 * s, color: 0xEBE8C8, opacity: 0.19)
+        var land = Path()
+        for i in 0...96 {
+            let x = width * CGFloat(i) / 96
+            let point = CGPoint(x: x, y: exitBoundaryY(x: x, width: width, scale: s))
+            if i == 0 { land.move(to: point) } else { land.addLine(to: point) }
+        }
+        land.addLine(to: CGPoint(x: width, y: 240 * s))
+        land.addLine(to: CGPoint(x: 0, y: 240 * s)); land.closeSubpath()
+        c.fill(land, with: .linearGradient(Gradient(stops: [
+            .init(color: Color(dinoHex: 0x879EA2), location: 0),
+            .init(color: Color(dinoHex: 0xA9BBB0), location: 0.28),
+            .init(color: Color(dinoHex: 0xC9D3B7), location: 0.53),
+            .init(color: Color(dinoHex: 0xDCE2BF).opacity(0.7), location: 0.77),
+            .init(color: Color(dinoHex: 0xDCE2BF).opacity(0), location: 1)
+        ]), startPoint: CGPoint(x: 0, y: -60 * s), endPoint: CGPoint(x: 0, y: 240 * s)))
+
+        var paving = c; paving.clip(to: land)
+        let p = CrystalCavePainter(context: paving)
+        let mid = width / 2
+        let startY = threshold.exitSpringY + 62 * threshold.exitScale
+        let endY = 122 * s
+        let mouth = 124 * threshold.exitScale + 6 * s
+        let outer = min(width * 0.39, 111 * s)
+        func halfWidth(_ t: CGFloat) -> CGFloat { mouth + (outer - mouth) * t }
+        func point(_ u: CGFloat, _ t: CGFloat) -> CGPoint {
+            CGPoint(x: mid + u * halfWidth(t), y: startY + (endY - startY) * t)
+        }
+        let landing = p.contour([point(-1, 0), point(1, 0), point(1, 1), point(-1, 1)], radius: 3 * s)
+        p.context.fill(landing.offsetBy(dx: 0, dy: 2 * s), with: .color(Color(dinoHex: 0x607C7D).opacity(0.2)))
+        p.material(landing, colors: [0xA4B5AF, 0xCFD1B8, 0xD9D7B9])
+        let tileContext: GraphicsContext = {
+            var clipped = paving; clipped.clip(to: landing); return clipped
+        }()
+        let tiles = CrystalCavePainter(context: tileContext)
+        let rows: [CGFloat] = [0, 0.10, 0.23, 0.39, 0.58, 0.78, 1]
+        // A continuous staggered pavement shares the landing's perspective.
+        // Clipped end stones finish beneath one complete coping edge.
+        for row in 0..<(rows.count - 1) {
+            let back = rows[row] + 0.007, front = rows[row + 1] - 0.007
+            let stagger: CGFloat = row % 2 == 0 ? 0 : 0.5
+            for column in -1..<8 {
+                let u = -1 + (CGFloat(column) + stagger) * 0.25
+                let stone = tiles.contour([point(u + 0.009, back), point(u + 0.241, back),
+                                           point(u + 0.241, front), point(u + 0.009, front)], radius: 1.3 * s)
+                let cool = row < 2
+                let colors: [UInt32] = cool
+                    ? ((row + column) % 2 == 0 ? [0xBAC5BB,0x9EAEA6] : [0xC3CAC0,0xAAB7AA])
+                    : ((row + column) % 2 == 0 ? [0xE4DFC3,0xC5CAB1] : [0xDAD9BD,0xB9C3AA])
+                tiles.material(stone, colors: colors)
+                tiles.context.stroke(stone, with: .color(Color(dinoHex: 0x849A91).opacity(0.45)), lineWidth: 0.65 * s)
+                tiles.line([point(u + 0.023, back + 0.008), point(u + 0.228, back + 0.008)],
+                           color: 0xF3EAD0, width: 0.8 * s, opacity: 0.56)
+            }
+        }
+        for side: CGFloat in [-1, 1] {
+            let edge = Path { a in a.move(to: point(side, 0)); a.addLine(to: point(side, 1)) }
+            p.context.stroke(edge, with: .color(Color(dinoHex: 0x8EA39A)),
+                             style: StrokeStyle(lineWidth: 4 * s, lineCap: .round))
+            p.context.stroke(edge.offsetBy(dx: -side * 0.6 * s, dy: -0.5 * s),
+                             with: .color(Color(dinoHex: 0xDCE0C8)), lineWidth: 1.4 * s)
+        }
+    }
+
     private func passageFloor(layout: WorldSceneryLayout, passage: Passage) -> Path {
         if passage == .departure { return exitCaveMask(width: layout.width, height: layout.height, scale: layout.scale) }
         let w = layout.width, h = layout.height
@@ -4276,14 +4769,12 @@ private struct CrystalCavePainter {
         var c = context; c.clip(to: passageFloor(layout: layout, passage: passage))
         let cave = CrystalCavePainter(context: c)
         cave.enclosure(layout: layout, passage: passage)
-        if leavingCave {
-            cave.ground(at: CGPoint(x: size.width / 2, y: 118 * layout.scale), width: 275 * layout.scale,
-                        height: 245 * layout.scale, color: 0xFFE0A0, opacity: 0.23)
-            for right in [false, true] {
-                let sign: CGFloat = right ? 1 : -1
-                cave.cluster(at: CGPoint(x: size.width / 2 + sign * 160 * layout.scale, y: 88 * layout.scale),
-                             size: layout.scale * 0.55, variation: right ? 4 : 3)
-            }
+        // Departure minerals belong to complete shelves in exitForeground.
+        // Clipping hanging crystals to the terrain contour cut their tips off.
+        if passage == .arrival {
+            var scene = DepthScene()
+            cave.appendOverhangs(layout: layout, passage: passage, to: &scene)
+            scene.draw()
         }
     }
 
@@ -4333,6 +4824,12 @@ private struct CrystalCavePainter {
                     }
                 }
             }
+        }
+    }
+
+    private func appendOverhangs(layout: WorldSceneryLayout, passage: Passage? = nil, to scene: inout DepthScene) {
+        let h = layout.height, scale = layout.scale
+        for right in [false, true] {
             // Attached ledges and downward growth give the sides a cavern ceiling.
             let overhangStart = passage == .arrival ? h - 285 : passage == .departure ? 110 : layout.routeOffset + 245
             let overhangCount = passage == nil ? 5 : 2
@@ -4341,16 +4838,18 @@ private struct CrystalCavePainter {
                 if passage == nil && y >= h - 295 { continue }
                 if passage != nil && (y < 70 || y > h - 100) { continue }
                 let x = wallX(at: y, right: right, distance: 155, layout: layout, passage: passage)
-                at(CGPoint(x: x, y: y), size: scale, mirror: right) { p in
-                    let tooth = p.contour([.init(x: -48, y: -20), .init(x: 22, y: -17), .init(x: 18, y: 8),
-                                           .init(x: 4, y: 48), .init(x: -7, y: 21), .init(x: -29, y: 9)], radius: 6)
-                    p.material(tooth, colors: [0x91A5BF, 0x5C769C, 0x405C84])
-                    if i % 2 == 0 {
-                        var hanging = p.context; hanging.translateBy(x: -8, y: 8); hanging.scaleBy(x: 1, y: -1)
-                        CrystalCavePainter(context: hanging).crystal(at: .zero, height: 40 + CGFloat(i % 3) * 8, tint: right ? 0 : 1)
+                scene.add(at: y + 48 * scale) {
+                    self.at(CGPoint(x: x, y: y), size: scale, mirror: right) { p in
+                        let tooth = p.contour([.init(x: -48, y: -20), .init(x: 22, y: -17), .init(x: 18, y: 8),
+                                               .init(x: 4, y: 48), .init(x: -7, y: 21), .init(x: -29, y: 9)], radius: 6)
+                        p.material(tooth, colors: [0x91A5BF, 0x5C769C, 0x405C84])
+                        if i % 2 == 0 {
+                            var hanging = p.context; hanging.translateBy(x: -8, y: 8); hanging.scaleBy(x: 1, y: -1)
+                            CrystalCavePainter(context: hanging).crystal(at: .zero, height: 40 + CGFloat(i % 3) * 8, tint: right ? 0 : 1)
+                        }
+                        p.material(p.contour([.init(x: -50, y: -22), .init(x: 18, y: -19), .init(x: 31, y: -8),
+                                               .init(x: 5, y: 6), .init(x: -40, y: 0)], radius: 7), colors: [0xBECDDB, 0x8EA1BB, 0x5B769C])
                     }
-                    p.material(p.contour([.init(x: -50, y: -22), .init(x: 18, y: -19), .init(x: 31, y: -8),
-                                           .init(x: 5, y: 6), .init(x: -40, y: 0)], radius: 7), colors: [0xBECDDB, 0x8EA1BB, 0x5B769C])
                 }
             }
         }
@@ -4376,37 +4875,72 @@ private struct CrystalCavePainter {
         for (y, color): (CGFloat, UInt32) in [(routeOffset + 260, 0xB8EEE9), (routeOffset + 790, 0xD9C6F0), (routeOffset + 1330, 0xB3E8E5)] {
             light.ground(at: CGPoint(x: layout.centerX(at: y - routeOffset), y: y), width: min(w, 650), height: 380, color: color, opacity: 0.29)
         }
-        CrystalCavePainter(context: interior).enclosure(layout: layout)
-        CrystalCavePainter(context: interior).entranceVista(width: w, scale: scale)
-        // Crystals emerge from the wall, with their roots seated in small ledges.
+        let interiorPainter = CrystalCavePainter(context: interior)
+        interiorPainter.enclosure(layout: layout)
+        let lift = CrystalCaveThresholdLayout(width: w).entranceLift
+        var entrance = context; entrance.translateBy(x: 0, y: -lift)
+        CrystalCavePainter(context: entrance).entranceButtresses(width: w, scale: scale)
+        exitClearing(width: w, boundaryY: h)
+        exitWall(width: w, boundaryY: h)
+
+        let routeWidth = min(w, 600) - 36
+        let points = WorldRouteTrail.chapterPositions.enumerated().map {
+            CGPoint(x: (w - routeWidth) / 2 + routeWidth * $0.element,
+                    y: routeOffset + 80 + CGFloat($0.offset) * WorldRouteTrail.levelSpacing)
+        }
+        WorldRouteTrail(points: points, entryY: 0, exitY: h).draw(in: context)
+
+        var scene = DepthScene()
+        interiorPainter.appendOverhangs(layout: layout, to: &scene)
+        appendEntrance(width: w, scale: scale, lift: lift, to: &scene)
+        appendEntranceVista(width: w, scale: scale, lift: lift, to: &scene)
+        // Wall minerals and freestanding destinations share their actual baseline.
         for i in 0..<46 {
             let right = i.isMultiple(of: 2), sign: CGFloat = right ? 1 : -1
             let y = routeOffset + 62 + CGFloat(i / 2) * 64 + (right ? 0 : 39)
             guard y < h - 265 else { continue }
             let x = wallX(at: y, right: right, distance: 153, layout: layout) + sign * 18 * scale
-            let gems = CrystalCavePainter(context: interior)
-            gems.cluster(at: CGPoint(x: x, y: y), size: scale * (0.48 + CGFloat(i % 4) * 0.12), variation: (i * 7 + i / 4) % 6)
-            gems.glow(CGPoint(x: x - sign * 16 * scale, y: y - 25 * scale), radius: 40 * scale,
-                      color: i % 3 == 0 ? 0x59E7FF : 0xB890FF, opacity: 0.22)
+            let clusterSize = scale * (0.48 + CGFloat(i % 4) * 0.12)
+            scene.add(at: y + 22 * clusterSize) {
+                interiorPainter.cluster(at: CGPoint(x: x, y: y), size: clusterSize, variation: (i * 7 + i / 4) % 6)
+                interiorPainter.glow(CGPoint(x: x - sign * 16 * scale, y: y - 25 * scale), radius: 40 * scale,
+                                      color: i % 3 == 0 ? 0x59E7FF : 0xB890FF, opacity: 0.22)
+            }
         }
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let p = CrystalCavePainter(context: c, scenery: layout)
-        p.terracedCascade(at: CGPoint(x: w - 12 * scale, y: 955), size: scale * 0.91)
-        p.terracedCascade(at: CGPoint(x: 12 * scale, y: 1300), size: scale * 0.78, mirror: true)
+        scene.add(at: routeOffset + 955 + 38 * scale * 0.91) { p.terracedCascade(at: CGPoint(x: w - 12 * scale, y: 955), size: scale * 0.91) }
+        scene.add(at: routeOffset + 1300 + 38 * scale * 0.78) { p.terracedCascade(at: CGPoint(x: 12 * scale, y: 1300), size: scale * 0.78, mirror: true) }
         for (y, right): (CGFloat, Bool) in [(95, false), (505, true), (1035, false)] {
-            p.minePost(at: CGPoint(x: right ? w - 22 * scale : 22 * scale, y: y), size: scale * 0.83, mirror: right)
+            scene.add(at: routeOffset + y + 10 * scale * 0.83) {
+                p.minePost(at: CGPoint(x: right ? w - 22 * scale : 22 * scale, y: y), size: scale * 0.83, mirror: right)
+            }
         }
-        p.mineStorage(at: CGPoint(x: 15 * scale, y: 1080), size: scale * 0.80)
-        p.minePlatform(at: CGPoint(x: 10 * scale, y: 610), size: scale * 0.82)
-        p.minePlatform(at: CGPoint(x: w - 10 * scale, y: 1370), size: scale * 0.80, mirror: true)
+        scene.add(at: routeOffset + 1080 + 19 * scale * 0.80) { p.mineStorage(at: CGPoint(x: 15 * scale, y: 1080), size: scale * 0.80) }
+        scene.add(at: routeOffset + 610 + 51 * scale * 0.82) { p.minePlatform(at: CGPoint(x: 10 * scale, y: 610), size: scale * 0.82) }
+        scene.add(at: routeOffset + 1370 + 51 * scale * 0.80) { p.minePlatform(at: CGPoint(x: w - 10 * scale, y: 1370), size: scale * 0.80, mirror: true) }
         for (y, right): (CGFloat, Bool) in [(335, false), (870, true), (1265, false)] {
-            p.mineWorkshop(at: CGPoint(x: right ? w - 20 * scale : 20 * scale, y: y), size: scale * 0.87, mirror: right)
+            scene.add(at: routeOffset + y + 29 * scale * 0.87) {
+                p.mineWorkshop(at: CGPoint(x: right ? w - 20 * scale : 20 * scale, y: y), size: scale * 0.87, mirror: right)
+            }
         }
-        // Each cluster grows from a shelf; varied heights leave the clock faces clear.
         for (variation, y, right): (Int, CGFloat, Bool) in [(0, 205, true), (2, 465, false), (1, 680, true), (3, 935, false), (4, 1190, false), (6, 1430, true)] {
-            p.scene(at: CGPoint(x: right ? w - 32 * scale : 32 * scale, y: y), size: scale * 0.92, variation: variation)
+            let foot: CGFloat = variation % 4 == 3 ? 98 : 33
+            scene.add(at: routeOffset + y + foot * scale * 0.92) {
+                p.scene(at: CGPoint(x: right ? w - 32 * scale : 32 * scale, y: y), size: scale * 0.92, variation: variation)
+            }
         }
-        CrystalCavePainter(context: c).arch(at: CGPoint(x: w - 80 * scale, y: 1687), size: scale * 0.98)
+        let boss = ThemePainter(context: c, colors: WorldThemeColors(DinoWorldCatalog.world(5)!))
+        let bossPoint = CGPoint(x: w - 79 * scale, y: 1675)
+        scene.add(at: routeOffset + bossPoint.y) {
+            boss.bossClearing(worldID: 5, at: bossPoint, size: scale)
+            boss.boss(worldID: 5, at: bossPoint, size: scale * 0.88)
+        }
+        let archY: CGFloat = 1650
+        scene.add(at: routeOffset + archY + 14 * scale * 0.98) {
+            CrystalCavePainter(context: c).arch(at: CGPoint(x: w - 80 * scale, y: archY), size: scale * 0.98)
+        }
+        scene.draw()
     }
 
     /// A raised centre makes a roof (∩), with the cavern continuing underneath.
@@ -4419,7 +4953,7 @@ private struct CrystalCavePainter {
         Path { p in
             for i in 0...64 {
                 let x = width * CGFloat(i) / 64
-                let point = CGPoint(x: x, y: entranceY(x: x, width: width, scale: scale))
+                let point = CGPoint(x: x, y: entranceY(x: x, width: width, scale: scale) - CrystalCaveThresholdLayout(width: width).entranceLift)
                 if i == 0 { p.move(to: point) } else { p.addLine(to: point) }
             }
             p.addLine(to: CGPoint(x: width, y: height + 24))
@@ -4528,30 +5062,54 @@ private struct CrystalCavePainter {
         }
     }
 
-    private func entranceVista(width: CGFloat, scale: CGFloat) {
-        // A small gallery and a blue waterfall sit beyond the foreground lip.
+    private func appendEntrance(width: CGFloat, scale: CGFloat, lift: CGFloat, to scene: inout DepthScene) {
+        var c = context; c.translateBy(x: 0, y: -lift)
+        let p = CrystalCavePainter(context: c)
+        scene.add(at: 243 * scale - lift) { p.entranceRim(width: width) }
+        for right in [false, true] {
+            let x = width * (right ? 0.88 : 0.12)
+            let y = entranceY(x: x, width: width, scale: scale) + 90 * scale
+            scene.add(at: y + 10 * scale * 1.06 - lift) { p.minePost(at: CGPoint(x: x, y: y), size: scale * 1.06, mirror: right) }
+            scene.add(at: (312 + 22 * 0.76) * scale - lift) {
+                p.cluster(at: CGPoint(x: width * (right ? 0.93 : 0.07), y: 312 * scale), size: scale * 0.76, variation: right ? 0 : 1)
+            }
+        }
+    }
+
+    private func appendEntranceVista(width: CGFloat, scale: CGFloat, lift: CGFloat, to scene: inout DepthScene) {
+        var c = context; c.translateBy(x: 0, y: -lift)
+        let p = CrystalCavePainter(context: c)
         let x = width * 0.66
-        glow(CGPoint(x: x, y: 247 * scale), radius: 115 * scale, color: 0x4CCBEB, opacity: 0.24)
-        var water = Path(); water.move(to: CGPoint(x: x + 17 * scale, y: 166 * scale))
-        water.addCurve(to: CGPoint(x: x - 4 * scale, y: 395 * scale),
-                       control1: CGPoint(x: x + 36 * scale, y: 238 * scale), control2: CGPoint(x: x - 19 * scale, y: 310 * scale))
-        context.stroke(water, with: .color(Color(dinoHex: 0x1E638C)), style: StrokeStyle(lineWidth: 27 * scale, lineCap: .round))
-        context.stroke(water, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xA4F4F5), Color(dinoHex: 0x43B5D8), Color(dinoHex: 0x397BB5)]), startPoint: .init(x: x, y: 166 * scale), endPoint: .init(x: x, y: 395 * scale)), style: StrokeStyle(lineWidth: 17 * scale, lineCap: .round))
-        context.stroke(water, with: .color(Color(dinoHex: 0xD0FFFD).opacity(0.65)), style: StrokeStyle(lineWidth: 2 * scale, lineCap: .round))
-        pool(at: CGPoint(x: x - 4 * scale, y: 392 * scale), size: scale * 0.65)
-        rock(at: CGPoint(x: x + 31 * scale, y: 390 * scale), size: scale * 0.44)
-        cluster(at: CGPoint(x: x + 11 * scale, y: 174 * scale), size: scale * 0.47, variation: 4)
-        minePlatform(at: CGPoint(x: x, y: 244 * scale), size: scale * 0.81)
+        p.glow(CGPoint(x: x, y: 247 * scale), radius: 115 * scale, color: 0x4CCBEB, opacity: 0.24)
+        scene.add(at: 395 * scale - lift) {
+            var water = Path(); water.move(to: CGPoint(x: x + 17 * scale, y: 166 * scale))
+            water.addCurve(to: CGPoint(x: x - 4 * scale, y: 395 * scale),
+                           control1: CGPoint(x: x + 36 * scale, y: 238 * scale), control2: CGPoint(x: x - 19 * scale, y: 310 * scale))
+            p.context.stroke(water, with: .color(Color(dinoHex: 0x1E638C)), style: StrokeStyle(lineWidth: 27 * scale, lineCap: .round))
+            p.context.stroke(water, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xA4F4F5), Color(dinoHex: 0x43B5D8), Color(dinoHex: 0x397BB5)]), startPoint: .init(x: x, y: 166 * scale), endPoint: .init(x: x, y: 395 * scale)), style: StrokeStyle(lineWidth: 17 * scale, lineCap: .round))
+            p.context.stroke(water, with: .color(Color(dinoHex: 0xD0FFFD).opacity(0.65)), style: StrokeStyle(lineWidth: 2 * scale, lineCap: .round))
+        }
+        scene.add(at: (392 + 13 * 0.65) * scale - lift) { p.pool(at: CGPoint(x: x - 4 * scale, y: 392 * scale), size: scale * 0.65) }
+        scene.add(at: (390 + 18 * 0.44) * scale - lift) { p.rock(at: CGPoint(x: x + 31 * scale, y: 390 * scale), size: scale * 0.44) }
+        scene.add(at: (174 + 22 * 0.47) * scale - lift) { p.cluster(at: CGPoint(x: x + 11 * scale, y: 174 * scale), size: scale * 0.47, variation: 4) }
+        scene.add(at: (244 + 51 * 0.81) * scale - lift) { p.minePlatform(at: CGPoint(x: x, y: 244 * scale), size: scale * 0.81) }
         for i in 0..<9 {
             let point = CGPoint(x: width * (0.24 + CGFloat(i) * 0.07), y: (207 + CGFloat((i * 17) % 63)) * scale)
-            glow(point, radius: 8 * scale, color: i % 3 == 0 ? 0xFFBA55 : 0x67DEFF, opacity: 0.30)
-            oval(CGRect(x: point.x, y: point.y, width: 1.7 * scale, height: 1.7 * scale), colors: [0xE9FFFF, 0x72DDF5])
+            scene.add(at: point.y - lift) {
+                p.glow(point, radius: 8 * scale, color: i % 3 == 0 ? 0xFFBA55 : 0x67DEFF, opacity: 0.30)
+                p.oval(CGRect(x: point.x, y: point.y, width: 1.7 * scale, height: 1.7 * scale), colors: [0xE9FFFF, 0x72DDF5])
+            }
         }
     }
 
     func entranceForeground(width: CGFloat) {
+        var c = context
+        c.translateBy(x: 0, y: -CrystalCaveThresholdLayout(width: width).entranceLift)
+        CrystalCavePainter(context: c).entranceRim(width: width)
+    }
+
+    private func entranceRim(width: CGFloat) {
         let scale = min(1.30, max(0.82, width / 390))
-        entranceButtresses(width: width, scale: scale)
         // A deep continuous lip hides the road, including its centre dashes.
         var rim = Path()
         for i in 0...64 {
@@ -4604,10 +5162,6 @@ private struct CrystalCavePainter {
                   .init(x: right - 2 * scale, y: b + 6 * scale)], color: 0xE5AF64, width: 3.4 * scale, opacity: 0.65)
         }
         for right in [false, true] {
-            let x = width * (right ? 0.88 : 0.12)
-            let y = entranceY(x: x, width: width, scale: scale)
-            minePost(at: CGPoint(x: x, y: y + 90 * scale), size: scale * 1.06, mirror: right)
-            cluster(at: CGPoint(x: width * (right ? 0.93 : 0.07), y: 312 * scale), size: scale * 0.76, variation: right ? 0 : 1)
             for j in 0..<5 {
                 let leafX = width * (right ? 0.985 - CGFloat(j) * 0.055 : 0.015 + CGFloat(j) * 0.055)
                 let leafY = entranceY(x: leafX, width: width, scale: scale) - (55 + CGFloat(j % 2) * 9) * scale
@@ -4683,7 +5237,7 @@ private struct CrystalCavePainter {
             p.ground(at: CGPoint(x: 0, y: 13), width: 153, height: 44)
             p.rock(at: CGPoint(x: -13, y: 5), size: 1.3)
             // Stacked cut timber, with visible end grain and retaining pegs.
-            for i in 0..<5 {
+            for i in (0..<5).sorted(by: { $0 / 3 > $1 / 3 }) {
                 let x: CGFloat = -45 + CGFloat(i % 3) * 17, y: CGFloat = 10 - CGFloat(i / 3) * 14
                 p.timber(from: CGPoint(x: x, y: y), to: CGPoint(x: x + 43, y: y - 13), width: 13)
                 p.oval(CGRect(x: x - 7, y: y - 6, width: 14, height: 12), colors: [0xE9C58A, 0xB38350])
@@ -4776,8 +5330,9 @@ private struct CrystalCavePainter {
             p.material(p.contour([.init(x: -52, y: 3), .init(x: -33, y: -16), .init(x: 12, y: -17),
                                    .init(x: 42, y: -8), .init(x: 55, y: 15), .init(x: 12, y: 22), .init(x: -39, y: 18)], radius: 8), colors: [0xB9CAD3, 0x8298B3, 0x5E799D])
             let heights: [CGFloat] = variation % 2 == 0 ? [39, 67, 99, 76, 43] : [43, 85, 108, 64, 35]
-            for i in [0, 4, 1, 3, 2] {
-                let x = CGFloat(i - 2) * 17, y: CGFloat = [5, 2, 4, 9, 11][i]
+            let roots: [CGFloat] = [5, 2, 4, 9, 11]
+            for i in roots.indices.sorted(by: { roots[$0] < roots[$1] }) {
+                let x = CGFloat(i - 2) * 17, y = roots[i]
                 p.at(CGPoint(x: x, y: y)) { shard in
                     var c = shard.context; c.rotate(by: .degrees([-24.0, -12, 3, 15, 27][i]))
                     let tint = i == 4 ? 2 : variation >= 3 ? 3 + variation % 3 : variation % 2
@@ -5026,12 +5581,16 @@ private struct CrystalCavePainter {
 private struct CityWorldPainter {
     let context: GraphicsContext
     var scenery: WorldSceneryLayout? = nil
+    var depth: WorldSceneryDepth? = nil
+    var depthOffset: CGFloat = 0
 
-    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: (CityWorldPainter) -> Void) {
+    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: @escaping (CityWorldPainter) -> Void) {
         let point = scenery?.position(point, radius: radius, rise: rise) ?? point
         var c = context; c.translateBy(x: point.x, y: point.y)
         c.scaleBy(x: mirror ? -size : size, y: size)
-        draw(.init(context: c))
+        if let depth {
+            depth.add(at: depthOffset + point.y) { draw(.init(context: c)) }
+        } else { draw(.init(context: c)) }
     }
     private func material(_ path: Path, colors: [UInt32]) {
         let r = path.boundingRect
@@ -5059,24 +5618,26 @@ private struct CityWorldPainter {
                                            center: point, startRadius: 0, endRadius: radius))
     }
 
-    func landscape(in size: CGSize, routeOffset: CGFloat) {
+    func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let w = size.width, h = size.height
         let scale = min(1.30, max(0.82, w / 390))
         context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
-            .init(color: Color(dinoHex: 0xB8E4F5), location: 0),
-            .init(color: Color(dinoHex: 0x8CD4EC), location: 0.035),
+            .init(color: Color(dinoHex: 0xACBEB4), location: 0),
+            .init(color: Color(dinoHex: 0xC5D1B9), location: 0.055),
             .init(color: Color(dinoHex: 0xE5EBCF), location: (routeOffset + 110) / h),
             .init(color: Color(dinoHex: 0xDFE5BF), location: 0.38),
             .init(color: Color(dinoHex: 0xD1DFBB), location: 0.70),
             .init(color: Color(dinoHex: 0xD4DDC4), location: 1)
         ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
         entrance(width: w, scale: scale)
+        CrystalCavePainter(context: context).exitClearing(width: w, boundaryY: 0)
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         scenery.drawBanks(in: c, worldID: 6)
-        let p = CityWorldPainter(context: c)
+        let p = CityWorldPainter(context: c, depth: depth, depthOffset: routeOffset)
         p.quays(along: scenery)
         CrystalCavePainter(context: context).approach(in: size, routeOffset: routeOffset, leavingCave: true)
+        CrystalCavePainter(context: context).exitWall(width: w)
 
         let crossings: [(right: Bool, y: CGFloat)] = [(false, 480), (true, 815), (false, 1165), (true, 1505)]
         p.bankDetails(along: scenery, crossings: crossings)
@@ -5670,13 +6231,17 @@ private struct CityWorldPainter {
 private struct DayNightForestPainter {
     let context: GraphicsContext
     var scenery: WorldSceneryLayout? = nil
+    var depth: WorldSceneryDepth? = nil
+    var depthOffset: CGFloat = 0
     var night: Double = 0
 
-    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: (DayNightForestPainter) -> Void) {
+    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: @escaping (DayNightForestPainter) -> Void) {
         let point = scenery?.position(point, radius: radius, rise: rise) ?? point
         var c = context; c.translateBy(x: point.x, y: point.y)
         c.scaleBy(x: mirror ? -size : size, y: size)
-        draw(.init(context: c, night: night))
+        if let depth {
+            depth.add(at: depthOffset + point.y) { draw(.init(context: c, night: night)) }
+        } else { draw(.init(context: c, night: night)) }
     }
     private func tone(_ day: UInt32, _ moonlight: UInt32) -> UInt32 {
         let amount = min(1, max(0, night))
@@ -5715,7 +6280,7 @@ private struct DayNightForestPainter {
                                            center: point, startRadius: 0, endRadius: radius))
     }
 
-    func landscape(in size: CGSize, routeOffset: CGFloat) {
+    func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let w = size.width, h = size.height
         let scale = min(1.30, max(0.82, w / 390))
         context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
@@ -5732,7 +6297,7 @@ private struct DayNightForestPainter {
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         scenery.drawBanks(in: c, worldID: 7)
-        let p = DayNightForestPainter(context: c, scenery: scenery)
+        let p = DayNightForestPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset)
         p.twilight(width: w, scale: scale)
         for side in 0..<2 {
             for i in 0..<13 {
@@ -5748,20 +6313,20 @@ private struct DayNightForestPainter {
             }
         }
         // Water, crossings and scattered plants sit behind the clock clearings.
-        DayNightForestPainter(context: c, scenery: scenery, night: p.darkness(at: 760)).cascade(at: CGPoint(x: -2, y: 760), size: scale)
-        DayNightForestPainter(context: c, scenery: scenery, night: p.darkness(at: 1125)).cascade(at: CGPoint(x: w + 2, y: 1125), size: scale, mirror: true)
-        DayNightForestPainter(context: c, scenery: scenery, night: p.darkness(at: 900)).bridge(at: CGPoint(x: 10 * scale, y: 900), size: scale * 0.86)
-        DayNightForestPainter(context: c, scenery: scenery, night: p.darkness(at: 1250)).bridge(at: CGPoint(x: w - 10 * scale, y: 1250), size: scale * 0.83)
+        DayNightForestPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset, night: p.darkness(at: 760)).cascade(at: CGPoint(x: -2, y: 760), size: scale)
+        DayNightForestPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset, night: p.darkness(at: 1125)).cascade(at: CGPoint(x: w + 2, y: 1125), size: scale, mirror: true)
+        DayNightForestPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset, night: p.darkness(at: 900)).bridge(at: CGPoint(x: 10 * scale, y: 900), size: scale * 0.86)
+        DayNightForestPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset, night: p.darkness(at: 1250)).bridge(at: CGPoint(x: w - 10 * scale, y: 1250), size: scale * 0.83)
         for index in 0..<9 {
             let onRight = index % 4 == 0 || index % 4 == 3
             let y = 185 + CGFloat(index) * 175
-            let forest = DayNightForestPainter(context: c, scenery: scenery, night: p.darkness(at: y))
+            let forest = DayNightForestPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset, night: p.darkness(at: y))
             // The last clock clearing sits beside the owl, with its whole display exposed.
             let sceneX = index == 8 ? w - 130 * scale : onRight ? w - 35 * scale : 35 * scale
             forest.scene(at: CGPoint(x: sceneX, y: index == 8 ? y - 15 : y), size: scale * 0.95, variation: index)
             forest.garden(at: CGPoint(x: onRight ? 4 * scale : w - 4 * scale, y: y + 88), size: scale, variation: index)
         }
-        let lunar = DayNightForestPainter(context: c, scenery: scenery, night: 1)
+        let lunar = DayNightForestPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset, night: 1)
         lunar.moon(at: CGPoint(x: w - 70 * scale, y: 1050), size: scale * 0.85)
         for i in 0..<28 {
             let side = i % 2 == 0
@@ -6070,12 +6635,16 @@ private struct DayNightForestPainter {
 private struct TimeMachinePainter {
     let context: GraphicsContext
     var scenery: WorldSceneryLayout? = nil
+    var depth: WorldSceneryDepth? = nil
+    var depthOffset: CGFloat = 0
 
-    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: (TimeMachinePainter) -> Void) {
+    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: @escaping (TimeMachinePainter) -> Void) {
         let point = scenery?.position(point, radius: radius, rise: rise) ?? point
         var c = context; c.translateBy(x: point.x, y: point.y)
         c.scaleBy(x: mirror ? -size : size, y: size)
-        draw(.init(context: c))
+        if let depth {
+            depth.add(at: depthOffset + point.y) { draw(.init(context: c)) }
+        } else { draw(.init(context: c)) }
     }
     private func material(_ path: Path, _ colors: [UInt32]) {
         let r = path.boundingRect
@@ -6109,7 +6678,7 @@ private struct TimeMachinePainter {
         line([.init(x: point.x - radius * 0.4, y: point.y), .init(x: point.x + radius * 0.4, y: point.y)], 0x8A794E, 0.6)
     }
 
-    func landscape(in size: CGSize, routeOffset: CGFloat) {
+    func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let w = size.width, h = size.height
         let scale = min(1.30, max(0.82, w / 390))
         context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
@@ -6125,7 +6694,7 @@ private struct TimeMachinePainter {
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         scenery.drawBanks(in: c, worldID: 8)
-        let p = TimeMachinePainter(context: c, scenery: scenery)
+        let p = TimeMachinePainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset)
         // Glass channels and masonry sit behind the individual workshop terraces.
         for side in 0..<2 {
             for i in 0..<11 {
@@ -6468,12 +7037,16 @@ private struct TimeMachinePainter {
 private struct PirateCoastPainter {
     let context: GraphicsContext
     var scenery: WorldSceneryLayout? = nil
+    var depth: WorldSceneryDepth? = nil
+    var depthOffset: CGFloat = 0
 
-    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: (PirateCoastPainter) -> Void) {
+    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: @escaping (PirateCoastPainter) -> Void) {
         let point = scenery?.position(point, radius: radius, rise: rise) ?? point
         var c = context; c.translateBy(x: point.x, y: point.y)
         c.scaleBy(x: mirror ? -size : size, y: size)
-        draw(.init(context: c))
+        if let depth {
+            depth.add(at: depthOffset + point.y) { draw(.init(context: c)) }
+        } else { draw(.init(context: c)) }
     }
     private func material(_ path: Path, _ colors: [UInt32]) {
         let r = path.boundingRect
@@ -6502,7 +7075,7 @@ private struct PirateCoastPainter {
                                            center: point, startRadius: 0, endRadius: radius))
     }
 
-    func landscape(in size: CGSize, routeOffset: CGFloat) {
+    func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let w = size.width, h = size.height, scale = min(1.30, max(0.82, size.width / 390))
         context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
             .init(color: Color(dinoHex: 0xF5D698), location: 0),
@@ -6517,7 +7090,7 @@ private struct PirateCoastPainter {
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         scenery.drawBanks(in: c, worldID: 9)
-        let coast = PirateCoastPainter(context: c, scenery: scenery)
+        let coast = PirateCoastPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset)
         for side in 0..<2 {
             for i in 0..<12 {
                 let y = 30 + CGFloat(i) * 144
@@ -6926,12 +7499,16 @@ private struct PirateCoastPainter {
 private struct CastleWorldPainter {
     let context: GraphicsContext
     var scenery: WorldSceneryLayout? = nil
+    var depth: WorldSceneryDepth? = nil
+    var depthOffset: CGFloat = 0
 
-    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: (CastleWorldPainter) -> Void) {
+    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: @escaping (CastleWorldPainter) -> Void) {
         let point = scenery?.position(point, radius: radius, rise: rise) ?? point
         var c = context; c.translateBy(x: point.x, y: point.y)
         c.scaleBy(x: mirror ? -size : size, y: size)
-        draw(.init(context: c))
+        if let depth {
+            depth.add(at: depthOffset + point.y) { draw(.init(context: c)) }
+        } else { draw(.init(context: c)) }
     }
     private func material(_ path: Path, _ colors: [UInt32]) {
         let r = path.boundingRect
@@ -6960,7 +7537,7 @@ private struct CastleWorldPainter {
                                            center: point, startRadius: 0, endRadius: radius))
     }
 
-    func landscape(in size: CGSize, routeOffset: CGFloat) {
+    func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let w = size.width, h = size.height, scale = min(1.30, max(0.82, size.width / 390))
         context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
             .init(color: Color(dinoHex: 0xE8DFCC), location: 0),
@@ -6975,7 +7552,7 @@ private struct CastleWorldPainter {
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         scenery.drawBanks(in: c, worldID: 10)
-        let p = CastleWorldPainter(context: c, scenery: scenery)
+        let p = CastleWorldPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset)
         for side in 0..<2 {
             for i in 0..<12 {
                 let y = 35 + CGFloat(i) * 145
@@ -7398,105 +7975,123 @@ struct ThemedWorldLandscape: View, Equatable {
 
     var body: some View {
         Canvas { context, size in
+            let depth = WorldSceneryDepth()
             if world.id == 2 {
-                SleepValleyPainter(context: context).landscape(in: size, routeOffset: routeOffset)
+                SleepValleyPainter(context: context).landscape(in: size, routeOffset: routeOffset, depth: depth)
                 var routeContext = context
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
                 let right = size.width
                 let point = CGPoint(x: right - 79 * scale, y: 1675)
-                boss.bossClearing(worldID: 2, at: point, size: scale)
-                boss.boss(worldID: 2, at: point, size: scale * 0.88)
+                depth.add(at: routeOffset + point.y) {
+                    boss.bossClearing(worldID: 2, at: point, size: scale)
+                    boss.boss(worldID: 2, at: point, size: scale * 0.88)
+                }
+                depth.draw()
                 return
             }
             if world.id == 3 {
-                VolcanoWorldPainter(context: context).landscape(in: size, routeOffset: routeOffset)
+                VolcanoWorldPainter(context: context).landscape(in: size, routeOffset: routeOffset, depth: depth)
                 var routeContext = context
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
                 let right = size.width
                 let point = CGPoint(x: right - 79 * scale, y: 1675)
-                boss.bossClearing(worldID: 3, at: point, size: scale)
-                boss.boss(worldID: 3, at: point, size: scale * 0.88)
+                depth.add(at: routeOffset + point.y) {
+                    boss.bossClearing(worldID: 3, at: point, size: scale)
+                    boss.boss(worldID: 3, at: point, size: scale * 0.88)
+                }
+                depth.draw()
                 return
             }
             if world.id == 4 {
-                VillageWorldPainter(context: context).landscape(in: size, routeOffset: routeOffset)
+                VillageWorldPainter(context: context).landscape(in: size, routeOffset: routeOffset, depth: depth)
                 var routeContext = context
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
                 let right = size.width
                 let point = CGPoint(x: right - 79 * scale, y: 1675)
-                boss.bossClearing(worldID: 4, at: point, size: scale)
-                boss.boss(worldID: 4, at: point, size: scale * 0.88)
+                depth.add(at: routeOffset + point.y) {
+                    boss.bossClearing(worldID: 4, at: point, size: scale)
+                    boss.boss(worldID: 4, at: point, size: scale * 0.88)
+                }
+                depth.draw()
                 return
             }
             if world.id == 5 {
                 CrystalCavePainter(context: context).landscape(in: size, routeOffset: routeOffset)
-                var routeContext = context
-                routeContext.translateBy(x: 0, y: routeOffset)
-                let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
-                let scale = min(1.30, max(0.82, size.width / 390))
-                let point = CGPoint(x: size.width - 79 * scale, y: 1675)
-                boss.bossClearing(worldID: 5, at: point, size: scale)
-                boss.boss(worldID: 5, at: point, size: scale * 0.88)
                 return
             }
             if world.id == 6 {
-                CityWorldPainter(context: context).landscape(in: size, routeOffset: routeOffset)
+                CityWorldPainter(context: context).landscape(in: size, routeOffset: routeOffset, depth: depth)
                 var routeContext = context
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
                 let point = CGPoint(x: size.width - 79 * scale, y: 1675)
-                boss.boss(worldID: 6, at: point, size: scale * 0.88)
+                depth.add(at: routeOffset + point.y) {
+                    boss.boss(worldID: 6, at: point, size: scale * 0.88)
+                }
+                depth.draw()
                 return
             }
             if world.id == 7 {
-                DayNightForestPainter(context: context).landscape(in: size, routeOffset: routeOffset)
+                DayNightForestPainter(context: context).landscape(in: size, routeOffset: routeOffset, depth: depth)
                 var routeContext = context
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
                 let point = CGPoint(x: size.width - 79 * scale, y: 1675)
-                boss.bossClearing(worldID: 7, at: point, size: scale)
-                boss.boss(worldID: 7, at: point, size: scale * 0.88)
+                depth.add(at: routeOffset + point.y) {
+                    boss.bossClearing(worldID: 7, at: point, size: scale)
+                    boss.boss(worldID: 7, at: point, size: scale * 0.88)
+                }
+                depth.draw()
                 return
             }
             if world.id == 8 {
-                TimeMachinePainter(context: context).landscape(in: size, routeOffset: routeOffset)
+                TimeMachinePainter(context: context).landscape(in: size, routeOffset: routeOffset, depth: depth)
                 var routeContext = context
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
                 let point = CGPoint(x: size.width - 79 * scale, y: 1675)
-                boss.bossClearing(worldID: 8, at: point, size: scale)
-                boss.boss(worldID: 8, at: point, size: scale * 0.88)
+                depth.add(at: routeOffset + point.y) {
+                    boss.bossClearing(worldID: 8, at: point, size: scale)
+                    boss.boss(worldID: 8, at: point, size: scale * 0.88)
+                }
+                depth.draw()
                 return
             }
             if world.id == 9 {
-                PirateCoastPainter(context: context).landscape(in: size, routeOffset: routeOffset)
+                PirateCoastPainter(context: context).landscape(in: size, routeOffset: routeOffset, depth: depth)
                 var routeContext = context
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
                 let point = CGPoint(x: size.width - 79 * scale, y: 1675)
-                boss.bossClearing(worldID: 9, at: point, size: scale)
-                boss.boss(worldID: 9, at: point, size: scale * 0.88)
+                depth.add(at: routeOffset + point.y) {
+                    boss.bossClearing(worldID: 9, at: point, size: scale)
+                    boss.boss(worldID: 9, at: point, size: scale * 0.88)
+                }
+                depth.draw()
                 return
             }
             if world.id == 10 {
-                CastleWorldPainter(context: context).landscape(in: size, routeOffset: routeOffset)
+                CastleWorldPainter(context: context).landscape(in: size, routeOffset: routeOffset, depth: depth)
                 var routeContext = context
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
                 let point = CGPoint(x: size.width - 79 * scale, y: 1675)
-                boss.bossClearing(worldID: 10, at: point, size: scale)
-                boss.boss(worldID: 10, at: point, size: scale * 0.88)
+                depth.add(at: routeOffset + point.y) {
+                    boss.bossClearing(worldID: 10, at: point, size: scale)
+                    boss.boss(worldID: 10, at: point, size: scale * 0.88)
+                }
+                depth.draw()
                 return
             }
             let colors = WorldThemeColors(world)

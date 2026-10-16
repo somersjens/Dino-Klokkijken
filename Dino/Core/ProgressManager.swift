@@ -6,9 +6,13 @@ final class DinoProgressStore {
     static let legacyNameKey = "profile.playerName"
     static let resetKey = "dino.profile.reset.v1"
     static let practiceKey = "dino.practice.records.v1"
+    static let levelSelectedKey = "dino.map.levelSelected.v1"
     private let defaults: KeyValueStore
 
     init(defaults: KeyValueStore = UserDefaults.standard) { self.defaults = defaults }
+
+    var hasSelectedLevel: Bool { defaults.object(forKey: Self.levelSelectedKey) as? Bool ?? false }
+    func markLevelSelected() { defaults.set(true, forKey: Self.levelSelectedKey) }
 
     func load() -> PlayerProfile {
         if let data = defaults.object(forKey: Self.profileKey) as? Data,

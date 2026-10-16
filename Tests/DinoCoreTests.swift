@@ -36,6 +36,7 @@ struct DinoCoreTests {
         testDinoSpriteColors()
         testPaleBandanaLettering()
         testPlayerModel()
+        testMapLevelGuidance()
         testLiveClockChanges()
         testUnchangedInputsDoNotPublish()
         testSettingsAndFeedback()
@@ -59,11 +60,10 @@ struct DinoCoreTests {
                        "a foreground shrub hides the far end of every log")
             }
             expect(scene === layout.scene(), "unchanged viewport reuses resolved jungle coordinates")
-            expect(scene.ground.contains { $0.item.kind == .mushrooms } &&
-                   scene.ground.allSatisfy { !$0.item.kind.occludesWildlife },
-                   "mushrooms and logs are behind wildlife and the canopy")
-            expect(scene.canopyTiles.flatMap(\.placements).allSatisfy { $0.item.kind.occludesWildlife },
-                   "static foreground tiles cover snakes with bushes and trunks")
+            expect(scene.sceneryTiles.flatMap(\.placements).allSatisfy { !$0.item.kind.animated },
+                   "static scenery shares a depth layer while animation stays independent")
+            expect(scene.sceneryTiles.contains( where: { $0.includesBoss }),
+                   "the jungle boss shares the scenery tiles instead of sitting behind every tree")
             let trailWidth = min(width, 600) - 36
             for (index, fraction) in ([CGFloat(0.5)] + JungleMapLayout.chapterPositions).enumerated() {
                 let y = JungleMapLayout.firstNodeY + CGFloat(index) * JungleMapLayout.levelSpacing
@@ -92,9 +92,9 @@ struct DinoCoreTests {
             expect(layout.waterfall.heightScale == 0.78 && layout.waterfall.mirrored &&
                    layout.waterfall.preferred.x < width / 2 - min(width, 720) * 0.4,
                    "level three waterfall is shorter, at the bank and fed from the left")
-            for placement in scene.placements where placement.item.kind.occludesWildlife && placement.bounds.intersects(CGRect(x: 0, y: -512, width: width, height: 2560)) {
-                expect(scene.canopyTiles.contains { $0.placements.contains { $0.id == placement.id } },
-                       "visible foliage is retained in the static tiles")
+            for placement in scene.placements where !placement.item.kind.animated && placement.bounds.intersects(CGRect(x: 0, y: -512, width: width, height: 2560)) {
+                expect(scene.sceneryTiles.contains { $0.placements.contains { $0.id == placement.id } },
+                       "every static object is retained in the shared depth tiles")
             }
             expect(layout.items.filter(\.foreground).count == 2,
                    "the two entrance trees can occlude the upper waterfall pools")
@@ -170,26 +170,52 @@ struct DinoCoreTests {
         example.submit(example.question.expectedAnswer)
         expect(restarted.practiceRecords == beforeHelp, "interactive examples cannot set records or increase lifetime counters")
 
-        let ascending = DinoPracticeConfiguration(time: .quarter, order: .ascending)
-        let mixedSession = DinoSession(level: ascending.level, player: restarted, practice: ascending)
-        for _ in DinoPracticeQuestion.allCases {
-            expect(mixedSession.practiceQuestionNumber == 1, "ascending tracks the current question type independently")
-            mixedSession.submit(mixedSession.question.expectedAnswer); mixedSession.advance()
-        }
-        expect(mixedSession.practiceQuestionType == .chooseAnalog && mixedSession.practiceStreak == 1 && mixedSession.practiceQuestionNumber == 2, "ascending restores the per-type streak and count on its next cycle")
-        mixedSession.submit(wrongAnswer(for: mixedSession.question)); mixedSession.showAnswer(); mixedSession.advance()
-        expect(mixedSession.practiceStreak == 1, "one type's wrong answer does not reset another type's streak")
-        let mixed = DinoPracticeConfiguration(time: .quarter, order: .mix)
-        let shuffled = DinoSession(level: mixed.level, player: restarted, practice: mixed)
-        let initialMixedType = shuffled.practiceQuestionType!
-        expect(shuffled.practiceStreak == restarted.practiceRecord(time: .quarter, question: initialMixedType).currentStreak,
-               "switching practice modes preserves the active per-type streak")
-        for _ in DinoPracticeQuestion.allCases {
-            let type = shuffled.practiceQuestionType!
-            let saved = restarted.practiceRecord(time: .quarter, question: type)
-            expect(shuffled.practiceQuestionNumber == saved.questionsAnswered + 1 && shuffled.practiceBestStreak == saved.bestStreak,
-                   "mix shares the same lifetime records as specific and ascending practice")
-            shuffled.submit(shuffled.question.expectedAnswer); shuffled.advance()
+        for order in [DinoPracticeOrder.ascending, .mix] {
+            let configuration = DinoPracticeConfiguration(time: .quarter, order: order)
+            let session = DinoSession(level: configuration.level, player: restarted, practice: configuration)
+            let otherOrder: DinoPracticeOrder = order == .ascending ? .mix : .ascending
+            let otherRecord = restarted.practiceRecord(time: .quarter, order: otherOrder)
+            expect(session.practiceProgress == .init(), "each mixed mode starts with its own record and counter")
+            let count = DinoPracticeQuestion.allCases.count
+            for index in 0..<count {
+                let type = session.practiceQuestionType!
+                let savedType = restarted.practiceRecord(time: .quarter, question: type)
+                let held = session.practiceProgress
+                session.submit(session.question.expectedAnswer)
+                session.submit(session.question.expectedAnswer)
+                expect(session.practiceProgress == held, "mixed-mode feedback holds the HUD counters together")
+                expect(restarted.practiceRecord(time: .quarter, order: order) ==
+                       .init(bestStreak: index + 1, questionsAnswered: index + 1, currentStreak: index + 1),
+                       "mixed modes persist one continuous record across question types, without counting duplicates")
+                expect(restarted.practiceRecord(time: .quarter, question: type).questionsAnswered == savedType.questionsAnswered + 1 &&
+                       restarted.practiceRecord(time: .quarter, question: type).currentStreak == savedType.currentStreak + 1,
+                       "mixed modes continue crediting the individual question type")
+                session.advance()
+                expect(session.practiceProgress == .init(streak: index + 1, bestStreak: index + 1, questionNumber: index + 2),
+                       "changing question types advances the mixed-mode streak, trophy and question counter together")
+            }
+            let reloaded = DinoPlayer(store: store)
+            let paused = DinoSession(level: configuration.level, player: reloaded, practice: configuration)
+            expect(paused.practiceProgress == session.practiceProgress,
+                   "mixed-mode streaks, trophies and counters survive pause and app relaunch")
+            let beforeExample = restarted.practiceRecords
+            let example = DinoSession(level: configuration.level, player: restarted, practice: configuration, example: session.question)
+            example.submit(example.question.expectedAnswer)
+            expect(restarted.practiceRecords == beforeExample, "examples never update mixed-mode records")
+            session.submit(wrongAnswer(for: session.question))
+            let afterWrong = restarted.practiceRecords
+            session.submit(session.question.expectedAnswer)
+            expect(restarted.practiceRecords == afterWrong && session.practiceStreak == count,
+                   "a retry cannot restore a mixed-mode streak or change held feedback counters")
+            session.showAnswer(); session.advance()
+            expect(session.practiceProgress == .init(streak: 0, bestStreak: count, questionNumber: count + 2),
+                   "a wrong answer breaks the mixed-mode streak across question types but retains its trophy")
+            session.submit(session.question.expectedAnswer); session.advance()
+            expect(session.practiceProgress == .init(streak: 1, bestStreak: count, questionNumber: count + 3),
+                   "mixed-mode streaks restart after an error while retaining their record")
+            expect(restarted.practiceRecord(time: .quarter, order: otherOrder) == otherRecord &&
+                   restarted.practiceRecord(time: .whole, order: order) == .init(),
+                   "ascending, mix and different time families have independent mode records")
         }
 
         for (value, digits, thousands) in [(999, "999", nil), (1_000, "0", "1k"), (1_999, "999", "1k"), (999_999, "999", "999k"), (1_000_000, "0", nil)] {
@@ -807,7 +833,7 @@ struct DinoCoreTests {
         expect(session.result?.correct == 9 && player.profile.record(10).bestCorrect == 9, "completed levels preserve the lost point after a correct retry")
 
         let config = DinoPracticeConfiguration(time: .whole, order: .specific(.dayPart))
-        for streak in 1...3 { player.recordPracticeAnswer(time: .whole, question: .dayPart, streak: streak) }
+        for _ in 1...3 { player.recordPracticeAnswer(configuration: config, question: .dayPart, correct: true) }
         let practice = DinoSession(level: config.level, player: player, practice: config)
         practice.submit(practice.question.responses.first { $0 != practice.question.expectedAnswer }!)
         let savedAfterWrong = player.practiceRecords
@@ -1044,6 +1070,46 @@ struct DinoCoreTests {
         preserved = expected; preserved.display = .navy; preserved.customDisplayHex = nil
         preserved.digitalInkHex = 0xFFFFFF; preserved.numerals = .rounded
         expect(reset == preserved, "restoring digital style resets font and both colors while preserving analog style")
+    }
+
+    static func testMapLevelGuidance() {
+        let memory = InMemoryKeyValueStore()
+        let store = DinoProgressStore(defaults: memory)
+        let player = DinoPlayer(store: store)
+        expect(player.needsFirstLevelHint && player.profile.nextAdventureLevel == 1, "a fresh installation guides level one")
+        player.completeOnboarding(theme: .standard)
+        expect(player.needsFirstLevelHint, "finishing onboarding keeps the first-level pointer")
+        expect(DinoPlayer(store: store).needsFirstLevelHint, "relaunch before selecting a level preserves the pointer")
+        player.markLevelSelected()
+        expect(!player.needsFirstLevelHint && player.profile.levels.isEmpty, "opening a level dismisses onboarding without requiring an attempt")
+        expect(!DinoPlayer(store: store).needsFirstLevelHint, "an opened then closed level stays acknowledged after relaunch")
+        player.resetProgress()
+        expect(!player.needsFirstLevelHint, "resetting scores does not replay the installation hint")
+        player.resetAllData()
+        expect(player.needsFirstLevelHint && DinoPlayer(store: store).needsFirstLevelHint, "erasing all data restores first-install guidance")
+
+        var legacy = PlayerProfile()
+        legacy.recordCompletedAttempt(levelID: 1, correct: 0)
+        store.save(legacy)
+        let migrated = DinoPlayer(store: store)
+        expect(!migrated.needsFirstLevelHint, "an existing failed attempt also counts as a previously selected level")
+        migrated.resetProgress()
+        expect(!DinoPlayer(store: store).needsFirstLevelHint, "migration remembers existing players through a later reset")
+
+        var route = PlayerProfile()
+        route.recordCompletedAttempt(levelID: 1, correct: 2)
+        expect(route.nextAdventureLevel == 1, "a failed level remains the next playable step")
+        for level in DinoLevelCatalog.levels {
+            expect(route.nextAdventureLevel == level.id, "guidance targets each of the hundred playable levels")
+            route.recordCompletedAttempt(levelID: level.id, correct: level.questionCount)
+        }
+        expect(route.adventureComplete && route.nextAdventureLevel == nil, "finishing the adventure never points to level 101")
+        var shortcut = PlayerProfile()
+        for world in DinoWorldCatalog.worlds {
+            shortcut.recordCompletedAttempt(levelID: world.bossLevel, correct: 10)
+            expect(shortcut.nextAdventureLevel == (world.id == 10 ? nil : world.bossLevel + 1), "boss shortcuts guide the next world's entrance")
+        }
+        expect(shortcut.adventureComplete, "all perfect boss shortcuts celebrate adventure completion")
     }
 
     static func testPlayerModel() {

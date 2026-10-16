@@ -6,6 +6,8 @@
 	"archiveVersion" = "1";
 	"validationLevel" = "1";
 	"objects" = {
+        "DA162026BD01000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/StarsOverview.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+        "DB162026BD01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA162026BD01000000000001"; };
         "DA152026BD03000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/JungleMapLayout.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
         "DB152026BD03000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA152026BD03000000000001"; };
         "DA132026BD01000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/WorldBossArt.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
@@ -244,6 +246,7 @@
 				"DB121026AC01000000000001",
 				"DB121026AC02000000000002",
 				"DB121026AC01000000000002",
+				"DB162026BD01000000000001",
 				"DB121026AB13000000000001",
 				"DB121026AB12000000000003",
 				"DB121026AB12000000000002",
@@ -887,6 +890,7 @@
 			"children" = (
 				"DA121026AC02000000000002",
 				"DA121026AC01000000000002",
+				"DA162026BD01000000000001",
 				"DA121026AB12000000000003",
 				"DA121026AB12000000000002",
                 "DA1A20261011000000000001",

@@ -37,7 +37,7 @@
         }
       }
     },
-    "→" : {
+    "↓" : {
 
     },
     "+%@" : {
@@ -4174,36 +4174,19 @@
         }
       }
     },
-    "dino.practice.ascendingDescription" : {
+    "dino.practice.backToLevels" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All question types from easy to hard, then repeat."
+            "value" : "Back to the level overview"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alle vraagtypen van makkelijk naar moeilijk, daarna opnieuw."
-          }
-        }
-      }
-    },
-    "dino.practice.ascendingInfo" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "About increasing difficulty"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uitleg over oplopend oefenen"
+            "value" : "Terug naar het leveloverzicht"
           }
         }
       }
@@ -4758,13 +4741,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Question type"
+            "value" : "Practice question type"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Type vraag"
+            "value" : "Type vraag oefenen"
           }
         }
       }
@@ -5955,6 +5938,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld sterren"
+          }
+        }
+      }
+    },
+    "dino.stars.total" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Totaal"
           }
         }
       }

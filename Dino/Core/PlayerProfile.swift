@@ -56,6 +56,10 @@ struct PlayerProfile: Codable, Equatable, Sendable {
     var dinoLevel: Int {
         DinoLevelCatalog.levels.last { $0.isBoss ? worldComplete($0.worldID) : record($0.id).stars >= 1 }?.id ?? 0
     }
+    var nextAdventureLevel: Int? {
+        guard !adventureComplete, let next = DinoLevelCatalog.level(dinoLevel + 1), isUnlocked(next.id) else { return nil }
+        return next.id
+    }
     var unlockedLevels: [Int] { DinoLevelCatalog.levels.map(\.id).filter(isUnlocked) }
     func record(_ id: Int) -> LevelRecord { levels[String(id)] ?? LevelRecord() }
 

@@ -127,3 +127,16 @@ Reeks, record en Vraag worden nu samen bijgewerkt wanneer de volgende vraag vers
 - [Beide tellers blijven staan tijdens feedback](Screenshots/PracticeHUDCounters/feedback-iphone.png)
 - [Beide tellers veranderen bij de volgende vraag](Screenshots/PracticeHUDCounters/next-question-iphone.png)
 - [Controlelogs](PracticeHUDCounterTestLogs)
+
+## Trofeeën voor Oplopend en Mix — 16 oktober 2026
+
+**Oplopend** heeft geen informatieknop of uitlegpop-up meer. De bijbehorende toestand en vertalingen zijn verwijderd. Oplopend en Mix tonen nu dezelfde trofee met de hoogste reeks als de losse vraagtypen.
+
+Beide modi bewaren per tijdsoort een eigen actieve reeks, hoogste reeks en vragentotaal. Deze tellers lopen door wanneer het vraagtype wisselt en blijven behouden bij pauzeren en herstarten. Een fout antwoord breekt de reeks van de gekozen modus; de trofee blijft staan. Antwoorden blijven daarnaast meetellen voor het afzonderlijke vraagtype, zoals voorheen. Voorbeelden en herkansingen na een fout tellen niet extra mee. Tijdens feedback blijven de HUD-tellers samen staan tot de volgende vraag.
+
+Bestaande records per vraagtype blijven behouden. De nieuwe modusrecords beginnen op nul, omdat eerdere opslag geen afzonderlijke reeksen voor Oplopend en Mix bevatte. Een voortgangsreset wist ook deze modusrecords.
+
+`Tools/test-dino.sh` slaagt met **557.818 controles**, inclusief beide modusrecords, vraagtypewissels, fouten, herkansingen, dubbele antwoorden, voorbeelden, opslag/herstart en reset. `testPracticeAscendingAndMixHavePersistentTrophies` slaagt op iPhone 18 Pro en iPad Air 13-inch (M4), beide met iOS 27: beide trofeeën stijgen naar 2, hervatten met reeks 2 en behouden hun waarde na herstarten. De bestaande `testPracticeHUDRecordsAndPersistentCounter` slaagt eveneens op iPhone. `testPracticeThousandCounterWithoutAscendingPopup` slaagt op een aparte iPhone 18 Pro-simulator: geen informatieknop of pop-up, en vraag 999 gaat correct over naar 0 met 1k. De screenshots zijn visueel gecontroleerd. De Debug-build en `git diff --check` slagen.
+
+- [Trofeeën op iPhone](Screenshots/PracticeModeRecords/trophies-iphone.png)
+- [Trofeeën op iPad](Screenshots/PracticeModeRecords/trophies-ipad.png)
