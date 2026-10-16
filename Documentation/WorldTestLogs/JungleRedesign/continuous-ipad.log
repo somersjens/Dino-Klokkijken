@@ -1,0 +1,133 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -configuration Debug -destination "platform=iOS Simulator,id=CD5048F9-F217-4BE9-8A78-37A684D8710B" -derivedDataPath /tmp/dino-jungle-continuous -resultBundlePath /tmp/dino-jungle-continuous-ipad.xcresult test-without-building "-only-testing:DinoUITests/DinoUITests/testJungleContinuousScroll" CODE_SIGNING_ALLOWED=NO
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Writing result bundle at path:
+	/tmp/dino-jungle-continuous-ipad.xcresult
+
+2026-10-16 08:06:49.500777+0200 DinoUITests-Runner[94566:28326859] [Default] Running tests...
+2026-10-16 08:06:49.551664+0200 DinoUITests-Runner[94566:28326859] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-16 08:06:50.257.
+Test Suite 'DinoUITests.xctest' started at 2026-10-16 08:06:50.258.
+Test Suite 'DinoUITests' started at 2026-10-16 08:06:50.258.
+Test Case '-[DinoUITests.DinoUITests testJungleContinuousScroll]' started.
+    t =     0.00s Start Test at 2026-10-16 08:06:50.258
+    t =     0.09s Set Up
+    t =     0.09s     Setting device orientation to Portrait
+    t =     0.10s         Wait for com.apple.DocumentManager.DockFolderViewService to idle
+    t =     0.10s         Wait for com.apple.springboard to idle
+    t =     0.11s     Open Hakketjak.Dino-Klokkijken
+    t =     0.11s         Launch Hakketjak.Dino-Klokkijken
+2026-10-16 08:06:50.419 xcodebuild[94507:28326183] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-16 08:06:50.420 xcodebuild[94507:28326183] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[94566]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x105ed0310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x105e30398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.98s             Setting up automation session
+    t =     1.82s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.20s Terminate Hakketjak.Dino-Klokkijken:94605
+    t =     4.28s Open Hakketjak.Dino-Klokkijken
+    t =     4.28s     Launch Hakketjak.Dino-Klokkijken
+2026-10-16 08:06:54.538 xcodebuild[94507:28326183] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-16 08:06:54.538 xcodebuild[94507:28326183] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     4.49s         Setting up automation session
+    t =     5.08s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     7.51s Waiting 8.0s for "header.settings" Button to exist
+    t =     8.55s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =     8.55s         Checking existence of `"header.settings" Button`
+    t =     9.05s Checking existence of `"map.level.3" Button`
+    t =     9.69s Added attachment named 'jungle-continuous-scroll-start'
+    t =     9.70s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.54, 0.72] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.54, 0.48] with velocity of 250.00 pixels per second, and then hold for 0.1 seconds 
+    t =     9.70s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     9.70s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    10.09s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    10.44s         Wait for com.apple.springboard to idle
+    t =    10.46s     Synthesize event
+    t =    10.46s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    10.79s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    11.19s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    11.52s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    11.87s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.91s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    13.91s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.54, 0.48] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.54, 0.72] with velocity of 250.00 pixels per second, and then hold for 0.1 seconds 
+    t =    13.91s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    13.91s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.27s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    14.63s         Wait for com.apple.springboard to idle
+    t =    14.65s     Synthesize event
+    t =    14.65s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.99s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    15.34s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    15.67s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    16.02s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    17.94s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    17.94s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.54, 0.72] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.54, 0.48] with velocity of 250.00 pixels per second, and then hold for 0.1 seconds 
+    t =    17.94s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    17.94s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.28s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    18.63s         Wait for com.apple.springboard to idle
+    t =    18.64s     Synthesize event
+    t =    18.65s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.98s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.33s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.66s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    20.00s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    21.92s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.92s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.54, 0.48] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.54, 0.72] with velocity of 250.00 pixels per second, and then hold for 0.1 seconds 
+    t =    21.92s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.92s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    22.28s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    22.64s         Wait for com.apple.springboard to idle
+    t =    22.65s     Synthesize event
+    t =    22.66s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.00s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.37s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.71s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    24.06s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    25.99s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    25.99s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.54, 0.72] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.54, 0.48] with velocity of 250.00 pixels per second, and then hold for 0.1 seconds 
+    t =    25.99s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    25.99s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    26.34s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    26.70s         Wait for com.apple.springboard to idle
+    t =    26.71s     Synthesize event
+    t =    26.73s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    27.07s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    27.41s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    27.75s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    28.09s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    29.99s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    30.00s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.54, 0.48] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.54, 0.72] with velocity of 250.00 pixels per second, and then hold for 0.1 seconds 
+    t =    30.00s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    30.00s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.34s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    30.69s         Wait for com.apple.springboard to idle
+    t =    30.71s     Synthesize event
+    t =    30.71s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    31.06s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    31.40s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    31.74s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    32.08s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    34.01s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    34.01s Find the "header.settings" Button
+    t =    34.49s Find the "header.level" Any
+    t =    35.12s Added attachment named 'jungle-continuous-scroll-return'
+    t =    35.12s Tear Down
+Test Case '-[DinoUITests.DinoUITests testJungleContinuousScroll]' passed (35.515 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-16 08:07:25.773.
+	 Executed 1 test, with 0 failures (0 unexpected) in 35.515 (35.516) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-16 08:07:25.773.
+	 Executed 1 test, with 0 failures (0 unexpected) in 35.515 (35.516) seconds
+Test Suite 'Selected tests' passed at 2026-10-16 08:07:25.774.
+	 Executed 1 test, with 0 failures (0 unexpected) in 35.515 (35.516) seconds
+2026-10-16 08:07:26.080 xcodebuild[94507:28326183] [MT] IDETestOperationsObserverDebug: 42.422 elapsed -- Testing started completed.
+2026-10-16 08:07:26.080 xcodebuild[94507:28326183] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-16 08:07:26.080 xcodebuild[94507:28326183] [MT] IDETestOperationsObserverDebug: 42.422 sec, +42.422 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-jungle-continuous-ipad.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

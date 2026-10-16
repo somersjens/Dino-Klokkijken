@@ -1,0 +1,12 @@
+{
+  "map_window_seconds": [
+    15,
+    40.5
+  ],
+  "decoded_map_frames": 634,
+  "maximum_adjacent_luma_increase": 0.00222525579196331,
+  "maximum_adjacent_luma_decrease": -0.002731090529826452,
+  "minimum_green_fraction": 0.8445390070921985,
+  "maximum_white_fraction": 0.0022695035460992908,
+  "note": "Sampled lower-map brightness supports visual review; this is not an FPS or universal flash detector."
+}
