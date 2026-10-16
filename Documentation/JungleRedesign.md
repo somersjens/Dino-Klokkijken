@@ -2,6 +2,8 @@
 
 15 oktober 2026.
 
+**Herstel op 16 oktober:** de scrollpauze is verwijderd; animaties blijven tijdens scrollen bewegen en eenmaal voorbereide begroeiing blijft staan. Ook de stamoriëntatie en bandanaletters zijn aangepast. De definitieve werking en controles staan in [JungleContinuityFix.md](JungleContinuityFix.md). De eerdere scrollmetingen hieronder horen bij de variant van 15 oktober, inclusief de inmiddels verwijderde scrollpauze.
+
 De eerste bomen staan 135–185 punten hoger dan voor deze herindeling. Hun kronen zijn van het pad af gedraaid en vormen een scherp groen kader naast Dino. De voorste begroeiing overlapt de onderkant van de bovenste watervallen. De open route blijft zichtbaar; er is geen terugkeer van de doorschijnende struikenband.
 
 De waterval langs de route staat op de linkeroever bij level 3, verder naar de rand en 22% lager. Een gespiegelde bovenloop komt zichtbaar van links en stroomt naar de lip. Basisillustratie en stromend water delen dezelfde positie, spiegeling en hoogtefactor. De overige bomen, palmen en lage begroeiing vormen losse groepen bij de bochten en de bosrand. Nieuwe details zijn brede bladplanten, bloemen, mosrotsen, paddenstoelen en vier gevallen boomstammen met schorslijnen, houtringen en jonge bladeren. Beide uiteinden van de gevallen stammen hebben een afgeronde doorsnede met houtringen; de schorslijnen blijven binnen de stam.

@@ -20,6 +20,10 @@ struct ClockCustomizer: View {
     var onNavigate: ((Int) -> Void)? = nil
     private var compact: Bool { verticalSizeClass == .compact }
     private var inkSwatches: [(name: String, hex: UInt32)] { ClockInk.allCases.map { ($0.rawValue, $0.hex) } }
+    private let digitalInkSwatches: [(name: String, hex: UInt32)] = [
+        ("navy", 0x193B53), ("orange", 0xED832B), ("green", 0x299A49),
+        ("red", 0xD83D3A), ("white", 0xFFFFFF)
+    ]
     private var faceSwatches: [(name: String, hex: UInt32)] { ClockFace.allCases.map { ($0.rawValue, $0.hex) } }
     private var displaySwatches: [(name: String, hex: UInt32)] { DigitalDisplay.allCases.map { ($0.rawValue, $0.hex) } }
 
@@ -42,14 +46,12 @@ struct ClockCustomizer: View {
                 layout {
                     Group {
                         if page == .analog { analogPreview } else { digitalPreview }
-                    }.padding(.vertical, compact ? 4 : 12)
+                    }.padding(.vertical, CustomizationLayout.previewPadding)
                         .frame(maxWidth: compact ? (page == .analog ? 140 : 185) : .infinity)
                     ScrollView {
                         Group {
                             if page == .analog { analogOptions } else { digitalOptions }
-                        }.dinoCard(padding: 16)
-                            .padding(.horizontal, 16).padding(.vertical, 8)
-                            .frame(maxWidth: 520).frame(maxWidth: .infinity)
+                        }.modifier(CustomizationOptionsCard())
                     }.clipped().id(page == .analog ? "analog" : "digital")
                         .accessibilityIdentifier(page == .analog ? "theme.options.analog" : "theme.options.digital")
                 }.frame(maxWidth: compact ? 760 : .infinity).frame(maxWidth: .infinity)
@@ -81,56 +83,53 @@ struct ClockCustomizer: View {
     }
 
     private var analogOptions: some View {
-        VStack(spacing: 10) {
-            analogNumeralChoices
-            Divider()
-            analogShapeChoices
-            Divider()
-            colorChoices(title: "dino.hourHand", color: analogColor(\.customHourHex, preset: \.hourInk), values: inkSwatches)
-            Divider()
-            colorChoices(title: "dino.minuteHand", color: analogColor(\.customMinuteHex, preset: \.minuteInk), values: inkSwatches)
-            Divider()
-            colorChoices(title: "dino.face", color: faceColor, values: faceSwatches)
-            Divider()
-            colorChoices(title: "dino.rim", color: analogColor(\.customRimHex, preset: \.rimInk), values: inkSwatches)
-            Divider()
-            // Re-enable alongside ClockTheme.applyingFixedStyles() if hand styles return.
-            // styleChoice(title: "dino.hands", selection: $theme.hands, values: ClockHandStyle.allCases,
-            //             keyPrefix: "dino.hands.", identifier: "theme.hands")
+        VStack(spacing: CustomizationLayout.restoreSpacing) {
+            VStack(spacing: CustomizationLayout.sectionSpacing) {
+                analogNumeralChoices
+                analogShapeChoices.padding(.bottom, CustomizationLayout.swatchInset)
+                colorChoices(title: "dino.hourHand", color: analogColor(\.customHourHex, preset: \.hourInk), values: inkSwatches)
+                colorChoices(title: "dino.minuteHand", color: analogColor(\.customMinuteHex, preset: \.minuteInk), values: inkSwatches)
+                colorChoices(title: "dino.face", color: faceColor, values: faceSwatches)
+                colorChoices(title: "dino.rim", color: analogColor(\.customRimHex, preset: \.rimInk), values: inkSwatches)
+                // Re-enable alongside ClockTheme.applyingFixedStyles() if hand styles return.
+                // styleChoice(title: "dino.hands", selection: $theme.hands, values: ClockHandStyle.allCases,
+                //             keyPrefix: "dino.hands.", identifier: "theme.hands")
+            }
             ClockRestoreStyleButton(theme: $theme, analog: true)
         }
     }
 
     private var digitalOptions: some View {
-        VStack(spacing: 16) {
-            colorChoices(title: "dino.digitColor", color: $theme.digitalInkHex, values: displaySwatches)
-            Divider()
-            colorChoices(title: "dino.display", color: displayColor, values: displaySwatches)
-            Divider()
-            Text("dino.numerals").modifier(CustomizationText()).multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
-            VStack(spacing: 10) {
-                ForEach(0..<2, id: \.self) { row in
-                    HStack(spacing: 10) {
-                        ForEach(Array(DigitalNumerals.allCases.dropFirst(row * 2).prefix(2)), id: \.self) { style in
-                            fontChoice(style)
+        VStack(spacing: CustomizationLayout.restoreSpacing) {
+            VStack(spacing: CustomizationLayout.sectionSpacing) {
+                colorChoices(title: "dino.digitColor", color: $theme.digitalInkHex, values: digitalInkSwatches)
+                colorChoices(title: "dino.display", color: displayColor, values: displaySwatches)
+                CustomizationSection(title: "dino.numerals", identifier: "theme.numerals.label",
+                                     controlSpacing: CustomizationLayout.labelSpacing + CustomizationLayout.swatchInset) {
+                    VStack(spacing: CustomizationLayout.choiceSpacing) {
+                        ForEach(0..<2, id: \.self) { row in
+                            HStack(spacing: CustomizationLayout.choiceSpacing) {
+                                ForEach(Array(DigitalNumerals.allCases.dropFirst(row * 2).prefix(2)), id: \.self) { style in
+                                    fontChoice(style)
+                                }
+                            }
                         }
                     }
                 }
             }
-            Divider()
             ClockRestoreStyleButton(theme: $theme, analog: false)
         }
     }
 
     private func fontChoice(_ style: DigitalNumerals) -> some View {
         Button { theme.numerals = style } label: {
-            VStack(spacing: 6) {
+            GeometryReader { geometry in
                 TimelineView(.dinoMinute) { context in
-                    DigitalClock(time: ClockTime(date: context.date), theme: fontPreview(style), fontSize: 22)
+                    DigitalClock(time: ClockTime(date: context.date), theme: fontPreview(style),
+                                 fontSize: max(1, min(40, (geometry.size.width - 24) / 3)), showsDisplay: false)
+                        .fixedSize().frame(maxWidth: .infinity, maxHeight: .infinity)
                 }.accessibilityHidden(true)
-                Text(verbatim: L(key: "dino.numerals." + style.rawValue)).modifier(CustomizationText())
-            }.padding(.vertical, 10).frame(maxWidth: .infinity)
+            }.frame(height: 72).frame(maxWidth: .infinity)
                 .background(theme.numerals == style ? DinoStyle.green.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 14))
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(theme.numerals == style ? DinoStyle.deepGreen : DinoStyle.ink.opacity(0.15), lineWidth: theme.numerals == style ? 2 : 1))
         }.buttonStyle(.plain)
@@ -142,6 +141,7 @@ struct ClockCustomizer: View {
     private func fontPreview(_ style: DigitalNumerals) -> ClockTheme {
         var preview = ClockTheme.standard
         preview.numerals = style
+        preview.digitalInkHex = ClockInk.navy.hex
         return preview
     }
 
@@ -216,10 +216,7 @@ struct ClockCustomizer: View {
     }
 
     private func colorChoices(title: String, color: Binding<UInt32>, values: [(name: String, hex: UInt32)]) -> some View {
-        VStack(spacing: 4) {
-            Text(LocalizedStringKey(title)).modifier(CustomizationText())
-                .multilineTextAlignment(.center).frame(maxWidth: .infinity)
-                .accessibilityIdentifier("theme." + title + ".label")
+        CustomizationSection(title: title, identifier: "theme." + title + ".label") {
             HStack(spacing: 0) {
                 ForEach(values, id: \.name) { value in
                     Button { color.wrappedValue = value.hex } label: {
@@ -240,9 +237,10 @@ struct ClockCustomizer: View {
                 ColorPicker(selection: systemColor(color), supportsOpacity: false) { Text("dino.customColor") }
                     .labelsHidden().frame(maxWidth: .infinity, minHeight: 44)
                     .accessibilityLabel(Text(verbatim: L(key: title) + ", " + L("dino.customColor")))
+                    .accessibilityValue(Text(verbatim: String(format: "#%06X", color.wrappedValue)))
                     .accessibilityIdentifier("theme." + title + ".custom")
             }
-        }.frame(maxWidth: .infinity)
+        }
     }
 
     private func systemColor(_ hex: Binding<UInt32>) -> Binding<Color> {

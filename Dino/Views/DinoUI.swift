@@ -35,6 +35,42 @@ enum DinoStyle {
 }
 
 private struct CustomizationTypeScaleKey: EnvironmentKey { static let defaultValue: CGFloat = 1 }
+
+/// Shared rhythm for the Dino, analog and digital customization menus.
+enum CustomizationLayout {
+    static let sectionSpacing: CGFloat = 12
+    static let labelSpacing: CGFloat = 12
+    static let restoreSpacing: CGFloat = 4
+    // A 28-point swatch is centered in a 44-point tap area.
+    static let swatchInset: CGFloat = 8
+    static let choiceSpacing: CGFloat = 10
+    static let previewPadding: CGFloat = 8
+}
+
+/// Every option heading shares its typography and distance to the controls below.
+struct CustomizationSection<Content: View>: View {
+    let title: String
+    let identifier: String
+    var controlSpacing: CGFloat = CustomizationLayout.labelSpacing
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(spacing: controlSpacing) {
+            Text(LocalizedStringKey(title)).modifier(CustomizationText())
+                .frame(maxWidth: .infinity).accessibilityIdentifier(identifier)
+            content
+        }.frame(maxWidth: .infinity)
+    }
+}
+
+struct CustomizationOptionsCard: ViewModifier {
+    func body(content: Content) -> some View {
+        content.dinoCard(padding: 16)
+            .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 16)
+            .frame(maxWidth: 520).frame(maxWidth: .infinity)
+    }
+}
+
 extension EnvironmentValues {
     var customizationTypeScale: CGFloat {
         get { self[CustomizationTypeScaleKey.self] }
@@ -66,7 +102,6 @@ struct CustomizationTypography: ViewModifier {
         }
         fit(["dino.shape.circle", "dino.shape.square", "dino.shape.octagon"], in: (card - 16) / 3 - 12)
         fit(["dino.analogNumerals.normal", "dino.analogNumerals.roman"], in: (card - 8) / 2 - 16)
-        fit(DigitalNumerals.allCases.map { "dino.numerals." + $0.rawValue }, in: (card - 10) / 2 - 16)
         fit(["dino.appearance.bandana", "dino.appearance.spikes", "dino.appearance.body", "dino.appearance.belly",
              "dino.hourHand", "dino.minuteHand", "dino.face", "dino.rim", "dino.digitColor", "dino.display", "dino.numerals"], in: card)
         fit(["dino.appearance.reset", "dino.clock.restoreStyle"], in: card - 28)

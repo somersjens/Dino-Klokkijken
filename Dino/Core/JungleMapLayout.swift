@@ -163,24 +163,32 @@ struct JungleMapLayout {
         ]
         result += [
             item(.mushrooms, 0.11, 205, 0.64), item(.shrub, 0.86, 218, 0.35),
-            item(.log, 0.89, 365, 0.63), item(.mushrooms, 0.85, 390, 0.57),
+            item(.log, 0.89, 365, 0.63, mirror: true), item(.mushrooms, 0.85, 390, 0.57),
             item(.plant, 0.09, 390, 0.45, mirror: true),
             item(.shrub, 0.96, 580, 0.43), item(.flowers, 0.86, 592, 0.52),
-            item(.log, 0.13, 735, 0.62, mirror: true),
+            item(.log, 0.13, 735, 0.62),
             item(.mushrooms, 0.17, 752, 0.59), item(.plant, 0.07, 745, 0.45),
             item(.snake, 0.87, 754, 0.66),
             item(.mushrooms, 0.14, 955, 0.61), item(.plant, 0.88, 1005, 0.57),
             item(.shrub, 0.72, 946, 0.34), item(.flowers, 0.70, 925, 0.50),
             item(.rocks, 0.72, 977, 0.40),
-            item(.log, 0.89, 1060, 0.68), item(.shrub, 0.85, 1083, 0.36),
+            item(.log, 0.89, 1060, 0.68, mirror: true), item(.shrub, 0.85, 1083, 0.36),
             item(.snake, 0.15, 1145, 0.68, mirror: true),
             item(.mushrooms, 0.16, 1205, 0.57), item(.plant, 0.07, 1160, 0.48),
-            item(.log, 0.16, 1385, 0.66, mirror: true),
+            item(.log, 0.16, 1385, 0.66),
             item(.shrub, 0.08, 1405, 0.45), item(.mushrooms, 0.21, 1423, 0.65),
             item(.snake, 0.83, 1515, 0.67),
             item(.mushrooms, 0.91, 1740, 0.62), item(.flowers, 0.83, 1790, 0.55),
             item(.shrub, 0.10, 1640, 0.39), item(.plant, 0.87, 1865, 0.46)
         ]
+        // The single pale cut faces the road. The far bark end disappears into
+        // a shrub tied to the resolved log position, including on wide tablets.
+        for log in result.filter({ $0.kind == .log }) {
+            let origin = position(of: log)
+            let rearX = origin.x + (log.mirrored ? 48 : -48) * log.size
+            result.append(Item(kind: .shrub,
+                preferred: CGPoint(x: rearX, y: origin.y + 7 * log.size), size: log.size * 0.52))
+        }
         // Small grounded details favour alternating banks, never the centre lane.
         for i in 0..<28 {
             result.append(item(.grass, i.isMultiple(of: 2) ? 0.23 : 0.79,

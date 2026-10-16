@@ -82,10 +82,11 @@ struct DinoAppearanceEditor: View {
         VStack(spacing: 0) {
             preview
             ScrollView {
-                VStack(spacing: 10) {
-                    ForEach(DinoAppearance.Part.allCases, id: \.self) { part in
-                        colorChoice(part)
-                        if part != .belly { Divider() }
+                VStack(spacing: CustomizationLayout.restoreSpacing) {
+                    VStack(spacing: CustomizationLayout.sectionSpacing) {
+                        ForEach(DinoAppearance.Part.allCases, id: \.self) { part in
+                            colorChoice(part)
+                        }
                     }
                     Button {
                         player.setDinoAppearance(.standard)
@@ -95,9 +96,7 @@ struct DinoAppearanceEditor: View {
                             .frame(maxWidth: .infinity, minHeight: 44)
                     }.buttonStyle(.plain).foregroundStyle(DinoStyle.deepGreen)
                         .accessibilityIdentifier("personalize.resetColors")
-                }.dinoCard(padding: 16)
-                    .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 16)
-                    .frame(maxWidth: 520).frame(maxWidth: .infinity)
+                }.modifier(CustomizationOptionsCard())
             }.clipped()
         }
     }
@@ -111,15 +110,12 @@ struct DinoAppearanceEditor: View {
             .accessibilityLabel(Text("dino.appearance.preview"))
             .accessibilityIdentifier("personalize.preview")
             .modifier(PersonalizationPreviewNavigation(onNavigate: onNavigate))
-            .padding(.vertical, 8)
+            .padding(.vertical, CustomizationLayout.previewPadding)
             .frame(maxWidth: .infinity)
     }
 
     private func colorChoice(_ part: DinoAppearance.Part) -> some View {
-        VStack(spacing: 4) {
-            Text(LocalizedStringKey(part.labelKey))
-                .modifier(CustomizationText()).multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity).accessibilityIdentifier("personalize.\(part.rawValue).label")
+        CustomizationSection(title: part.labelKey, identifier: "personalize.\(part.rawValue).label") {
             HStack(spacing: 0) {
                 ForEach(swatches, id: \.name) { swatch in
                     Button { setColor(swatch.hex, for: part) } label: {

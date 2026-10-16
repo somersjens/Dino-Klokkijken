@@ -37,175 +37,11 @@
         }
       }
     },
-    "dino.analogNumerals" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Numbers"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cijfers"
-          }
-        }
-      }
+    "→" : {
+
     },
-    "dino.analogNumerals.normal" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Normal"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Normaal"
-          }
-        }
-      }
-    },
-    "dino.analogNumerals.roman" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Roman"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Romeins"
-          }
-        }
-      }
-    },
-    "dino.clock.restoreStyle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restore original style"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Herstel oorspronkelijke stijl"
-          }
-        }
-      }
-    },
-    "dino.clock.colors" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Colors"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kleuren"
-          }
-        }
-      }
-    },
-    "dino.clock.design" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Design"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ontwerp"
-          }
-        }
-      }
-    },
-    "dino.color.black" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Black"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zwart"
-          }
-        }
-      }
-    },
-    "dino.personalize.dino" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dino"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dino"
-          }
-        }
-      }
-    },
-    "dino.personalize.analog" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Analog"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Analoog"
-          }
-        }
-      }
-    },
-    "dino.personalize.digital" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Digital"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Digitaal"
-          }
-        }
-      }
+    "+%@" : {
+
     },
     "dino.activity.breakfast" : {
       "extractionState" : "manual",
@@ -356,6 +192,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O nee, nu kun je de tijd niet zien!"
+          }
+        }
+      }
+    },
+    "dino.analogNumerals" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numbers"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cijfers"
+          }
+        }
+      }
+    },
+    "dino.analogNumerals.normal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normaal"
+          }
+        }
+      }
+    },
+    "dino.analogNumerals.roman" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Roman"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Romeins"
           }
         }
       }
@@ -819,19 +706,36 @@
         }
       }
     },
-    "dino.clock.switchField" : {
+    "dino.clock.colors" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap the clock to switch between hours and minutes."
+            "value" : "Colors"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tik op het klokje om te wisselen tussen uren en minuten."
+            "value" : "Kleuren"
+          }
+        }
+      }
+    },
+    "dino.clock.design" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Design"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontwerp"
           }
         }
       }
@@ -870,6 +774,40 @@
         }
       }
     },
+    "dino.clock.restoreStyle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore original style"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herstel oorspronkelijke stijl"
+          }
+        }
+      }
+    },
+    "dino.clock.switchField" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the clock to switch between hours and minutes."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tik op het klokje om te wisselen tussen uren en minuten."
+          }
+        }
+      }
+    },
     "dino.clockCase" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -904,6 +842,23 @@
         }
       }
     },
+    "dino.color.black" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Black"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwart"
+          }
+        }
+      }
+    },
     "dino.color.blue" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -917,40 +872,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lichtblauw"
-          }
-        }
-      }
-    },
-    "dino.color.teal" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Teal"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Turquoise"
-          }
-        }
-      }
-    },
-    "dino.color.yellow" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Warm yellow"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Warmgeel"
           }
         }
       }
@@ -1057,6 +978,23 @@
         }
       }
     },
+    "dino.color.teal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turquoise"
+          }
+        }
+      }
+    },
     "dino.color.white" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1070,6 +1008,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wit"
+          }
+        }
+      }
+    },
+    "dino.color.yellow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warm yellow"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warmgeel"
           }
         }
       }
@@ -3947,23 +3902,6 @@
         }
       }
     },
-    "dino.showAnswer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show answer"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toon antwoord"
-          }
-        }
-      }
-    },
     "dino.next" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4147,6 +4085,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Perfecte boss-overwinning!"
+          }
+        }
+      }
+    },
+    "dino.personalize.analog" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analog"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analoog"
+          }
+        }
+      }
+    },
+    "dino.personalize.digital" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digital"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Digitaal"
+          }
+        }
+      }
+    },
+    "dino.personalize.dino" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino"
           }
         }
       }
@@ -5262,13 +5251,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "From earliest to latest: tap in order"
+            "value" : "From earliest to latest"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Van vroeg naar laat: tik op volgorde"
+            "value" : "Van vroeg naar laat"
           }
         }
       }
@@ -5817,23 +5806,6 @@
         }
       }
     },
-    "dino.shape.oval" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Oval"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ovaal"
-          }
-        }
-      }
-    },
     "dino.shape.octagon" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5847,6 +5819,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Achthoek"
+          }
+        }
+      }
+    },
+    "dino.shape.oval" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oval"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ovaal"
           }
         }
       }
@@ -5898,6 +5887,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vierkant"
+          }
+        }
+      }
+    },
+    "dino.showAnswer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show answer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon antwoord"
           }
         }
       }

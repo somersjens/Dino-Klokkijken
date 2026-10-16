@@ -199,24 +199,28 @@ private struct ClockAccessibility: ViewModifier {
     let onHourChange: ((Int) -> Void)?
     let onMinuteChange: ((ClockTime) -> Void)?
     let minuteStep: Int
-    @ViewBuilder func body(content: Content) -> some View {
-        if let onMinuteChange {
-            content.accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text("dino.minutes"))
-                .accessibilityValue(time.digitalText)
-                .accessibilityAdjustableAction { direction in
-                    onMinuteChange(time.shiftingMinutes(by: direction == .increment ? minuteStep : -minuteStep))
-                }
-        } else if let onHourChange {
-            content.accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text("dino.question.setAnalog"))
-                .accessibilityValue(time.digitalText)
-                .accessibilityAdjustableAction { direction in
-                    onHourChange(ClockTime.shiftedHour(time.hour == 0 ? 12 : time.hour, by: direction == .increment ? 1 : -1))
-                }
-        } else {
-            content.accessibilityElement(children: .ignore).accessibilityLabel(Text("dino.analog"))
-                .accessibilityValue(time.digitalText)
+    func body(content: Content) -> some View {
+        // Changing the available accessibility action must not replace the
+        // visible face when feedback disables dragging during its animation.
+        content.accessibilityRepresentation {
+            if let onMinuteChange {
+                Color.clear.accessibilityElement(children: .ignore)
+                    .accessibilityLabel(Text("dino.minutes"))
+                    .accessibilityValue(time.digitalText)
+                    .accessibilityAdjustableAction { direction in
+                        onMinuteChange(time.shiftingMinutes(by: direction == .increment ? minuteStep : -minuteStep))
+                    }
+            } else if let onHourChange {
+                Color.clear.accessibilityElement(children: .ignore)
+                    .accessibilityLabel(Text("dino.question.setAnalog"))
+                    .accessibilityValue(time.digitalText)
+                    .accessibilityAdjustableAction { direction in
+                        onHourChange(ClockTime.shiftedHour(time.hour == 0 ? 12 : time.hour, by: direction == .increment ? 1 : -1))
+                    }
+            } else {
+                Color.clear.accessibilityElement(children: .ignore).accessibilityLabel(Text("dino.analog"))
+                    .accessibilityValue(time.digitalText)
+            }
         }
     }
 }

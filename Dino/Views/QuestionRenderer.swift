@@ -68,32 +68,13 @@ struct QuestionRenderer: View {
     }
 
     private var analogInput: some View {
-        let cellWidth = (width - 14) / 2
-        let scale = comparing ? min(1, (cellWidth - 12) / (targetSize + 20)) : 1
-        let height = (targetSize + 20) * scale
         let hourChange: ((Int) -> Void)? = session.hasFeedback || adjustingMinutes ? nil : { session.inputHour = $0 }
         let minuteChange: ((ClockTime) -> Void)? = session.hasFeedback || !adjustingMinutes ? nil : { session.setInputTime($0) }
-        return HStack(alignment: .top, spacing: 14) {
-            VStack(spacing: 10) {
-                AnalogClock(time: session.attempt.submittedAnswer ?? session.inputTime, theme: theme, size: targetSize,
-                            onHourChange: hourChange,
-                            onMinuteChange: minuteChange,
-                            minuteStep: session.minuteStep)
-                    .accessibilityIdentifier("question.analogControl")
-                    .padding(10).modifier(ClockAnswerOutline(visible: session.hasFeedback, correct: session.correctFeedback))
-                    .scaleEffect(scale).frame(width: comparing ? cellWidth : width, height: height)
-                if comparing { comparisonLabel(correct: false) }
-            }
-            if comparing {
-                VStack(spacing: 10) {
-                    AnalogClock(time: question.target, theme: theme, size: targetSize).padding(10)
-                        .modifier(ClockAnswerOutline(visible: true, correct: true))
-                        .scaleEffect(scale).frame(width: cellWidth, height: height)
-                        .accessibilityIdentifier("question.correctClock")
-                    comparisonLabel(correct: true)
-                }.transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
-            }
-        }.frame(width: width)
+        return AnalogClockAnswerComparison(answer: session.attempt.submittedAnswer ?? session.inputTime,
+                                           target: question.target, theme: theme, width: width, clockSize: targetSize,
+                                           hasFeedback: session.hasFeedback, correct: session.correctFeedback,
+                                           onHourChange: hourChange, onMinuteChange: minuteChange,
+                                           minuteStep: session.minuteStep)
     }
 
     @ViewBuilder private var digitalInput: some View {
@@ -215,11 +196,64 @@ struct QuestionRenderer: View {
     }
 }
 
+/// Keep both faces in one stable layout. Inserting a second HStack child while
+/// resizing the first face also animated its layout proposal, causing a flash.
+struct AnalogClockAnswerComparison: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let answer: ClockTime
+    let target: ClockTime
+    let theme: ClockTheme
+    let width: CGFloat
+    let clockSize: CGFloat
+    let hasFeedback: Bool
+    let correct: Bool
+    var onHourChange: ((Int) -> Void)? = nil
+    var onMinuteChange: ((ClockTime) -> Void)? = nil
+    var minuteStep = 1
+
+    private var comparing: Bool { hasFeedback && !correct }
+    private var cellWidth: CGFloat { (width - 14) / 2 }
+    private var comparisonScale: CGFloat { min(1, (cellWidth - 12) / (clockSize + 20)) }
+    private var scale: CGFloat { comparing ? comparisonScale : 1 }
+    private var faceHeight: CGFloat { (clockSize + 20) * scale }
+    private var displacement: CGFloat { (width + 14) / 4 }
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            VStack(spacing: 10) {
+                AnalogClock(time: answer, theme: theme, size: clockSize,
+                            onHourChange: onHourChange, onMinuteChange: onMinuteChange, minuteStep: minuteStep)
+                    .accessibilityIdentifier("question.analogControl")
+                    .padding(10).modifier(ClockAnswerOutline(visible: hasFeedback, correct: correct))
+                    .scaleEffect(scale).frame(width: cellWidth, height: faceHeight)
+                comparisonLabel(correct: false).opacity(comparing ? 1 : 0).accessibilityHidden(!comparing)
+            }.frame(width: cellWidth).offset(x: comparing ? -displacement : 0)
+            VStack(spacing: 10) {
+                AnalogClock(time: target, theme: theme, size: clockSize).padding(10)
+                    .modifier(ClockAnswerOutline(visible: true, correct: true))
+                    .scaleEffect(comparisonScale).frame(width: cellWidth, height: (clockSize + 20) * comparisonScale)
+                    .accessibilityIdentifier("question.correctClock")
+                comparisonLabel(correct: true)
+            }.frame(width: cellWidth)
+                .offset(x: displacement + (comparing || reduceMotion ? 0 : 24))
+                .opacity(comparing ? 1 : 0).allowsHitTesting(false).accessibilityHidden(!comparing)
+        }
+        .frame(width: width, height: faceHeight + (comparing ? 46 : 0), alignment: .top)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.34), value: comparing)
+    }
+
+    private func comparisonLabel(correct: Bool) -> some View {
+        Label(LocalizedStringKey(correct ? "dino.correctTime" : "dino.yourAnswer"), systemImage: correct ? "checkmark.circle.fill" : "xmark.circle.fill")
+            .font(.system(size: 12, weight: .bold, design: .rounded))
+            .foregroundStyle(correct ? DinoStyle.deepGreen : Color(dinoHex: 0xB54343))
+            .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+    }
+}
+
 /// Connect a face and a digital time with two taps or a drag, starting on either side.
 struct ClockMatchingBoard: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.locale) private var locale
     let times: [ClockTime]
     let options: [ClockTime]
     @Binding var selections: [Int: ClockTime]
@@ -248,21 +282,17 @@ struct ClockMatchingBoard: View {
     private var rowHeight: CGFloat { faceSize + 24 }
     private let spacing: CGFloat = 16
 
-    private var hintText: String {
-        let key = isDemonstration ? demonstrationHint : "dino.match.hint"
-        return String(localized: String.LocalizationValue(key), bundle: LanguageManager.shared.bundle, locale: locale)
-            .replacingOccurrences(of: ". ", with: ".\n")
-    }
-
     var body: some View {
         VStack(spacing: 14) {
-            Text(verbatim: hintText)
-                .font(.system(size: width >= 600 ? 16 : 14, weight: .semibold, design: .rounded))
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: min(520, width - 24))
-                .frame(width: width)
-                .accessibilityIdentifier("\(prefix).hint")
+            if isDemonstration {
+                Text("dino.match.hint")
+                    .font(.system(size: width >= 600 ? 16 : 14, weight: .semibold, design: .rounded))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: min(520, width - 24))
+                    .frame(width: width)
+                    .accessibilityIdentifier("\(prefix).hint")
+            }
             ZStack {
                 Canvas { context, _ in
                     for index in times.indices {
@@ -330,11 +360,6 @@ struct ClockMatchingBoard: View {
                     demonstrationStep = times.count * 2
                 } catch { return }
             }
-    }
-
-    private var demonstrationHint: String {
-        if demonstrationStep >= times.count * 2 { return "dino.match.demo.connected" }
-        return demonstrationStep >= 0 && !demonstrationStep.isMultiple(of: 2) ? "dino.match.demo.time" : "dino.match.demo.clock"
     }
 
     private func clockButton(_ index: Int) -> some View {

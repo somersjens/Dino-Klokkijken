@@ -436,6 +436,27 @@ final class DinoUITests: XCTestCase {
         }
     }
 
+    func testJungleContinuousScroll() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "3"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["map.level.3"].exists)
+        saveScreenshot("jungle-continuous-scroll-start")
+        // Short, slow drags keep the water, wildlife and tile joins in view.
+        // A simulator recording of this test checks intermediate frames too.
+        for step in 0..<6 {
+            let upward = step.isMultiple(of: 2)
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.54, dy: upward ? 0.72 : 0.48))
+                .press(forDuration: 0.05,
+                       thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.54, dy: upward ? 0.48 : 0.72)),
+                       withVelocity: .slow, thenHoldForDuration: 0.1)
+        }
+        XCTAssertTrue(app.buttons["header.settings"].isHittable)
+        XCTAssertEqual(app.descendants(matching: .any)["header.level"].label, "Level 3")
+        saveScreenshot("jungle-continuous-scroll-return")
+    }
+
     func testMapScrollPerformance() {
         app.terminate()
         app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
@@ -1222,6 +1243,80 @@ final class DinoUITests: XCTestCase {
         tap("header.pause")
     }
 
+    func testQuestionInstructionsAndWorkedBoards() {
+        openPractice()
+        selectPractice("practice.type.match")
+        tap("practice.start")
+        XCTAssertFalse(app.staticTexts["question.match.hint"].exists)
+        tap("question.example")
+        let matchingHint = app.staticTexts["demo.match.hint"]
+        XCTAssertTrue(matchingHint.waitForExistence(timeout: 5))
+        XCTAssertEqual(matchingHint.label, "Tik op een klok en daarna op de bijbehorende tijd. Je mag ook met een tijd beginnen.")
+        saveScreenshot("matching-description-only-in-example")
+        tap("demo.ready")
+        tap("header.pause")
+
+        selectPractice("practice.type.sortTimes")
+        tap("practice.start")
+        XCTAssertEqual(app.staticTexts["question.title"].label, "Van vroeg naar laat")
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Alle klokken horen")).firstMatch.exists)
+        tap("question.example")
+        XCTAssertTrue(app.staticTexts["demo.sort.hint"].waitForExistence(timeout: 5))
+        for example in 0..<2 {
+            let choices = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "demo.sort."))
+            XCTAssertEqual(choices.count, 4)
+            let orderedLabels = (0..<4).map { index -> (Int, String) in
+                let clock = app.buttons["demo.sort.\(index)"]
+                XCTAssertTrue(clock.isSelected)
+                XCTAssertFalse(clock.isEnabled)
+                XCTAssertNotEqual(clock.label, "00:00")
+                return (Int(clock.value as? String ?? "") ?? 0, clock.label)
+            }.sorted { $0.0 < $1.0 }
+            XCTAssertEqual(orderedLabels.map(\.0), [1, 2, 3, 4])
+            XCTAssertEqual(orderedLabels.map(\.1), orderedLabels.map(\.1).sorted())
+            XCTAssertFalse(app.buttons["question.confirm"].exists)
+            XCTAssertTrue(app.staticTexts["demo.answer"].label.contains(" → "))
+            if example == 0 { saveScreenshot("sorting-example-already-selected"); tap("demo.nextExample") }
+        }
+        tap("demo.ready")
+        tap("header.pause")
+
+        selectPractice("practice.type.timeSequence")
+        tap("practice.start")
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Een dag heeft 24 uur")).firstMatch.exists)
+        for index in 0..<3 {
+            XCTAssertTrue(app.descendants(matching: .any)["question.sequence.arrow.\(index)"].exists)
+        }
+        tap("question.example")
+        XCTAssertTrue(app.staticTexts["demo.sequence.hint"].waitForExistence(timeout: 5))
+        let pattern = DinoDemonstrationExamples.question(kind: .timeSequence, minutes: [0], minuteStep: 60,
+                                                         index: 0, previousTarget: nil)
+        for index in 0..<3 {
+            XCTAssertEqual(app.descendants(matching: .any)["demo.sequence.arrow.\(index)"].label,
+                           "+\(DinoTimeWords.duration(pattern.durationMinutes, language: "nl"))")
+        }
+        saveScreenshot("sequence-example-step-arrows")
+        tap("demo.ready")
+    }
+
+    func testDayPartExampleActionsStayInPlace() {
+        openPractice()
+        selectPractice("practice.type.read24Hour")
+        tap("practice.start")
+        tap("question.example")
+        let ready = app.buttons["demo.ready"]
+        let another = app.buttons["demo.nextExample"]
+        XCTAssertTrue(another.waitForExistence(timeout: 5))
+        let readyY = ready.frame.minY
+        let anotherY = another.frame.minY
+        for _ in 0..<22 {
+            tap("demo.nextExample")
+            XCTAssertEqual(ready.frame.minY, readyY, accuracy: 1, "Longer day-part answers reserve the same space")
+            XCTAssertEqual(another.frame.minY, anotherY, accuracy: 1)
+        }
+        saveScreenshot("day-part-example-stable-actions")
+    }
+
     func testManualExamplesAndClockComparison() {
         onboard()
         begin(10)
@@ -1821,7 +1916,8 @@ final class DinoUITests: XCTestCase {
             let prefix = "theme.dino.\(part)."
             let presets = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND NOT identifier ENDSWITH %@", prefix, ".custom"))
             XCTAssertEqual(presets.count, 5)
-            let colors = ["black", "navy", "teal", "yellow", "white"].map { app.buttons[prefix + $0] }
+            let names = part == "digitColor" ? ["navy", "orange", "green", "red", "white"] : ["black", "navy", "teal", "yellow", "white"]
+            let colors = names.map { app.buttons[prefix + $0] }
             for (first, second) in zip(colors, colors.dropFirst()) {
                 XCTAssertLessThan(first.frame.minX, second.frame.minX)
             }
@@ -1830,9 +1926,9 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["theme.dino.digitColor.white"].isSelected)
         XCTAssertFalse(app.descendants(matching: .any)["theme.digitalShape"].exists)
         tap("theme.dino.display.teal")
-        tap("theme.dino.digitColor.yellow")
+        tap("theme.dino.digitColor.orange")
         tap("theme.numerals.classic")
-        saveScreenshot("digital-five-shades-fixed-shape")
+        saveScreenshot("digital-bright-palette-and-numeral-previews")
         tap("theme.resetDigitalStyle")
         XCTAssertEqual(app.buttons["theme.resetDigitalStyle"].label, "Herstel oorspronkelijke stijl")
         XCTAssertTrue(app.buttons["theme.dino.display.navy"].isSelected)
@@ -1859,6 +1955,10 @@ final class DinoUITests: XCTestCase {
 
     func testCompactClockOptionsAndSafeTabs() {
         let dinoSpacing = app.staticTexts["personalize.spikes.label"].frame.minY - app.staticTexts["personalize.bandana.label"].frame.minY
+        let dinoRowCenters = (app.buttons["personalize.bandana.red"].frame.midY + app.buttons["personalize.spikes.red"].frame.midY) / 2
+        XCTAssertEqual(app.staticTexts["personalize.spikes.label"].frame.midY, dinoRowCenters, accuracy: 2)
+        let dinoRestoreGap = app.buttons["personalize.resetColors"].frame.minY - app.buttons["personalize.belly.red"].frame.maxY
+        XCTAssertLessThanOrEqual(dinoRestoreGap, 18, "The restore label stays close to the final color row")
         tap("onboarding.next")
         let numbers = app.descendants(matching: .any)["theme.analogNumerals"]
         let shapes = app.descendants(matching: .any)["theme.analogShape"]
@@ -1868,12 +1968,31 @@ final class DinoUITests: XCTestCase {
         XCTAssertLessThan(shapes.frame.maxY, hour.frame.minY)
         XCTAssertLessThanOrEqual(shapes.frame.height, 82)
         XCTAssertEqual(minute.frame.minY - hour.frame.minY, dinoSpacing, accuracy: 2)
+        let analogRowCenters = (app.buttons["theme.dino.hourHand.navy"].frame.midY + app.buttons["theme.dino.minuteHand.navy"].frame.midY) / 2
+        XCTAssertEqual(minute.frame.midY, analogRowCenters, accuracy: 2)
         XCTAssertFalse(app.staticTexts["theme.analogNumerals.label"].exists)
         XCTAssertFalse(app.descendants(matching: .any)["theme.hands"].exists)
         tap("theme.analogNumerals.roman")
         tap("theme.analogShape.octagon")
         saveScreenshot("analog-compact-options-order")
-        tap("onboarding.next"); tap("onboarding.customClock")
+        tap("onboarding.next")
+        let digits = app.staticTexts["theme.dino.digitColor.label"]
+        let display = app.staticTexts["theme.dino.display.label"]
+        XCTAssertEqual(display.frame.minY - digits.frame.minY, dinoSpacing, accuracy: 2)
+        let digitalRowCenters = (app.buttons["theme.dino.digitColor.navy"].frame.midY + app.buttons["theme.dino.display.black"].frame.midY) / 2
+        XCTAssertEqual(display.frame.midY, digitalRowCenters, accuracy: 2)
+        let numeralTitle = app.staticTexts["theme.numerals.label"]
+        XCTAssertEqual(numeralTitle.frame.height, digits.frame.height, accuracy: 0.5)
+        XCTAssertEqual(app.buttons["theme.numerals.rounded"].frame.minY - numeralTitle.frame.maxY, 20, accuracy: 2)
+        XCTAssertLessThanOrEqual(app.buttons["theme.resetDigitalStyle"].frame.minY - app.buttons["theme.numerals.classic"].frame.maxY, 18)
+        for style in ["rounded", "digital", "modern", "classic"] {
+            let choice = app.buttons["theme.numerals." + style]
+            XCTAssertTrue(choice.exists)
+            XCTAssertFalse(choice.staticTexts[choice.label].exists)
+        }
+        RunLoop.current.run(until: Date().addingTimeInterval(0.4))
+        saveScreenshot("digital-shared-spacing-and-clock-only-styles")
+        tap("onboarding.customClock")
         tap("header.dino")
         for page in ["dino", "analog", "digital", "analog"] {
             let button = app.buttons["personalize.page." + page]
@@ -1926,11 +2045,13 @@ final class DinoUITests: XCTestCase {
             XCTAssertEqual(app.staticTexts["onboarding.title"].frame.height, titleHeight, accuracy: 0.5)
             for part in ["digitColor", "display"] {
                 XCTAssertEqual(app.staticTexts["theme.dino.\(part).label"].frame.height, labelHeight, accuracy: 0.5)
-                let colors = ["black", "navy", "teal", "yellow", "white"].map { app.buttons["theme.dino.\(part)." + $0].frame }
+                let names = part == "digitColor" ? ["navy", "orange", "green", "red", "white"] : ["black", "navy", "teal", "yellow", "white"]
+                let colors = names.map { app.buttons["theme.dino.\(part)." + $0].frame }
                 for (first, second) in zip(colors, colors.dropFirst()) { XCTAssertLessThan(first.minX, second.minX) }
             }
+            XCTAssertEqual(app.staticTexts["theme.numerals.label"].frame.height, labelHeight, accuracy: 0.5)
             tap("theme.dino.display.teal")
-            tap("theme.dino.digitColor.yellow")
+            tap("theme.dino.digitColor.orange")
             saveScreenshot("customization-typography-digital-" + code)
             tap("onboarding.customClock")
             tap("header.dino")
@@ -2468,8 +2589,7 @@ final class DinoUITests: XCTestCase {
             XCTAssertEqual(first.frame.height, right.frame.height, accuracy: 1)
             XCTAssertGreaterThanOrEqual(first.frame.height, tablet ? 170 : 108, "Practice clocks grow with the available width")
             XCTAssertEqual((first.frame.minX + right.frame.maxX) / 2, app.frame.midX, accuracy: 1)
-            let hint = app.staticTexts["question.match.hint"]
-            XCTAssertEqual(hint.frame.midX, app.frame.midX, accuracy: 1)
+            XCTAssertFalse(app.staticTexts["question.match.hint"].exists, "Matching instructions belong in the example")
             XCTAssertEqual(app.staticTexts["question.title"].frame.midX, app.frame.midX, accuracy: 1)
             saveScreenshot(name)
         }

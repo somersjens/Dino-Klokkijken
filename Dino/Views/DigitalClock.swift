@@ -1,5 +1,17 @@
 import SwiftUI
 
+private enum DigitalControlAnchor: Hashable {
+    case digits, display, decrease, increase
+}
+
+private struct DigitalControlAnchors: PreferenceKey {
+    static var defaultValue: [DigitalControlAnchor: Anchor<CGRect>] { [:] }
+    static func reduce(value: inout [DigitalControlAnchor: Anchor<CGRect>],
+                       nextValue: () -> [DigitalControlAnchor: Anchor<CGRect>]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, new in new })
+    }
+}
+
 struct DigitalClockOutline: InsettableShape {
     var shape: DigitalClockShape
     var insetAmount: CGFloat = 0
@@ -25,6 +37,7 @@ struct DigitalClock: View {
     let time: ClockTime
     let theme: ClockTheme
     var fontSize: CGFloat = 42
+    var showsDisplay = true
     var showHandHints = false
     /// nil for a read-only clock; false underlines hours, true underlines minutes.
     var activeMinutes: Bool? = nil
@@ -42,9 +55,22 @@ struct DigitalClock: View {
         .monospacedDigit()
         .padding(.vertical, theme.numerals == .digital ? fontSize * 0.08 : 0)
         .foregroundStyle(Color(dinoHex: theme.digitalInkHex))
-        .padding(.horizontal, fontSize * (theme.digitalShape == .oval ? 0.62 : 0.38)).padding(.vertical, fontSize * 0.22)
-        .background(Color(dinoHex: theme.displayHex), in: DigitalClockOutline(shape: theme.digitalShape))
-        .overlay(DigitalClockOutline(shape: theme.digitalShape).strokeBorder(DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: highContrast ? 3 : 2))
+        .padding(.horizontal, showsDisplay ? fontSize * (theme.digitalShape == .oval ? 0.62 : 0.38) : 0)
+        .padding(.vertical, showsDisplay ? fontSize * 0.22 : 0)
+        .background {
+            if showsDisplay {
+                DigitalClockOutline(shape: theme.digitalShape).fill(Color(dinoHex: theme.displayHex))
+            }
+        }
+        .overlay {
+            if showsDisplay {
+                DigitalClockOutline(shape: theme.digitalShape)
+                    .strokeBorder(DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: highContrast ? 3 : 2)
+            }
+        }
+        .transformAnchorPreference(key: DigitalControlAnchors.self, value: .bounds) { anchors, display in
+            if activeMinutes != nil { anchors[.display] = display }
+        }
         .padding(.top, showHandHints ? 48 : 0)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(time.digitalText)
@@ -69,12 +95,8 @@ struct DigitalClock: View {
                 }
             } else { Text(verbatim: text) }
         }
-        .overlay(alignment: .bottom) {
-            if let activeMinutes, activeMinutes == (number == 2) {
-                Capsule().fill(Color(dinoHex: theme.digitalInkHex))
-                    .frame(height: 3).offset(y: 6)
-                    .accessibilityHidden(true)
-            }
+        .anchorPreference(key: DigitalControlAnchors.self, value: .bounds) {
+            activeMinutes == (number == 2) ? [.digits: $0] : [:]
         }
         .overlay(alignment: .top) {
             if showHandHints {
@@ -137,6 +159,7 @@ struct DigitalClockControl: View {
         HStack(spacing: 8) {
             DinoIconButton(icon: "minus", labelKey: adjustingMinutes ? "dino.minuteLess" : "dino.hourLess") { adjust(-1) }
                 .accessibilityIdentifier(adjustingMinutes ? "clock.minute.less" : "clock.hour.less")
+                .anchorPreference(key: DigitalControlAnchors.self, value: .bounds) { [.decrease: $0] }
             Button {
                 if onMinuteChange != nil { adjustingMinutes.toggle() }
             } label: {
@@ -154,7 +177,35 @@ struct DigitalClockControl: View {
             .accessibilityIdentifier(valueIdentifier)
             DinoIconButton(icon: "plus", labelKey: adjustingMinutes ? "dino.minuteMore" : "dino.hourMore") { adjust(1) }
                 .accessibilityIdentifier(adjustingMinutes ? "clock.minute.more" : "clock.hour.more")
-        }.environment(\.layoutDirection, .leftToRight)
+                .anchorPreference(key: DigitalControlAnchors.self, value: .bounds) { [.increase: $0] }
+        }
+        .backgroundPreferenceValue(DigitalControlAnchors.self) { anchors in
+            GeometryReader { geometry in
+                if let digits = anchors[.digits], let display = anchors[.display],
+                   let decrease = anchors[.decrease], let increase = anchors[.increase] {
+                    let field = geometry[digits]
+                    let screen = geometry[display]
+                    let minus = geometry[decrease]
+                    let plus = geometry[increase]
+                    let underlineY = screen.maxY + 5
+                    let connectorY = max(underlineY, minus.maxY, plus.maxY) + 12
+                    Path { path in
+                        path.move(to: CGPoint(x: field.minX, y: underlineY))
+                        path.addLine(to: CGPoint(x: field.maxX, y: underlineY))
+                        path.move(to: CGPoint(x: field.midX, y: underlineY))
+                        path.addLine(to: CGPoint(x: field.midX, y: connectorY))
+                        path.move(to: CGPoint(x: minus.midX, y: minus.maxY + 2))
+                        path.addLine(to: CGPoint(x: minus.midX, y: connectorY))
+                        path.addLine(to: CGPoint(x: plus.midX, y: connectorY))
+                        path.addLine(to: CGPoint(x: plus.midX, y: plus.maxY + 2))
+                    }
+                    .stroke(DinoStyle.ink, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                    .accessibilityIdentifier("\(valueIdentifier).connectors")
+                }
+            }.allowsHitTesting(false).accessibilityHidden(true)
+        }
+        .padding(.bottom, 22)
+        .environment(\.layoutDirection, .leftToRight)
     }
 
     private func adjust(_ direction: Int) {

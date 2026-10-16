@@ -215,6 +215,8 @@ enum DinoSpriteColorRenderer {
         let unchanged = DinoAppearance.Part.allCases.map { appearance[$0] == DinoAppearance.standard[$0] }
         let regions = DinoAvatarMask.spriteRegions(for: asset)
         let sourcePalette = palettes[asset] ?? idlePalette
+        let letteringBounds = appearance.usesBlackBandanaLettering ? bandanaLetteringBounds[asset] : nil
+        let letteringInk = HSL(hex: appearance.bandanaLetteringHex).rgb
         let success = pixels.withUnsafeMutableBytes { buffer -> Bool in
             guard let context = CGContext(data: buffer.baseAddress, width: width, height: height,
                                           bitsPerComponent: 8, bytesPerRow: width * 4,
@@ -231,6 +233,25 @@ enum DinoSpriteColorRenderer {
                     let pixel = HSL(red: min(1, Double(bytes[index]) / 255 / alpha),
                                     green: min(1, Double(bytes[index + 1]) / 255 / alpha),
                                     blue: min(1, Double(bytes[index + 2]) / 255 / alpha))
+                    if let letteringBounds,
+                       letteringBounds.contains(CGPoint(x: Double(x) / Double(width) * 1254,
+                                                        y: Double(y) / Double(height) * 1254)) {
+                        let rgb = pixel.rgb
+                        // The white print mixes into red cloth at its edges.
+                        // Recover that coverage, then blend charcoal into the chosen
+                        // cloth color so pale bandanas have no white/red fringe.
+                        let white = min(rgb.0, rgb.1, rgb.2)
+                        let isPrint = pixel.hue < 0.055 || pixel.hue > 0.95
+                            || max(rgb.0, rgb.1, rgb.2) - white < 0.12
+                        let coverage = isPrint ? min(1, max(0, (white - 0.30) / 0.60)) : 0
+                        if coverage > 0 {
+                            let cloth = targets[0].rgb
+                            bytes[index] = UInt8(((cloth.0 * (1 - coverage) + letteringInk.0 * coverage) * alpha * 255).rounded())
+                            bytes[index + 1] = UInt8(((cloth.1 * (1 - coverage) + letteringInk.1 * coverage) * alpha * 255).rounded())
+                            bytes[index + 2] = UInt8(((cloth.2 * (1 - coverage) + letteringInk.2 * coverage) * alpha * 255).rounded())
+                            continue
+                        }
+                    }
                     guard let part = DinoAvatarMask.part(hue: pixel.hue, saturation: pixel.saturation,
                                           lightness: pixel.lightness,
                                           x: Double(x) / Double(width), y: Double(y) / Double(height), regions: regions) else { continue }
@@ -272,6 +293,18 @@ enum DinoSpriteColorRenderer {
                        bitmapInfo: CGBitmapInfo(rawValue: bitmapInfo), provider: provider,
                        decode: nil, shouldInterpolate: true, intent: .defaultIntent)
     }
+
+    /// Tight print regions in each 1254-point illustration exclude the eyes,
+    /// highlights and transparent background, even when the head is tilted.
+    private static let bandanaLetteringBounds: [String: CGRect] = [
+        "dino-idle": CGRect(x: 550, y: 90, width: 238, height: 106),
+        "dino-thumbs-up-08": CGRect(x: 525, y: 85, width: 250, height: 117),
+        "dino-wrong-answer-04": CGRect(x: 526, y: 89, width: 252, height: 137),
+        "dino-backflip-01": CGRect(x: 702, y: 205, width: 258, height: 98),
+        "dino-backflip-03": CGRect(x: 326, y: 131, width: 210, height: 160),
+        "dino-backflip-07": CGRect(x: 638, y: 233, width: 256, height: 106),
+        "dino-backflip-08": CGRect(x: 520, y: 102, width: 237, height: 109)
+    ]
 
     private struct HSL {
         let hue: Double

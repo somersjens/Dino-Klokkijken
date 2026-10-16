@@ -137,7 +137,7 @@ struct AdventureHeader: View {
                     .frame(width: size, height: size)
                 HUDDinoBust(appearance: player.profile.dinoAppearance ?? .standard, diameter: size)
                     .frame(width: metrics.portraitFootprint, height: metrics.portraitFootprint)
-                    .mask(HUDBandanaTailMask(diameter: size))
+                    .mask(HUDDinoForegroundMask(diameter: size))
                     .shadow(color: DinoStyle.ink.opacity(0.14), radius: 0.7, y: 0.7)
             }
             .frame(width: metrics.portraitFootprint, height: metrics.portraitFootprint)
@@ -426,14 +426,23 @@ private struct HUDDinoBust: View {
     }
 }
 
-/// Only the cloth at the left of the head crosses the white portrait rim.
-private struct HUDBandanaTailMask: Shape {
+/// The bandana tails and both top spikes cross the portrait and its rim.
+private struct HUDDinoForegroundMask: Shape {
     let diameter: CGFloat
     func path(in rect: CGRect) -> Path {
         let origin = CGPoint(x: rect.midX - diameter / 2, y: rect.midY - diameter / 2)
-        return Path(CGRect(x: origin.x - diameter * 0.23 / 0.62,
-                           y: origin.y + diameter * 0.165 / 0.62,
-                           width: diameter * 0.355 / 0.62, height: diameter * 0.192 / 0.62))
+        var path = Path(CGRect(x: origin.x - diameter * 0.23 / 0.62,
+                               y: origin.y + diameter * 0.165 / 0.62,
+                               width: diameter * 0.355 / 0.62, height: diameter * 0.192 / 0.62))
+        // Follow HUDDinoBust's sprite placement; transparent pixels retain the
+        // original curved silhouettes, including their antialiased edges.
+        let spriteSize = diameter / 0.62
+        let spriteOrigin = CGPoint(x: rect.midX - spriteSize / 2 - diameter * 0.065,
+                                   y: rect.midY - spriteSize / 2 + diameter * 0.339)
+        path.addRect(CGRect(x: spriteOrigin.x + spriteSize * 0.31,
+                            y: spriteOrigin.y,
+                            width: spriteSize * 0.22, height: spriteSize * 0.19))
+        return path
     }
 }
 

@@ -50,3 +50,23 @@ Type 7 ondersteunt naast beide tikvolgordes ook indrukken en loslaten op de kaar
 `Tools/test-dino.sh` slaagt met 437.231 controles, inclusief de nieuwe nummering, alle 19 typen in Oplopend en Mix en geldige koppelvragen in alle werelden. De Debug-build slaagt. `testMatchingSupportsDragsAlongsideTaps` slaagt op iPhone 18 Pro en iPad Air 13-inch (M4), beide met iOS 27.0: heen en terug slepen, een bezette tijd overnemen, loskoppelen met een tik, ongeldige drops, combineren met losse tikken en correct bevestigen. De screenshots zijn visueel gecontroleerd.
 
 Ook `testThreePairMatchingAndTapDemonstration` slaagt op beide apparaten, inclusief beide tikvolgordes, verbreken, het geanimeerde voorbeeld en foutfeedback. Op iPhone slaagt daarnaast `testExpandedPracticeExamplesAndBoards` met de samengevoegde koppelvraag en het sorteerbord: vijf schermtests in totaal, zonder fouten.
+
+## Vraagtypen en voorbeelden — 15 oktober 2026
+
+- **Dagdeel kiezen:** vragen gebruiken geen 06:00–06:59 of 22:00–23:59. De voorbeelden blijven de volledige dag doorlopen, inclusief deze tijden. De vier dagdelen blijven beschikbaar.
+- **Verbind de klokken:** tijdens het spelen staat alleen de titel boven het bord. Het voorbeeld bevat de volledige beschrijving van de twee tikvolgordes. De genummerde handjes en het opbouwen van de verbindingen blijven zichtbaar; de beschrijving wisselt niet meer tussendoor.
+- **Stel de juiste tijd in:** het geselecteerde cijferpaar krijgt een streepje direct onder de display. Vanuit zowel min als plus loopt een lijn onderlangs naar dat streepje. Spel en voorbeeld gebruiken dezelfde component; de lijnen volgen ook een wissel tussen uren en minuten.
+- **Draai de korte wijzer:** bij een fout antwoord blijft de invoerklok dezelfde view en schuift hij verkleind naar links. De juiste klok verschijnt rechts op zijn uiteindelijke schaal. Dezelfde vergelijking wordt gebruikt bij het vooruitzetten van de analoge klok.
+- **Lees de tijd en het dagdeel af:** het voorbeeld reserveert een vaste hoogte voor het antwoord. Een langer antwoord of een extra tekstregel verschuift de onderknoppen niet. Een nieuw voorbeeld vervangt de inhoud zonder overgangsanimatie.
+- **Van vroeg naar laat:** 00:00 komt niet voor op het sorteerbord. De extra instructie staat alleen in het voorbeeld. Daar zijn alle vier klokken al geselecteerd en genummerd van vroeg naar laat, met de uitgewerkte volgorde eronder en zonder bevestigingsknop voor het antwoord.
+- **Welke tijd komt hierna:** de extra uitleg staat alleen in het voorbeeld. Tussen elke twee tijden staat een pijl, ook van de laatste tijd naar het vraagteken. In het voorbeeld staat bij iedere pijl de werkelijke stap, bijvoorbeeld +2 uur of +30 min; de pijlen en digitale klokken passen zich aan de beschikbare breedte aan.
+
+De filters zitten in de gedeelde vraaggenerator en gelden dus voor losse oefentypen, Oplopend, Mix en de betreffende levels. Voorbeelden gebruiken eigen invoer en veranderen de echte vraag of oefenrecords niet.
+
+De kerncontroles omvatten alle minuutsoorten, de vier dagdelen, verboden tijden als voorkeursdoel, vier unieke sorteerkeuzes en voorbeelden op de grensminuten 00 en 59. `Tools/test-dino.sh`: **555.334 controles geslaagd**. De definitieve Debug-build voor iOS Simulator slaagt.
+
+De digitale verbindingslijnen zijn in het spel en het voorbeeld visueel gecontroleerd op iPhone 17 en iPad Pro 11-inch met iOS 26.5. De analoge vergelijking is met een simulatoropname en beelden om de 50 milliseconden gecontroleerd: de invoerklok blijft zichtbaar, schuift en verkleint zonder extra klokbeeld. De VoiceOver-acties gebruiken een eigen toegankelijkheidsrepresentatie, zodat het uitschakelen van de bediening de zichtbare klok niet vervangt. `testManualExamplesAndClockComparison` en `testPracticeAnalogHandsAndManualExample` slagen, inclusief klokwaarden, slepen, minutenbediening en behoud van de echte invoer na een voorbeeld.
+
+Op iPhone 18 Pro en iPad Air 13-inch met iOS 27.0 slagen `testDayPartExampleActionsStayInPlace` en `testQuestionInstructionsAndWorkedBoards`: 22 opeenvolgende voorbeeldwissels zonder verschuiving van de onderknoppen, uitleg uitsluitend in voorbeelden, vier vooraf geselecteerde en chronologisch genummerde sorteerklokken zonder bevestigingsknop, en drie pijlen met de werkelijke tijdstap. De screenshots van de voorbeelden zijn visueel gecontroleerd.
+
+Ook `testThreePairMatchingAndTapDemonstration` slaagt op iPhone: verbinden in beide tikvolgordes, verbreken, opnieuw verbinden, geanimeerde voorbeeldverbindingen, behoud van echte selecties en foutfeedback. In totaal zijn twaalf gerichte schermtestuitvoeringen geslaagd, zonder fouten.

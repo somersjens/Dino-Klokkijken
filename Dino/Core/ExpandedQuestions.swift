@@ -35,9 +35,15 @@ enum DinoExpandedQuestions {
 
     static func generate<R: RandomNumberGenerator>(kind: ClockQuestionKind, minutes: [Int], minuteStep: Int,
                                                    index: Int, previousTarget: ClockTime?, preferredTarget: ClockTime? = nil,
+                                                   isDemonstration: Bool = false,
                                                    using rng: inout R) -> ClockQuestion {
         let hours = [.readDigital, .spokenTime, .trueFalse].contains(kind) ? Array(1...12) : Array(0...23)
         let pool = hours.flatMap { hour in minutes.map { ClockTime(hour: hour, minute: $0) } }
+            .filter { time in
+                if kind == .dayPart && !isDemonstration { return time.hour != 6 && time.hour < 22 }
+                if kind == .sortTimes { return time.minutesOfDay != 0 }
+                return true
+            }
         let target = preferredTarget.flatMap { pool.contains($0) ? $0 : nil }
             ?? pool.filter { $0 != previousTarget }.randomElement(using: &rng)!
         let other = pool.filter { $0 != target }.shuffled(using: &rng)
@@ -89,7 +95,8 @@ enum DinoExpandedQuestions {
 
     static func example(kind: ClockQuestionKind, time: DinoPracticeTime) -> ClockQuestion {
         var rng = SeededGenerator(seed: 20261012)
-        return generate(kind: kind, time: time, index: 0, previousTarget: nil, using: &rng)
+        return generate(kind: kind, minutes: time.minutes, minuteStep: time.minuteStep,
+                        index: 0, previousTarget: nil, isDemonstration: true, using: &rng)
     }
 }
 
@@ -117,6 +124,7 @@ enum DinoDemonstrationExamples {
         return DinoExpandedQuestions.generate(kind: kind, minutes: minutes, minuteStep: minuteStep,
                                               index: index, previousTarget: previousTarget,
                                               preferredTarget: sequential ? time(index: index, minutes: minutes, hours: hours) : nil,
+                                              isDemonstration: true,
                                               using: &rng)
     }
 }

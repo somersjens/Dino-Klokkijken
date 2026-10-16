@@ -15,7 +15,6 @@ struct WorldMap: View {
     @State private var floatingHUDHeight: CGFloat = 128
     @State private var worldsAboveHUD: Set<Int> = [1]
     @State private var selectedFriend: FriendSelection?
-    @State private var isMapScrolling = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -60,8 +59,6 @@ struct WorldMap: View {
                                 comingSoon(bottomInset: geometry.safeAreaInsets.bottom)
                             }
                         }
-                        .onScrollPhaseChange { _, phase in isMapScrolling = phase != .idle }
-                        .environment(\.jungleMapIsScrolling, isMapScrolling)
                         .accessibilityIdentifier("map.route")
                         .onAppear {
                             if player.profile.dinoLevel > 0 {

@@ -38,16 +38,33 @@ struct DinoExpandedQuestionView: View {
             AnalogClock(time: q.target, theme: theme, size: min(180, clockSize))
                 .accessibilityIdentifier(isDemonstration ? "demo.targetClock" : "question.targetClock")
         case .sortTimes:
-            Text("dino.expanded.sameDay").font(.subheadline).multilineTextAlignment(.center)
+            if isDemonstration {
+                Text("dino.expanded.sameDay").font(.subheadline).multilineTextAlignment(.center)
+                    .accessibilityIdentifier("demo.sort.hint")
+            }
         case .timeSequence:
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 ForEach(Array(q.relatedTimes.enumerated()), id: \.offset) { index, time in
-                    DigitalClock(time: time, theme: theme, fontSize: width < 340 ? 16 : 19)
-                    if index < 2 { Image(systemName: "arrow.right").font(.caption.bold()) }
+                    DigitalClock(time: time, theme: theme, fontSize: sequenceClockFont)
+                    VStack(spacing: 4) {
+                        if isDemonstration {
+                            Text(verbatim: "+\(duration)")
+                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                                .lineLimit(2).minimumScaleFactor(0.8)
+                        }
+                        Image(systemName: "arrow.right").font(.caption.bold())
+                    }.frame(width: sequenceArrowWidth)
+                        .foregroundStyle(DinoStyle.deepGreen)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(isDemonstration ? "+\(duration)" : "→")
+                        .accessibilityIdentifier("\(isDemonstration ? "demo" : "question").sequence.arrow.\(index)")
                 }
-                Text("?").font(.title2.bold())
+                Text("?").font(.title2.bold()).frame(width: 18)
             }.frame(maxWidth: .infinity)
-            if !isDemonstration { Text("dino.expanded.midnightHint").font(.footnote).multilineTextAlignment(.center) }
+            if isDemonstration {
+                Text("dino.expanded.midnightHint").font(.footnote).multilineTextAlignment(.center)
+                    .accessibilityIdentifier("demo.sequence.hint")
+            }
         case .elapsedTime:
             HStack(spacing: 12) {
                 timeCard(q.relatedTimes[0], title: "dino.expanded.start")
@@ -81,6 +98,9 @@ struct DinoExpandedQuestionView: View {
         }
     }
 
+    private var sequenceArrowWidth: CGFloat { isDemonstration ? max(28, width * 0.105) : 14 }
+    private var sequenceClockFont: CGFloat { min(19, (width - 42 - 3 * sequenceArrowWidth) / 12) }
+
     private func timeCard(_ time: ClockTime, title: String) -> some View {
         VStack(spacing: 8) {
             Text(LocalizedStringKey(title)).font(.system(size: 13, weight: .bold, design: .rounded))
@@ -102,6 +122,10 @@ struct DinoExpandedQuestionView: View {
                     Text(verbatim: responseText(q.expectedAnswer))
                         .font(.system(size: 24, weight: .bold, design: .rounded))
                         .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        // Reserve four lines so refreshing a longer day-part answer
+                        // cannot move the action buttons or recenter the example card.
+                        .frame(height: q.kind == .read24Hour ? 120 : nil)
                 }
             }
         }.frame(maxWidth: .infinity)
@@ -173,21 +197,27 @@ struct DinoExpandedQuestionView: View {
                                         .background(DinoStyle.green, in: Circle())
                                 }
                             }
-                    }.buttonStyle(.plain).disabled(session.hasFeedback)
-                        .accessibilityLabel(time.digitalText).accessibilityIdentifier("question.sort.\(index)")
+                    }.buttonStyle(DinoAnswerButtonStyle()).disabled(session.hasFeedback || isDemonstration)
+                        .accessibilityLabel(time.digitalText)
+                        .accessibilityValue(position.map { String($0 + 1) } ?? "")
+                        .accessibilityAddTraits(position == nil ? [] : .isSelected)
+                        .accessibilityIdentifier("\(isDemonstration ? "demo" : "question").sort.\(index)")
                 }
             }.id("question.answers")
             if !session.selectedOrder.isEmpty {
                 Text(verbatim: session.selectedOrder.map(\.digitalText).joined(separator: " → "))
                     .font(.system(size: 15, weight: .bold, design: .rounded)).monospacedDigit().multilineTextAlignment(.center)
                     .padding(12).modifier(ClockAnswerOutline(visible: session.hasFeedback, correct: session.correctFeedback))
+                    .accessibilityIdentifier(isDemonstration ? "demo.answer" : "question.sort.selection")
             }
             if session.hasFeedback && !session.correctFeedback {
                 Label("dino.expanded.correctOrder", systemImage: "checkmark.circle.fill").font(.subheadline.bold())
                 Text(verbatim: responseText(q.expectedAnswer)).font(.system(size: 15, weight: .bold, design: .rounded))
                     .monospacedDigit().padding(12).modifier(ClockAnswerOutline(visible: true, correct: true))
             }
-            confirm(.ordering(session.selectedOrder), enabled: session.selectedOrder.count == 4)
+            if !isDemonstration {
+                confirm(.ordering(session.selectedOrder), enabled: session.selectedOrder.count == 4)
+            }
         }
     }
 
@@ -195,18 +225,11 @@ struct DinoExpandedQuestionView: View {
         let hourChange: ((Int) -> Void)? = session.hasFeedback || movingMinutes ? nil : { session.inputHour = $0 }
         let minuteChange: ((ClockTime) -> Void)? = session.hasFeedback || !movingMinutes ? nil : { session.setInputTime($0) }
         return VStack(spacing: 16) {
-            HStack(spacing: 12) {
-                AnalogClock(time: session.attempt.submittedAnswer ?? session.inputTime, theme: theme,
-                            size: session.hasFeedback && !session.correctFeedback ? min(140, (width - 44) / 2) : min(190, clockSize),
-                            onHourChange: hourChange,
-                            onMinuteChange: minuteChange, minuteStep: session.minuteStep)
-                    .padding(8).modifier(ClockAnswerOutline(visible: session.hasFeedback, correct: session.correctFeedback))
-                    .accessibilityIdentifier("question.analogControl")
-                if session.hasFeedback && !session.correctFeedback {
-                    AnalogClock(time: q.target, theme: theme, size: min(140, (width - 44) / 2)).padding(8)
-                        .modifier(ClockAnswerOutline(visible: true, correct: true)).accessibilityIdentifier("question.correctClock")
-                }
-            }
+            AnalogClockAnswerComparison(answer: session.attempt.submittedAnswer ?? session.inputTime,
+                                        target: q.target, theme: theme, width: width, clockSize: min(190, clockSize),
+                                        hasFeedback: session.hasFeedback, correct: session.correctFeedback,
+                                        onHourChange: hourChange, onMinuteChange: minuteChange,
+                                        minuteStep: session.minuteStep)
             if !session.hasFeedback {
                 if session.allowsMinutes {
                     Picker("dino.practice.hand", selection: $movingMinutes) {
@@ -256,14 +279,18 @@ struct DinoExpandedDemonstration: View {
                     .accessibilityIdentifier("demo.title")
                 DinoExpandedQuestionView(session: sample, theme: theme, width: width, clockSize: 150, isDemonstration: true)
                     .id(sample.question.id)
-                if !kind.usesOptions {
+                if !kind.usesOptions && kind != .sortTimes {
                     Text(verbatim: answer(sample.question)).font(.system(size: 15, weight: .medium, design: .rounded))
                         .multilineTextAlignment(.center).accessibilityIdentifier("demo.answer")
                 }
             }
             DinoDemonstrationActions(done: done) {
-                exampleIndex += 1
-                loadExample()
+                var transaction = Transaction(animation: nil)
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    exampleIndex += 1
+                    loadExample()
+                }
             }
         }.frame(width: width).dinoCard()
             .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
@@ -276,8 +303,10 @@ struct DinoExpandedDemonstration: View {
         let question = DinoDemonstrationExamples.question(kind: kind, minutes: worldMinutes ?? time.minutes,
                                                         minuteStep: worldMinutes == nil ? time.minuteStep : minuteStep,
                                                         index: exampleIndex, previousTarget: sample?.question.target)
-        sample = DinoSession(level: configuration.level, player: player, practice: configuration,
-                             example: question, exampleMinuteStep: worldMinutes == nil ? nil : minuteStep)
+        let next = DinoSession(level: configuration.level, player: player, practice: configuration,
+                               example: question, exampleMinuteStep: worldMinutes == nil ? nil : minuteStep)
+        if case .ordering(let times) = question.expectedAnswer { next.selectedOrder = times }
+        sample = next
     }
 
     private func answer(_ q: ClockQuestion) -> String {

@@ -1,9 +1,5 @@
 import SwiftUI
 
-extension EnvironmentValues {
-    @Entry var jungleMapIsScrolling = false
-}
-
 /// Every section meets its neighbour at the same centre line and vertical tangent.
 /// The sign is drawn over the trail, rather than leaving a blank break in it.
 struct WorldRouteTrail: View, Equatable {
@@ -1362,7 +1358,7 @@ struct WorldMapLandscape: View, Equatable {
         GeometryReader { geometry in
             let headroom = max(900, viewportHeight * 1.5)
             let scene = JungleMapLayout(width: geometry.size.width).scene()
-            Canvas(rendersAsynchronously: true) { canvasContext, _ in
+            Canvas { canvasContext, _ in
                 var context = canvasContext
                 context.translateBy(x: 0, y: headroom)
                 let size = geometry.size
@@ -1481,12 +1477,13 @@ struct WorldMapLandscape: View, Equatable {
 }
 
 /// Small static textures cover wildlife and ground details in the correct order.
-/// Nearby tiles are prepared ahead of scrolling, distant ones release their art.
+/// Tiles are prepared ahead of scrolling and retained until the chapter leaves
+/// the map's nearby-world window. Scrolling back never replaces them with clear.
 private struct JungleCanopyTile: View, Equatable {
     let scene: JungleMapLayout.Scene
     let index: Int
     let viewportHeight: CGFloat
-    @State private var nearby = false
+    @State private var prepared = false
 
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.scene === rhs.scene && lhs.index == rhs.index && lhs.viewportHeight == rhs.viewportHeight
@@ -1495,8 +1492,8 @@ private struct JungleCanopyTile: View, Equatable {
     var body: some View {
         let tile = scene.canopyTiles[index]
         Color.clear.overlay {
-            if nearby {
-                Canvas(rendersAsynchronously: true) { context, _ in
+            if prepared {
+                Canvas { context, _ in
                     var c = context
                     c.translateBy(x: 0, y: -tile.bounds.minY)
                     let painter = JungleWorldPainter(context: c)
@@ -1511,7 +1508,12 @@ private struct JungleCanopyTile: View, Equatable {
             let frame = geometry.frame(in: .named("adventure.map.viewport"))
             let margin = max(768, viewportHeight)
             return frame.maxY > -margin && frame.minY < viewportHeight + margin
-        } action: { nearby = $0 }
+        } action: { nearby in
+            guard nearby, !prepared else { return }
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { prepared = true }
+        }
         .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
@@ -1521,14 +1523,13 @@ private struct JungleCanopyTile: View, Equatable {
 private struct JungleWildlife: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.jungleMapIsScrolling) private var scrolling
     @State private var visible = false
     let item: JungleMapLayout.Item
     let viewportHeight: CGFloat
 
     var body: some View {
         let bounds = item.kind.footprint[0]
-        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: !visible || scrolling || reduceMotion || scenePhase != .active)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: !visible || reduceMotion || scenePhase != .active)) { timeline in
             Canvas { context, _ in
                 var c = context
                 c.translateBy(x: -bounds.minX * item.size, y: -bounds.minY * item.size)
@@ -1622,12 +1623,11 @@ private struct JungleWildlife: View {
 private struct JungleFlyingBirds: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.jungleMapIsScrolling) private var scrolling
     @State private var visible = false
     let viewportHeight: CGFloat
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24, paused: !visible || scrolling || reduceMotion || scenePhase != .active)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24, paused: !visible || reduceMotion || scenePhase != .active)) { timeline in
             Canvas { context, size in
                 let time = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate
                 for i in 0..<9 {
@@ -1690,7 +1690,6 @@ private enum JungleWaterfallGeometry {
 private struct JungleWaterfallFlow: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.jungleMapIsScrolling) private var scrolling
     @State private var visible = false
     let scale: CGFloat
     var opacity: Double = 1
@@ -1700,7 +1699,7 @@ private struct JungleWaterfallFlow: View {
 
     var body: some View {
         let bounds = JungleWaterfallGeometry.bounds(mirrored: mirrored, heightScale: heightScale)
-        TimelineView(.animation(minimumInterval: 1.0 / 24, paused: !visible || scrolling || reduceMotion || scenePhase != .active)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24, paused: !visible || reduceMotion || scenePhase != .active)) { timeline in
             Canvas { context, _ in
                 if !reduceMotion {
                     var c = context
@@ -1973,15 +1972,7 @@ private struct JungleWorldPainter {
             }
             p.material(trunk, [0xCDA368, 0x9A744A, 0x745635])
             p.context.stroke(trunk, with: .color(Color(dinoHex: 0x755635)), style: StrokeStyle(lineWidth: 1.3, lineJoin: .round))
-            let rearEnd = Path(ellipseIn: CGRect(x: -64, y: -14, width: 20, height: 32))
-            p.material(rearEnd, [0xD8BA80, 0xA07B4D])
-            p.context.stroke(rearEnd, with: .color(Color(dinoHex: 0x755635)), lineWidth: 1.4)
-            for inset: CGFloat in [4, 7] {
-                p.context.stroke(Path(ellipseIn: CGRect(x: -64 + inset, y: -14 + inset,
-                                                       width: 20 - inset * 2, height: 32 - inset * 2)),
-                                 with: .color(Color(dinoHex: 0x8D683F).opacity(0.7)), lineWidth: 0.8)
-            }
-            // Clip the grain to bark so it cannot run over either finished end.
+            // Only the road-facing cut is visible; the far end recedes into a bush.
             var bark = p.context
             bark.clip(to: trunk)
             for i in 0..<4 {

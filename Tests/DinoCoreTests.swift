@@ -25,6 +25,7 @@ struct DinoCoreTests {
         testPractice()
         testPracticeRecords()
         testExpandedQuestions()
+        testUnambiguousQuestionTimes()
         testDemonstrationExamples()
         testProgress()
         testStorage()
@@ -33,6 +34,7 @@ struct DinoCoreTests {
         testDinoAppearance()
         testDinoAvatarMask()
         testDinoSpriteColors()
+        testPaleBandanaLettering()
         testPlayerModel()
         testLiveClockChanges()
         testUnchangedInputsDoNotPublish()
@@ -47,6 +49,15 @@ struct DinoCoreTests {
         for width: CGFloat in [320, 375, 390, 402, 430, 600, 744, 834, 1024, 1194, 1366] {
             let layout = JungleMapLayout(width: width)
             let scene = layout.scene()
+            for log in scene.placements.filter({ $0.item.kind == .log }) {
+                expect(log.item.mirrored == (log.point.x > width / 2),
+                       "each fallen log faces its pale cut toward the road")
+                let rear = CGPoint(x: log.point.x + (log.item.mirrored ? 48 : -48) * log.item.size,
+                                   y: log.point.y + 7 * log.item.size)
+                expect(scene.placements.contains { $0.item.kind == .shrub &&
+                    abs($0.point.x - rear.x) < 8 && abs($0.point.y - rear.y) < 1 },
+                       "a foreground shrub hides the far end of every log")
+            }
             expect(scene === layout.scene(), "unchanged viewport reuses resolved jungle coordinates")
             expect(scene.ground.contains { $0.item.kind == .mushrooms } &&
                    scene.ground.allSatisfy { !$0.item.kind.occludesWildlife },
@@ -478,6 +489,40 @@ struct DinoCoreTests {
         expect(player.profile == profile && player.practiceRecords == records, "refreshing and answering examples preserves saved progress and practice records")
         expect(DinoDemonstrationExamples.activity(index: 0).hour == 3, "activity example starts with fruit at three")
         expect(Set((0..<5).map { DinoDemonstrationExamples.activity(index: $0) }).count == 5, "activity examples cycle all real activities")
+    }
+
+    static func testUnambiguousQuestionTimes() {
+        for time in DinoPracticeTime.allCases {
+            var dayParts = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.dayPart)), seed: 20261015)
+            var sorting = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.sortTimes)), seed: 20261015)
+            var seenParts = Set<DinoDayPart>()
+            for index in 0..<500 {
+                let dayPart = dayParts.next(index: index)
+                expect(dayPart.target.hour != 6 && dayPart.target.hour < 22,
+                       "day-part questions exclude 06:00–06:59 and 22:00–23:59 in every minute family")
+                seenParts.insert(DinoDayPart(hour: dayPart.target.hour))
+                let sorted = sorting.next(index: index)
+                expect(sorted.options.allSatisfy { $0.minutesOfDay != 0 }, "sorting never includes 00:00")
+                expect(Set(sorted.options).count == 4, "filtering midnight preserves four distinct sorting choices")
+            }
+            expect(seenParts == Set(DinoDayPart.allCases), "unambiguous questions still practice all four day parts")
+        }
+        for minutes in [[0], [59]] {
+            let examples = (0..<24).map {
+                DinoDemonstrationExamples.question(kind: .dayPart, minutes: minutes, minuteStep: 1,
+                                                   index: $0, previousTarget: nil).target
+            }
+            for hour in [6, 22, 23] {
+                expect(examples.contains(ClockTime(hour: hour, minute: minutes[0])),
+                       "day-part examples retain the excluded question hours, including both minute boundaries")
+            }
+        }
+        for time in [ClockTime(hour: 6), ClockTime(hour: 6, minute: 59), ClockTime(hour: 22), ClockTime(hour: 23, minute: 59)] {
+            var rng = SeededGenerator(seed: 20261015)
+            let question = DinoExpandedQuestions.generate(kind: .dayPart, minutes: [time.minute], minuteStep: 1,
+                                                          index: 0, previousTarget: nil, preferredTarget: time, using: &rng)
+            expect(question.target != time, "preferred targets cannot bypass the day-part question filter")
+        }
     }
 
     static func testExpandedQuestions() {
@@ -1242,6 +1287,42 @@ struct DinoCoreTests {
                                "\(asset) keeps idle \(part) saturation instead of becoming pastel: \(s[s.count / 2]) vs \(idleSaturation[part]!)")
                     }
                 }
+            }
+        }
+    }
+
+    static func testPaleBandanaLettering() {
+        // Pose-specific print regions also keep the eye and mouth out of this check.
+        let regions: [(String, CGRect)] = [
+            ("dino-idle", CGRect(x: 550, y: 90, width: 238, height: 106)),
+            ("dino-thumbs-up-08", CGRect(x: 525, y: 85, width: 250, height: 117)),
+            ("dino-wrong-answer-04", CGRect(x: 526, y: 89, width: 252, height: 137)),
+            ("dino-backflip-01", CGRect(x: 702, y: 205, width: 258, height: 98)),
+            ("dino-backflip-03", CGRect(x: 326, y: 131, width: 210, height: 160)),
+            ("dino-backflip-07", CGRect(x: 638, y: 233, width: 256, height: 106)),
+            ("dino-backflip-08", CGRect(x: 520, y: 102, width: 237, height: 109))
+        ]
+        expect(DinoAppearance.standard.bandanaLetteringHex == 0xFFFFFF,
+               "the original red bandana retains white lettering")
+        for color: UInt32 in [0xFFFFFF, 0xFFF4CE] {
+            let appearance = DinoAppearance(bandana: color)
+            for (asset, region) in regions {
+                let url = URL(fileURLWithPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
+                let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
+                let output = DinoSpriteColorRenderer.recolored(source, appearance: appearance, asset: asset)!
+                let bytes = [UInt8](output.dataProvider!.data! as Data)
+                let scale = CGFloat(output.width) / 1254
+                let bounds = region.applying(CGAffineTransform(scaleX: scale, y: scale))
+                var softInk = 0
+                for y in Int(bounds.minY)...Int(bounds.maxY) {
+                    for x in Int(bounds.minX)...Int(bounds.maxX) {
+                        let i = y * output.bytesPerRow + x * 4
+                        if bytes[i + 3] > 250 && (0..<3).allSatisfy({ (58...65).contains(Int(bytes[i + $0])) }) {
+                            softInk += 1
+                        }
+                    }
+                }
+                expect(softInk > 50, "\(asset) renders charcoal print instead of hard black on pale cloth")
             }
         }
     }

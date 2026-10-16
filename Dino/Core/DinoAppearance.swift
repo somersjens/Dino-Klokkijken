@@ -13,6 +13,20 @@ struct DinoAppearance: Codable, Equatable, Hashable, Sendable {
     var belly: UInt32 = 0xFBE4AB
     static let standard = DinoAppearance()
 
+    /// Keep the original white ink except on genuinely pale or bright cloth.
+    var usesBlackBandanaLettering: Bool {
+        func linear(_ channel: UInt32) -> Double {
+            let value = Double(channel & 255) / 255
+            return value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        let luminance = 0.2126 * linear(bandana >> 16)
+            + 0.7152 * linear(bandana >> 8) + 0.0722 * linear(bandana)
+        return luminance >= 0.70
+    }
+
+    /// Charcoal softens the print on pale cloth while retaining clear contrast.
+    var bandanaLetteringHex: UInt32 { usesBlackBandanaLettering ? 0x3D3D3D : 0xFFFFFF }
+
     subscript(_ part: Part) -> UInt32 {
         get {
             switch part {
