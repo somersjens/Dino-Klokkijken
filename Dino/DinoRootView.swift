@@ -39,10 +39,13 @@ struct DinoRootView: View {
             }
             .sheet(isPresented: $showsSettings) {
                 DinoSettingsView().environmentObject(player).gameEnvironment()
+                    .presentationSizing(.page)
                     .presentationDetents([.large]).presentationDragIndicator(.visible)
             }
             .sheet(isPresented: $showsPractice) {
                 DinoPracticeView().gameEnvironment()
+                    .presentationSizing(.page)
+                    .presentationDetents([.large]).presentationDragIndicator(.visible)
             }
             .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
                 if friends.enabled { friends.refresh(); friends.scheduleSync() }
@@ -83,7 +86,7 @@ struct DinoRootView: View {
 
     private func start(_ level: LevelConfiguration) {
         guard player.profile.isUnlocked(level.id) else { return }
-        let nextSession = DinoSession(level: level, player: player, answerFeedback: { [settings] correct in
+        let nextSession = DinoSession(level: level, player: player, language: LanguageManager.shared.effective.code, answerFeedback: { [settings] correct in
             DinoAnswerFeedback.shared.play(correct: correct, sound: settings.soundEffectsEnabled,
                                            vibration: settings.hapticsEnabled)
         })

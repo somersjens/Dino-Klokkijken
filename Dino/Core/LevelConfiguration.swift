@@ -3,7 +3,7 @@ import Foundation
 enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
     case chooseAnalog, chooseDigital, activity, setAnalog, setDigital, match
     case readDigital, spokenTime, trueFalse, dayPart, read24Hour, sortTimes, timeSequence
-    case addTime, advanceAnalog, elapsedTime, subtractTime, schoolEnd, flightArrival, timeZone
+    case addTime, advanceAnalog, elapsedTime, subtractTime, schoolEnd, flightArrival, timeZone, daySchedule, minutesBetween
     var instructionKey: String { "dino.question.\(rawValue)" }
     var symbol: String {
         switch self {
@@ -21,10 +21,12 @@ enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
         case .timeSequence: return "ellipsis"
         case .addTime, .advanceAnalog: return "clock.arrow.2.circlepath"
         case .elapsedTime: return "stopwatch.fill"
+        case .minutesBetween: return "arrow.right.to.line"
         case .subtractTime: return "minus.circle.fill"
         case .schoolEnd: return "book.fill"
         case .flightArrival: return "airplane"
         case .timeZone: return "globe.europe.africa.fill"
+        case .daySchedule: return "calendar"
         }
     }
     var usesOptions: Bool { ![.setAnalog, .setDigital, .match, .advanceAnalog, .sortTimes].contains(self) }

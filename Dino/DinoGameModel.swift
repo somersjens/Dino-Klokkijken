@@ -228,7 +228,7 @@ final class DinoSession: ObservableObject, Identifiable {
     private var practiceGenerator: DinoPracticeGenerator?
     private let exampleMinuteStep: Int?
 
-    init(level: LevelConfiguration, player: DinoPlayer, practice: DinoPracticeConfiguration? = nil, example: ClockQuestion? = nil, exampleMinuteStep: Int? = nil, now: @escaping () -> TimeInterval = DinoQuestionTiming.now, answerFeedback: ((Bool) -> Void)? = nil) {
+    init(level: LevelConfiguration, player: DinoPlayer, practice: DinoPracticeConfiguration? = nil, example: ClockQuestion? = nil, exampleMinuteStep: Int? = nil, language: String = "nl", now: @escaping () -> TimeInterval = DinoQuestionTiming.now, answerFeedback: ((Bool) -> Void)? = nil) {
         self.now = now
         questionStartedAt = now()
         self.level = level
@@ -241,7 +241,7 @@ final class DinoSession: ObservableObject, Identifiable {
 #if DEBUG
             if let raw = ProcessInfo.processInfo.environment["DINO_TEST_SEED"], let fixed = UInt64(raw) { seed = fixed }
 #endif
-            var generator = DinoPracticeGenerator(configuration: practice, seed: seed)
+            var generator = DinoPracticeGenerator(configuration: practice, seed: seed, language: language)
             attempt = LevelAttempt(levelID: 0, questions: [example ?? generator.next(index: 0)])
             practiceGenerator = example == nil ? generator : nil
             refreshPracticeProgress()
@@ -252,14 +252,14 @@ final class DinoSession: ObservableObject, Identifiable {
 #if DEBUG
         if let raw = ProcessInfo.processInfo.environment["DINO_TEST_SEED"], let seed = UInt64(raw) {
             var rng = SeededGenerator(seed: seed)
-            questions = DinoQuestionGenerator.generate(level: level, attempt: player.profile.record(level.id).attempts, using: &rng)
+            questions = DinoQuestionGenerator.generate(level: level, attempt: player.profile.record(level.id).attempts, language: language, using: &rng)
         } else {
             var rng = SystemRandomNumberGenerator()
-            questions = DinoQuestionGenerator.generate(level: level, attempt: player.profile.record(level.id).attempts, using: &rng)
+            questions = DinoQuestionGenerator.generate(level: level, attempt: player.profile.record(level.id).attempts, language: language, using: &rng)
         }
 #else
         var rng = SystemRandomNumberGenerator()
-        questions = DinoQuestionGenerator.generate(level: level, attempt: player.profile.record(level.id).attempts, using: &rng)
+        questions = DinoQuestionGenerator.generate(level: level, attempt: player.profile.record(level.id).attempts, language: language, using: &rng)
 #endif
         attempt = LevelAttempt(levelID: level.id, questions: questions)
         resetInputs()

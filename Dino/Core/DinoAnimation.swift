@@ -74,3 +74,52 @@ enum DinoAnimation {
         return sin(.pi * (t - start) / (end - start))
     }
 }
+
+/// Continuous patrols with a short detour, a few pickaxe strokes and a return
+/// to the same shoulder. Distances are route coordinates, independent of width.
+struct CrystalMinerPatrol: Identifiable {
+    let id: Int
+    let right: Bool
+    let stops: [Double]
+    let speed: Double
+    let phaseOffset: Double
+
+    struct Pose {
+        var y: Double
+        var outward: Double = 0
+        var walking = false
+        var upward = false
+        var work: Double? = nil
+    }
+
+    static let routes = [
+        CrystalMinerPatrol(id: 0, right: false, stops: [180, 465, 860, 1440], speed: 19, phaseOffset: 0),
+        CrystalMinerPatrol(id: 1, right: true, stops: [200, 505, 980, 1480], speed: 18, phaseOffset: 59),
+        CrystalMinerPatrol(id: 2, right: false, stops: [725, 835], speed: 15, phaseOffset: 11),
+        CrystalMinerPatrol(id: 3, right: true, stops: [1060, 1210], speed: 15, phaseOffset: 27)
+    ]
+
+    private var indices: [Int] { Array(stops.indices) + Array(stops.indices.dropLast().reversed()) }
+    var duration: Double { 2 * (stops.last! - stops.first!) / speed + Double((stops.count - 1) * 2) * 8.8 }
+
+    func pose(at time: TimeInterval) -> Pose {
+        var t = (time + phaseOffset).truncatingRemainder(dividingBy: duration)
+        if t < 0 { t += duration }
+        func ease(_ x: Double) -> Double { x * x * (3 - 2 * x) }
+        for pair in zip(indices, indices.dropFirst()) {
+            let a = stops[pair.0], b = stops[pair.1]
+            let travel = abs(b - a) / speed
+            if t < travel {
+                return Pose(y: a + (b - a) * t / travel, walking: true, upward: b < a)
+            }
+            t -= travel
+            if t < 2 { return Pose(y: b, outward: ease(t / 2), walking: true, upward: b < a) }
+            t -= 2
+            if t < 4.8 { return Pose(y: b, outward: 1, upward: b < a, work: t) }
+            t -= 4.8
+            if t < 2 { return Pose(y: b, outward: 1 - ease(t / 2), walking: true, upward: b < a) }
+            t -= 2
+        }
+        return Pose(y: stops[0], walking: true)
+    }
+}

@@ -29,7 +29,7 @@ enum DinoPracticeTime: String, CaseIterable, Sendable {
 enum DinoPracticeQuestion: String, CaseIterable, Sendable {
     case chooseAnalog, chooseDigital, readDigital, spokenTime, trueFalse, dayPart, match
     case setDigital, setAnalog, read24Hour, sortTimes, timeSequence
-    case addTime, advanceAnalog, elapsedTime, subtractTime, schoolEnd, flightArrival, timeZone
+    case addTime, advanceAnalog, elapsedTime, subtractTime, schoolEnd, flightArrival, timeZone, daySchedule, minutesBetween
     var titleKey: String { "dino.practice.question.\(rawValue)" }
     var number: Int { Self.allCases.firstIndex(of: self)! + 1 }
     var recipe: QuestionRecipe {
@@ -113,9 +113,11 @@ struct DinoPracticeGenerator {
     private var rng: SeededGenerator
     private var mixedTypes: [DinoPracticeQuestion] = []
     private var previousTarget: ClockTime?
+    private let language: String
 
-    init(configuration: DinoPracticeConfiguration, seed: UInt64 = .random(in: .min ... .max)) {
+    init(configuration: DinoPracticeConfiguration, seed: UInt64 = .random(in: .min ... .max), language: String = "nl") {
         self.configuration = configuration
+        self.language = language
         rng = SeededGenerator(seed: seed)
     }
 
@@ -131,7 +133,7 @@ struct DinoPracticeGenerator {
         var recipe = type.recipe
         if recipe.kind.isExpanded {
             let question = DinoExpandedQuestions.generate(kind: recipe.kind, time: configuration.time,
-                                                           index: index, previousTarget: previousTarget, using: &rng)
+                                                           index: index, previousTarget: previousTarget, language: language, using: &rng)
             previousTarget = question.target
             return question
         }

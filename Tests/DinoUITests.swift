@@ -548,8 +548,8 @@ final class DinoUITests: XCTestCase {
         openSettings()
         tap("settings.soundEffects"); tap("settings.haptics")
         tap("settings.highContrast"); tap("settings.icloudSync")
-        for _ in 0..<6 { if app.buttons["language.picker"].isHittable { break }; app.swipeDown() }
-        tap("language.picker"); tap("language.option.en")
+        for _ in 0..<6 { if app.buttons["language.option.nl"].isHittable { break }; app.swipeDown() }
+        tap("language.option.en")
         tap("settings.reset")
         XCTAssertTrue(app.buttons["settings.reset.confirm"].waitForExistence(timeout: 5))
         saveScreenshot("reset-all-data-confirmation")
@@ -589,6 +589,75 @@ final class DinoUITests: XCTestCase {
         }
         option.tap()
         XCTAssertTrue(option.isSelected, "Practice choice was selected above the fixed start button")
+    }
+
+    func testMinutesBetweenQuestionAndExample() {
+        checkMinutesBetweenQuestionAndExample(language: "nl", family: .whole)
+    }
+
+    func testMinutesBetweenEnglishQuarterHours() {
+        checkMinutesBetweenQuestionAndExample(language: "en", family: .quarter)
+    }
+
+    private func checkMinutesBetweenQuestionAndExample(language: String, family: DinoPracticeTime) {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchArguments = ["-settings.languageOverride", language]
+        app.launch()
+        tap("header.practice")
+        tap("practice.time.\(family.rawValue)")
+        selectPractice("practice.type.minutesBetween")
+        XCTAssertEqual(app.buttons["practice.type.minutesBetween"].label,
+                       language == "nl" ? "Bereken het verschil in minuten" : "Calculate the difference in minutes")
+        tap("practice.start")
+        var generator = DinoPracticeGenerator(configuration: .init(time: family, order: .specific(.minutesBetween)), seed: seed)
+        let q = generator.next(index: 0)
+        let start = app.descendants(matching: .any)["question.minutesBetween.start"]
+        let end = app.descendants(matching: .any)["question.minutesBetween.end"]
+        XCTAssertEqual(start.label, q.relatedTimes[0].digitalText)
+        XCTAssertEqual(end.label, q.relatedTimes[1].digitalText)
+        XCTAssertEqual(app.staticTexts["question.title"].label,
+                       language == "nl" ? "Hoeveel minuten zitten ertussen?" : "How many minutes are there in between?")
+        XCTAssertTrue(app.descendants(matching: .any)["question.minutesBetween.unknown"].exists)
+        for (index, answer) in q.responses.enumerated() {
+            guard case .duration(let minutes) = answer else { return XCTFail("Expected minutes") }
+            XCTAssertEqual(app.buttons["question.option.\(index)"].label, DinoTimeWords.minutes(minutes, language: language))
+            XCTAssertTrue(app.buttons["question.option.\(index)"].isHittable, "All four minute choices fit on screen")
+        }
+        saveScreenshot("minutes-between-question-\(language)")
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            XCUIDevice.shared.orientation = .landscapeLeft
+            XCTAssertTrue(start.waitForExistence(timeout: 5))
+            saveScreenshot("minutes-between-landscape")
+            XCUIDevice.shared.orientation = .portrait
+        }
+        tap("question.example")
+        let example = DinoDemonstrationExamples.question(kind: .minutesBetween, minutes: family.minutes,
+                                                        minuteStep: family.minuteStep, index: 0, previousTarget: nil)
+        let demoAnswer = app.descendants(matching: .any)["demo.answer"]
+        XCTAssertTrue(demoAnswer.waitForExistence(timeout: 5))
+        XCTAssertEqual(demoAnswer.label, DinoTimeWords.minutes(example.durationMinutes, language: language))
+        saveScreenshot("minutes-between-example-\(language)")
+        tap("demo.nextExample")
+        let refreshed = DinoDemonstrationExamples.question(kind: .minutesBetween, minutes: family.minutes,
+                                                          minuteStep: family.minuteStep, index: 1, previousTarget: example.target)
+        XCTAssertEqual(app.descendants(matching: .any)["demo.minutesBetween.end"].label, refreshed.target.digitalText)
+        XCTAssertEqual(demoAnswer.label, DinoTimeWords.minutes(refreshed.durationMinutes, language: language))
+        tap("demo.ready")
+        XCTAssertEqual(start.label, q.relatedTimes[0].digitalText, "Examples preserve the live question")
+        let wrong = q.responses.firstIndex { $0 != q.expectedAnswer }!
+        tap("question.option.\(wrong)")
+        XCTAssertTrue(app.buttons["question.showAnswer"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["question.minutesBetween.unknown"].exists)
+        tap("question.showAnswer")
+        XCTAssertEqual(app.descendants(matching: .any)["question.minutesBetween.answer"].label,
+                       DinoTimeWords.minutes(q.durationMinutes, language: language))
+        XCTAssertGreaterThan(app.staticTexts["question.title"].frame.minY,
+                             app.descendants(matching: .any)["practice.hudSubtitle"].frame.maxY,
+                             "The question stays below the header during feedback")
+        saveScreenshot("minutes-between-answer-\(language)")
+        tap("question.next")
+        XCTAssertEqual(app.staticTexts["practice.questionNumber"].label, "2")
     }
 
     func testPracticeOpenAndScrollPerformance() {
@@ -938,6 +1007,70 @@ final class DinoUITests: XCTestCase {
         }
     }
 
+    func testTimeZoneAtlasCapitalsAndAnswerReveal() {
+        openPractice()
+        selectPractice("practice.type.timeZone")
+        for family in [DinoPracticeTime.whole, .quarter, .fiveMinutes] {
+            chooseExampleTimeFamily(family.rawValue)
+            tap("practice.start")
+            var generator = DinoPracticeGenerator(configuration: .init(time: family, order: .specific(.timeZone)), seed: seed)
+            let question = generator.next(index: 0)
+            let city = question.timeZoneJourney!.destination.name(language: "nl")
+            XCTAssertEqual(app.staticTexts["question.title"].label, "Hoe laat is het in \(city)?")
+            let origin = app.descendants(matching: .any)["question.timeZone.origin"]
+            let destination = app.descendants(matching: .any)["question.timeZone.destination"]
+            let map = app.descendants(matching: .any)["question.timeZone.map"]
+            XCTAssertTrue(map.waitForExistence(timeout: 5))
+            XCTAssertTrue(origin.label.contains("Amsterdam") && origin.label.contains(question.relatedTimes[0].digitalText))
+            XCTAssertTrue(destination.label.contains(city) && destination.label.contains("?"))
+            XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "question.option.")).count, 4)
+            XCTAssertGreaterThanOrEqual(origin.frame.minX, map.frame.minX)
+            XCTAssertLessThanOrEqual(destination.frame.maxX, map.frame.maxX)
+            saveScreenshot("time-zone-atlas-\(family.rawValue)-nl")
+            if family == .fiveMinutes && UIDevice.current.userInterfaceIdiom == .pad {
+                XCUIDevice.shared.orientation = .landscapeLeft
+                RunLoop.current.run(until: Date().addingTimeInterval(0.8))
+                XCTAssertTrue(map.isHittable)
+                let viewport = app.scrollViews["game.questions"].frame
+                XCTAssertGreaterThanOrEqual(app.staticTexts["question.title"].frame.minY, viewport.minY)
+                XCTAssertLessThanOrEqual(app.buttons["question.option.3"].frame.maxY, viewport.maxY)
+                saveScreenshot("time-zone-atlas-worldwide-landscape")
+                XCUIDevice.shared.orientation = .portrait
+            }
+            tap("question.example")
+            XCTAssertTrue(app.buttons["demo.ready"].waitForExistence(timeout: 5))
+            let demoCity = app.descendants(matching: .any)["demo.timeZone.destination"]
+            XCTAssertFalse(demoCity.label.contains("?"), "The worked map reveals the destination time")
+            saveScreenshot("time-zone-atlas-example-\(family.rawValue)")
+            tap("demo.nextExample")
+            XCTAssertFalse(demoCity.label.contains("?"))
+            tap("demo.ready")
+            XCTAssertTrue(destination.label.contains("?"), "Examples preserve the unanswered live map")
+            let wrongIndex = question.options.firstIndex { $0 != question.target }!
+            tap("question.option.\(wrongIndex)")
+            XCTAssertTrue(destination.label.contains("?"), "A wrong first attempt does not reveal the time")
+            tap("question.showAnswer")
+            XCTAssertTrue(destination.label.contains(question.target.digitalText), "Revealing the answer updates the map")
+            tap("header.pause")
+        }
+    }
+
+    func testTimeZoneAtlasEnglishUsesLondon() {
+        app.terminate()
+        app.launchArguments = ["-settings.languageOverride", "en"]
+        app.launch()
+        openPractice()
+        selectPractice("practice.type.timeZone")
+        tap("practice.start")
+        var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.timeZone)), seed: seed, language: "en")
+        let question = generator.next(index: 0)
+        XCTAssertEqual(app.staticTexts["question.title"].label,
+                       "What time is it in \(question.timeZoneJourney!.destination.name(language: "en"))?")
+        XCTAssertTrue(app.descendants(matching: .any)["question.timeZone.origin"].label.contains("London"))
+        XCTAssertTrue(app.descendants(matching: .any)["question.timeZone.destination"].label.contains("?"))
+        saveScreenshot("time-zone-atlas-whole-en")
+    }
+
     func testExpandedExamplesRefreshTheirQuestionAndAnswer() {
         openPractice()
         tap("practice.time.quarter")
@@ -971,6 +1104,51 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("refreshed-time-zone-example")
         tap("demo.ready")
         XCTAssertEqual(app.staticTexts["practice.questionNumber"].label, "1", "Examples do not count as practice answers")
+    }
+
+    func testDayScheduleHasTwoActivitiesAndBreak() {
+        openPractice()
+        tap("practice.time.quarter")
+        selectPractice("practice.type.daySchedule")
+        tap("practice.start")
+        var generator = DinoPracticeGenerator(configuration: .init(time: .quarter, order: .specific(.daySchedule)), seed: seed)
+        let question = generator.next(index: 0)
+        let schedule = question.daySchedule!
+        func element(_ id: String) -> XCUIElement {
+            app.descendants(matching: .any).matching(identifier: id).firstMatch
+        }
+        for (suffix, minutes) in [("activity.1", schedule.firstMinutes), ("break", schedule.breakMinutes), ("activity.2", schedule.secondMinutes)] {
+            XCTAssertTrue(element("question.schedule.\(suffix)").waitForExistence(timeout: 5))
+            XCTAssertTrue(element("question.schedule.\(suffix)").label.contains("\(minutes) min"))
+        }
+        XCTAssertTrue(element("question.schedule.start").label.contains(schedule.start.digitalText))
+        XCTAssertTrue(element("question.schedule.finish").label.contains("?"), "The end time is the question")
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "question.option.")).count, 4)
+        saveScreenshot("day-schedule-question")
+
+        tap("question.example")
+        XCTAssertTrue(app.buttons["demo.ready"].waitForExistence(timeout: 5))
+        let example = DinoDemonstrationExamples.question(kind: .daySchedule, minutes: [15, 45], minuteStep: 15, index: 0, previousTarget: nil)
+        XCTAssertEqual(element("demo.answer").label, example.target.digitalText)
+        XCTAssertTrue(element("demo.schedule.calculation").label.contains("+ \(example.daySchedule!.breakMinutes) min +"))
+        for suffix in ["activity.1", "break", "activity.2"] { XCTAssertTrue(element("demo.schedule.\(suffix)").exists) }
+        saveScreenshot("day-schedule-example")
+        tap("demo.nextExample")
+        let next = DinoDemonstrationExamples.question(kind: .daySchedule, minutes: [15, 45], minuteStep: 15, index: 1, previousTarget: example.target)
+        XCTAssertEqual(element("demo.answer").label, next.target.digitalText)
+        tap("demo.ready")
+        XCTAssertTrue(element("question.schedule.start").label.contains(schedule.start.digitalText), "Help preserves the live question")
+        XCTAssertEqual(app.staticTexts["practice.questionNumber"].label, "1")
+
+        let wrongIndex = question.options.firstIndex { $0 != question.target }!
+        tap("question.option.\(wrongIndex)")
+        XCTAssertTrue(element("question.schedule.finish").label.contains("?"), "A retry keeps the end time hidden")
+        tap("question.showAnswer")
+        XCTAssertTrue(element("question.schedule.finish").label.contains(schedule.end.digitalText))
+        saveScreenshot("day-schedule-answer")
+        tap("question.next")
+        XCTAssertEqual(app.staticTexts["practice.questionNumber"].label, "2")
+        XCTAssertTrue(element("question.schedule.finish").label.contains("?"))
     }
 
     func testExpandedMultipleChoiceExamplesShowOneAnswer() {
@@ -2202,7 +2380,8 @@ final class DinoUITests: XCTestCase {
         XCTAssertEqual(display.frame.midY, digitalRowCenters, accuracy: 2)
         let numeralTitle = app.staticTexts["theme.numerals.label"]
         XCTAssertEqual(numeralTitle.frame.height, digits.frame.height, accuracy: 0.5)
-        XCTAssertEqual(app.buttons["theme.numerals.rounded"].frame.minY - numeralTitle.frame.maxY, 20, accuracy: 2)
+        XCTAssertEqual(app.buttons["theme.numerals.rounded"].frame.minY - numeralTitle.frame.maxY,
+                       UIDevice.current.userInterfaceIdiom == .pad ? 26 : 20, accuracy: 2)
         XCTAssertLessThanOrEqual(app.buttons["theme.resetDigitalStyle"].frame.minY - app.buttons["theme.numerals.classic"].frame.maxY, 18)
         for style in ["rounded", "digital", "modern", "classic"] {
             let choice = app.buttons["theme.numerals." + style]
@@ -2529,6 +2708,101 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("custom-clocks")
     }
 
+    func testAdaptiveWelcomePracticeAndSettingsPresentation() {
+        func activate(_ identifier: String) {
+            let button = app.buttons[identifier]
+            let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                button.exists && button.isHittable
+            }, object: nil)
+            wait(for: [ready], timeout: 6)
+            button.tap()
+        }
+        func capture(_ name: String) {
+            // SwiftUI updates AX frames before the page fade/rotation has finished.
+            RunLoop.current.run(until: Date().addingTimeInterval(0.6))
+            saveScreenshot(name)
+        }
+        let tablet = UIDevice.current.userInterfaceIdiom == .pad
+        let title = app.staticTexts["onboarding.title"]
+        let preview = app.descendants(matching: .any)["personalize.preview"]
+        XCTAssertEqual(title.frame.midX, app.frame.midX, accuracy: 1)
+        XCTAssertGreaterThanOrEqual(preview.frame.width, tablet ? 250 : 170)
+        XCTAssertGreaterThanOrEqual(app.buttons["personalize.bandana.red"].frame.height, tablet ? 58 : 44)
+        XCTAssertTrue(app.buttons["personalize.belly.pink"].isHittable)
+        capture("adaptive-welcome-dino")
+        if tablet {
+            XCUIDevice.shared.orientation = .landscapeLeft
+            let landscape = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                self.app.frame.width > self.app.frame.height
+            }, object: nil)
+            wait(for: [landscape], timeout: 8)
+            if app.frame.height < 900 {
+                XCTAssertLessThan(preview.frame.maxX, app.staticTexts["personalize.bandana.label"].frame.minX)
+            }
+            XCTAssertTrue(app.buttons["personalize.belly.pink"].isHittable)
+            XCTAssertTrue(app.buttons["onboarding.next"].isHittable)
+            capture("adaptive-welcome-landscape")
+            XCUIDevice.shared.orientation = .portrait
+            let portrait = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                self.app.frame.width < self.app.frame.height
+            }, object: nil)
+            wait(for: [portrait], timeout: 8)
+        }
+        activate("onboarding.next")
+        let analog = app.descendants(matching: .any)["theme.analog.preview"]
+        XCTAssertGreaterThanOrEqual(analog.frame.width, tablet ? 250 : 170)
+        capture("adaptive-welcome-analog")
+        activate("onboarding.next")
+        XCTAssertTrue(app.buttons["theme.numerals.rounded"].isHittable)
+        capture("adaptive-welcome-digital")
+        activate("onboarding.customClock")
+        activate("header.practice")
+        let options = app.scrollViews["practice.options"]
+        XCTAssertTrue(options.waitForExistence(timeout: 5))
+        if tablet {
+            XCTAssertLessThan(options.frame.minY, app.frame.height * 0.15, "The iPad sheet opens near the top")
+            XCTAssertGreaterThan(options.frame.width, app.frame.width * 0.7)
+            XCTAssertGreaterThan(options.frame.minY, 20, "The map keeps a visible overlap above the sheet")
+        }
+        XCTAssertTrue(app.buttons["practice.start"].isHittable)
+        capture("adaptive-practice-sheet")
+        selectPractice("practice.order.mix")
+        XCTAssertTrue(app.buttons["practice.start"].isHittable)
+        activate("practice.close")
+        activate("header.settings")
+        let settingsTitle = app.staticTexts["settings.title"]
+        XCTAssertTrue(settingsTitle.waitForExistence(timeout: 5))
+        XCTAssertEqual(settingsTitle.frame.midX, app.frame.midX, accuracy: 1)
+        XCTAssertFalse(app.navigationBars.buttons["Klaar"].exists)
+        let done = app.buttons["settings.done"]
+        XCTAssertTrue(done.isHittable)
+        XCTAssertGreaterThan(done.frame.minY, app.frame.height * 0.7)
+        XCTAssertTrue(app.buttons["language.option.nl"].isSelected)
+        XCTAssertTrue(app.buttons["language.option.en"].isHittable)
+        capture("adaptive-settings-dutch")
+        activate("language.option.en")
+        XCTAssertEqual(settingsTitle.label, "Settings")
+        XCTAssertTrue(app.buttons["language.option.en"].isSelected)
+        capture("adaptive-settings-english")
+        activate("language.option.nl")
+        activate("settings.clocks")
+        XCTAssertTrue(app.buttons["theme.done"].waitForExistence(timeout: 5))
+        activate("theme.done")
+        XCTAssertTrue(done.waitForExistence(timeout: 5))
+        activate("settings.done")
+        let returnedToMap = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            !settingsTitle.exists && self.app.buttons["header.settings"].isHittable
+        }, object: nil)
+        wait(for: [returnedToMap], timeout: 6)
+        activate("header.settings")
+        settingsTitle.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.96)))
+        let dismissed = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            !settingsTitle.exists && self.app.buttons["header.settings"].isHittable
+        }, object: nil)
+        wait(for: [dismissed], timeout: 6)
+    }
+
     func testSettingsPreferencesPersist() {
         onboard()
         openSettings()
@@ -2544,6 +2818,9 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("settings-preferences")
         tap("settings.soundEffects"); tap("settings.haptics")
         tap("settings.highContrast"); tap("settings.icloudSync")
+        XCTAssertEqual(sound.value as? String, "0")
+        XCTAssertEqual(haptics.value as? String, "0")
+        XCTAssertEqual(contrast.value as? String, "1")
         XCTAssertEqual(cloud.value as? String, "1")
         XCTAssertTrue(app.staticTexts["settings.icloudStatus"].exists)
         saveScreenshot("settings-high-contrast")
@@ -2560,8 +2837,8 @@ final class DinoUITests: XCTestCase {
         tap("settings.icloudSync"); tap("settings.icloudSync")
         saveScreenshot("settings-landscape")
         XCUIDevice.shared.orientation = .portrait
-        for _ in 0..<6 { if app.buttons["language.picker"].isHittable { break }; app.swipeDown() }
-        tap("language.picker"); tap("language.option.en")
+        for _ in 0..<6 { if app.buttons["language.option.nl"].isHittable { break }; app.swipeDown() }
+        tap("language.option.en")
         XCTAssertEqual(sound.label, "Sound effects")
         XCTAssertEqual(contrast.label, "High contrast")
         saveScreenshot("settings-english")
@@ -2870,7 +3147,6 @@ final class DinoUITests: XCTestCase {
         expectation(for: portraitSettled, evaluatedWith: nil)
         waitForExpectations(timeout: 8)
         openSettings()
-        tap("language.picker")
         XCTAssertTrue(app.buttons["language.option.nl"].exists)
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "language.option.")).count, 2)
         let english = app.descendants(matching: .any).matching(identifier: "language.option.en").firstMatch

@@ -43,7 +43,7 @@ struct DinoPersonalizer: View {
                             .accessibilityAddTraits(page == choice ? .isSelected : [])
                     }
                 }.padding(.horizontal, 16).padding(.top, 32).padding(.bottom, 8)
-                    .frame(maxWidth: 520).frame(maxWidth: .infinity)
+                    .modifier(CustomizationWidth())
                 TabView(selection: $page) {
                     DinoAppearanceEditor().tag(PersonalizationPage.dino)
                     ClockCustomizer(theme: $theme, page: .analog).tag(PersonalizationPage.analog)
@@ -53,7 +53,7 @@ struct DinoPersonalizer: View {
                     player.completeClockCustomization(theme: theme)
                     dismiss()
                 }.buttonStyle(DinoButtonStyle(customization: true)).accessibilityIdentifier("personalize.done")
-                    .padding(16).frame(maxWidth: 540).frame(maxWidth: .infinity)
+                    .padding(16).modifier(CustomizationWidth(footer: true))
             }
             .modifier(CustomizationTypography())
             .background(JungleBackground(quiet: true))
@@ -69,6 +69,7 @@ struct DinoPersonalizer: View {
 struct DinoAppearanceEditor: View {
     @EnvironmentObject private var player: DinoPlayer
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @Environment(\.customizationMetrics) private var metrics
     var onNavigate: ((Int) -> Void)?
     private var appearance: DinoAppearance { player.profile.dinoAppearance ?? .standard }
     private var compact: Bool { verticalSizeClass == .compact }
@@ -79,11 +80,12 @@ struct DinoAppearanceEditor: View {
     ]
 
     var body: some View {
-        VStack(spacing: 0) {
+        let layout = metrics.sideBySide ? AnyLayout(HStackLayout(spacing: 16)) : AnyLayout(VStackLayout(spacing: 0))
+        layout {
             preview
             ScrollView {
                 VStack(spacing: CustomizationLayout.restoreSpacing) {
-                    VStack(spacing: CustomizationLayout.sectionSpacing) {
+                    VStack(spacing: CustomizationLayout.sectionSpacing * metrics.enlargement) {
                         ForEach(DinoAppearance.Part.allCases, id: \.self) { part in
                             colorChoice(part)
                         }
@@ -98,12 +100,12 @@ struct DinoAppearanceEditor: View {
                         .accessibilityIdentifier("personalize.resetColors")
                 }.modifier(CustomizationOptionsCard())
             }.clipped()
-        }
+        }.frame(maxWidth: metrics.sideBySide ? 1100 : .infinity).frame(maxWidth: .infinity)
     }
 
     private var preview: some View {
         ZStack { DinoAvatar(appearance: appearance) }
-            .frame(width: compact ? 88 : 180, height: compact ? 88 : 180)
+            .frame(width: compact ? 88 : metrics.previewSize, height: compact ? 88 : metrics.previewSize)
             .shadow(color: DinoStyle.deepGreen.opacity(0.10), radius: 8, y: 5)
             .accessibilityElement(children: .ignore)
             .accessibilityHidden(false)
@@ -111,7 +113,7 @@ struct DinoAppearanceEditor: View {
             .accessibilityIdentifier("personalize.preview")
             .modifier(PersonalizationPreviewNavigation(onNavigate: onNavigate))
             .padding(.vertical, CustomizationLayout.previewPadding)
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: metrics.sideBySide ? 320 : .infinity)
     }
 
     private func colorChoice(_ part: DinoAppearance.Part) -> some View {
@@ -120,7 +122,7 @@ struct DinoAppearanceEditor: View {
                 ForEach(swatches, id: \.name) { swatch in
                     Button { setColor(swatch.hex, for: part) } label: {
                         Circle().fill(Color(dinoHex: swatch.hex))
-                            .frame(width: 28, height: 28)
+                            .frame(width: metrics.swatchSize, height: metrics.swatchSize)
                             .overlay(Circle().stroke(DinoStyle.ink.opacity(0.18), lineWidth: 1))
                             .overlay {
                                 if appearance[part] == swatch.hex {
@@ -129,7 +131,7 @@ struct DinoAppearanceEditor: View {
                                         .foregroundStyle(swatch.hex == 0x246B37 || swatch.hex == 0xED2429 ? .white : DinoStyle.ink)
                                 }
                             }
-                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .frame(maxWidth: .infinity, minHeight: metrics.controlHeight)
                             .contentShape(Rectangle())
                     }.buttonStyle(.plain)
                         .accessibilityLabel(Text(LocalizedStringKey("dino.appearance.color." + swatch.name)))
@@ -139,7 +141,8 @@ struct DinoAppearanceEditor: View {
                 ColorPicker(selection: colorBinding(part), supportsOpacity: false) {
                     Text(LocalizedStringKey(part.labelKey))
                 }.labelsHidden()
-                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .scaleEffect(metrics.spacious ? 1.25 : 1)
+                    .frame(maxWidth: .infinity, minHeight: metrics.controlHeight)
                     .accessibilityIdentifier("personalize.color.\(part.rawValue)")
             }
         }

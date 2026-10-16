@@ -4,7 +4,9 @@ Native SwiftUI-klokkijkgame voor iPhone en iPad met **tien werelden en honderd l
 
 De volledige appnaam is **Leer klokkijken met Dino** in het Nederlands en **Learn to Tell Time with Dino** in het Engels. Onder het appicoon op het beginscherm staat **Tijd Dino** in het Nederlands en **Dino Time** in het Engels. De naam op het beginscherm volgt de iOS-app-/systeemtaal; de taalkiezer in de game past de gameteksten aan.
 
-Tijdens **Levels oefenen** kies je één van zes tijdsoorten en 19 vraagtypen. Het overzicht toont per combinatie een trofee met de hoogste reeks, ook voor **Oplopend** en **Mix**. Deze twee modi hebben elk een eigen doorlopende reeks en record per tijdsoort. Oefenen gebruikt dezelfde HUD als een level, met **Reeks** en een blijvend doorlopende **Vraag**-teller (0–999 plus een kleine k-teller). Records, actieve reeksen en vragentellers worden lokaal bewaard; pauzeren en hervatten behouden de reeks. [Scherm, opslag en controles](Documentation/PracticeVerification.md). [Aanpassingen aan vragen en voorbeelden](Documentation/QuestionFeedbackVerification.md).
+Tijdens **Levels oefenen** kies je één van zes tijdsoorten en 21 vraagtypen. Het overzicht toont per combinatie een trofee met de hoogste reeks, ook voor **Oplopend** en **Mix**. Deze twee modi hebben elk een eigen doorlopende reeks en record per tijdsoort. Oefenen gebruikt dezelfde HUD als een level, met **Reeks** en een blijvend doorlopende **Vraag**-teller (0–999 plus een kleine k-teller). Records, actieve reeksen en vragentellers worden lokaal bewaard; pauzeren en hervatten behouden de reeks. [Scherm, opslag en controles](Documentation/PracticeVerification.md). [Aanpassingen aan vragen en voorbeelden](Documentation/QuestionFeedbackVerification.md).
+
+Vraagtype **19 · Tijdzones** toont twee echte hoofdsteden op een platte, offline wereldkaart. Nederlands gebruikt Amsterdam als referentie en Engels Londen. De kaart zoomt met de afstand mee; moeilijkere minutensoorten kiezen verder gelegen hoofdsteden. Stippellijnen tonen vereenvoudigde tijdzonegrenzen en uurverschillen. De datum **15 januari** houdt zomer- en wintertijd expliciet. [Kaart, hoofdsteden en verificatie](Documentation/TimeZoneQuestionRefinement.md).
 
 ## Starten
 
@@ -37,6 +39,8 @@ De eerste start volgt de apparaatstaal en opent bij **Maak jouw dino** met vier 
 - Tijdens het zetten van een analoge of digitale klok beweegt het uur mee wanneer de minuten over het hele uur gaan: 05:55 + 5 minuten wordt 06:00 en 06:00 − 5 minuten wordt 05:55. Dit werkt ook voor slepen, de voorbeeldklokken en de overgang tussen twaalf en één.
 - Bij **Verbind de klokken met de tijden** verbreekt een tik op een verbonden klok of digitale tijd het betreffende paar. Beide selecties en de lijn verdwijnen; de speler kan daarna een nieuwe verbinding kiezen.
 - Bij **5/5** of **10/10** speelt de dino één backflip op het uitslagscherm, met vier gekozen poses voor afzet, draai, landing en eindpose. Tijdens de hele draai blijft dezelfde ingetrokken pose zichtbaar, met een doorlopende rotatie en sprongbaan op maximaal 60 frames per seconde. Er worden geen afbeeldingen over elkaar heen getoond. Bij Minder beweging verschijnt de feestelijke eindpose.
+
+Vraagtype **21 – Bereken het verschil in minuten** toont twee persoonlijke digitale klokken in een afgeronde kaart met een groene tijdlijn. De speler kiest uit vier aantallen minuten; ook hele uren worden als minuten getoond. Beide klokken volgen de gekozen tijdsoort en vallen op dezelfde dag, met een verschil tot drie uur. Het voorbeeld toont de uitkomst in de tijdlijn en kan worden vernieuwd. Het type is beschikbaar als losse oefening, in **Oplopend** en in **Mix**, met een eigen oefenrecord. [Uitwerking en controles](Documentation/MinutesBetweenVerification.md).
 
 ## Project en opslag
 

@@ -9,38 +9,45 @@ struct DinoPracticeView: View {
     @State private var session: DinoSession?
 
     var body: some View {
+        GeometryReader { geometry in
+            options(spacious: geometry.size.width >= 650)
+        }
+    }
+
+    private func options(spacious: Bool) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(spacing: 14) {
-                    Text("dino.practice.time").font(.title3.bold()).frame(maxWidth: .infinity)
+                    Text("dino.practice.time").font(.system(size: spacious ? 25 : 20, weight: .bold, design: .rounded)).frame(maxWidth: .infinity)
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                         ForEach(DinoPracticeTime.allCases, id: \.self) { time in
-                            timeChoice(time)
+                            timeChoice(time, spacious: spacious)
                         }
                     }
-                }.padding(14).background(.white.opacity(0.75), in: RoundedRectangle(cornerRadius: 28))
+                }.padding(spacious ? 20 : 14).background(.white.opacity(0.75), in: RoundedRectangle(cornerRadius: 28))
                 LazyVStack(spacing: 10) {
-                    Text("dino.practice.questionType").font(.title3.bold())
+                    Text("dino.practice.questionType").font(.system(size: spacious ? 25 : 20, weight: .bold, design: .rounded))
                         .frame(maxWidth: .infinity).padding(.bottom, 6)
                     ForEach(Array(DinoPracticeQuestion.allCases.enumerated()), id: \.element) { index, type in
                         choice(title: type.titleKey, symbol: type.recipe.kind.symbol, number: index + 1,
                                order: .specific(type), identifier: "practice.type.\(type.rawValue)",
-                               record: player.practiceRecord(time: configuration.time, question: type).bestStreak)
+                               record: player.practiceRecord(time: configuration.time, question: type).bestStreak, spacious: spacious)
                     }
                     Divider().padding(.vertical, 4)
                     choice(title: "dino.practice.ascending", symbol: "arrow.up.right", order: .ascending,
                            identifier: "practice.order.ascending",
-                           record: player.practiceRecord(time: configuration.time, order: .ascending).bestStreak)
+                           record: player.practiceRecord(time: configuration.time, order: .ascending).bestStreak, spacious: spacious)
                     choice(title: "dino.practice.mix", symbol: "shuffle", order: .mix, identifier: "practice.order.mix",
-                           record: player.practiceRecord(time: configuration.time, order: .mix).bestStreak)
+                           record: player.practiceRecord(time: configuration.time, order: .mix).bestStreak, spacious: spacious)
                 }.padding(16).background(.white.opacity(0.75), in: RoundedRectangle(cornerRadius: 28))
-            }.padding(16).frame(maxWidth: 560).frame(maxWidth: .infinity)
+            }.padding(spacious ? 24 : 16).padding(.top, 12).frame(maxWidth: 800).frame(maxWidth: .infinity)
         }.accessibilityIdentifier("practice.options")
             .background(JungleBackground(quiet: true)).foregroundStyle(DinoStyle.ink)
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 12) {
                     Button {
                         session = DinoSession(level: configuration.level, player: player, practice: configuration,
+                                              language: LanguageManager.shared.effective.code,
                                               answerFeedback: { [settings] correct in
                             DinoAnswerFeedback.shared.play(correct: correct, sound: settings.soundEffectsEnabled, vibration: settings.hapticsEnabled)
                         })
@@ -48,23 +55,24 @@ struct DinoPracticeView: View {
                         .buttonStyle(DinoButtonStyle(compact: true)).accessibilityIdentifier("practice.start")
                     Button("dino.practice.backToLevels") { dismiss() }
                         .buttonStyle(DinoSecondaryButtonStyle()).accessibilityIdentifier("practice.close")
-                }.padding(16).frame(maxWidth: 520).frame(maxWidth: .infinity).background(.ultraThinMaterial)
+                }.padding(spacious ? 24 : 16).frame(maxWidth: 760).frame(maxWidth: .infinity)
+                    .background(DinoStyle.paper.opacity(0.97))
             }
             .fullScreenCover(item: $session) { active in
                 DinoPracticeGame(session: active, exit: { session = nil }).gameEnvironment()
             }
     }
 
-    private func timeChoice(_ time: DinoPracticeTime) -> some View {
+    private func timeChoice(_ time: DinoPracticeTime, spacious: Bool) -> some View {
         let selected = configuration.time == time
         return Button { configuration.time = time } label: {
             VStack(spacing: 8) {
                 // Static previews draw in one canvas instead of laying out 60 tick views per clock.
                 PracticeClockPreview(time: time.previewTime, theme: player.profile.clockTheme)
-                    .aspectRatio(1, contentMode: .fit).frame(maxWidth: 90)
+                    .aspectRatio(1, contentMode: .fit).frame(maxWidth: spacious ? 122 : 90)
                     .accessibilityHidden(true)
                 Text(LocalizedStringKey(time.titleKey))
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(.system(size: spacious ? 17 : 13, weight: .bold, design: .rounded))
                     .lineLimit(2).minimumScaleFactor(0.85).frame(height: 30)
             }.padding(.horizontal, 6).padding(.vertical, 10).frame(maxWidth: .infinity)
                 .background(selected ? DinoStyle.green.opacity(0.22) : .white.opacity(0.5), in: RoundedRectangle(cornerRadius: 18))
@@ -76,7 +84,7 @@ struct DinoPracticeView: View {
     }
 
     private func choice(title: String, symbol: String, number: Int? = nil, order: DinoPracticeOrder,
-                        identifier: String, record: Int? = nil) -> some View {
+                        identifier: String, record: Int? = nil, spacious: Bool = false) -> some View {
         let selected = configuration.order == order
         let tint = Color(dinoHex: [0xEDF5E5, 0xEAF3F8, 0xF4EFF8, 0xFBF2E3][((number ?? 1) - 1) % 4])
         return Button {
@@ -89,7 +97,7 @@ struct DinoPracticeView: View {
                 } else {
                     Image(systemName: symbol).frame(width: 32, height: 32)
                 }
-                Text(LocalizedStringKey(title)).font(.system(size: 15, weight: .semibold, design: .rounded))
+                Text(LocalizedStringKey(title)).font(.system(size: spacious ? 18 : 15, weight: .semibold, design: .rounded))
                     .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 if let record {
@@ -100,7 +108,7 @@ struct DinoPracticeView: View {
                 }
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 22)).foregroundStyle(selected ? DinoStyle.deepGreen : DinoStyle.muted)
-            }.frame(minHeight: 44).padding(.horizontal, 12).padding(.vertical, 8)
+            }.frame(minHeight: spacious ? 52 : 44).padding(.horizontal, 12).padding(.vertical, 8)
                 .background(selected ? DinoStyle.green.opacity(0.20) : tint, in: RoundedRectangle(cornerRadius: 18))
                 .overlay(RoundedRectangle(cornerRadius: 18)
                     .stroke(selected ? DinoStyle.deepGreen : highContrast ? DinoStyle.ink.opacity(0.6) : .clear,

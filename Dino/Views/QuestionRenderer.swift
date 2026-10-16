@@ -61,7 +61,8 @@ struct QuestionRenderer: View {
                         .accessibilityLabel(Text("dino.confirm")).accessibilityIdentifier("question.confirm")
                 }
             default:
-                DinoExpandedQuestionView(session: session, theme: theme, width: width, clockSize: clockSize)
+                DinoExpandedQuestionView(session: session, theme: theme, width: width, clockSize: clockSize,
+                                         compactLayout: compactLayout || (wideLayout && question.kind == .timeZone))
             }
         }.frame(maxWidth: .infinity)
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.34), value: session.hasFeedback)

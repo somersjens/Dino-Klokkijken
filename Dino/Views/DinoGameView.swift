@@ -65,7 +65,8 @@ struct DinoGameView: View {
                         .defaultScrollAnchor(.center, for: .alignment)
                         .accessibilityIdentifier("game.questions")
                         .onChange(of: session.hasFeedback) { _, visible in
-                            if visible && !session.correctFeedback {
+                            // This compact question already keeps all four choices visible.
+                            if visible && !session.correctFeedback && session.question.kind != .minutesBetween {
                                 withAnimation(.easeOut(duration: 0.25)) {
                                     proxy.scrollTo("question.answers", anchor: .center)
                                 }
@@ -73,6 +74,9 @@ struct DinoGameView: View {
                         }
                         .onChange(of: session.question.id) { _, _ in
                             proxy.scrollTo("question.top", anchor: .top)
+                        }
+                        .onChange(of: wide) { _, _ in
+                            if session.question.kind == .timeZone { proxy.scrollTo("question.top", anchor: .top) }
                         }
                     }
                     companionDock(height: dockHeight, size: companionSize, width: g.size.width)
@@ -294,6 +298,10 @@ struct DinoQuestionTitle: View {
     }
 
     private var title: Text {
+        if question.kind == .timeZone, let journey = question.timeZoneJourney {
+            return Text(verbatim: String(format: L(key: "dino.question.timeZone.format"),
+                                         journey.destination.name(language: language.effective.code)))
+        }
         guard [.spokenTime, .trueFalse].contains(question.kind) else {
             return Text(LocalizedStringKey(instructionKey ?? question.kind.instructionKey))
         }

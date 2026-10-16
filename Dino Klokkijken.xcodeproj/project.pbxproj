@@ -6,6 +6,14 @@
 	"archiveVersion" = "1";
 	"validationLevel" = "1";
 	"objects" = {
+        "DA192026BD01000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/TimeZoneQuestions.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+        "DB192026BD01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA192026BD01000000000001"; };
+        "DC192026BD01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA192026BD01000000000001"; };
+        "DA192026BD01000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/TimeZoneMap.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+        "DB192026BD01000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA192026BD01000000000002"; };
+        "DA192026BD01000000000003" = { "isa" = "PBXFileReference"; "path" = "Dino/Resources/TimeZoneMap.json"; "lastKnownFileType" = "text.json"; "sourceTree" = "SOURCE_ROOT"; };
+        "DB192026BD01000000000003" = { "isa" = "PBXBuildFile"; "fileRef" = "DA192026BD01000000000003"; };
+
         "DA162026BD01000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/StarsOverview.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
         "DB162026BD01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA162026BD01000000000001"; };
         "DA152026BD03000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/JungleMapLayout.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
@@ -17,6 +25,8 @@
 		"DC121026AC02000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000001"; };
 		"DA121026AC02000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/ExpandedQuestionView.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
 		"DB121026AC02000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000002"; };
+        "DA212026BD01000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/MinutesBetweenQuestion.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+        "DB212026BD01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA212026BD01000000000001"; };
 
 		"DA121026AC01000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/PracticeConfiguration.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
 		"DB121026AC01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC01000000000001"; };
@@ -191,6 +201,7 @@
 			"isa" = "PBXResourcesBuildPhase";
 			"files" = (
 				"9BB407718D9D26EDD1309082",
+                "DB192026BD01000000000003",
 				"B8196F54F8B174235D7F48CC",
 				"F951E75B307BE03500FF04C4",
 				"F951E7F1307BE03500FF04C4",
@@ -201,6 +212,7 @@
 			"buildActionMask" = "2147483647";
 			"files" = (
 				"DC121026AC02000000000001",
+                "DC192026BD01000000000001",
 				"DC121026AC01000000000001",
 				"DC121026AB13000000000001",
 				"DC121026AB12000000000001",
@@ -243,8 +255,11 @@
 			"files" = (
                 "DB152026BD03000000000001",
 				"DB121026AC02000000000001",
+                "DB192026BD01000000000001",
+                "DB192026BD01000000000002",
 				"DB121026AC01000000000001",
 				"DB121026AC02000000000002",
+                "DB212026BD01000000000001",
 				"DB121026AC01000000000002",
 				"DB162026BD01000000000001",
 				"DB121026AB13000000000001",
@@ -864,6 +879,7 @@
 			"children" = (
                 "DA152026BD03000000000001",
 				"DA121026AC02000000000001",
+                "DA192026BD01000000000001",
 				"DA121026AC01000000000001",
 				"DA121026AB13000000000001",
 				"DA121026AB12000000000001",
@@ -889,6 +905,8 @@
 			"name" = "Views";
 			"children" = (
 				"DA121026AC02000000000002",
+                "DA212026BD01000000000001",
+                "DA192026BD01000000000002",
 				"DA121026AC01000000000002",
 				"DA162026BD01000000000001",
 				"DA121026AB12000000000003",
@@ -962,6 +980,7 @@
 			"isa" = "PBXGroup";
 			"children" = (
 				"DCDF56484DA8108CF908CF1F",
+                "DA192026BD01000000000003",
 				"6D123AE8AB04EEE632CC6C18",
 				"8D1BC6DD34FD70BFF7727C14",
 				"837325E4F6046C826649A631",

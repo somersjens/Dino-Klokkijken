@@ -8,6 +8,11 @@ struct OnboardingFlow: View {
     @State private var theme = ClockTheme.standard
 
     var body: some View {
+        content.modifier(CustomizationTypography())
+            .onAppear { theme = player.profile.clockTheme }
+    }
+
+    private var content: some View {
         VStack(spacing: 0) {
             Text(LocalizedStringKey(step == 0 ? "dino.appearance.welcome" : step == 1 ? "dino.makeAnalogClock" : "dino.makeDigitalClock"))
                 .modifier(CustomizationTitle())
@@ -24,8 +29,6 @@ struct OnboardingFlow: View {
         }
         .background(JungleBackground())
         .foregroundStyle(DinoStyle.ink)
-        .modifier(CustomizationTypography())
-        .onAppear { theme = player.profile.clockTheme }
     }
 
     private var footer: some View {
@@ -40,7 +43,7 @@ struct OnboardingFlow: View {
                 Button("dino.useMyClock") { player.completeOnboarding(theme: theme) }
                     .buttonStyle(DinoButtonStyle(customization: true)).accessibilityIdentifier("onboarding.customClock")
             }
-        }.padding(16).frame(maxWidth: 540).frame(maxWidth: .infinity)
+        }.padding(16).modifier(CustomizationWidth(footer: true))
     }
 
     private func navigate(_ offset: Int) {

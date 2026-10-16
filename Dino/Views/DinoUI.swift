@@ -35,6 +35,24 @@ enum DinoStyle {
 }
 
 private struct CustomizationTypeScaleKey: EnvironmentKey { static let defaultValue: CGFloat = 1 }
+private struct CustomizationMetricsKey: EnvironmentKey { static let defaultValue = CustomizationMetrics() }
+
+/// Use the available window, including iPad split view, rather than the device model.
+struct CustomizationMetrics {
+    var spacious = false
+    var sideBySide = false
+    var contentWidth: CGFloat { spacious ? 740 : 520 }
+    var footerWidth: CGFloat { spacious ? 760 : 540 }
+    var enlargement: CGFloat { spacious ? 1.3 : 1 }
+    var previewSize: CGFloat { spacious ? 270 : 180 }
+    var swatchSize: CGFloat { spacious ? 40 : 28 }
+    var controlHeight: CGFloat { spacious ? 60 : 44 }
+
+    init(size: CGSize = .zero) {
+        spacious = size.width >= 650
+        sideBySide = size.width >= 900 && size.height < 900
+    }
+}
 
 /// Shared rhythm for the Dino, analog and digital customization menus.
 enum CustomizationLayout {
@@ -49,13 +67,14 @@ enum CustomizationLayout {
 
 /// Every option heading shares its typography and distance to the controls below.
 struct CustomizationSection<Content: View>: View {
+    @Environment(\.customizationMetrics) private var metrics
     let title: String
     let identifier: String
     var controlSpacing: CGFloat = CustomizationLayout.labelSpacing
     @ViewBuilder var content: Content
 
     var body: some View {
-        VStack(spacing: controlSpacing) {
+        VStack(spacing: controlSpacing * metrics.enlargement) {
             Text(LocalizedStringKey(title)).modifier(CustomizationText())
                 .frame(maxWidth: .infinity).accessibilityIdentifier(identifier)
             content
@@ -64,14 +83,27 @@ struct CustomizationSection<Content: View>: View {
 }
 
 struct CustomizationOptionsCard: ViewModifier {
+    @Environment(\.customizationMetrics) private var metrics
     func body(content: Content) -> some View {
-        content.dinoCard(padding: 16)
+        content.dinoCard(padding: metrics.spacious ? 24 : 16)
             .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 16)
-            .frame(maxWidth: 520).frame(maxWidth: .infinity)
+            .frame(maxWidth: metrics.contentWidth).frame(maxWidth: .infinity)
+    }
+}
+
+struct CustomizationWidth: ViewModifier {
+    @Environment(\.customizationMetrics) private var metrics
+    var footer = false
+    func body(content: Content) -> some View {
+        content.frame(maxWidth: footer ? metrics.footerWidth : metrics.contentWidth).frame(maxWidth: .infinity)
     }
 }
 
 extension EnvironmentValues {
+    var customizationMetrics: CustomizationMetrics {
+        get { self[CustomizationMetricsKey.self] }
+        set { self[CustomizationMetricsKey.self] = newValue }
+    }
     var customizationTypeScale: CGFloat {
         get { self[CustomizationTypeScaleKey.self] }
         set { self[CustomizationTypeScaleKey.self] = newValue }
@@ -87,13 +119,15 @@ struct CustomizationTypography: ViewModifier {
 
     func body(content: Content) -> some View {
         GeometryReader { geometry in
-            content.environment(\.customizationTypeScale, scale(for: geometry.size.width))
+            let metrics = CustomizationMetrics(size: geometry.size)
+            content.environment(\.customizationMetrics, metrics)
+                .environment(\.customizationTypeScale, scale(for: geometry.size.width, metrics: metrics))
         }
     }
 
-    private func scale(for width: CGFloat) -> CGFloat {
-        let card = max(1, min(520, width) - optionsInset)
-        var scale: CGFloat = 1
+    private func scale(for width: CGFloat, metrics: CustomizationMetrics) -> CGFloat {
+        let card = max(1, min(metrics.contentWidth, width) - optionsInset - (metrics.spacious ? 16 : 0))
+        var scale = metrics.enlargement
         func fit(_ keys: [String], in available: CGFloat, size: CGFloat = 17, weight: UIFont.Weight = .bold) {
             let base = UIFont.systemFont(ofSize: size, weight: weight)
             let font = UIFont(descriptor: base.fontDescriptor.withDesign(.rounded) ?? base.fontDescriptor, size: size)
@@ -106,8 +140,8 @@ struct CustomizationTypography: ViewModifier {
              "dino.hourHand", "dino.minuteHand", "dino.face", "dino.rim", "dino.digitColor", "dino.display", "dino.numerals"], in: card)
         fit(["dino.appearance.reset", "dino.clock.restoreStyle"], in: card - 28)
         fit(["dino.personalize.dino", "dino.personalize.analog", "dino.personalize.digital"],
-            in: (min(520, width) - 48) / 3 - 16)
-        fit(["dino.next", "dino.useMyClock", "dino.done"], in: min(540, width) - 100)
+            in: (min(metrics.contentWidth, width) - 48) / 3 - 16)
+        fit(["dino.next", "dino.useMyClock", "dino.done"], in: min(metrics.footerWidth, width) - 100)
         fit(["dino.appearance.welcome", "dino.makeAnalogClock", "dino.makeDigitalClock"], in: width - 40,
             size: verticalSizeClass == .compact ? 24 : 29, weight: .heavy)
         return scale
@@ -203,7 +237,7 @@ struct DinoButtonStyle: ButtonStyle {
             .font(.system(size: customization ? 17 * customizationScale : compact ? 17 : 20, weight: .bold, design: .rounded))
             .foregroundStyle(color == DinoStyle.green ? DinoStyle.ink : .white)
             .padding(.horizontal, compact ? 16 : 24)
-            .frame(minHeight: compact ? 48 : 58)
+            .frame(minHeight: customization ? max(58, 58 * customizationScale) : compact ? 48 : 58)
             .frame(maxWidth: .infinity)
             .background(LinearGradient(colors: [color, color.opacity(highContrast ? 1 : 0.88)], startPoint: .top, endPoint: .bottom),
                         in: RoundedRectangle(cornerRadius: 20))

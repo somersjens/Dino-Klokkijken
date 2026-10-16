@@ -15,6 +15,7 @@ enum ClockCustomizerPage {
 struct ClockCustomizer: View {
     @ObservedObject private var language = LanguageManager.shared
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @Environment(\.customizationMetrics) private var metrics
     @Binding var theme: ClockTheme
     var page: ClockCustomizerPage = .both
     var onNavigate: ((Int) -> Void)? = nil
@@ -42,19 +43,20 @@ struct ClockCustomizer: View {
                     }.dinoCard()
                 }
             case .analog, .digital:
-                let layout = compact ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
+                let horizontal = compact || metrics.sideBySide
+                let layout = horizontal ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
                 layout {
                     Group {
                         if page == .analog { analogPreview } else { digitalPreview }
                     }.padding(.vertical, CustomizationLayout.previewPadding)
-                        .frame(maxWidth: compact ? (page == .analog ? 140 : 185) : .infinity)
+                        .frame(maxWidth: compact ? (page == .analog ? 140 : 185) : metrics.sideBySide ? 320 : .infinity)
                     ScrollView {
                         Group {
                             if page == .analog { analogOptions } else { digitalOptions }
                         }.modifier(CustomizationOptionsCard())
                     }.clipped().id(page == .analog ? "analog" : "digital")
                         .accessibilityIdentifier(page == .analog ? "theme.options.analog" : "theme.options.digital")
-                }.frame(maxWidth: compact ? 760 : .infinity).frame(maxWidth: .infinity)
+                }.frame(maxWidth: compact ? 760 : metrics.sideBySide ? 1100 : .infinity).frame(maxWidth: .infinity)
             }
         }.foregroundStyle(DinoStyle.ink)
             .onAppear { theme = theme.applyingFixedStyles() }
@@ -63,28 +65,28 @@ struct ClockCustomizer: View {
     private var analogPreview: some View {
         TimelineView(.dinoMinute) { context in
             VStack(spacing: 10) {
-                AnalogClock(time: ClockTime(date: context.date), theme: theme, size: compact ? 100 : 180)
+                AnalogClock(time: ClockTime(date: context.date), theme: theme, size: compact ? 100 : metrics.previewSize)
                     .accessibilityIdentifier("theme.analog.preview")
                     .modifier(PersonalizationPreviewNavigation(onNavigate: onNavigate))
                 if theme.analogColorsMatch { ClockColorWarning(analog: true) }
             }
-        }.padding(.horizontal, 16).frame(maxWidth: 520)
+        }.padding(.horizontal, 16).frame(maxWidth: metrics.contentWidth)
     }
 
     private var digitalPreview: some View {
         TimelineView(.dinoMinute) { context in
             VStack(spacing: 10) {
-                DigitalClock(time: ClockTime(date: context.date), theme: theme, fontSize: compact ? 36 : 48)
+                DigitalClock(time: ClockTime(date: context.date), theme: theme, fontSize: compact ? 36 : metrics.spacious ? 68 : 48)
                     .accessibilityIdentifier("theme.digital.preview")
                     .modifier(PersonalizationPreviewNavigation(onNavigate: onNavigate))
                 if theme.digitalColorsMatch { ClockColorWarning(analog: false) }
             }
-        }.padding(.horizontal, 16).frame(maxWidth: 520)
+        }.padding(.horizontal, 16).frame(maxWidth: metrics.contentWidth)
     }
 
     private var analogOptions: some View {
         VStack(spacing: CustomizationLayout.restoreSpacing) {
-            VStack(spacing: CustomizationLayout.sectionSpacing) {
+            VStack(spacing: CustomizationLayout.sectionSpacing * metrics.enlargement) {
                 analogNumeralChoices
                 analogShapeChoices.padding(.bottom, CustomizationLayout.swatchInset)
                 colorChoices(title: "dino.hourHand", color: analogColor(\.customHourHex, preset: \.hourInk), values: inkSwatches)
@@ -101,7 +103,7 @@ struct ClockCustomizer: View {
 
     private var digitalOptions: some View {
         VStack(spacing: CustomizationLayout.restoreSpacing) {
-            VStack(spacing: CustomizationLayout.sectionSpacing) {
+            VStack(spacing: CustomizationLayout.sectionSpacing * metrics.enlargement) {
                 colorChoices(title: "dino.digitColor", color: $theme.digitalInkHex, values: digitalInkSwatches)
                 colorChoices(title: "dino.display", color: displayColor, values: displaySwatches)
                 CustomizationSection(title: "dino.numerals", identifier: "theme.numerals.label",
@@ -220,7 +222,7 @@ struct ClockCustomizer: View {
             HStack(spacing: 0) {
                 ForEach(values, id: \.name) { value in
                     Button { color.wrappedValue = value.hex } label: {
-                        Circle().fill(Color(dinoHex: value.hex)).frame(width: 28, height: 28)
+                        Circle().fill(Color(dinoHex: value.hex)).frame(width: metrics.swatchSize, height: metrics.swatchSize)
                             .overlay(Circle().stroke(DinoStyle.ink.opacity(0.18), lineWidth: 1))
                             .overlay {
                                 if color.wrappedValue == value.hex {
@@ -228,14 +230,15 @@ struct ClockCustomizer: View {
                                     Image(systemName: "checkmark").font(.system(size: 12, weight: .heavy))
                                         .foregroundStyle(Color(dinoHex: ClockColorContrast.markingHex(on: value.hex)))
                                 }
-                            }.frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
+                            }.frame(maxWidth: .infinity, minHeight: metrics.controlHeight).contentShape(Rectangle())
                     }.buttonStyle(.plain)
                         .accessibilityIdentifier("theme." + title + "." + value.name)
                         .accessibilityLabel(Text(verbatim: L(key: "dino.color." + value.name)))
                         .accessibilityAddTraits(color.wrappedValue == value.hex ? .isSelected : [])
                 }
                 ColorPicker(selection: systemColor(color), supportsOpacity: false) { Text("dino.customColor") }
-                    .labelsHidden().frame(maxWidth: .infinity, minHeight: 44)
+                    .labelsHidden().scaleEffect(metrics.spacious ? 1.25 : 1)
+                    .frame(maxWidth: .infinity, minHeight: metrics.controlHeight)
                     .accessibilityLabel(Text(verbatim: L(key: title) + ", " + L("dino.customColor")))
                     .accessibilityValue(Text(verbatim: String(format: "#%06X", color.wrappedValue)))
                     .accessibilityIdentifier("theme." + title + ".custom")
@@ -312,13 +315,13 @@ struct MyClocksView: View {
         VStack(spacing: 0) {
             ScrollView {
                 ClockCustomizer(theme: $theme)
-                    .padding(20).frame(maxWidth: 520).frame(maxWidth: .infinity)
+                    .padding(20).modifier(CustomizationWidth())
             }.accessibilityIdentifier("theme.options.both").clipped()
             Button("dino.done") {
                 player.completeClockCustomization(theme: theme)
                 dismiss()
             }.buttonStyle(DinoButtonStyle(customization: true)).accessibilityIdentifier("theme.done")
-                .padding(16).frame(maxWidth: 540).frame(maxWidth: .infinity)
+                .padding(16).modifier(CustomizationWidth(footer: true))
         }
         .background(JungleBackground(quiet: true))
         .modifier(CustomizationTypography(optionsInset: 80))

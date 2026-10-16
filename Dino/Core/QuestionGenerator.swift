@@ -11,6 +11,8 @@ struct ClockQuestion: Identifiable, Equatable, Sendable {
     var relatedTimes: [ClockTime] = []
     var durationMinutes = 0
     var offsetHours = 0
+    var timeZoneJourney: DinoTimeZoneJourney? = nil
+    var daySchedule: DinoDaySchedule? = nil
     var statement: ClockTime? = nil
     var answerChoices: [ClockAnswer] = []
     var answer: ClockAnswer? = nil
@@ -32,9 +34,10 @@ enum DinoMatchingQuestions {
 enum DinoQuestionGenerator {
     static func generate<R: RandomNumberGenerator>(level: LevelConfiguration,
                                                    attempt: Int = 0,
+                                                   language: String = "nl",
                                                    using rng: inout R) -> [ClockQuestion] {
         precondition(!level.allowedHours.isEmpty && level.allowedHours.allSatisfy { (1...12).contains($0) })
-        if level.worldID > 1 { return generateWorld(level: level, using: &rng) }
+        if level.worldID > 1 { return generateWorld(level: level, language: language, using: &rng) }
         var available = level.allowedHours.shuffled(using: &rng)
         var used = Set<Int>()
         let positionOffset = Int.random(in: 0..<12, using: &rng)
@@ -70,7 +73,7 @@ enum DinoQuestionGenerator {
         }
     }
 
-    private static func generateWorld<R: RandomNumberGenerator>(level: LevelConfiguration, using rng: inout R) -> [ClockQuestion] {
+    private static func generateWorld<R: RandomNumberGenerator>(level: LevelConfiguration, language: String, using rng: inout R) -> [ClockQuestion] {
         let pool = level.allowedHours.flatMap { hour in
             level.allowedMinutes.map { ClockTime(hour: hour, minute: $0) }
         }
@@ -80,7 +83,7 @@ enum DinoQuestionGenerator {
             if recipe.kind.isExpanded {
                 let question = DinoExpandedQuestions.generate(kind: recipe.kind, minutes: level.allowedMinutes,
                                                                minuteStep: level.minuteStep, index: index,
-                                                               previousTarget: previous, using: &rng)
+                                                               previousTarget: previous, language: language, using: &rng)
                 previous = question.target
                 return question
             }

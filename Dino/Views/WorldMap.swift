@@ -953,7 +953,7 @@ private struct WorldChapter: View {
         }.background {
             MapScenery(viewportHeight: viewportHeight) {
                 ZStack(alignment: .top) {
-                    ThemedWorldLandscape(world: world, routeOffset: routeOffset).equatable()
+                    ThemedWorldLandscape(world: world, routeOffset: routeOffset, viewportHeight: viewportHeight).equatable()
                     if world.id != 5 {
                         GeometryReader { geometry in
                             let points = positions.enumerated().map {

@@ -1,6 +1,91 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "dino.minutesBetween.sameDay": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Both times are on the same day."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beide tijden zijn op dezelfde dag."
+          }
+        }
+      }
+    },
+    "dino.minutesBetween.until": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Until"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tot"
+          }
+        }
+      }
+    },
+    "dino.minutesBetween.from": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Van"
+          }
+        }
+      }
+    },
+    "dino.question.minutesBetween": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How many minutes are there in between?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoeveel minuten zitten ertussen?"
+          }
+        }
+      }
+    },
+    "dino.practice.question.minutesBetween": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calculate the difference in minutes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bereken het verschil in minuten"
+          }
+        }
+      }
+    },
     "" : {
 
     },
@@ -1726,6 +1811,13 @@
         }
       }
     },
+    "dino.expanded.arrival" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Arrival" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Aankomst" } }
+      }
+    },
     "dino.expanded.departure" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1809,6 +1901,27 @@
             "value" : "De vlucht duurt:"
           }
         }
+      }
+    },
+    "dino.expanded.flightDuration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Flight duration" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Vluchtduur" } }
+      }
+    },
+    "dino.expanded.flightTicket" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Flight ticket" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Vliegticket" } }
+      }
+    },
+    "dino.expanded.unknownArrival" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Arrival time: unknown" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Aankomsttijd: onbekend" } }
       }
     },
     "dino.expanded.flightZone" : {
@@ -4446,6 +4559,23 @@
         }
       }
     },
+    "dino.practice.question.daySchedule" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Two activities with a break"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twee activiteiten met pauze"
+          }
+        }
+      }
+    },
     "dino.practice.question.digitalFour" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5092,6 +5222,23 @@
         }
       }
     },
+    "dino.question.daySchedule" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What time will you finish?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoe laat ben je klaar?"
+          }
+        }
+      }
+    },
     "dino.question.elapsedTime" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5313,6 +5460,142 @@
         }
       }
     },
+    "dino.question.timeZone.format" : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What time is it in %@?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoe laat is het in %@?"
+          }
+        }
+      }
+    },
+    "dino.timeZone.atlas" : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TIME ZONES"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TIJDZONES"
+          }
+        }
+      }
+    },
+    "dino.timeZone.date" : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 January"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 januari"
+          }
+        }
+      }
+    },
+    "dino.timeZone.legend" : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simplified time zones"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vereenvoudigde tijdzones"
+          }
+        }
+      }
+    },
+    "dino.timeZone.format" : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24-hour clock"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "24-uursklok"
+          }
+        }
+      }
+    },
+    "dino.timeZone.reference" : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Given time"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gegeven tijd"
+          }
+        }
+      }
+    },
+    "dino.timeZone.later" : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d h later"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d uur later"
+          }
+        }
+      }
+    },
+    "dino.timeZone.earlier" : {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d h earlier"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d uur eerder"
+          }
+        }
+      }
+    },
     "dino.question.timeZone" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5496,6 +5779,159 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Klokrand"
+          }
+        }
+      }
+    },
+    "dino.schedule.activity.building" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Building"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bouwen"
+          }
+        }
+      }
+    },
+    "dino.schedule.activity.drawing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drawing"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekenen"
+          }
+        }
+      }
+    },
+    "dino.schedule.activity.music" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Making music"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muziek maken"
+          }
+        }
+      }
+    },
+    "dino.schedule.activity.puzzles" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puzzles"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puzzelen"
+          }
+        }
+      }
+    },
+    "dino.schedule.activity.reading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lezen"
+          }
+        }
+      }
+    },
+    "dino.schedule.activity.sports" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sports"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sporten"
+          }
+        }
+      }
+    },
+    "dino.schedule.break" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Break"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pauze"
+          }
+        }
+      }
+    },
+    "dino.schedule.finish" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finished"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klaar"
+          }
+        }
+      }
+    },
+    "dino.schedule.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day planner"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dagplanning"
           }
         }
       }

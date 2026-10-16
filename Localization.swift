@@ -119,24 +119,38 @@ extension View {
     func gameEnvironment() -> some View { modifier(GameEnvironment()) }
 }
 
+/// Both languages are visible in the settings card; selection applies immediately.
 struct LanguagePicker: View {
     @ObservedObject private var language = LanguageManager.shared
-    var tint: Color = .secondary
+    @Environment(\.dinoHighContrast) private var highContrast
+
     var body: some View {
-        Menu {
+        HStack(spacing: 12) {
             ForEach(AppLanguage.all) { option in
+                let selected = option == language.effective
                 Button { language.select(option) } label: {
-                    let title = Text(verbatim: "\(option.flag)  \(option.displayName)")
-                    if option == language.effective {
-                        Label { title } icon: { Image(systemName: "checkmark") }
-                    } else { title }
-                }.accessibilityIdentifier("language.option." + option.code)
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Text(verbatim: option.flag).font(.system(size: 28))
+                            Spacer(minLength: 4)
+                            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                                .font(.system(size: 21, weight: .semibold))
+                                .foregroundStyle(selected ? DinoStyle.deepGreen : DinoStyle.muted)
+                        }
+                        Text(verbatim: option.displayName)
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .lineLimit(1).minimumScaleFactor(0.8)
+                    }.padding(14).frame(maxWidth: .infinity, alignment: .leading)
+                        .background(selected ? DinoStyle.green.opacity(0.22) : DinoStyle.paper,
+                                    in: RoundedRectangle(cornerRadius: 18))
+                        .overlay(RoundedRectangle(cornerRadius: 18)
+                            .stroke(selected ? DinoStyle.deepGreen : highContrast ? DinoStyle.ink : DinoStyle.ink.opacity(0.10),
+                                    lineWidth: selected || highContrast ? 2 : 1))
+                }.buttonStyle(.plain)
+                    .accessibilityLabel(Text(verbatim: option.displayName))
+                    .accessibilityAddTraits(selected ? .isSelected : [])
+                    .accessibilityIdentifier("language.option." + option.code)
             }
-        } label: {
-            HStack(spacing: 6) {
-                Text(verbatim: language.effective.flag).font(.system(size: 23))
-                Image(systemName: "chevron.down").font(.system(size: 10, weight: .bold)).foregroundStyle(tint)
-            }.frame(minWidth: 64, minHeight: 44).glassEffect(in: Capsule())
-        }.accessibilityIdentifier("language.picker")
+        }.accessibilityElement(children: .contain).accessibilityIdentifier("language.picker")
     }
 }

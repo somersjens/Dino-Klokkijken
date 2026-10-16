@@ -26,22 +26,62 @@ enum ClockAnswer: Equatable, Hashable, Sendable {
     case ordering([ClockTime]), pairs([ClockTime])
 }
 
+enum DinoScheduleActivity: String, CaseIterable, Sendable {
+    case drawing, reading, sports, music, building, puzzles
+    var titleKey: String { "dino.schedule.activity.\(rawValue)" }
+    var symbol: String {
+        switch self {
+        case .drawing: return "paintpalette.fill"
+        case .reading: return "book.fill"
+        case .sports: return "soccerball"
+        case .music: return "music.note"
+        case .building: return "building.2.fill"
+        case .puzzles: return "puzzlepiece.fill"
+        }
+    }
+}
+
+/// A single day always contains two different activities with one break between them.
+struct DinoDaySchedule: Equatable, Sendable {
+    let start: ClockTime
+    let firstActivity: DinoScheduleActivity
+    let firstMinutes: Int
+    let breakMinutes: Int
+    let secondActivity: DinoScheduleActivity
+    let secondMinutes: Int
+    var totalMinutes: Int { firstMinutes + breakMinutes + secondMinutes }
+    var firstEnd: ClockTime { start.adding(minutes: firstMinutes) }
+    var secondStart: ClockTime { firstEnd.adding(minutes: breakMinutes) }
+    var end: ClockTime { secondStart.adding(minutes: secondMinutes) }
+    var durations: [Int] { [firstMinutes, breakMinutes, secondMinutes] }
+}
+
 enum DinoExpandedQuestions {
     static func generate<R: RandomNumberGenerator>(kind: ClockQuestionKind, time: DinoPracticeTime,
-                                                   index: Int, previousTarget: ClockTime?, using rng: inout R) -> ClockQuestion {
+                                                   index: Int, previousTarget: ClockTime?, language: String = "nl", using rng: inout R) -> ClockQuestion {
         generate(kind: kind, minutes: time.minutes, minuteStep: time.minuteStep,
-                 index: index, previousTarget: previousTarget, using: &rng)
+                 index: index, previousTarget: previousTarget, language: language, using: &rng)
     }
 
     static func generate<R: RandomNumberGenerator>(kind: ClockQuestionKind, minutes: [Int], minuteStep: Int,
                                                    index: Int, previousTarget: ClockTime?, preferredTarget: ClockTime? = nil,
                                                    isDemonstration: Bool = false,
+                                                   language: String = "nl",
                                                    using rng: inout R) -> ClockQuestion {
+        let scheduleDurations = kind == .daySchedule
+            ? [minuteStep * Int.random(in: 1...2, using: &rng), minuteStep,
+               minuteStep * Int.random(in: 1...3, using: &rng)] : []
         let hours = [.readDigital, .spokenTime, .trueFalse].contains(kind) ? Array(1...12) : Array(0...23)
         let pool = hours.flatMap { hour in minutes.map { ClockTime(hour: hour, minute: $0) } }
             .filter { time in
                 if kind == .dayPart && !isDemonstration { return time.hour != 6 && time.hour < 22 }
                 if kind == .sortTimes { return time.minutesOfDay != 0 }
+                // Leave room for an earlier time in the same selected minute family.
+                if kind == .minutesBetween { return time.minutesOfDay >= 60 + (minutes.min() ?? 0) }
+                if kind == .daySchedule {
+                    return time.minutesOfDay >= 8 * 60 + scheduleDurations.reduce(0, +)
+                        && time.minutesOfDay <= 20 * 60
+                }
                 return true
             }
         let target = preferredTarget.flatMap { pool.contains($0) ? $0 : nil }
@@ -75,6 +115,20 @@ enum DinoExpandedQuestions {
             q.durationMinutes = duration; q.relatedTimes = [target.adding(minutes: duration)]
         case .flightArrival:
             q.durationMinutes = 120 + duration; q.relatedTimes = [target.adding(minutes: -q.durationMinutes)]
+        case .daySchedule:
+            let activities = DinoScheduleActivity.allCases.shuffled(using: &rng)
+            let schedule = DinoDaySchedule(start: target.adding(minutes: -scheduleDurations.reduce(0, +)),
+                firstActivity: activities[0], firstMinutes: scheduleDurations[0],
+                breakMinutes: scheduleDurations[1], secondActivity: activities[1], secondMinutes: scheduleDurations[2])
+            q.daySchedule = schedule
+            q.durationMinutes = schedule.totalMinutes
+            q.relatedTimes = [schedule.start]
+            // Include common mistakes, such as forgetting the break or stopping after activity one.
+            let candidates = [schedule.firstEnd, target.adding(minutes: -schedule.breakMinutes), schedule.start,
+                              target.adding(minutes: -60), target.adding(minutes: 60)] + other
+            var seen: Set<ClockTime> = [target]
+            let distractors = candidates.filter { minutes.contains($0.minute) && seen.insert($0).inserted }
+            q.options = (Array(distractors.prefix(3)) + [target]).shuffled(using: &rng)
         case .elapsedTime:
             q.durationMinutes = duration; q.relatedTimes = [target.adding(minutes: -duration), target]
             var durations = Set([duration])
@@ -85,9 +139,35 @@ enum DinoExpandedQuestions {
             }
             q.options = []; q.answerChoices = (distractors + [duration]).shuffled(using: &rng).map(ClockAnswer.duration)
             q.answer = .duration(duration)
+        case .minutesBetween:
+            let starts = (1...min(180, target.minutesOfDay))
+                .map { target.adding(minutes: -$0) }
+                .filter { minutes.contains($0.minute) }
+            let start = starts.randomElement(using: &rng)!
+            let elapsed = target.minutesOfDay - start.minutesOfDay
+            q.relatedTimes = [start, target]
+            q.durationMinutes = elapsed
+            // Nearby minute totals catch conversion and subtraction mistakes.
+            let gap = min(15, minuteStep)
+            var seen: Set<Int> = [elapsed]
+            let distractors = [-gap, gap, -2 * gap, 2 * gap, -60, 60, 3 * gap]
+                .map { elapsed + $0 }
+                .filter { $0 > 0 && seen.insert($0).inserted }
+            q.options = []
+            q.answerChoices = (Array(distractors.shuffled(using: &rng).prefix(3)) + [elapsed])
+                .shuffled(using: &rng).map(ClockAnswer.duration)
+            q.answer = .duration(elapsed)
         case .timeZone:
-            q.offsetHours = [-2, -1, 0, 1, 2].randomElement(using: &rng)!
+            q.timeZoneJourney = DinoTimeZoneJourney.generate(language: language,
+                difficulty: .init(minuteStep: minuteStep), using: &rng)
+            q.offsetHours = q.timeZoneJourney!.offsetHours
             q.relatedTimes = [target.adding(minutes: -q.offsetHours * 60)]
+            // Plausible mistakes: the given time and reversing the difference.
+            q.options = Array(Set([q.relatedTimes[0], target.adding(minutes: -2 * q.offsetHours * 60),
+                                   target.adding(minutes: 60), target.adding(minutes: -60)])
+                .subtracting([target])).sorted { $0.minutesOfDay < $1.minutesOfDay }
+                .shuffled(using: &rng).prefix(3).map { $0 }
+            q.options.insert(target, at: Int.random(in: 0...q.options.count, using: &rng))
         default: preconditionFailure("Use the original clock generator for \(kind)")
         }
         return q
@@ -117,7 +197,7 @@ enum DinoDemonstrationExamples {
     }
 
     static func question(kind: ClockQuestionKind, minutes: [Int], minuteStep: Int,
-                         index: Int, previousTarget: ClockTime?) -> ClockQuestion {
+                         index: Int, previousTarget: ClockTime?, language: String = "nl") -> ClockQuestion {
         let sequential = [.readDigital, .spokenTime, .trueFalse, .dayPart, .read24Hour].contains(kind)
         let hours = [.readDigital, .spokenTime, .trueFalse].contains(kind) ? 12 : 24
         var rng = SeededGenerator(seed: 20261012 &+ UInt64(index))
@@ -125,6 +205,7 @@ enum DinoDemonstrationExamples {
                                               index: index, previousTarget: previousTarget,
                                               preferredTarget: sequential ? time(index: index, minutes: minutes, hours: hours) : nil,
                                               isDemonstration: true,
+                                              language: language,
                                               using: &rng)
     }
 }
@@ -172,6 +253,10 @@ enum DinoTimeWords {
         case .evening: suffix = nl ? "’s avonds" : "in the evening"
         }
         return "\(text) \(suffix)"
+    }
+    static func minutes(_ value: Int, language: String) -> String {
+        let unit = language == "nl" ? (value == 1 ? "minuut" : "minuten") : (value == 1 ? "minute" : "minutes")
+        return "\(value) \(unit)"
     }
     static func duration(_ minutes: Int, language: String) -> String {
         let h = minutes / 60, m = minutes % 60

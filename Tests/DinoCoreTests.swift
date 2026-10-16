@@ -16,6 +16,7 @@ struct DinoCoreTests {
         testClocks()
         testHandHintClearance()
         testAnimation()
+        testCrystalMinerPatrols()
         testQuestions()
         testWorlds()
         testJungleSceneryClearance()
@@ -25,6 +26,9 @@ struct DinoCoreTests {
         testPractice()
         testPracticeRecords()
         testExpandedQuestions()
+        testMinutesBetweenQuestions()
+        testDaySchedules()
+        testCapitalTimeZones()
         testUnambiguousQuestionTimes()
         testDemonstrationExamples()
         testProgress()
@@ -345,8 +349,42 @@ struct DinoCoreTests {
         expect(!AnswerValidator.isCorrect(.pairs(Array(question.relatedTimes.reversed())), for: question), "wrong pairs cannot answer the question")
     }
 
+    static func testMinutesBetweenQuestions() {
+        let example = ClockQuestion(id: 0, kind: .minutesBetween, target: ClockTime(hour: 3), options: [],
+                                    activity: nil, companionClocks: [],
+                                    relatedTimes: [ClockTime(hour: 1), ClockTime(hour: 3)],
+                                    durationMinutes: 120, answer: .duration(120))
+        expect(AnswerValidator.isCorrect(.duration(120), for: example), "one to three o'clock is 120 minutes")
+        expect(!AnswerValidator.isCorrect(.duration(2), for: example), "hours are not accepted as a minute total")
+        expect(DinoTimeWords.minutes(120, language: "nl") == "120 minuten", "whole hours remain expressed in minutes")
+        expect(DinoTimeWords.minutes(1, language: "nl") == "1 minuut", "Dutch minute singular")
+        expect(DinoTimeWords.minutes(1, language: "en") == "1 minute", "English minute singular")
+        expect(DinoTimeWords.minutes(75, language: "en") == "75 minutes", "English minute totals")
+        for family in DinoPracticeTime.allCases {
+            var generator = DinoPracticeGenerator(configuration: .init(time: family, order: .specific(.minutesBetween)), seed: 21)
+            var crossedHour = false
+            for index in 0..<200 {
+                let q = generator.next(index: index)
+                expect(q.relatedTimes.count == 2, "minute difference has exactly two endpoints")
+                let start = q.relatedTimes[0], end = q.relatedTimes[1]
+                let elapsed = end.minutesOfDay - start.minutesOfDay
+                expect((1...180).contains(elapsed), "minute differences run forward within the same day")
+                expect(q.target == end && q.durationMinutes == elapsed, "displayed clocks determine the minute total")
+                expect(q.relatedTimes.allSatisfy { family.minutes.contains($0.minute) }, "both endpoints follow the selected minute family")
+                expect(q.expectedAnswer == .duration(elapsed), "minute totals use duration validation")
+                expect(q.responses.count == 4 && Set(q.responses).count == 4, "four distinct minute totals")
+                expect(q.responses.filter { AnswerValidator.isCorrect($0, for: q) }.count == 1, "exactly one correct minute total")
+                expect(q.responses.allSatisfy { if case .duration(let m) = $0 { return m > 0 }; return false }, "every choice is a positive number of minutes")
+                crossedHour = crossedHour || start.hour != end.hour
+            }
+            expect(crossedHour, "minute differences include hour changes for every time family")
+        }
+    }
+
     static func testPractice() {
-        expect(DinoPracticeQuestion.allCases.count == 19, "practice contains nineteen distinct question types")
+        expect(DinoPracticeQuestion.allCases.count == 21, "practice contains twenty-one distinct question types")
+        expect(DinoPracticeQuestion.minutesBetween.number == 21, "minute differences are appended as question type twenty-one")
+        expect(DinoPracticeQuestion.daySchedule.number == 20, "day planning is appended as question type twenty")
         expect(DinoPracticeQuestion.match.number == 7, "matching remains question type seven")
         expect(DinoPracticeQuestion.read24Hour.number == 10 && DinoPracticeQuestion.timeZone.number == 19,
                "question numbers close the gap after the removed duplicate")
@@ -551,6 +589,109 @@ struct DinoCoreTests {
         }
     }
 
+    static func testCapitalTimeZones() {
+        let catalog = DinoTimeZoneJourney.capitals
+        expect(Set(catalog.map(\.id)).count == catalog.count, "capital identifiers are unique")
+        expect(catalog.allSatisfy { TimeZone(identifier: $0.timeZoneID) != nil }, "all capitals use valid IANA zones")
+        expect(catalog.first { $0.countryCode == "TUR" }?.id == "ankara", "Turkey uses its capital Ankara")
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        expect(calendar.component(.month, from: DinoTimeZoneJourney.referenceDate) == 1 &&
+               calendar.component(.day, from: DinoTimeZoneJourney.referenceDate) == 15, "map date agrees with the offset reference date")
+        for language in ["nl", "en"] {
+            for family in DinoPracticeTime.allCases {
+                var generator = DinoPracticeGenerator(configuration: .init(time: family, order: .specific(.timeZone)), seed: 19, language: language)
+                var seenDestinations = Set<String>()
+                var crossesMidnight = false
+                for index in 0..<250 {
+                    let q = generator.next(index: index)
+                    guard let journey = q.timeZoneJourney else { fatalError("time-zone task needs two capitals") }
+                    expect(journey.origin.id == (language == "nl" ? "amsterdam" : "london"), "chosen language determines the reference capital")
+                    expect(journey.origin.countryCode != journey.destination.countryCode && q.offsetHours != 0, "two capitals always use different countries and time zones")
+                    expect(q.offsetHours == journey.offsetHours, "map and question use the same real-world offset")
+                    expect(q.relatedTimes[0].adding(minutes: 60 * journey.offsetHours) == q.target, "geographic time-zone calculation survives midnight")
+                    expect(q.options.count == 4 && Set(q.options).count == 4 && q.options.contains(q.target), "four distinct answer choices include the correct time")
+                    expect(q.options.allSatisfy { family.minutes.contains($0.minute) }, "time-zone choices retain the selected minute family")
+                    switch DinoTimeZoneDifficulty(minuteStep: family.minuteStep) {
+                    case .nearby: expect(abs(q.offsetHours) == 1, "easy maps use a nearby one-hour difference")
+                    case .regional: expect(abs(q.offsetHours) <= 3, "medium maps keep regional hour differences")
+                    case .worldwide: expect(abs(q.offsetHours) >= 4, "hard maps include distant capitals")
+                    }
+                    for size in [CGSize(width: 230, height: 224), CGSize(width: 340, height: 252), CGSize(width: 760, height: 252)] {
+                        let viewport = DinoTimeZoneViewport(journey: journey, size: size)
+                        for capital in [journey.origin, journey.destination] {
+                            let point = viewport.point(capital, size: size)
+                            expect(point.x > 10 && point.x < size.width - 10 && point.y > 10 && point.y < size.height - 10,
+                                   "automatic map crop keeps both points inside small examples and tablet maps")
+                        }
+                    }
+                    seenDestinations.insert(journey.destination.id)
+                    crossesMidnight = crossesMidnight || abs(q.target.minutesOfDay - q.relatedTimes[0].minutesOfDay) != abs(q.offsetHours * 60)
+                }
+                expect(seenDestinations.count >= 4, "each language and difficulty offers varied familiar countries")
+                expect(crossesMidnight, "each minute family covers a change of day")
+            }
+        }
+        let origin = catalog.first { $0.id == "amsterdam" }!
+        let nearby = DinoTimeZoneJourney(origin: origin, destination: catalog.first { $0.id == "london" }!)
+        let distant = DinoTimeZoneJourney(origin: origin, destination: catalog.first { $0.id == "tokyo" }!)
+        let size = CGSize(width: 340, height: 252)
+        expect(DinoTimeZoneViewport(journey: distant, size: size).longitudeSpan > DinoTimeZoneViewport(journey: nearby, size: size).longitudeSpan * 3,
+               "the atlas zooms out for an intercontinental journey")
+        for reference in catalog.filter({ ["amsterdam", "london"].contains($0.id) }) {
+            for destination in catalog where destination.id != reference.id {
+                let journey = DinoTimeZoneJourney(origin: reference, destination: destination)
+                for size in [CGSize(width: 230, height: 224), CGSize(width: 340, height: 252), CGSize(width: 760, height: 252),
+                             CGSize(width: 600, height: 184), CGSize(width: 760, height: 184)] {
+                    let viewport = DinoTimeZoneViewport(journey: journey, size: size)
+                    let labels = DinoTimeZoneLabelLayout(origin: viewport.point(reference, size: size),
+                                                        destination: viewport.point(destination, size: size), size: size)
+                    let a = CGRect(x: labels.origin.x - labels.width / 2, y: labels.origin.y - 38, width: labels.width, height: 76)
+                    let b = CGRect(x: labels.destination.x - labels.width / 2, y: labels.destination.y - 38, width: labels.width, height: 76)
+                    expect(!a.intersects(b), "capital labels never overlap, including narrow worked examples")
+                    for capital in [reference, destination] {
+                        let point = viewport.point(capital, size: size)
+                        expect(!a.insetBy(dx: -12, dy: -12).contains(point) && !b.insetBy(dx: -12, dy: -12).contains(point),
+                               "city labels leave both geographic markers visible")
+                    }
+                    expect(CGRect(origin: .zero, size: size).contains(a) && CGRect(origin: .zero, size: size).contains(b),
+                           "both city labels fit fully inside each map size")
+                }
+            }
+        }
+    }
+
+    static func testDaySchedules() {
+        let worked = DinoDaySchedule(start: .init(hour: 9, minute: 45), firstActivity: .drawing,
+                                     firstMinutes: 40, breakMinutes: 15, secondActivity: .reading, secondMinutes: 35)
+        expect(worked.firstEnd == ClockTime(hour: 10, minute: 25) && worked.secondStart == ClockTime(hour: 10, minute: 40),
+               "the break starts after activity one and ends before activity two")
+        expect(worked.end == ClockTime(hour: 11, minute: 15), "all three durations carry across the hour")
+        for time in DinoPracticeTime.allCases {
+            var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.daySchedule)), seed: 20261016)
+            var seenActivities = Set<DinoScheduleActivity>()
+            for index in 0..<200 {
+                let question = generator.next(index: index)
+                guard let schedule = question.daySchedule else { fatalError("day planning requires a schedule") }
+                seenActivities.formUnion([schedule.firstActivity, schedule.secondActivity])
+                expect(schedule.firstActivity != schedule.secondActivity, "every schedule has two different activities")
+                expect(schedule.durations.allSatisfy { $0 > 0 && $0.isMultiple(of: time.minuteStep) },
+                       "both activities and the break respect the selected difficulty")
+                expect(schedule.start.minutesOfDay >= 8 * 60 && schedule.end.minutesOfDay <= 20 * 60 &&
+                       schedule.start.minutesOfDay < schedule.end.minutesOfDay,
+                       "the complete schedule stays within the same daytime")
+                expect(schedule.end == question.target && question.relatedTimes == [schedule.start] &&
+                       question.durationMinutes == schedule.totalMinutes, "the correct answer includes both activities and the break")
+                expect(!AnswerValidator.isCorrect(schedule.firstEnd, for: question) &&
+                       !AnswerValidator.isCorrect(schedule.start.adding(minutes: schedule.firstMinutes + schedule.secondMinutes), for: question),
+                       "stopping after the first activity and forgetting the break are rejected")
+                expect(question.options.count == 4 && Set(question.options).count == 4 && question.options.contains(schedule.end),
+                       "the schedule offers four unique times with its answer exactly once")
+            }
+            expect(seenActivities == Set(DinoScheduleActivity.allCases), "day schedules vary their activities")
+        }
+    }
+
     static func testExpandedQuestions() {
         expect(ClockTime(hour: 23, minute: 55).adding(minutes: 10) == ClockTime(hour: 0, minute: 5), "addition crosses midnight")
         expect(ClockTime(hour: 0, minute: 5).adding(minutes: -10) == ClockTime(hour: 23, minute: 55), "subtraction crosses midnight")
@@ -625,6 +766,35 @@ struct DinoCoreTests {
             expect(active.question == question && active.practiceAnswered == 0, "help uses an independent question and score")
         }
         expect(player.profile == before, "interactive examples preserve saved profile")
+    }
+
+    static func testCrystalMinerPatrols() {
+        expect(CrystalMinerPatrol.routes.count == 4, "four cave workers")
+        expect(CrystalMinerPatrol.routes.filter { $0.stops.last! - $0.stops.first! > 1000 }.count == 2,
+               "two workers patrol the length of the cave")
+        for route in CrystalMinerPatrol.routes {
+            var previous = route.pose(at: 0)
+            var down = false, up = false, miningStops = Set<Double>()
+            for step in 1...Int(ceil(route.duration * 20)) {
+                let pose = route.pose(at: Double(step) / 20)
+                expect(pose.y.isFinite && pose.outward.isFinite && (0...1).contains(pose.outward),
+                       "finite, bounded mining detour")
+                expect((route.stops.first!...route.stops.last!).contains(pose.y), "patrol stays inside its cave route")
+                expect(abs(pose.y - previous.y) <= route.speed / 20 + 0.00001 && abs(pose.outward - previous.outward) < 0.05,
+                       "continuous walking, stopping and returning, including cycle boundaries")
+                if let work = pose.work {
+                    expect(!pose.walking && pose.outward == 1 && route.stops.contains(pose.y) && (0..<4.8).contains(work),
+                           "pickaxe only swings while stopped at a mineral seam")
+                    miningStops.insert(pose.y)
+                }
+                if pose.walking && pose.outward == 0 { if pose.upward { up = true } else { down = true } }
+                previous = pose
+            }
+            expect(down && up && miningStops == Set(route.stops), "every stop is mined and each route is walked both ways")
+            let a = route.pose(at: 13.125), b = route.pose(at: 13.125 + route.duration)
+            expect(abs(a.y - b.y) < 0.00001 && abs(a.outward - b.outward) < 0.00001,
+                   "a full patrol repeats without teleporting")
+        }
     }
 
     static func testAnimation() {
