@@ -279,7 +279,7 @@ final class DinoSession: ObservableObject, Identifiable {
     var allowsMinutes: Bool { minuteStep < 60 }
     var inputTime: ClockTime { ClockTime(hour: inputHour, minute: inputMinute) }
     var instructionKey: String {
-        if allowsMinutes && (question.kind == .setAnalog || question.kind == .setDigital) {
+        if allowsMinutes && question.kind == .setDigital {
             return "dino.practice.\(question.kind.rawValue)"
         }
         return question.kind.instructionKey

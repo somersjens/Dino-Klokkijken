@@ -210,6 +210,69 @@ enum DinoDemonstrationExamples {
     }
 }
 
+/// A finite script of the same taps as the live analog controls, without a game session.
+struct DinoAnalogSettingExample {
+    enum Action: Equatable {
+        case selectMinutes(Bool), adjust(Int), confirm
+    }
+    let target: ClockTime
+    let minuteStep: Int
+    let initialTime: ClockTime
+    let actions: [Action]
+    var initialHourAngle: Double { target.hourAngle + 180 }
+    var initialMinuteAngle: Double { target.minuteAngle + (minuteStep < 60 ? 180 : 0) }
+
+    init(target: ClockTime, minuteStep: Int, clockwise: Bool = true) {
+        precondition(minuteStep == 60 || (minuteStep > 0 && 30.isMultiple(of: minuteStep)))
+        self.target = target
+        self.minuteStep = minuteStep
+        initialTime = ClockTime(hour: ClockTime.shiftedHour(target.hour, by: 6),
+                                minute: minuteStep < 60 ? ClockTime.shiftedMinute(target.minute, by: 30) : 0)
+        var taps: [Action] = []
+        if minuteStep < 60 {
+            // Correct minutes first, without crossing twelve. The subsequent hour
+            // taps therefore always finish at the target, including 12:xx.
+            taps.append(.selectMinutes(true))
+            let direction = target.minute < 30 ? -1 : 1
+            taps += Array(repeating: .adjust(direction), count: 30 / minuteStep)
+            taps.append(.selectMinutes(false))
+        }
+        taps += Array(repeating: .adjust(clockwise ? 1 : -1), count: 6)
+        taps.append(.confirm)
+        actions = taps
+    }
+
+    func applying(_ action: Action, to time: ClockTime, adjustingMinutes: Bool) -> ClockTime {
+        guard case .adjust(let direction) = action else { return time }
+        return adjustingMinutes ? time.shiftingMinutes(by: direction * minuteStep)
+            : ClockTime(hour: ClockTime.shiftedHour(time.hour, by: direction), minute: time.minute)
+    }
+
+    static func continuingAngle(_ angle: Double, from previous: Double, direction: Int) -> Double {
+        var delta = (angle - previous).truncatingRemainder(dividingBy: 360)
+        if delta > 180 { delta -= 360 }
+        if delta < -180 { delta += 360 }
+        if abs(delta) == 180 { delta = Double(direction) * 180 }
+        return previous + delta
+    }
+}
+
+/// Subtract clock components with an explicit borrowed hour when minutes require it.
+struct DinoMinuteDifference: Equatable, Sendable {
+    let earlier: ClockTime
+    let later: ClockTime
+
+    init(_ first: ClockTime, _ second: ClockTime) {
+        earlier = first.minutesOfDay <= second.minutesOfDay ? first : second
+        later = first.minutesOfDay <= second.minutesOfDay ? second : first
+    }
+
+    var borrowsHour: Bool { later.minute < earlier.minute }
+    var hours: Int { later.hour - earlier.hour - (borrowsHour ? 1 : 0) }
+    var minutes: Int { later.minute + (borrowsHour ? 60 : 0) - earlier.minute }
+    var totalMinutes: Int { hours * 60 + minutes }
+}
+
 enum DinoTimeWords {
     static func time(_ time: ClockTime, language: String, dayPart: Bool = false) -> String {
         let nl = language == "nl"

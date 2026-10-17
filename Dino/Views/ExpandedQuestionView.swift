@@ -32,7 +32,10 @@ struct DinoExpandedQuestionView: View {
             case .timeSequence:
                 if !isDemonstration { responses }
             case .minutesBetween:
-                if !isDemonstration { responses }
+                if isDemonstration, q.relatedTimes.count == 2 {
+                    DinoMinutesBetweenExplanation(difference: DinoMinuteDifference(q.relatedTimes[0], q.relatedTimes[1]),
+                                                  language: code)
+                } else if !isDemonstration { responses }
             default:
                 if isDemonstration { demonstrationAnswer }
                 else { responses }
@@ -63,7 +66,7 @@ struct DinoExpandedQuestionView: View {
                                        minutes: q.durationMinutes, theme: theme, width: min(600, width),
                                        showsAnswer: isDemonstration || session.showsCorrectResponse,
                                        isDemonstration: isDemonstration, language: code,
-                                       compact: compactLayout)
+                                       compact: compactLayout || (isDemonstration && width < 340))
             }
         case .elapsedTime:
             HStack(spacing: 12) {

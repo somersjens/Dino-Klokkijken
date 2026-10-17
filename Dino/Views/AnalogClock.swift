@@ -96,6 +96,9 @@ struct AnalogClock: View {
     var showHandHints = false
     var onMinuteChange: ((ClockTime) -> Void)? = nil
     var minuteStep = 1
+    /// Unwrapped demonstration angles preserve the direction when passing twelve.
+    var displayedHourAngle: Double? = nil
+    var displayedMinuteAngle: Double? = nil
     var body: some View {
         ZStack {
             AnalogClockOutline(shape: theme.analogShape).fill(Color(dinoHex: theme.rimHex))
@@ -112,8 +115,8 @@ struct AnalogClock: View {
                     .position(x: size / 2 + CGFloat(sin(radians)) * size * 0.34,
                               y: size / 2 - CGFloat(cos(radians)) * size * 0.34)
             }
-            hand(length: size * 0.23, width: hourWidth, color: Color(dinoHex: theme.hourHex), angle: time.hourAngle)
-            hand(length: size * 0.34, width: minuteWidth, color: Color(dinoHex: theme.minuteHex), angle: time.minuteAngle)
+            hand(length: size * 0.23, width: hourWidth, color: Color(dinoHex: theme.hourHex), angle: displayedHourAngle ?? time.hourAngle)
+            hand(length: size * 0.34, width: minuteWidth, color: Color(dinoHex: theme.minuteHex), angle: displayedMinuteAngle ?? time.minuteAngle)
             Circle().fill(Color(dinoHex: theme.rimHex)).frame(width: size * 0.085)
             Circle().fill(.white).frame(width: size * 0.025)
         }

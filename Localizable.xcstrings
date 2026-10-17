@@ -1,19 +1,19 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "dino.minutesBetween.sameDay": {
+    "dino.minutesBetween.borrow.format": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Both times are on the same day."
+            "value": "Borrow 1 hour: %1$lld h %2$lld min = %3$lld h %4$lld min"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Beide tijden zijn op dezelfde dag."
+            "value": "Leen 1 uur: %1$lld uur %2$lld min = %3$lld uur %4$lld min"
           }
         }
       }
@@ -4888,13 +4888,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Set both hands to the right time"
+            "value" : "Set both clocks to the same time"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zet beide wijzers op de juiste tijd"
+            "value" : "Zet beide klokken op dezelfde tijd"
           }
         }
       }
@@ -5347,13 +5347,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Turn the short hand"
+            "value" : "Set both clocks to the same time"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Draai de korte wijzer"
+            "value" : "Zet beide klokken op dezelfde tijd"
           }
         }
       }

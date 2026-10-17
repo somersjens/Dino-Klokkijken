@@ -31,6 +31,7 @@ struct DinoCoreTests {
         testCapitalTimeZones()
         testUnambiguousQuestionTimes()
         testDemonstrationExamples()
+        testAnalogSettingExamples()
         testProgress()
         testStorage()
         testClockThemes()
@@ -350,6 +351,22 @@ struct DinoCoreTests {
     }
 
     static func testMinutesBetweenQuestions() {
+        let calculations: [(ClockTime, ClockTime, Int, Int, Bool)] = [
+            (.init(hour: 1), .init(hour: 3), 2, 0, false),
+            (.init(hour: 5, minute: 15), .init(hour: 7, minute: 45), 2, 30, false),
+            (.init(hour: 5, minute: 45), .init(hour: 7, minute: 15), 1, 30, true),
+            (.init(hour: 10, minute: 55), .init(hour: 11, minute: 5), 0, 10, true),
+            (.init(hour: 0, minute: 59), .init(hour: 1), 0, 1, true),
+            (.init(hour: 8, minute: 10), .init(hour: 8, minute: 40), 0, 30, false)
+        ]
+        for (start, end, hours, minutes, borrows) in calculations {
+            let difference = DinoMinuteDifference(start, end)
+            expect(difference.earlier == start && difference.later == end, "subtraction keeps the highest time first")
+            expect(difference.hours == hours && difference.minutes == minutes, "worked subtraction preserves hours and minutes")
+            expect(difference.borrowsHour == borrows, "worked subtraction identifies a borrowed hour")
+            expect(difference.totalMinutes == end.minutesOfDay - start.minutesOfDay, "converting remaining hours and minutes gives the exact interval")
+            expect(DinoMinuteDifference(end, start) == difference, "the worked sum orders both inputs chronologically")
+        }
         let example = ClockQuestion(id: 0, kind: .minutesBetween, target: ClockTime(hour: 3), options: [],
                                     activity: nil, companionClocks: [],
                                     relatedTimes: [ClockTime(hour: 1), ClockTime(hour: 3)],
@@ -372,6 +389,8 @@ struct DinoCoreTests {
                 expect(q.target == end && q.durationMinutes == elapsed, "displayed clocks determine the minute total")
                 expect(q.relatedTimes.allSatisfy { family.minutes.contains($0.minute) }, "both endpoints follow the selected minute family")
                 expect(q.expectedAnswer == .duration(elapsed), "minute totals use duration validation")
+                let calculation = DinoMinuteDifference(start, end)
+                expect(calculation.totalMinutes == elapsed && (0..<60).contains(calculation.minutes), "every worked example converts the correct remaining time")
                 expect(q.responses.count == 4 && Set(q.responses).count == 4, "four distinct minute totals")
                 expect(q.responses.filter { AnswerValidator.isCorrect($0, for: q) }.count == 1, "exactly one correct minute total")
                 expect(q.responses.allSatisfy { if case .duration(let m) = $0 { return m > 0 }; return false }, "every choice is a positive number of minutes")
@@ -495,6 +514,61 @@ struct DinoCoreTests {
         case .dayPart(let part): return .dayPart(DinoDayPart.allCases.first { $0 != part }!)
         case .ordering(let times): return .ordering(Array(times.reversed()))
         case .pairs(let times): return .pairs(Array(times.reversed()))
+        }
+    }
+
+    static func testAnalogSettingExamples() {
+        for step in [1, 5, 10, 15, 30, 60] {
+            for hour in 1...12 {
+                for minute in stride(from: 0, to: 60, by: step) {
+                    let target = ClockTime(hour: hour, minute: minute)
+                    for clockwise in [false, true] {
+                        let example = DinoAnalogSettingExample(target: target, minuteStep: step, clockwise: clockwise)
+                        expect(example.initialTime.hour == ClockTime.shiftedHour(hour, by: 6), "example starts on the opposite hour")
+                        expect((example.initialHourAngle - target.hourAngle).truncatingRemainder(dividingBy: 360) == 180,
+                               "introductory hour hand is exactly opposite, including the minute offset")
+                        if step < 60 {
+                            let difference = (example.initialTime.minuteAngle - target.minuteAngle + 360).truncatingRemainder(dividingBy: 360)
+                            expect(difference == 180, "introductory minute hand is exactly opposite")
+                        }
+                        var time = example.initialTime
+                        var minutes = false
+                        var hourAngle = example.initialHourAngle
+                        var minuteAngle = example.initialMinuteAngle
+                        for (index, action) in example.actions.enumerated() {
+                            switch action {
+                            case .selectMinutes(let selected):
+                                expect(step < 60, "whole-hour examples never select the minute hand")
+                                minutes = selected
+                            case .adjust(let direction):
+                                let next = example.applying(action, to: time, adjustingMinutes: minutes)
+                                expect(next == (minutes ? time.shiftingMinutes(by: direction * step)
+                                                : ClockTime(hour: ClockTime.shiftedHour(time.hour, by: direction), minute: time.minute)),
+                                       "each demonstrated tap uses the live clock arithmetic")
+                                time = next
+                                let nextHour = DinoAnalogSettingExample.continuingAngle(next.hourAngle, from: hourAngle, direction: direction)
+                                let nextMinute = DinoAnalogSettingExample.continuingAngle(next.minuteAngle, from: minuteAngle, direction: direction)
+                                expect(abs(nextHour - hourAngle) <= 30 && abs(nextMinute - minuteAngle) <= 180,
+                                       "each tap follows the nearby clock tick, including the transition through twelve")
+                                if !minutes { expect(abs(nextHour - hourAngle - Double(direction) * 30) < 0.001,
+                                                     "hour taps always animate in the direction of the shown button") }
+                                hourAngle = nextHour
+                                minuteAngle = nextMinute
+                            case .confirm:
+                                expect(index == example.actions.count - 1 && time == target, "confirm is last and always submits the correct time")
+                            }
+                            if step == 60 { expect(time.minute == 0, "whole-hour demonstration leaves the minute hand on twelve") }
+                        }
+                        expect(time == target, "all analog examples finish at the fixed digital target in either direction")
+                    }
+                }
+            }
+        }
+        let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+        for family in DinoPracticeTime.allCases {
+            let configuration = DinoPracticeConfiguration(time: family, order: .specific(.setAnalog))
+            let session = DinoSession(level: configuration.level, player: player, practice: configuration)
+            expect(session.instructionKey == "dino.question.setAnalog", "question nine uses one instruction for every time family")
         }
     }
 

@@ -16,7 +16,7 @@ struct QuestionRenderer: View {
     private var targetSize: CGFloat { min(clockSize, width - 20) }
 
     var body: some View {
-        VStack(spacing: compactLayout ? 14 : 22) {
+        VStack(spacing: question.kind == .setAnalog ? 12 : compactLayout ? 14 : 22) {
             switch question.kind {
             case .chooseAnalog, .activity:
                 targetCard
@@ -28,20 +28,8 @@ struct QuestionRenderer: View {
                 targetCard
                 analogInput.id("question.answers")
                 if !session.hasFeedback {
-                    if session.allowsMinutes {
-                        Picker("dino.practice.hand", selection: $adjustingMinutes) {
-                            Text("dino.hours").tag(false)
-                            Text("dino.minutes").tag(true)
-                        }.pickerStyle(.segmented).frame(maxWidth: 280)
-                            .accessibilityIdentifier("question.hand")
-                    }
-                    HStack(spacing: 14) {
-                        DinoIconButton(icon: "arrow.counterclockwise", labelKey: adjustingMinutes ? "dino.minuteLess" : "dino.hourLess") { adjustAnalog(by: -1) }
-                            .accessibilityIdentifier("question.analog.less")
-                        Image(systemName: "hand.draw.fill").font(.title2).foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-                        DinoIconButton(icon: "arrow.clockwise", labelKey: adjustingMinutes ? "dino.minuteMore" : "dino.hourMore") { adjustAnalog(by: 1) }
-                            .accessibilityIdentifier("question.analog.more")
-                    }
+                    DinoAnalogClockControls(adjustingMinutes: $adjustingMinutes, allowsMinutes: session.allowsMinutes,
+                                            minuteStep: session.minuteStep, adjust: adjustAnalog)
                 }
                 confirmButton
             case .setDigital:
@@ -194,6 +182,93 @@ struct QuestionRenderer: View {
                 }.shadow(color: DinoStyle.ink.opacity(0.06), radius: 7, y: 4)
                 .opacity(!highContrast && session.showsCorrectResponse && !correct && !wrong ? 0.55 : 1)
         }.buttonStyle(DinoAnswerButtonStyle()).disabled(!session.responseIsEnabled(response)).accessibilityIdentifier("question.option.\(index)")
+    }
+}
+
+/// The game and its worked example share the exact same hand selector and buttons.
+struct DinoAnalogClockControls: View {
+    @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Binding var adjustingMinutes: Bool
+    let allowsMinutes: Bool
+    let minuteStep: Int
+    var prefix = "question"
+    var demonstratedAction: DinoAnalogSettingExample.Action? = nil
+    var adjust: (Int) -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            if allowsMinutes {
+                HStack(spacing: 6) {
+                    handButton(minutes: false)
+                    handButton(minutes: true)
+                }.padding(5)
+                    .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 22))
+                    .overlay(RoundedRectangle(cornerRadius: 22)
+                        .stroke(DinoStyle.ink.opacity(highContrast ? 1 : 0.14), lineWidth: highContrast ? 3 : 1.5))
+                    .accessibilityElement(children: .contain)
+                    .accessibilityLabel(Text("dino.practice.hand"))
+                    .accessibilityIdentifier("\(prefix).hand")
+            }
+            HStack(spacing: 14) {
+                turnButton(direction: -1)
+                turnButton(direction: 1)
+            }
+        }.frame(maxWidth: 280)
+    }
+
+    private func handButton(minutes: Bool) -> some View {
+        let selected = adjustingMinutes == minutes
+        let action = DinoAnalogSettingExample.Action.selectMinutes(minutes)
+        return Button { adjustingMinutes = minutes } label: {
+            Text(LocalizedStringKey(minutes ? "dino.minutes" : "dino.hours"))
+                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .minimumScaleFactor(0.75).lineLimit(1)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .foregroundStyle(DinoStyle.ink)
+                .background {
+                    if selected {
+                        RoundedRectangle(cornerRadius: 17)
+                            .fill(LinearGradient(colors: [DinoStyle.green, DinoStyle.green.opacity(0.85)],
+                                                 startPoint: .top, endPoint: .bottom))
+                            .overlay(RoundedRectangle(cornerRadius: 17).stroke(highContrast ? DinoStyle.ink : .white.opacity(0.7), lineWidth: 2))
+                            .shadow(color: DinoStyle.deepGreen.opacity(0.2), radius: 0, y: 3)
+                    }
+                }
+        }.buttonStyle(DinoAnswerButtonStyle())
+            .accessibilityAddTraits(selected ? .isSelected : [])
+            .accessibilityIdentifier("\(prefix).hand.\(minutes ? "minutes" : "hours")")
+            .overlay(alignment: .bottomTrailing) { if demonstratedAction == action { DinoClockTapCue() } }
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: selected)
+    }
+
+    private func turnButton(direction: Int) -> some View {
+        let minutes = allowsMinutes && adjustingMinutes
+        let cue = demonstratedAction == .adjust(direction)
+        return Button { adjust(direction) } label: {
+            HStack(spacing: 10) {
+                Image(systemName: direction < 0 ? "arrow.counterclockwise" : "arrow.clockwise")
+                    .font(.system(size: 24, weight: .bold))
+                Text(verbatim: "\(direction < 0 ? "−" : "+")\(minutes ? minuteStep : 1)")
+                    .font(.system(size: 18, weight: .heavy, design: .rounded)).monospacedDigit()
+            }
+        }.buttonStyle(DinoButtonStyle(compact: true))
+            .accessibilityLabel(Text(LocalizedStringKey(minutes ? (direction < 0 ? "dino.minuteLess" : "dino.minuteMore")
+                                                               : (direction < 0 ? "dino.hourLess" : "dino.hourMore"))))
+            .accessibilityIdentifier("\(prefix).analog.\(direction < 0 ? "less" : "more")")
+            .scaleEffect(cue && !reduceMotion ? 0.96 : 1)
+            .overlay(alignment: .bottomTrailing) { if cue { DinoClockTapCue() } }
+    }
+}
+
+struct DinoClockTapCue: View {
+    var body: some View {
+        Image(systemName: "hand.tap.fill")
+            .font(.system(size: 25, weight: .bold)).foregroundStyle(DinoStyle.ink)
+            .padding(8).background(.white, in: Circle())
+            .overlay(Circle().stroke(DinoStyle.ink, lineWidth: 2))
+            .offset(x: 13, y: 16)
+            .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 

@@ -5,15 +5,47 @@ import UIKit
 @MainActor
 final class DinoAnswerFeedback {
     static let shared = DinoAnswerFeedback()
-    private var correctPlayer: AVAudioPlayer?
-    private var incorrectPlayer: AVAudioPlayer?
+    private let audio = DinoAnswerAudio()
     private let haptics = UINotificationFeedbackGenerator()
-    private let correctTone = DinoAnswerFeedback.tone(frequencies: [659.25, 880])
-    private let incorrectTone = DinoAnswerFeedback.tone(frequencies: [330, 261.63])
 
     func prepare(sound: Bool, vibration: Bool) {
         if vibration { haptics.prepare() }
-        guard sound, correctPlayer == nil || incorrectPlayer == nil else { return }
+        if sound { audio.prepare() }
+    }
+
+    func play(correct: Bool, sound: Bool, vibration: Bool) {
+        if vibration { haptics.notificationOccurred(correct ? .success : .warning) }
+        if sound { audio.play(correct: correct) }
+    }
+}
+
+/// All audio state stays on this serial queue. AVAudioPlayer can synchronously
+/// activate the audio session in prepareToPlay/play and release hardware in stop.
+private final class DinoAnswerAudio: @unchecked Sendable {
+    private let queue = DispatchQueue(label: "DinoTime.answerAudio", qos: .userInitiated)
+    private var correctPlayer: AVAudioPlayer?
+    private var incorrectPlayer: AVAudioPlayer?
+    private lazy var correctTone = Self.tone(frequencies: [659.25, 880])
+    private lazy var incorrectTone = Self.tone(frequencies: [330, 261.63])
+
+    func prepare() {
+        queue.async { [self] in preparePlayers() }
+    }
+
+    func play(correct: Bool) {
+        queue.async { [self] in
+            preparePlayers()
+            correctPlayer?.stop()
+            incorrectPlayer?.stop()
+            let player = correct ? correctPlayer : incorrectPlayer
+            player?.currentTime = 0
+            player?.play()
+        }
+    }
+
+    private func preparePlayers() {
+        dispatchPrecondition(condition: .onQueue(queue))
+        guard correctPlayer == nil || incorrectPlayer == nil else { return }
         do {
             try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
             if correctPlayer == nil { correctPlayer = try makePlayer(data: correctTone) }
@@ -21,18 +53,8 @@ final class DinoAnswerFeedback {
         } catch { /* Try again on the next answer if audio is temporarily unavailable. */ }
     }
 
-    func play(correct: Bool, sound: Bool, vibration: Bool) {
-        if vibration { haptics.notificationOccurred(correct ? .success : .warning) }
-        guard sound else { return }
-        prepare(sound: true, vibration: false)
-        correctPlayer?.stop()
-        incorrectPlayer?.stop()
-        let player = correct ? correctPlayer : incorrectPlayer
-        player?.currentTime = 0
-        player?.play()
-    }
-
     private func makePlayer(data: Data) throws -> AVAudioPlayer {
+        dispatchPrecondition(condition: .onQueue(queue))
         let player = try AVAudioPlayer(data: data)
         player.volume = 0.45
         player.prepareToPlay()
