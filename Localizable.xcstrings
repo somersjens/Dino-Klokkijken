@@ -1131,6 +1131,23 @@
         }
       }
     },
+    "dino.clock.check" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check my clock"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleer mijn klok"
+          }
+        }
+      }
+    },
     "dino.confirm" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5490,23 +5507,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "TIJDZONES"
-          }
-        }
-      }
-    },
-    "dino.timeZone.date" : {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "15 January"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "15 januari"
           }
         }
       }

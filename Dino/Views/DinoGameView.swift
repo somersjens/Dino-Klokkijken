@@ -330,16 +330,20 @@ struct DinoAnalogSettingDemonstration: View {
                 time = script.applying(.adjust(direction), to: time, adjustingMinutes: adjustingMinutes)
             }
             Button {
-                stopDemonstration()
-                confirmed = time == script.target
+                if confirmed { done() }
+                else {
+                    stopDemonstration()
+                    confirmed = time == script.target
+                }
             } label: {
-                Image(systemName: confirmed ? "checkmark.circle.fill" : "checkmark")
-                    .font(.system(size: 25, weight: .heavy))
-            }.buttonStyle(DinoButtonStyle(compact: true)).frame(maxWidth: 260)
-                .accessibilityLabel(Text("dino.confirm")).accessibilityIdentifier("demo.confirm")
+                Label(LocalizedStringKey(confirmed ? "dino.ready" : "dino.clock.check"), systemImage: "checkmark")
+                    .lineLimit(1).minimumScaleFactor(0.75)
+                    .contentTransition(.opacity)
+            }.buttonStyle(DinoButtonStyle())
+                .accessibilityIdentifier(confirmed ? "demo.ready" : "demo.confirm")
                 .accessibilityValue(confirmed ? Text("dino.correctTime") : Text(""))
                 .overlay(alignment: .bottomTrailing) { if demonstratedAction == .confirm { DinoClockTapCue() } }
-            DinoDemonstrationActions(done: done) {
+            DinoDemonstrationActions(showsReady: false, done: done) {
                 // Reset synchronously so the next frame never shows the previous answer.
                 exampleIndex = (exampleIndex + 1) % (12 * minutes.count)
                 reset()
@@ -430,13 +434,16 @@ struct DinoQuestionTitle: View {
 }
 
 struct DinoDemonstrationActions: View {
+    var showsReady = true
     let done: () -> Void
     let another: () -> Void
 
     var body: some View {
         VStack(spacing: 10) {
-            Button(action: done) { Label("dino.ready", systemImage: "checkmark") }
-                .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("demo.ready")
+            if showsReady {
+                Button(action: done) { Label("dino.ready", systemImage: "checkmark") }
+                    .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("demo.ready")
+            }
             Button(action: another) { Label("dino.example.another", systemImage: "arrow.clockwise") }
                 .multilineTextAlignment(.center).buttonStyle(DinoSecondaryButtonStyle())
                 .overlay(RoundedRectangle(cornerRadius: 18).stroke(DinoStyle.ink, lineWidth: 2))

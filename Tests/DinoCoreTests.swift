@@ -668,10 +668,27 @@ struct DinoCoreTests {
         expect(Set(catalog.map(\.id)).count == catalog.count, "capital identifiers are unique")
         expect(catalog.allSatisfy { TimeZone(identifier: $0.timeZoneID) != nil }, "all capitals use valid IANA zones")
         expect(catalog.first { $0.countryCode == "TUR" }?.id == "ankara", "Turkey uses its capital Ankara")
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
-        expect(calendar.component(.month, from: DinoTimeZoneJourney.referenceDate) == 1 &&
-               calendar.component(.day, from: DinoTimeZoneJourney.referenceDate) == 15, "map date agrees with the offset reference date")
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(secondsFromGMT: 0)!
+        let today = Calendar(identifier: .gregorian).dateComponents([.year, .month, .day], from: Date())
+        let shown = utc.dateComponents([.year, .month, .day, .hour], from: DinoTimeZoneJourney.referenceDate)
+        expect(shown.year == today.year && shown.month == today.month && shown.day == today.day && shown.hour == Optional(12),
+               "the map date and the city offset use noon UTC on today")
+        expect(utc.component(.month, from: DinoTimeZoneJourney.atlasDate) == 1 &&
+               utc.component(.day, from: DinoTimeZoneJourney.atlasDate) == 15,
+               "simplified zone bands stay on the winter atlas date")
+        expect(catalog.allSatisfy {
+            TimeZone(identifier: $0.timeZoneID)!.secondsFromGMT(for: DinoTimeZoneJourney.referenceDate).isMultiple(of: 3_600)
+        }, "every capital keeps a whole-hour offset today")
+        let formatter = DateFormatter()
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.setLocalizedDateFormatFromTemplate("dMMMM")
+        formatter.locale = Locale(identifier: "nl_NL")
+        expect(DinoTimeZoneJourney.displayedDate(language: "nl") == formatter.string(from: DinoTimeZoneJourney.referenceDate),
+               "the Dutch map names today's date")
+        formatter.locale = Locale(identifier: "en_GB")
+        expect(DinoTimeZoneJourney.displayedDate(language: "en") == formatter.string(from: DinoTimeZoneJourney.referenceDate),
+               "the English map names today's date")
         for language in ["nl", "en"] {
             for family in DinoPracticeTime.allCases {
                 var generator = DinoPracticeGenerator(configuration: .init(time: family, order: .specific(.timeZone)), seed: 19, language: language)
@@ -684,6 +701,9 @@ struct DinoCoreTests {
                     expect(journey.origin.countryCode != journey.destination.countryCode && q.offsetHours != 0, "two capitals always use different countries and time zones")
                     expect(q.offsetHours == journey.offsetHours, "map and question use the same real-world offset")
                     expect(q.relatedTimes[0].adding(minutes: 60 * journey.offsetHours) == q.target, "geographic time-zone calculation survives midnight")
+                    let walked = journey.hourSteps(from: q.relatedTimes[0])
+                    expect(walked.map { abs($0.addedHours) } == Array(1...abs(q.offsetHours)) && walked.last?.time == q.target,
+                           "the example counts +1, +2 until the new time and then stops")
                     expect(q.options.count == 4 && Set(q.options).count == 4 && q.options.contains(q.target), "four distinct answer choices include the correct time")
                     expect(q.options.allSatisfy { family.minutes.contains($0.minute) }, "time-zone choices retain the selected minute family")
                     switch DinoTimeZoneDifficulty(minuteStep: family.minuteStep) {

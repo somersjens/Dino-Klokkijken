@@ -27,11 +27,18 @@ struct QuestionRenderer: View {
             case .setAnalog:
                 targetCard
                 analogInput.id("question.answers")
-                if !session.hasFeedback {
+                VStack(spacing: 12) {
                     DinoAnalogClockControls(adjustingMinutes: $adjustingMinutes, allowsMinutes: session.allowsMinutes,
                                             minuteStep: session.minuteStep, adjust: adjustAnalog)
+                    clockCheckButton
                 }
-                confirmButton
+                .frame(maxWidth: min(380, width))
+                // Retain the controls' space while they fade, so neither the
+                // clock nor the centered scroll content slides after checking.
+                .opacity(session.hasFeedback ? 0 : 1)
+                .allowsHitTesting(!session.hasFeedback)
+                .accessibilityHidden(session.hasFeedback)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.5), value: session.hasFeedback)
             case .setDigital:
                 analogTarget
                 digitalInput.id("question.answers")
@@ -152,12 +159,17 @@ struct QuestionRenderer: View {
     private var confirmButton: some View {
         Group {
             if !session.hasFeedback {
-                Button { session.submit(session.inputTime) } label: {
-                    Image(systemName: "checkmark").font(.system(size: 25, weight: .heavy))
-                }.buttonStyle(DinoButtonStyle()).frame(maxWidth: 260)
-                    .accessibilityLabel(Text("dino.confirm")).accessibilityIdentifier("question.confirm")
+                clockCheckButton.frame(maxWidth: min(380, width))
             }
         }
+    }
+
+    private var clockCheckButton: some View {
+        Button { session.submit(session.inputTime) } label: {
+            Label("dino.clock.check", systemImage: "checkmark")
+                .lineLimit(1).minimumScaleFactor(0.75)
+        }.buttonStyle(DinoButtonStyle())
+            .accessibilityIdentifier("question.confirm")
     }
 
     private func adjustAnalog(by direction: Int) {
@@ -214,7 +226,7 @@ struct DinoAnalogClockControls: View {
                 turnButton(direction: -1)
                 turnButton(direction: 1)
             }
-        }.frame(maxWidth: 280)
+        }.frame(maxWidth: .infinity)
     }
 
     private func handButton(minutes: Bool) -> some View {

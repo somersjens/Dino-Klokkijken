@@ -36,6 +36,8 @@ struct DinoExpandedQuestionView: View {
                     DinoMinutesBetweenExplanation(difference: DinoMinuteDifference(q.relatedTimes[0], q.relatedTimes[1]),
                                                   language: code)
                 } else if !isDemonstration { responses }
+            case .timeZone:
+                if !isDemonstration { responses }
             default:
                 if isDemonstration { demonstrationAnswer }
                 else { responses }
@@ -77,9 +79,10 @@ struct DinoExpandedQuestionView: View {
             if !isDemonstration { Text("dino.expanded.midnightHint").font(.footnote).multilineTextAlignment(.center) }
         case .timeZone:
             if let journey = q.timeZoneJourney, let referenceTime = q.relatedTimes.first {
-                DinoTimeZoneMap(journey: journey, referenceTime: referenceTime,
-                                answer: q.target, showsAnswer: isDemonstration || session.showsCorrectResponse,
-                                isDemonstration: isDemonstration, compactLayout: compactLayout && width >= 600)
+                DinoTimeZoneLesson(journey: journey, referenceTime: referenceTime, answer: q.target,
+                                   showsAnswer: isDemonstration || session.showsCorrectResponse,
+                                   isDemonstration: isDemonstration, compactLayout: compactLayout && width >= 600,
+                                   theme: theme, width: min(760, width))
             }
         case .addTime, .subtractTime:
             DigitalClock(time: q.relatedTimes[0], theme: theme, fontSize: min(48, width * 0.14))

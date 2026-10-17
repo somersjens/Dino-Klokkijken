@@ -1058,6 +1058,8 @@ final class DinoUITests: XCTestCase {
             let destination = app.descendants(matching: .any)["question.timeZone.destination"]
             let map = app.descendants(matching: .any)["question.timeZone.map"]
             XCTAssertTrue(map.waitForExistence(timeout: 5))
+            XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.date"].label,
+                           DinoTimeZoneJourney.displayedDate(language: "nl"))
             XCTAssertTrue(origin.label.contains("Amsterdam") && origin.label.contains(question.relatedTimes[0].digitalText))
             XCTAssertTrue(destination.label.contains(city) && destination.label.contains("?"))
             XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "question.option.")).count, 4)
@@ -1076,11 +1078,15 @@ final class DinoUITests: XCTestCase {
             }
             tap("question.example")
             XCTAssertTrue(app.buttons["demo.ready"].waitForExistence(timeout: 5))
-            let demoCity = app.descendants(matching: .any)["demo.timeZone.destination"]
-            XCTAssertFalse(demoCity.label.contains("?"), "The worked map reveals the destination time")
+            let example = DinoDemonstrationExamples.question(kind: .timeZone, minutes: family.minutes,
+                                                             minuteStep: family.minuteStep, index: 0, previousTarget: nil)
+            waitForTimeZoneWalk(example)
             saveScreenshot("time-zone-atlas-example-\(family.rawValue)")
             tap("demo.nextExample")
-            XCTAssertFalse(demoCity.label.contains("?"))
+            let nextExample = DinoDemonstrationExamples.question(kind: .timeZone, minutes: family.minutes,
+                                                                 minuteStep: family.minuteStep, index: 1,
+                                                                 previousTarget: example.target)
+            waitForTimeZoneWalk(nextExample)
             tap("demo.ready")
             XCTAssertTrue(destination.label.contains("?"), "Examples preserve the unanswered live map")
             let wrongIndex = question.options.firstIndex { $0 != question.target }!
@@ -1103,6 +1109,8 @@ final class DinoUITests: XCTestCase {
         let question = generator.next(index: 0)
         XCTAssertEqual(app.staticTexts["question.title"].label,
                        "What time is it in \(question.timeZoneJourney!.destination.name(language: "en"))?")
+        XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.date"].label,
+                       DinoTimeZoneJourney.displayedDate(language: "en"))
         XCTAssertTrue(app.descendants(matching: .any)["question.timeZone.origin"].label.contains("London"))
         XCTAssertTrue(app.descendants(matching: .any)["question.timeZone.destination"].label.contains("?"))
         saveScreenshot("time-zone-atlas-whole-en")
@@ -1131,10 +1139,10 @@ final class DinoUITests: XCTestCase {
         tap("question.example")
         XCTAssertTrue(app.buttons["demo.nextExample"].waitForExistence(timeout: 5))
         let q = DinoDemonstrationExamples.question(kind: .timeZone, minutes: [30], minuteStep: 30, index: 0, previousTarget: nil)
-        XCTAssertEqual(answer.label, q.target.digitalText)
+        waitUntilLabel("demo.answer", equals: q.target.digitalText, timeout: 8)
         tap("demo.nextExample")
         let next = DinoDemonstrationExamples.question(kind: .timeZone, minutes: [30], minuteStep: 30, index: 1, previousTarget: q.target)
-        XCTAssertEqual(answer.label, next.target.digitalText)
+        waitUntilLabel("demo.answer", equals: next.target.digitalText, timeout: 8)
         XCTAssertNotEqual(answer.label, q.target.digitalText)
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "question.option.")).count, 0)
         XCTAssertFalse(app.staticTexts["demo.explanation"].exists)
@@ -1200,6 +1208,11 @@ final class DinoUITests: XCTestCase {
             }
             tap("question.example")
             XCTAssertTrue(app.buttons["demo.ready"].waitForExistence(timeout: 5))
+            if type == .timeZone {
+                let example = DinoDemonstrationExamples.question(kind: .timeZone, minutes: [30], minuteStep: 30,
+                                                                 index: 0, previousTarget: nil)
+                waitUntilLabel("demo.answer", equals: example.target.digitalText, timeout: 8)
+            }
             let answers = app.descendants(matching: .any).matching(identifier: "demo.answer")
             XCTAssertEqual(answers.count, 1, "\(type) shows one worked answer")
             XCTAssertFalse(answers.firstMatch.label.isEmpty)
@@ -1224,6 +1237,24 @@ final class DinoUITests: XCTestCase {
             tap("header.pause")
             XCTAssertTrue(app.buttons["practice.start"].waitForExistence(timeout: 5))
         }
+    }
+
+    private func waitUntilLabel(_ identifier: String, equals expected: String, timeout: TimeInterval) {
+        let element = app.descendants(matching: .any)[identifier]
+        let predicate = NSPredicate(format: "exists == 1 AND label == %@", expected)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        XCTAssertEqual(XCTWaiter().wait(for: [expectation], timeout: timeout), .completed,
+                       "Expected \(identifier) to read \(expected)")
+    }
+
+    private func waitForTimeZoneWalk(_ question: ClockQuestion) {
+        let steps = question.timeZoneJourney!.hourSteps(from: question.relatedTimes[0])
+        waitUntilLabel("demo.answer", equals: question.target.digitalText, timeout: Double(steps.count) + 8)
+        XCTAssertEqual(app.descendants(matching: .any)["demo.timeZone.step.0"].label, question.relatedTimes[0].digitalText)
+        XCTAssertEqual(app.descendants(matching: .any)["demo.timeZone.difference"].label, steps.last!.caption)
+        XCTAssertTrue(app.descendants(matching: .any)["demo.timeZone.destination"].label.contains(question.target.digitalText))
+        XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "demo.answer").count, 1,
+                       "One difference chip updates the same result clock")
     }
 
     private func chooseExampleTimeFamily(_ family: String) {
