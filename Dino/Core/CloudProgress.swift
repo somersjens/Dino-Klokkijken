@@ -7,7 +7,7 @@ struct DinoCloudProgress: Codable, Equatable {
     var version = 1
     var resetAt: Date?
     var levels: [String: LevelRecord]
-    var demonstratedInteractions: Set<ClockQuestionKind>
+    @KnownQuestionKinds var demonstratedInteractions: Set<ClockQuestionKind>
     var completedWorlds: Set<Int>?
     var perfectWorlds: Set<Int>?
 

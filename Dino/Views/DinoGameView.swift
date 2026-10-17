@@ -42,7 +42,6 @@ struct DinoGameView: View {
                                         practiceRecord: session.practiceBestStreak,
                                         practiceQuestionNumber: session.practice == nil ? nil : session.practiceQuestionNumber,
                                         practiceConfiguration: session.practice,
-                                        helpEnabled: !session.hasFeedback,
                                         help: showExample, action: pause)
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { hudHeight = $0 }
                     ScrollViewReader { proxy in
@@ -116,8 +115,8 @@ struct DinoGameView: View {
             .transformPreference(DinoCompanionPreference.self) { anchors in
                 if confirmExit || session.demonstration != nil { anchors = [:] }
             }
-            .task(id: session.shouldAutoAdvance && !confirmExit && !personalizing) {
-                guard session.shouldAutoAdvance && !confirmExit && !personalizing else { return }
+            .task(id: session.shouldAutoAdvance && session.demonstration == nil && !confirmExit && !personalizing) {
+                guard session.shouldAutoAdvance && session.demonstration == nil && !confirmExit && !personalizing else { return }
                 do { try await Task.sleep(for: .seconds(DinoAnimation.correctAnswerDelay)) } catch { return }
                 guard !Task.isCancelled else { return }
                 session.advance()
@@ -224,6 +223,8 @@ struct InteractionDemonstration: View {
     var body: some View {
         if kind == .setAnalog {
             DinoAnalogSettingDemonstration(theme: theme, minuteStep: minuteStep, minutes: minutes, width: width, done: done)
+        } else if kind == .advanceAnalog {
+            DinoAnalogAdvanceDemonstration(theme: theme, minuteStep: minuteStep, minutes: minutes, width: width, done: done)
         } else if kind.isExpanded {
             DinoExpandedDemonstration(kind: kind, time: practiceTime, worldMinutes: worldMinutes,
                                       minuteStep: minuteStep, width: width, theme: theme, done: done)
@@ -330,11 +331,10 @@ struct DinoAnalogSettingDemonstration: View {
                 time = script.applying(.adjust(direction), to: time, adjustingMinutes: adjustingMinutes)
             }
             Button {
-                if confirmed { done() }
-                else {
-                    stopDemonstration()
-                    confirmed = time == script.target
-                }
+                // The script hides the separate ready button. Leaving while it is still
+                // playing has to dismiss the example, or the player cannot close it.
+                if confirmed || !manuallyAdjusting { done() }
+                else { confirmed = time == script.target }
             } label: {
                 Label(LocalizedStringKey(confirmed ? "dino.ready" : "dino.clock.check"), systemImage: "checkmark")
                     .lineLimit(1).minimumScaleFactor(0.75)
@@ -400,6 +400,139 @@ struct DinoAnalogSettingDemonstration: View {
                 try await Task.sleep(for: .seconds(action == .confirm ? 0.8 : 0.3))
                 demonstratedAction = nil
                 try await Task.sleep(for: .seconds(0.2))
+            }
+        } catch { /* Dismissal and another example cancel the previous script. */ }
+    }
+}
+
+struct DinoAnalogAdvanceDemonstration: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ObservedObject private var language = LanguageManager.shared
+    let theme: ClockTheme
+    let minuteStep: Int
+    let minutes: [Int]
+    let width: CGFloat
+    let done: () -> Void
+    @State private var exampleIndex = 0
+    @State private var previousTarget: ClockTime?
+    @State private var question = DinoDemonstrationExamples.question(kind: .advanceAnalog, minutes: [0], minuteStep: 60,
+                                                                    index: 0, previousTarget: nil)
+    @State private var time = ClockTime(hour: 12)
+    @State private var adjustingMinutes = false
+    @State private var demonstratedAction: DinoAnalogSettingExample.Action? = nil
+    @State private var confirmed = false
+    @State private var manuallyAdjusting = false
+    @State private var hourAngle = 0.0
+    @State private var minuteAngle = 0.0
+
+    private var script: DinoAnalogAdvanceExample { DinoAnalogAdvanceExample(question: question, minuteStep: minuteStep) }
+    private var face: CGFloat { min(118, max(72, (width - 96) / 2)) }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Label("dino.example", systemImage: "sparkles")
+                .font(.system(size: 13, weight: .heavy, design: .rounded)).foregroundStyle(DinoStyle.green)
+            Text("dino.question.advanceAnalog")
+                .font(.system(size: 21, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
+                .accessibilityIdentifier("demo.title")
+            HStack(alignment: .center, spacing: 6) {
+                AnalogClock(time: script.start, theme: theme, size: face)
+                    .accessibilityIdentifier("demo.startClock")
+                DinoAdvanceDifference(minutes: question.durationMinutes, language: language.effective.code, prefix: "demo")
+                AnalogClock(time: time, theme: theme, size: face,
+                            onHourChange: adjustingMinutes ? nil : { hour in
+                                stopDemonstration()
+                                time = ClockTime(hour: hour, minute: time.minute)
+                            },
+                            onMinuteChange: adjustingMinutes ? { next in stopDemonstration(); time = next } : nil,
+                            minuteStep: minuteStep,
+                            displayedHourAngle: manuallyAdjusting ? nil : hourAngle,
+                            displayedMinuteAngle: manuallyAdjusting ? nil : minuteAngle)
+                    .padding(4)
+                    .modifier(ClockAnswerOutline(visible: confirmed, correct: true))
+                    .accessibilityIdentifier("demo.analog")
+            }
+            DinoAnalogClockControls(adjustingMinutes: Binding(get: { adjustingMinutes }, set: {
+                stopDemonstration()
+                adjustingMinutes = $0
+            }), allowsMinutes: minuteStep < 60, minuteStep: minuteStep, prefix: "demo",
+                                    demonstratedAction: demonstratedAction) { direction in
+                stopDemonstration()
+                time = script.applying(.adjust(direction), to: time, adjustingMinutes: adjustingMinutes)
+            }
+            Button {
+                stopDemonstration()
+                confirmed = time == script.target
+            } label: {
+                Label("dino.clock.check", systemImage: "checkmark")
+                    .lineLimit(1).minimumScaleFactor(0.75)
+            }.buttonStyle(DinoButtonStyle())
+                .accessibilityIdentifier("demo.confirm")
+                .accessibilityValue(confirmed ? Text("dino.correctTime") : Text(""))
+                .overlay(alignment: .bottomTrailing) { if demonstratedAction == .confirm { DinoClockTapCue() } }
+            DinoDemonstrationActions(done: done) {
+                exampleIndex = (exampleIndex + 1) % 10_000
+                previousTarget = question.target
+                reset()
+            }
+        }.frame(width: width).dinoCard()
+            .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
+            .foregroundStyle(DinoStyle.ink)
+            .accessibilityElement(children: .contain).accessibilityAddTraits(.isModal)
+            .onAppear { reset() }
+            .task(id: exampleIndex) { await demonstrate() }
+    }
+
+    private func reset() {
+        question = DinoDemonstrationExamples.question(kind: .advanceAnalog, minutes: minutes, minuteStep: minuteStep,
+                                                      index: exampleIndex, previousTarget: previousTarget)
+        let example = DinoAnalogAdvanceExample(question: question, minuteStep: minuteStep)
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            time = example.start
+            adjustingMinutes = false
+            demonstratedAction = nil
+            confirmed = false
+            manuallyAdjusting = false
+            hourAngle = example.start.hourAngle
+            minuteAngle = example.start.minuteAngle
+        }
+    }
+
+    private func stopDemonstration() {
+        manuallyAdjusting = true
+        demonstratedAction = nil
+        confirmed = false
+    }
+
+    @MainActor private func demonstrate() async {
+        let example = DinoAnalogAdvanceExample(question: question, minuteStep: minuteStep)
+        do {
+            try await Task.sleep(for: .seconds(1.2))
+            var movingMinutes = false
+            for action in example.actions {
+                try Task.checkCancellation()
+                guard !manuallyAdjusting else { return }
+                demonstratedAction = action
+                try await Task.sleep(for: .seconds(0.25))
+                try Task.checkCancellation()
+                guard !manuallyAdjusting else { return }
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.22)) {
+                    switch action {
+                    case .selectMinutes(let minutes):
+                        adjustingMinutes = minutes
+                        movingMinutes = minutes
+                    case .adjust(let direction):
+                        time = example.applying(action, to: time, adjustingMinutes: movingMinutes)
+                        hourAngle = DinoAnalogSettingExample.continuingAngle(time.hourAngle, from: hourAngle, direction: direction)
+                        minuteAngle = DinoAnalogSettingExample.continuingAngle(time.minuteAngle, from: minuteAngle, direction: direction)
+                    case .confirm: confirmed = time == example.target
+                    }
+                }
+                try await Task.sleep(for: .seconds(action == .confirm ? 0.6 : 0.2))
+                demonstratedAction = nil
+                try await Task.sleep(for: .seconds(0.12))
             }
         } catch { /* Dismissal and another example cancel the previous script. */ }
     }

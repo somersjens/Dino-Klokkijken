@@ -1522,23 +1522,6 @@
         }
       }
     },
-    "dino.example.rule.elapsedTime" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Count forward from the start time to the end time. If the end time is earlier, continue through midnight."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tel vooruit van de begintijd naar de eindtijd. Ligt de eindtijd eerder, reken dan door middernacht heen."
-          }
-        }
-      }
-    },
     "dino.example.rule.flightArrival" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1586,23 +1569,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lees de uren vóór de dubbele punt en de minuten erna. Zeg de tijd daarna in woorden."
-          }
-        }
-      }
-    },
-    "dino.example.rule.schoolEnd" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add the length of the lesson to its start time to find when it ends."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tel de lesduur bij de begintijd op. Zo vind je hoe laat de les afgelopen is."
           }
         }
       }
@@ -1941,6 +1907,23 @@
         "nl" : { "stringUnit" : { "state" : "translated", "value" : "Aankomsttijd: onbekend" } }
       }
     },
+    "dino.expanded.flightZoneDifference" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time zone difference"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tijdzoneverschil"
+          }
+        }
+      }
+    },
     "dino.expanded.flightZone" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2056,23 +2039,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stad B heeft dezelfde tijd als stad A."
-          }
-        }
-      }
-    },
-    "dino.expanded.school" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The lesson starts at:"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De les begint om:"
           }
         }
       }
@@ -4627,23 +4593,6 @@
         }
       }
     },
-    "dino.practice.question.elapsedTime" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Calculate elapsed time"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bereken hoeveel tijd is verstreken"
-          }
-        }
-      }
-    },
     "dino.practice.question.flightArrival" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4708,23 +4657,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Digitale tijd in woorden"
-          }
-        }
-      }
-    },
-    "dino.practice.question.schoolEnd" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When does the lesson end?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wanneer is de les afgelopen?"
           }
         }
       }
@@ -5177,13 +5109,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Move the hands forward by this duration"
+            "value" : "Move the hands forward"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zet de wijzers deze tijd vooruit"
+            "value" : "Zet de wijzers vooruit"
           }
         }
       }
@@ -5256,23 +5188,6 @@
         }
       }
     },
-    "dino.question.elapsedTime" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "How much time has passed?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hoeveel tijd is er verstreken?"
-          }
-        }
-      }
-    },
     "dino.question.flightArrival" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5337,23 +5252,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hoe zeg je deze tijd?"
-          }
-        }
-      }
-    },
-    "dino.question.schoolEnd" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What time does the lesson end?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hoe laat is de les afgelopen?"
           }
         }
       }

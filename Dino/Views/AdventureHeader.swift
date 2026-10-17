@@ -29,7 +29,6 @@ struct AdventureHeader: View {
     var practiceRecord = 0
     var practiceQuestionNumber: Int?
     var practiceConfiguration: DinoPracticeConfiguration?
-    var helpEnabled = true
     var help: () -> Void = {}
     var focusLevel: (() -> Void)?
     var openStars: (() -> Void)?
@@ -228,8 +227,7 @@ struct AdventureHeader: View {
             .frame(width: metrics.cellWidth, height: metrics.cell)
             .contentShape(Rectangle())
         }
-        .buttonStyle(HUDPressStyle()).disabled(!helpEnabled)
-        // Feedback still blocks the action; it no longer fades the icon between questions.
+        .buttonStyle(HUDPressStyle())
         .accessibilityLabel(Text(LocalizedStringKey(control == .settings ? "dino.practice.title" : "dino.example")))
         .accessibilityIdentifier(control == .settings ? "header.practice" : "question.example")
     }

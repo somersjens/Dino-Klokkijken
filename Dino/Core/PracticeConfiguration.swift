@@ -29,7 +29,7 @@ enum DinoPracticeTime: String, CaseIterable, Sendable {
 enum DinoPracticeQuestion: String, CaseIterable, Sendable {
     case chooseAnalog, chooseDigital, readDigital, spokenTime, trueFalse, dayPart, match
     case setDigital, setAnalog, read24Hour, sortTimes, timeSequence
-    case addTime, advanceAnalog, elapsedTime, subtractTime, schoolEnd, flightArrival, timeZone, daySchedule, minutesBetween
+    case addTime, advanceAnalog, subtractTime, flightArrival, timeZone, daySchedule, minutesBetween
     var titleKey: String { "dino.practice.question.\(rawValue)" }
     var number: Int { Self.allCases.firstIndex(of: self)! + 1 }
     var recipe: QuestionRecipe {
@@ -93,7 +93,7 @@ struct DinoPracticeRecord: Codable, Equatable, Sendable {
         // Retain saved records of retired exercises without renumbering other records.
         DinoPracticeQuestion.allCases.map { key(time: time, question: $0) }
             + [key(time: time, order: .ascending), key(time: time, order: .mix)]
-            + ["\(time.rawValue).activity", "\(time.rawValue).pairClocks"]
+            + ["\(time.rawValue).activity", "\(time.rawValue).pairClocks", "\(time.rawValue).elapsedTime", "\(time.rawValue).schoolEnd"]
     })
 }
 

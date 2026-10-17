@@ -108,13 +108,29 @@ enum DinoExpandedQuestions {
         case .timeSequence:
             q.durationMinutes = duration
             q.relatedTimes = [target.adding(minutes: -3 * duration), target.adding(minutes: -2 * duration), target.adding(minutes: -duration)]
-        case .addTime, .advanceAnalog, .schoolEnd:
-            q.durationMinutes = duration; q.relatedTimes = [target.adding(minutes: -duration)]
+        case .addTime, .advanceAnalog:
+            q.durationMinutes = kind == .advanceAnalog ? Self.advanceDuration(minuteStep: step, using: &rng) : duration
+            q.relatedTimes = [target.adding(minutes: -q.durationMinutes)]
             if kind == .advanceAnalog { q.options = [] }
         case .subtractTime:
             q.durationMinutes = duration; q.relatedTimes = [target.adding(minutes: duration)]
         case .flightArrival:
-            q.durationMinutes = 120 + duration; q.relatedTimes = [target.adding(minutes: -q.durationMinutes)]
+            // Whole and half hours stay in one zone. Harder minute families state an hour difference.
+            q.offsetHours = Self.flightOffsetHours(minuteStep: minuteStep, using: &rng)
+            q.durationMinutes = Self.flightDurationMinutes(offsetHours: q.offsetHours, minuteStep: minuteStep,
+                                                           extraSteps: Int.random(in: q.offsetHours == 0 ? 1...3 : 0...2, using: &rng))
+            q.relatedTimes = [target.adding(minutes: -(q.durationMinutes + q.offsetHours * 60))]
+            if q.offsetHours != 0 {
+                let forgotten = target.adding(minutes: -q.offsetHours * 60)
+                let reversed = target.adding(minutes: q.offsetHours * 60)
+                let nudged = target.adding(minutes: q.offsetHours > 0 ? 60 : -60)
+                var seen: Set<ClockTime> = [target]
+                var distractors = [forgotten, reversed, nudged].filter { seen.insert($0).inserted }
+                for candidate in other where distractors.count < 3 && seen.insert(candidate).inserted {
+                    distractors.append(candidate)
+                }
+                q.options = (distractors + [target]).shuffled(using: &rng)
+            }
         case .daySchedule:
             let activities = DinoScheduleActivity.allCases.shuffled(using: &rng)
             let schedule = DinoDaySchedule(start: target.adding(minutes: -scheduleDurations.reduce(0, +)),
@@ -129,16 +145,6 @@ enum DinoExpandedQuestions {
             var seen: Set<ClockTime> = [target]
             let distractors = candidates.filter { minutes.contains($0.minute) && seen.insert($0).inserted }
             q.options = (Array(distractors.prefix(3)) + [target]).shuffled(using: &rng)
-        case .elapsedTime:
-            q.durationMinutes = duration; q.relatedTimes = [target.adding(minutes: -duration), target]
-            var durations = Set([duration])
-            var distractors: [Int] = []
-            while distractors.count < 3 {
-                let value = step * Int.random(in: 1...8, using: &rng)
-                if durations.insert(value).inserted { distractors.append(value) }
-            }
-            q.options = []; q.answerChoices = (distractors + [duration]).shuffled(using: &rng).map(ClockAnswer.duration)
-            q.answer = .duration(duration)
         case .minutesBetween:
             let starts = (1...min(180, target.minutesOfDay))
                 .map { target.adding(minutes: -$0) }
@@ -171,6 +177,33 @@ enum DinoExpandedQuestions {
         default: preconditionFailure("Use the original clock generator for \(kind)")
         }
         return q
+    }
+
+    /// Forward clock turns stay within four hours. Minute practice mixes whole hours with leftover minutes.
+    static func advanceDuration<R: RandomNumberGenerator>(minuteStep: Int, using rng: inout R) -> Int {
+        if minuteStep >= 60 { return 60 * Int.random(in: 1...4, using: &rng) }
+        let roll = Int.random(in: 0..<10, using: &rng)
+        if roll < 2 {
+            let steps = max(1, min(3, (60 / minuteStep) - 1))
+            return minuteStep * Int.random(in: 1...steps, using: &rng)
+        }
+        if roll < 4 { return 60 * Int.random(in: 1...4, using: &rng) }
+        let hours = Int.random(in: 1...3, using: &rng)
+        let minutes = Array(stride(from: minuteStep, to: 60, by: minuteStep))
+        return hours * 60 + minutes.randomElement(using: &rng)!
+    }
+
+    /// Easier flights keep a zero offset. Quarter hours and finer state a whole-hour difference.
+    static func flightOffsetHours<R: RandomNumberGenerator>(minuteStep: Int, using rng: inout R) -> Int {
+        if minuteStep >= 30 { return 0 }
+        let choices = minuteStep >= 10 ? [1, -1, 2, -2] : [2, -2, 3, -3, 4, -4]
+        return choices.randomElement(using: &rng)!
+    }
+
+    /// A zone change needs at least two extra flying hours, so two hours aloft never crosses four zones.
+    static func flightDurationMinutes(offsetHours: Int, minuteStep: Int, extraSteps: Int) -> Int {
+        let base = offsetHours == 0 ? 120 : (abs(offsetHours) + 2) * 60
+        return base + minuteStep * extraSteps
     }
 
     static func example(kind: ClockQuestionKind, time: DinoPracticeTime) -> ClockQuestion {
@@ -243,6 +276,10 @@ struct DinoAnalogSettingExample {
     }
 
     func applying(_ action: Action, to time: ClockTime, adjustingMinutes: Bool) -> ClockTime {
+        Self.applying(action, to: time, adjustingMinutes: adjustingMinutes, minuteStep: minuteStep)
+    }
+
+    static func applying(_ action: Action, to time: ClockTime, adjustingMinutes: Bool, minuteStep: Int) -> ClockTime {
         guard case .adjust(let direction) = action else { return time }
         return adjustingMinutes ? time.shiftingMinutes(by: direction * minuteStep)
             : ClockTime(hour: ClockTime.shiftedHour(time.hour, by: direction), minute: time.minute)
@@ -254,6 +291,40 @@ struct DinoAnalogSettingExample {
         if delta < -180 { delta += 360 }
         if abs(delta) == 180 { delta = Double(direction) * 180 }
         return previous + delta
+    }
+}
+
+/// Turns the given clock forward by its duration, using the same hour and minute buttons as the question.
+struct DinoAnalogAdvanceExample {
+    let minuteStep: Int
+    let durationMinutes: Int
+    let start: ClockTime
+    let target: ClockTime
+    let actions: [DinoAnalogSettingExample.Action]
+
+    init(question: ClockQuestion, minuteStep: Int) {
+        precondition(minuteStep > 0 && 60.isMultiple(of: minuteStep))
+        self.minuteStep = minuteStep
+        durationMinutes = question.durationMinutes
+        start = Self.face(question.relatedTimes[0])
+        target = Self.face(question.target)
+        let hours = durationMinutes / 60
+        let extra = durationMinutes % 60
+        var taps: [DinoAnalogSettingExample.Action] = Array(repeating: .adjust(1), count: hours)
+        if extra > 0 {
+            taps.append(.selectMinutes(true))
+            taps += Array(repeating: .adjust(1), count: extra / minuteStep)
+        }
+        taps.append(.confirm)
+        actions = taps
+    }
+
+    func applying(_ action: DinoAnalogSettingExample.Action, to time: ClockTime, adjustingMinutes: Bool) -> ClockTime {
+        DinoAnalogSettingExample.applying(action, to: time, adjustingMinutes: adjustingMinutes, minuteStep: minuteStep)
+    }
+
+    static func face(_ time: ClockTime) -> ClockTime {
+        ClockTime(hour: time.hour % 12 == 0 ? 12 : time.hour % 12, minute: time.minute)
     }
 }
 
@@ -325,5 +396,44 @@ enum DinoTimeWords {
         let h = minutes / 60, m = minutes % 60
         if h == 0 { return "\(m) min" }
         return m == 0 ? "\(h) \(language == "nl" ? "uur" : "h")" : "\(h) \(language == "nl" ? "uur" : "h") \(m) min"
+    }
+
+    static func hourDifference(_ hours: Int, language: String) -> String {
+        let sign = hours >= 0 ? "+" : "−"
+        return "\(sign)\(abs(hours)) \(language == "nl" ? "uur" : "h")"
+    }
+}
+
+/// Flight duration and the time-zone difference are combined first. That one shift is then added to the departure.
+struct DinoFlightArrivalWork: Equatable {
+    let departure: ClockTime
+    let durationMinutes: Int
+    let offsetHours: Int
+    let arrival: ClockTime
+
+    var combinedMinutes: Int { durationMinutes + offsetHours * 60 }
+    /// Time after the flight duration alone, before the zone difference is included.
+    var afterDuration: ClockTime { departure.adding(minutes: durationMinutes) }
+    var zoneSign: String { offsetHours >= 0 ? "+" : "−" }
+
+    func durationText(_ language: String) -> String {
+        DinoTimeWords.duration(durationMinutes, language: language)
+    }
+
+    func zoneText(_ language: String) -> String {
+        DinoTimeWords.duration(abs(offsetHours) * 60, language: language)
+    }
+
+    func combinedText(_ language: String) -> String {
+        DinoTimeWords.duration(combinedMinutes, language: language)
+    }
+
+    func differenceLine(language: String) -> String {
+        "\(durationText(language)) \(zoneSign) \(zoneText(language)) = \(combinedText(language))"
+    }
+
+    func arrivalLine(language: String) -> String {
+        let shift = offsetHours == 0 ? durationText(language) : combinedText(language)
+        return "\(departure.digitalText) + \(shift) = \(arrival.digitalText)"
     }
 }

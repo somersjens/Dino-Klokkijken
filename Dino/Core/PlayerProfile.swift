@@ -1,5 +1,29 @@
 import Foundation
 
+/// Saved demonstrations may name a question type that no longer exists.
+@propertyWrapper
+struct KnownQuestionKinds: Codable, Equatable, Sendable {
+    var wrappedValue: Set<ClockQuestionKind>
+    init(wrappedValue: Set<ClockQuestionKind> = []) { self.wrappedValue = wrappedValue }
+
+    init(from decoder: Decoder) throws {
+        var container = try decoder.unkeyedContainer()
+        var values: Set<ClockQuestionKind> = []
+        while !container.isAtEnd {
+            let raw = try container.decode(String.self)
+            if let kind = ClockQuestionKind(rawValue: raw) { values.insert(kind) }
+        }
+        wrappedValue = values
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.unkeyedContainer()
+        for kind in wrappedValue.sorted(by: { $0.rawValue < $1.rawValue }) {
+            try container.encode(kind.rawValue)
+        }
+    }
+}
+
 struct LevelRecord: Codable, Equatable, Sendable {
     var stars = 0
     var bestCorrect = 0
@@ -29,7 +53,7 @@ struct PlayerProfile: Codable, Equatable, Sendable {
     // Optional additions keep existing version-one saves readable.
     var completedWorlds: Set<Int>?
     var perfectWorlds: Set<Int>?
-    var demonstratedInteractions: Set<ClockQuestionKind> = []
+    @KnownQuestionKinds var demonstratedInteractions: Set<ClockQuestionKind> = []
     // Optional for compatibility with existing version-one saves.
     var progressResetAt: Date?
 

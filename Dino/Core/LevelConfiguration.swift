@@ -3,7 +3,7 @@ import Foundation
 enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
     case chooseAnalog, chooseDigital, activity, setAnalog, setDigital, match
     case readDigital, spokenTime, trueFalse, dayPart, read24Hour, sortTimes, timeSequence
-    case addTime, advanceAnalog, elapsedTime, subtractTime, schoolEnd, flightArrival, timeZone, daySchedule, minutesBetween
+    case addTime, advanceAnalog, subtractTime, flightArrival, timeZone, daySchedule, minutesBetween
     var instructionKey: String { "dino.question.\(rawValue)" }
     var symbol: String {
         switch self {
@@ -20,10 +20,8 @@ enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
         case .sortTimes: return "list.number"
         case .timeSequence: return "ellipsis"
         case .addTime, .advanceAnalog: return "clock.arrow.2.circlepath"
-        case .elapsedTime: return "stopwatch.fill"
         case .minutesBetween: return "arrow.right.to.line"
         case .subtractTime: return "minus.circle.fill"
-        case .schoolEnd: return "book.fill"
         case .flightArrival: return "airplane"
         case .timeZone: return "globe.europe.africa.fill"
         case .daySchedule: return "calendar"
@@ -140,14 +138,14 @@ enum DinoLevelCatalog {
                 kinds = [.match, .match, .chooseDigital, .setAnalog,
                          .setDigital, .trueFalse, .match, .match, .spokenTime]
             case 9:
-                kinds = [.elapsedTime, .addTime, .elapsedTime, .advanceAnalog,
-                         .subtractTime, .schoolEnd, .timeSequence, .flightArrival, .elapsedTime]
+                kinds = [.minutesBetween, .addTime, .minutesBetween, .advanceAnalog,
+                         .subtractTime, .addTime, .timeSequence, .flightArrival, .minutesBetween]
             default:
                 kinds = [.chooseAnalog, .spokenTime, .readDigital, .setAnalog,
-                         .read24Hour, .match, .elapsedTime, .addTime, .sortTimes]
+                         .read24Hour, .match, .minutesBetween, .addTime, .sortTimes]
             }
             let boss = position == 10
-            let selected = boss ? kinds + [worldID == 9 ? .elapsedTime : .setDigital] : [kinds[position - 1]]
+            let selected = boss ? kinds + [worldID == 9 ? .minutesBetween : .setDigital] : [kinds[position - 1]]
             let recipes = selected.map { kind in
                 QuestionRecipe(kind: kind, optionCount: kind.usesOptions ? (position == 1 && !kind.isExpanded ? 2 : 4) : 0)
             }
