@@ -366,6 +366,14 @@ struct DinoCoreTests {
         let sameZone = DinoFlightArrivalWork(departure: .init(hour: 9, minute: 30), durationMinutes: 150,
                                              offsetHours: 0, arrival: .init(hour: 12))
         expect(sameZone.arrivalLine(language: "nl") == "09:30 + 2 uur 30 min = 12:00", "one zone uses the duration as the only shift")
+        expect(forward.walkMinutes(step: 15) == [60, 120, 180, 240, 300, 360], "a whole-hour shift counts one hour at a time")
+        expect(sameZone.walkMinutes(step: 30) == [60, 120, 150], "half hours add the leftover thirty minutes in one step")
+        expect(sameZone.walkMinutes(step: 5) == [60, 120, 125, 130, 135, 140, 145, 150],
+               "five-minute questions add a fifteen-minute remainder in steps of five")
+        expect(sameZone.walkMinutes(step: 15) == [60, 120, 135, 150], "quarter hours add the remainder a quarter at a time")
+        let removed = DinoFlightArrivalWork(departure: .init(hour: 10), durationMinutes: 60,
+                                            offsetHours: -3, arrival: .init(hour: 8))
+        expect(removed.combinedMinutes == -120 && removed.walkMinutes(step: 60) == [-60, -120], "time comes off one hour at a time")
         expect(DinoExpandedQuestions.flightDurationMinutes(offsetHours: 4, minuteStep: 5, extraSteps: 0) == 360,
                "a four-hour zone change needs at least a six-hour flight")
         expect(DinoTimeWords.hourDifference(2, language: "nl") == "+2 uur" &&

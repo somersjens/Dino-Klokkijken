@@ -280,8 +280,7 @@ struct WorldMap: View {
                     .overlay(Capsule().stroke(DinoStyle.deepGreen.opacity(0.18), lineWidth: 1.5))
                     .offset(y: 25)
             }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text("dino.startPoint")).accessibilityIdentifier("map.start")
+            .accessibilityIdentifier("map.start")
     }
 
     private func routePoint(_ index: Int, width: CGFloat, topClearance: CGFloat) -> CGPoint {
@@ -316,8 +315,6 @@ private struct MapLevelPointer: View {
             }
         }
         .allowsHitTesting(false)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("dino.friends.nextLevel \(levelID)"))
         .accessibilityIdentifier("map.levelPointer.\(levelID)")
         .onAppear { visible = true }
         .onDisappear { visible = false }
@@ -339,8 +336,6 @@ private struct MapCompletionConfetti: View {
             }
         }
         .ignoresSafeArea()
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("dino.worldComplete"))
     }
 
     private func drawConfetti(context: inout GraphicsContext, size: CGSize, elapsed: TimeInterval) {
@@ -434,8 +429,6 @@ struct LevelNode: View {
                 }.frame(width: level.isBoss ? 90 : 72, height: level.isBoss ? 90 : 72)
             }
             .buttonStyle(DinoAnswerButtonStyle()).disabled(!unlocked)
-            .accessibilityLabel(Text("dino.levelNumber \(level.id)"))
-            .accessibilityValue(Text(LocalizedStringKey(unlocked ? "dino.unlocked" : "dino.locked")))
             .accessibilityIdentifier("map.level.\(level.id)")
             .overlay(alignment: .bottom) {
                 Group {
@@ -1051,7 +1044,6 @@ struct LevelStartOverlay: View {
                 .padding(.top, top)
                 .offset(y: dragOffset)
                 .transition(reduceMotion ? .opacity : .scale(scale: 0.95, anchor: .top).combined(with: .opacity))
-                .accessibilityAddTraits(.isModal)
             }
         }
     }

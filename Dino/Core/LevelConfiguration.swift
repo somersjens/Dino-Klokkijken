@@ -24,7 +24,7 @@ enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
         case .subtractTime: return "minus.circle.fill"
         case .flightArrival: return "airplane"
         case .timeZone: return "globe.europe.africa.fill"
-        case .daySchedule: return "calendar"
+        case .daySchedule: return "train.side.front.car"
         }
     }
     var usesOptions: Bool { ![.setAnalog, .setDigital, .match, .advanceAnalog, .sortTimes].contains(self) }

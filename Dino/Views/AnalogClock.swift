@@ -142,7 +142,6 @@ struct AnalogClock: View {
             }
         }
         .padding(showHandHints ? size * 0.24 : 0)
-        .modifier(ClockAccessibility(time: time, onHourChange: onHourChange, onMinuteChange: onMinuteChange, minuteStep: minuteStep))
     }
 
     private var hourWidth: CGFloat { size * 0.038 }
@@ -194,36 +193,5 @@ private struct ClockHandHint: View {
         ClockHintBadgeArrow(number: number, badge: point(pointer.badge), tip: point(pointer.tip),
                            wings: pointer.arrowWings.map(point), ink: ink,
                            bounds: CGSize(width: size * 1.48, height: size * 1.48))
-    }
-}
-
-private struct ClockAccessibility: ViewModifier {
-    let time: ClockTime
-    let onHourChange: ((Int) -> Void)?
-    let onMinuteChange: ((ClockTime) -> Void)?
-    let minuteStep: Int
-    func body(content: Content) -> some View {
-        // Changing the available accessibility action must not replace the
-        // visible face when feedback disables dragging during its animation.
-        content.accessibilityRepresentation {
-            if let onMinuteChange {
-                Color.clear.accessibilityElement(children: .ignore)
-                    .accessibilityLabel(Text("dino.minutes"))
-                    .accessibilityValue(time.digitalText)
-                    .accessibilityAdjustableAction { direction in
-                        onMinuteChange(time.shiftingMinutes(by: direction == .increment ? minuteStep : -minuteStep))
-                    }
-            } else if let onHourChange {
-                Color.clear.accessibilityElement(children: .ignore)
-                    .accessibilityLabel(Text("dino.question.setAnalog"))
-                    .accessibilityValue(time.digitalText)
-                    .accessibilityAdjustableAction { direction in
-                        onHourChange(ClockTime.shiftedHour(time.hour == 0 ? 12 : time.hour, by: direction == .increment ? 1 : -1))
-                    }
-            } else {
-                Color.clear.accessibilityElement(children: .ignore).accessibilityLabel(Text("dino.analog"))
-                    .accessibilityValue(time.digitalText)
-            }
-        }
     }
 }

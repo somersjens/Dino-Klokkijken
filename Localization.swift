@@ -147,10 +147,8 @@ struct LanguagePicker: View {
                             .stroke(selected ? DinoStyle.deepGreen : highContrast ? DinoStyle.ink : DinoStyle.ink.opacity(0.10),
                                     lineWidth: selected || highContrast ? 2 : 1))
                 }.buttonStyle(.plain)
-                    .accessibilityLabel(Text(verbatim: option.displayName))
-                    .accessibilityAddTraits(selected ? .isSelected : [])
                     .accessibilityIdentifier("language.option." + option.code)
             }
-        }.accessibilityElement(children: .contain).accessibilityIdentifier("language.picker")
+        }.accessibilityIdentifier("language.picker")
     }
 }

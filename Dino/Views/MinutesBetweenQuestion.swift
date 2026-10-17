@@ -54,9 +54,6 @@ struct DinoMinutesBetweenCard: View {
                                                style: StrokeStyle(lineWidth: highContrast ? 2.5 : 1.5,
                                                                   dash: showsAnswer ? [] : [5, 4])))
                 .padding(.horizontal, 24)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text(verbatim: showsAnswer ? DinoTimeWords.minutes(minutes, language: language)
-                                         : L(key: "dino.question.minutesBetween")))
                 .accessibilityIdentifier(isDemonstration ? "demo.answer" : "question.minutesBetween.\(showsAnswer ? "answer" : "unknown")")
             }
 
@@ -70,7 +67,6 @@ struct DinoMinutesBetweenCard: View {
             .strokeBorder(highContrast ? DinoStyle.ink : DinoStyle.deepGreen.opacity(0.16),
                           lineWidth: highContrast ? 2.5 : 1.5))
         .shadow(color: DinoStyle.deepGreen.opacity(0.08), radius: 14, y: 6)
-        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("\(prefix).minutesBetween.card")
     }
 
@@ -116,7 +112,6 @@ struct DinoMinutesBetweenExplanation: View {
         .fixedSize(horizontal: false, vertical: true)
         .padding(12).frame(maxWidth: .infinity)
         .background(DinoStyle.green.opacity(0.10), in: RoundedRectangle(cornerRadius: 18))
-        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("demo.minutesBetween.calculation")
     }
 }

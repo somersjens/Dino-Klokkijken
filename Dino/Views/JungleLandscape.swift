@@ -438,7 +438,6 @@ struct WorldTitleBanner: View, Equatable {
                     .position(x: layout.subtitle.midX + 10, y: layout.subtitle.midY)
             }
         }.frame(height: 212)
-            .accessibilityElement(children: .combine)
     }
 }
 
@@ -8470,10 +8469,6 @@ struct WorldThemePreview: View {
             p.bossClearing(worldID: world.id, at: CGPoint(x: size.width * 0.71, y: size.height * 0.92), size: scale)
             p.boss(worldID: world.id, at: CGPoint(x: size.width * 0.70, y: size.height * 0.94), size: scale)
         }.allowsHitTesting(false)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text(LocalizedStringKey(world.bossKey)))
-            .accessibilityValue(Text(verbatim: String(format: "%02d:%02d", WorldBossClock.time(in: world.id).hour,
-                                                     WorldBossClock.time(in: world.id).minute)))
     }
 }
 

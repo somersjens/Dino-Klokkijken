@@ -23,7 +23,7 @@ struct DinoSettingsView: View {
                     Text("dino.settings")
                         .font(.system(size: spacious ? 34 : 28, weight: .heavy, design: .rounded))
                         .frame(maxWidth: .infinity).padding(.top, 28).padding(.bottom, 18)
-                        .accessibilityAddTraits(.isHeader).accessibilityIdentifier("settings.title")
+                        .accessibilityIdentifier("settings.title")
                     ScrollView {
                         VStack(spacing: spacious ? 20 : 16) {
                             section("dino.language", symbol: "globe") {
@@ -132,7 +132,6 @@ struct DinoSettingsView: View {
                     .foregroundStyle(DinoStyle.deepGreen).frame(width: 36, height: 36)
                     .background(DinoStyle.green.opacity(0.2), in: RoundedRectangle(cornerRadius: 12))
                 Text(title).font(.system(size: 19, weight: .bold, design: .rounded))
-                    .accessibilityAddTraits(.isHeader)
             }
             content()
         }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
@@ -168,7 +167,6 @@ struct DinoSettingsView: View {
 }
 
 /// The label fills the row and has its own action, including its empty space.
-/// Keep the native switch and its accessibility behavior for direct interaction.
 private struct SettingsToggleStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack(spacing: 12) {
@@ -178,8 +176,6 @@ private struct SettingsToggleStyle: ToggleStyle {
             }.buttonStyle(.plain)
             Toggle(isOn: configuration.$isOn) { EmptyView() }
                 .labelsHidden().toggleStyle(.switch).tint(DinoStyle.deepGreen)
-        }.accessibilityRepresentation {
-            Toggle(isOn: configuration.$isOn) { configuration.label }.toggleStyle(.switch)
         }
     }
 }

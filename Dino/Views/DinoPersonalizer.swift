@@ -40,7 +40,6 @@ struct DinoPersonalizer: View {
                                 .contentShape(Rectangle())
                         }.buttonStyle(.plain)
                             .accessibilityIdentifier("personalize.page." + choice.identifier)
-                            .accessibilityAddTraits(page == choice ? .isSelected : [])
                     }
                 }.padding(.horizontal, 16).padding(.top, 32).padding(.bottom, 8)
                     .modifier(CustomizationWidth())
@@ -107,9 +106,7 @@ struct DinoAppearanceEditor: View {
         ZStack { DinoAvatar(appearance: appearance) }
             .frame(width: compact ? 88 : metrics.previewSize, height: compact ? 88 : metrics.previewSize)
             .shadow(color: DinoStyle.deepGreen.opacity(0.10), radius: 8, y: 5)
-            .accessibilityElement(children: .ignore)
             .accessibilityHidden(false)
-            .accessibilityLabel(Text("dino.appearance.preview"))
             .accessibilityIdentifier("personalize.preview")
             .modifier(PersonalizationPreviewNavigation(onNavigate: onNavigate))
             .padding(.vertical, CustomizationLayout.previewPadding)
@@ -134,8 +131,6 @@ struct DinoAppearanceEditor: View {
                             .frame(maxWidth: .infinity, minHeight: metrics.controlHeight)
                             .contentShape(Rectangle())
                     }.buttonStyle(.plain)
-                        .accessibilityLabel(Text(LocalizedStringKey("dino.appearance.color." + swatch.name)))
-                        .accessibilityAddTraits(appearance[part] == swatch.hex ? .isSelected : [])
                         .accessibilityIdentifier("personalize.\(part.rawValue).\(swatch.name)")
                 }
                 ColorPicker(selection: colorBinding(part), supportsOpacity: false) {

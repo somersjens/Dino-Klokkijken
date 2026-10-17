@@ -32,6 +32,12 @@ enum DinoStyle {
     static let paper = Color(dinoHex: 0xF6FAF1)
     static let muted = Color(dinoHex: 0x657E80)
     static let warning = Color(dinoHex: 0x8F2435)
+    static let orange = Color(dinoHex: 0xF59A32)
+    static let deepOrange = Color(dinoHex: 0xC45E00)
+
+    static func wrong(_ highContrast: Bool) -> Color {
+        highContrast ? deepOrange : orange
+    }
 }
 
 private struct CustomizationTypeScaleKey: EnvironmentKey { static let defaultValue: CGFloat = 1 }
@@ -180,8 +186,6 @@ struct PersonalizationPreviewNavigation: ViewModifier {
                     guard abs(movement.width) >= 50, abs(movement.width) > abs(movement.height) * 1.25 else { return }
                     onNavigate(movement.width < 0 ? 1 : -1)
                 })
-                .accessibilityAction(named: Text("dino.back")) { onNavigate(-1) }
-                .accessibilityAction(named: Text("dino.next")) { onNavigate(1) }
         } else {
             content
         }
@@ -285,7 +289,6 @@ struct DinoIconButton: View {
                 .shadow(color: DinoStyle.ink.opacity(0.08), radius: 8, y: 3)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text(LocalizedStringKey(labelKey)))
     }
 }
 
@@ -320,8 +323,6 @@ struct DinoStars: View {
                 }
             }
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("dino.stars \(count)"))
     }
 }
 

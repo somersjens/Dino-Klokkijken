@@ -40,9 +40,6 @@ struct DinoCharacter: View {
         }
         .frame(width: size, height: size)
         .shadow(color: DinoStyle.deepGreen.opacity(0.10), radius: 8, y: 5)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("dino.character"))
-        .accessibilityAddTraits(.isImage)
         .accessibilityIdentifier(animationIdentifier)
         .task(id: appearance) {
             let colors = appearance

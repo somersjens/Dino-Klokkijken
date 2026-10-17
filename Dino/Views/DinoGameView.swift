@@ -174,7 +174,7 @@ struct DinoGameView: View {
             Button(role: .destructive, action: onExit) { Label("dino.exit", systemImage: "rectangle.portrait.and.arrow.right") }
                 .buttonStyle(DinoButtonStyle(color: Color(dinoHex: 0xC74343), compact: true))
                 .accessibilityIdentifier("game.exit.confirm")
-        }.padding(4).dinoCard().accessibilityAddTraits(.isModal)
+        }.padding(4).dinoCard()
     }
 
     private func showExample() { session.demonstration = session.question.kind }
@@ -262,7 +262,7 @@ struct InteractionDemonstration: View {
             DinoDemonstrationActions(done: done, another: nextExample)
         }.frame(width: width).dinoCard()
             .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
-            .foregroundStyle(DinoStyle.ink).accessibilityElement(children: .contain).accessibilityAddTraits(.isModal)
+            .foregroundStyle(DinoStyle.ink)
             .onAppear { resetExample() }
     }
 
@@ -341,7 +341,6 @@ struct DinoAnalogSettingDemonstration: View {
                     .contentTransition(.opacity)
             }.buttonStyle(DinoButtonStyle())
                 .accessibilityIdentifier(confirmed ? "demo.ready" : "demo.confirm")
-                .accessibilityValue(confirmed ? Text("dino.correctTime") : Text(""))
                 .overlay(alignment: .bottomTrailing) { if demonstratedAction == .confirm { DinoClockTapCue() } }
             DinoDemonstrationActions(showsReady: false, done: done) {
                 // Reset synchronously so the next frame never shows the previous answer.
@@ -351,7 +350,6 @@ struct DinoAnalogSettingDemonstration: View {
         }.frame(width: width).dinoCard()
             .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
             .foregroundStyle(DinoStyle.ink)
-            .accessibilityElement(children: .contain).accessibilityAddTraits(.isModal)
             .onAppear { reset() }
             .task(id: exampleIndex) { await demonstrate() }
     }
@@ -468,7 +466,6 @@ struct DinoAnalogAdvanceDemonstration: View {
                     .lineLimit(1).minimumScaleFactor(0.75)
             }.buttonStyle(DinoButtonStyle())
                 .accessibilityIdentifier("demo.confirm")
-                .accessibilityValue(confirmed ? Text("dino.correctTime") : Text(""))
                 .overlay(alignment: .bottomTrailing) { if demonstratedAction == .confirm { DinoClockTapCue() } }
             DinoDemonstrationActions(done: done) {
                 exampleIndex = (exampleIndex + 1) % 10_000
@@ -478,7 +475,6 @@ struct DinoAnalogAdvanceDemonstration: View {
         }.frame(width: width).dinoCard()
             .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
             .foregroundStyle(DinoStyle.ink)
-            .accessibilityElement(children: .contain).accessibilityAddTraits(.isModal)
             .onAppear { reset() }
             .task(id: exampleIndex) { await demonstrate() }
     }

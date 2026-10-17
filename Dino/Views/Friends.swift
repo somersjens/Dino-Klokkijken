@@ -96,7 +96,7 @@ struct DinoFriendsView: View {
                     if manager.authenticated {
                         ToolbarItem(placement: .topBarLeading) {
                             Button { manager.refresh(); manager.scheduleSync(force: true) } label: { Image(systemName: "arrow.clockwise") }
-                                .accessibilityLabel(Text("dino.friends.refresh")).accessibilityIdentifier("friends.refresh")
+                                .accessibilityIdentifier("friends.refresh")
                         }
                     }
                 }
@@ -110,7 +110,7 @@ struct DinoFriendsView: View {
     private var statusCard: some View {
         VStack(spacing: 14) {
             Label("dino.friends.title", systemImage: "person.2.fill").font(.title2.bold())
-            if manager.state == .authenticating || manager.state == .loading { ProgressView().accessibilityLabel(Text("dino.friends.loading")) }
+            if manager.state == .authenticating || manager.state == .loading { ProgressView() }
             Text(LocalizedStringKey(manager.state.messageKey)).multilineTextAlignment(.center)
             if !manager.enabled {
                 Button("dino.friends.connect") { parentAction = .enable }
@@ -220,7 +220,7 @@ struct FriendProfileView: View {
                                         }
                                     }
                                 } else { Text("dino.friends.notAvailable").font(.caption) }
-                            }.accessibilityElement(children: .combine).accessibilityIdentifier("friend.level.\(level.id)")
+                            }.accessibilityIdentifier("friend.level.\(level.id)")
                             if level.id != 10 { Divider() }
                         }
                     }.dinoCard()
@@ -242,7 +242,7 @@ struct FriendProfileView: View {
             Text(LocalizedStringKey(key)).font(.subheadline)
             Spacer(minLength: 8)
             Text(verbatim: value ?? L("dino.friends.notAvailable")).font(.subheadline.bold()).multilineTextAlignment(.trailing)
-        }.accessibilityElement(children: .combine).accessibilityIdentifier("friend.metric.\(key)")
+        }.accessibilityIdentifier("friend.metric.\(key)")
     }
 }
 
@@ -256,14 +256,13 @@ struct FriendMapAvatars: View {
             ForEach(group.visibleIDs, id: \.self) { id in
                 if let friend = friends.first(where: { $0.id == id }) {
                     Button { openFriend(id) } label: { FriendAvatar(friend: friend, size: 28).frame(width: 44, height: 44) }
-                        .buttonStyle(.plain).accessibilityLabel(Text(verbatim: friend.displayName))
-                        .accessibilityHint(Text("dino.friends.openProfile"))
+                        .buttonStyle(.plain)
                         .accessibilityIdentifier("map.friend.\(id)")
                 }
             }
             if group.additionalCount > 0 {
                 Button(action: openMore) { Text(verbatim: "+\(group.additionalCount)").font(.caption.bold()).frame(minWidth: 44, minHeight: 44) }
-                    .buttonStyle(.plain).accessibilityLabel(Text("dino.friends.more \(group.additionalCount)"))
+                    .buttonStyle(.plain)
             }
         }.padding(.horizontal, 3).background(.white.opacity(0.95), in: Capsule())
     }
@@ -353,12 +352,11 @@ struct LevelFriendsView: View {
                     Label(String(result.stars), systemImage: "star.fill").foregroundStyle(DinoStyle.deepGreen)
                     Text(verbatim: result.seconds.map(DinoQuestionTiming.text) ?? "—")
                         .monospacedDigit().frame(minWidth: 44, alignment: .trailing)
-                        .accessibilityLabel(Text(verbatim: result.seconds.map { L("dino.friends.time") + " " + DinoQuestionTiming.text($0) } ?? L("dino.friends.timeUnavailable")))
                 }
             }.font(.system(size: 13, weight: .bold, design: .rounded))
                 .padding(.vertical, 5).frame(minHeight: 44)
                 .contentShape(Rectangle())
-        }.buttonStyle(.plain).accessibilityElement(children: .combine)
+        }.buttonStyle(.plain)
             .accessibilityIdentifier("level.friend.\(friend.id)")
     }
 
@@ -366,8 +364,6 @@ struct LevelFriendsView: View {
         let result = FriendProgress.local(player.profile).levels[levelID]
         return HStack(spacing: 12) {
             DinoPortrait(appearance: player.profile.dinoAppearance ?? .standard, size: 52)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text("dino.appearance.title"))
                 .accessibilityIdentifier("level.ownAvatar")
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -381,15 +377,10 @@ struct LevelFriendsView: View {
                 HStack(spacing: 10) {
                     Label(String(result?.stars ?? 0), systemImage: "star.fill")
                         .foregroundStyle(DinoStyle.deepGreen).monospacedDigit()
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(Text("dino.stars \(result?.stars ?? 0)"))
                         .accessibilityIdentifier("level.ownScore")
                     Spacer(minLength: 0)
                     Text(verbatim: result?.seconds.map(DinoQuestionTiming.text) ?? "—")
                         .monospacedDigit().accessibilityIdentifier("level.ownTime")
-                        .accessibilityLabel(Text(verbatim: result?.seconds.map {
-                            L("dino.friends.time") + " " + DinoQuestionTiming.text($0)
-                        } ?? L("dino.friends.timeUnavailable")))
                 }.font(.system(size: 13, weight: .semibold, design: .rounded))
             }
         }.padding(12).background(DinoStyle.green.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))

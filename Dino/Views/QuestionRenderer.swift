@@ -53,7 +53,7 @@ struct QuestionRenderer: View {
                         Image(systemName: "checkmark").font(.system(size: 25, weight: .heavy))
                     }.buttonStyle(DinoButtonStyle()).frame(maxWidth: 260)
                         .disabled(session.pairSelections.count != question.relatedTimes.count)
-                        .accessibilityLabel(Text("dino.confirm")).accessibilityIdentifier("question.confirm")
+                        .accessibilityIdentifier("question.confirm")
                 }
             default:
                 DinoExpandedQuestionView(session: session, theme: theme, width: width, clockSize: clockSize,
@@ -80,14 +80,14 @@ struct QuestionRenderer: View {
                     DigitalClock(time: session.attempt.submittedAnswer ?? session.inputTime, theme: theme, fontSize: comparing ? min(28, width * 0.075) : 38)
                         .padding(8).modifier(ClockAnswerOutline(visible: true, correct: session.correctFeedback))
                         .accessibilityIdentifier("question.digitalControl")
-                    if comparing { comparisonLabel(correct: false) }
+                    if comparing { AnswerVerdictMark(correct: false) }
                 }.frame(maxWidth: .infinity)
                 if comparing {
                     VStack(spacing: 10) {
                         DigitalClock(time: question.target, theme: theme, fontSize: min(28, width * 0.075))
                             .padding(8).modifier(ClockAnswerOutline(visible: true, correct: true))
                             .accessibilityIdentifier("question.correctClock")
-                        comparisonLabel(correct: true)
+                        AnswerVerdictMark(correct: true)
                     }.frame(maxWidth: .infinity)
                         .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
                 }
@@ -98,13 +98,6 @@ struct QuestionRenderer: View {
                                 onMinuteChange: { session.inputMinute = $0 },
                                 minuteStep: session.minuteStep, valueIdentifier: "question.digitalControl")
         }
-    }
-
-    private func comparisonLabel(correct: Bool) -> some View {
-        Label(LocalizedStringKey(correct ? "dino.correctTime" : "dino.yourAnswer"), systemImage: correct ? "checkmark.circle.fill" : "xmark.circle.fill")
-            .font(.system(size: 12, weight: .bold, design: .rounded))
-            .foregroundStyle(correct ? DinoStyle.deepGreen : Color(dinoHex: 0xB54343))
-            .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
     }
 
     private var targetCard: some View {
@@ -184,12 +177,11 @@ struct QuestionRenderer: View {
         return Button { session.submit(option) } label: {
             content().frame(maxWidth: .infinity)
                 .background(.white, in: RoundedRectangle(cornerRadius: 22))
-                .overlay(RoundedRectangle(cornerRadius: 22).stroke(correct ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : wrong ? Color(dinoHex: 0xC65A59) : DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: correct || wrong ? 4 : highContrast ? 3 : 1.5))
+                .overlay(RoundedRectangle(cornerRadius: 22).stroke(correct ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : wrong ? DinoStyle.wrong(highContrast) : DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: correct || wrong ? 4 : highContrast ? 3 : 1.5))
                 .overlay(alignment: .topTrailing) {
                     if correct || wrong {
-                        Image(systemName: correct ? "checkmark.circle.fill" : "xmark.circle.fill")
-                            .font(.system(size: 24, weight: .bold)).foregroundStyle(correct ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : Color(dinoHex: 0xC65A59))
-                            .background(.white, in: Circle()).offset(x: 5, y: -5)
+                        AnswerVerdictMark(correct: correct)
+                            .padding(2).background(.white, in: Circle()).offset(x: 5, y: -5)
                     }
                 }.shadow(color: DinoStyle.ink.opacity(0.06), radius: 7, y: 4)
                 .opacity(!highContrast && session.showsCorrectResponse && !correct && !wrong ? 0.55 : 1)
@@ -218,8 +210,6 @@ struct DinoAnalogClockControls: View {
                     .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 22))
                     .overlay(RoundedRectangle(cornerRadius: 22)
                         .stroke(DinoStyle.ink.opacity(highContrast ? 1 : 0.14), lineWidth: highContrast ? 3 : 1.5))
-                    .accessibilityElement(children: .contain)
-                    .accessibilityLabel(Text("dino.practice.hand"))
                     .accessibilityIdentifier("\(prefix).hand")
             }
             HStack(spacing: 14) {
@@ -248,7 +238,6 @@ struct DinoAnalogClockControls: View {
                     }
                 }
         }.buttonStyle(DinoAnswerButtonStyle())
-            .accessibilityAddTraits(selected ? .isSelected : [])
             .accessibilityIdentifier("\(prefix).hand.\(minutes ? "minutes" : "hours")")
             .overlay(alignment: .bottomTrailing) { if demonstratedAction == action { DinoClockTapCue() } }
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: selected)
@@ -265,8 +254,6 @@ struct DinoAnalogClockControls: View {
                     .font(.system(size: 18, weight: .heavy, design: .rounded)).monospacedDigit()
             }
         }.buttonStyle(DinoButtonStyle(compact: true))
-            .accessibilityLabel(Text(LocalizedStringKey(minutes ? (direction < 0 ? "dino.minuteLess" : "dino.minuteMore")
-                                                               : (direction < 0 ? "dino.hourLess" : "dino.hourMore"))))
             .accessibilityIdentifier("\(prefix).analog.\(direction < 0 ? "less" : "more")")
             .scaleEffect(cue && !reduceMotion ? 0.96 : 1)
             .overlay(alignment: .bottomTrailing) { if cue { DinoClockTapCue() } }
@@ -314,27 +301,20 @@ struct AnalogClockAnswerComparison: View {
                     .accessibilityIdentifier("question.analogControl")
                     .padding(10).modifier(ClockAnswerOutline(visible: hasFeedback, correct: correct))
                     .scaleEffect(scale).frame(width: cellWidth, height: faceHeight)
-                comparisonLabel(correct: false).opacity(comparing ? 1 : 0).accessibilityHidden(!comparing)
+                AnswerVerdictMark(correct: false).opacity(comparing ? 1 : 0).accessibilityHidden(!comparing)
             }.frame(width: cellWidth).offset(x: comparing ? -displacement : 0)
             VStack(spacing: 10) {
                 AnalogClock(time: target, theme: theme, size: clockSize).padding(10)
                     .modifier(ClockAnswerOutline(visible: true, correct: true))
                     .scaleEffect(comparisonScale).frame(width: cellWidth, height: (clockSize + 20) * comparisonScale)
                     .accessibilityIdentifier("question.correctClock")
-                comparisonLabel(correct: true)
+                AnswerVerdictMark(correct: true)
             }.frame(width: cellWidth)
                 .offset(x: displacement + (comparing || reduceMotion ? 0 : 24))
                 .opacity(comparing ? 1 : 0).allowsHitTesting(false).accessibilityHidden(!comparing)
         }
-        .frame(width: width, height: faceHeight + (comparing ? 46 : 0), alignment: .top)
+        .frame(width: width, height: faceHeight + (comparing ? 38 : 0), alignment: .top)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.34), value: comparing)
-    }
-
-    private func comparisonLabel(correct: Bool) -> some View {
-        Label(LocalizedStringKey(correct ? "dino.correctTime" : "dino.yourAnswer"), systemImage: correct ? "checkmark.circle.fill" : "xmark.circle.fill")
-            .font(.system(size: 12, weight: .bold, design: .rounded))
-            .foregroundStyle(correct ? DinoStyle.deepGreen : Color(dinoHex: 0xB54343))
-            .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
     }
 }
 
@@ -385,7 +365,7 @@ struct ClockMatchingBoard: View {
                 Canvas { context, _ in
                     for index in times.indices {
                         if let time = selections[index], let option = options.firstIndex(of: time) {
-                            let color = hasFeedback ? (time == times[index] ? DinoStyle.deepGreen : Color(dinoHex: 0xB54343)) : linkColor(index)
+                            let color = hasFeedback ? (time == times[index] ? DinoStyle.deepGreen : DinoStyle.wrong(highContrast)) : linkColor(index)
                             context.stroke(line(from: index, to: option), with: .color(color),
                                            style: StrokeStyle(lineWidth: 3, lineCap: .round))
                             if hasFeedback, time != times[index], let correct = options.firstIndex(of: times[index]) {
@@ -421,8 +401,6 @@ struct ClockMatchingBoard: View {
                         Color.clear.frame(width: 4, height: 4)
                             .position(x: (leftWidth + width - rightWidth) / 2,
                                       y: (rowY(index) + rowY(option)) / 2)
-                            .accessibilityElement(children: .ignore)
-                            .accessibilityLabel("\(times[index].digitalText) → \(time.digitalText)")
                             .accessibilityIdentifier("\(prefix).line.\(index)")
                     }
                 }.allowsHitTesting(false)
@@ -452,7 +430,7 @@ struct ClockMatchingBoard: View {
 
     private func clockButton(_ index: Int) -> some View {
         let selected = selections[index]
-        let color = hasFeedback && selected != times[index] ? Color(dinoHex: 0xB54343) : linkColor(index)
+        let color = hasFeedback && selected != times[index] ? DinoStyle.wrong(highContrast) : linkColor(index)
         return Button { tapped(.clock(index)) } label: {
             AnalogClock(time: times[index], theme: theme, size: faceSize).allowsHitTesting(false)
                 .frame(width: leftWidth, height: rowHeight)
@@ -465,15 +443,12 @@ struct ClockMatchingBoard: View {
                 }
         }.buttonStyle(DinoAnswerButtonStyle()).disabled(hasFeedback)
             .highPriorityGesture(connectionDrag(from: .clock(index)))
-            .accessibilityLabel(times[index].digitalText)
-            .accessibilityValue(selected?.digitalText ?? L("dino.expanded.choose"))
-            .accessibilityAddTraits(pending == .clock(index) ? .isSelected : [])
             .accessibilityIdentifier("\(prefix).clock.\(index)")
     }
 
     private func timeButton(_ index: Int) -> some View {
         let owner = times.indices.first { selections[$0] == options[index] }
-        let color = owner.map { hasFeedback && times[$0] != options[index] ? Color(dinoHex: 0xB54343) : linkColor($0) } ?? DinoStyle.muted
+        let color = owner.map { hasFeedback && times[$0] != options[index] ? DinoStyle.wrong(highContrast) : linkColor($0) } ?? DinoStyle.muted
         return Button { tapped(.time(index)) } label: {
             DigitalClock(time: options[index], theme: theme, fontSize: min(width >= 600 ? 40 : 26, width * 0.067))
                 .frame(width: rightWidth, height: rowHeight)
@@ -487,8 +462,6 @@ struct ClockMatchingBoard: View {
                 }
         }.buttonStyle(DinoAnswerButtonStyle()).disabled(hasFeedback)
             .highPriorityGesture(connectionDrag(from: .time(index)))
-            .accessibilityLabel(options[index].digitalText)
-            .accessibilityAddTraits(pending == .time(index) ? .isSelected : [])
             .accessibilityIdentifier("\(prefix).time.\(index)")
     }
 
@@ -598,6 +571,31 @@ struct ClockAnswerOutline: ViewModifier {
         content
             .background(.white.opacity(visible ? 0.8 : 0), in: RoundedRectangle(cornerRadius: 22))
             .overlay(RoundedRectangle(cornerRadius: 22)
-                .stroke(correct ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : Color(dinoHex: 0xC65A59), lineWidth: visible ? 4 : 0))
+                .stroke(correct ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : DinoStyle.wrong(highContrast), lineWidth: visible ? 4 : 0))
+    }
+}
+
+/// Green check for a right answer, orange circle with a cross for a wrong one.
+struct AnswerVerdictMark: View {
+    @Environment(\.dinoHighContrast) private var highContrast
+    var correct: Bool
+    var size: CGFloat = 26
+
+    var body: some View {
+        Group {
+            if correct {
+                Image(systemName: "checkmark")
+                    .font(.system(size: size * 0.82, weight: .heavy))
+                    .foregroundStyle(DinoStyle.deepGreen)
+                    .frame(width: size, height: size)
+            } else {
+                Image(systemName: "xmark")
+                    .font(.system(size: size * 0.46, weight: .black))
+                    .foregroundStyle(highContrast ? Color.white : DinoStyle.ink)
+                    .frame(width: size, height: size)
+                    .background(DinoStyle.wrong(highContrast), in: Circle())
+            }
+        }
+        .accessibilityHidden(true)
     }
 }

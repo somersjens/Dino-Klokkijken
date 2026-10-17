@@ -78,8 +78,7 @@ struct DinoPracticeView: View {
                 .background(selected ? DinoStyle.green.opacity(0.22) : .white.opacity(0.5), in: RoundedRectangle(cornerRadius: 18))
                 .overlay(RoundedRectangle(cornerRadius: 18)
                     .stroke(selected ? DinoStyle.deepGreen : highContrast ? DinoStyle.ink : .white, lineWidth: 2))
-        }.buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected : [])
-            .accessibilityLabel(Text(LocalizedStringKey(time.titleKey)))
+        }.buttonStyle(.plain)
             .accessibilityIdentifier("practice.time.\(time.rawValue)")
     }
 
@@ -113,9 +112,7 @@ struct DinoPracticeView: View {
                 .overlay(RoundedRectangle(cornerRadius: 18)
                     .stroke(selected ? DinoStyle.deepGreen : highContrast ? DinoStyle.ink.opacity(0.6) : .clear,
                             lineWidth: selected || highContrast ? 1.5 : 0))
-        }.buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected : [])
-            .accessibilityLabel(Text(LocalizedStringKey(title)))
-            .accessibilityValue(record.map { "\(L("dino.practice.bestStreak")): \($0)" } ?? "")
+        }.buttonStyle(.plain)
             .accessibilityIdentifier(identifier)
     }
 

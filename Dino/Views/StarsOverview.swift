@@ -10,7 +10,6 @@ struct DinoStarsOverview: View {
             VStack(spacing: 16) {
                 Text("dino.starsLabel")
                     .font(.system(size: 26, weight: .heavy, design: .rounded))
-                    .accessibilityAddTraits(.isHeader)
                 VStack(spacing: 10) {
                     ForEach(DinoWorldCatalog.worlds) { world in
                         worldRow(world)
@@ -34,9 +33,6 @@ struct DinoStarsOverview: View {
                 .font(.system(size: 20, weight: .heavy, design: .rounded))
                 .padding(.leading, 16).padding(.trailing, 24).padding(.vertical, 14)
                 .background(.white.opacity(0.8), in: RoundedRectangle(cornerRadius: 18))
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text("dino.stars.total"))
-                .accessibilityValue(Text("dino.stars \(player.profile.totalStars)"))
                 .accessibilityIdentifier("stars.total")
 
                 Button("dino.practice.backToLevels") { dismiss() }
@@ -78,9 +74,6 @@ struct DinoStarsOverview: View {
         .background(tint.opacity(0.5), in: RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18)
             .stroke(highContrast ? DinoStyle.ink.opacity(0.6) : .clear, lineWidth: highContrast ? 1.5 : 0))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(LocalizedStringKey(world.titleKey)))
-        .accessibilityValue(unlocked ? Text("dino.stars \(stars)") : Text("dino.locked"))
         .accessibilityIdentifier("stars.world.\(world.id)")
     }
 

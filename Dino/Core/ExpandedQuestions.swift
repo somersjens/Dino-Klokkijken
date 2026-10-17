@@ -41,7 +41,7 @@ enum DinoScheduleActivity: String, CaseIterable, Sendable {
     }
 }
 
-/// A single day always contains two different activities with one break between them.
+/// A train ride: departure, two trains, and the transfer you have to count between them.
 struct DinoDaySchedule: Equatable, Sendable {
     let start: ClockTime
     let firstActivity: DinoScheduleActivity
@@ -435,5 +435,23 @@ struct DinoFlightArrivalWork: Equatable {
     func arrivalLine(language: String) -> String {
         let shift = offsetHours == 0 ? durationText(language) : combinedText(language)
         return "\(departure.digitalText) + \(shift) = \(arrival.digitalText)"
+    }
+
+    /// Whole hours first, then the leftover minutes in the question's own minute steps.
+    func walkMinutes(step: Int) -> [Int] {
+        let magnitude = abs(combinedMinutes)
+        guard magnitude > 0 else { return [] }
+        let sign = combinedMinutes > 0 ? 1 : -1
+        let hours = magnitude / 60
+        let minutes = magnitude % 60
+        let minuteStep = max(1, step)
+        var steps: [Int] = []
+        if hours > 0 { steps.append(contentsOf: (1...hours).map { sign * $0 * 60 }) }
+        var covered = 0
+        while covered < minutes {
+            covered = min(minutes, covered + minuteStep)
+            steps.append(sign * (hours * 60 + covered))
+        }
+        return steps
     }
 }

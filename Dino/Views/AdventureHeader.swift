@@ -57,7 +57,6 @@ struct AdventureHeader: View {
                     if let focusLevel {
                         Button(action: focusLevel) { levelCell(metrics) }
                             .buttonStyle(HUDPressStyle())
-                            .accessibilityLabel(Text("dino.levelNumber \(level)"))
                             .accessibilityIdentifier("header.level")
                     } else {
                         levelCell(metrics)
@@ -66,7 +65,6 @@ struct AdventureHeader: View {
                     if let openStars, questionCounter == nil {
                         Button(action: openStars) { progressCell(metrics) }
                             .buttonStyle(HUDPressStyle())
-                            .accessibilityLabel(Text("dino.stars \(stars)"))
                             .accessibilityIdentifier("header.stars")
                     } else {
                         progressCell(metrics)
@@ -89,9 +87,7 @@ struct AdventureHeader: View {
                     Color.clear.frame(width: metrics.leadingMargin + metrics.portraitFootprint * 0.48)
                     HUDPlate(palette: palette, highContrast: highContrast)
                         .frame(height: metrics.plate)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(Text("dino.worldNumber \(worldID)"))
-                        .accessibilityIdentifier("header.world")
+                        .accessibilityIdentifier("header.world.\(worldID)")
                         .background(alignment: .trailing) {
                             HUDTrailingLeaves(palette: palette).frame(width: metrics.plate * 0.48, height: metrics.plate * 0.96)
                                 .offset(x: 7)
@@ -161,8 +157,6 @@ struct AdventureHeader: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(HUDPressStyle())
-        .accessibilityLabel(Text("dino.appearance.title"))
-        .accessibilityHint(Text("dino.appearance.open"))
         .accessibilityIdentifier("header.dino")
     }
 
@@ -179,15 +173,10 @@ struct AdventureHeader: View {
                                compact: compact, spacious: metrics.spacious, highContrast: highContrast)
                     .frame(maxWidth: metrics.cellWidth + 8)
                     .offset(y: compact ? -15 : metrics.spacious ? -23 : -21)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(Text("dino.practice.bestStreak"))
-                    .accessibilityValue(String(practiceRecord))
                     .accessibilityIdentifier("practice.bestStreak")
             }
         }
         .contentShape(Rectangle())
-        .accessibilityElement(children: practiceStreak == nil ? .ignore : .contain)
-        .accessibilityLabel(practiceStreak == nil ? Text("dino.levelNumber \(level)") : Text("dino.practice.streak"))
         .accessibilityIdentifier(practiceStreak == nil ? "header.level" : "header.streak")
     }
 
@@ -207,8 +196,6 @@ struct AdventureHeader: View {
             }
         }
         .contentShape(Rectangle())
-        .accessibilityElement(children: questionCounter == nil ? .ignore : .contain)
-        .accessibilityLabel(questionCounter == nil ? Text("dino.stars \(stars)") : Text("dino.questionsLabel"))
         .accessibilityIdentifier(questionCounter == nil ? "header.stars" : "header.questions")
     }
 
@@ -228,7 +215,6 @@ struct AdventureHeader: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(HUDPressStyle())
-        .accessibilityLabel(Text(LocalizedStringKey(control == .settings ? "dino.practice.title" : "dino.example")))
         .accessibilityIdentifier(control == .settings ? "header.practice" : "question.example")
     }
 
@@ -255,7 +241,6 @@ struct AdventureHeader: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(HUDPressStyle())
-        .accessibilityLabel(Text(LocalizedStringKey(control.labelKey)))
         .accessibilityIdentifier(control.identifier)
     }
 
@@ -372,8 +357,6 @@ private struct HUDPracticeSubtitle: View {
                 .overlay(Capsule().strokeBorder(palette.outline, lineWidth: (highContrast ? 2 : 1.5) * Self.enlargement))
                 .overlay(Capsule().strokeBorder(.white.opacity(0.7), lineWidth: 0.7 * Self.enlargement).padding(2 * Self.enlargement))
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: "\(markerTitle) · \(L(key: configuration.time.titleKey))"))
         .accessibilityIdentifier("practice.hudSubtitle")
     }
 }

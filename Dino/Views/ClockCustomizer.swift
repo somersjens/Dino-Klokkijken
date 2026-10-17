@@ -135,8 +135,6 @@ struct ClockCustomizer: View {
                 .background(theme.numerals == style ? DinoStyle.green.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 14))
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(theme.numerals == style ? DinoStyle.deepGreen : DinoStyle.ink.opacity(0.15), lineWidth: theme.numerals == style ? 2 : 1))
         }.buttonStyle(.plain)
-            .accessibilityLabel(Text(verbatim: L(key: "dino.numerals." + style.rawValue)))
-            .accessibilityAddTraits(theme.numerals == style ? .isSelected : [])
             .accessibilityIdentifier("theme.numerals." + style.rawValue)
     }
 
@@ -165,10 +163,9 @@ struct ClockCustomizer: View {
                                         in: RoundedRectangle(cornerRadius: 10))
                     }.buttonStyle(.plain)
                         .accessibilityIdentifier(identifier + "." + value.rawValue)
-                        .accessibilityAddTraits(selection.wrappedValue == value ? .isSelected : [])
                 }
             }.padding(3).background(DinoStyle.ink.opacity(0.06), in: RoundedRectangle(cornerRadius: 13))
-                .frame(maxWidth: 240).accessibilityElement(children: .contain)
+                .frame(maxWidth: 240)
                 .accessibilityIdentifier(identifier)
         }.frame(maxWidth: .infinity, minHeight: 44)
     }
@@ -181,7 +178,7 @@ struct ClockCustomizer: View {
                     AnalogClockOutline(shape: shape).stroke(DinoStyle.ink, lineWidth: 2.5).frame(width: 28, height: 28)
                 }
             }
-        }.accessibilityElement(children: .contain).accessibilityIdentifier("theme.analogShape")
+        }.accessibilityIdentifier("theme.analogShape")
     }
 
     private var analogNumeralChoices: some View {
@@ -199,9 +196,8 @@ struct ClockCustomizer: View {
                         .contentShape(Rectangle())
                 }.buttonStyle(.plain)
                     .accessibilityIdentifier("theme.analogNumerals." + numerals.rawValue)
-                    .accessibilityAddTraits(theme.analogNumerals == numerals ? .isSelected : [])
             }
-        }.accessibilityElement(children: .contain).accessibilityIdentifier("theme.analogNumerals")
+        }.accessibilityIdentifier("theme.analogNumerals")
     }
 
     private func shapeChoice<Icon: View>(title: String, selected: Bool, identifier: String,
@@ -214,7 +210,6 @@ struct ClockCustomizer: View {
                 .background(selected ? DinoStyle.green.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 12))
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(selected ? DinoStyle.deepGreen : DinoStyle.ink.opacity(0.15), lineWidth: selected ? 2 : 1))
         }.buttonStyle(.plain).accessibilityIdentifier(identifier)
-            .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     private func colorChoices(title: String, color: Binding<UInt32>, values: [(name: String, hex: UInt32)]) -> some View {
@@ -233,14 +228,10 @@ struct ClockCustomizer: View {
                             }.frame(maxWidth: .infinity, minHeight: metrics.controlHeight).contentShape(Rectangle())
                     }.buttonStyle(.plain)
                         .accessibilityIdentifier("theme." + title + "." + value.name)
-                        .accessibilityLabel(Text(verbatim: L(key: "dino.color." + value.name)))
-                        .accessibilityAddTraits(color.wrappedValue == value.hex ? .isSelected : [])
                 }
                 ColorPicker(selection: systemColor(color), supportsOpacity: false) { Text("dino.customColor") }
                     .labelsHidden().scaleEffect(metrics.spacious ? 1.25 : 1)
                     .frame(maxWidth: .infinity, minHeight: metrics.controlHeight)
-                    .accessibilityLabel(Text(verbatim: L(key: title) + ", " + L("dino.customColor")))
-                    .accessibilityValue(Text(verbatim: String(format: "#%06X", color.wrappedValue)))
                     .accessibilityIdentifier("theme." + title + ".custom")
             }
         }

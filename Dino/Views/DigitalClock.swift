@@ -72,8 +72,6 @@ struct DigitalClock: View {
             if activeMinutes != nil { anchors[.display] = display }
         }
         .padding(.top, showHandHints ? 48 : 0)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(time.digitalText)
         .environment(\.layoutDirection, .leftToRight)
     }
 
@@ -171,9 +169,6 @@ struct DigitalClockControl: View {
             .alignmentGuide(VerticalAlignment.center) { dimensions in
                 dimensions[VerticalAlignment.center] + (showHandHints ? 24 : 0)
             }
-            .accessibilityLabel(ClockTime(hour: hour, minute: minute).digitalText)
-            .accessibilityValue(Text(adjustingMinutes ? "dino.minutes" : "dino.hours"))
-            .accessibilityHint(Text("dino.clock.switchField"))
             .accessibilityIdentifier(valueIdentifier)
             DinoIconButton(icon: "plus", labelKey: adjustingMinutes ? "dino.minuteMore" : "dino.hourMore") { adjust(1) }
                 .accessibilityIdentifier(adjustingMinutes ? "clock.minute.more" : "clock.hour.more")

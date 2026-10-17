@@ -39,11 +39,7 @@ struct DinoExpandedQuestionView: View {
                     DinoMinutesBetweenExplanation(difference: DinoMinuteDifference(q.relatedTimes[0], q.relatedTimes[1]),
                                                   language: code)
                 } else if !isDemonstration { responses }
-            case .flightArrival:
-                if isDemonstration || showsFlightWork {
-                    DinoFlightArrivalExplanation(work: flightWork, language: code,
-                                                 prefix: isDemonstration ? "demo" : "question")
-                }
+            case .flightArrival, .daySchedule:
                 if !isDemonstration { responses }
             case .timeZone:
                 if !isDemonstration { responses }
@@ -92,14 +88,15 @@ struct DinoExpandedQuestionView: View {
                 .accessibilityIdentifier(isDemonstration ? "demo.targetClock" : "question.targetClock")
             timeChange
         case .flightArrival:
-            DinoFlightTicket(departure: q.relatedTimes[0], duration: duration, offsetHours: q.offsetHours,
-                             arrival: isDemonstration ? q.target : nil,
-                             language: code, width: min(600, width), isDemonstration: isDemonstration)
+            DinoFlightTicket(work: flightWork, showsWork: isDemonstration || showsFlightWork,
+                             minuteStep: session.minuteStep, language: code, width: min(600, width),
+                             isDemonstration: isDemonstration)
         case .daySchedule:
             if let schedule = q.daySchedule {
-                DinoDayScheduleCard(schedule: schedule,
-                                    showsAnswer: isDemonstration || session.showsCorrectResponse,
-                                    isDemonstration: isDemonstration)
+                DinoTrainJourneyCard(schedule: schedule,
+                                     showsAnswer: isDemonstration || session.showsCorrectResponse,
+                                     countsTotal: showsTrainSum, minuteStep: session.minuteStep,
+                                     isDemonstration: isDemonstration, language: code)
             }
         default:
             // SwiftUI can update an outgoing view after the shared session has advanced.
@@ -124,9 +121,15 @@ struct DinoExpandedQuestionView: View {
         !isDemonstration && (session.retryAnsweredCorrectly || session.answerRevealed)
     }
 
-    /// A wrong first try keeps the worked flight sum visible, including a later correct retry.
+    /// Plays once the player stays on the question: a correct retry, or Show answer.
+    /// A correct first answer moves on by itself, so the walk is not started for that brief moment.
     private var showsFlightWork: Bool {
-        !isDemonstration && !session.rejectedResponses.isEmpty
+        !isDemonstration && !session.shouldAutoAdvance && (session.correctFeedback || session.answerRevealed)
+    }
+
+    /// A wrong first answer stays on screen, so the three ride times can be summed before the next try.
+    private var showsTrainSum: Bool {
+        !isDemonstration && session.hasFeedback && !session.shouldAutoAdvance
     }
 
     private var flightWork: DinoFlightArrivalWork {
@@ -143,7 +146,6 @@ struct DinoExpandedQuestionView: View {
                 Image(systemName: "arrow.down")
                     .font(.system(size: isDemonstration ? 17 : 15, weight: .bold))
                     .foregroundStyle(DinoStyle.deepGreen)
-                    .accessibilityLabel(isDemonstration ? "+\(duration)" : "↓")
                     .accessibilityIdentifier("\(sequencePrefix).sequence.arrow.\(index)")
             }
             Group {
@@ -201,8 +203,6 @@ struct DinoExpandedQuestionView: View {
                 }
             }
         }.frame(maxWidth: .infinity)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(responseText(q.expectedAnswer))
             .accessibilityIdentifier("demo.answer")
     }
 
@@ -225,13 +225,11 @@ struct DinoExpandedQuestionView: View {
                         .background(.white, in: RoundedRectangle(cornerRadius: 22))
                         .overlay(alignment: .topTrailing) {
                             if correct || wrong {
-                                Image(systemName: correct ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                    .foregroundStyle(correct ? DinoStyle.deepGreen : Color(dinoHex: 0xB54343))
-                                    .font(.title3).background(.white, in: Circle()).offset(x: 4, y: -4)
+                                AnswerVerdictMark(correct: correct)
+                                    .padding(2).background(.white, in: Circle()).offset(x: 4, y: -4)
                             }
                         }
                 }.buttonStyle(DinoAnswerButtonStyle()).disabled(!session.responseIsEnabled(response))
-                    .accessibilityLabel(Text(verbatim: responseText(response)))
                     .accessibilityIdentifier("question.option.\(index)")
             }
         }.id("question.answers")
@@ -260,21 +258,28 @@ struct DinoExpandedQuestionView: View {
                         if let position { session.selectedOrder.remove(at: position) }
                         else { session.selectedOrder.append(time) }
                     } label: {
+                        let clockSize = min(width >= 600 ? 180 : 96, (width - 48) / 2)
+                        let badge: CGFloat = 26
+                        // Center the number in the open corner beside a round face.
+                        let badgeInset = clockSize * 0.105 - badge / 2
                         VStack(spacing: 8) {
-                            AnalogClock(time: time, theme: theme, size: min(width >= 600 ? 180 : 96, (width - 48) / 2)).allowsHitTesting(false)
+                            AnalogClock(time: time, theme: theme, size: clockSize).allowsHitTesting(false)
+                                .overlay(alignment: .topLeading) {
+                                    if let position {
+                                        Text(verbatim: "\(position + 1)")
+                                            .font(.system(size: 14, weight: .heavy, design: .rounded))
+                                            .foregroundStyle(DinoStyle.ink)
+                                            .frame(width: badge, height: badge)
+                                            .background(DinoStyle.green, in: Circle())
+                                            .overlay(Circle().strokeBorder(.white, lineWidth: 2))
+                                            .offset(x: badgeInset, y: badgeInset)
+                                            .accessibilityHidden(true)
+                                    }
+                                }
                             Text(verbatim: time.digitalText).font(.system(size: 17, weight: .bold, design: .rounded)).monospacedDigit()
                         }.padding(12).frame(maxWidth: .infinity).background(.white, in: RoundedRectangle(cornerRadius: 22))
                             .overlay(RoundedRectangle(cornerRadius: 22).stroke(position == nil ? .clear : DinoStyle.deepGreen, lineWidth: 3))
-                            .overlay(alignment: .topLeading) {
-                                if let position {
-                                    Text(verbatim: "\(position + 1)").font(.headline).frame(width: 28, height: 28)
-                                        .background(DinoStyle.green, in: Circle())
-                                }
-                            }
                     }.buttonStyle(DinoAnswerButtonStyle()).disabled(session.hasFeedback || isDemonstration)
-                        .accessibilityLabel(time.digitalText)
-                        .accessibilityValue(position.map { String($0 + 1) } ?? "")
-                        .accessibilityAddTraits(position == nil ? [] : .isSelected)
                         .accessibilityIdentifier("\(isDemonstration ? "demo" : "question").sort.\(index)")
                 }
             }.id("question.answers")
@@ -285,9 +290,9 @@ struct DinoExpandedQuestionView: View {
                     .accessibilityIdentifier(isDemonstration ? "demo.answer" : "question.sort.selection")
             }
             if session.hasFeedback && !session.correctFeedback {
-                Label("dino.expanded.correctOrder", systemImage: "checkmark.circle.fill").font(.subheadline.bold())
                 Text(verbatim: responseText(q.expectedAnswer)).font(.system(size: 15, weight: .bold, design: .rounded))
                     .monospacedDigit().padding(12).modifier(ClockAnswerOutline(visible: true, correct: true))
+                    .accessibilityIdentifier("question.sort.correct")
             }
             if !isDemonstration {
                 confirm(.ordering(session.selectedOrder), enabled: session.selectedOrder.count == 4)
@@ -347,11 +352,7 @@ struct DinoExpandedQuestionView: View {
                 .padding(4)
                 .modifier(ClockAnswerOutline(visible: true, correct: correct))
                 .accessibilityIdentifier(identifier)
-            Label(LocalizedStringKey(correct ? "dino.correctTime" : "dino.yourAnswer"),
-                  systemImage: correct ? "checkmark.circle.fill" : "xmark.circle.fill")
-                .font(.system(size: 11, weight: .bold, design: .rounded))
-                .foregroundStyle(correct ? DinoStyle.deepGreen : Color(dinoHex: 0xB54343))
-                .multilineTextAlignment(.center)
+            AnswerVerdictMark(correct: correct, size: 22)
         }
     }
 
@@ -363,7 +364,7 @@ struct DinoExpandedQuestionView: View {
         if !session.hasFeedback {
             Button { session.submit(answer) } label: { Image(systemName: "checkmark").font(.title2.bold()) }
                 .buttonStyle(DinoButtonStyle()).frame(maxWidth: 260).disabled(!enabled)
-                .accessibilityLabel(Text("dino.confirm")).accessibilityIdentifier("question.confirm")
+                .accessibilityIdentifier("question.confirm")
         }
     }
 }
@@ -387,7 +388,6 @@ struct DinoAdvanceDifference: View {
         }
         .foregroundStyle(DinoStyle.deepGreen)
         .frame(width: 78)
-        .accessibilityElement(children: .combine)
         .accessibilityIdentifier("\(prefix).advance.difference")
     }
 }
@@ -406,7 +406,6 @@ private struct SequencePatternArcs: View {
                     pointed: index == points.count - 2, index: index)
             }
         }
-        .accessibilityElement(children: .contain)
     }
 
     private func arc(from start: CGPoint, to end: CGPoint, pointed: Bool, index: Int) -> some View {
@@ -440,122 +439,250 @@ private struct SequencePatternArcs: View {
                 .overlay(Capsule().stroke(DinoStyle.deepGreen.opacity(0.35), lineWidth: 1))
                 .fixedSize()
                 .offset(x: outerX + 6, y: (start.y + end.y) / 2 - 12)
-                .accessibilityLabel(label)
                 .accessibilityHidden(prefix == "demo")
                 .accessibilityIdentifier("\(prefix).sequence.step.\(index)")
         }
     }
 }
 
-private struct DinoDayScheduleCard: View {
+/// Vertical journey: departure, two trains, the transfer between them, and the arrival to find.
+private struct DinoTrainJourneyCard: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let schedule: DinoDaySchedule
     let showsAnswer: Bool
+    let countsTotal: Bool
+    let minuteStep: Int
     let isDemonstration: Bool
+    let language: String
+    @State private var summedMinutes = 0
+    @State private var showsTotal = false
     private var prefix: String { isDemonstration ? "demo" : "question" }
-    private let colors = [DinoStyle.deepGreen, Color(dinoHex: 0x986020), Color(dinoHex: 0x377C95)]
+
+    private let ride = Color(dinoHex: 0x1A4E86)
+    private let rideFill = Color(dinoHex: 0xE7F1FB)
+    private let rideChip = Color(dinoHex: 0xD4E6F8)
+    private let transferFill = Color(dinoHex: 0xFFF3DF)
+    private let transferChip = Color(dinoHex: 0xFFE0B8)
+    private let arrivalFill = Color(dinoHex: 0xE7F7DC)
+    private let arrivalChip = Color(dinoHex: 0xD5F0C2)
+    private let totalInk = Color(dinoHex: 0x5E6A70)
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Label("dino.schedule.title", systemImage: "calendar")
-                    .font(.system(size: 19, weight: .heavy, design: .rounded))
-                Spacer(minLength: 8)
-                Image(systemName: "sun.max.fill").foregroundStyle(Color(dinoHex: 0xB87A25))
-                    .accessibilityHidden(true)
-            }.foregroundStyle(DinoStyle.deepGreen)
+        VStack(spacing: 2) {
+            leg(symbol: "building.columns.fill", title: "dino.train.departure",
+                value: schedule.start.digitalText, ink: ride, fill: rideFill, chip: rideChip,
+                identifier: "\(prefix).schedule.start")
+            connector
+            leg(symbol: "train.side.front.car", title: "dino.train.one",
+                value: DinoTimeWords.duration(schedule.firstMinutes, language: language),
+                ink: ride, fill: rideFill, chip: rideChip,
+                identifier: "\(prefix).schedule.activity.1")
+            connector
+            leg(symbol: "figure.walk", title: "dino.train.transfer",
+                value: DinoTimeWords.duration(schedule.breakMinutes, language: language),
+                ink: DinoStyle.deepOrange, fill: transferFill, chip: transferChip,
+                identifier: "\(prefix).schedule.break")
+            connector
+            leg(symbol: "train.side.front.car", title: "dino.train.two",
+                value: DinoTimeWords.duration(schedule.secondMinutes, language: language),
+                ink: ride, fill: rideFill, chip: rideChip,
+                identifier: "\(prefix).schedule.activity.2")
+            VStack(spacing: 0) {
+                if showsTotal { totalRow }
+            }
+            .clipped()
+            .animation(.spring(duration: 0.55, bounce: 0.04), value: showsTotal)
+            connector
+            arrival
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity)
+        .background(.white, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous)
+            .stroke(highContrast ? DinoStyle.ink : DinoStyle.deepGreen.opacity(0.16), lineWidth: highContrast ? 2 : 1.5))
+        .shadow(color: DinoStyle.deepGreen.opacity(0.08), radius: 16, y: 6)
+        .accessibilityIdentifier("\(prefix).schedule.card")
+        .task(id: walkIdentity) { await play() }
+    }
 
-            VStack(spacing: 8) {
-                GeometryReader { geometry in
-                    HStack(spacing: 3) {
-                        ForEach(0..<3) { index in
-                            Group {
-                                if index == 1 { Image(systemName: "pause.fill") }
-                                else { Text(verbatim: index == 0 ? "1" : "2") }
-                            }
-                            .font(.system(size: 14, weight: .heavy, design: .rounded))
-                            .frame(width: max(0, geometry.size.width - 6) * CGFloat(schedule.durations[index]) / CGFloat(schedule.totalMinutes), height: 32)
-                            .foregroundStyle(colors[index])
-                            .background(colors[index].opacity(highContrast ? 0.26 : 0.16), in: RoundedRectangle(cornerRadius: 8))
-                        }
-                    }
-                }.frame(height: 32).accessibilityHidden(true)
+    private var connector: some View {
+        Image(systemName: "arrow.down")
+            .font(.system(size: 11, weight: .bold))
+            .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+            .accessibilityHidden(true)
+    }
 
-                HStack(alignment: .top) {
-                    endpoint(title: "dino.expanded.start", value: schedule.start.digitalText, alignment: .leading)
-                        .accessibilityIdentifier("\(prefix).schedule.start")
-                    Spacer(minLength: 12)
-                    endpoint(title: "dino.schedule.finish", value: showsAnswer ? schedule.end.digitalText : "?", alignment: .trailing)
-                        .accessibilityIdentifier("\(prefix).schedule.finish")
+    /// The two trains and the transfer, counted the same way as a flight duration.
+    private var totalRow: some View {
+        HStack(spacing: 8) {
+            ZStack {
+                Circle().fill(totalInk.opacity(highContrast ? 0.22 : 0.16))
+                VStack(spacing: 2) {
+                    Capsule().frame(width: 8, height: 1.5)
+                    Capsule().frame(width: 8, height: 1.5)
                 }
             }
-
-            VStack(spacing: 7) {
-                activityRow(title: schedule.firstActivity.titleKey, symbol: schedule.firstActivity.symbol,
-                            minutes: schedule.firstMinutes, index: 0)
-                activityRow(title: "dino.schedule.break", symbol: "pause.fill", minutes: schedule.breakMinutes, index: 1)
-                activityRow(title: schedule.secondActivity.titleKey, symbol: schedule.secondActivity.symbol,
-                            minutes: schedule.secondMinutes, index: 2)
-            }
+            .foregroundStyle(highContrast ? DinoStyle.ink : totalInk)
+            .frame(width: 22, height: 22)
+            .accessibilityHidden(true)
+            Text("dino.expanded.flightTotalAdded")
+                .font(.system(size: 14, weight: .heavy, design: .rounded))
+                .lineLimit(1).minimumScaleFactor(0.7)
+            Spacer(minLength: 8)
+            Text(verbatim: DinoTimeWords.duration(summedMinutes, language: language))
+                .font(.system(size: 14, weight: .heavy, design: .rounded))
+                .monospacedDigit().lineLimit(1).minimumScaleFactor(0.55)
+                .contentTransition(.numericText())
+                .padding(.horizontal, 10).padding(.vertical, 4)
+                .background((highContrast ? DinoStyle.ink : totalInk).opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .layoutPriority(1)
         }
-        .padding(16).frame(maxWidth: .infinity)
-        .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 24))
-        .overlay(RoundedRectangle(cornerRadius: 24)
-            .stroke(highContrast ? DinoStyle.ink : DinoStyle.deepGreen.opacity(0.18), lineWidth: highContrast ? 2 : 1.5))
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("\(prefix).schedule.card")
-    }
-
-    private func endpoint(title: String, value: String, alignment: HorizontalAlignment) -> some View {
-        VStack(alignment: alignment, spacing: 2) {
-            Text(LocalizedStringKey(title))
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-            Text(verbatim: value).font(.system(size: 22, weight: .heavy, design: .rounded))
-                .monospacedDigit().foregroundStyle(DinoStyle.deepGreen)
-        }.accessibilityElement(children: .combine)
-    }
-
-    private func activityRow(title: String, symbol: String, minutes: Int, index: Int) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: symbol).font(.system(size: 16, weight: .semibold))
-                .frame(width: 24).foregroundStyle(colors[index]).accessibilityHidden(true)
-            Text(LocalizedStringKey(title))
-                .font(.system(size: 15, weight: .bold, design: .rounded))
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 4)
-            Text(verbatim: "\(minutes) min").font(.system(size: 15, weight: .heavy, design: .rounded))
-                .monospacedDigit().fixedSize()
-        }
-        .padding(.horizontal, 10).padding(.vertical, 9)
-        .background(colors[index].opacity(highContrast ? 0.16 : 0.07), in: RoundedRectangle(cornerRadius: 12))
+        .foregroundStyle(highContrast ? DinoStyle.ink : totalInk)
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background((highContrast ? DinoStyle.ink : totalInk).opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .padding(.top, 4)
+        .transition(.move(edge: .top).combined(with: .opacity))
         .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("\(prefix).schedule.\(index == 1 ? "break" : "activity.\(index == 0 ? 1 : 2)")")
+        .accessibilityIdentifier("\(prefix).schedule.total")
+    }
+
+    private var arrival: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "mappin.circle.fill")
+                .font(.system(size: 16, weight: .semibold))
+                .frame(width: 26, height: 26)
+                .accessibilityHidden(true)
+            Text("dino.train.arrival")
+                .font(.system(size: 15, weight: .heavy, design: .rounded))
+                .lineLimit(1).minimumScaleFactor(0.7)
+            Spacer(minLength: 8)
+            arrivalValue
+        }
+        .foregroundStyle(DinoStyle.deepGreen)
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(arrivalFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .stroke(highContrast ? DinoStyle.deepGreen : .clear, lineWidth: 1.5))
+    }
+
+    private var arrivalValue: some View {
+        let text = showsAnswer ? schedule.end.digitalText : "?"
+        return Text(verbatim: text)
+            .font(.system(size: showsAnswer ? 14 : 18, weight: .heavy, design: .rounded))
+            .monospacedDigit()
+            .lineLimit(1).minimumScaleFactor(0.6)
+            .padding(.horizontal, 10).padding(.vertical, 4)
+            .frame(minWidth: showsAnswer ? 0 : 52, minHeight: 26)
+            .background(arrivalChip, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(DinoStyle.deepGreen.opacity(showsAnswer ? 0 : (highContrast ? 1 : 0.75)),
+                              style: StrokeStyle(lineWidth: 1.5, dash: showsAnswer ? [] : [5, 4])))
+            .accessibilityIdentifier(isDemonstration ? "demo.answer" : "\(prefix).schedule.finish")
+    }
+
+    private func leg(symbol: String, title: LocalizedStringKey, value: String,
+                     ink: Color, fill: Color, chip: Color, identifier: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: symbol)
+                .font(.system(size: 16, weight: .semibold))
+                .frame(width: 26, height: 26)
+                .accessibilityHidden(true)
+            Text(title)
+                .font(.system(size: 15, weight: .heavy, design: .rounded))
+                .lineLimit(1).minimumScaleFactor(0.7)
+            Spacer(minLength: 8)
+            Text(verbatim: value)
+                .font(.system(size: 14, weight: .heavy, design: .rounded))
+                .monospacedDigit()
+                .lineLimit(1).minimumScaleFactor(0.55)
+                .padding(.horizontal, 10).padding(.vertical, 4)
+                .background(chip, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .layoutPriority(1)
+        }
+        .foregroundStyle(ink)
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(fill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .stroke(highContrast ? ink : .clear, lineWidth: 1.5))
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier(identifier)
+    }
+
+    private var walkIdentity: String {
+        "\(countsTotal)-\(schedule.start.digitalText)-\(schedule.totalMinutes)-\(minuteStep)-\(language)"
+    }
+
+    private var walkSteps: [Int] {
+        DinoFlightArrivalWork(departure: schedule.start, durationMinutes: schedule.totalMinutes,
+                              offsetHours: 0, arrival: schedule.end).walkMinutes(step: minuteStep)
+    }
+
+    @MainActor private func play() async {
+        guard countsTotal else {
+            summedMinutes = 0
+            showsTotal = false
+            return
+        }
+        let steps = walkSteps
+        if reduceMotion || steps.isEmpty {
+            showsTotal = true
+            summedMinutes = schedule.totalMinutes
+            return
+        }
+        summedMinutes = 0
+        var reset = Transaction()
+        reset.disablesAnimations = true
+        withTransaction(reset) { showsTotal = false }
+        do {
+            try await Task.sleep(for: .milliseconds(280))
+            withAnimation(.spring(duration: 0.55, bounce: 0.04)) { showsTotal = true }
+            try await Task.sleep(for: .milliseconds(700))
+            for step in steps {
+                try Task.checkCancellation()
+                let minute = step % 60 != 0
+                withAnimation(.easeInOut(duration: minute ? 0.28 : 0.35)) { summedMinutes = step }
+                if step != steps.last {
+                    try await Task.sleep(for: .milliseconds(minute ? 420 : 700))
+                }
+            }
+        } catch { /* The next question cancels the count. */ }
     }
 }
 
-/// Shared inks so each number on the ticket matches the same number in the worked sum.
+/// Shared inks so each number on the ticket stays distinct from the gray total.
 private enum DinoFlightInk {
     static let departure = Color(dinoHex: 0x154A86)
     static let duration = Color(dinoHex: 0x9A3412)
     static let zone = Color(dinoHex: 0x0E6A78)
-    static let combined = Color(dinoHex: 0x6B3FA0)
     static let arrival = DinoStyle.deepGreen
+    static let total = Color(dinoHex: 0x5E6A70)
+    static let totalFill = Color(dinoHex: 0xE6EAEC)
 }
 
 private struct DinoFlightTicket: View {
     @Environment(\.dinoHighContrast) private var highContrast
-    let departure: ClockTime
-    let duration: String
-    let offsetHours: Int
-    let arrival: ClockTime?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let work: DinoFlightArrivalWork
+    let showsWork: Bool
+    let minuteStep: Int
     let language: String
     let width: CGFloat
     let isDemonstration: Bool
+    @State private var appliedMinutes = 0
+    @State private var walking = false
+    /// 0...1 for the practice reveal. Examples show the finished total and ignore this.
+    @State private var totalProgress: CGFloat = 0
+
     private var prefix: String { isDemonstration ? "demo" : "question" }
     private var secondaryInk: Color { highContrast ? DinoStyle.ink : DinoStyle.muted }
-    private var pathWidth: CGFloat { min(100, max(44, width * 0.2)) }
-    private var timeSize: CGFloat { width < 300 ? 27 : 34 }
+    private var pathWidth: CGFloat { min(88, max(36, width * 0.16)) }
+    private var timeSize: CGFloat { width < 380 ? 22 : 26 }
+    private var totalInk: Color { highContrast ? DinoStyle.ink : DinoFlightInk.total }
+    private var factIcon: CGFloat { 28 }
+    private var shownArrival: ClockTime { work.departure.adding(minutes: appliedMinutes) }
+    private var totalAmount: CGFloat { isDemonstration ? 1 : totalProgress }
+    private var totalRowAmount: CGFloat { max(0, min(1, (totalAmount - 0.22) / 0.78)) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -582,51 +709,64 @@ private struct DinoFlightTicket: View {
                 .frame(height: 1).padding(.horizontal, 16).accessibilityHidden(true)
 
             VStack(spacing: 18) {
-                VStack(spacing: 6) {
-                    HStack(spacing: 8) {
+                HStack(alignment: .center, spacing: 6) {
+                    VStack(spacing: 4) {
                         fieldLabel("dino.expanded.departure", color: DinoFlightInk.departure)
-                        Color.clear.frame(width: pathWidth).accessibilityHidden(true)
-                        fieldLabel("dino.expanded.arrival", color: arrival == nil ? secondaryInk : DinoFlightInk.arrival)
-                    }
-                    HStack(alignment: .center, spacing: 8) {
-                        timeChip(departure.digitalText, color: DinoFlightInk.departure,
+                        timeChip(work.departure.digitalText, color: DinoFlightInk.departure,
                                  identifier: "\(prefix).targetClock")
-                        flightPath.frame(width: pathWidth)
-                        if let arrival {
-                            timeChip(arrival.digitalText, color: DinoFlightInk.arrival,
-                                     identifier: "demo.answer")
+                    }.frame(minWidth: 0, maxWidth: .infinity)
+
+                    Group {
+                        if showsWork && walking { difference }
+                        else { flightPath.frame(width: pathWidth) }
+                    }
+                    .padding(.top, 20)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .layoutPriority(1)
+
+                    VStack(spacing: 4) {
+                        fieldLabel("dino.expanded.arrival", color: showsWork && walking ? DinoFlightInk.arrival : secondaryInk)
+                        if showsWork && walking {
+                            timeChip(shownArrival.digitalText, color: DinoFlightInk.arrival,
+                                     identifier: isDemonstration ? "demo.answer" : "\(prefix).flight.arrival")
+                                .contentTransition(.numericText())
                         } else {
                             Text(verbatim: "?")
                                 .font(.system(size: timeSize, weight: .heavy, design: .rounded))
                                 .foregroundStyle(secondaryInk)
-                                .frame(maxWidth: .infinity, minHeight: timeSize + 8)
+                                .lineLimit(1).minimumScaleFactor(0.45)
+                                .padding(.horizontal, 6).padding(.vertical, 5)
+                                .frame(minWidth: 0, maxWidth: .infinity, minHeight: timeSize + 12)
                                 .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 12))
                                 .overlay(RoundedRectangle(cornerRadius: 12)
                                     .strokeBorder(secondaryInk.opacity(0.45),
                                                   style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])))
                                 .accessibilityLabel(Text("dino.expanded.unknownArrival"))
-                                .accessibilityIdentifier("\(prefix).flight.unknown")
+                                .accessibilityIdentifier(isDemonstration ? "demo.answer" : "\(prefix).flight.unknown")
                         }
-                    }
+                    }.frame(minWidth: 0, maxWidth: .infinity)
                 }
 
                 VStack(spacing: 8) {
-                    factRow(title: "dino.expanded.flightDuration", systemImage: "clock", value: duration,
-                            color: DinoFlightInk.duration, identifier: "\(prefix).flight.duration")
-                    if offsetHours != 0 {
+                    factRow(title: "dino.expanded.flightDuration", systemImage: "clock",
+                            value: work.durationText(language), color: DinoFlightInk.duration,
+                            identifier: "\(prefix).flight.duration")
+                    if work.offsetHours != 0 {
                         factRow(title: "dino.expanded.flightZoneDifference", systemImage: "globe",
-                                value: DinoTimeWords.hourDifference(offsetHours, language: language),
+                                value: DinoTimeWords.hourDifference(work.offsetHours, language: language),
                                 color: DinoFlightInk.zone, identifier: "\(prefix).flight.zone")
+                        if totalAmount > 0.01 { totalReveal }
                     }
                 }
 
-                if offsetHours == 0 {
+                if work.offsetHours == 0 {
                     Text("dino.expanded.flightZone")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(secondaryInk)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("\(prefix).flight.sameZone")
                 }
+
             }.padding(width < 300 ? 16 : 20)
         }
         .foregroundStyle(DinoStyle.ink)
@@ -637,6 +777,144 @@ private struct DinoFlightTicket: View {
         .shadow(color: DinoStyle.deepGreen.opacity(0.08), radius: 18, y: 8)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("\(prefix).flight.ticket")
+        .task(id: walkIdentity) { await play() }
+    }
+
+    /// The line draws first. The finished total then settles open beneath it.
+    private var totalReveal: some View {
+        VStack(spacing: 8) {
+            Capsule()
+                .fill(totalInk.opacity(highContrast ? 0.55 : 0.35))
+                .frame(height: 1)
+                .scaleEffect(x: min(1, totalAmount * 1.35), anchor: .center)
+                .opacity(min(1, totalAmount * 1.8))
+                .accessibilityHidden(true)
+            totalShift
+                .opacity(totalRowAmount)
+                .scaleEffect(x: 0.985 + 0.015 * totalRowAmount, y: 0.86 + 0.14 * totalRowAmount, anchor: .top)
+                .offset(y: (1 - totalRowAmount) * -4)
+        }
+        .padding(.top, 4)
+        .frame(height: isDemonstration || totalRowAmount >= 1 ? nil : 62 * totalRowAmount, alignment: .top)
+        .clipped()
+        .accessibilityHidden(totalRowAmount < 0.9 && !isDemonstration)
+    }
+
+    /// Light gray field, a slightly darker circle, and a small dark equals, like the icons above.
+    private var totalShift: some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 8) {
+                equalsBadge
+                Text("dino.expanded.flightTotalAdded")
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 8)
+            Text(verbatim: work.combinedText(language))
+                .font(.system(size: 17, weight: .heavy, design: .rounded))
+                .monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
+                .fixedSize(horizontal: true, vertical: false)
+        }
+        .foregroundStyle(totalInk)
+        .padding(.horizontal, 12).padding(.vertical, 7)
+        .frame(maxWidth: .infinity)
+        .background(totalInk.opacity(highContrast ? 0.14 : 0.10), in: RoundedRectangle(cornerRadius: 16))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(verbatim: "\(L(key: "dino.expanded.flightTotalAdded")) \(work.combinedText(language))"))
+        .accessibilityIdentifier("\(prefix).flight.total")
+    }
+
+    /// Two short bars, sized like the clock and globe glyphs, centered in the circle.
+    private var equalsBadge: some View {
+        ZStack {
+            Circle().fill(totalInk.opacity(highContrast ? 0.22 : 0.16))
+            VStack(spacing: 2.5) {
+                Capsule().frame(width: 10, height: 1.6)
+                Capsule().frame(width: 10, height: 1.6)
+            }
+        }
+        .foregroundStyle(totalInk)
+        .frame(width: factIcon, height: factIcon)
+        .accessibilityHidden(true)
+    }
+
+    /// Same capsule as the time-zone walk: the icon carries the sign, the text is the amount so far.
+    private var difference: some View {
+        let resting = appliedMinutes == 0
+        let negative = appliedMinutes < 0
+        let ink = resting ? DinoStyle.muted : negative ? DinoTimeDirection.earlier : DinoStyle.deepGreen
+        let fill = resting ? DinoStyle.muted : negative ? DinoTimeDirection.earlier : DinoStyle.green
+        return HStack(spacing: 4) {
+            Image(systemName: negative ? "minus.circle.fill" : "plus.circle.fill")
+                .font(.system(size: 15, weight: .bold))
+            Text(verbatim: chipNumber)
+                .font(.system(size: width < 380 ? 13 : 14, weight: .heavy, design: .rounded))
+                .monospacedDigit().lineLimit(1).minimumScaleFactor(0.45)
+                .contentTransition(.numericText())
+        }
+        .foregroundStyle(ink)
+        .padding(.horizontal, 10).padding(.vertical, 7)
+        .fixedSize(horizontal: true, vertical: false)
+        .layoutPriority(1)
+        .background(fill.opacity(resting ? 0.14 : 0.28), in: Capsule())
+        .overlay(Capsule().strokeBorder(ink.opacity(resting ? 0.28 : 0.35), lineWidth: 1))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: chipCaption))
+        .accessibilityIdentifier("\(prefix).flight.difference")
+    }
+
+    private var chipNumber: String {
+        appliedMinutes == 0 ? "0" : DinoTimeWords.duration(abs(appliedMinutes), language: language)
+    }
+
+    private var chipCaption: String {
+        if appliedMinutes == 0 { return "+0" }
+        let sign = appliedMinutes > 0 ? "+" : "−"
+        return "\(sign)\(DinoTimeWords.duration(abs(appliedMinutes), language: language))"
+    }
+
+    private var walkIdentity: String {
+        "\(showsWork)-\(work.departure.digitalText)-\(work.combinedMinutes)-\(minuteStep)-\(language)"
+    }
+
+    @MainActor private func play() async {
+        guard showsWork else {
+            appliedMinutes = 0
+            walking = false
+            if !isDemonstration { totalProgress = 0 }
+            return
+        }
+        let steps = work.walkMinutes(step: minuteStep)
+        if isDemonstration || reduceMotion || steps.isEmpty {
+            walking = true
+            appliedMinutes = reduceMotion || steps.isEmpty ? work.combinedMinutes : 0
+            totalProgress = work.offsetHours != 0 ? 1 : 0
+            if isDemonstration && !reduceMotion && !steps.isEmpty {
+                appliedMinutes = 0
+            } else {
+                return
+            }
+        }
+        if !isDemonstration {
+            appliedMinutes = 0
+            walking = true
+            totalProgress = 0
+        }
+        do {
+            if !isDemonstration && work.offsetHours != 0 {
+                try await Task.sleep(for: .milliseconds(180))
+                withAnimation(.easeInOut(duration: 0.72)) { totalProgress = 1 }
+            }
+            try await Task.sleep(for: .milliseconds(isDemonstration ? 700 : 520))
+            for step in steps {
+                try Task.checkCancellation()
+                let minute = abs(step) % 60 != 0
+                withAnimation(.easeInOut(duration: minute ? 0.28 : 0.35)) { appliedMinutes = step }
+                if step != steps.last {
+                    try await Task.sleep(for: .milliseconds(minute ? 420 : 700))
+                }
+            }
+        } catch { /* A new example or the next question cancels the walk. */ }
     }
 
     private func fieldLabel(_ key: String, color: Color) -> some View {
@@ -649,9 +927,10 @@ private struct DinoFlightTicket: View {
     private func timeChip(_ text: String, color: Color, identifier: String) -> some View {
         Text(verbatim: text)
             .font(.system(size: timeSize, weight: .heavy, design: .rounded))
-            .monospacedDigit().lineLimit(1).minimumScaleFactor(0.75)
+            .monospacedDigit().lineLimit(1).minimumScaleFactor(0.4)
             .foregroundStyle(color)
-            .frame(maxWidth: .infinity, minHeight: timeSize + 8)
+            .padding(.horizontal, 6).padding(.vertical, 5)
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: timeSize + 12)
             .background(color.opacity(highContrast ? 0.16 : 0.12), in: RoundedRectangle(cornerRadius: 12))
             .accessibilityIdentifier(identifier)
     }
@@ -669,16 +948,23 @@ private struct DinoFlightTicket: View {
                 factValue(value, color: color)
             }
         }
-        .padding(12).frame(maxWidth: .infinity)
+        .padding(.horizontal, 12).padding(.vertical, 7)
+        .frame(maxWidth: .infinity)
         .background(color.opacity(highContrast ? 0.14 : 0.10), in: RoundedRectangle(cornerRadius: 16))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier(identifier)
     }
 
     private func factLabel(_ title: LocalizedStringKey, systemImage: String, color: Color) -> some View {
-        Label(title, systemImage: systemImage)
-            .font(.system(size: 13, weight: .bold, design: .rounded))
-            .foregroundStyle(color)
+        HStack(spacing: 8) {
+            Image(systemName: systemImage)
+                .font(.system(size: 13, weight: .bold))
+                .frame(width: factIcon, height: factIcon)
+                .background(color.opacity(highContrast ? 0.22 : 0.14), in: Circle())
+            Text(title)
+                .font(.system(size: 15, weight: .bold, design: .rounded))
+        }
+        .foregroundStyle(color)
     }
 
     private func factValue(_ value: String, color: Color) -> some View {
@@ -711,55 +997,6 @@ private struct DinoFlightRoute: Shape {
         path.move(to: CGPoint(x: rect.minX, y: rect.midY))
         path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
         return path
-    }
-}
-
-/// Duration and the zone difference become one shift, which is then added to the departure.
-private struct DinoFlightArrivalExplanation: View {
-    let work: DinoFlightArrivalWork
-    let language: String
-    var prefix = "demo"
-
-    var body: some View {
-        VStack(spacing: 8) {
-            if work.offsetHours != 0 {
-                equation([
-                    (work.durationText(language), DinoFlightInk.duration),
-                    (" \(work.zoneSign) ", DinoStyle.ink),
-                    (work.zoneText(language), DinoFlightInk.zone),
-                    (" = ", DinoStyle.ink),
-                    (work.combinedText(language), DinoFlightInk.combined)
-                ])
-                .accessibilityIdentifier("\(prefix).flight.differenceStep")
-            }
-            equation([
-                (work.departure.digitalText, DinoFlightInk.departure),
-                (" + ", DinoStyle.ink),
-                (work.offsetHours == 0 ? work.durationText(language) : work.combinedText(language),
-                 work.offsetHours == 0 ? DinoFlightInk.duration : DinoFlightInk.combined),
-                (" = ", DinoStyle.ink),
-                (work.arrival.digitalText, DinoFlightInk.arrival)
-            ])
-            .accessibilityIdentifier("\(prefix).flight.arrivalStep")
-        }
-        .monospacedDigit().multilineTextAlignment(.center)
-        .fixedSize(horizontal: false, vertical: true)
-        .padding(12).frame(maxWidth: .infinity)
-        .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(DinoStyle.deepGreen.opacity(0.16), lineWidth: 1.5))
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("\(prefix).flight.calculation")
-    }
-
-    private func equation(_ parts: [(String, Color)]) -> Text {
-        var line = AttributedString()
-        for part in parts {
-            var run = AttributedString(part.0)
-            run.foregroundColor = part.1
-            line += run
-        }
-        line.font = .system(size: 19, weight: .heavy, design: .rounded).monospacedDigit()
-        return Text(line)
     }
 }
 
@@ -816,7 +1053,10 @@ struct DinoExpandedDemonstration: View {
                         .multilineTextAlignment(.center).accessibilityIdentifier("demo.answer")
                 }
                 if kind == .daySchedule, let schedule = sample.question.daySchedule {
-                    Text(verbatim: "\(schedule.start.digitalText) + \(schedule.firstMinutes) min + \(schedule.breakMinutes) min + \(schedule.secondMinutes) min = \(schedule.end.digitalText)")
+                    let code = LanguageManager.shared.effective.code
+                    let parts = [schedule.firstMinutes, schedule.breakMinutes, schedule.secondMinutes]
+                        .map { DinoTimeWords.duration($0, language: code) }
+                    Text(verbatim: "\(schedule.start.digitalText) + \(parts.joined(separator: " + ")) = \(schedule.end.digitalText)")
                         .font(.system(size: 14, weight: .semibold, design: .rounded))
                         .fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.center)
                         .accessibilityIdentifier("demo.schedule.calculation")
@@ -832,7 +1072,7 @@ struct DinoExpandedDemonstration: View {
             }
         }.frame(width: width).dinoCard()
             .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
-            .foregroundStyle(DinoStyle.ink).accessibilityElement(children: .contain)
+            .foregroundStyle(DinoStyle.ink)
             .onAppear { loadExample() }
     }
 
