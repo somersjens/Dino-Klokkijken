@@ -183,27 +183,30 @@ struct DinoExpandedQuestionView: View {
     }
 
     private var demonstrationAnswer: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: q.kind == .dayPart ? 10 : 14) {
             Image(systemName: "arrow.down").font(.system(size: 22, weight: .bold))
                 .foregroundStyle(DinoStyle.green).accessibilityHidden(true)
-            Group {
-                if q.kind == .spokenTime {
-                    AnalogClock(time: q.target, theme: theme, size: min(170, width))
-                } else if case .time(let time) = q.expectedAnswer,
-                          ![.readDigital, .read24Hour].contains(q.kind) {
-                    DigitalClock(time: time, theme: theme, fontSize: 32)
-                } else {
-                    Text(verbatim: responseText(q.expectedAnswer))
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                        // Reserve four lines so refreshing a longer day-part answer
-                        // cannot move the action buttons or recenter the example card.
-                        .frame(height: q.kind == .read24Hour ? 120 : nil)
-                }
+            if q.kind == .dayPart {
+                DinoDayPartLine(time: q.target, width: width)
+            } else {
+                Group {
+                    if q.kind == .spokenTime {
+                        AnalogClock(time: q.target, theme: theme, size: min(170, width))
+                    } else if case .time(let time) = q.expectedAnswer,
+                              ![.readDigital, .read24Hour].contains(q.kind) {
+                        DigitalClock(time: time, theme: theme, fontSize: 32)
+                    } else {
+                        Text(verbatim: responseText(q.expectedAnswer))
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            // Reserve four lines so refreshing a longer 24-hour answer
+                            // cannot move the action buttons or recenter the example card.
+                            .frame(height: q.kind == .read24Hour ? 120 : nil)
+                    }
+                }.accessibilityIdentifier("demo.answer")
             }
         }.frame(maxWidth: .infinity)
-            .accessibilityIdentifier("demo.answer")
     }
 
     private var responses: some View {
@@ -1055,6 +1058,166 @@ private struct DinoFlightTicketShape: Shape {
             path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + corner))
             path.addQuadCurve(to: CGPoint(x: rect.minX + corner, y: rect.minY), control: CGPoint(x: rect.minX, y: rect.minY))
             path.closeSubpath()
+        }
+    }
+}
+
+/// A 24-hour ruler for the day-part example. Each stretch keeps its name, and the clock time marks the answer.
+private struct DinoDayPartLine: View {
+    @Environment(\.dinoHighContrast) private var highContrast
+    @ObservedObject private var language = LanguageManager.shared
+    let time: ClockTime
+    let width: CGFloat
+
+    private var active: DinoDayPart { DinoDayPart(hour: time.hour) }
+    private var fraction: CGFloat { CGFloat(time.minutesOfDay) / (24 * 60) }
+    private var barHeight: CGFloat { 36 }
+
+    var body: some View {
+        let _ = language.effective.code
+        VStack(spacing: 5) {
+            names
+            ZStack(alignment: .topLeading) {
+                bar.padding(.top, 13)
+                Image(systemName: "arrowtriangle.down.fill")
+                    .font(.system(size: 13, weight: .black))
+                    .foregroundStyle(DinoStyle.deepGreen)
+                    .shadow(color: .white, radius: 1)
+                    .frame(width: 14, height: 12)
+                    .offset(x: fraction * width - 7, y: 1)
+                    .accessibilityHidden(true)
+            }
+            hours
+        }
+        .frame(width: width)
+        .environment(\.layoutDirection, .leftToRight)
+    }
+
+    private var names: some View {
+        HStack(spacing: 4) {
+            ForEach(DinoDayPart.allCases, id: \.self) { part in
+                let chosen = part == active
+                VStack(spacing: 1) {
+                    Image(systemName: part.symbol)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(part.symbolInk)
+                        .frame(height: 16)
+                    Text(verbatim: L(key: part.titleKey))
+                        .font(.system(size: width < 280 ? 12 : 14, weight: .heavy, design: .rounded))
+                        .foregroundStyle(chosen ? DinoStyle.deepGreen : DinoStyle.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.55)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 4)
+                .background {
+                    if chosen {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(DinoStyle.green.opacity(highContrast ? 0.55 : 0.32))
+                    }
+                }
+                .overlay {
+                    if chosen {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(DinoStyle.deepGreen, lineWidth: highContrast ? 2 : 1.5)
+                    }
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(L(key: part.titleKey)), \(hourText(part.lineStartHour))–\(hourText(part.lineEndHour))")
+                .accessibilityIdentifier(chosen ? "demo.answer" : "demo.dayPart.\(part.rawValue)")
+                .accessibilityAddTraits(chosen ? .isSelected : [])
+            }
+        }
+        .frame(height: 44)
+    }
+
+    private var bar: some View {
+        HStack(spacing: 0) {
+            ForEach(DinoDayPart.allCases, id: \.self) { part in
+                let colors = part.lineColors
+                LinearGradient(colors: [colors.top, colors.bottom], startPoint: .top, endPoint: .bottom)
+                    .overlay(alignment: .trailing) {
+                        if part != .evening {
+                            Rectangle().fill(.white.opacity(highContrast ? 1 : 0.92)).frame(width: 2)
+                        }
+                    }
+            }
+        }
+        .frame(height: barHeight)
+        .overlay {
+            GeometryReader { geometry in
+                ZStack {
+                    Capsule().fill(.white).frame(width: 7, height: geometry.size.height - 8)
+                    Capsule().fill(DinoStyle.deepGreen).frame(width: 3, height: geometry.size.height - 12)
+                }
+                .position(x: fraction * geometry.size.width, y: geometry.size.height / 2)
+            }
+        }
+        .clipShape(Capsule())
+        .overlay {
+            GeometryReader { geometry in
+                if let index = DinoDayPart.allCases.firstIndex(of: active) {
+                    Capsule()
+                        .strokeBorder(.white.opacity(0.95), lineWidth: 2)
+                        .frame(width: geometry.size.width / 4 - 8, height: geometry.size.height - 8)
+                        .position(x: (CGFloat(index) + 0.5) * geometry.size.width / 4,
+                                  y: geometry.size.height / 2)
+                }
+            }
+            .allowsHitTesting(false)
+        }
+        .overlay(Capsule().strokeBorder(highContrast ? DinoStyle.ink : .white.opacity(0.55), lineWidth: highContrast ? 2.5 : 2))
+        .shadow(color: DinoStyle.ink.opacity(0.16), radius: 0, y: 3)
+        .accessibilityHidden(true)
+    }
+
+    private var hours: some View {
+        ZStack {
+            ForEach([0, 6, 12, 18, 24], id: \.self) { hour in
+                Text(verbatim: hourText(hour))
+                    .font(.system(size: 12, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(hourInk(hour))
+                    .position(x: width * CGFloat(hour) / 24, y: 8)
+            }
+        }
+        .frame(width: width, height: 16)
+        .accessibilityHidden(true)
+    }
+
+    private func hourInk(_ hour: Int) -> Color {
+        let marksAnswer = hour == active.lineStartHour || hour == active.lineEndHour
+        if marksAnswer { return DinoStyle.deepGreen }
+        return highContrast ? DinoStyle.ink : DinoStyle.muted
+    }
+
+    private func hourText(_ hour: Int) -> String { String(format: "%02d", hour) }
+}
+
+private extension DinoDayPart {
+    var lineStartHour: Int {
+        switch self {
+        case .night: return 0
+        case .morning: return 6
+        case .afternoon: return 12
+        case .evening: return 18
+        }
+    }
+    var lineEndHour: Int { lineStartHour + 6 }
+    var lineColors: (top: Color, bottom: Color) {
+        switch self {
+        case .night: return (Color(dinoHex: 0x35597C), Color(dinoHex: 0x1C3654))
+        case .morning: return (Color(dinoHex: 0xFFE7B0), Color(dinoHex: 0xF5C15A))
+        case .afternoon: return (Color(dinoHex: 0xC8EE8C), Color(dinoHex: 0x74C83E))
+        case .evening: return (Color(dinoHex: 0xFFC98A), Color(dinoHex: 0xF08A2C))
+        }
+    }
+    var symbolInk: Color {
+        switch self {
+        case .night: return Color(dinoHex: 0x1C3654)
+        case .morning: return Color(dinoHex: 0xC47A12)
+        case .afternoon: return DinoStyle.deepGreen
+        case .evening: return DinoStyle.deepOrange
         }
     }
 }

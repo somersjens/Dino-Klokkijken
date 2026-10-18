@@ -119,36 +119,69 @@ extension View {
     func gameEnvironment() -> some View { modifier(GameEnvironment()) }
 }
 
-/// Both languages are visible in the settings card; selection applies immediately.
+/// A searchable language list, ready for the full set of translations.
 struct LanguagePicker: View {
     @ObservedObject private var language = LanguageManager.shared
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.dismiss) private var dismiss
+    @State private var query = ""
+
+    private var options: [AppLanguage] {
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: language.locale)
+        guard !needle.isEmpty else { return AppLanguage.all }
+        return AppLanguage.all.filter { option in
+            let name = option.displayName.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: language.locale)
+            return name.contains(needle) || option.code.localizedCaseInsensitiveContains(needle)
+        }
+    }
 
     var body: some View {
-        HStack(spacing: 12) {
-            ForEach(AppLanguage.all) { option in
-                let selected = option == language.effective
-                Button { language.select(option) } label: {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Text(verbatim: option.flag).font(.system(size: 28))
-                            Spacer(minLength: 4)
-                            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                                .font(.system(size: 21, weight: .semibold))
-                                .foregroundStyle(selected ? DinoStyle.deepGreen : DinoStyle.muted)
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 0) {
+                    if options.isEmpty {
+                        Text("dino.settings.languageEmpty")
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+                            .frame(maxWidth: .infinity, minHeight: 72)
+                    }
+                    ForEach(Array(options.enumerated()), id: \.element.id) { index, option in
+                        if index > 0 {
+                            Rectangle().fill(DinoStyle.ink.opacity(highContrast ? 0.5 : 0.08))
+                                .frame(height: 1).padding(.horizontal, 16).accessibilityHidden(true)
                         }
-                        Text(verbatim: option.displayName)
-                            .font(.system(size: 16, weight: .bold, design: .rounded))
-                            .lineLimit(1).minimumScaleFactor(0.8)
-                    }.padding(14).frame(maxWidth: .infinity, alignment: .leading)
-                        .background(selected ? DinoStyle.green.opacity(0.22) : DinoStyle.paper,
-                                    in: RoundedRectangle(cornerRadius: 18))
-                        .overlay(RoundedRectangle(cornerRadius: 18)
-                            .stroke(selected ? DinoStyle.deepGreen : highContrast ? DinoStyle.ink : DinoStyle.ink.opacity(0.10),
-                                    lineWidth: selected || highContrast ? 2 : 1))
-                }.buttonStyle(.plain)
-                    .accessibilityIdentifier("language.option." + option.code)
-            }
-        }.accessibilityIdentifier("language.picker")
+                        let selected = option == language.effective
+                        Button {
+                            language.select(option)
+                            dismiss()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Text(verbatim: option.flag).font(.system(size: 28))
+                                Text(verbatim: option.displayName)
+                                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                                    .font(.system(size: 22, weight: .semibold))
+                                    .foregroundStyle(selected ? DinoStyle.deepGreen : DinoStyle.muted)
+                            }.padding(.horizontal, 16).frame(minHeight: 60).contentShape(Rectangle())
+                        }.buttonStyle(.plain)
+                            .accessibilityIdentifier("language.option." + option.code)
+                    }
+                }.background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 22))
+                    .padding(16).frame(maxWidth: 640).frame(maxWidth: .infinity)
+            }.accessibilityIdentifier("language.picker")
+                .background(JungleBackground(quiet: true))
+                .navigationTitle(Text("dino.language"))
+                .navigationBarTitleDisplayMode(.inline)
+                .searchable(text: $query, prompt: Text("dino.settings.languageSearch"))
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("dino.done") { dismiss() }.accessibilityIdentifier("language.done")
+                    }
+                }
+        }.foregroundStyle(DinoStyle.ink)
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
     }
 }

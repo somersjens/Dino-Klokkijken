@@ -114,3 +114,9 @@ De iOS Simulator-build slaagt. `Tools/test-dino.sh` slaagt met **796.994 control
 `testDigitalClockHasIndependentHourAndMinuteArrows` slaagt op iPhone 17 / iOS 26.5, met een gele digitale klok en een controleknop die donkerblauw blijft. De schermbeelden zijn visueel gecontroleerd.
 
 Beelden: [vaste knopkleur bij een andere digitale klok](Screenshots/QuestionFeedback/clock-controls-fixed-color-iphone.png), [analoge bediening op iPhone](Screenshots/QuestionFeedback/analog-controls-auto-hand-iphone.png) en [automatische wijzerselectie in het voorbeeld op iPad](Screenshots/QuestionFeedback/analog-controls-auto-hand-example-ipad.png).
+
+## Aaneengesloten switch en afstand tot bevestigen — 18 oktober 2026
+
+Uren en Minuten vormen één aaneengesloten switch in een gezamenlijke rand, met twee even brede aanraakvlakken en een schuivende donkerblauwe selectie. De totale breedte blijft gelijk aan die van de rij met draaiknoppen. De geselecteerde helft heeft witte tekst, de andere helft donkerblauwe tekst. Automatische wijzerselectie werkt ook de switch bij.
+
+Bij vraagtype **9** staat **Controleer mijn klok** 24 punten onder de draaiknoppen. Bij vraagtype **8** is de afstand tot de onderste digitale pijltjes eveneens 24 punten. Het analoge voorbeeld gebruikt dezelfde afstand. De tussenruimte houdt de aanraakvlakken van instellen en bevestigen uit elkaar.

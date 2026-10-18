@@ -559,7 +559,7 @@ private struct BossBrush {
             rounded(CGRect(x: x, y: -26, width: 23, height: 29), radius: 9, color: blue)
             toes(at: CGPoint(x: x + 2, y: -2), color: 0xE9EBCE)
         }
-        // The blanket itself is a clock, embroidered across the entire cloth.
+        // A moon and small embroidered stars keep the blanket in the night theme.
         var blanket = Path()
         blanket.move(to: CGPoint(x: -12, y: -72))
         blanket.addQuadCurve(to: CGPoint(x: 53, y: -69), control: CGPoint(x: 19, y: -89))
@@ -571,7 +571,17 @@ private struct BossBrush {
         for x: CGFloat in [-5, 8, 21, 34, 47] {
             line([CGPoint(x: x, y: -19), CGPoint(x: x + 1, y: -13)], color: 0xEDE3CE, width: 1.2)
         }
-        clock(at: CGPoint(x: 20, y: -49), radius: 26, time: WorldBossClock.time(in: 2), metal: 0xB7AAD3, fabric: true)
+        let disk = Path(ellipseIn: CGRect(x: 2, y: -68, width: 33, height: 33))
+        var cut = disk; cut.addEllipse(in: CGRect(x: 13, y: -74, width: 30, height: 30))
+        var embroidery = context; embroidery.clip(to: disk); embroidery.clip(to: cut, style: FillStyle(eoFill: true))
+        embroidery.fill(disk, with: .color(Color(dinoHex: 0xF4DFAD)))
+        for (x, y): (CGFloat, CGFloat) in [(40, -59), (33, -36), (7, -29)] {
+            var star = Path()
+            star.addLines([CGPoint(x: x, y: y - 4), CGPoint(x: x + 1, y: y - 1), CGPoint(x: x + 4, y: y),
+                           CGPoint(x: x + 1, y: y + 1), CGPoint(x: x, y: y + 4), CGPoint(x: x - 1, y: y + 1),
+                           CGPoint(x: x - 4, y: y), CGPoint(x: x - 1, y: y - 1)])
+            star.closeSubpath(); context.fill(star, with: .color(Color(dinoHex: 0xEDE4CF)))
+        }
     }
 
     private func crystal(at point: CGPoint, height: CGFloat, color: UInt32) {

@@ -27,7 +27,7 @@ struct QuestionRenderer: View {
             case .setAnalog:
                 targetCard
                 analogInput.id("question.answers")
-                VStack(spacing: 10) {
+                VStack(spacing: 24) {
                     DinoAnalogClockControls(adjustingMinutes: $adjustingMinutes, allowsMinutes: session.allowsMinutes,
                                             minuteStep: session.minuteStep, adjust: adjustAnalog)
                     clockCheckButton
@@ -36,7 +36,7 @@ struct QuestionRenderer: View {
                 .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
             case .setDigital:
                 analogTarget
-                VStack(spacing: 8) {
+                VStack(spacing: 24) {
                     digitalInput
                     confirmButton
                 }.id("question.answers")
@@ -199,7 +199,9 @@ struct QuestionRenderer: View {
 
 /// The game and its worked example share the exact same hand selector and buttons.
 struct DinoAnalogClockControls: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Namespace private var handSelection
     @Binding var adjustingMinutes: Bool
     let allowsMinutes: Bool
     let minuteStep: Int
@@ -210,10 +212,14 @@ struct DinoAnalogClockControls: View {
     var body: some View {
         VStack(spacing: 10) {
             if allowsMinutes {
-                HStack(spacing: 8) {
+                HStack(spacing: 0) {
                     handButton(minutes: false)
                     handButton(minutes: true)
                 }
+                .padding(4)
+                .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(DinoStyle.ink.opacity(highContrast ? 1 : 0.22), lineWidth: highContrast ? 3 : 1.5))
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("\(prefix).hand")
             }
@@ -229,8 +235,19 @@ struct DinoAnalogClockControls: View {
         let action = DinoAnalogSettingExample.Action.selectMinutes(minutes)
         return Button { adjustingMinutes = minutes } label: {
             Text(LocalizedStringKey(minutes ? "dino.minutes" : "dino.hours"))
+                .font(.system(size: 17, weight: .bold, design: .rounded))
                 .minimumScaleFactor(0.75).lineLimit(1)
-        }.buttonStyle(DinoClockControlButtonStyle(selected: selected, expands: true))
+                .foregroundStyle(selected ? Color.white : DinoStyle.ink)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .contentShape(Rectangle())
+                .background {
+                    if selected {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(DinoStyle.ink)
+                            .matchedGeometryEffect(id: "selectedHand", in: handSelection)
+                    }
+                }
+        }.buttonStyle(.plain)
             .accessibilityIdentifier("\(prefix).hand.\(minutes ? "minutes" : "hours")")
             .accessibilityAddTraits(selected ? .isSelected : [])
             .overlay(alignment: .bottomTrailing) { if demonstratedAction == action { DinoClockTapCue() } }

@@ -337,6 +337,7 @@ struct DinoAnalogSettingDemonstration: View {
                     .lineLimit(1).minimumScaleFactor(0.75)
                     .contentTransition(.opacity)
             }.buttonStyle(DinoClockControlButtonStyle())
+                .padding(.top, 12)
                 .accessibilityIdentifier(confirmed ? "demo.ready" : "demo.confirm")
                 .overlay(alignment: .bottomTrailing) { if demonstratedAction == .confirm { DinoClockTapCue() } }
             DinoDemonstrationActions(showsReady: false, done: done) {

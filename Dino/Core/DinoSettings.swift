@@ -8,6 +8,8 @@ final class DinoSettings: ObservableObject {
     @Published var hapticsEnabled: Bool { didSet { save(hapticsEnabled, key: "haptics") } }
     @Published var highContrastEnabled: Bool { didSet { save(highContrastEnabled, key: "highContrast") } }
     @Published var icloudSyncEnabled: Bool { didSet { save(icloudSyncEnabled, key: "icloudSync") } }
+    @Published var practiceTime: DinoPracticeTime { didSet { defaults.set(practiceTime.rawValue, forKey: "dino.settings.practiceTime") } }
+    @Published var practiceOrder: DinoPracticeOrder { didSet { defaults.set(practiceOrder.storageKey, forKey: "dino.settings.practiceOrder") } }
     @Published private(set) var cloudDeviceID: String
     private let defaults: KeyValueStore
 
@@ -32,6 +34,8 @@ final class DinoSettings: ObservableObject {
         hapticsEnabled = resolved.object(forKey: "dino.settings.haptics") as? Bool ?? true
         highContrastEnabled = resolved.object(forKey: "dino.settings.highContrast") as? Bool ?? false
         icloudSyncEnabled = resolved.object(forKey: "dino.settings.icloudSync") as? Bool ?? false
+        practiceTime = DinoPracticeTime(rawValue: resolved.string(forKey: "dino.settings.practiceTime") ?? "") ?? .whole
+        practiceOrder = DinoPracticeOrder(storageKey: resolved.string(forKey: "dino.settings.practiceOrder") ?? "") ?? .ascending
     }
 
     private func save(_ value: Bool, key: String) { defaults.set(value, forKey: "dino.settings." + key) }
@@ -41,6 +45,8 @@ final class DinoSettings: ObservableObject {
         hapticsEnabled = true
         highContrastEnabled = false
         icloudSyncEnabled = false
+        practiceTime = .whole
+        practiceOrder = .ascending
         cloudDeviceID = UUID().uuidString
         defaults.set(cloudDeviceID, forKey: "dino.settings.cloudDeviceID")
         (defaults as? UserDefaults)?.synchronize()

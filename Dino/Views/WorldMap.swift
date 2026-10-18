@@ -972,14 +972,12 @@ struct LevelInfoPanel: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
-                Text("dino.levelNumber \(level.id)")
-                    .font(.system(size: 22, weight: .heavy, design: .rounded))
-                    .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.deepGreen)
-                    .accessibilityIdentifier("level.number")
-                LevelQuestionOutlineList(items: level.questionOutline)
-                Button(action: start) { Label("dino.play", systemImage: "play.fill") }
-                    .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("level.play")
-                LevelFriendsView(levelID: level.id)
+                LevelBanner(levelID: level.id, highContrast: highContrast)
+                LevelDetailsDisclosure(items: level.questionOutline, highContrast: highContrast)
+                LevelFriendsView(levelID: level.id) {
+                    Button(action: start) { Label("dino.play", systemImage: "play.fill") }
+                        .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("level.play")
+                }
                 Button("dino.map") { if let close { close() } else { dismiss() } }
                     .buttonStyle(DinoSecondaryButtonStyle())
                     .accessibilityIdentifier("level.map")
@@ -988,6 +986,85 @@ struct LevelInfoPanel: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .background(JungleBackground(quiet: true)).foregroundStyle(DinoStyle.ink)
+    }
+}
+
+/// A small trail sign for the level number, in the same cream-and-leaf colors as the world banners.
+private struct LevelBanner: View {
+    let levelID: Int
+    let highContrast: Bool
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "leaf.fill")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(Color(dinoHex: 0x3E7A45))
+            Text("dino.levelNumber \(levelID)")
+                .font(.system(size: 28, weight: .heavy, design: .rounded))
+                .foregroundStyle(Color(dinoHex: highContrast ? 0x153C48 : 0x235C34))
+                .shadow(color: Color(dinoHex: 0xDAB867).opacity(0.7), radius: 0, y: 1)
+                .accessibilityIdentifier("level.number")
+            Image(systemName: "leaf.fill")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(Color(dinoHex: 0x3E7A45))
+                .scaleEffect(x: -1, y: 1)
+        }
+        .padding(.horizontal, 22)
+        .frame(maxWidth: .infinity)
+        .frame(height: 64)
+        .background {
+            RoundedRectangle(cornerRadius: 20)
+                .fill(LinearGradient(colors: [Color(dinoHex: 0xFFF8DE), Color(dinoHex: 0xF4E4B4), Color(dinoHex: 0xE8D398)],
+                                     startPoint: .top, endPoint: .bottom))
+                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(dinoHex: 0xC4A15A), lineWidth: highContrast ? 3 : 2.5))
+                .overlay(RoundedRectangle(cornerRadius: 15).stroke(Color(dinoHex: 0xFFF9E8).opacity(0.9), lineWidth: 1.5).padding(5))
+        }
+        .shadow(color: Color(dinoHex: 0x8A6840).opacity(0.16), radius: 0, y: 3)
+    }
+}
+
+/// Level exercises stay tucked away until the sign is opened.
+private struct LevelDetailsDisclosure: View {
+    let items: [LevelQuestionOutline]
+    let highContrast: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var open = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Button {
+                withAnimation(reduceMotion ? nil : .spring(response: 0.38, dampingFraction: 0.84)) { open.toggle() }
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "list.bullet")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(DinoStyle.deepGreen)
+                        .frame(width: 32, height: 32)
+                        .background(DinoStyle.green.opacity(0.22), in: Circle())
+                    Text("dino.level.details")
+                        .font(.system(size: 16, weight: .heavy, design: .rounded))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(DinoStyle.deepGreen)
+                        .rotationEffect(.degrees(open ? 180 : 0))
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("level.details")
+            .accessibilityValue(Text(LocalizedStringKey(open ? "dino.level.detailsOpen" : "dino.level.detailsClosed")))
+            if open {
+                LevelQuestionOutlineList(items: items)
+                    .padding(.horizontal, 14)
+                    .padding(.bottom, 14)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .background(.white.opacity(highContrast ? 1 : 0.94), in: RoundedRectangle(cornerRadius: 22))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(DinoStyle.deepGreen.opacity(highContrast ? 0.85 : 0.14), lineWidth: highContrast ? 2.5 : 1.5))
+        .shadow(color: DinoStyle.deepGreen.opacity(0.06), radius: 8, y: 3)
     }
 }
 

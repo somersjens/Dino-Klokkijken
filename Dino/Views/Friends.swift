@@ -278,12 +278,13 @@ struct FriendMapAvatars: View {
     }
 }
 
-struct LevelFriendsView: View {
+struct LevelFriendsView<Play: View>: View {
     @EnvironmentObject private var manager: FriendsManager
     @EnvironmentObject private var player: DinoPlayer
     @State private var socialSheet: LevelSocialSheet?
     @State private var showsAllFriends = false
     let levelID: Int
+    @ViewBuilder var play: () -> Play
     private let menuSpacing: CGFloat = 12
     var body: some View {
         let friends = rankedFriends
@@ -306,6 +307,7 @@ struct LevelFriendsView: View {
                 .foregroundStyle(DinoStyle.deepGreen)
                 .accessibilityIdentifier("level.friends.more")
             }
+            play()
             if manager.authenticated {
                 shareButton
             } else {

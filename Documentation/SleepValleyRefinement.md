@@ -42,3 +42,11 @@ Alle schermcontroles gebruiken afzonderlijke Debug-testopslag. Echte spelersvoor
 ## Eerste redesignronde — 18 oktober 2026
 
 De Slaapvallei heeft een verdere verbeterslag gekregen met vollere bewegende wilgen, hangende lantaarns, doorlopende beekjes, vier kleine watervallen, rijkere oevers en subtiele lichtanimaties. [Uitwerking en verificatie](SleepValleyFirstPass.md).
+
+## Tweede redesignronde — 18 oktober 2026
+
+Natuurlijkere wilgen, mosoevers met waterlelies en riet, waterpoelen, afgeronde rotsen en een verre bosrand met bewegende nevel geven de vallei meer diepte. [Uitwerking, beelden en controles](SleepValleySecondPass.md).
+
+## Klokjes verwijderd en water beter aangesloten — 18 oktober 2026
+
+De decoratieve klokjes zijn vervangen door nachtdetails. De kleine watervallen hebben een gedeelde beeklijn voor hun toevoer en uitstroom. De rechterbeek verdwijnt eerder en de rechter lava-ingang begint al in het einde van Slaapvallei. [Aanpassingen, beelden en controles](SleepValleyWaterConnections.md).

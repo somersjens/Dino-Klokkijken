@@ -1864,10 +1864,17 @@ struct DinoCoreTests {
         let settings = DinoSettings(defaults: memory)
         expect(settings.soundEffectsEnabled && settings.hapticsEnabled, "answer feedback enabled by default")
         expect(!settings.highContrastEnabled && !settings.icloudSyncEnabled, "contrast and cloud opt-in defaults")
+        expect(settings.practiceTime == .whole && settings.practiceOrder == .ascending, "practice opens on whole hours in ascending order")
         settings.soundEffectsEnabled = false; settings.hapticsEnabled = false
         settings.highContrastEnabled = true; settings.icloudSyncEnabled = true
+        settings.practiceTime = .quarter; settings.practiceOrder = .specific(.setAnalog)
         let restarted = DinoSettings(defaults: memory)
         expect(!restarted.soundEffectsEnabled && !restarted.hapticsEnabled && restarted.highContrastEnabled && restarted.icloudSyncEnabled, "all four settings survive restart, including false values")
+        expect(restarted.practiceTime == .quarter && restarted.practiceOrder == .specific(.setAnalog), "the last practice time and exercise stay selected")
+        memory.set("retired", forKey: "dino.settings.practiceTime")
+        memory.set("retiredExercise", forKey: "dino.settings.practiceOrder")
+        let unknown = DinoSettings(defaults: memory)
+        expect(unknown.practiceTime == .whole && unknown.practiceOrder == .ascending, "unknown practice choices fall back to the default combination")
         let player = DinoPlayer(store: DinoProgressStore(defaults: memory))
         var feedback: [Bool] = []
         let session = DinoSession(level: DinoLevelCatalog.level(1)!, player: player, answerFeedback: { feedback.append($0) })
@@ -1902,6 +1909,7 @@ struct DinoCoreTests {
         let settings = DinoSettings(defaults: memory)
         settings.soundEffectsEnabled = false; settings.hapticsEnabled = false
         settings.highContrastEnabled = true; settings.icloudSyncEnabled = true
+        settings.practiceTime = .fiveMinutes; settings.practiceOrder = .mix
         let previousDevice = settings.cloudDeviceID
         let oldData = try! JSONEncoder().encode(DinoCloudProgress(original))
         let cloud = TestCloudStore()
@@ -1924,6 +1932,7 @@ struct DinoCoreTests {
         let restarted = DinoSettings(defaults: memory)
         expect(restarted.soundEffectsEnabled && restarted.hapticsEnabled && !restarted.highContrastEnabled && !restarted.icloudSyncEnabled,
                "settings return to fresh-install defaults")
+        expect(restarted.practiceTime == .whole && restarted.practiceOrder == .ascending, "a full reset also clears the last practice choice")
         expect(restarted.cloudDeviceID != previousDevice, "reset generates a new cloud installation identity")
         expect(Set(cloud.values.keys) == [DinoCloudSync.progressKey, "other.feature"], "reset removes all app progress snapshots and leaves unrelated keys alone")
         let marker = try! JSONDecoder().decode(DinoCloudProgress.self, from: cloud.values[DinoCloudSync.progressKey]!)

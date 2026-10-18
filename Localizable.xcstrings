@@ -4,6 +4,16 @@
     "?" : {
 
     },
+    "%@, %@–%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@–%3$@"
+          }
+        }
+      }
+    },
     "%@%@%@" : {
       "localizations" : {
         "en" : {
@@ -2819,36 +2829,19 @@
         }
       }
     },
-    "dino.friends.showAllScores" : {
+    "dino.friends.share" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All scores"
+            "value" : "Choose to share results"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alle scores"
-          }
-        }
-      }
-    },
-    "dino.friends.showFewerScores" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fewer scores"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minder scores"
+            "value" : "Kiezen om resultaten te delen"
           }
         }
       }
@@ -2883,23 +2876,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Speel Dino Klokkijken met mij."
-          }
-        }
-      }
-    },
-    "dino.friends.share" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose to share results"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kiezen om resultaten te delen"
           }
         }
       }
@@ -2968,6 +2944,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Je voortgang delen"
+          }
+        }
+      }
+    },
+    "dino.friends.showAllScores" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All scores"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle scores"
+          }
+        }
+      }
+    },
+    "dino.friends.showFewerScores" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fewer scores"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minder scores"
           }
         }
       }
@@ -3703,19 +3713,53 @@
         }
       }
     },
-    "dino.levelLabel" : {
+    "dino.level.details" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Level"
+            "value" : "In this level"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Level"
+            "value" : "In dit level"
+          }
+        }
+      }
+    },
+    "dino.level.detailsClosed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closed"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dicht"
+          }
+        }
+      }
+    },
+    "dino.level.detailsOpen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open"
           }
         }
       }
@@ -3733,6 +3777,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Minuut"
+          }
+        }
+      }
+    },
+    "dino.levelLabel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Level"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Level"
           }
         }
       }
@@ -5624,19 +5685,53 @@
         }
       }
     },
+    "dino.resetAnswer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Answer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord"
+          }
+        }
+      }
+    },
+    "dino.resetChallenge" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only a calculator can solve this."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit kan alleen met een rekenmachine."
+          }
+        }
+      }
+    },
     "dino.resetMessage" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "All local data will be erased: progress, dino colors, clocks, language and settings. The welcome flow will start again."
+            "value" : "Progress, colors, clocks, language and settings on this device will be erased."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alle lokale gegevens worden gewist: voortgang, dinokleuren, klokken, taal en instellingen. Daarna begint de welkomstflow opnieuw."
+            "value" : "Voortgang, kleuren, klokken, taal en instellingen op dit apparaat worden gewist."
           }
         }
       }
@@ -5987,13 +6082,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "On. Sign in to the same iCloud account on both devices. Updating may take a little time."
+            "value" : "On. Same iCloud account on both devices."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aan. Log op beide apparaten in met hetzelfde iCloud-account. Het bijwerken kan even duren."
+            "value" : "Aan. Hetzelfde iCloud-account op beide apparaten."
           }
         }
       }
@@ -6004,13 +6099,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Off. Your progress is saved only on this device."
+            "value" : "Off. Saved on this device."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uit. Je voortgang wordt alleen op dit apparaat bewaard."
+            "value" : "Uit. Alleen op dit apparaat."
           }
         }
       }
@@ -6021,13 +6116,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iCloud is temporarily unavailable. Your progress stays saved locally; we will try again later."
+            "value" : "Unavailable for now. Saved on this device."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iCloud is tijdelijk niet beschikbaar. Je voortgang blijft lokaal bewaard; we proberen het later opnieuw."
+            "value" : "Nu niet beschikbaar. Alleen op dit apparaat."
           }
         }
       }
@@ -6055,13 +6150,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Saved iCloud progress will also be erased. Sync will be turned off."
+            "value" : "Saved iCloud progress is erased too."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ook de opgeslagen iCloud-voortgang wordt gewist. Synchronisatie wordt uitgezet."
+            "value" : "Ook de iCloud-voortgang wordt gewist."
           }
         }
       }
@@ -6079,6 +6174,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "iCloud-sync"
+          }
+        }
+      }
+    },
+    "dino.settings.languageEmpty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No language found"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen taal gevonden"
+          }
+        }
+      }
+    },
+    "dino.settings.languageSearch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search languages"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoek een taal"
           }
         }
       }

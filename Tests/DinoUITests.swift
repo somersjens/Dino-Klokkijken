@@ -97,6 +97,32 @@ final class DinoUITests: XCTestCase {
         tap("header.settings")
     }
 
+    private func openClockPage(_ page: String) {
+        tap("header.dino")
+        tap("personalize.page." + page)
+    }
+
+    private func confirmProgressReset() {
+        let equation = app.staticTexts["settings.reset.equation"]
+        XCTAssertTrue(equation.waitForExistence(timeout: 5))
+        let token = equation.value as? String ?? ""
+        let halves = token.split(separator: "x")
+        XCTAssertEqual(halves.count, 2)
+        let tail = halves[1].split(separator: "+")
+        XCTAssertEqual(tail.count, 2)
+        let answer = (Int(halves[0]) ?? 0) * (Int(tail[0]) ?? 0) + (Int(tail[1]) ?? 0)
+        XCTAssertGreaterThan(answer, 10_000)
+        let field = app.textFields["settings.reset.answer"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        field.typeText(String(answer))
+        let confirm = app.buttons["settings.reset.confirm"]
+        let ready = NSPredicate { _, _ in confirm.exists && confirm.isEnabled }
+        expectation(for: ready, evaluatedWith: nil)
+        waitForExpectations(timeout: 5)
+        confirm.tap()
+    }
+
     private func revealMapNode(_ id: Int) -> XCUIElement {
         let node = app.buttons["map.level.\(id)"]
         for _ in 0..<14 {
@@ -300,6 +326,9 @@ final class DinoUITests: XCTestCase {
             let node = revealMapNode(world * 10)
             saveScreenshot(world == 1 ? "jungle-guardian-map" : "boss-\(world)-map")
             node.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            XCTAssertTrue(app.buttons["level.details"].waitForExistence(timeout: 5))
+            XCTAssertFalse(app.descendants(matching: .any)["level.questions"].exists)
+            tap("level.details")
             let questions = app.descendants(matching: .any)["level.questions"]
             XCTAssertTrue(questions.waitForExistence(timeout: 5))
             XCTAssertGreaterThan(questions.frame.minY, app.buttons["header.settings"].frame.maxY)
@@ -557,12 +586,14 @@ final class DinoUITests: XCTestCase {
         openSettings()
         tap("settings.soundEffects"); tap("settings.haptics")
         tap("settings.highContrast"); tap("settings.icloudSync")
-        for _ in 0..<6 { if app.buttons["language.option.nl"].isHittable { break }; app.swipeDown() }
+        tap("settings.language")
         tap("language.option.en")
+        let reset = app.buttons["settings.reset"]
+        for _ in 0..<6 { if reset.isHittable { break }; app.swipeUp() }
         tap("settings.reset")
-        XCTAssertTrue(app.buttons["settings.reset.confirm"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["settings.reset.equation"].waitForExistence(timeout: 5))
         saveScreenshot("reset-all-data-confirmation")
-        tap("settings.reset.confirm")
+        confirmProgressReset()
         let closed = NSPredicate { _, _ in self.app.state == .notRunning }
         expectation(for: closed, evaluatedWith: nil)
         waitForExpectations(timeout: 8)
@@ -576,7 +607,6 @@ final class DinoUITests: XCTestCase {
         for (id, value) in [("soundEffects", "1"), ("haptics", "1"), ("highContrast", "0"), ("icloudSync", "0")] {
             XCTAssertEqual(app.descendants(matching: .any)["settings.\(id)"].switches.firstMatch.value as? String, value)
         }
-        tap("settings.clocks")
     }
 
     private func selectPractice(_ id: String) {
@@ -1324,6 +1354,13 @@ final class DinoUITests: XCTestCase {
         let initial = time(clock)
         for _ in 0..<((3 - initial.hour + 12) % 12) { app.buttons["question.analog.more"].tap() }
         XCTAssertEqual(clock.label, "03:00")
+        let hours = app.buttons["question.hand.hours"]
+        let minutes = app.buttons["question.hand.minutes"]
+        XCTAssertEqual(hours.frame.width, minutes.frame.width, accuracy: 1)
+        XCTAssertEqual(hours.frame.maxX, minutes.frame.minX, accuracy: 1,
+                       "Hours and minutes share one switch without a gap")
+        XCTAssertGreaterThanOrEqual(app.buttons["question.confirm"].frame.minY
+            - app.buttons["question.analog.more"].frame.maxY, 20)
         XCTAssertTrue(app.buttons["question.hand.hours"].isSelected)
         drag(clock, from: 0, to: 120, radius: 0.31)
         XCTAssertEqual(clock.label, "03:20")
@@ -1347,6 +1384,10 @@ final class DinoUITests: XCTestCase {
         XCTAssertEqual(example.label, "03:00")
         drag(example, from: 0, to: 120, radius: 0.31)
         XCTAssertEqual(example.label, "03:20")
+        XCTAssertEqual(app.buttons["demo.hand.hours"].frame.width,
+                       app.buttons["demo.hand.minutes"].frame.width, accuracy: 1)
+        XCTAssertGreaterThanOrEqual(app.buttons["demo.confirm"].frame.minY
+            - app.buttons["demo.analog.more"].frame.maxY, 20)
         XCTAssertTrue(app.buttons["demo.hand.minutes"].isSelected)
         saveScreenshot("analog-example-fixed-controls-auto-hand-selection")
     }
@@ -1752,7 +1793,7 @@ final class DinoUITests: XCTestCase {
         let confirm = app.buttons["question.confirm"]
         XCTAssertEqual(confirm.frame.midX, clock.frame.midX, accuracy: 1)
         XCTAssertLessThan(confirm.frame.width, app.frame.width * 0.85)
-        XCTAssertLessThan(confirm.frame.minY - minuteDown.frame.maxY, 16)
+        XCTAssertGreaterThanOrEqual(confirm.frame.minY - minuteDown.frame.maxY, 20)
         tap("clock.minute.more")
         XCTAssertEqual(clock.label, ClockTime(hour: initialHour, minute: 30).digitalText)
         tap("clock.hour.more")
@@ -1932,6 +1973,36 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("day-part-example-stable-actions")
     }
 
+    func testDayPartExampleShowsTheDayLine() {
+        openPractice()
+        selectPractice("practice.type.dayPart")
+        tap("practice.start")
+        XCTAssertFalse(app.descendants(matching: .any)["demo.dayPart.night"].exists)
+        tap("question.example")
+        XCTAssertTrue(app.descendants(matching: .any)["demo.answer"].waitForExistence(timeout: 5))
+        let parts = ["night": "Nacht, 00–06", "morning": "Ochtend, 06–12",
+                     "afternoon": "Middag, 12–18", "evening": "Avond, 18–24"]
+        func expectAnswer(_ part: String, shot: String) {
+            XCTAssertEqual(app.descendants(matching: .any)["demo.answer"].label, parts[part])
+            for (name, label) in parts {
+                let identifier = name == part ? "demo.answer" : "demo.dayPart.\(name)"
+                XCTAssertEqual(app.descendants(matching: .any)[identifier].label, label)
+            }
+            XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "demo.answer").count, 1)
+            saveScreenshot(shot)
+        }
+        expectAnswer("night", shot: "day-part-line-night")
+        for _ in 0..<3 { tap("demo.nextExample") }
+        expectAnswer("morning", shot: "day-part-line-morning")
+        for _ in 0..<6 { tap("demo.nextExample") }
+        expectAnswer("afternoon", shot: "day-part-line-afternoon")
+        for _ in 0..<6 { tap("demo.nextExample") }
+        expectAnswer("evening", shot: "day-part-line-evening")
+        tap("demo.ready")
+        XCTAssertFalse(app.descendants(matching: .any)["demo.dayPart.night"].exists)
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "question.option.")).count, 4)
+    }
+
     func testManualExamplesAndClockComparison() {
         onboard()
         begin(10)
@@ -1982,10 +2053,12 @@ final class DinoUITests: XCTestCase {
                               app.buttons["level.friend.\(next)"].frame.minY,
                               "Most stars first; equal stars use the shortest time")
         }
+        let play = app.buttons["level.play"]
         let share = app.buttons["level.friends.share"]
         let map = app.buttons["level.map"]
-        XCTAssertEqual(map.frame.minY - share.frame.maxY, share.frame.minY - app.buttons["level.friends.more"].frame.maxY, accuracy: 2,
-                       "Share and the level map keep the same gap as the rest of the menu")
+        XCTAssertLessThan(play.frame.maxY, share.frame.minY, "Play sits above share")
+        XCTAssertEqual(share.frame.minY - play.frame.maxY, map.frame.minY - share.frame.maxY, accuracy: 2,
+                       "Play, share and the level map keep the same gap")
         tap("level.friend.test-0")
         XCTAssertTrue(app.buttons["friend.close"].waitForExistence(timeout: 5))
         tap("friend.close")
@@ -2387,7 +2460,8 @@ final class DinoUITests: XCTestCase {
         tap("onboarding.customClock")
         XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 5))
         app.terminate(); app.launch()
-        openSettings(); tap("settings.clocks")
+        openClockPage("analog")
+        revealThemeChoice("theme.dino.face.custom")
         tap("theme.dino.face.custom")
         let sliders = app.buttons.matching(NSPredicate(format: "label IN %@", ["Sliders", "Schuifbalken", "Schuifregelaars"])).firstMatch
         XCTAssertTrue(sliders.waitForExistence(timeout: 5)); sliders.tap()
@@ -2431,11 +2505,12 @@ final class DinoUITests: XCTestCase {
         tap("onboarding.customClock")
         XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 5))
         app.terminate(); app.launch()
-        openSettings(); tap("settings.clocks")
+        openClockPage("analog")
         revealThemeChoice("theme.analogNumerals")
         tap("theme.resetAnalogStyle")
+        tap("personalize.page.digital")
         revealThemeChoice("theme.numerals.classic")
-        tap("theme.done")
+        tap("personalize.done")
     }
 
     func testHeaderPersonalizerHasLiveClockPages() {
@@ -2832,27 +2907,25 @@ final class DinoUITests: XCTestCase {
         tap("onboarding.customClock")
         XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 5))
         app.terminate(); app.launch()
-        openSettings(); tap("settings.clocks")
+        openClockPage("digital")
         XCTAssertFalse(app.descendants(matching: .any)["theme.digitalShape"].exists)
         revealThemeChoice("theme.numerals.classic")
         tap("theme.dino.display.white")
-        XCTAssertTrue(app.buttons["theme.done"].isEnabled)
+        XCTAssertTrue(app.buttons["personalize.done"].isEnabled)
         tap("theme.dino.digitColor.navy")
-        XCTAssertTrue(app.buttons["theme.done"].isEnabled)
-        tap("theme.done")
+        XCTAssertTrue(app.buttons["personalize.done"].isEnabled)
+        tap("personalize.done")
     }
 
     func testCustomClockAndSettings() {
         onboard(custom: true)
-        openSettings()
-        tap("settings.clocks")
+        openClockPage("analog")
         let blue = app.buttons["theme.dino.face.blue"]
         XCTAssertTrue(blue.waitForExistence(timeout: 5))
         tap("theme.dino.face.green")
-        app.buttons["Klaar"].firstMatch.tap()
+        tap("personalize.done")
         app.terminate(); app.launch()
-        openSettings()
-        tap("settings.clocks")
+        openClockPage("analog")
         saveScreenshot("custom-clocks")
     }
 
@@ -2925,15 +2998,16 @@ final class DinoUITests: XCTestCase {
         let done = app.buttons["settings.done"]
         XCTAssertTrue(done.isHittable)
         XCTAssertGreaterThan(done.frame.minY, app.frame.height * 0.7)
+        activate("settings.language")
         XCTAssertTrue(app.buttons["language.option.en"].isHittable)
         capture("adaptive-settings-dutch")
         activate("language.option.en")
-        XCTAssertEqual(settingsTitle.label, "Settings")
+        let englishTitle = NSPredicate { _, _ in settingsTitle.exists && settingsTitle.label == "Settings" }
+        expectation(for: englishTitle, evaluatedWith: nil)
+        waitForExpectations(timeout: 5)
         capture("adaptive-settings-english")
+        activate("settings.language")
         activate("language.option.nl")
-        activate("settings.clocks")
-        XCTAssertTrue(app.buttons["theme.done"].waitForExistence(timeout: 5))
-        activate("theme.done")
         XCTAssertTrue(done.waitForExistence(timeout: 5))
         activate("settings.done")
         let returnedToMap = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
@@ -2983,8 +3057,11 @@ final class DinoUITests: XCTestCase {
         tap("settings.icloudSync"); tap("settings.icloudSync")
         saveScreenshot("settings-landscape")
         XCUIDevice.shared.orientation = .portrait
-        for _ in 0..<6 { if app.buttons["language.option.nl"].isHittable { break }; app.swipeDown() }
+        tap("settings.language")
         tap("language.option.en")
+        let englishLabels = NSPredicate { _, _ in sound.label == "Sound effects" }
+        expectation(for: englishLabels, evaluatedWith: nil)
+        waitForExpectations(timeout: 5)
         XCTAssertEqual(sound.label, "Sound effects")
         XCTAssertEqual(contrast.label, "High contrast")
         saveScreenshot("settings-english")
@@ -3293,17 +3370,15 @@ final class DinoUITests: XCTestCase {
         expectation(for: portraitSettled, evaluatedWith: nil)
         waitForExpectations(timeout: 8)
         openSettings()
-        XCTAssertTrue(app.buttons["language.option.nl"].exists)
+        tap("settings.language")
+        XCTAssertTrue(app.buttons["language.option.nl"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "language.option.")).count, 2)
         let english = app.descendants(matching: .any).matching(identifier: "language.option.en").firstMatch
-        for _ in 0..<8 {
-            if english.isHittable { break }
-            app.swipeDown()
-        }
         XCTAssertTrue(english.isHittable)
         english.tap()
         XCTAssertTrue(app.staticTexts["Settings"].waitForExistence(timeout: 5))
-        tap("settings.clocks")
+        tap("settings.done")
+        openClockPage("analog")
         XCTAssertTrue(app.staticTexts["Short hour hand"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["dino.hands.straight"].exists)
         saveScreenshot("clocks-english")

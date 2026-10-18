@@ -3,7 +3,7 @@ import SwiftUI
 import Darwin
 #endif
 
-/// Scrollable player preferences, clock customization and progress reset.
+/// One settings list: Game Center, language, preferences and a guarded reset.
 struct DinoSettingsView: View {
     @ObservedObject private var language = LanguageManager.shared
     @EnvironmentObject private var player: DinoPlayer
@@ -15,108 +15,117 @@ struct DinoSettingsView: View {
     @State private var confirmReset = false
     @State private var showsPrivacy = false
     @State private var showsGameCenter = false
+    @State private var showsLanguages = false
+    @State private var challenge = ResetChallenge.make()
+    @State private var resetAnswer = ""
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
                 let spacious = geometry.size.width >= 650
-                VStack(spacing: 0) {
-                    Text("dino.settings")
-                        .font(.system(size: spacious ? 34 : 28, weight: .heavy, design: .rounded))
-                        .frame(maxWidth: .infinity).padding(.top, 28).padding(.bottom, 18)
-                        .accessibilityIdentifier("settings.title")
-                    ScrollView {
-                        VStack(spacing: spacious ? 20 : 16) {
-                            section("dino.language", symbol: "globe") {
-                                LanguagePicker()
-                                NavigationLink {
-                                    MyClocksView().environmentObject(player)
-                                } label: {
-                                    HStack(spacing: 12) {
-                                        Image(systemName: "clock.fill").frame(width: 26)
-                                        Text("dino.myClocks")
-                                        Spacer(minLength: 4)
-                                        Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold))
-                                    }.font(.system(size: 17, weight: .bold, design: .rounded))
-                                        .padding(16).frame(minHeight: 56)
-                                        .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 18))
-                                }.buttonStyle(.plain).accessibilityIdentifier("settings.clocks")
-                            }
-                            section("dino.settings.play", symbol: "slider.horizontal.3") {
-                                VStack(spacing: 0) {
-                                    preference("dino.settings.soundEffects", symbol: "speaker.wave.2.fill",
-                                               value: $settings.soundEffectsEnabled, identifier: "settings.soundEffects")
-                                    rowDivider
-                                    preference("dino.settings.haptics", symbol: "iphone.radiowaves.left.and.right",
-                                               value: $settings.hapticsEnabled, identifier: "settings.haptics")
-                                    rowDivider
-                                    preference("dino.settings.highContrast", symbol: "circle.lefthalf.filled",
-                                               value: $settings.highContrastEnabled, identifier: "settings.highContrast")
-                                }.background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 18))
-                            }
-                            section("dino.settings.icloudSync", symbol: "icloud.fill") {
-                                VStack(alignment: .leading, spacing: 0) {
-                                    preference("dino.settings.icloudSync", symbol: "icloud.fill",
-                                               value: $settings.icloudSyncEnabled, identifier: "settings.icloudSync")
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        Text("dino.settings.icloudDescription").font(.system(size: 15, design: .rounded))
-                                        Text(LocalizedStringKey(cloudSync.status.messageKey))
-                                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                                            .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-                                            .accessibilityIdentifier("settings.icloudStatus")
-                                    }.padding(.horizontal, 16).padding(.bottom, 16)
-                                }.background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 18))
-                            }
-                            section("dino.settings.gameCenter", symbol: "person.crop.circle.fill") {
-                                VStack(alignment: .leading, spacing: 10) {
-                                    if let name = friends.playerDisplayName {
-                                        Text(verbatim: name).font(.system(size: 20, weight: .bold, design: .rounded))
-                                            .textSelection(.enabled).accessibilityIdentifier("settings.gameCenterName")
-                                        Text("dino.settings.gameCenter.nameSource").font(.system(size: 14, design: .rounded))
-                                            .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-                                    } else {
-                                        Text("dino.settings.gameCenter.noAccount").font(.system(size: 15, design: .rounded))
-                                            .accessibilityIdentifier("settings.gameCenterSignedOut")
-                                    }
-                                    Button("dino.settings.gameCenter.open") { showsGameCenter = true }
-                                        .buttonStyle(DinoSecondaryButtonStyle()).accessibilityIdentifier("settings.gameCenter")
-                                }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 18))
-                            }
-                            VStack(spacing: 8) {
-                                Button { showsPrivacy = true } label: {
-                                    Label("dino.friends.privacy", systemImage: "hand.raised.fill")
-                                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                                        .frame(maxWidth: .infinity, minHeight: 48)
-                                }.buttonStyle(.plain).accessibilityIdentifier("settings.privacy")
-                                Button { confirmReset = true } label: {
-                                    Label("dino.resetProgress", systemImage: "arrow.counterclockwise")
-                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                        .foregroundStyle(DinoStyle.warning).frame(maxWidth: .infinity, minHeight: 48)
-                                }.buttonStyle(.plain).accessibilityIdentifier("settings.reset")
-                            }.padding(8).background(.white.opacity(0.78), in: RoundedRectangle(cornerRadius: 24))
-                        }.padding(.horizontal, spacious ? 24 : 16).padding(.bottom, 20)
+                ZStack {
+                    VStack(spacing: 0) {
+                        Text("dino.settings")
+                            .font(.system(size: spacious ? 34 : 28, weight: .heavy, design: .rounded))
+                            .frame(maxWidth: .infinity).padding(.top, 28).padding(.bottom, 18)
+                            .accessibilityIdentifier("settings.title")
+                        ScrollView {
+                            menu.padding(.horizontal, spacious ? 24 : 16).padding(.bottom, 20)
+                                .frame(maxWidth: 760).frame(maxWidth: .infinity)
+                        }.accessibilityIdentifier("settings.options")
+                        Button("dino.done") { dismiss() }
+                            .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("settings.done")
+                            .padding(.horizontal, spacious ? 24 : 20).padding(.top, 12).padding(.bottom, 18)
                             .frame(maxWidth: 760).frame(maxWidth: .infinity)
-                    }.accessibilityIdentifier("settings.options")
-                    Button("dino.done") { dismiss() }
-                        .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("settings.done")
-                        .padding(.horizontal, spacious ? 24 : 20).padding(.top, 12).padding(.bottom, 18)
-                        .frame(maxWidth: 760).frame(maxWidth: .infinity)
-                        .background(DinoStyle.paper.opacity(0.97))
+                            .background(DinoStyle.paper.opacity(0.97))
+                    }
+                    if confirmReset {
+                        Color.black.opacity(0.28).ignoresSafeArea()
+                        ScrollView {
+                            resetCard(compact: geometry.size.height < 700)
+                                .padding(16)
+                        }.scrollBounceBehavior(.basedOnSize)
+                            .defaultScrollAnchor(.center, for: .alignment)
+                            .frame(maxWidth: 460)
+                    }
                 }.background(JungleBackground(quiet: true))
             }
             .toolbar(.hidden, for: .navigationBar)
-            .confirmationDialog("dino.resetTitle", isPresented: $confirmReset, titleVisibility: .visible) {
-                Button("dino.resetProgress", role: .destructive, action: resetApp)
-                    .accessibilityIdentifier("settings.reset.confirm")
-                Button("dino.cancel", role: .cancel) {}
-            } message: {
-                Text("dino.resetMessage")
-                Text("dino.settings.icloudResetMessage")
-                Text("dino.friends.resetMessage")
-            }
             .sheet(isPresented: $showsPrivacy) { DinoSocialPrivacyView() }
             .sheet(isPresented: $showsGameCenter) { DinoFriendsView().gameEnvironment() }
+            .sheet(isPresented: $showsLanguages) { LanguagePicker() }
         }.foregroundStyle(DinoStyle.ink)
+            .onChange(of: confirmReset) { _, shown in
+                if shown {
+                    challenge = ResetChallenge.make()
+                    resetAnswer = ""
+                }
+            }
+    }
+
+    private var menu: some View {
+        VStack(spacing: 0) {
+            navigationRow(title: "dino.settings.gameCenter", symbol: "person.crop.circle.fill",
+                          identifier: "settings.gameCenter") {
+                showsGameCenter = true
+            } detail: {
+                if let name = friends.playerDisplayName {
+                    Text(verbatim: name).font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+                        .accessibilityIdentifier("settings.gameCenterName")
+                } else {
+                    Text("dino.settings.gameCenter.noAccount")
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+                        .accessibilityIdentifier("settings.gameCenterSignedOut")
+                }
+            }
+            rowDivider
+            navigationRow(title: "dino.language", symbol: "globe", identifier: "settings.language") {
+                showsLanguages = true
+            } detail: {
+                Text(verbatim: language.effective.flag + "  " + language.effective.displayName)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+            }
+            rowDivider
+            preference("dino.settings.soundEffects", symbol: "speaker.wave.2.fill",
+                       value: $settings.soundEffectsEnabled, identifier: "settings.soundEffects")
+            rowDivider
+            preference("dino.settings.haptics", symbol: "iphone.radiowaves.left.and.right",
+                       value: $settings.hapticsEnabled, identifier: "settings.haptics")
+            rowDivider
+            preference("dino.settings.highContrast", symbol: "circle.lefthalf.filled",
+                       value: $settings.highContrastEnabled, identifier: "settings.highContrast")
+            rowDivider
+            VStack(alignment: .leading, spacing: 0) {
+                preference("dino.settings.icloudSync", symbol: "icloud.fill",
+                           value: $settings.icloudSyncEnabled, identifier: "settings.icloudSync")
+                Text(LocalizedStringKey(cloudSync.status.messageKey))
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+                    .padding(.horizontal, 16).padding(.bottom, 12)
+                    .accessibilityIdentifier("settings.icloudStatus")
+            }
+            rowDivider
+            navigationRow(title: "dino.friends.privacy", symbol: "hand.raised.fill",
+                          identifier: "settings.privacy") { showsPrivacy = true }
+            rowDivider
+            Button { confirmReset = true } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "arrow.counterclockwise").frame(width: 26)
+                    Text("dino.resetProgress")
+                    Spacer(minLength: 4)
+                }.font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .foregroundStyle(DinoStyle.warning)
+                    .padding(.horizontal, 16).frame(minHeight: 60)
+                    .contentShape(Rectangle())
+            }.buttonStyle(.plain).accessibilityIdentifier("settings.reset")
+        }
+        .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 22))
+        .padding(12)
+        .background(.white.opacity(highContrast ? 1 : 0.8), in: RoundedRectangle(cornerRadius: 28))
+        .overlay(RoundedRectangle(cornerRadius: 28).stroke(highContrast ? DinoStyle.ink : .white,
+                                                           lineWidth: highContrast ? 2 : 1.5))
     }
 
     private var rowDivider: some View {
@@ -124,22 +133,52 @@ struct DinoSettingsView: View {
             .frame(height: 1).padding(.horizontal, 16).accessibilityHidden(true)
     }
 
-    private func section<Content: View>(_ title: LocalizedStringKey, symbol: String,
-                                      @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 10) {
-                Image(systemName: symbol).font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(DinoStyle.deepGreen).frame(width: 36, height: 36)
-                    .background(DinoStyle.green.opacity(0.2), in: RoundedRectangle(cornerRadius: 12))
-                Text(title).font(.system(size: 19, weight: .bold, design: .rounded))
-            }
-            content()
-        }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
-            .background(.white.opacity(highContrast ? 1 : 0.8), in: RoundedRectangle(cornerRadius: 28))
-            .overlay(RoundedRectangle(cornerRadius: 28).stroke(highContrast ? DinoStyle.ink : .white, lineWidth: highContrast ? 2 : 1.5))
+    private var solvedReset: Bool {
+        Int(resetAnswer.filter(\.isNumber)) == challenge.answer
+    }
+
+    private func resetCard(compact: Bool) -> some View {
+        VStack(spacing: compact ? 12 : 16) {
+            DinoCharacter(size: compact ? 84 : 108)
+            Text("dino.resetTitle").font(.system(size: compact ? 24 : 28, weight: .heavy, design: .rounded))
+                .multilineTextAlignment(.center)
+            Text("dino.resetMessage").font(.system(size: 15, weight: .medium, design: .rounded))
+                .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+                .multilineTextAlignment(.center)
+            Text("dino.settings.icloudResetMessage").font(.system(size: 13, weight: .medium, design: .rounded))
+                .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+                .multilineTextAlignment(.center)
+            Text("dino.resetChallenge").font(.system(size: 15, weight: .bold, design: .rounded))
+                .multilineTextAlignment(.center)
+            Text(verbatim: challenge.prompt)
+                .font(.system(size: compact ? 26 : 32, weight: .heavy, design: .rounded))
+                .monospacedDigit()
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+                .accessibilityIdentifier("settings.reset.equation")
+                .accessibilityValue(challenge.token)
+            TextField("dino.resetAnswer", text: $resetAnswer)
+                .keyboardType(.numberPad)
+                .font(.system(size: 24, weight: .heavy, design: .rounded))
+                .multilineTextAlignment(.center)
+                .padding(.vertical, 12)
+                .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(DinoStyle.ink.opacity(highContrast ? 1 : 0.15),
+                                                                   lineWidth: highContrast ? 2 : 1.5))
+                .accessibilityIdentifier("settings.reset.answer")
+            Button(action: resetApp) {
+                Label("dino.resetProgress", systemImage: "arrow.counterclockwise")
+            }.buttonStyle(DinoButtonStyle(color: Color(dinoHex: 0xC74343), compact: true))
+                .disabled(!solvedReset)
+                .accessibilityIdentifier("settings.reset.confirm")
+            Button("dino.cancel") { confirmReset = false }
+                .buttonStyle(DinoSecondaryButtonStyle())
+                .accessibilityIdentifier("settings.reset.cancel")
+        }.padding(4).dinoCard()
     }
 
     private func resetApp() {
+        guard solvedReset else { return }
         let date = Date()
         friends.disable()
         cloudSync.removeAllData(at: date)
@@ -163,6 +202,49 @@ struct DinoSettingsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
         }.toggleStyle(SettingsToggleStyle()).padding(.horizontal, 16).padding(.vertical, 10).frame(minHeight: 60)
             .accessibilityIdentifier(identifier)
+    }
+
+    private func navigationRow(title: LocalizedStringKey, symbol: String, identifier: String,
+                               action: @escaping () -> Void) -> some View {
+        navigationRow(title: title, symbol: symbol, identifier: identifier, action: action) { EmptyView() }
+    }
+
+    private func navigationRow<Detail: View>(title: LocalizedStringKey, symbol: String, identifier: String,
+                                             action: @escaping () -> Void,
+                                             @ViewBuilder detail: () -> Detail) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: symbol).frame(width: 26)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                    detail()
+                }.frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+            }.font(.system(size: 17, weight: .semibold, design: .rounded))
+                .padding(.horizontal, 16).frame(minHeight: 60)
+                .contentShape(Rectangle())
+        }.buttonStyle(.plain).accessibilityIdentifier(identifier)
+    }
+}
+
+/// A product large enough that confirming a reset takes a calculator.
+private struct ResetChallenge {
+    let left: Int
+    let right: Int
+    let extra: Int
+    var answer: Int { left * right + extra }
+    var prompt: String { "\(left) × \(right) + \(extra)" }
+    var token: String { "\(left)x\(right)+\(extra)" }
+
+    static func make() -> ResetChallenge {
+        ResetChallenge(left: awkward(237...986), right: awkward(128...874), extra: awkward(2408...9876))
+    }
+
+    private static func awkward(_ range: ClosedRange<Int>) -> Int {
+        var value = Int.random(in: range)
+        while value % 10 == 0 || value % 25 == 0 { value = Int.random(in: range) }
+        return value
     }
 }
 

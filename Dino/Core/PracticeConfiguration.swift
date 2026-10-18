@@ -71,6 +71,25 @@ extension LevelConfiguration {
 
 enum DinoPracticeOrder: Equatable, Sendable {
     case specific(DinoPracticeQuestion), ascending, mix
+
+    /// Stable preference key. Question names never overlap the two mixed orders.
+    var storageKey: String {
+        switch self {
+        case .specific(let question): return question.rawValue
+        case .ascending: return "ascending"
+        case .mix: return "mix"
+        }
+    }
+
+    init?(storageKey: String) {
+        switch storageKey {
+        case "ascending": self = .ascending
+        case "mix": self = .mix
+        default:
+            guard let question = DinoPracticeQuestion(rawValue: storageKey) else { return nil }
+            self = .specific(question)
+        }
+    }
 }
 
 struct DinoPracticeConfiguration: Equatable, Sendable {

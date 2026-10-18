@@ -5,8 +5,11 @@ struct DinoPracticeView: View {
     @EnvironmentObject private var settings: DinoSettings
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dinoHighContrast) private var highContrast
-    @State private var configuration = DinoPracticeConfiguration()
     @State private var session: DinoSession?
+
+    private var configuration: DinoPracticeConfiguration {
+        DinoPracticeConfiguration(time: settings.practiceTime, order: settings.practiceOrder)
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -65,7 +68,7 @@ struct DinoPracticeView: View {
 
     private func timeChoice(_ time: DinoPracticeTime, spacious: Bool) -> some View {
         let selected = configuration.time == time
-        return Button { configuration.time = time } label: {
+        return Button { settings.practiceTime = time } label: {
             VStack(spacing: 8) {
                 // Static previews draw in one canvas instead of laying out 60 tick views per clock.
                 PracticeClockPreview(time: time.previewTime, theme: player.profile.clockTheme)
@@ -87,7 +90,7 @@ struct DinoPracticeView: View {
         let selected = configuration.order == order
         let tint = Color(dinoHex: [0xEDF5E5, 0xEAF3F8, 0xF4EFF8, 0xFBF2E3][((number ?? 1) - 1) % 4])
         return Button {
-            configuration.order = order
+            settings.practiceOrder = order
         } label: {
             HStack(spacing: 10) {
                 if let number {
