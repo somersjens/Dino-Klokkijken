@@ -51,6 +51,21 @@ struct DinoRootView: View {
                 if friends.enabled { friends.refresh(); friends.scheduleSync() }
             }
             .onChange(of: player.profile.progressResetAt) { _, _ in showMap() }
+#if DEBUG
+            .task {
+                let environment = ProcessInfo.processInfo.environment
+                if environment["DINO_TEST_SUITE"] != nil,
+                   let raw = environment["DINO_TEST_RESULT_LEVEL"], let id = Int(raw),
+                   let level = DinoLevelCatalog.level(id),
+                   let rawCorrect = environment["DINO_TEST_RESULT_CORRECT"], let correct = Int(rawCorrect),
+                   (0...level.questionCount).contains(correct) {
+                    result = DinoLevelResult(level: level, correct: correct,
+                        stars: level.isBoss ? 0 : StarCalculator.stars(correct: correct),
+                        victory: level.isBoss ? BossVictory.evaluate(correct: correct,
+                            normalLevelsComplete: player.profile.normalLevelsComplete(in: level.worldID)) : .none)
+                }
+            }
+#endif
     }
 
     private var companionClip: DinoAnimation.Clip {

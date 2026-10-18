@@ -6,6 +6,7 @@ final class DinoProgressStore {
     static let legacyNameKey = "profile.playerName"
     static let resetKey = "dino.profile.reset.v1"
     static let practiceKey = "dino.practice.records.v1"
+    static let learningKey = "dino.learning.records.v1"
     static let levelSelectedKey = "dino.map.levelSelected.v1"
     private let defaults: KeyValueStore
 
@@ -33,7 +34,12 @@ final class DinoProgressStore {
 
     func loadPracticeRecords() -> [String: DinoPracticeRecord] {
         guard let data = defaults.object(forKey: Self.practiceKey) as? Data,
-              let records = try? JSONDecoder().decode([String: DinoPracticeRecord].self, from: data) else { return [:] }
+              var records = try? JSONDecoder().decode([String: DinoPracticeRecord].self, from: data) else { return [:] }
+        // The former time-family Mix is now exact Minutes. The mixed question order keeps its own key.
+        for (key, value) in records where key.hasPrefix("mix.") {
+            let migrated = "minutes." + key.dropFirst(4)
+            if records[migrated] == nil { records[migrated] = value }
+        }
         return records.filter { DinoPracticeRecord.validKeys.contains($0.key) }.mapValues {
             DinoPracticeRecord(bestStreak: max(0, max($0.bestStreak, $0.currentStreak)),
                                questionsAnswered: max(0, $0.questionsAnswered), currentStreak: max(0, $0.currentStreak))
@@ -46,6 +52,21 @@ final class DinoProgressStore {
     }
 
     func resetPracticeRecords() { defaults.removeObject(forKey: Self.practiceKey) }
+
+    func loadLearningProgress() -> [String: DinoLearningProgress] {
+        guard let data = defaults.object(forKey: Self.learningKey) as? Data,
+              let records = try? JSONDecoder().decode([String: DinoLearningProgress].self, from: data) else { return [:] }
+        return records.filter { DinoLearningProgress.validKeys.contains($0.key) }.mapValues {
+            DinoLearningProgress(difficulty: $0.difficulty, consecutiveCorrect: min(2, max(0, $0.consecutiveCorrect)), recoveryTarget: $0.recoveryTarget)
+        }
+    }
+
+    func saveLearningProgress(_ records: [String: DinoLearningProgress]) {
+        guard let data = try? JSONEncoder().encode(records) else { return }
+        defaults.set(data, forKey: Self.learningKey)
+    }
+
+    func resetLearningProgress() { defaults.removeObject(forKey: Self.learningKey) }
 
     func removeAllData(resetAt date: Date) {
         defaults.removeAllObjects()

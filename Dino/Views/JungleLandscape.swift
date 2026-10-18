@@ -1728,6 +1728,84 @@ private struct JungleFlyingBirds: View {
     }
 }
 
+/// Moving marks follow the stream toward the lower end.
+/// A dash phase on a scaled or mirrored canvas runs back up the fall on iPad.
+private enum DownstreamFlow {
+    struct Metrics {
+        var length: CGFloat
+        var downward: Bool
+    }
+
+    static func metrics(_ path: Path) -> Metrics {
+        var length: CGFloat = 0
+        var first: CGPoint?
+        var last: CGPoint?
+        var previous: CGPoint?
+        func visit(_ point: CGPoint) {
+            if first == nil { first = point }
+            if let previous { length += hypot(point.x - previous.x, point.y - previous.y) }
+            previous = point
+            last = point
+        }
+        path.forEach { element in
+            switch element {
+            case .move(to: let point):
+                previous = point
+                if first == nil { first = point }
+                last = point
+            case .line(to: let point):
+                visit(point)
+            case .quadCurve(to: let end, control: let control):
+                guard let start = previous else { previous = end; return }
+                for step in 1...12 {
+                    let t = CGFloat(step) / 12, u = 1 - t
+                    visit(CGPoint(x: u * u * start.x + 2 * u * t * control.x + t * t * end.x,
+                                  y: u * u * start.y + 2 * u * t * control.y + t * t * end.y))
+                }
+            case .curve(to: let end, control1: let c1, control2: let c2):
+                guard let start = previous else { previous = end; return }
+                for step in 1...16 {
+                    let t = CGFloat(step) / 16, u = 1 - t
+                    visit(CGPoint(x: u * u * u * start.x + 3 * u * u * t * c1.x + 3 * u * t * t * c2.x + t * t * t * end.x,
+                                  y: u * u * u * start.y + 3 * u * u * t * c1.y + 3 * u * t * t * c2.y + t * t * t * end.y))
+                }
+            case .closeSubpath:
+                break
+            }
+        }
+        return Metrics(length: max(1, length), downward: (last?.y ?? 0) >= (first?.y ?? 0))
+    }
+
+    static func marks(_ path: Path, metrics known: Metrics? = nil, in context: GraphicsContext,
+                      shading: GraphicsContext.Shading, width: CGFloat, time: TimeInterval,
+                      pointsPerSecond: Double, dash: CGFloat, gap: CGFloat) {
+        let metrics = known ?? metrics(path)
+        let period = max(1, dash + gap)
+        let length = max(period, metrics.length)
+        let count = max(1, Int(ceil(length / period)))
+        let travel = CGFloat(time * pointsPerSecond).truncatingRemainder(dividingBy: length)
+        for index in 0..<count {
+            var head = travel + CGFloat(index) * period
+            if head >= length { head -= length }
+            if !metrics.downward { head = length - head }
+            let tail = head - dash
+            func piece(_ start: CGFloat, _ end: CGFloat) {
+                let lower = min(1, max(0, start / length))
+                let upper = min(1, max(0, end / length))
+                guard upper > lower else { return }
+                context.stroke(path.trimmedPath(from: lower, to: upper), with: shading,
+                               style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
+            }
+            if tail >= 0 {
+                piece(tail, head)
+            } else {
+                piece(0, max(0, head))
+                piece(length + tail, length)
+            }
+        }
+    }
+}
+
 private enum JungleWaterfallGeometry {
     static let flowBounds = CGRect(x: -72, y: -248, width: 144, height: 346)
 
@@ -1756,6 +1834,8 @@ private enum JungleWaterfallGeometry {
                         control1: CGPoint(x: x + 9, y: -137), control2: CGPoint(x: x - 10, y: -27))
         return stream
     }
+
+    static let streamMetrics = streams.map(DownstreamFlow.metrics)
 }
 
 /// A bounded transparent canvas animates water, never the cliffs or map texture.
@@ -1793,19 +1873,20 @@ private struct JungleWaterfallFlow: View {
     private func drawWater(in context: GraphicsContext, time: TimeInterval) {
         var water = context
         water.clip(to: JungleWaterfallGeometry.curtain)
-        // Dashed, curved filaments travel down continuously, with staggered phases.
+        // Marks travel toward the pool. Dash phases run back up a scaled iPad canvas.
         for (i, stream) in JungleWaterfallGeometry.streams.enumerated() {
-            let phase = CGFloat((time * (i.isMultiple(of: 2) ? 86 : 108) + Double(i) * 13).truncatingRemainder(dividingBy: 52))
-            water.stroke(stream, with: .color(Color(dinoHex: i.isMultiple(of: 3) ? 0x2EAACD : 0xF3FFFD).opacity(i.isMultiple(of: 3) ? 0.35 : 0.82)),
-                         style: StrokeStyle(lineWidth: i.isMultiple(of: 2) ? 2.2 : 1.2, lineCap: .round, dash: [18, 34], dashPhase: -phase))
+            DownstreamFlow.marks(stream, metrics: JungleWaterfallGeometry.streamMetrics[i], in: water,
+                                 shading: .color(Color(dinoHex: i.isMultiple(of: 3) ? 0x2EAACD : 0xF3FFFD).opacity(i.isMultiple(of: 3) ? 0.35 : 0.82)),
+                                 width: i.isMultiple(of: 2) ? 2.2 : 1.2,
+                                 time: time + Double(i) * 0.15,
+                                 pointsPerSecond: i.isMultiple(of: 2) ? 86 : 108, dash: 18, gap: 34)
         }
         if mirrored {
             var source = Path()
             source.move(to: CGPoint(x: 90, y: -263))
             source.addCurve(to: CGPoint(x: 0, y: -241), control1: CGPoint(x: 56, y: -269), control2: CGPoint(x: 9, y: -268))
-            context.stroke(source, with: .color(.white.opacity(0.8)),
-                           style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [8, 14],
-                                              dashPhase: -CGFloat((time * 34).truncatingRemainder(dividingBy: 22))))
+            DownstreamFlow.marks(source, in: context, shading: .color(.white.opacity(0.8)),
+                                 width: 2, time: time, pointsPerSecond: 34, dash: 8, gap: 14)
         }
         // Rings expand from the landing and fade; a few droplets arc into the pool.
         for i in 0..<3 {
@@ -3074,11 +3155,12 @@ private struct SleepValleyEffects {
             var c = context
             c.clip(to: banks[index])
             for strand in 0..<4 {
-                let phase = CGFloat((time * (10 + Double(strand) * 2) + Double(index * 21 + strand * 17)).truncatingRemainder(dividingBy: 110))
-                c.stroke(path.offsetBy(dx: CGFloat(strand - 2) * 7 * scale, dy: 0),
-                         with: .color(Color(dinoHex: strand.isMultiple(of: 2) ? 0xD3E9E6 : 0x7ABFCB).opacity(0.23)),
-                         style: StrokeStyle(lineWidth: (strand == 0 ? 2 : 0.8) * scale, lineCap: .round,
-                                            dash: [13 * scale, 63 * scale, 4 * scale, 30 * scale], dashPhase: -phase * scale))
+                DownstreamFlow.marks(path.offsetBy(dx: CGFloat(strand - 2) * 7 * scale, dy: 0), in: c,
+                                     shading: .color(Color(dinoHex: strand.isMultiple(of: 2) ? 0xD3E9E6 : 0x7ABFCB).opacity(0.23)),
+                                     width: (strand == 0 ? 2 : 0.8) * scale,
+                                     time: time + Double(index * 21 + strand * 17) / (10 + Double(strand) * 2),
+                                     pointsPerSecond: 10 + Double(strand) * 2,
+                                     dash: 13 * scale, gap: 97 * scale)
             }
             for pool in SleepValleyLayout.pools where pool.right == (index == 1) {
                 let point = SleepValleyLayout.streamPoint(y: pool.y + 9, right: pool.right, layout: layout)
@@ -3119,12 +3201,13 @@ private struct SleepValleyEffects {
             .init(color: Color(dinoHex: 0xDAF1E7).opacity(0), location: 1)
         ])
         for i in 0..<8 {
-            let phase = CGFloat((time * (i.isMultiple(of: 2) ? 24 : 31) + Double(i * 7)).truncatingRemainder(dividingBy: 43))
-            water.stroke(cascade.filament(across: CGFloat(i) * 0.22 - 0.77, layout: layout),
-                         with: .linearGradient(shimmer, startPoint: cascade.localPoint(y: -105, layout: layout),
-                                               endPoint: cascade.localPoint(y: 85, layout: layout)),
-                         style: StrokeStyle(lineWidth: i.isMultiple(of: 2) ? 1.6 : 0.8, lineCap: .round,
-                                            dash: [16, 27], dashPhase: -phase))
+            let filament = cascade.filament(across: CGFloat(i) * 0.22 - 0.77, layout: layout)
+            DownstreamFlow.marks(filament, in: water,
+                                 shading: .linearGradient(shimmer, startPoint: cascade.localPoint(y: -105, layout: layout),
+                                                          endPoint: cascade.localPoint(y: 85, layout: layout)),
+                                 width: i.isMultiple(of: 2) ? 1.6 : 0.8,
+                                 time: time + Double(i * 7) / (i.isMultiple(of: 2) ? 24 : 31),
+                                 pointsPerSecond: i.isMultiple(of: 2) ? 24 : 31, dash: 16, gap: 27)
         }
         for i in 0..<3 {
             let progress = (time / 4.3 + Double(i) / 3).truncatingRemainder(dividingBy: 1)
@@ -4689,10 +4772,25 @@ private struct VolcanoLifePainter {
                                            center: point, startRadius: 0, endRadius: radius))
     }
     private func stroke(_ path: Path, width: CGFloat, opacity: Double, dash: [CGFloat] = [], speed: Double = 0) {
-        let period = max(1, Double(dash.reduce(0, +)))
-        context.stroke(path, with: .color(Color(dinoHex: 0xFFF0A6).opacity(opacity)),
-                       style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round,
-                                          dash: dash, dashPhase: -CGFloat((time * speed).truncatingRemainder(dividingBy: period))))
+        let shading = GraphicsContext.Shading.color(Color(dinoHex: 0xFFF0A6).opacity(opacity))
+        if speed > 0, dash.contains(where: { $0 > 0 }) {
+            let period = max(1, dash.reduce(0, +))
+            var cursor: CGFloat = 0
+            var index = 0
+            while index < dash.count {
+                let mark = dash[index]
+                let gap = index + 1 < dash.count ? dash[index + 1] : 0
+                if mark > 0 {
+                    DownstreamFlow.marks(path, in: context, shading: shading, width: width,
+                                         time: time + Double(cursor) / speed,
+                                         pointsPerSecond: speed, dash: mark, gap: max(1, period - mark))
+                }
+                cursor += mark + gap
+                index += 2
+            }
+            return
+        }
+        context.stroke(path, with: shading, style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round, dash: dash))
     }
 
     private func flowing(_ line: VolcanoWorldLayout.FlowLine, width: CGFloat, speed: Double,
@@ -8260,8 +8358,8 @@ private struct CityWorldPainter {
             p.rounded(CGRect(x: -5, y: -52, width: 10, height: 46), radius: 3, colors: [0xF4E3B8, 0xB7C4A6])
             p.oval(CGRect(x: -17, y: -54, width: 34, height: 11), colors: [0xE8F7DE, 0x80CDD0])
             for side: CGFloat in [-1, 1] {
-                var water = Path(); water.move(to: .init(x: side * 3, y: -47))
-                water.addQuadCurve(to: .init(x: side * 25, y: -6), control: .init(x: side * 29, y: -69))
+                var water = Path();                 water.move(to: .init(x: side * 3, y: -47))
+                water.addQuadCurve(to: .init(x: side * 25, y: -6), control: .init(x: side * 22, y: -24))
                 p.context.stroke(water, with: .color(Color(dinoHex: 0xE6FFF0)), style: StrokeStyle(lineWidth: 2, lineCap: .round))
                 p.oval(CGRect(x: side * 25 - 5, y: -8, width: 11, height: 4), colors: [0xF5FFF0, 0xAFE5D7])
             }
@@ -9947,8 +10045,9 @@ private struct CastleWorldPainter {
             p.oval(CGRect(x: -5, y: -80, width: 10, height: 16), [0xFFF0B5, 0xCBA96C])
             for side: CGFloat in [-1, 1] {
                 for i in 0..<3 {
-                    var water = Path(); water.move(to: .init(x: 0, y: -79 + CGFloat(i) * 13))
-                    water.addQuadCurve(to: .init(x: side * CGFloat(27 + i * 7), y: -6), control: .init(x: side * CGFloat(35 + i * 6), y: -93 + CGFloat(i) * 14))
+                    let spout = -79 + CGFloat(i) * 13
+                    var water = Path(); water.move(to: .init(x: 0, y: spout))
+                    water.addQuadCurve(to: .init(x: side * CGFloat(27 + i * 7), y: -6), control: .init(x: side * CGFloat(22 + i * 5), y: spout + (-6 - spout) * 0.42))
                     p.context.stroke(water, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xF3FFFF), Color(dinoHex: 0x89D4DC)]), startPoint: .init(x: 0, y: -79), endPoint: .zero), style: StrokeStyle(lineWidth: i == 0 ? 1.7 : 1, lineCap: .round))
                 }
             }

@@ -2,9 +2,9 @@
 
 Via **Instellingen → Levels oefenen** kiest de speler een tijdsoort in een raster van **drie kolommen en twee rijen**. Elke kaart heeft een klok: hele uren, halve uren, kwartieren, 10 minuten, 5 minuten en mix. De klokken volgen het gekozen klokontwerp van de speler.
 
-Het overzicht bevat **21 unieke vraagtypen**, van makkelijk naar moeilijk. De twee- en vierkeuzeversies van analoog en digitaal aflezen zijn samengevoegd. Het spel gebruikt beide aantallen nog als variatie binnen deze typen.
+Het overzicht bevat **20 unieke vraagtypen**, van makkelijk naar moeilijk. De twee- en vierkeuzeversies van analoog en digitaal aflezen zijn samengevoegd. Het spel gebruikt beide aantallen nog als variatie binnen deze typen.
 
-Een gekozen type geeft onbeperkt nieuwe vragen. **Oplopend** doorloopt alle 21 typen op volgorde en begint opnieuw. **Mix** bevat per reeks van 21 vragen ieder type één keer in een willekeurige volgorde. Alleen de huidige vraag blijft in het geheugen. Oefenen bewaart geen levelvoortgang en verstuurt geen Game Center-resultaten. Sinds de update van 13 oktober worden eigen oefenrecords en vragentellers lokaal bewaard; zie hieronder. De reguliere wereld heeft de bestaande tien levels; deze uitbreiding is beschikbaar in het oefenoverzicht.
+Een gekozen type geeft onbeperkt nieuwe vragen. **Oplopend** doorloopt alle 20 typen op volgorde en begint opnieuw. **Mix** bevat per reeks van 20 vragen ieder type één keer in een willekeurige volgorde. Alleen de huidige vraag blijft in het geheugen. Oefenen bewaart geen levelvoortgang en verstuurt geen Game Center-resultaten. Sinds de update van 13 oktober worden eigen oefenrecords en vragentellers lokaal bewaard; zie hieronder. De reguliere wereld heeft de bestaande tien levels; deze uitbreiding is beschikbaar in het oefenoverzicht.
 
 Alle nieuwe typen hebben een handmatig te openen voorbeeld achter het vraagteken, met een uitleg en een uitgewerkt antwoord. De interactieve voorbeeldvraag heeft een eigen sessie, zodat oefenen in de voorbeeldkaart de echte vraag en score niet beïnvloedt. Voorbeelden bevatten geen dino en openen nooit automatisch.
 
@@ -140,3 +140,36 @@ Bestaande records per vraagtype blijven behouden. De nieuwe modusrecords beginne
 
 - [Trofeeën op iPhone](Screenshots/PracticeModeRecords/trophies-iphone.png)
 - [Trofeeën op iPad](Screenshots/PracticeModeRecords/trophies-ipad.png)
+
+## Leeropbouw van de vraagtypen — 18 oktober 2026
+
+De huidige twintig typen volgen deze volgorde in het oefenoverzicht, de nummers op levelkaarten en **Oplopend**:
+
+| Nummer | Vraagtype |
+| --- | --- |
+| 1 | Kies de analoge klok |
+| 2 | Lees de analoge klok af |
+| 3 | Goed of fout? |
+| 4 | Digitale tijd in woorden |
+| 5 | Woorden naar een analoge klok |
+| 6 | Zeg de tijd |
+| 7 | Digitale klok instellen |
+| 8 | Analoge wijzers instellen |
+| 9 | Lees de 24-uursklok af |
+| 10 | Kies het dagdeel |
+| 11 | Verbind klokken en tijden |
+| 12 | Zet tijden op volgorde |
+| 13 | Draai de klok vooruit |
+| 14 | Bereken een latere tijd |
+| 15 | Bereken een eerdere tijd |
+| 16 | Bereken het verschil in minuten |
+| 17 | Maak de tijdreeks af |
+| 18 | Hoe laat komt de trein aan? |
+| 19 | Bereken de tijd in een andere tijdzone |
+| 20 | Wanneer komt de vlucht aan? |
+
+Herkennen en kiezen gaan vooraf aan zelf formuleren en instellen. De 24-uursnotatie en dagdelen komen vóór koppelen en vergelijken, omdat die borden beide gebruiken. De klok vooruitzetten maakt het tijdrekenen concreet; daarna staan vooruit- en terugrekenen direct naast elkaar. Tijdsverschillen bereiden de tijdreeksen en treinritten met overstaptijd voor. Tijdzones komen vóór vluchtvragen, die bij moeilijkere tijdsoorten ook een tijdzoneverschil gebruiken.
+
+De opslag gebruikt de bestaande namen van vraagtypen, onafhankelijk van hun zichtbare nummer. De gekozen oefening, records, reeksen en vragentellers blijven daardoor bij het juiste type horen. Mix blijft alle twintig typen eenmaal per blok aanbieden. De inhoud en ontgrendeling van de honderd avontuurlevels blijven gelijk.
+
+`Tools/test-dino.sh` slaagt met **808.404 controles**, inclusief de leeropbouw, alle typen per tijdsoort, Oplopend/Mix, levelnummers en opslag/herstart van oefenrecords. De Debug-build voor de iOS-simulator en `git diff --check` slagen. Er zijn voor deze volgordewijziging geen simulatorinteractietests uitgevoerd.

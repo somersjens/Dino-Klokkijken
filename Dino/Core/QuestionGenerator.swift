@@ -17,6 +17,8 @@ struct ClockQuestion: Identifiable, Equatable, Sendable {
     var spokenPrompt: SpokenTimePrompt? = nil
     var answerChoices: [ClockAnswer] = []
     var answer: ClockAnswer? = nil
+    var difficulty: DinoQuestionDifficulty = .introduction
+    var timeFamily: DinoPracticeTime = .whole
     var expectedAnswer: ClockAnswer { answer ?? .time(target) }
     var responses: [ClockAnswer] { answerChoices.isEmpty ? options.map(ClockAnswer.time) : answerChoices }
 }
@@ -36,67 +38,63 @@ enum DinoQuestionGenerator {
     static func generate<R: RandomNumberGenerator>(level: LevelConfiguration,
                                                    attempt: Int = 0,
                                                    language: String = "nl",
+                                                   difficulties: [DinoQuestionSkill: DinoQuestionDifficulty] = [:],
                                                    using rng: inout R) -> [ClockQuestion] {
         precondition(!level.allowedHours.isEmpty && level.allowedHours.allSatisfy { (1...12).contains($0) })
-        if level.worldID > 1 { return generateWorld(level: level, language: language, using: &rng) }
-        var available = level.allowedHours.shuffled(using: &rng)
-        var used = Set<Int>()
+        var usedHours = Set<Int>()
+        var previous: ClockTime?
         let positionOffset = Int.random(in: 0..<12, using: &rng)
         return (0..<level.questionCount).map { index in
-            let recipe = level.recipes[index % level.recipes.count]
-            let activity: DinoActivity? = recipe.kind == .activity ? DinoActivity.allCases[index % 5] : nil
-            let hour: Int
-            if let activity {
-                hour = activity.hour
-            } else if attempt == 0, let fixed = recipe.firstAttemptHour {
-                hour = fixed
-            } else {
-                if available.allSatisfy({ used.contains($0) }) { used.removeAll() }
-                let candidate = available.first { !used.contains($0) } ?? available[0]
-                hour = candidate
-                available.removeAll { $0 == candidate }
-                available.append(candidate)
-            }
-            used.insert(hour)
-            let target = ClockTime(hour: hour)
-            var options: [ClockTime] = []
-            if recipe.kind.usesOptions {
-                precondition([2, 4].contains(recipe.optionCount), "Answer grids must contain two or four choices")
-                let distractors = Array(1...12).filter { $0 != hour }.shuffled(using: &rng)
-                options = distractors.prefix(recipe.optionCount - 1).map { ClockTime(hour: $0) }
-                options.insert(target, at: (positionOffset + index) % recipe.optionCount)
-            }
-            let companions = Array(1...12).filter { $0 != hour }.shuffled(using: &rng)
-                .prefix(2).map { ClockTime(hour: $0) }
-            let question = ClockQuestion(id: index, kind: recipe.kind, target: target,
-                                         options: options, activity: activity, companionClocks: companions)
-            return DinoMatchingQuestions.configure(question, using: &rng)
+            let recipe = level.recipe(at: index)
+            let difficulty = difficulties[level.skill(for: recipe)] ?? level.plannedDifficulty(for: recipe)
+            let question = generateQuestion(level: level, recipe: recipe, index: index, attempt: attempt,
+                difficulty: difficulty, previousTarget: previous, usedHours: usedHours,
+                optionPosition: positionOffset + index, language: language, using: &rng)
+            usedHours.insert(question.target.hour)
+            previous = question.target
+            return question
         }
     }
 
-    private static func generateWorld<R: RandomNumberGenerator>(level: LevelConfiguration, language: String, using rng: inout R) -> [ClockQuestion] {
+    static func generateQuestion<R: RandomNumberGenerator>(level: LevelConfiguration, recipe: QuestionRecipe,
+        index: Int, attempt: Int = 0, difficulty: DinoQuestionDifficulty, previousTarget: ClockTime?,
+        usedHours: Set<Int> = [], optionPosition: Int? = nil, language: String = "nl", using rng: inout R) -> ClockQuestion {
+        let family = level.time(for: recipe)
+        let minutes = recipe.time == nil ? level.allowedMinutes : family.minutes
+        if recipe.kind.isExpanded {
+            return DinoExpandedQuestions.generate(kind: recipe.kind, minutes: minutes,
+                minuteStep: family.minuteStep, index: index, previousTarget: previousTarget,
+                language: language, difficulty: difficulty, using: &rng)
+        }
+        let activity: DinoActivity? = recipe.kind == .activity ? DinoActivity.allCases[index % 5] : nil
         let pool = level.allowedHours.flatMap { hour in
-            level.allowedMinutes.map { ClockTime(hour: hour, minute: $0) }
+            minutes.map { ClockTime(hour: hour, minute: $0) }
         }
-        var previous: ClockTime?
-        return (0..<level.questionCount).map { index in
-            let recipe = level.recipes[index % level.recipes.count]
-            if recipe.kind.isExpanded {
-                let question = DinoExpandedQuestions.generate(kind: recipe.kind, minutes: level.allowedMinutes,
-                                                               minuteStep: level.minuteStep, index: index,
-                                                               previousTarget: previous, language: language, using: &rng)
-                previous = question.target
-                return question
+        let target: ClockTime
+        if let activity { target = ClockTime(hour: activity.hour) }
+        else if attempt == 0, let fixed = recipe.firstAttemptHour { target = ClockTime(hour: fixed) }
+        else {
+            var candidates = pool
+            if level.worldID == 1 && level.id > 0 {
+                let freshHours = pool.filter { !usedHours.contains($0.hour) }
+                if !freshHours.isEmpty { candidates = freshHours }
             }
-            let target = pool.filter { $0 != previous }.randomElement(using: &rng)!
-            previous = target
-            let others = pool.filter { $0 != target }.shuffled(using: &rng)
-            var options = recipe.kind.usesOptions ? Array(others.prefix(recipe.optionCount - 1)) : []
-            if recipe.kind.usesOptions { options.insert(target, at: Int.random(in: 0..<recipe.optionCount, using: &rng)) }
-            let question = ClockQuestion(id: index, kind: recipe.kind, target: target, options: options,
-                                         activity: nil, companionClocks: Array(others.prefix(2)))
-            return DinoMatchingQuestions.configure(question, using: &rng)
+            target = DinoQuestionTeaching.target(pool: candidates, time: family,
+                difficulty: difficulty, previous: previousTarget, using: &rng)
         }
+        let optionPool = family.minuteStep == 60 ? (1...12).map { ClockTime(hour: $0) } : pool
+        let others = DinoQuestionTeaching.distractors(pool: optionPool, target: target, difficulty: difficulty, using: &rng)
+        let count = min(recipe.optionCount, difficulty.optionCount)
+        var options = recipe.kind.usesOptions ? Array(others.prefix(count - 1)) : []
+        if recipe.kind.usesOptions {
+            precondition([2, 4].contains(count), "Answer grids must contain two or four choices")
+            options.insert(target, at: (optionPosition ?? Int.random(in: 0..<count, using: &rng)) % count)
+        }
+        var question = ClockQuestion(id: index, kind: recipe.kind, target: target, options: options,
+            activity: activity, companionClocks: Array(others.prefix(2)))
+        question.difficulty = difficulty
+        question.timeFamily = family
+        return DinoMatchingQuestions.configure(question, using: &rng)
     }
 }
 
@@ -134,7 +132,7 @@ enum BossVictory: String, Codable, Sendable {
 /// Prevents double scoring, including rapid taps and taps during feedback.
 struct LevelAttempt: Sendable {
     let levelID: Int
-    let questions: [ClockQuestion]
+    private(set) var questions: [ClockQuestion]
     private(set) var answers: [Bool] = []
     private(set) var questionSeconds: [Int] = []
     private(set) var submittedResponse: ClockAnswer?
@@ -159,6 +157,12 @@ struct LevelAttempt: Sendable {
         answers.append(correct)
         if let elapsed { questionSeconds.append(DinoQuestionTiming.scoredSeconds(elapsed)) }
         return correct
+    }
+
+    /// Only the unanswered current question may be adapted. Scored answers and indices stay intact.
+    mutating func replaceCurrent(with question: ClockQuestion) {
+        guard !isComplete, submittedResponse == nil, question.id == current.id, question.kind == current.kind else { return }
+        questions[index] = question
     }
 
     mutating func advance() {

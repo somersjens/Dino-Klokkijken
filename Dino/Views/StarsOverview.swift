@@ -79,8 +79,7 @@ struct DinoStarsOverview: View {
 
     private func starCount(_ count: Int) -> some View {
         HStack(spacing: 6) {
-            Image(systemName: "star.fill")
-                .foregroundStyle(highContrast ? DinoStyle.ink : Color(dinoHex: 0x92702E))
+            DinoRewardStar(size: 22)
             Text(verbatim: "\(count)").monospacedDigit()
         }.fixedSize()
     }

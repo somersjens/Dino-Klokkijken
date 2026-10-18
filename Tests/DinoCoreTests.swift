@@ -13,6 +13,27 @@ private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
 @MainActor
 struct DinoCoreTests {
     static func main() async {
+        if CommandLine.arguments.contains("--curriculum") {
+            for level in DinoLevelCatalog.levels {
+                for (index, recipe) in level.recipes.enumerated() {
+                    let count = level.recipeOrder.filter { $0 == index }.count
+                    print("\(level.id)\t\(level.worldID)\t\(index + 1)\t\(recipe.kind.rawValue)\t\(level.time(for: recipe).rawValue)\t\(level.plannedDifficulty(for: recipe).rawValue)\t\(count)\t\(level.recipeOrder.map { String($0 + 1) }.joined(separator: ","))")
+                }
+            }
+            return
+        }
+        if CommandLine.arguments.contains("--curriculum-tests") {
+            testLevelCurriculum()
+            print("PASS: \(checks) curriculum checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--difficulty") {
+            testAdaptiveDifficulty()
+            print("PASS: \(checks) adaptive difficulty checks.")
+            return
+        }
+        testLevelCurriculum()
+        testAdaptiveDifficulty()
         testClocks()
         testHandSelection()
         testHandHintClearance()
@@ -54,6 +75,300 @@ struct DinoCoreTests {
         testFullReset()
         let socialChecks = await DinoSocialTests.run()
         print("PASS: \(checks + socialChecks) checks — gameplay, persistence, social progress, privacy guards, offline sync and international names.")
+    }
+
+    static func testLevelCurriculum() {
+        let levels = DinoLevelCatalog.levels
+        expect(levels.count == 100, "the route retains all one hundred level IDs")
+        var introduced = Set<DinoQuestionSkill>()
+        var taughtBeforeBoss = Set<DinoQuestionSkill>()
+        var tiers = [DinoQuestionSkill: Set<DinoQuestionDifficulty>]()
+        for level in levels {
+            let skills = level.recipes.map { level.skill(for: $0) }
+            expect(Set(skills).count == skills.count, "a listed combination is unique by question type and time family")
+            if level.id == 1 { expect(skills.count == 1, "only level one teaches a single combination") }
+            else if level.isBoss {
+                expect(skills.count == 10 && level.questionCount == 10, "each boss asks ten distinct combinations")
+                expect(skills.allSatisfy { taughtBeforeBoss.contains($0) }, "bosses assess combinations introduced in ordinary lessons")
+            } else { expect((2...3).contains(skills.count), "every other normal level has two or three combinations") }
+            expect(level.recipeOrder.count == level.questionCount, "every question has an authored recipe")
+            expect(Set(level.recipeOrder) == Set(level.recipes.indices), "all listed combinations are actually asked")
+            if level.isBoss { expect(Set(level.recipeOrder).count == 10, "no boss recipe repeats") }
+            else if level.recipes.count > 1 {
+                let counts = level.recipes.indices.map { index in level.recipeOrder.filter { $0 == index }.count }
+                expect(counts.max()! - counts.min()! <= 1, "five questions are balanced over the selected combinations")
+            }
+            for recipe in level.recipes {
+                let skill = level.skill(for: recipe), difficulty = level.plannedDifficulty(for: recipe)
+                expect(recipe.time != nil && recipe.difficulty != nil, "each curriculum recipe explicitly authors both time and difficulty")
+                expect(DinoPracticeQuestion(rawValue: recipe.kind.rawValue) != nil, "the route uses the twenty current exercise types")
+                if !introduced.contains(skill) { expect(difficulty == .introduction, "a new combination always starts on introduction") }
+                if difficulty == .challenge {
+                    expect(tiers[skill]?.contains(.familiar) == true, "challenge follows a planned familiar lesson of the same combination")
+                }
+                let dependencies: [ClockQuestionKind]
+                switch recipe.kind {
+                case .sortTimes: dependencies = [.match]
+                case .advanceAnalog: dependencies = [.setAnalog]
+                case .addTime: dependencies = [.advanceAnalog]
+                case .subtractTime, .timeSequence: dependencies = [.addTime]
+                case .minutesBetween, .daySchedule: dependencies = [.addTime, .subtractTime]
+                case .timeZone: dependencies = [.read24Hour]
+                case .flightArrival: dependencies = [.addTime, .timeZone]
+                default: dependencies = []
+                }
+                expect(dependencies.allSatisfy { introduced.contains(.init(kind: $0, time: skill.time)) },
+                       "arithmetic and time zones follow their prerequisite skills in the same time family")
+                introduced.insert(skill)
+                tiers[skill, default: []].insert(difficulty)
+            }
+            if !level.isBoss { taughtBeforeBoss.formUnion(skills) }
+            if level.id >= 91 {
+                expect(level.recipes.allSatisfy { $0.time == .minutes && $0.difficulty == .challenge },
+                       "all last-world questions are authored on exact minutes at maximum difficulty")
+            }
+        }
+        expect(introduced.count == 120, "all twenty types are taught in all six time families")
+        expect(Set(levels.suffix(10).flatMap { $0.recipes.map(\.kind) }).count == 20, "the last world assesses every exercise type")
+
+        let memory = InMemoryKeyValueStore(), store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        let player = DinoPlayer(store: store)
+        var finalBossTiers: [DinoQuestionDifficulty] = []
+        var actualSkills = Set<DinoQuestionSkill>()
+        for level in levels {
+            let run = DinoSession(level: level, player: player)
+            for index in 0..<level.questionCount {
+                let recipe = level.recipe(at: index), q = run.question
+                expect(q.id == index && q.kind == recipe.kind && q.timeFamily == level.time(for: recipe), "live sessions follow the complete authored sequence")
+                expect(q.difficulty == level.plannedDifficulty(for: recipe), "a successful full playthrough reaches each planned difficulty")
+                expect(run.minuteStep == q.timeFamily.minuteStep, "answer controls follow the current question, including mixed-time levels")
+                actualSkills.insert(.init(kind: q.kind, time: q.timeFamily))
+                if level.id == 100 { finalBossTiers.append(q.difficulty) }
+                run.submit(q.expectedAnswer); run.advance()
+            }
+            expect(run.result?.correct == level.questionCount, "new lesson mixes preserve scoring and completion")
+        }
+        expect(actualSkills.count == 120 && player.profile.adventureComplete, "a real perfect run teaches every combination and completes the adventure")
+        expect(player.profile.totalStars == 270 && finalBossTiers == Array(repeating: .challenge, count: 10),
+               "the final boss really runs ten maximum-difficulty questions while stars keep their existing rules")
+
+        let mixed = DinoSession(level: DinoLevelCatalog.level(11)!, player: player)
+        expect(mixed.question.kind == .chooseAnalog && mixed.minuteStep == 30, "mixed-time lesson starts on half hours")
+        mixed.submit(mixed.question.expectedAnswer); mixed.advance()
+        expect(mixed.question.kind == .chooseAnalog && mixed.minuteStep == 60 && mixed.question.difficulty == .challenge,
+               "the same question kind can change time family and baseline difficulty inside one lesson")
+
+        // A mistake temporarily reduces another skill, and persistently reduces the failed skill.
+        let finalLevel = DinoLevelCatalog.level(98)!
+        let failed = DinoSession(level: finalLevel, player: player)
+        expect(failed.question.kind == .sayTime && failed.question.difficulty == .challenge, "late lessons begin at their authored maximum after learning")
+        failed.submit(wrongAnswer(for: failed.question)); failed.showAnswer(); failed.advance()
+        expect(failed.question.kind == .setAnalog && failed.question.difficulty == .familiar && failed.attempt.answers == [false],
+               "a mixed-type error produces an easier next question without changing its planned skill or score")
+        let restarted = DinoPlayer(store: store)
+        let retry = DinoSession(level: finalLevel, player: restarted)
+        expect(retry.question.difficulty == .familiar, "the failed combination remains easier after restarting the app")
+        let stored = store.loadLearningProgress()
+        let key = DinoLearningProgress.key(kind: .sayTime, time: .minutes)
+        expect(stored[key]?.recoveryTarget == .challenge, "the previous level is remembered during recovery")
+        for _ in 0..<3 {
+            let lesson = DinoSession(level: finalLevel, player: restarted)
+            expect(lesson.question.difficulty == .familiar, "recovery does not jump to maximum early")
+            lesson.submit(lesson.question.expectedAnswer)
+            lesson.submit(lesson.question.expectedAnswer)
+        }
+        expect(DinoSession(level: finalLevel, player: restarted).question.difficulty == .challenge, "three successful first answers restore the planned maximum")
+        expect(finalLevel.recipes.allSatisfy { $0.difficulty == .challenge }, "adaptive support never mutates the authored curriculum")
+
+        let legacy = try! JSONDecoder().decode(DinoLearningProgress.self, from: Data(#"{"difficulty":1,"consecutiveCorrect":2}"#.utf8))
+        expect(legacy.difficulty == .familiar && legacy.consecutiveCorrect == 2 && legacy.recoveryTarget == nil, "older hidden-learning saves remain readable")
+        memory.set(try! JSONEncoder().encode(stored), forKey: DinoProgressStore.learningKey)
+        expect(DinoProgressStore(defaults: memory).loadLearningProgress()[key]?.recoveryTarget == .challenge, "validated loading preserves active recovery")
+    }
+
+    static func testAdaptiveDifficulty() {
+        expect(DinoQuestionCategory.all.count == 360 && Set(DinoQuestionCategory.all).count == 360,
+               "twenty types, six minute families and three internal teaching steps")
+        for time in DinoPracticeTime.allCases {
+            expect(time.minutes == Array(stride(from: 0, to: 60, by: time.minuteStep)), "each family includes all its multiples, including zero")
+        }
+        expect(DinoPracticeTime.quarter.minutes == [0, 15, 30, 45], "quarter practice also reviews whole and half hours")
+        expect(DinoPracticeTime.minutes.minuteStep == 1 && DinoPracticeTime.minutes.minutes.count == 60, "Minutes practices individual minutes")
+        expect(DinoTimeWords.time(.init(hour: 3, minute: 1), language: "nl") == "1 minuut over drie", "single-minute Dutch questions use the singular")
+        expect(DinoTimeWords.time(.init(hour: 3, minute: 59), language: "nl") == "1 minuut voor vier", "late Dutch minutes refer to the next hour")
+        expect(DinoTimeWords.time(.init(hour: 3, minute: 1), language: "en") == "1 minute past three", "single-minute English questions use the singular")
+        expect(DinoTimeWords.time(.init(hour: 3, minute: 59), language: "en") == "1 minute to four", "late English minutes refer to the next hour")
+        for language in ["nl", "en"] {
+            for category in DinoQuestionCategory.all {
+                let configuration = DinoPracticeConfiguration(time: category.time, order: .specific(category.type))
+                var generator = DinoPracticeGenerator(configuration: configuration, seed: 105, language: language)
+                var replay = generator
+                var previous: ClockTime?
+                for index in 0..<12 {
+                    let q = generator.next(index: index, difficultyForKind: { _ in category.difficulty })
+                    expect(q == replay.next(index: index, difficultyForKind: { _ in category.difficulty }), "all 360 categories are reproducible in both languages")
+                    expect(q.kind == category.type.recipe.kind && q.timeFamily == category.time && q.difficulty == category.difficulty,
+                           "every category retains its independent dimensions")
+                    expect(q.id == index && q.target != previous, "adaptive questions retain IDs and avoid consecutive duplicate targets")
+                    previous = q.target
+                    expect(category.time.minutes.contains(q.target.minute), "teaching steps stay in the selected time family")
+                    expect((q.options + q.relatedTimes + q.companionClocks).allSatisfy { category.time.minutes.contains($0.minute) },
+                           "options and arithmetic context remain on the selected grid")
+                    expect(AnswerValidator.isCorrect(q.expectedAnswer, for: q) && !AnswerValidator.isCorrect(wrongAnswer(for: q), for: q),
+                           "every teaching step has a valid, discriminating answer")
+                    if q.kind.usesOptions {
+                        expect(Set(q.responses).count == q.responses.count && q.responses.filter { $0 == q.expectedAnswer }.count == 1,
+                               "all teaching steps offer unique choices and exactly one correct response")
+                        let count = q.kind == .trueFalse ? 2 : q.kind == .dayPart ? 4 : category.difficulty.optionCount
+                        expect(q.responses.count == count, "introduction reduces answer load without changing binary or day-part exercises")
+                    }
+                    switch q.kind {
+                    case .addTime, .advanceAnalog:
+                        expect(q.relatedTimes[0].adding(minutes: q.durationMinutes) == q.target, "all tiers preserve addition")
+                    case .subtractTime:
+                        expect(q.relatedTimes[0].adding(minutes: -q.durationMinutes) == q.target, "all tiers preserve subtraction")
+                    case .minutesBetween:
+                        let limit = category.difficulty == .introduction ? category.time.minuteStep : category.difficulty == .familiar ? 90 : 180
+                        expect(q.durationMinutes <= limit && q.relatedTimes[1].minutesOfDay - q.relatedTimes[0].minutesOfDay == q.durationMinutes,
+                               "elapsed-time complexity changes independently of the minute grid")
+                        expect(q.responses.allSatisfy { if case .duration(let value) = $0 { return value.isMultiple(of: category.time.minuteStep) }; return false },
+                               "duration alternatives also retain the selected minute multiples")
+                    case .timeSequence:
+                        let times = q.relatedTimes + [q.target]
+                        expect(zip(times, times.dropFirst()).allSatisfy { $0.adding(minutes: q.durationMinutes) == $1 }, "sequence steps agree in all categories")
+                    case .flightArrival:
+                        expect(q.relatedTimes[0].adding(minutes: q.durationMinutes + q.offsetHours * 60) == q.target, "all flight tiers have consistent tickets")
+                        expect((q.offsetHours == 0) == (category.difficulty == .introduction), "flights introduce duration before adding zone changes")
+                    case .timeZone:
+                        expect(q.relatedTimes[0].adding(minutes: q.offsetHours * 60) == q.target, "all geographic tiers agree with their displayed offset")
+                        if category.difficulty == .introduction { expect(abs(q.offsetHours) == 1, "first maps use a single hour") }
+                        if category.difficulty == .challenge { expect(abs(q.offsetHours) >= 4, "later maps use distant countries in every minute family") }
+                    case .daySchedule:
+                        expect(q.daySchedule?.end == q.target && q.daySchedule?.totalMinutes == q.durationMinutes, "train tiers include both trains and the transfer")
+                    case .sayTime:
+                        expect(q.spokenPrompt?.phrase.isEmpty == false && q.spokenPrompt?.correct == { if case .spoken(let answer) = q.expectedAnswer { return answer }; return nil }(),
+                               "spoken questions support exact minutes in both languages")
+                    case .match: checkMatchingQuestion(q)
+                    case .sortTimes:
+                        expect(q.options.count == 4, "the sorting board retains four clocks at every tier")
+                    default: break
+                    }
+                }
+            }
+        }
+        for time in DinoPracticeTime.allCases {
+            var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.chooseDigital)), seed: 87)
+            var targets = Set<Int>(), options = Set<Int>()
+            var focused = 0
+            for index in 0..<1600 {
+                let q = generator.next(index: index, difficultyForKind: { _ in .challenge })
+                targets.insert(q.target.minute); options.formUnion(q.options.map(\.minute))
+                if time.teachingMinutes(.challenge).contains(q.target.minute) { focused += 1 }
+            }
+            expect(targets == Set(time.minutes) && options == Set(time.minutes), "every multiple can be both an answer and an alternative")
+            expect(focused > 1000, "the selected teaching step remains the focus while reviewing familiar positions")
+        }
+        var quarters = DinoPracticeGenerator(configuration: .init(time: .quarter, order: .specific(.chooseAnalog)), seed: 11)
+        let introductoryMinutes = Set((0..<100).map { quarters.next(index: $0).target.minute })
+        expect(introductoryMinutes == [0, 15, 30], "quarter past is introduced before quarter to, with familiar whole and half hours")
+        var rng = SeededGenerator(seed: 30)
+        for code in ["nl", "en"] {
+            let language = SpokenTimeCatalog.language(code: code)
+            for minute in 0..<60 {
+                let prompt = language.prompt(for: ClockTime(hour: 11, minute: minute), using: &rng)
+                expect(!prompt.phrase.isEmpty && zip(prompt.slots, prompt.correct.choiceIDs).allSatisfy { slot, id in slot.choices.contains { $0.id == id } },
+                       "all sixty spoken minute positions have selectable correct words")
+            }
+        }
+
+        let memory = InMemoryKeyValueStore()
+        let store = DinoProgressStore(defaults: memory)
+        let player = DinoPlayer(store: store)
+        let configuration = DinoPracticeConfiguration(time: .whole, order: .specific(.chooseAnalog))
+        let session = DinoSession(level: configuration.level, player: player, practice: configuration)
+        expect(session.question.difficulty == .introduction, "the first encounter introduces the exercise gently")
+        for _ in 0..<3 { session.submit(session.question.expectedAnswer); session.advance() }
+        expect(session.question.difficulty == .familiar, "three correct first answers raise one teaching step")
+        for _ in 0..<3 { session.submit(session.question.expectedAnswer); session.advance() }
+        expect(session.question.difficulty == .challenge, "six successful answers can reach the challenging tier")
+        session.submit(session.question.responses.first { $0 != session.question.expectedAnswer }!)
+        expect(player.questionDifficulty(kind: .chooseAnalog, time: .whole) == .familiar, "a first-attempt error immediately lowers the saved skill")
+        let afterWrong = memory.object(forKey: DinoProgressStore.learningKey) as? Data
+        session.submit(session.question.expectedAnswer)
+        expect(memory.object(forKey: DinoProgressStore.learningKey) as? Data == afterWrong, "a correct retry does not undo the adaptive reduction")
+        session.advance()
+        expect(session.question.difficulty == .familiar && session.practiceAnswered == 7, "the next live question is easier without adding or removing scores")
+        expect(player.questionDifficulty(kind: .chooseDigital, time: .whole) == .introduction && player.questionDifficulty(kind: .chooseAnalog, time: .half) == .introduction,
+               "difficulty is independent per exercise and time family")
+        let reloaded = DinoPlayer(store: store)
+        expect(reloaded.questionDifficulty(kind: .chooseAnalog, time: .whole) == .familiar, "learning survives relaunch")
+        let example = DinoSession(level: configuration.level, player: player, practice: configuration, example: session.question)
+        example.submit(wrongAnswer(for: example.question)); example.submit(example.question.expectedAnswer)
+        expect(memory.object(forKey: DinoProgressStore.learningKey) as? Data == afterWrong, "examples never affect the learner's difficulty")
+
+        // Establish prior mastery, then check both mixed orders and an adventure level.
+        for type in DinoPracticeQuestion.allCases {
+            var question = ClockQuestion(id: 0, kind: type.recipe.kind, target: ClockTime(hour: 3), options: [], activity: nil, companionClocks: [])
+            question.difficulty = .challenge
+            for _ in 0..<3 { player.recordLearningAnswer(question: question, correct: true) }
+        }
+        for order in [DinoPracticeOrder.ascending, .mix] {
+            let config = DinoPracticeConfiguration(time: .whole, order: order)
+            let mixed = DinoSession(level: config.level, player: player, practice: config)
+            let presented = mixed.question.difficulty
+            mixed.submit(wrongAnswer(for: mixed.question)); mixed.showAnswer(); mixed.advance()
+            expect(mixed.question.difficulty.rawValue <= presented.easier.rawValue, "an error offers immediate relief even when the next mixed exercise differs")
+        }
+        var mastered = ClockQuestion(id: 0, kind: .chooseAnalog, target: ClockTime(hour: 3), options: [], activity: nil, companionClocks: [])
+        mastered.difficulty = .challenge
+        for _ in 0..<3 { player.recordLearningAnswer(question: mastered, correct: true) }
+        let early = DinoSession(level: DinoLevelCatalog.level(1)!, player: player)
+        expect(early.question.difficulty == .introduction, "early adventure lessons keep their introductory ceiling")
+        let later = DinoSession(level: DinoLevelCatalog.level(10)!, player: player)
+        expect(later.question.difficulty == .challenge, "later adventure levels can challenge a familiar exercise")
+        later.submit(wrongAnswer(for: later.question)); later.showAnswer(); later.advance()
+        expect(later.question.difficulty == .familiar && later.attempt.answers == [false] && later.attempt.questions.count == 10,
+               "adventure adapts its unanswered question while preserving the boss length, ID and first score")
+        let beginner = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+        let directBoss = DinoSession(level: DinoLevelCatalog.level(10)!, player: beginner)
+        expect(directBoss.question.difficulty == .introduction, "even a direct boss starts a previously unseen type gently")
+        for levelID in [12, 22, 32, 42, 63, 97] {
+            let level = DinoLevelCatalog.level(levelID)!
+            for _ in 0..<6 {
+                let learner = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+                for recipe in level.recipes {
+                    var known = mastered
+                    known = ClockQuestion(id: 0, kind: recipe.kind, target: known.target, options: [], activity: nil, companionClocks: [],
+                                          difficulty: .challenge, timeFamily: level.time(for: recipe))
+                    for _ in 0..<3 { learner.recordLearningAnswer(question: known, correct: true) }
+                }
+                let run = DinoSession(level: level, player: learner)
+                var previous: ClockTime?
+                for index in 0..<level.questionCount {
+                    expect(run.question.target != previous, "regenerating an adventure question never repeats the adapted previous target")
+                    previous = run.question.target
+                    run.submit(index == 2 ? wrongAnswer(for: run.question) : run.question.expectedAnswer)
+                    run.showAnswer(); run.advance()
+                }
+                expect(run.attempt.isComplete && run.attempt.answers.count == level.questionCount && run.attempt.correctCount == level.questionCount - 1,
+                       "adaptation across minute worlds preserves question count and first-attempt scores")
+            }
+        }
+        player.resetProgress()
+        expect(store.loadLearningProgress().isEmpty && player.questionDifficulty(kind: .chooseAnalog, time: .whole) == .introduction,
+               "progress reset clears hidden learning as well as visible records")
+        player.recordLearningAnswer(question: mastered, correct: true)
+        player.resetAllData()
+        expect(store.loadLearningProgress().isEmpty, "full reset also clears hidden learning")
+
+        let legacy = DinoPracticeRecord(bestStreak: 9, questionsAnswered: 24, currentStreak: 2)
+        memory.set(try! JSONEncoder().encode(["mix.chooseAnalog": legacy, "whole.mix": legacy]), forKey: DinoProgressStore.practiceKey)
+        expect(store.loadPracticeRecords()["minutes.chooseAnalog"] == legacy && store.loadPracticeRecords()["whole.mix"] == legacy,
+               "legacy time Mix records migrate while the mixed question order remains intact")
+        memory.set("mix", forKey: "dino.settings.practiceTime")
+        memory.set("mix", forKey: "dino.settings.practiceOrder")
+        let settings = DinoSettings(defaults: memory)
+        expect(settings.practiceTime == .minutes && settings.practiceOrder == .mix, "old preferences migrate to exact Minutes without changing question order")
     }
 
     static func testJungleSceneryClearance() {
@@ -232,10 +547,10 @@ struct DinoCoreTests {
             let counter = DinoPracticeCounter(value: value)
             expect(counter.digits == digits && counter.thousands == thousands, "counter carries thousands without showing four large digits")
         }
-        let key = DinoPracticeRecord.key(time: .mix, question: .setAnalog)
+        let key = DinoPracticeRecord.key(time: .minutes, question: .setAnalog)
         store.savePracticeRecords([key: .init(bestStreak: 20, questionsAnswered: 999), "unknown": .init(bestStreak: 10, questionsAnswered: 10)])
         let nearThousand = DinoPlayer(store: store)
-        let thousandConfig = DinoPracticeConfiguration(time: .mix, order: .specific(.setAnalog))
+        let thousandConfig = DinoPracticeConfiguration(time: .minutes, order: .specific(.setAnalog))
         let thousandSession = DinoSession(level: thousandConfig.level, player: nearThousand, practice: thousandConfig)
         expect(thousandSession.practiceQuestionNumber == 1_000 && nearThousand.practiceRecords.count == 1, "stored counters resume at the thousand boundary and discard unknown combinations")
         store.savePracticeRecords([key: .init(bestStreak: -1, questionsAnswered: -20, currentStreak: -2)])
@@ -418,16 +733,15 @@ struct DinoCoreTests {
             var generator = DinoPracticeGenerator(configuration: .init(time: family, order: .specific(.flightArrival)), seed: 18)
             var positive = false, negative = false
             for index in 0..<120 {
-                let q = generator.next(index: index)
+                let q = generator.next(index: index, difficultyForKind: { _ in .challenge })
                 let shift = q.durationMinutes + q.offsetHours * 60
                 expect(q.relatedTimes[0].adding(minutes: shift) == q.target, "departure, duration and zone determine the arrival")
                 expect(q.options.count == 4 && Set(q.options).count == 4 && q.options.contains(q.target), "four unique flight choices include the arrival")
                 expect(q.options.allSatisfy { family.minutes.contains($0.minute) }, "flight choices keep the selected minute family")
-                if family.minuteStep >= 30 {
-                    expect(q.offsetHours == 0, "whole and half hours keep the same time zone")
+                if q.difficulty == .introduction {
+                    expect(q.offsetHours == 0, "introductory flights keep the same time zone")
                 } else {
-                    let limit = family.minuteStep >= 10 ? 2 : 4
-                    expect((1...limit).contains(abs(q.offsetHours)), "harder flights state a whole-hour difference")
+                    expect((2...4).contains(abs(q.offsetHours)), "challenging flights state a whole-hour difference")
                     expect(q.durationMinutes >= (abs(q.offsetHours) + 2) * 60, "the flight is at least two hours longer than the zone change")
                     let forgotten = q.relatedTimes[0].adding(minutes: q.durationMinutes)
                     expect(q.options.contains(forgotten), "forgetting the time zone remains one of the choices")
@@ -475,7 +789,7 @@ struct DinoCoreTests {
             var generator = DinoPracticeGenerator(configuration: .init(time: family, order: .specific(.minutesBetween)), seed: 21)
             var crossedHour = false
             for index in 0..<200 {
-                let q = generator.next(index: index)
+                let q = generator.next(index: index, difficultyForKind: { _ in .challenge })
                 expect(q.relatedTimes.count == 2, "minute difference has exactly two endpoints")
                 let start = q.relatedTimes[0], end = q.relatedTimes[1]
                 let elapsed = end.minutesOfDay - start.minutesOfDay
@@ -496,13 +810,27 @@ struct DinoCoreTests {
 
     static func testPractice() {
         expect(DinoPracticeQuestion.allCases.count == 20, "practice contains twenty distinct question types")
-        expect(DinoPracticeQuestion.sortTimes.number == 11 && DinoPracticeQuestion.sayTime.number == 12
-               && DinoPracticeQuestion.timeSequence.number == 13, "saying the time sits between sorting and sequences")
-        expect(DinoPracticeQuestion.minutesBetween.number == 20, "minute differences follow saying the time")
-        expect(DinoPracticeQuestion.daySchedule.number == 19, "day planning precedes minute differences")
-        expect(DinoPracticeQuestion.match.number == 7, "matching remains question type seven")
-        expect(DinoPracticeQuestion.addTime.number == 14 && DinoPracticeQuestion.timeZone.number == 18,
-               "later question numbers shift by one after saying the time")
+        expect(DinoPracticeQuestion.chooseAnalog.number == 1 && DinoPracticeQuestion.chooseDigital.number == 2,
+               "practice starts with recognizing and reading a clock")
+        expect([DinoPracticeQuestion.trueFalse, .readDigital, .spokenTime].allSatisfy {
+            $0.number < DinoPracticeQuestion.sayTime.number
+        }, "recognizing time phrases precedes constructing them")
+        expect(DinoPracticeQuestion.setDigital.number < DinoPracticeQuestion.setAnalog.number,
+               "setting digits precedes independently positioning hands")
+        expect(DinoPracticeQuestion.read24Hour.number < DinoPracticeQuestion.dayPart.number
+               && DinoPracticeQuestion.dayPart.number < DinoPracticeQuestion.match.number
+               && DinoPracticeQuestion.match.number < DinoPracticeQuestion.sortTimes.number,
+               "24-hour notation and day parts precede connecting and comparing times")
+        expect(DinoPracticeQuestion.advanceAnalog.number + 1 == DinoPracticeQuestion.addTime.number
+               && DinoPracticeQuestion.addTime.number + 1 == DinoPracticeQuestion.subtractTime.number,
+               "moving hands introduces arithmetic, with later and earlier times consecutive")
+        expect(DinoPracticeQuestion.subtractTime.number + 1 == DinoPracticeQuestion.minutesBetween.number
+               && DinoPracticeQuestion.minutesBetween.number < DinoPracticeQuestion.timeSequence.number,
+               "time differences follow addition and subtraction before repeated time steps")
+        expect(DinoPracticeQuestion.timeSequence.number < DinoPracticeQuestion.daySchedule.number
+               && DinoPracticeQuestion.daySchedule.number < DinoPracticeQuestion.timeZone.number
+               && DinoPracticeQuestion.timeZone.number < DinoPracticeQuestion.flightArrival.number,
+               "combined durations and time zones are taught before flights combine them")
         expect(DinoPracticeQuestion(rawValue: "schoolEnd") == nil && ClockQuestionKind(rawValue: "schoolEnd") == nil,
                "the duplicate lesson exercise is retired from practice and levels")
         expect(DinoPracticeQuestion(rawValue: "elapsedTime") == nil && ClockQuestionKind(rawValue: "elapsedTime") == nil,
@@ -572,7 +900,7 @@ struct DinoCoreTests {
         let original = player.profile
         var uploads = 0
         player.progressChanged = { uploads += 1 }
-        let config = DinoPracticeConfiguration(time: .mix, order: .ascending)
+        let config = DinoPracticeConfiguration(time: .minutes, order: .ascending)
         var now = 100.0
         let session = DinoSession(level: config.level, player: player, practice: config, now: { now })
         session.demonstration = .setAnalog
@@ -685,7 +1013,7 @@ struct DinoCoreTests {
         expect(DinoDemonstrationExamples.time(index: 1, minutes: [30]) == ClockTime(hour: 4, minute: 30), "half-hour examples retain thirty minutes")
         expect(DinoDemonstrationExamples.time(index: 1, minutes: [15, 45]) == ClockTime(hour: 3, minute: 45), "quarter-hour examples advance to quarter to")
         expect(DinoDemonstrationExamples.time(index: 2, minutes: [15, 45]) == ClockTime(hour: 4, minute: 15), "quarter-hour examples advance to the next hour")
-        expect(DinoDemonstrationExamples.time(index: 5, minutes: DinoPracticeTime.tenMinutes.minutes) == ClockTime(hour: 4, minute: 10), "ten-minute examples skip disallowed whole hours")
+        expect(DinoDemonstrationExamples.time(index: 6, minutes: DinoPracticeTime.tenMinutes.minutes) == ClockTime(hour: 4), "ten-minute examples include whole hours")
         let families = DinoPracticeTime.allCases.map { ($0.minutes, $0.minuteStep) }
             + DinoWorldCatalog.worlds.map { ($0.minutes, $0.minuteStep) }
         let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
@@ -712,7 +1040,7 @@ struct DinoCoreTests {
                         expect(q.relatedTimes.last!.adding(minutes: q.durationMinutes) == q.target, "example addition and sequence answers agree with their context")
                     case .flightArrival:
                         expect(q.relatedTimes[0].adding(minutes: q.durationMinutes + q.offsetHours * 60) == q.target, "example flight adds duration and the stated zone difference")
-                        expect((step >= 30) == (q.offsetHours == 0), "easier flight examples keep one time zone")
+                        expect(q.offsetHours == 0, "introductory flight examples teach duration in a single time zone")
                         if q.offsetHours != 0 {
                             let work = DinoFlightArrivalWork(departure: q.relatedTimes[0], durationMinutes: q.durationMinutes,
                                                              offsetHours: q.offsetHours, arrival: q.target)
@@ -805,7 +1133,7 @@ struct DinoCoreTests {
                 var seenDestinations = Set<String>()
                 var crossesMidnight = false
                 for index in 0..<250 {
-                    let q = generator.next(index: index)
+                    let q = generator.next(index: index, difficultyForKind: { _ in .challenge })
                     guard let journey = q.timeZoneJourney else { fatalError("time-zone task needs two capitals") }
                     expect(journey.origin.id == (language == "nl" ? "amsterdam" : "london"), "chosen language determines the reference capital")
                     expect(journey.origin.countryCode != journey.destination.countryCode && q.offsetHours != 0, "two capitals always use different countries and time zones")
@@ -816,10 +1144,10 @@ struct DinoCoreTests {
                            "the example counts +1, +2 until the new time and then stops")
                     expect(q.options.count == 4 && Set(q.options).count == 4 && q.options.contains(q.target), "four distinct answer choices include the correct time")
                     expect(q.options.allSatisfy { family.minutes.contains($0.minute) }, "time-zone choices retain the selected minute family")
-                    switch DinoTimeZoneDifficulty(minuteStep: family.minuteStep) {
-                    case .nearby: expect(abs(q.offsetHours) == 1, "easy maps use a nearby one-hour difference")
-                    case .regional: expect(abs(q.offsetHours) <= 3, "medium maps keep regional hour differences")
-                    case .worldwide: expect(abs(q.offsetHours) >= 4, "hard maps include distant capitals")
+                    switch q.difficulty {
+                    case .introduction: expect(abs(q.offsetHours) == 1, "easy maps use a nearby one-hour difference")
+                    case .familiar: expect(abs(q.offsetHours) <= 3, "medium maps keep regional hour differences")
+                    case .challenge: expect(abs(q.offsetHours) >= 4, "hard maps include distant capitals")
                     }
                     for size in [CGSize(width: 230, height: 224), CGSize(width: 340, height: 252), CGSize(width: 760, height: 252)] {
                         let viewport = DinoTimeZoneViewport(journey: journey, size: size)
@@ -880,7 +1208,7 @@ struct DinoCoreTests {
             var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.daySchedule)), seed: 20261016)
             var seenActivities = Set<DinoScheduleActivity>()
             for index in 0..<200 {
-                let question = generator.next(index: index)
+                let question = generator.next(index: index, difficultyForKind: { _ in .challenge })
                 guard let schedule = question.daySchedule else { fatalError("day planning requires a schedule") }
                 seenActivities.formUnion([schedule.firstActivity, schedule.secondActivity])
                 expect(schedule.firstActivity != schedule.secondActivity, "every schedule has two different activities")
@@ -938,17 +1266,24 @@ struct DinoCoreTests {
         expect(halfFour.slots.map(\.id) == ["minutes", "direction", "hour", "closing"], "English puts half with the minutes")
         expect(quarterTo.correct.choiceIDs == ["kwart", "voor", "-", "h9", "-"], "quarter to nine is checked by choice, not by the sentence")
         expect(halfFour.correct.choiceIDs == ["twenty", "past", "h3", "-"], "twenty past three does not borrow the Dutch half-hour form")
+        expect(quarterTo.phrase(for: SpokenTimeAnswer(choiceIDs: ["tien", "voor", "half", "h9", "-"])) == "Tien voor half negen",
+               "the sentence follows the words chosen so far")
+        expect(quarterTo.phrase(for: SpokenTimeAnswer(choiceIDs: Array(repeating: "-", count: 5))) == "", "dashes add no words")
         for prompt in [quarterTo, halfFour] {
             let hour = prompt.slots.first { $0.id == "hour" }!
-            expect(hour.choices.count == 3 && Set(hour.choices.map(\.id)).count == 3, "the hour row offers three different hours")
-            expect(!hour.choices.contains { $0.id == SpokenTimeChoice.emptyID }, "the hour itself cannot be left empty")
+            let hourWords = hour.choices.filter { $0.id != SpokenTimeChoice.emptyID }
+            expect(hour.choices.first?.id == SpokenTimeChoice.emptyID && hourWords.count == 3 && Set(hourWords.map(\.id)).count == 3,
+                   "the hour row offers nothing and three different hours")
             for (slot, correct) in zip(prompt.slots, prompt.correct.choiceIDs) {
+                let words = slot.choices.filter { $0.id != SpokenTimeChoice.emptyID }
+                expect(slot.choices.contains { $0.id == SpokenTimeChoice.emptyID }, "every row can stay empty")
+                expect((1...3).contains(words.count), "every row shows at most three words besides nothing")
                 expect(slot.choices.contains { $0.id == correct }, "every correct word is one of the choices")
-                if slot.id != "hour" {
-                    expect(slot.choices.contains { $0.id == SpokenTimeChoice.emptyID }, "every other row can stay empty")
-                }
             }
         }
+        expect(quarterTo.slots[0].choices.map(\.id) == ["-", "vijf", "tien", "kwart"], "Dutch minutes stay the three real words")
+        expect(halfFour.slots[0].choices.count == 4 && halfFour.slots[0].choices.contains { $0.id == "twenty" },
+               "English minutes keep the right word and two alternatives")
         expect(quarterTo.slots.first { $0.id == "half" }!.choices.map(\.id) == ["-", "half"], "half can be left empty")
         let almost = SpokenTimeAnswer(choiceIDs: ["kwart", "voor", "half", "h9", "-"])
         let question = spokenQuestion(prompt: quarterTo, time: ClockTime(hour: 8, minute: 45))
@@ -988,6 +1323,10 @@ struct DinoCoreTests {
                     expect(!prompt.phrase.isEmpty && AnswerValidator.isCorrect(generated.expectedAnswer, for: generated), "the generated sentence matches that clock")
                     expect(!AnswerValidator.isCorrect(wrongAnswer(for: generated), for: generated), "one changed word is rejected")
                     expect((prompt.slots.first { $0.id == "half" } != nil) == (code == "nl"), "only Dutch shows the half row")
+                    expect(prompt.slots.allSatisfy { slot in
+                        let words = slot.choices.filter { $0.id != SpokenTimeChoice.emptyID }
+                        return slot.choices.contains { $0.id == SpokenTimeChoice.emptyID } && (1...3).contains(words.count)
+                    }, "each spoken row offers nothing and at most three words")
                     previous = generated.target
                 }
             }
@@ -1028,7 +1367,7 @@ struct DinoCoreTests {
                 var sawAdvanceCombination = false
                 var sawAdvanceShort = false
                 for index in 0..<150 {
-                    let q = generator.next(index: index)
+                    let q = generator.next(index: index, difficultyForKind: { _ in .challenge })
                     expect(!AnswerValidator.isCorrect(wrongAnswer(for: q), for: q), "wrong typed answer rejected")
                     switch kind {
                     case .addTime, .advanceAnalog:
@@ -1060,7 +1399,7 @@ struct DinoCoreTests {
                     case .flightArrival:
                         let shift = q.durationMinutes + q.offsetHours * 60
                         expect(q.relatedTimes[0].adding(minutes: shift) == q.target, "flight arrival adds duration and time zone")
-                        expect((time.minuteStep >= 30) == (q.offsetHours == 0), "easier flights stay in one time zone")
+                        expect((2...4).contains(abs(q.offsetHours)), "challenging flights combine durations and time zones in every family")
                         let linear = q.relatedTimes[0].minutesOfDay + shift
                         sawMidnight = sawMidnight || linear < 0 || linear >= 24 * 60
                     case .subtractTime:
@@ -1173,31 +1512,23 @@ struct DinoCoreTests {
     static func testQuestions() {
         expect(DinoLevelCatalog.levels.count == 100, "100 levels")
         var observedKinds = Set<ClockQuestionKind>()
-        for seed in 0..<300 {
+        for seed in 0..<100 {
             for level in DinoLevelCatalog.levels.filter({ $0.worldID == 1 }) {
                 var rng = SeededGenerator(seed: UInt64(seed))
                 let questions = DinoQuestionGenerator.generate(level: level, attempt: seed % 3, using: &rng)
-                expect(questions.count == (level.isBoss ? 10 : 5), "question count")
+                expect(questions.count == level.questionCount, "question count")
                 expect(Set(questions.map(\.id)).count == questions.count, "unique IDs")
-                expect(Set(questions.map { $0.target.hour }).count == questions.count, "no duplicate target within attempt")
                 for (index, q) in questions.enumerated() {
+                    let recipe = level.recipe(at: index)
                     observedKinds.insert(q.kind)
-                    expect((1...12).contains(q.target.hour) && q.target.minute == 0, "whole hours only")
-                    expect(q.kind == level.recipes[index % level.recipes.count].kind, "configured type")
+                    expect((0...23).contains(q.target.hour) && q.target.minute == 0, "jungle teaches whole hours, including 24-hour reading")
+                    expect(q.kind == recipe.kind && q.timeFamily == level.time(for: recipe), "configured question and time type")
                     if q.kind.usesOptions {
-                        expect([2, 4].contains(q.options.count), "balanced answer rows, never three choices")
-                        expect(q.options.count == level.recipes[index % level.recipes.count].optionCount, "option count")
-                        expect(Set(q.options).count == q.options.count, "unique options")
-                        expect(q.options.filter { AnswerValidator.isCorrect($0, for: q) }.count == 1, "exactly one correct answer")
-                        if index > 0, questions[index - 1].options.count == q.options.count {
-                            expect(q.options.firstIndex(of: q.target) != questions[index - 1].options.firstIndex(of: questions[index - 1].target), "correct position changes")
-                        }
+                        expect([2, 4].contains(q.responses.count), "balanced answer rows, never three choices")
+                        expect(Set(q.responses).count == q.responses.count, "unique options")
+                        expect(q.responses.filter { AnswerValidator.isCorrect($0, for: q) }.count == 1, "exactly one correct answer")
                     } else if q.kind == .match { checkMatchingQuestion(q) }
-                    else { expect(q.options.isEmpty, "no options for controls") }
-                    if let activity = q.activity { expect(activity.hour == q.target.hour, "explicit activity time") }
-                }
-                if level.isBoss && seed % 3 == 0 {
-                    expect(Array(questions.prefix(4).map { $0.target.hour }) == [3, 8, 11, 6], "first boss prescribed times")
+                    else if q.kind != .sortTimes { expect(q.options.isEmpty, "no options for controls") }
                 }
             }
         }
@@ -1242,7 +1573,7 @@ struct DinoCoreTests {
                 let questions = DinoQuestionGenerator.generate(level: level, using: &rng)
                 expect(questions.count == level.questionCount, "new world question count")
                 for q in questions {
-                    expect(level.allowedMinutes.contains(q.target.minute), "world-specific clock granularity")
+                    expect(q.timeFamily.minutes.contains(q.target.minute), "recipe-specific clock granularity")
                     expect(AnswerValidator.isCorrect(q.expectedAnswer, for: q), "generated expected answer is valid")
                     if q.kind.usesOptions {
                         expect([2, 4].contains(q.responses.count), "full answer rows")
@@ -1260,25 +1591,24 @@ struct DinoCoreTests {
     }
 
     static func testLevelQuestionOutline() {
-        let digital = DinoLevelCatalog.level(4)!
-        expect(digital.questionOutline.count == 1, "one repeated exercise stays one row")
-        expect(digital.questionOutline[0].practiceNumber == DinoPracticeQuestion.chooseDigital.number, "level 4 uses the practice number for reading the analog clock")
-        expect(digital.questionOutline[0].titleKey == DinoPracticeQuestion.chooseDigital.titleKey, "level card uses the practice name")
-        expect(digital.questionOutline[0].timeTitleKey == "dino.practice.time.whole", "jungle levels use whole hours")
-        let activity = DinoLevelCatalog.level(5)!
-        expect(activity.questionOutline[0].practiceNumber == nil && activity.questionOutline[0].titleKey == "dino.practice.question.activity", "retired activity has a name and no practice number")
-        let mixed = DinoLevelCatalog.level(9)!
-        expect(mixed.questionOutline.map(\.practiceNumber) == [
-            DinoPracticeQuestion.chooseAnalog.number, DinoPracticeQuestion.chooseDigital.number,
-            DinoPracticeQuestion.setAnalog.number, DinoPracticeQuestion.setDigital.number,
-            DinoPracticeQuestion.chooseAnalog.number
-        ], "mixed level keeps the ask order, including a repeated exercise")
-        expect(DinoLevelCatalog.level(11)!.practiceTimeTitleKey == "dino.practice.time.half", "half hours")
-        expect(DinoLevelCatalog.level(21)!.practiceTimeTitleKey == "dino.practice.time.quarter", "quarter hours")
-        expect(DinoLevelCatalog.level(31)!.practiceTimeTitleKey == "dino.practice.time.mix", "five-minute steps match the practice mix")
-        expect(DinoLevelCatalog.level(41)!.practiceTimeTitleKey == "dino.level.time.minute", "exact minutes")
-        let boss = DinoLevelCatalog.level(20)!
-        expect(boss.questionOutline.count == boss.recipes.count && boss.questionOutline.allSatisfy { $0.timeTitleKey == "dino.practice.time.half" }, "boss lists every question in order")
+        let first = DinoLevelCatalog.level(1)!
+        expect(first.questionOutline.count == 1 && first.questionOutline[0].practiceNumber == DinoPracticeQuestion.chooseAnalog.number,
+               "the first level lists one whole-hour exercise")
+        let mixed = DinoLevelCatalog.level(11)!
+        expect(mixed.questionOutline.map(\.practiceNumber) == [DinoPracticeQuestion.chooseAnalog.number, DinoPracticeQuestion.chooseAnalog.number, DinoPracticeQuestion.match.number],
+               "the same question type on two time families remains two distinct outline rows")
+        expect(mixed.questionOutline.map(\.timeTitleKey) == [DinoPracticeTime.half.titleKey, DinoPracticeTime.whole.titleKey, DinoPracticeTime.whole.titleKey],
+               "each outline row labels its own time family")
+        for level in DinoLevelCatalog.levels {
+            expect(level.questionOutline.count == level.recipes.count, "every planned combination has one row")
+            for (index, recipe) in level.recipes.enumerated() {
+                expect(level.questionOutline[index].timeTitleKey == level.time(for: recipe).titleKey, "outline times match actual generation")
+                expect(level.questionOutline[index].titleKey == DinoPracticeQuestion(rawValue: recipe.kind.rawValue)!.titleKey, "outline names match practice")
+            }
+        }
+        expect(DinoLevelCatalog.level(31)!.practiceTimeTitleKey == DinoPracticeTime.tenMinutes.titleKey, "village introduces ten-minute steps")
+        expect(DinoLevelCatalog.level(41)!.practiceTimeTitleKey == DinoPracticeTime.fiveMinutes.titleKey, "cave introduces five-minute steps")
+        expect(DinoLevelCatalog.level(51)!.practiceTimeTitleKey == DinoPracticeTime.minutes.titleKey, "city introduces individual minutes")
     }
 
     static func testAttempt() {
@@ -1319,9 +1649,11 @@ struct DinoCoreTests {
         ascending.submit(ascending.question.expectedAnswer)
         expect(!ascending.retainsAnswerControls && ascending.hidesAnswerControls, "a different following question dismisses its buttons")
 
-        let level = DinoSession(level: DinoLevelCatalog.level(6)!, player: player, now: { 0 })
+        let repeated = LevelConfiguration(id: 6, worldID: 1, titleKey: "dino.level.6", instructionKey: "dino.question.setAnalog",
+            allowedHours: Array(1...12), difficulty: 1, questionCount: 5, isBoss: false, recipes: [.init(kind: .setAnalog, optionCount: 0)])
+        let level = DinoSession(level: repeated, player: player, now: { 0 })
         for index in 0..<4 {
-            expect(level.question.kind == .setAnalog, "level six keeps the analog controls")
+            expect(level.question.kind == .setAnalog, "a repeated analog exercise keeps the analog controls")
             level.submit(level.question.expectedAnswer)
             expect(level.retainsAnswerControls, "question \(index + 1) is followed by the same buttons")
             level.advance()
@@ -1329,7 +1661,7 @@ struct DinoCoreTests {
         level.submit(level.question.expectedAnswer)
         expect(!level.retainsAnswerControls && level.hidesAnswerControls, "the last question has no following buttons to keep")
 
-        var mixed = DinoPracticeGenerator(configuration: .init(time: .mix, order: .mix), seed: 11)
+        var mixed = DinoPracticeGenerator(configuration: .init(time: .minutes, order: .mix), seed: 11)
         for index in 0..<45 {
             let question = mixed.next(index: index)
             expect(mixed.upcomingKind(after: index) != nil, "every mixed question knows which buttons come next")
@@ -1342,12 +1674,12 @@ struct DinoCoreTests {
         let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
         let player = DinoPlayer(store: store)
         for type in DinoPracticeQuestion.allCases where type.recipe.kind.usesOptions {
-            let config = DinoPracticeConfiguration(time: .mix, order: .specific(type))
+            let config = DinoPracticeConfiguration(time: .minutes, order: .specific(type))
             var generator = DinoPracticeGenerator(configuration: config, seed: 42)
-            var question = generator.next(index: 0)
+            var question = generator.next(index: 0, difficultyForKind: { _ in .challenge })
             // Choose a four-option variation for the original clock questions.
             for index in 1..<20 where question.responses.count <= 2 && type != .trueFalse {
-                question = generator.next(index: index)
+                question = generator.next(index: index, difficultyForKind: { _ in .challenge })
             }
             var feedback: [Bool] = []
             var now = 10.0

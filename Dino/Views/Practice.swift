@@ -31,8 +31,8 @@ struct DinoPracticeView: View {
                 LazyVStack(spacing: 10) {
                     Text("dino.practice.questionType").font(.system(size: spacious ? 25 : 20, weight: .bold, design: .rounded))
                         .frame(maxWidth: .infinity).padding(.bottom, 6)
-                    ForEach(Array(DinoPracticeQuestion.allCases.enumerated()), id: \.element) { index, type in
-                        choice(title: type.titleKey, symbol: type.recipe.kind.symbol, number: index + 1,
+                    ForEach(DinoPracticeQuestion.allCases, id: \.self) { type in
+                        choice(title: type.titleKey, symbol: type.recipe.kind.symbol, number: type.number,
                                order: .specific(type), identifier: "practice.type.\(type.rawValue)",
                                record: player.practiceRecord(time: configuration.time, question: type).bestStreak, spacious: spacious)
                     }

@@ -24,8 +24,11 @@
 		"DB121026AC02000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000001"; };
 		"DC121026AC02000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000001"; };
 		"DA1820261018000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/SpokenTime.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+		"DA1820261018000000000003" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/QuestionDifficulty.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
 		"DB1820261018000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1820261018000000000001"; };
+		"DB1820261018000000000003" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1820261018000000000003"; };
 		"DC1820261018000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1820261018000000000001"; };
+		"DC1820261018000000000003" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1820261018000000000003"; };
 		"DA1820261018000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/SpokenTimeQuestion.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
 		"DB1820261018000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1820261018000000000002"; };
 		"DA121026AC02000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/ExpandedQuestionView.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
@@ -220,6 +223,7 @@
 			"files" = (
 				"DC121026AC02000000000001",
 				"DC1820261018000000000001",
+				"DC1820261018000000000003",
                 "DC192026BD01000000000001",
 				"DC121026AC01000000000001",
 				"DC121026AB13000000000001",
@@ -264,6 +268,7 @@
                 "DB152026BD03000000000001",
 				"DB121026AC02000000000001",
 				"DB1820261018000000000001",
+				"DB1820261018000000000003",
 				"DB1820261018000000000002",
                 "DB192026BD01000000000001",
                 "DB192026BD01000000000002",
@@ -892,6 +897,7 @@
                 "DA152026BD03000000000001",
 				"DA121026AC02000000000001",
 				"DA1820261018000000000001",
+				"DA1820261018000000000003",
                 "DA192026BD01000000000001",
 				"DA121026AC01000000000001",
 				"DA121026AB13000000000001",

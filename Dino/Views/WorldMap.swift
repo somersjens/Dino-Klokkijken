@@ -39,7 +39,7 @@ struct WorldMap: View {
                                             .scaleEffect(landscape ? 0.82 : 1)
                                             .frame(height: landscape ? 174 : 190, alignment: .top)
                                             .padding(.top, landscape ? 0 : -16)
-                                        friendsShortcut
+                                        if !friends.authenticated { friendsShortcut }
                                         bossShortcut
                                     }.padding(.horizontal, 18).padding(.bottom, 2)
                                         .frame(maxWidth: 600).frame(maxWidth: .infinity)
@@ -444,7 +444,7 @@ struct LevelNode: View {
             .accessibilityIdentifier("map.level.\(level.id)")
             .overlay(alignment: .bottom) {
                 if !level.isBoss {
-                    DinoStars(count: record.stars, size: 17, showEmpty: record.stars > 0)
+                    DinoStars(count: record.stars, size: 22, showEmpty: record.stars > 0)
                         .frame(height: 20).offset(y: 32).allowsHitTesting(false)
                 }
             }

@@ -5192,19 +5192,19 @@
         }
       }
     },
-    "dino.practice.time.mix" : {
+    "dino.practice.time.minutes" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mix"
+            "value" : "Minutes"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mix"
+            "value" : "Minuten"
           }
         }
       }
@@ -6881,13 +6881,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Whole hours · 01:00 — 12:00"
+            "value" : "Whole hours"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hele uren · 01:00 — 12:00"
+            "value" : "Hele uren"
           }
         }
       }
@@ -7034,13 +7034,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "5-minute steps"
+            "value" : "10-minute steps"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stappen van 5 minuten"
+            "value" : "Stappen van 10 minuten"
           }
         }
       }
@@ -7085,13 +7085,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exact minutes"
+            "value" : "5-minute steps"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exacte minuten"
+            "value" : "Stappen van 5 minuten"
           }
         }
       }
@@ -7136,13 +7136,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Digital clocks"
+            "value" : "Individual minutes"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Digitale klok"
+            "value" : "Losse minuten"
           }
         }
       }
@@ -7187,13 +7187,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "12- and 24-hour clocks"
+            "value" : "Reading and calculating time"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "12- en 24-uursklok"
+            "value" : "Tijd lezen en tijdrekenen"
           }
         }
       }
@@ -7238,13 +7238,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Analog and digital clocks"
+            "value" : "Combining clock skills"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Analoog en digitaal combineren"
+            "value" : "Alle klokvaardigheden combineren"
           }
         }
       }
@@ -7289,13 +7289,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elapsed time"
+            "value" : "Advanced time calculations"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tijdsduur"
+            "value" : "Uitdagend tijdrekenen"
           }
         }
       }

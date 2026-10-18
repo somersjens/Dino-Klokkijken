@@ -84,8 +84,8 @@ struct DinoGameView: View {
                     Color.black.opacity(0.28).ignoresSafeArea()
                     ScrollView {
                         InteractionDemonstration(kind: kind, theme: player.profile.clockTheme, minuteStep: session.minuteStep,
-                                                 practiceTime: session.practice?.time ?? .whole,
-                                                 worldMinutes: session.practice == nil ? session.level.allowedMinutes : nil,
+                                                 practiceTime: session.practice?.time ?? session.question.timeFamily,
+                                                 worldMinutes: session.practice == nil ? session.question.timeFamily.minutes : nil,
                                                  width: min(380, max(230, g.size.width - 80)), done: session.dismissDemonstration)
                             .padding(16)
                     }.scrollBounceBehavior(.basedOnSize)

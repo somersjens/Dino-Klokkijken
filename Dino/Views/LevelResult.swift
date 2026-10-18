@@ -15,40 +15,55 @@ struct DinoResultView: View {
     private var perfect: Bool { result.correct == result.level.questionCount }
 
     var body: some View {
-        ZStack {
-            ResultScenery(worldID: result.level.worldID)
-            GeometryReader { geometry in
-                let compact = geometry.size.height < 720
-                let dinoSize: CGFloat = compact ? 150 : 180
+        GeometryReader { geometry in
+            let layout = ResultLayout(size: geometry.size, needsMessage: !succeeded)
+            ZStack {
+                ResultScenery(worldID: result.level.worldID)
                 VStack(spacing: 0) {
                     ResultLevelBadge(levelID: result.level.id)
-                        .padding(.top, compact ? 4 : 8)
-                    Spacer(minLength: compact ? 4 : 10)
-                    stage(dinoSize: dinoSize, compact: compact)
-                    if result.level.isBoss && result.victory == .perfect {
-                        Label("dino.perfectBoss", systemImage: "sparkles")
-                            .font(.system(size: 18, weight: .heavy, design: .rounded))
-                            .foregroundStyle(DinoStyle.deepGreen)
-                            .padding(.top, 6)
-                    }
-                    if !succeeded {
-                        Text(LocalizedStringKey(result.level.isBoss ? (player.profile.normalLevelsComplete(in: result.level.worldID) ? "dino.needFive" : "dino.needPerfectOrRoute") : "dino.needThree"))
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            .multilineTextAlignment(.center)
-                            .padding(.top, 8)
-                            .padding(.horizontal, 8)
-                    }
-                    Spacer(minLength: compact ? 8 : 12)
-                    actions(compact: compact)
+                        .frame(width: layout.signWidth, height: layout.signHeight)
+                        .padding(.top, layout.topInset)
+                        .zIndex(1)
+                    Spacer(minLength: 0)
+                    stage(layout: layout)
+                    resultCaption
+                        .padding(.top, 4)
+                    Spacer(minLength: 8)
+                    actions
+                        .frame(width: layout.actionWidth)
+                        .padding(.bottom, 14)
                 }
-                .padding(.horizontal, 22)
-                .padding(.bottom, compact ? 6 : 8)
-                .frame(width: min(460, geometry.size.width), height: geometry.size.height)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(width: geometry.size.width, height: geometry.size.height)
             }
+            .frame(width: geometry.size.width, height: geometry.size.height)
         }
         .foregroundStyle(DinoStyle.ink)
         .task(id: result.level.id) { await playReward() }
+    }
+
+    private var resultCaption: some View {
+        VStack(spacing: 5) {
+            HStack(spacing: 7) {
+                Text(verbatim: "\(result.correct)/\(result.level.questionCount)")
+                    .fontWeight(.heavy)
+                Text("dino.correctAnswers")
+            }
+            .font(.system(size: 16, weight: .bold, design: .rounded))
+            .foregroundStyle(Color(dinoHex: 0x244E29))
+            if result.level.isBoss && result.victory == .perfect {
+                Label("dino.perfectBoss", systemImage: "sparkles")
+                    .font(.system(size: 17, weight: .heavy, design: .rounded))
+            }
+            if !succeeded {
+                Text(LocalizedStringKey(result.level.isBoss ? (player.profile.normalLevelsComplete(in: result.level.worldID) ? "dino.needFive" : "dino.needPerfectOrRoute") : "dino.needThree"))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 330)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .shadow(color: .white.opacity(0.75), radius: 2, y: 1)
     }
 
     /// The backflip finishes on the rock first. Earned stars then drop in one by one,
@@ -72,34 +87,41 @@ struct DinoResultView: View {
         if result.stars >= 3 { confetti = true }
     }
 
-    private func stage(dinoSize: CGFloat, compact: Bool) -> some View {
-        let rockHeight = dinoSize * 0.98
-        let burst = dinoSize * 2.05
-        let starSize: CGFloat = compact ? 40 : 50
-        return ZStack(alignment: .bottom) {
+    private func stage(layout: ResultLayout) -> some View {
+        ZStack(alignment: .bottom) {
             ResultSunburst(strength: succeeded ? (starsRevealed > 0 ? 1 : 0.78) : 0.3)
-                .frame(width: burst, height: burst)
-                .offset(y: -(rockHeight * 0.78 + dinoSize * 0.42 - burst / 2))
+                .frame(width: layout.podiumWidth * 1.38, height: layout.podiumWidth * 1.38)
+                .position(x: layout.stageWidth / 2, y: layout.dinoCenterY + layout.dinoSize * 0.05)
             ResultRock()
-                .frame(width: dinoSize * 1.95, height: rockHeight)
+                .frame(width: layout.podiumWidth, height: layout.podiumHeight)
+                .position(x: layout.podiumCenterX, y: layout.stageHeight - layout.podiumHeight / 2 + layout.podiumLift)
+            Ellipse()
+                .fill(Color(dinoHex: 0x304627).opacity(0.24))
+                .frame(width: layout.dinoSize * 0.55, height: layout.dinoSize * 0.055)
+                .blur(radius: 3)
+                .position(x: layout.podiumCenterX, y: layout.stageHeight - layout.podiumHeight * 0.73 + layout.podiumLift)
+            character(size: layout.dinoSize)
+                .position(x: layout.stageWidth / 2, y: layout.dinoCenterY)
             if !result.level.isBoss {
-                ResultStarReward(count: result.stars, revealed: starsRevealed, size: starSize)
-                    .offset(y: -rockHeight * 0.34)
+                ResultStarReward(count: result.stars, revealed: starsRevealed, size: layout.starSize)
+                    .position(x: layout.podiumCenterX, y: layout.rewardCenterY)
+            } else if succeeded {
+                Image("result-trophy").resizable().scaledToFit()
+                    .frame(width: layout.starSize * 1.65, height: layout.starSize * 1.65)
+                    .shadow(color: Color(dinoHex: 0xFFE56A).opacity(0.65), radius: 14)
+                    .shadow(color: Color(dinoHex: 0x603E12).opacity(0.25), radius: 3, y: 5)
+                    .position(x: layout.podiumCenterX, y: layout.stageHeight - layout.podiumHeight * 0.39 + layout.podiumLift)
+                    .accessibilityHidden(true)
             }
-            character(size: dinoSize)
-                .offset(y: -rockHeight * 0.78)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: dinoSize + rockHeight * 0.5, alignment: .bottom)
-        .overlay {
+            ResultCelebrationMotes(active: succeeded)
+                .allowsHitTesting(false)
             if confetti {
                 ResultConfetti()
-                    .frame(width: dinoSize * 2.6, height: dinoSize * 2.3)
-                    .offset(y: -dinoSize * 0.35)
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
             }
         }
+        .frame(width: layout.stageWidth, height: layout.stageHeight)
     }
 
     private func character(size: CGFloat) -> some View {
@@ -109,30 +131,98 @@ struct DinoResultView: View {
             } else {
                 DinoCharacter(state: succeeded ? .celebrating : .thinking, size: size, performsBackflip: perfect)
             }
-            if result.level.isBoss && succeeded {
-                Image(systemName: "trophy.fill").font(.system(size: size * 0.32))
-                    .foregroundStyle(Color(dinoHex: 0xF0B429))
-                    .shadow(color: DinoStyle.ink.opacity(0.2), radius: 4, y: 4).offset(x: 16, y: 6)
+        }
+    }
+
+    private var actions: some View {
+        VStack(spacing: 10) {
+            if nextAvailable {
+                Button(action: next) {
+                    HStack(spacing: 12) {
+                        Spacer(minLength: 0)
+                        Text(LocalizedStringKey(result.level.isBoss ? "dino.worldComplete" : "dino.next"))
+                        Image(systemName: "arrow.right").fontWeight(.heavy)
+                        Spacer(minLength: 0)
+                    }
+                }
+                .buttonStyle(ResultAdventureButtonStyle(primary: true))
+                .accessibilityIdentifier("result.next")
+                HStack(spacing: 10) {
+                    retryButton
+                    mapButton
+                }
+            } else {
+                retryButton
+                mapButton
             }
         }
     }
 
-    private func actions(compact: Bool) -> some View {
-        VStack(spacing: compact ? 8 : 10) {
-            if nextAvailable {
-                Button(action: next) {
-                    Label { Text(LocalizedStringKey(result.level.isBoss ? "dino.worldComplete" : "dino.next")) }
-                        icon: { Image(systemName: "arrow.right") }
-                }
-                .buttonStyle(DinoButtonStyle(compact: compact)).accessibilityIdentifier("result.next")
+    private var retryButton: some View {
+        Button(action: retry) { Label("dino.playAgain", systemImage: "arrow.clockwise") }
+            .buttonStyle(ResultAdventureButtonStyle(primary: !nextAvailable))
+            .accessibilityIdentifier("result.retry")
+    }
+
+    private var mapButton: some View {
+        Button(action: map) { Label("dino.map", systemImage: "map.fill") }
+            .buttonStyle(ResultAdventureButtonStyle(primary: false))
+            .accessibilityIdentifier("result.map")
+    }
+}
+
+/// Reserve space for the controls first, then scale the illustration as one scene.
+/// This keeps Dino's feet, the rock and the stars registered on every window size.
+private struct ResultLayout {
+    let size: CGSize
+    let needsMessage: Bool
+    var topInset: CGFloat { size.height < 650 ? 0 : 8 }
+    var signWidth: CGFloat { min(size.width * 0.96, size.height * 0.56, 500) }
+    var signHeight: CGFloat { signWidth * 0.36 }
+    var actionWidth: CGFloat { min(size.width - 40, 430) }
+    var stageWidth: CGFloat { min(size.width * 1.12, 700) }
+    var availableHeight: CGFloat { max(160, size.height - signHeight - topInset - (needsMessage ? 224 : 194)) }
+    var dinoSize: CGFloat { min(size.width * 0.73, availableHeight / 1.65, 360) }
+    var podiumWidth: CGFloat { min(stageWidth, dinoSize * 1.85) }
+    var podiumHeight: CGFloat { podiumWidth * 0.50 }
+    var podiumCenterX: CGFloat { stageWidth / 2 + dinoSize * 0.04 }
+    var podiumLift: CGFloat { -dinoSize * 0.035 }
+    var stageHeight: CGFloat { min(availableHeight, dinoSize + podiumHeight * 0.66) }
+    var dinoCenterY: CGFloat { stageHeight - podiumHeight * 0.73 - dinoSize * 0.47 }
+    var starSize: CGFloat { min(podiumWidth * 0.21, 122) }
+    var rewardCenterY: CGFloat { stageHeight - podiumHeight * 0.37 + podiumLift }
+}
+
+private struct ResultAdventureButtonStyle: ButtonStyle {
+    @Environment(\.dinoHighContrast) private var highContrast
+    let primary: Bool
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: primary ? 20 : 15, weight: .heavy, design: .rounded))
+            .lineLimit(1).minimumScaleFactor(0.7)
+            .frame(maxWidth: .infinity)
+            .frame(height: primary ? 56 : 46)
+            .foregroundStyle(primary ? Color.white : Color(dinoHex: 0x28502B))
+            .background {
+                RoundedRectangle(cornerRadius: primary ? 22 : 18)
+                    .fill(Color(dinoHex: primary ? 0x22662C : 0x88A361))
+                    .offset(y: configuration.isPressed ? 1 : 4)
+                RoundedRectangle(cornerRadius: primary ? 22 : 18)
+                    .fill(LinearGradient(colors: primary
+                        ? (highContrast
+                            ? [Color(dinoHex: 0x3E842B), Color(dinoHex: 0x286C28), Color(dinoHex: 0x1D5824)]
+                            : [Color(dinoHex: 0x94CE43), Color(dinoHex: 0x50A62E), Color(dinoHex: 0x36832B)])
+                        : [Color(dinoHex: 0xFFFFEF), Color(dinoHex: 0xEEF5D9)],
+                        startPoint: .top, endPoint: .bottom))
+                RoundedRectangle(cornerRadius: primary ? 20 : 16)
+                    .stroke(.white.opacity(primary ? 0.50 : 0.85), lineWidth: 1.5)
+                    .padding(3)
+                RoundedRectangle(cornerRadius: primary ? 22 : 18)
+                    .stroke(Color(dinoHex: highContrast ? 0x173F20 : 0x4B812D).opacity(highContrast ? 1 : 0.55), lineWidth: highContrast ? 2.5 : 1)
             }
-            Button(action: retry) { Label("dino.playAgain", systemImage: "arrow.clockwise") }
-                .buttonStyle(DinoButtonStyle(color: succeeded ? Color(dinoHex: 0x1A6A62) : DinoStyle.green, compact: compact))
-                .accessibilityIdentifier("result.retry")
-            Button(action: map) { Label("dino.map", systemImage: "map.fill") }
-                .buttonStyle(DinoButtonStyle(color: .white, compact: compact, inkLabel: true))
-                .accessibilityIdentifier("result.map")
-        }
+            .shadow(color: Color(dinoHex: 0x294C1D).opacity(0.18), radius: 8, y: 6)
+            .offset(y: configuration.isPressed ? 3 : 0)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 
@@ -164,34 +254,41 @@ private struct ResultScenery: View {
             let width = geometry.size.width
             let height = geometry.size.height
             ZStack {
-                LinearGradient(colors: [Color(dinoHex: look.top), Color(dinoHex: look.mid), Color(dinoHex: colors.ground)],
-                               startPoint: .top, endPoint: .bottom)
-                if look.night {
-                    moon.position(x: width * 0.78, y: height * 0.16)
-                    nightStars(width: width, height: height)
-                } else if worldID == 3 {
-                    Circle().fill(Color(dinoHex: 0xFFD0A0).opacity(0.55))
-                        .frame(width: width * 0.5).blur(radius: 18)
-                        .position(x: width * 0.5, y: height * 0.28)
-                }
-                hill(centerX: width * 0.5, width: width * 1.2, height: height * 0.26,
-                     color: Color(dinoHex: colors.distant).opacity(0.85), y: height * 0.56)
-                hill(centerX: width * 0.32, width: width * 0.85, height: height * 0.22,
-                     color: Color(dinoHex: colors.accent).opacity(0.55), y: height * 0.64)
-                hill(centerX: width * 0.5, width: width * 1.25, height: height * 0.36,
-                     color: Color(dinoHex: colors.ground), y: height * 0.84)
-                worldAccent(width: width, height: height, colors: colors)
-                if worldID == 1 || worldID == 4 {
-                    HStack(spacing: 18) {
-                        flower(Color(dinoHex: colors.accent))
-                        flower(.white)
-                        Spacer()
-                        flower(.white)
-                        flower(Color(dinoHex: colors.accent))
+                if worldID == 1 {
+                    Image("result-jungle-grounded")
+                        .resizable().scaledToFill()
+                        .frame(width: width, height: height)
+                        .clipped()
+                } else {
+                    LinearGradient(colors: [Color(dinoHex: look.top), Color(dinoHex: look.mid), Color(dinoHex: colors.ground)],
+                                   startPoint: .top, endPoint: .bottom)
+                    if look.night {
+                        moon.position(x: width * 0.78, y: height * 0.16)
+                        nightStars(width: width, height: height)
+                    } else if worldID == 3 {
+                        Circle().fill(Color(dinoHex: 0xFFD0A0).opacity(0.55))
+                            .frame(width: width * 0.5).blur(radius: 18)
+                            .position(x: width * 0.5, y: height * 0.28)
                     }
-                    .padding(.horizontal, 16)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-                    .padding(.bottom, 18)
+                    hill(centerX: width * 0.5, width: width * 1.2, height: height * 0.26,
+                         color: Color(dinoHex: colors.distant).opacity(0.85), y: height * 0.56)
+                    hill(centerX: width * 0.32, width: width * 0.85, height: height * 0.22,
+                         color: Color(dinoHex: colors.accent).opacity(0.55), y: height * 0.64)
+                    hill(centerX: width * 0.5, width: width * 1.25, height: height * 0.36,
+                         color: Color(dinoHex: colors.ground), y: height * 0.84)
+                    worldAccent(width: width, height: height, colors: colors)
+                    if worldID == 1 || worldID == 4 {
+                        HStack(spacing: 18) {
+                            flower(Color(dinoHex: colors.accent))
+                            flower(.white)
+                            Spacer()
+                            flower(.white)
+                            flower(Color(dinoHex: colors.accent))
+                        }
+                        .padding(.horizontal, 16)
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                        .padding(.bottom, 18)
+                    }
                 }
             }
         }
@@ -331,34 +428,33 @@ private struct TriangleRoof: Shape {
     }
 }
 
-/// Rays and a hot core behind Dino, the way the concept lights him from the back.
+/// Wide tapered rays fade out into the scenery, leaving a warm focal light behind Dino.
 private struct ResultSunburst: View {
     var strength: Double
     var body: some View {
         Canvas { context, size in
             let center = CGPoint(x: size.width / 2, y: size.height / 2)
-            let reach = min(size.width, size.height) * 0.48
-            for index in 0..<18 {
+            let reach = min(size.width, size.height) * 0.50
+            for index in 0..<14 {
                 var ray = context
                 ray.translateBy(x: center.x, y: center.y)
-                ray.rotate(by: .degrees(Double(index) * 20))
-                let wide = index.isMultiple(of: 3)
-                let length = reach * (wide ? 0.96 : index.isMultiple(of: 2) ? 0.72 : 0.5)
-                let rect = CGRect(x: wide ? -11 : -5, y: -length, width: wide ? 22 : 10, height: length)
-                ray.fill(Path(roundedRect: rect, cornerRadius: wide ? 12 : 7),
-                         with: .linearGradient(Gradient(colors: [
-                            Color(dinoHex: 0xFFFCEC).opacity(0.95 * strength),
-                            Color(dinoHex: 0xFFE28A).opacity(0.55 * strength),
-                            Color(dinoHex: 0xFFD56A).opacity(0)
-                         ]), startPoint: CGPoint(x: rect.midX, y: rect.maxY), endPoint: CGPoint(x: rect.midX, y: rect.minY)))
+                ray.rotate(by: .degrees(Double(index) * (360.0 / 14) + 9))
+                let length = reach * (index.isMultiple(of: 2) ? 1 : 0.84)
+                var wedge = Path()
+                wedge.move(to: .zero)
+                wedge.addLine(to: CGPoint(x: -length * 0.14, y: -length))
+                wedge.addQuadCurve(to: CGPoint(x: length * 0.14, y: -length), control: CGPoint(x: 0, y: -length * 1.03))
+                wedge.closeSubpath()
+                ray.fill(wedge, with: .linearGradient(Gradient(colors: [
+                    Color(dinoHex: 0xFFFBC9).opacity(0.42 * strength),
+                    Color(dinoHex: 0xFFFAAE).opacity(0.20 * strength), .clear
+                ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: -length)))
             }
-            let core = CGRect(x: center.x - reach * 0.42, y: center.y - reach * 0.42, width: reach * 0.84, height: reach * 0.84)
-            context.fill(Path(ellipseIn: core), with: .radialGradient(Gradient(colors: [
-                Color.white.opacity(0.95 * strength),
-                Color(dinoHex: 0xFFF3C0).opacity(0.9 * strength),
-                Color(dinoHex: 0xFFD56A).opacity(0.28 * strength),
-                .clear
-            ]), center: center, startRadius: 4, endRadius: reach * 0.42))
+            context.fill(Path(ellipseIn: CGRect(origin: .zero, size: size)), with: .radialGradient(Gradient(colors: [
+                Color(dinoHex: 0xFFFFE8).opacity(0.90 * strength),
+                Color(dinoHex: 0xFFF9AD).opacity(0.60 * strength),
+                Color(dinoHex: 0xFFF4A0).opacity(0.12 * strength), .clear
+            ]), center: center, startRadius: 0, endRadius: reach * 0.85))
         }
         .animation(.easeOut(duration: 0.45), value: strength)
         .accessibilityHidden(true)
@@ -369,188 +465,76 @@ private struct ResultLevelBadge: View {
     @Environment(\.dinoHighContrast) private var highContrast
     let levelID: Int
     var body: some View {
-        ZStack {
-            leafCluster.offset(x: -118, y: 2)
-            leafCluster.scaleEffect(x: -1, y: 1).offset(x: 118, y: 2)
-            leafCluster.scaleEffect(0.72).offset(y: -34)
+        GeometryReader { geometry in
             ZStack {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(dinoHex: 0x8C5A2B))
-                    .offset(y: 7)
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(LinearGradient(colors: [Color(dinoHex: 0xF6D27A), Color(dinoHex: 0xE7B14E), Color(dinoHex: 0xC88838)],
-                                         startPoint: .top, endPoint: .bottom))
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color(dinoHex: 0xFFF0C4).opacity(0.7), lineWidth: 2)
-                    .padding(5)
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color(dinoHex: highContrast ? 0x3A2412 : 0xA86B30), lineWidth: highContrast ? 3 : 2)
-                levelTitle
+                Image("result-sign").resizable().scaledToFit()
+                    .shadow(color: Color(dinoHex: 0x294D21).opacity(0.24), radius: 8, y: 8)
+                title
+                    .font(.system(size: geometry.size.width * 0.137, weight: .heavy, design: .rounded))
+                    .lineLimit(1).minimumScaleFactor(0.6)
+                    .padding(.horizontal, geometry.size.width * 0.19)
+                    .offset(y: -geometry.size.height * 0.035)
             }
-            .frame(width: 236, height: 68)
-            .shadow(color: Color(dinoHex: 0x6A4A22).opacity(0.28), radius: 0, y: 5)
+            .frame(width: geometry.size.width, height: geometry.size.height)
         }
-        .frame(height: 92)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("dino.levelNumber \(levelID)"))
     }
 
-    private var levelTitle: some View {
-        let title = Text("dino.levelNumber \(levelID)")
-            .font(.system(size: 30, weight: .heavy, design: .rounded))
-            .lineLimit(1)
-            .minimumScaleFactor(0.6)
+    private var title: some View {
+        let text = Text("dino.levelNumber \(levelID)")
         return ZStack {
-            title.foregroundStyle(Color(dinoHex: 0x1F7A34)).offset(x: 0, y: 2)
-            title.foregroundStyle(Color(dinoHex: 0x1F7A34)).offset(x: 1.2, y: 0)
-            title.foregroundStyle(Color(dinoHex: 0x1F7A34)).offset(x: -1.2, y: 0)
-            title.foregroundStyle(.white)
-        }
-        .padding(.horizontal, 28)
-    }
-
-    private var leafCluster: some View {
-        ZStack {
-            Circle().fill(Color(dinoHex: 0x3E9A3C)).frame(width: 22, height: 22)
-            JungleLeaf().fill(Color(dinoHex: 0x7ED24A)).frame(width: 34, height: 18).rotationEffect(.degrees(-30)).offset(x: 8, y: -10)
-            JungleLeaf().fill(Color(dinoHex: 0x2F7A32)).frame(width: 30, height: 16).rotationEffect(.degrees(20)).offset(x: -6, y: 6)
+            // Eight samples form an even outline, including the diagonals of the numerals.
+            ForEach(0..<8, id: \.self) { index in
+                let angle = Double(index) * .pi / 4
+                text.foregroundStyle(Color(dinoHex: highContrast ? 0x123A1C : 0x235A2B))
+                    .offset(x: cos(angle) * 3, y: sin(angle) * 3 + 2)
+                    .accessibilityHidden(true)
+            }
+            text.foregroundStyle(Color(dinoHex: 0xFFFDE9))
+                .shadow(color: Color(dinoHex: 0x163D20).opacity(0.5), radius: 0, y: 2)
         }
     }
 }
 
 private struct ResultRock: View {
     var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            let h = geo.size.height
-            ZStack {
-                lawn(w: w, h: h, front: false)
-                leaves(w: w, h: h, front: false)
-                ResultBoulderShape()
-                    .fill(LinearGradient(colors: [Color(dinoHex: 0xC8CDC4), Color(dinoHex: 0x8B9388), Color(dinoHex: 0x5E665E)],
-                                         startPoint: .top, endPoint: .bottom))
-                    .overlay(ResultBoulderShape().stroke(Color.white.opacity(0.22), lineWidth: 1))
-                Ellipse()
-                    .fill(Color(dinoHex: 0x5A6258).opacity(0.35))
-                    .frame(width: w * 0.5, height: h * 0.08)
-                    .position(x: w / 2, y: h * 0.24)
-                Ellipse()
-                    .fill(LinearGradient(colors: [Color(dinoHex: 0xF4F6F0), Color(dinoHex: 0xC2C8BC), Color(dinoHex: 0x9AA396)],
-                                         startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .overlay(Ellipse().stroke(Color.white.opacity(0.55), lineWidth: 1.5))
-                    .frame(width: w * 0.42, height: h * 0.16)
-                    .position(x: w / 2, y: h * 0.16)
-                Ellipse().fill(Color.white.opacity(0.45))
-                    .frame(width: w * 0.14, height: h * 0.045)
-                    .position(x: w * 0.4, y: h * 0.14)
-                speck(w: w, h: h)
-                moss(w: w, h: h)
-                leaves(w: w, h: h, front: true)
-                lawn(w: w, h: h, front: true)
-            }
-        }
-        .accessibilityHidden(true)
-    }
-
-    private func lawn(w: CGFloat, h: CGFloat, front: Bool) -> some View {
-        ZStack {
-            if front {
-                Ellipse().fill(Color(dinoHex: 0x67B34A))
-                    .frame(width: w * 1.05, height: h * 0.22)
-                    .position(x: w / 2, y: h * 0.9)
-                Ellipse().fill(Color(dinoHex: 0x8ED25E).opacity(0.85))
-                    .frame(width: w * 0.72, height: h * 0.1)
-                    .position(x: w / 2, y: h * 0.86)
-                ForEach(0..<11, id: \.self) { index in
-                    let x = w * (0.08 + CGFloat(index) * 0.084)
-                    blade(height: h * (0.1 + CGFloat(index % 3) * 0.035), light: index.isMultiple(of: 2))
-                        .position(x: x, y: h * (0.8 - CGFloat(index % 3) * 0.02))
-                }
-                Circle().fill(Color.white).frame(width: 7, height: 7).position(x: w * 0.12, y: h * 0.9)
-                Circle().fill(Color(dinoHex: 0xFFE27A)).frame(width: 3, height: 3).position(x: w * 0.12, y: h * 0.9)
-                Circle().fill(Color(dinoHex: 0xB7B2A4)).frame(width: 8, height: 6).position(x: w * 0.9, y: h * 0.92)
-            } else {
-                Ellipse().fill(Color(dinoHex: 0x3E6E32).opacity(0.28))
-                    .frame(width: w * 0.78, height: h * 0.1)
-                    .blur(radius: 2)
-                    .position(x: w / 2, y: h * 0.78)
-            }
-        }
-    }
-
-    private func blade(height: CGFloat, light: Bool) -> some View {
-        Capsule()
-            .fill(Color(dinoHex: light ? 0xA6DE6A : 0x3F8C38))
-            .frame(width: 3.5, height: height)
-    }
-
-    private func speck(w: CGFloat, h: CGFloat) -> some View {
-        ZStack {
-            Circle().fill(Color.white.opacity(0.28)).frame(width: w * 0.035, height: w * 0.035).position(x: w * 0.38, y: h * 0.4)
-            Circle().fill(Color(dinoHex: 0x4E564C).opacity(0.35)).frame(width: w * 0.028, height: w * 0.028).position(x: w * 0.62, y: h * 0.46)
-            Circle().fill(Color.white.opacity(0.2)).frame(width: w * 0.02, height: w * 0.02).position(x: w * 0.5, y: h * 0.52)
-        }
-    }
-
-    private func moss(w: CGFloat, h: CGFloat) -> some View {
-        ZStack {
-            Capsule().fill(Color(dinoHex: 0x7EBE58)).frame(width: w * 0.13, height: h * 0.04)
-                .rotationEffect(.degrees(-14)).position(x: w * 0.34, y: h * 0.2)
-            Capsule().fill(Color(dinoHex: 0x4E9A42)).frame(width: w * 0.09, height: h * 0.032)
-                .rotationEffect(.degrees(10)).position(x: w * 0.64, y: h * 0.19)
-        }
-    }
-
-    private func leaves(w: CGFloat, h: CGFloat, front: Bool) -> some View {
-        ZStack {
-            if front {
-                leaf(w * 0.2, h * 0.16, 28).position(x: w * 0.9, y: h * 0.48)
-                leaf(w * 0.16, h * 0.13, -36).position(x: w * 0.1, y: h * 0.52)
-                leaf(w * 0.12, h * 0.1, 8).position(x: w * 0.82, y: h * 0.68)
-            } else {
-                leaf(w * 0.24, h * 0.2, -42).position(x: w * 0.06, y: h * 0.34)
-                leaf(w * 0.22, h * 0.18, 32).position(x: w * 0.94, y: h * 0.3)
-                leaf(w * 0.13, h * 0.1, -16).position(x: w * 0.26, y: h * 0.12)
-                leaf(w * 0.12, h * 0.09, 18).position(x: w * 0.76, y: h * 0.1)
-            }
-        }
-    }
-
-    private func leaf(_ width: CGFloat, _ height: CGFloat, _ turn: Double) -> some View {
-        DinoFoliageLeaf()
-            .fill(LinearGradient(colors: [Color(dinoHex: 0xD4EE78), Color(dinoHex: 0x3E9438)],
-                                 startPoint: .top, endPoint: .bottom))
-            .frame(width: width, height: height)
-            .rotationEffect(.degrees(turn))
+        Image("result-podium").resizable().scaledToFit()
+            .accessibilityHidden(true)
     }
 }
 
-/// Narrower at the crown and at the ground, widest through the middle.
-private struct ResultBoulderShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        let w = rect.width
-        let h = rect.height
-        var path = Path()
-        path.move(to: CGPoint(x: w * 0.34, y: h * 0.2))
-        path.addCurve(to: CGPoint(x: w * 0.66, y: h * 0.2),
-                      control1: CGPoint(x: w * 0.42, y: h * 0.1),
-                      control2: CGPoint(x: w * 0.58, y: h * 0.1))
-        path.addCurve(to: CGPoint(x: w * 0.94, y: h * 0.46),
-                      control1: CGPoint(x: w * 0.86, y: h * 0.24),
-                      control2: CGPoint(x: w * 0.99, y: h * 0.34))
-        path.addCurve(to: CGPoint(x: w * 0.7, y: h * 0.74),
-                      control1: CGPoint(x: w * 0.9, y: h * 0.6),
-                      control2: CGPoint(x: w * 0.82, y: h * 0.74))
-        path.addCurve(to: CGPoint(x: w * 0.3, y: h * 0.74),
-                      control1: CGPoint(x: w * 0.56, y: h * 0.8),
-                      control2: CGPoint(x: w * 0.44, y: h * 0.8))
-        path.addCurve(to: CGPoint(x: w * 0.06, y: h * 0.46),
-                      control1: CGPoint(x: w * 0.16, y: h * 0.74),
-                      control2: CGPoint(x: w * 0.08, y: h * 0.6))
-        path.addCurve(to: CGPoint(x: w * 0.34, y: h * 0.2),
-                      control1: CGPoint(x: w * 0.02, y: h * 0.34),
-                      control2: CGPoint(x: w * 0.14, y: h * 0.24))
-        path.closeSubpath()
-        return path
+/// Small suspended flecks keep the final composition festive after the confetti has landed.
+private struct ResultCelebrationMotes: View {
+    let active: Bool
+    var body: some View {
+        Canvas { context, size in
+            guard active else { return }
+            let points: [(CGFloat, CGFloat, CGFloat, Double)] = [
+                (0.16, 0.22, 8, -16), (0.84, 0.16, 10, 22),
+                (0.10, 0.48, 12, -12), (0.89, 0.43, 8, 15),
+                (0.23, 0.61, 6, 8), (0.78, 0.63, 7, -10),
+                (0.30, 0.12, 3, 0), (0.71, 0.31, 4, 0)
+            ]
+            for (index, item) in points.enumerated() {
+                var spark = context
+                spark.translateBy(x: size.width * item.0, y: size.height * item.1)
+                spark.rotate(by: .degrees(item.3))
+                if index < 6 {
+                    let r = item.2
+                    var path = Path()
+                    path.move(to: CGPoint(x: 0, y: -r))
+                    path.addQuadCurve(to: CGPoint(x: r * 0.65, y: 0), control: CGPoint(x: r * 0.18, y: -r * 0.16))
+                    path.addQuadCurve(to: CGPoint(x: 0, y: r), control: CGPoint(x: r * 0.18, y: r * 0.16))
+                    path.addQuadCurve(to: CGPoint(x: -r * 0.65, y: 0), control: CGPoint(x: -r * 0.18, y: r * 0.16))
+                    path.addQuadCurve(to: CGPoint(x: 0, y: -r), control: CGPoint(x: -r * 0.18, y: -r * 0.16))
+                    spark.fill(path, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xFFF7A0), Color(dinoHex: 0xFFD02F)]),
+                        startPoint: CGPoint(x: 0, y: -r), endPoint: CGPoint(x: 0, y: r)))
+                } else {
+                    spark.fill(Path(ellipseIn: CGRect(x: -item.2 / 2, y: -item.2 / 2, width: item.2, height: item.2)), with: .color(.white.opacity(0.9)))
+                }
+            }
+        }.accessibilityHidden(true)
     }
 }
 
@@ -560,7 +544,7 @@ private struct ResultStarReward: View {
     let revealed: Int
     var size: CGFloat
     var body: some View {
-        HStack(alignment: .bottom, spacing: size * 0.14) {
+        HStack(alignment: .center, spacing: -size * 0.02) {
             ForEach(0..<3, id: \.self) { index in
                 star(index)
             }
@@ -573,85 +557,12 @@ private struct ResultStarReward: View {
     private func star(_ index: Int) -> some View {
         let earned = index < count
         let shown = index < revealed
-        return ResultMedalStar(size: size, gold: earned && shown, dim: !earned)
-            .scaleEffect(earned ? (shown ? 1 : 0.3) : 0.92)
-            .offset(y: earned && !shown ? -size * 1.8 : (index == 1 ? -3 : 0))
-            .rotationEffect(.degrees(index == 1 ? 0 : index == 0 ? -4 : 4))
+        return DinoRewardStar(size: size, earned: earned && shown, dimmed: !earned,
+                              glowing: true, showsSparkle: true)
+            .scaleEffect((index == 1 ? 1.12 : 0.96) * (earned ? (shown ? 1 : 0.3) : 0.92))
+            .offset(y: earned && !shown ? -size * 1.8 : (index == 1 ? -size * 0.12 : size * 0.03))
+            .rotationEffect(.degrees(index == 1 ? 0 : index == 0 ? -9 : 9))
             .animation(reduceMotion ? nil : .spring(response: 0.48, dampingFraction: 0.62), value: shown)
-    }
-}
-
-/// A thick gold star with a dark underside, the way the concept sets them on the stone.
-private struct ResultMedalStar: View {
-    var size: CGFloat
-    var gold: Bool
-    var dim: Bool
-    var body: some View {
-        ZStack {
-            Ellipse()
-                .fill(Color(dinoHex: 0x5C6848).opacity(gold ? 0.22 : 0.1))
-                .frame(width: size * 0.62, height: size * 0.12)
-                .offset(y: size * 0.4)
-            if gold {
-                ResultGoldStarShape()
-                    .fill(Color(dinoHex: 0xFFE566))
-                    .blur(radius: size * 0.08)
-                    .scaleEffect(1.14)
-                    .opacity(0.75)
-                spark.offset(x: size * 0.4, y: -size * 0.36)
-                spark.scaleEffect(0.6).offset(x: -size * 0.42, y: -size * 0.1)
-            }
-            ResultGoldStarShape()
-                .fill(Color(dinoHex: gold ? 0xFFF6D0 : 0xD5D8CC))
-                .overlay(ResultGoldStarShape().stroke(Color.white.opacity(gold ? 0.95 : 0.4), lineWidth: max(1.5, size * 0.045)))
-            ResultGoldStarShape()
-                .fill(Color(dinoHex: gold ? 0xF0BE2E : 0x9AA392))
-                .scaleEffect(0.8)
-            ResultGoldStarShape()
-                .fill(LinearGradient(colors: gold
-                                     ? [Color(dinoHex: 0xFFFCE6), Color(dinoHex: 0xFFE45A), Color(dinoHex: 0xFFD448)]
-                                     : [Color(dinoHex: 0xF2F0E6), Color(dinoHex: 0xC8CCBC), Color(dinoHex: 0xA8AE9E)],
-                                     startPoint: .top, endPoint: .bottom))
-                .scaleEffect(0.64)
-            ResultGoldStarShape()
-                .fill(LinearGradient(colors: [Color.white.opacity(gold ? 0.85 : 0.3), .clear],
-                                     startPoint: .top, endPoint: .center))
-                .scaleEffect(0.4)
-                .offset(y: -size * 0.06)
-        }
-        .frame(width: size, height: size)
-        .opacity(dim ? 0.5 : 1)
-    }
-
-    private var spark: some View {
-        Circle().fill(Color.white).frame(width: 4, height: 4)
-            .shadow(color: Color(dinoHex: 0xFFF6C0), radius: 2)
-    }
-}
-
-private struct ResultGoldStarShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        let center = CGPoint(x: rect.midX, y: rect.midY)
-        let outer = min(rect.width, rect.height) / 2
-        let inner = outer * 0.52
-        let points = (0..<10).map { index in
-            let angle = CGFloat(index) * .pi / 5 - .pi / 2
-            let radius = index.isMultiple(of: 2) ? outer : inner
-            return CGPoint(x: center.x + cos(angle) * radius, y: center.y + sin(angle) * radius)
-        }
-        let round: CGFloat = 0.42
-        func between(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
-            CGPoint(x: a.x + (b.x - a.x) * round, y: a.y + (b.y - a.y) * round)
-        }
-        var path = Path()
-        path.move(to: between(points[9], points[0]))
-        for index in 0..<10 {
-            let tip = points[index]
-            let next = points[(index + 1) % 10]
-            path.addQuadCurve(to: between(tip, next), control: tip)
-        }
-        path.closeSubpath()
-        return path
     }
 }
 
@@ -660,10 +571,11 @@ private struct ResultConfetti: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var started = Date()
+    @State private var finished = false
     private let colors: [UInt32] = [0xFFD24A, 0x7ED24A, 0xFFF6C8, 0xF0B429, 0x5AAA40]
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion || scenePhase != .active)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: finished || reduceMotion || scenePhase != .active)) { timeline in
             let elapsed = reduceMotion ? 0.7 : timeline.date.timeIntervalSince(started)
             Canvas { context, size in
                 let origin = CGPoint(x: size.width / 2, y: size.height * 0.58)
@@ -689,6 +601,10 @@ private struct ResultConfetti: View {
                     }
                 }
             }
+        }
+        .task {
+            do { try await Task.sleep(for: .seconds(1.8)) } catch { return }
+            finished = true
         }
     }
 

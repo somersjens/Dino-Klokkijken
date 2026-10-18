@@ -34,7 +34,7 @@ final class DinoSettings: ObservableObject {
         hapticsEnabled = resolved.object(forKey: "dino.settings.haptics") as? Bool ?? true
         highContrastEnabled = resolved.object(forKey: "dino.settings.highContrast") as? Bool ?? false
         icloudSyncEnabled = resolved.object(forKey: "dino.settings.icloudSync") as? Bool ?? false
-        practiceTime = DinoPracticeTime(rawValue: resolved.string(forKey: "dino.settings.practiceTime") ?? "") ?? .whole
+        practiceTime = DinoPracticeTime(storageKey: resolved.string(forKey: "dino.settings.practiceTime") ?? "") ?? .whole
         practiceOrder = DinoPracticeOrder(storageKey: resolved.string(forKey: "dino.settings.practiceOrder") ?? "") ?? .ascending
     }
 

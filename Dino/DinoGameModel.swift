@@ -9,6 +9,7 @@ final class DinoPlayer: ObservableObject {
     @Published private(set) var resetGeneration = UUID()
     let profileChanges = PassthroughSubject<PlayerProfile, Never>()
     private let store: DinoProgressStore
+    private var learningProgress: [String: DinoLearningProgress]
     var progressChanged: (() -> Void)?
     var progressReset: (() -> Void)?
     init(store: DinoProgressStore? = nil) {
@@ -34,6 +35,7 @@ final class DinoPlayer: ObservableObject {
         loaded.clockTheme = previousTheme.applyingFixedStyles()
         profile = loaded
         practiceRecords = resolved.loadPracticeRecords()
+        learningProgress = resolved.loadLearningProgress()
         if loaded.clockTheme != previousTheme { resolved.save(loaded) }
 #if DEBUG
         if ProcessInfo.processInfo.environment["DINO_TEST_SUITE"] != nil,
@@ -59,6 +61,14 @@ final class DinoPlayer: ObservableObject {
             for world in DinoWorldCatalog.worlds.prefix(count) {
                 profile.recordCompletedAttempt(levelID: world.bossLevel, correct: 10)
             }
+        }
+        if ProcessInfo.processInfo.environment["DINO_TEST_SUITE"] != nil,
+           let raw = ProcessInfo.processInfo.environment["DINO_TEST_RESULT_LEVEL"], let id = Int(raw),
+           let level = DinoLevelCatalog.level(id),
+           let rawCorrect = ProcessInfo.processInfo.environment["DINO_TEST_RESULT_CORRECT"], let correct = Int(rawCorrect),
+           (0...level.questionCount).contains(correct) {
+            profile.onboardingComplete = true
+            profile.recordCompletedAttempt(levelID: id, correct: correct)
         }
 #endif
     }
@@ -128,6 +138,8 @@ final class DinoPlayer: ObservableObject {
         progressReset?()
         practiceRecords = [:]
         store.resetPracticeRecords()
+        learningProgress = [:]
+        store.resetLearningProgress()
         update { $0.resetProgress() }
     }
     func resetAllData(at date: Date = Date()) {
@@ -138,6 +150,7 @@ final class DinoPlayer: ObservableObject {
         fresh.progressResetAt = date
         profile = fresh
         practiceRecords = [:]
+        learningProgress = [:]
         profileChanges.send(fresh)
         resetGeneration = UUID()
     }
@@ -157,6 +170,28 @@ final class DinoPlayer: ObservableObject {
 
     func practiceRecord(time: DinoPracticeTime, question: DinoPracticeQuestion) -> DinoPracticeRecord {
         practiceRecord(time: time, order: .specific(question))
+    }
+
+    func questionDifficulty(kind: ClockQuestionKind, time: DinoPracticeTime) -> DinoQuestionDifficulty {
+        learningProgress[DinoLearningProgress.key(kind: kind, time: time)]?.difficulty ?? .introduction
+    }
+
+    /// Follow the authored lesson unless the combination is unseen or needs support after an error.
+    func adventureDifficulty(for recipe: QuestionRecipe, in level: LevelConfiguration) -> DinoQuestionDifficulty {
+        let family = level.time(for: recipe)
+        let key = DinoLearningProgress.key(kind: recipe.kind, time: family)
+        guard let progress = learningProgress[key] else { return .introduction }
+        let planned = level.plannedDifficulty(for: recipe)
+        return progress.recoveryTarget == nil ? planned
+            : DinoQuestionDifficulty(rawValue: min(planned.rawValue, progress.difficulty.rawValue))!
+    }
+
+    func recordLearningAnswer(question: ClockQuestion, correct: Bool) {
+        let key = DinoLearningProgress.key(kind: question.kind, time: question.timeFamily)
+        var progress = learningProgress[key] ?? DinoLearningProgress()
+        progress.record(correct: correct, at: question.difficulty)
+        learningProgress[key] = progress
+        store.saveLearningProgress(learningProgress)
     }
 
     func practiceRecord(time: DinoPracticeTime, order: DinoPracticeOrder) -> DinoPracticeRecord {
@@ -228,6 +263,10 @@ final class DinoSession: ObservableObject, Identifiable {
     private var questionStartedAt: TimeInterval
     private var practiceGenerator: DinoPracticeGenerator?
     private let exampleMinuteStep: Int?
+    private let isExample: Bool
+    private let language: String
+    private var questionRNG = SeededGenerator(seed: 0)
+    private var nextDifficultyLimit: DinoQuestionDifficulty?
 
     init(level: LevelConfiguration, player: DinoPlayer, practice: DinoPracticeConfiguration? = nil, example: ClockQuestion? = nil, exampleMinuteStep: Int? = nil, language: String = "nl", now: @escaping () -> TimeInterval = DinoQuestionTiming.now, answerFeedback: ((Bool) -> Void)? = nil) {
         self.now = now
@@ -235,34 +274,32 @@ final class DinoSession: ObservableObject, Identifiable {
         self.level = level
         self.practice = practice
         self.exampleMinuteStep = exampleMinuteStep
+        self.isExample = example != nil
+        self.language = language
         self.player = player
         self.answerFeedback = answerFeedback
-        if let practice {
-            var seed = UInt64.random(in: .min ... .max)
+        var seed = UInt64.random(in: .min ... .max)
 #if DEBUG
-            if let raw = ProcessInfo.processInfo.environment["DINO_TEST_SEED"], let fixed = UInt64(raw) { seed = fixed }
+        if let raw = ProcessInfo.processInfo.environment["DINO_TEST_SEED"], let fixed = UInt64(raw) { seed = fixed }
 #endif
+        if let practice {
             var generator = DinoPracticeGenerator(configuration: practice, seed: seed, language: language)
-            attempt = LevelAttempt(levelID: 0, questions: [example ?? generator.next(index: 0)])
+            attempt = LevelAttempt(levelID: 0, questions: [example ?? generator.next(index: 0) {
+                player.questionDifficulty(kind: $0, time: practice.time)
+            }])
             practiceGenerator = example == nil ? generator : nil
             refreshPracticeProgress()
             resetInputs()
             return
         }
-        let questions: [ClockQuestion]
-#if DEBUG
-        if let raw = ProcessInfo.processInfo.environment["DINO_TEST_SEED"], let seed = UInt64(raw) {
-            var rng = SeededGenerator(seed: seed)
-            questions = DinoQuestionGenerator.generate(level: level, attempt: player.profile.record(level.id).attempts, language: language, using: &rng)
-        } else {
-            var rng = SystemRandomNumberGenerator()
-            questions = DinoQuestionGenerator.generate(level: level, attempt: player.profile.record(level.id).attempts, language: language, using: &rng)
+        let difficulties = level.recipes.reduce(into: [DinoQuestionSkill: DinoQuestionDifficulty]()) { result, recipe in
+            result[level.skill(for: recipe)] = player.adventureDifficulty(for: recipe, in: level)
         }
-#else
-        var rng = SystemRandomNumberGenerator()
-        questions = DinoQuestionGenerator.generate(level: level, attempt: player.profile.record(level.id).attempts, language: language, using: &rng)
-#endif
+        var rng = SeededGenerator(seed: seed)
+        let questions = DinoQuestionGenerator.generate(level: level, attempt: player.profile.record(level.id).attempts,
+            language: language, difficulties: difficulties, using: &rng)
         attempt = LevelAttempt(levelID: level.id, questions: questions)
+        questionRNG = rng
         resetInputs()
     }
 
@@ -279,7 +316,8 @@ final class DinoSession: ObservableObject, Identifiable {
     /// A correct answer is about to show another question with the same buttons.
     var retainsAnswerControls: Bool {
         guard shouldAutoAdvance, let next = upcomingKind else { return false }
-        return next == question.kind && question.kind.reusesAnswerControls
+        let sameTime = practice != nil || level.time(for: level.recipe(at: attempt.index + 1)) == question.timeFamily
+        return next == question.kind && sameTime && question.kind.reusesAnswerControls
     }
     /// Hide the buttons while feedback is on screen, unless the next question brings those same buttons back.
     var hidesAnswerControls: Bool { hasFeedback && !retainsAnswerControls }
@@ -289,7 +327,7 @@ final class DinoSession: ObservableObject, Identifiable {
         guard nextIndex < attempt.questions.count else { return nil }
         return attempt.questions[nextIndex].kind
     }
-    var minuteStep: Int { exampleMinuteStep ?? practice?.time.minuteStep ?? level.minuteStep }
+    var minuteStep: Int { exampleMinuteStep ?? practice?.time.minuteStep ?? question.timeFamily.minuteStep }
     var allowsMinutes: Bool { minuteStep < 60 }
     var inputTime: ClockTime { ClockTime(hour: inputHour, minute: inputMinute) }
     var instructionKey: String {
@@ -313,7 +351,11 @@ final class DinoSession: ObservableObject, Identifiable {
             return
         }
         if let correct = attempt.submit(answer, elapsed: now() - questionStartedAt) {
-            if !correct { rejectedResponses.insert(answer) }
+            if !correct {
+                rejectedResponses.insert(answer)
+                nextDifficultyLimit = question.difficulty.easier
+            }
+            if !isExample { player.recordLearningAnswer(question: question, correct: correct) }
             if practice != nil { practiceAnswered += 1; if correct { practiceCorrect += 1 } }
             if practiceGenerator != nil, let practice, let type = practiceQuestionType {
                 // Persist immediately, while the HUD keeps this question's
@@ -345,7 +387,14 @@ final class DinoSession: ObservableObject, Identifiable {
     func advance() {
         guard hasFeedback && !canRetry else { return }
         if var generator = practiceGenerator {
-            attempt = LevelAttempt(levelID: 0, questions: [generator.next(index: question.id + 1)])
+            let limit = nextDifficultyLimit
+            let time = generator.configuration.time
+            let next = generator.next(index: question.id + 1) { kind in
+                let learned = player.questionDifficulty(kind: kind, time: time)
+                return DinoQuestionDifficulty(rawValue: min(learned.rawValue, limit?.rawValue ?? 2))!
+            }
+            attempt = LevelAttempt(levelID: 0, questions: [next])
+            nextDifficultyLimit = nil
             practiceGenerator = generator
             refreshPracticeProgress()
             resetInputs()
@@ -357,6 +406,21 @@ final class DinoSession: ObservableObject, Identifiable {
             guard result == nil else { return }
             result = player.finish(attempt)
         } else {
+            let recipe = level.recipe(at: attempt.index)
+            let learned = player.adventureDifficulty(for: recipe, in: level)
+            let difficulty = DinoQuestionDifficulty(rawValue: min(learned.rawValue, nextDifficultyLimit?.rawValue ?? 2))!
+            let previous = attempt.questions[attempt.index - 1]
+            if difficulty != question.difficulty || question.target == previous.target {
+                let usedHours = Set(attempt.questions.enumerated().filter { $0.offset != attempt.index }.map { $0.element.target.hour })
+                let replacement = DinoQuestionGenerator.generateQuestion(level: level,
+                    recipe: recipe, index: question.id,
+                    attempt: player.profile.record(level.id).attempts, difficulty: difficulty,
+                    previousTarget: previous.target, usedHours: usedHours,
+                    optionPosition: (previous.options.firstIndex(of: previous.target) ?? 0) + 1,
+                    language: language, using: &questionRNG)
+                attempt.replaceCurrent(with: replacement)
+            }
+            nextDifficultyLimit = nil
             resetInputs()
             questionStartedAt = now()
         }

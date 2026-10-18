@@ -58,19 +58,40 @@ struct DinoDaySchedule: Equatable, Sendable {
 
 enum DinoExpandedQuestions {
     static func generate<R: RandomNumberGenerator>(kind: ClockQuestionKind, time: DinoPracticeTime,
-                                                   index: Int, previousTarget: ClockTime?, language: String = "nl", using rng: inout R) -> ClockQuestion {
+                                                   index: Int, previousTarget: ClockTime?, language: String = "nl",
+                                                   difficulty: DinoQuestionDifficulty = .challenge, using rng: inout R) -> ClockQuestion {
         generate(kind: kind, minutes: time.minutes, minuteStep: time.minuteStep,
-                 index: index, previousTarget: previousTarget, language: language, using: &rng)
+                 index: index, previousTarget: previousTarget, language: language, difficulty: difficulty, using: &rng)
     }
 
     static func generate<R: RandomNumberGenerator>(kind: ClockQuestionKind, minutes: [Int], minuteStep: Int,
                                                    index: Int, previousTarget: ClockTime?, preferredTarget: ClockTime? = nil,
                                                    isDemonstration: Bool = false,
                                                    language: String = "nl",
+                                                   difficulty: DinoQuestionDifficulty = .challenge,
                                                    using rng: inout R) -> ClockQuestion {
+        let family = DinoPracticeTime.allCases.first { $0.minuteStep == minuteStep } ?? .minutes
+        let maxSteps = difficulty.rawValue + 1
         let scheduleDurations = kind == .daySchedule
-            ? [minuteStep * Int.random(in: 1...2, using: &rng), minuteStep,
-               minuteStep * Int.random(in: 1...3, using: &rng)] : []
+            ? [minuteStep * Int.random(in: 1...maxSteps, using: &rng), minuteStep,
+               minuteStep * Int.random(in: 1...maxSteps, using: &rng)] : []
+        let step = minuteStep
+        let duration = step * Int.random(in: 1...maxSteps, using: &rng)
+        let advance = kind == .advanceAnalog
+            ? (difficulty == .challenge ? Self.advanceDuration(minuteStep: step, using: &rng) : duration) : duration
+        let flightOffset = kind == .flightArrival
+            ? (difficulty == .introduction ? 0 : (difficulty == .familiar ? [1, -1] : [2, -2, 3, -3, 4, -4]).randomElement(using: &rng)!) : 0
+        let flightDuration = kind == .flightArrival
+            ? Self.flightDurationMinutes(offsetHours: flightOffset, minuteStep: step,
+                extraSteps: Int.random(in: 0...maxSteps, using: &rng)) : 0
+        let shift: Int
+        switch kind {
+        case .addTime, .advanceAnalog: shift = advance
+        case .subtractTime: shift = -duration
+        case .timeSequence: shift = 3 * duration
+        case .flightArrival: shift = flightDuration + flightOffset * 60
+        default: shift = 0
+        }
         let hours = [.readDigital, .spokenTime, .trueFalse, .sayTime].contains(kind) ? Array(1...12) : Array(0...23)
         let spoken = kind == .sayTime ? SpokenTimeCatalog.language(code: language) : nil
         let pool = hours.flatMap { hour in minutes.map { ClockTime(hour: hour, minute: $0) } }
@@ -78,7 +99,6 @@ enum DinoExpandedQuestions {
                 if kind == .sayTime { return spoken!.supports(minute: time.minute) }
                 if kind == .dayPart && !isDemonstration { return time.hour != 6 && time.hour < 22 }
                 if kind == .sortTimes { return time.minutesOfDay != 0 }
-                // Leave room for an earlier time in the same selected minute family.
                 if kind == .minutesBetween { return time.minutesOfDay >= 60 + (minutes.min() ?? 0) }
                 if kind == .daySchedule {
                     return time.minutesOfDay >= 8 * 60 + scheduleDurations.reduce(0, +)
@@ -86,15 +106,25 @@ enum DinoExpandedQuestions {
                 }
                 return true
             }
+        var targets = pool
+        if !isDemonstration && difficulty != .challenge {
+            let noMidnight = targets.filter { (0..<1440).contains($0.minutesOfDay - shift) }
+            if !noMidnight.isEmpty { targets = noMidnight }
+            if difficulty == .introduction && shift != 0 && abs(shift) < 60 {
+                let sameHour = targets.filter { $0.hour == $0.adding(minutes: -shift).hour }
+                if !sameHour.isEmpty { targets = sameHour }
+            }
+        }
         let target = preferredTarget.flatMap { pool.contains($0) ? $0 : nil }
-            ?? pool.filter { $0 != previousTarget }.randomElement(using: &rng)!
-        let other = pool.filter { $0 != target }.shuffled(using: &rng)
-        var choices = Array(other.prefix(3))
-        choices.insert(target, at: Int.random(in: 0..<4, using: &rng))
+            ?? DinoQuestionTeaching.target(pool: targets, time: family, difficulty: difficulty, previous: previousTarget, using: &rng)
+        let other = DinoQuestionTeaching.distractors(pool: pool, target: target, difficulty: difficulty, using: &rng)
+        let count = difficulty.optionCount
+        var choices = Array(other.prefix(count - 1))
+        choices.insert(target, at: Int.random(in: 0..<count, using: &rng))
         var q = ClockQuestion(id: index, kind: kind, target: target, options: choices,
                               activity: nil, companionClocks: Array(other.prefix(2)))
-        let step = minuteStep
-        let duration = step * Int.random(in: 1...3, using: &rng)
+        q.difficulty = difficulty
+        q.timeFamily = family
         switch kind {
         case .readDigital, .spokenTime, .read24Hour: break
         case .sayTime:
@@ -115,16 +145,15 @@ enum DinoExpandedQuestions {
             q.durationMinutes = duration
             q.relatedTimes = [target.adding(minutes: -3 * duration), target.adding(minutes: -2 * duration), target.adding(minutes: -duration)]
         case .addTime, .advanceAnalog:
-            q.durationMinutes = kind == .advanceAnalog ? Self.advanceDuration(minuteStep: step, using: &rng) : duration
+            q.durationMinutes = advance
             q.relatedTimes = [target.adding(minutes: -q.durationMinutes)]
             if kind == .advanceAnalog { q.options = [] }
         case .subtractTime:
             q.durationMinutes = duration; q.relatedTimes = [target.adding(minutes: duration)]
         case .flightArrival:
-            // Whole and half hours stay in one zone. Harder minute families state an hour difference.
-            q.offsetHours = Self.flightOffsetHours(minuteStep: minuteStep, using: &rng)
-            q.durationMinutes = Self.flightDurationMinutes(offsetHours: q.offsetHours, minuteStep: minuteStep,
-                                                           extraSteps: Int.random(in: q.offsetHours == 0 ? 1...3 : 0...2, using: &rng))
+            // Introduce flight duration before combining it with a zone difference.
+            q.offsetHours = flightOffset
+            q.durationMinutes = flightDuration
             q.relatedTimes = [target.adding(minutes: -(q.durationMinutes + q.offsetHours * 60))]
             if q.offsetHours != 0 {
                 let forgotten = target.adding(minutes: -q.offsetHours * 60)
@@ -132,10 +161,10 @@ enum DinoExpandedQuestions {
                 let nudged = target.adding(minutes: q.offsetHours > 0 ? 60 : -60)
                 var seen: Set<ClockTime> = [target]
                 var distractors = [forgotten, reversed, nudged].filter { seen.insert($0).inserted }
-                for candidate in other where distractors.count < 3 && seen.insert(candidate).inserted {
+                for candidate in other where distractors.count < count - 1 && seen.insert(candidate).inserted {
                     distractors.append(candidate)
                 }
-                q.options = (distractors + [target]).shuffled(using: &rng)
+                q.options = (Array(distractors.prefix(count - 1)) + [target]).shuffled(using: &rng)
             }
         case .daySchedule:
             let activities = DinoScheduleActivity.allCases.shuffled(using: &rng)
@@ -150,9 +179,10 @@ enum DinoExpandedQuestions {
                               target.adding(minutes: -60), target.adding(minutes: 60)] + other
             var seen: Set<ClockTime> = [target]
             let distractors = candidates.filter { minutes.contains($0.minute) && seen.insert($0).inserted }
-            q.options = (Array(distractors.prefix(3)) + [target]).shuffled(using: &rng)
+            q.options = (Array(distractors.prefix(count - 1)) + [target]).shuffled(using: &rng)
         case .minutesBetween:
-            let starts = (1...min(180, target.minutesOfDay))
+            let maxGap = difficulty == .introduction ? step : difficulty == .familiar ? 90 : 180
+            let starts = (1...min(maxGap, target.minutesOfDay))
                 .map { target.adding(minutes: -$0) }
                 .filter { minutes.contains($0.minute) }
             let start = starts.randomElement(using: &rng)!
@@ -160,25 +190,25 @@ enum DinoExpandedQuestions {
             q.relatedTimes = [start, target]
             q.durationMinutes = elapsed
             // Nearby minute totals catch conversion and subtraction mistakes.
-            let gap = min(15, minuteStep)
+            let gap = minuteStep
             var seen: Set<Int> = [elapsed]
             let distractors = [-gap, gap, -2 * gap, 2 * gap, -60, 60, 3 * gap]
                 .map { elapsed + $0 }
                 .filter { $0 > 0 && seen.insert($0).inserted }
             q.options = []
-            q.answerChoices = (Array(distractors.shuffled(using: &rng).prefix(3)) + [elapsed])
+            q.answerChoices = (Array(distractors.shuffled(using: &rng).prefix(count - 1)) + [elapsed])
                 .shuffled(using: &rng).map(ClockAnswer.duration)
             q.answer = .duration(elapsed)
         case .timeZone:
             q.timeZoneJourney = DinoTimeZoneJourney.generate(language: language,
-                difficulty: .init(minuteStep: minuteStep), using: &rng)
+                difficulty: difficulty == .introduction ? .nearby : difficulty == .familiar ? .regional : .worldwide, using: &rng)
             q.offsetHours = q.timeZoneJourney!.offsetHours
             q.relatedTimes = [target.adding(minutes: -q.offsetHours * 60)]
             // Plausible mistakes: the given time and reversing the difference.
             q.options = Array(Set([q.relatedTimes[0], target.adding(minutes: -2 * q.offsetHours * 60),
                                    target.adding(minutes: 60), target.adding(minutes: -60)])
                 .subtracting([target])).sorted { $0.minutesOfDay < $1.minutesOfDay }
-                .shuffled(using: &rng).prefix(3).map { $0 }
+                .shuffled(using: &rng).prefix(count - 1).map { $0 }
             q.options.insert(target, at: Int.random(in: 0...q.options.count, using: &rng))
         default: preconditionFailure("Use the original clock generator for \(kind)")
         }
@@ -199,13 +229,6 @@ enum DinoExpandedQuestions {
         return hours * 60 + minutes.randomElement(using: &rng)!
     }
 
-    /// Easier flights keep a zero offset. Quarter hours and finer state a whole-hour difference.
-    static func flightOffsetHours<R: RandomNumberGenerator>(minuteStep: Int, using rng: inout R) -> Int {
-        if minuteStep >= 30 { return 0 }
-        let choices = minuteStep >= 10 ? [1, -1, 2, -2] : [2, -2, 3, -3, 4, -4]
-        return choices.randomElement(using: &rng)!
-    }
-
     /// A zone change needs at least two extra flying hours, so two hours aloft never crosses four zones.
     static func flightDurationMinutes(offsetHours: Int, minuteStep: Int, extraSteps: Int) -> Int {
         let base = offsetHours == 0 ? 120 : (abs(offsetHours) + 2) * 60
@@ -215,7 +238,7 @@ enum DinoExpandedQuestions {
     static func example(kind: ClockQuestionKind, time: DinoPracticeTime) -> ClockQuestion {
         var rng = SeededGenerator(seed: 20261012)
         return generate(kind: kind, minutes: time.minutes, minuteStep: time.minuteStep,
-                        index: 0, previousTarget: nil, isDemonstration: true, using: &rng)
+                        index: 0, previousTarget: nil, isDemonstration: true, difficulty: .introduction, using: &rng)
     }
 }
 
@@ -244,7 +267,7 @@ enum DinoDemonstrationExamples {
                                               index: index, previousTarget: previousTarget,
                                               preferredTarget: sequential ? time(index: index, minutes: minutes, hours: hours) : nil,
                                               isDemonstration: true,
-                                              language: language,
+                                              language: language, difficulty: .introduction,
                                               using: &rng)
     }
 }
@@ -371,7 +394,8 @@ enum DinoTimeWords {
             case 45: text = "kwart voor \(next)"
             case 50: text = "tien voor \(next)"
             case 55: text = "vijf voor \(next)"
-            default: text = "\(time.minute) minuten over \(hour)"
+            case 1..<30: text = "\(minutes(time.minute, language: language)) over \(hour)"
+            default: text = "\(minutes(60 - time.minute, language: language)) voor \(next)"
             }
         } else {
             switch time.minute {
@@ -379,8 +403,8 @@ enum DinoTimeWords {
             case 15: text = "quarter past \(hour)"
             case 30: text = "half past \(hour)"
             case 45: text = "quarter to \(next)"
-            case 1..<30: text = "\(time.minute) minutes past \(hour)"
-            default: text = "\(60 - time.minute) minutes to \(next)"
+            case 1..<30: text = "\(minutes(time.minute, language: language)) past \(hour)"
+            default: text = "\(minutes(60 - time.minute, language: language)) to \(next)"
             }
         }
         guard dayPart else { return text }

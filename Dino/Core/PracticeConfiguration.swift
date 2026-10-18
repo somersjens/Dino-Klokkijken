@@ -1,17 +1,22 @@
 import Foundation
 
 enum DinoPracticeTime: String, CaseIterable, Sendable {
-    case whole, half, quarter, tenMinutes, fiveMinutes, mix
+    case whole, half, quarter, tenMinutes, fiveMinutes, minutes
     var titleKey: String { "dino.practice.time.\(rawValue)" }
-    var previewTime: ClockTime { ClockTime(hour: 3, minute: self == .mix ? 35 : minutes[0]) }
+    var previewTime: ClockTime { ClockTime(hour: 3, minute: focusMinutes[0]) }
+    init?(storageKey: String) { self.init(rawValue: storageKey == "mix" ? "minutes" : storageKey) }
     var minutes: [Int] {
+        Array(stride(from: 0, to: 60, by: minuteStep))
+    }
+    /// The selected family teaches these positions while continuing to review its other multiples.
+    var focusMinutes: [Int] {
         switch self {
         case .whole: return [0]
         case .half: return [30]
         case .quarter: return [15, 45]
-        case .tenMinutes: return Array(stride(from: 10, to: 60, by: 10))
-        case .fiveMinutes: return Array(stride(from: 5, to: 60, by: 5))
-        case .mix: return Array(stride(from: 0, to: 60, by: 5))
+        case .tenMinutes: return [10, 20, 40, 50]
+        case .fiveMinutes: return [5, 10, 20, 25, 35, 40, 50, 55]
+        case .minutes: return (1..<60).filter { !$0.isMultiple(of: 5) }
         }
     }
     var minuteStep: Int {
@@ -20,16 +25,23 @@ enum DinoPracticeTime: String, CaseIterable, Sendable {
         case .half: return 30
         case .quarter: return 15
         case .tenMinutes: return 10
-        case .fiveMinutes, .mix: return 5
+        case .fiveMinutes: return 5
+        case .minutes: return 1
         }
     }
 }
 
-/// Each distinct exercise, ordered by difficulty. Choice counts are an internal variation.
+/// Learning progression shared by the practice list, its numbers and ascending sessions.
+/// Recognize and read before producing an answer; build clock arithmetic before combining it.
 enum DinoPracticeQuestion: String, CaseIterable, Sendable {
-    case chooseAnalog, chooseDigital, readDigital, spokenTime, trueFalse, dayPart, match
-    case setDigital, setAnalog, read24Hour, sortTimes, sayTime, timeSequence
-    case addTime, advanceAnalog, subtractTime, flightArrival, timeZone, daySchedule, minutesBetween
+    // Recognize a clock, check a statement, then translate and build time phrases.
+    case chooseAnalog, chooseDigital, trueFalse, readDigital, spokenTime, sayTime
+    // Set clocks, learn 24-hour notation and day parts, then connect and compare times.
+    case setDigital, setAnalog, read24Hour, dayPart, match, sortTimes
+    // Move hands before calculating; keep later and earlier times together.
+    case advanceAnalog, addTime, subtractTime, minutesBetween, timeSequence
+    // Combine durations, then learn zone differences before a flight that can use both.
+    case daySchedule, timeZone, flightArrival
     var titleKey: String { "dino.practice.question.\(rawValue)" }
     var number: Int { Self.allCases.firstIndex(of: self)! + 1 }
     var recipe: QuestionRecipe {
@@ -46,17 +58,8 @@ struct LevelQuestionOutline: Equatable, Sendable {
 }
 
 extension LevelConfiguration {
-    /// The practice-screen time family for this level, so the card uses the same words as the exercise list.
-    var practiceTimeTitleKey: String {
-        switch minuteStep {
-        case 60: return "dino.practice.time.whole"
-        case 30: return "dino.practice.time.half"
-        case 15: return "dino.practice.time.quarter"
-        case 10: return "dino.practice.time.tenMinutes"
-        case 5: return allowedMinutes.contains(0) ? "dino.practice.time.mix" : "dino.practice.time.fiveMinutes"
-        default: return "dino.level.time.minute"
-        }
-    }
+    /// A summary label for older consumers; each outline row resolves its own time family.
+    var practiceTimeTitleKey: String { timeFamily.titleKey }
 
     /// Question types in the order they are asked. One recipe used for the whole level stays a single row.
     var questionOutline: [LevelQuestionOutline] {
@@ -64,7 +67,7 @@ extension LevelConfiguration {
             let practice = DinoPracticeQuestion(rawValue: recipe.kind.rawValue)
             return LevelQuestionOutline(practiceNumber: practice?.number,
                                         titleKey: practice?.titleKey ?? "dino.practice.question.\(recipe.kind.rawValue)",
-                                        timeTitleKey: practiceTimeTitleKey)
+                                        timeTitleKey: time(for: recipe).titleKey)
         }
     }
 }
@@ -100,7 +103,8 @@ struct DinoPracticeConfiguration: Equatable, Sendable {
         LevelConfiguration(id: 0, worldID: 1, titleKey: "dino.practice.title",
                            instructionKey: "dino.practice.description", allowedHours: Array(1...12),
                            difficulty: 0, questionCount: 1, isBoss: false,
-                           recipes: [.init(kind: .chooseAnalog, optionCount: 2)])
+                           recipes: [.init(kind: .chooseAnalog, optionCount: 2)],
+                           allowedMinutes: time.minutes, minuteStep: time.minuteStep)
     }
 }
 
@@ -171,7 +175,7 @@ struct DinoPracticeGenerator {
         rng = SeededGenerator(seed: seed)
     }
 
-    mutating func next(index: Int) -> ClockQuestion {
+    mutating func next(index: Int, difficultyForKind: (ClockQuestionKind) -> DinoQuestionDifficulty = { _ in .introduction }) -> ClockQuestion {
         let type: DinoPracticeQuestion
         switch configuration.order {
         case .specific(let selected): type = selected
@@ -180,34 +184,18 @@ struct DinoPracticeGenerator {
             if mixedTypes.isEmpty { mixedTypes = DinoPracticeQuestion.allCases.shuffled(using: &rng) }
             type = mixedTypes.removeLast()
         }
-        let question = make(type, index: index)
+        let question = make(type, index: index, difficulty: difficultyForKind(type.recipe.kind))
         if case .mix = configuration.order, mixedTypes.isEmpty {
             mixedTypes = DinoPracticeQuestion.allCases.shuffled(using: &rng)
         }
         return question
     }
 
-    private mutating func make(_ type: DinoPracticeQuestion, index: Int) -> ClockQuestion {
-        var recipe = type.recipe
-        if recipe.kind.isExpanded {
-            let question = DinoExpandedQuestions.generate(kind: recipe.kind, time: configuration.time,
-                                                           index: index, previousTarget: previousTarget, language: language, using: &rng)
-            previousTarget = question.target
-            return question
-        }
-        if recipe.kind == .chooseAnalog || recipe.kind == .chooseDigital {
-            recipe.optionCount = Bool.random(using: &rng) ? 2 : 4
-        }
-        let pool = (1...12).flatMap { hour in configuration.time.minutes.map { ClockTime(hour: hour, minute: $0) } }
-        let targets = pool.filter { $0 != previousTarget }
-        let target = targets.randomElement(using: &rng)!
-        previousTarget = target
-        let otherTimes = pool.filter { $0 != target }.shuffled(using: &rng)
-        var options = recipe.kind.usesOptions ? Array(otherTimes.prefix(recipe.optionCount - 1)) : []
-        if recipe.kind.usesOptions { options.insert(target, at: Int.random(in: 0..<recipe.optionCount, using: &rng)) }
-        let question = ClockQuestion(id: index, kind: recipe.kind, target: target, options: options,
-                                    activity: nil, companionClocks: Array(otherTimes.prefix(2)))
-        return DinoMatchingQuestions.configure(question, using: &rng)
+    private mutating func make(_ type: DinoPracticeQuestion, index: Int, difficulty: DinoQuestionDifficulty) -> ClockQuestion {
+        let question = DinoQuestionGenerator.generateQuestion(level: configuration.level, recipe: type.recipe,
+            index: index, difficulty: difficulty, previousTarget: previousTarget, language: language, using: &rng)
+        previousTarget = question.target
+        return question
     }
 
     /// The kind that `next(index:)` will draw after the question identified by `index`.

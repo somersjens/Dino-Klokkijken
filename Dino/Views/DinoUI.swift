@@ -330,21 +330,53 @@ struct DinoCard: ViewModifier {
 
 extension View { func dinoCard(padding: CGFloat = 20) -> some View { modifier(DinoCard(padding: padding)) } }
 
-struct DinoStars: View {
+/// Shared reward art keeps the result, map nodes and star totals visually consistent.
+struct DinoRewardStar: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    var size: CGFloat = 25
+    var earned = true
+    var dimmed = false
+    var glowing = false
+    var showsSparkle = false
+
+    var body: some View {
+        ZStack {
+            if earned && glowing {
+                Image("result-star").resizable().scaledToFit()
+                    .blur(radius: size * 0.13).opacity(0.65)
+                    .scaleEffect(1.12)
+            }
+            Image("result-star").resizable().scaledToFit()
+                .saturation(earned ? 1 : 0)
+                .brightness(earned ? 0 : -0.12)
+                .shadow(color: Color(dinoHex: 0x653809).opacity(earned ? 0.35 : 0.18),
+                        radius: max(0.5, size * 0.03), y: max(0.7, size * 0.05))
+                .shadow(color: highContrast ? DinoStyle.ink.opacity(0.65) : .clear, radius: 0.5, y: 0.5)
+                .opacity(dimmed ? (highContrast ? 0.75 : 0.48) : 1)
+            if earned && showsSparkle {
+                Image(systemName: "sparkle")
+                    .font(.system(size: size * 0.16, weight: .bold))
+                    .foregroundStyle(Color(dinoHex: 0xFFFFE4))
+                    .shadow(color: Color(dinoHex: 0xFFE24A), radius: 3)
+                    .offset(x: -size * 0.20, y: -size * 0.22)
+            }
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
+    }
+}
+
+struct DinoStars: View {
     let count: Int
     var size: CGFloat = 25
     var showEmpty = true
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: max(1, size * 0.045)) {
             ForEach(0..<3, id: \.self) { index in
                 if showEmpty || index < count {
-                    Image(systemName: "star.fill")
-                        .font(.system(size: size, weight: .bold))
-                        .foregroundStyle(index < count ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : DinoStyle.ink.opacity(highContrast ? 0.5 : 0.13))
-                        .rotationEffect(.degrees(index == 1 ? 0 : index == 0 ? -12 : 12))
-                        .offset(y: index == 1 ? -4 : 0)
-                        .shadow(color: index < count ? DinoStyle.deepGreen.opacity(0.18) : .clear, radius: 0, y: 2)
+                    DinoRewardStar(size: size, earned: index < count, dimmed: index >= count)
+                        .rotationEffect(.degrees(index == 1 ? 0 : index == 0 ? -9 : 9))
+                        .offset(y: index == 1 ? -size * 0.12 : 0)
                 }
             }
         }
