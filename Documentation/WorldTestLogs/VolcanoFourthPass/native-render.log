@@ -1,0 +1,44 @@
+Rendered 320
+Rendered 393
+Rendered 834
+Rendered 1194
+Sources at 320: ["0:(297.3538461538461, 88.0), size 0.5553230769230768", "1:(22.64615384615385, 430.0), size 0.6071794871794871", "2:(297.3538461538461, 780.0), size 0.5907692307692307", "3:(22.64615384615385, 1130.0), size 0.586174358974359", "4:(297.3538461538461, 1452.0), size 0.5553230769230768"]
+Minimum cone height: 127.72430769230766pt
+Volcano audit: 320pt, 5 volcanoes, 16380 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 320pt, 19 placements, 0 lava contacts
+Sources at 375: ["0:(348.46153846153845, 88.0), size 0.6507692307692308", "1:(26.538461538461544, 430.0), size 0.6688461538461539", "2:(348.46153846153845, 780.0), size 0.6507692307692308", "3:(26.538461538461544, 1130.0), size 0.686923076923077", "4:(348.46153846153845, 1452.0), size 0.6092307692307692"]
+Minimum cone height: 140.12307692307692pt
+Volcano audit: 375pt, 5 volcanoes, 16380 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 375pt, 14 placements, 0 lava contacts
+Sources at 393: ["0:(356.11846153846153, 88.0), size 0.6384738461538461", "1:(27.812307692307698, 430.0), size 0.7009507692307692", "2:(365.1876923076923, 780.0), size 0.6384738461538461", "3:(27.812307692307698, 1130.0), size 0.7198953846153846", "4:(365.1876923076923, 1476.0), size 0.6384738461538461"]
+Minimum cone height: 146.84898461538458pt
+Volcano audit: 393pt, 5 volcanoes, 16380 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 393pt, 15 placements, 0 lava contacts
+Sources at 402: ["0:(364.27384615384614, 88.0), size 0.6530953846153845", "1:(28.44923076923078, 430.0), size 0.7170030769230767", "2:(373.5507692307692, 780.0), size 0.6530953846153845", "3:(28.44923076923078, 1130.0), size 0.7363815384615384", "4:(373.5507692307692, 1452.0), size 0.6085661538461538"]
+Minimum cone height: 139.97021538461536pt
+Volcano audit: 402pt, 5 volcanoes, 16380 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 402pt, 14 placements, 0 lava contacts
+Sources at 430: ["0:(399.5692307692308, 88.0), size 0.6985846153846154", "1:(30.430769230769233, 430.0), size 0.7179897435897437", "2:(399.5692307692308, 780.0), size 0.6985846153846154", "3:(30.430769230769233, 1130.0), size 0.787671794871795", "4:(399.5692307692308, 1476.0), size 0.7462153846153846"]
+Minimum cone height: 160.67446153846154pt
+Volcano audit: 430pt, 5 volcanoes, 16380 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 430pt, 13 placements, 0 lava contacts
+Sources at 600: ["0:(562.8, 112.0), size 1.01088", "1:(37.20000000000001, 454.0), size 1.03896", "2:(551.1, 804.0), size 1.01088", "3:(48.90000000000001, 1154.0), size 0.9880000000000001", "4:(574.5, 1428.0), size 0.7675199999999999"]
+Minimum cone height: 176.52959999999996pt
+Volcano audit: 600pt, 5 volcanoes, 16380 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 600pt, 14 placements, 0 lava contacts
+Sources at 744: ["0:(639.84, 112.0), size 1.01088", "1:(80.76, 430.0), size 1.03896", "2:(663.24, 780.0), size 1.01088", "3:(69.06, 1130.0), size 1.0670400000000002", "4:(710.0400000000001, 1428.0), size 1.01088"]
+Minimum cone height: 232.5024pt
+Volcano audit: 744pt, 5 volcanoes, 16380 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 744pt, 34 placements, 0 lava contacts
+Sources at 834: ["0:(717.24, 112.0), size 1.01088", "1:(116.76, 430.0), size 1.03896", "2:(717.24, 780.0), size 1.01088", "3:(105.06, 1130.0), size 1.0670400000000002", "4:(752.34, 1428.0), size 1.01088"]
+Minimum cone height: 232.5024pt
+Volcano audit: 834pt, 5 volcanoes, 16380 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 834pt, 44 placements, 0 lava contacts
+Sources at 1024: ["0:(880.64, 112.0), size 1.01088", "1:(143.36, 430.0), size 1.03896", "2:(880.64, 780.0), size 1.01088", "3:(143.36, 1130.0), size 1.0670400000000002", "4:(880.64, 1428.0), size 1.01088"]
+Minimum cone height: 232.5024pt
+Volcano audit: 1024pt, 5 volcanoes, 16380 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 1024pt, 73 placements, 0 lava contacts
+Sources at 1194: ["0:(1026.84, 112.0), size 1.01088", "1:(167.16000000000003, 430.0), size 1.03896", "2:(1026.84, 780.0), size 1.01088", "3:(167.16000000000003, 1130.0), size 1.0670400000000002", "4:(1026.84, 1428.0), size 1.01088"]
+Minimum cone height: 232.5024pt
+Volcano audit: 1194pt, 5 volcanoes, 16380 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 1194pt, 85 placements, 0 lava contacts

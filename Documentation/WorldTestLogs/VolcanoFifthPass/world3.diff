@@ -1,0 +1,326 @@
+--- World3 before
++++ World3 after
+@@ -6,6 +6,12 @@
+         let point: CGPoint
+         let size: CGFloat
+         var mirrored = false
++        var outlet: CGPoint { position(kind == .summit ? CGPoint(x: 16, y: 32) : CGPoint(x: 17, y: 34)) }
++
++        func position(_ local: CGPoint) -> CGPoint {
++            CGPoint(x: point.x + local.x * size * (mirrored ? -1 : 1), y: point.y + local.y * size)
++        }
++
+         var bounds: CGRect {
+             let local: CGRect
+             switch kind {
+@@ -59,6 +65,75 @@
+                    width: 116 * size, height: 73 * size)
+         }
+     }
++
++    struct Tributary: Identifiable {
++        let id: Int
++        let points: [CGPoint]
++        var path: Path { Path { $0.addLines(points) } }
++    }
++
++    static let channelLanes: [CGFloat] = [-9, -6, -3, 0, 3, 6, 9]
++
++    static func channelWidth(lane: CGFloat, scale: CGFloat) -> CGFloat {
++        (lane == 0 ? 4.2 : abs(lane) == 3 ? 1.2 : abs(lane) == 6 ? 0.8 : 0.6) * scale
++    }
++
++    /// Every slope drains through its visible foot into the nearest side river.
++    /// The final control point approaches from the outer bank along the river.
++    static func tributaries(layout: WorldSceneryLayout) -> [Tributary] {
++        let s = layout.scale
++        return sources(layout: layout).map { source in
++            let right = source.point.x > layout.width / 2
++            let start = source.outlet
++            let river = channelPoint(layout: layout, right: right, y: source.point.y)
++            var drop = min(148 * s, max(64 * s, abs(start.x - river.x) * 0.42 + 32 * s))
++            if source.id == 4 {
++                drop = min(drop, 1675 - 150 * s - source.point.y - 8 * s)
++            }
++            let end = channelPoint(layout: layout, right: right, y: source.point.y + drop)
++            let before = channelPoint(layout: layout, right: right, y: end.y - 1)
++            let after = channelPoint(layout: layout, right: right, y: end.y + 1)
++            let dx = after.x - before.x, dy = after.y - before.y
++            let length = max(0.001, hypot(dx, dy))
++            let approach = min(24 * s, max(8 * s, (end.y - start.y) * 0.4))
++            let c1 = CGPoint(x: start.x + (end.x - start.x) * 0.12,
++                             y: start.y + (end.y - start.y) * 0.68)
++            let bankSide: CGFloat = right ? 1 : -1
++            let c2 = CGPoint(x: end.x - dx / length * approach + dy / length * bankSide * 7 * s,
++                             y: end.y - dy / length * approach - dx / length * bankSide * 7 * s)
++            let points = (0...48).map { index -> CGPoint in
++                let t = CGFloat(index) / 48, u = 1 - t
++                return CGPoint(x: u*u*u*start.x + 3*u*u*t*c1.x + 3*u*t*t*c2.x + t*t*t*end.x,
++                               y: u*u*u*start.y + 3*u*u*t*c1.y + 3*u*t*t*c2.y + t*t*t*end.y)
++            }
++            return Tributary(id: source.id, points: points)
++        }
++    }
++
++    /// Fine rivulets share an outlet instead of ending in an isolated puddle.
++    static func slopeFlow(lane: CGFloat = 0) -> Path {
++        Path { flow in
++            flow.move(to: CGPoint(x: 7 + lane * 9, y: -218))
++            flow.addCurve(to: CGPoint(x: 7 + lane * 26, y: -129),
++                          control1: CGPoint(x: -8 + lane * 18, y: -184),
++                          control2: CGPoint(x: 22 + lane * 25, y: -160))
++            if lane == 0 {
++                flow.addCurve(to: CGPoint(x: 16, y: 5),
++                              control1: CGPoint(x: -9, y: -82), control2: CGPoint(x: 31, y: -38))
++                flow.addQuadCurve(to: CGPoint(x: 16, y: 32), control: CGPoint(x: 16, y: 24))
++            } else {
++                // Smaller rills rejoin at different heights, rather than
++                // outlining the cone with five identical curves to the foot.
++                let t: CGFloat = abs(lane) > 1 ? (lane < 0 ? 0.38 : 0.22) : (lane < 0 ? 0.82 : 0.66)
++                let u = 1 - t
++                let join = CGPoint(x: u*u*u*7 - 3*u*u*t*9 + 3*u*t*t*31 + t*t*t*16,
++                                   y: -u*u*u*129 - 3*u*u*t*82 - 3*u*t*t*38 + t*t*t*5)
++                flow.addCurve(to: join,
++                              control1: CGPoint(x: 7 + lane * 34, y: (-129 + join.y) / 2),
++                              control2: CGPoint(x: join.x - 1, y: join.y - 15))
++            }
++        }
++    }
+     private final class RockField {
+         let rocks: [LooseRock]
+         init(_ rocks: [LooseRock]) { self.rocks = rocks }
+@@ -76,9 +151,9 @@
+         if let field = rockFields.object(forKey: key) { return field.rocks }
+         let s = layout.scale
+         var exclusions: [CGRect] = []
+-        for right in [false, true] {
+-            let river = channel(layout: layout, right: right, from: -layout.routeOffset,
+-                                to: layout.height - layout.routeOffset)
++        let rivers = [false, true].map { channel(layout: layout, right: $0, from: -layout.routeOffset,
++                                               to: layout.height - layout.routeOffset) }
++        for (index, river) in (rivers + tributaries(layout: layout).map(\.path)).enumerated() {
+             var previous: CGPoint? = nil
+             river.forEach { element in
+                 switch element {
+@@ -87,7 +162,7 @@
+                     if let start = previous {
+                         exclusions.append(CGRect(x: min(start.x, point.x), y: min(start.y, point.y),
+                                                  width: abs(start.x - point.x), height: abs(start.y - point.y))
+-                            .insetBy(dx: -25 * s, dy: -25 * s))
++                            .insetBy(dx: (index < 2 ? -18 : -7) * s, dy: (index < 2 ? -18 : -7) * s))
+                     }
+                     previous = point
+                 default: break
+@@ -105,11 +180,13 @@
+             return CGFloat(state >> 8) / CGFloat(0x00FF_FFFF)
+         }
+         var rocks: [LooseRock] = []
+-        let target = max(28, Int(layout.width / 14))
+-        for attempt in 0..<(target * 60) {
++        let target = max(72, Int(layout.width / 8))
++        for attempt in 0..<(target * 160) {
+             let point = CGPoint(x: 8 + random() * (layout.width - 16),
+                                 y: 112 + random() * max(1, layout.height - layout.routeOffset - 340))
+-            let rock = LooseRock(point: point, size: s * (0.22 + random() * 0.46), variation: attempt)
++            // Boulders establish the terrain; small rubble fills the dry gaps.
++            let size = attempt < target * 2 ? 0.28 + random() * 0.30 : 0.12 + random() * 0.19
++            let rock = LooseRock(point: point, size: s * size, variation: attempt)
+             let frame = rock.bounds
+             let clearsRoad = (0...8).allSatisfy { index in
+                 let y = frame.minY + frame.height * CGFloat(index) / 8
+@@ -117,7 +194,7 @@
+                 return frame.maxX < road - 57 * s || frame.minX > road + 57 * s
+             }
+             guard clearsRoad, !exclusions.contains(where: { $0.intersects(frame) }),
+-                  !rocks.contains(where: { $0.bounds.insetBy(dx: -10 * s, dy: -14 * s).intersects(frame) }) else { continue }
++                  !rocks.contains(where: { $0.bounds.insetBy(dx: -4 * s, dy: -5 * s).intersects(frame) }) else { continue }
+             rocks.append(rock)
+             if rocks.count == target { break }
+         }
+@@ -173,11 +250,14 @@
+         }
+         reserve(road, margin: 55 * s)
+         let boss = CGRect(x: w - 155 * s, y: 1675 - 150 * s, width: 172 * s, height: 178 * s)
++        // On a broad bank the final cone sits higher, leaving room for its
++        // tributary to descend before the boss clearing instead of running flat.
++        let finalBendY: CGFloat = w >= 600 ? 1380 : 1428
+         var result: [Source] = []
+         for (id, kind, y, right, baseSize): (Int, Kind, CGFloat, Bool, CGFloat) in [
+             (0, .summit, 112, true, 0.72), (1, .summit, 430, false, 0.74),
+             (2, .summit, 780, true, 0.72), (3, .summit, 1130, false, 0.76),
+-            (4, .summit, 1428, true, 0.72)
++            (4, .summit, finalBendY, true, 0.72)
+         ] {
+             var chosen: Source? = nil
+             // The closer river leaves broad outer clearings for full-size cones.
+@@ -237,8 +317,13 @@
+                     let after = channelPoint(layout: layout, right: right, y: y + 0.5)
+                     let dx = after.x - before.x, dy = after.y - before.y
+                     let length = max(0.001, hypot(dx, dy))
+-                    point.x += dy / length * lane
+-                    point.y -= dx / length * lane
++                    let drift = (sin(y / 71 + lane * 0.45) * 0.55 + sin(y / 31 + lane * 0.7) * 0.28) * layout.scale
++                    // Side fissures branch and merge along the bank instead of
++                    // forming evenly spaced rails beside the central flow.
++                    let spread = 0.12 + 0.88 * pow(sin(y / 113 + abs(lane) / layout.scale * 0.21), 2)
++                    let offset = (lane + drift) * spread
++                    point.x += dy / length * offset
++                    point.y -= dx / length * offset
+                 }
+                 if i == 0 { path.move(to: point) }
+                 else { path.addLine(to: point) }
+@@ -324,13 +409,14 @@
+     @State private var visible = false
+ 
+     var body: some View {
+-        let channels = [false, true].flatMap { right in
+-            (-2...2).map { lane in
++        let channels = source == nil ? [false, true].flatMap { right in
++            VolcanoWorldLayout.channelLanes.map { lane in
+                 VolcanoWorldLayout.channel(layout: layout, right: right, from: -layout.routeOffset,
+                                            to: layout.height - layout.routeOffset,
+-                                           lane: CGFloat(lane) * 4.7 * layout.scale)
+-            }
+-        }
++                                           lane: lane * layout.scale)
++            }
++        } : []
++        let tributaries = source == nil ? VolcanoWorldLayout.tributaries(layout: layout) : []
+         TimelineView(.animation(minimumInterval: 1.0 / 20,
+                                 paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
+             Canvas { context, _ in
+@@ -342,7 +428,9 @@
+                     c.scaleBy(x: source.mirrored ? -source.size : source.size, y: source.size)
+                     VolcanoLifePainter(context: c, time: time, seed: source.id).source(source.kind)
+                 } else {
+-                    VolcanoLifePainter(context: c, time: time, seed: 0).channels(paths: channels, scale: layout.scale)
++                    let painter = VolcanoLifePainter(context: c, time: time, seed: 0)
++                    painter.channels(paths: channels, scale: layout.scale)
++                    painter.tributaries(tributaries, scale: layout.scale)
+                 }
+             }
+         }
+@@ -375,24 +463,24 @@
+ 
+     func channels(paths: [Path], scale: CGFloat) {
+         for (index, river) in paths.enumerated() {
+-            // Parallel streams use the same falling light/dark streaks as the
+-            // old lava falls, following each bend's normal instead of straight lines.
+-            let lane = index % 5
+-            let dash: [CGFloat] = [16 + CGFloat(lane) * 3, 17, 5, 13]
+-            let speed = 48 + Double(lane) * 4
+-            let phase = -CGFloat(((time + Double(index) * 0.23) * speed)
++            // Viscous lava creeps through long, dim highlights. Short bright
++            // dashes and broad travelling pulses made the flow look mechanical.
++            let lane = index % VolcanoWorldLayout.channelLanes.count
++            let central = VolcanoWorldLayout.channelLanes[lane] == 0
++            let dash: [CGFloat] = [70 + CGFloat(lane) * 11, 89, 24, 117]
++            let speed = 3.2 + Double(lane) * 0.22
++            let phase = -CGFloat(((time + Double(index) * 3.7) * speed)
+                 .truncatingRemainder(dividingBy: Double(dash.reduce(0, +))))
+-            context.stroke(river, with: .color(Color(dinoHex: lane % 2 == 0 ? 0xFFF1AD : 0xDF6D30)
+-                .opacity(lane % 2 == 0 ? 0.93 : 0.63)),
+-                           style: StrokeStyle(lineWidth: (lane == 2 ? 3 : 1.8) * scale,
++            context.stroke(river, with: .color(Color(dinoHex: 0xFFE9A0).opacity(central ? 0.42 : 0.28)),
++                           style: StrokeStyle(lineWidth: (central ? 0.75 : 0.45) * scale,
+                                               lineCap: .round, lineJoin: .round, dash: dash, dashPhase: phase))
+-            if lane == 2 {
+-                let pattern: [CGFloat] = [35, 43, 10, 25]
+-                let surge = -CGFloat((time * 34).truncatingRemainder(dividingBy: Double(pattern.reduce(0, +))))
+-                context.stroke(river, with: .color(Color(dinoHex: 0xFFE17A).opacity(0.30)),
+-                               style: StrokeStyle(lineWidth: 14 * scale, lineCap: .round,
+-                                                  lineJoin: .round, dash: pattern, dashPhase: surge))
+-            }
++        }
++    }
++
++    func tributaries(_ feeders: [VolcanoWorldLayout.Tributary], scale: CGFloat) {
++        for feeder in feeders {
++            stroke(feeder.path, width: 0.65 * scale, opacity: 0.38,
++                   dash: [53, 87, 19, 103], speed: 3.6 * Double(scale))
+         }
+     }
+ 
+@@ -401,17 +489,17 @@
+         case .crater:
+             var flow = Path(); flow.move(to: CGPoint(x: 3, y: -96))
+             flow.addCurve(to: CGPoint(x: 17, y: 16), control1: CGPoint(x: -15, y: -55), control2: CGPoint(x: 32, y: -20))
+-            stroke(flow, width: 3, opacity: 0.9, dash: [13, 24, 5, 19], speed: 26)
++            stroke(flow, width: 1, opacity: 0.48, dash: [43, 68, 13, 82], speed: 5)
+             halo(at: CGPoint(x: 0, y: -97), radius: 41, opacity: 0.22 + sin(time * 2.1 + Double(seed)) * 0.05)
+             bubbles(at: CGPoint(x: 0, y: -97), spread: 17, count: 3)
+             bubbles(at: CGPoint(x: 19, y: 19), spread: 31, count: 3)
+             smoke(at: CGPoint(x: 0, y: -104), rise: 121, spread: 28, opacity: 0.54, count: 11)
+             sparks(at: CGPoint(x: 0, y: -101), height: 49, spread: 35, count: 10)
+         case .summit:
+-            var flow = Path(); flow.move(to: CGPoint(x: 7, y: -218))
+-            flow.addCurve(to: CGPoint(x: 7, y: -129), control1: CGPoint(x: -8, y: -184), control2: CGPoint(x: 22, y: -160))
+-            flow.addCurve(to: CGPoint(x: 16, y: 5), control1: CGPoint(x: -9, y: -82), control2: CGPoint(x: 31, y: -38))
+-            stroke(flow, width: 2, opacity: 0.82, dash: [13, 28, 4, 18], speed: 28)
++            for lane: CGFloat in [-1.5, -0.75, 0, 0.75, 1.5] {
++                stroke(VolcanoWorldLayout.slopeFlow(lane: lane), width: lane == 0 ? 0.8 : 0.5,
++                       opacity: lane == 0 ? 0.52 : 0.32, dash: [43, 68, 13, 82], speed: 5.5)
++            }
+             bubbles(at: CGPoint(x: 0, y: -219), spread: 15, count: 3)
+             smoke(at: CGPoint(x: 0, y: -229), rise: 147, spread: 31, opacity: 0.47, count: 12)
+             sparks(at: CGPoint(x: 0, y: -224), height: 48, spread: 31, count: 9)
+@@ -557,8 +645,8 @@
+ 
+     private func lava(_ path: Path, width: CGFloat, moving: Bool = false) {
+         let r = path.boundingRect
+-        context.stroke(path, with: .color(Color(dinoHex: 0xF17A3A).opacity(0.16)), style: StrokeStyle(lineWidth: width + 18, lineCap: .round, lineJoin: .round))
+-        context.stroke(path, with: .color(Color(dinoHex: 0x4A4353).opacity(0.72)), style: StrokeStyle(lineWidth: width + 7, lineCap: .round, lineJoin: .round))
++        context.stroke(path, with: .color(Color(dinoHex: 0xF17A3A).opacity(0.12)), style: StrokeStyle(lineWidth: width + max(3, width * 1.2), lineCap: .round, lineJoin: .round))
++        context.stroke(path, with: .color(Color(dinoHex: 0x4A4353).opacity(0.65)), style: StrokeStyle(lineWidth: width + max(1, width * 0.65), lineCap: .round, lineJoin: .round))
+         context.stroke(path, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xFFCF69), Color(dinoHex: 0xFF873E), Color(dinoHex: 0xE96736)]),
+                                                   startPoint: CGPoint(x: r.midX, y: r.minY), endPoint: CGPoint(x: r.midX, y: r.maxY)),
+                        style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
+@@ -652,9 +740,19 @@
+             }
+             let bed = VolcanoWorldLayout.channel(layout: layout, right: right,
+                                                 from: -layout.routeOffset, to: layout.height - layout.routeOffset)
+-            context.stroke(bed, with: .color(Color(dinoHex: 0xFF9D45).opacity(0.15)),
+-                           style: StrokeStyle(lineWidth: 62 * layout.scale, lineCap: .round, lineJoin: .round))
+-            lava(bed, width: 26 * layout.scale, moving: true)
++            context.stroke(bed, with: .color(Color(dinoHex: 0x3E384D).opacity(0.28)),
++                           style: StrokeStyle(lineWidth: 27 * layout.scale, lineCap: .round, lineJoin: .round))
++            for lane in VolcanoWorldLayout.channelLanes {
++                let fissure = VolcanoWorldLayout.channel(layout: layout, right: right,
++                    from: -layout.routeOffset, to: layout.height - layout.routeOffset, lane: lane * layout.scale)
++                var layer = context
++                layer.opacity = lane == 0 ? 1 : abs(lane) < 6 ? 0.78 : 0.55
++                VolcanoWorldPainter(context: layer).lava(fissure,
++                    width: VolcanoWorldLayout.channelWidth(lane: lane, scale: layout.scale), moving: true)
++            }
++        }
++        for tributary in VolcanoWorldLayout.tributaries(layout: layout) {
++            lava(tributary.path, width: 3.1 * layout.scale, moving: true)
+         }
+     }
+ 
+@@ -800,21 +898,10 @@
+                         .init(x: -20 - CGFloat(i) * 4, y: y + 5)], color: 0xE0B6A0, width: 1, opacity: 0.42)
+                 p.line([.init(x: 30 + CGFloat(i) * 8, y: y + 5), .init(x: 52 + CGFloat(i) * 9, y: y + 13)], color: 0x3D4A62, width: 1.2, opacity: 0.45)
+             }
+-            var flow = Path(); flow.move(to: CGPoint(x: 7, y: -218))
+-            flow.addCurve(to: CGPoint(x: 7, y: -129), control1: CGPoint(x: -8, y: -184), control2: CGPoint(x: 22, y: -160))
+-            flow.addCurve(to: CGPoint(x: 16, y: 5), control1: CGPoint(x: -9, y: -82), control2: CGPoint(x: 31, y: -38))
+-            p.lava(flow, width: 8)
+-            // Tributaries narrow into rock fissures instead of stopping as pipes.
+-            for (direction, startX): (CGFloat, CGFloat) in [(-1, -9), (1, 19)] {
+-                let ribbon = Path { r in
+-                    r.move(to: CGPoint(x: startX - 2.5, y: -219))
+-                    r.addCurve(to: CGPoint(x: direction * 72, y: -48), control1: CGPoint(x: direction * 25, y: -144), control2: CGPoint(x: direction * 59, y: -117))
+-                    r.addCurve(to: CGPoint(x: startX + 2.5, y: -219), control1: CGPoint(x: direction * 47, y: -132), control2: CGPoint(x: direction * 27, y: -159))
+-                    r.closeSubpath()
+-                }
+-                p.material(ribbon, colors: [0xFFE3A0, 0xFFBA74, 0xC98069])
+-            }
+-            p.pool(at: CGPoint(x: 16, y: 9), size: 0.56)
++            for lane: CGFloat in [-1.5, -0.75, 0, 0.75, 1.5] {
++                slopes.lava(VolcanoWorldLayout.slopeFlow(lane: lane),
++                            width: lane == 0 ? 2.6 : abs(lane) < 1 ? 1.1 : 0.75, moving: true)
++            }
+             p.oval(CGRect(x: -28, y: -230, width: 57, height: 20), colors: [0xA19594, 0x555B70, 0x424D65])
+             p.oval(CGRect(x: -20, y: -225, width: 41, height: 12), colors: [0xFFF0B4, 0xFFBD6D, 0xF58153])
+             p.glow(CGPoint(x: 0, y: -224), radius: 34, color: 0xFFD38A, opacity: 0.53)

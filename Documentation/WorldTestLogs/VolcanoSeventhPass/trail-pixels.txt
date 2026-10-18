@@ -1,0 +1,4 @@
+320pt: 90389 solid light trail pixels, 0 changed
+393pt: 99466 solid light trail pixels, 0 changed
+834pt: 128017 solid light trail pixels, 0 changed
+1194pt: 128019 solid light trail pixels, 0 changed

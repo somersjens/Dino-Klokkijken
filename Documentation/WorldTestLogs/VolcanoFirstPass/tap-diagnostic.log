@@ -1,0 +1,305 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun "/private/tmp/dino-volcano-before-build/Build/Products/Dino Klokkijken_iphonesimulator27.0-arm64.xctestrun" -destination "platform=iOS Simulator,id=D89C27EC-4204-4544-8F60-229870DD9564" -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testVolcanoTapDiagnostic" -resultBundlePath /private/tmp/DinoVolcanoTapDiagnostic.xcresult
+
+Writing result bundle at path:
+	/private/tmp/DinoVolcanoTapDiagnostic.xcresult
+
+2026-10-18 08:27:52.096787+0200 DinoUITests-Runner[31456:35152939] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-18 08:27:54.708.
+Test Suite 'DinoUITests.xctest' started at 2026-10-18 08:27:54.709.
+Test Suite 'DinoUITests' started at 2026-10-18 08:27:54.709.
+Test Case '-[DinoUITests.DinoUITests testVolcanoTapDiagnostic]' started.
+    t =     0.00s Start Test at 2026-10-18 08:27:54.714
+    t =     0.02s Set Up
+    t =     0.03s     Setting device orientation to Portrait
+    t =     0.06s         Wait for com.apple.springboard to idle
+    t =     0.07s     Open Hakketjak.Dino-Klokkijken
+    t =     0.07s         Launch Hakketjak.Dino-Klokkijken
+2026-10-18 08:27:54.845 xcodebuild[31437:35152538] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-18 08:27:54.845 xcodebuild[31437:35152538] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[31456]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_24A434/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1062b0398) and /Library/Developer/CoreSimulator/Volumes/iOS_24A434/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x1063a4310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.75s             Setting up automation session
+    t =     3.13s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     5.01s Terminate Hakketjak.Dino-Klokkijken:31533
+    t =     6.07s Open Hakketjak.Dino-Klokkijken
+    t =     6.07s     Launch Hakketjak.Dino-Klokkijken
+2026-10-18 08:28:00.786 xcodebuild[31437:35152538] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-18 08:28:00.786 xcodebuild[31437:35152538] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     6.30s         Setting up automation session
+    t =    10.32s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    14.93s Waiting 8.0s for "header.settings" Button to exist
+    t =    15.96s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    15.97s         Checking existence of `"header.settings" Button`
+    t =    16.57s Find the "header.settings" Button
+    t =    16.94s Find the "map.level.21" Button
+    t =    17.35s Checking existence of `"map.level.21" Button`
+    t =    17.80s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.00s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.72] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.47] with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    18.00s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.01s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.20s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    18.42s     Synthesize event
+    t =    18.42s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.59s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.82s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.04s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.25s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    20.19s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.74s Find the "header.settings" Button
+    t =    22.19s Find the "map.level.21" Button
+    t =    22.57s Checking existence of `"map.level.21" Button`
+    t =    22.93s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.12s Checking existence of `"map.level.21" Button`
+    t =    23.50s Find the "map.level.21" Button
+    t =    23.90s Find the "map.level.21" Button
+    t =    24.24s Find the "header.settings" Button
+    t =    24.64s Find the "map.level.21" Button
+    t =    25.05s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    25.25s Find the "map.level.21" Button
+    t =    25.62s Requesting snapshot of accessibility hierarchy for app with pid 31600
+    t =    26.00s Find: Descendants matching type Button
+    t =    26.00s Find: Elements matching predicate '"map.level.21" IN identifiers'
+    t =    26.04s Requesting snapshot of accessibility hierarchy for app with pid 31600
+    t =    26.45s Find: Descendants matching type Button
+    t =    26.46s Find: Elements matching predicate '"map.level.21" IN identifiers'
+    t =    26.47s Requesting snapshot of accessibility hierarchy for app with pid 31600
+    t =    26.88s Find: Descendants matching type Button
+    t =    26.88s Requesting snapshot of accessibility hierarchy for app with pid 31600
+VOLCANO NODE BEFORE (84.33333587646484, 641.6666870117188, 72.00000762939453, 78.0) Attributes: Button, 0x106a70500, {{84.3, 641.7}, {72.0, 78.0}}, identifier: 'map.level.21', label: '21'
+Element subtree:
+ →Button, 0x106a70500, {{84.3, 641.7}, {72.0, 78.0}}, identifier: 'map.level.21', label: '21'
+    Other, 0x106a70640, {{84.3, 641.7}, {72.0, 78.0}}
+    StaticText, 0x106a70780, {{103.0, 659.7}, {34.7, 36.0}}, label: '21'
+Path to element:
+ →Application, 0x106485400, pid: 31600, label: 'Tijd Dino'
+  ↳Window (Main), 0x106485a40, {{0.0, 0.0}, {402.0, 874.0}}
+   ↳Other, 0x106484c80, {{0.0, 0.0}, {402.0, 874.0}}
+    ↳Other, 0x106485b80, {{0.0, 0.0}, {402.0, 874.0}}
+     ↳Other, 0x106484f00, {{0.0, 0.0}, {402.0, 874.0}}
+      ↳Other, 0x106485180, {{0.0, 0.0}, {402.0, 874.0}}
+       ↳ScrollView, 0x106485040, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'map.route'
+        ↳Other, 0x1064852c0, {{0.0, -4320.3}, {402.0, 21854.0}}
+         ↳Button, 0x106a70500, {{84.3, 641.7}, {72.0, 78.0}}, identifier: 'map.level.21', label: '21'
+Query chain:
+ →Find: Target Application 'Hakketjak.Dino-Klokkijken'
+  Output: {
+    Application, 0x107088c80, pid: 31600, label: 'Tijd Dino'
+  }
+  ↪︎Find: Descendants matching type Button
+    Output: {
+      Button, 0x10707b0c0, {{4.1, 74.4}, {86.6, 103.1}}, identifier: 'header.dino'
+      Button, 0x10707b700, {{93.8, 91.9}, {66.3, 68.0}}, identifier: 'header.level', label: 'Level, 20'
+      Button, 0x10707bac0, {{167.3, 91.9}, {66.3, 68.0}}, identifier: 'header.stars', label: 'Sterren, 0'
+      Button, 0x10707be80, {{240.9, 91.9}, {66.0, 68.0}}, identifier: 'header.practice', label: 'Oefenen'
+      Button, 0x107088280, {{314.0, 91.9}, {66.3, 68.0}}, identifier: 'header.settings', label: 'Instellingen'
+      Button, 0x106beae40, {{92.7, -3949.3}, {217.0, 56.0}}, identifier: 'map.friends', label: 'Vrienden'
+      Button, 0x106beb480, {{17.2, -3891.1}, {367.5, 77.5}}, identifier: 'map.bossShortcut', label: 'Tiko de Junglewachter, Probeer hem nu · 10 uitdagingen'
+      Button, 0x106bebc00, {{84.3, -3550.0}, {72.0, 78.0}}, identifier: 'map.level.1', label: '1'
+      Button, 0x107038000, {{165.0, -3375.0}, {72.0, 78.0}}, identifier: 'map.level.2', label: '2'
+      Button, 0x1070383c0, {{245.7, -3200.0}, {72.0, 78.0}}, identifier: 'map.level.3', label: '3'
+      Button, 0x107038780, {{165.0, -3025.0}, {72.0, 78.0}}, identifier: 'map.level.4', label: '4'
+      Button, 0x107038b40, {{84.3, -2850.0}, {72.0, 78.0}}, identifier: 'map.level.5', label: '5'
+      Button, 0x107038f00, {{165.0, -2675.0}, {72.0, 78.0}}, identifier: 'map.level.6', label: '6'
+      Button, 0x1070392c0, {{245.7, -2500.0}, {72.0, 78.0}}, identifier: 'map.level.7', label: '7'
+      Button, 0x107039680, {{165.0, -2325.0}, {72.0, 78.0}}, identifier: 'map.level.8', label: '8'
+      Button, 0x107039a40, {{84.3, -2150.0}, {72.0, 78.0}}, identifier: 'map.level.9', label: '9'
+      Button, 0x107039e00, {{156.0, -1984.0}, {90.0, 96.0}}, identifier: 'map.level.10', label: '10'
+      Button, 0x10703a6c0, {{84.3, -1454.0}, {72.0, 78.0}}, identifier: 'map.level.11', label: '11'
+      Button, 0x10703aa80, {{165.0, -1279.0}, {72.0, 78.0}}, identifier: 'map.level.12', label: '12'
+      Button, 0x10703ae40, {{245.7, -1104.0}, {72.0, 78.0}}, identifier: 'map.level.13', label: '13'
+      Button, 0x10703b200, {{165.0, -929.0}, {72.0, 78.0}}, identifier: 'map.level.14', label: '14'
+      Button, 0x10703b5c0, {{84.3, -754.0}, {72.0, 78.0}}, identifier: 'map.level.15', label: '15'
+      Button, 0x10703b980, {{165.0, -579.0}, {72.0, 78.0}}, identifier: 'map.level.16', label: '16'
+      Button, 0x10703bd40, {{245.7, -404.0}, {72.0, 78.0}}, identifier: 'map.level.17', label: '17'
+      Button, 0x107040140, {{165.0, -229.0}, {72.0, 78.0}}, identifier: 'map.level.18', label: '18'
+      Button, 0x107040500, {{84.3, -54.0}, {72.0, 78.0}}, identifier: 'map.level.19', label: '19'
+      Button, 0x1070408c0, {{143.5, 99.5}, {115.0, 115.0}}, identifier: 'map.level.20', label: '20'
+      Button, 0x107041180, {{84.3, 641.7}, {72.0, 78.0}}, identifier: 'map.level.21', label: '21'
+      Button, 0x107041540, {{165.0, 816.7}, {72.0, 78.0}}, identifier: 'map.level.22', label: 'Vergrendel', Disabled
+      Button, 0x107041900, {{245.7, 991.7}, {72.0, 78.0}}, identifier: 'map.level.23', label: 'Vergrendel', Disabled
+      Button, 0x107041cc0, {{165.0, 1166.7}, {72.0, 78.0}}, identifier: 'map.level.24', label: 'Vergrendel', Disabled
+      Button, 0x107042080, {{84.3, 1341.7}, {72.0, 78.0}}, identifier: 'map.level.25', label: 'Vergrendel', Disabled
+      Button, 0x107042440, {{165.0, 1516.7}, {72.0, 78.0}}, identifier: 'map.level.26', label: 'Vergrendel', Disabled
+      Button, 0x107042800, {{245.7, 1691.7}, {72.0, 78.0}}, identifier: 'map.level.27', label: 'Vergrendel', Disabled
+      Button, 0x107042bc0, {{165.0, 1866.7}, {72.0, 78.0}}, identifier: 'map.level.28', label: 'Vergrendel', Disabled
+      Button, 0x107042f80, {{84.3, 2041.7}, {72.0, 78.0}}, identifier: 'map.level.29', label: 'Vergrendel', Disabled
+      Button, 0x107043340, {{156.0, 2207.7}, {90.0, 96.0}}, identifier: 'map.level.30', label: '30'
+      Button, 0x107043c00, {{84.3, 2737.7}, {72.0, 78.0}}, identifier: 'map.level.31', label: 'Vergrendel', Disabled
+      Button, 0x10704c000, {{165.0, 2912.7}, {72.0, 78.0}}, identifier: 'map.level.32', label: 'Vergrendel', Disabled
+      Button, 0x10704c3c0, {{245.7, 3087.7}, {72.0, 78.0}}, identifier: 'map.level.33', label: 'Vergrendel', Disabled
+      Button, 0x10704c780, {{165.0, 3262.7}, {72.0, 78.0}}, identifier: 'map.level.34', label: 'Vergrendel', Disabled
+      Button, 0x10704cb40, {{84.3, 3437.7}, {72.0, 78.0}}, identifier: 'map.level.35', label: 'Vergrendel', Disabled
+      Button, 0x10704cf00, {{165.0, 3612.7}, {72.0, 78.0}}, identifier: 'map.level.36', label: 'Vergrendel', Disabled
+      Button, 0x10704d2c0, {{245.7, 3787.7}, {72.0, 78.0}}, identifier: 'map.level.37', label: 'Vergrendel', Disabled
+      Button, 0x10704d680, {{165.0, 3962.7}, {72.0, 78.0}}, identifier: 'map.level.38', label: 'Vergrendel', Disabled
+      Button, 0x10704da40, {{84.3, 4137.7}, {72.0, 78.0}}, identifier: 'map.level.39', label: 'Vergrendel', Disabled
+      Button, 0x10704de00, {{156.0, 4303.7}, {90.0, 96.0}}, identifier: 'map.level.40', label: 'Kroon, Gevuld, Vergrendel', Disabled
+      Button, 0x10704e6c0, {{84.3, 4833.3}, {72.0, 78.0}}, identifier: 'map.level.41', label: 'Vergrendel', Disabled
+      Button, 0x10704ea80, {{165.0, 5008.3}, {72.0, 78.0}}, identifier: 'map.level.42', label: 'Vergrendel', Disabled
+      Button, 0x10704ee40, {{245.7, 5183.3}, {72.0, 78.0}}, identifier: 'map.level.43', label: 'Vergrendel', Disabled
+      Button, 0x10704f200, {{165.0, 5358.3}, {72.0, 78.0}}, identifier: 'map.level.44', label: 'Vergrendel', Disabled
+      Button, 0x10704f5c0, {{84.3, 5533.3}, {72.0, 78.0}}, identifier: 'map.level.45', label: 'Vergrendel', Disabled
+      Button, 0x10704f980, {{165.0, 5708.3}, {72.0, 78.0}}, identifier: 'map.level.46', label: 'Vergrendel', Disabled
+      Button, 0x10704fd40, {{245.7, 5883.3}, {72.0, 78.0}}, identifier: 'map.level.47', label: 'Vergrendel', Disabled
+      Button, 0x107054140, {{165.0, 6058.3}, {72.0, 78.0}}, identifier: 'map.level.48', label: 'Vergrendel', Disabled
+      Button, 0x107054500, {{84.3, 6233.3}, {72.0, 78.0}}, identifier: 'map.level.49', label: 'Vergrendel', Disabled
+      Button, 0x1070548c0, {{156.0, 6399.3}, {90.0, 96.0}}, identifier: 'map.level.50', label: 'Kroon, Gevuld, Vergrendel', Disabled
+      Button, 0x107055180, {{84.3, 7104.0}, {72.0, 78.0}}, identifier: 'map.level.51', label: 'Vergrendel', Disabled
+      Button, 0x107055540, {{165.0, 7279.0}, {72.0, 78.0}}, identifier: 'map.level.52', label: 'Vergrendel', Disabled
+      Button, 0x107055900, {{245.7, 7454.0}, {72.0, 78.0}}, identifier: 'map.level.53', label: 'Vergrendel', Disabled
+      Button, 0x107055cc0, {{165.0, 7629.0}, {72.0, 78.0}}, identifier: 'map.level.54', label: 'Vergrendel', Disabled
+      Button, 0x107056080, {{84.3, 7804.0}, {72.0, 78.0}}, identifier: 'map.level.55', label: 'Vergrendel', Disabled
+      Button, 0x107056440, {{165.0, 7979.0}, {72.0, 78.0}}, identifier: 'map.level.56', label: 'Vergrendel', Disabled
+      Button, 0x107056800, {{245.7, 8154.0}, {72.0, 78.0}}, identifier: 'map.level.57', label: 'Vergrendel', Disabled
+      Button, 0x107056bc0, {{165.0, 8329.0}, {72.0, 78.0}}, identifier: 'map.level.58', label: 'Vergrendel', Disabled
+      Button, 0x107056f80, {{84.3, 8504.0}, {72.0, 78.0}}, identifier: 'map.level.59', label: 'Vergrendel', Disabled
+      Button, 0x107057340, {{156.0, 8670.0}, {90.0, 96.0}}, identifier: 'map.level.60', label: 'Kroon, Gevuld, Vergrendel', Disabled
+      Button, 0x107057c00, {{84.3, 9199.7}, {72.0, 78.0}}, identifier: 'map.level.61', label: 'Vergrendel', Disabled
+      Button, 0x107060000, {{165.0, 9374.7}, {72.0, 78.0}}, identifier: 'map.level.62', label: 'Vergrendel', Disabled
+      Button, 0x1070603c0, {{245.7, 9549.7}, {72.0, 78.0}}, identifier: 'map.level.63', label: 'Vergrendel', Disabled
+      Button, 0x107060780, {{165.0, 9724.7}, {72.0, 78.0}}, identifier: 'map.level.64', label: 'Vergrendel', Disabled
+      Button, 0x107060b40, {{84.3, 9899.7}, {72.0, 78.0}}, identifier: 'map.level.65', label: 'Vergrendel', Disabled
+      Button, 0x107060f00, {{165.0, 10074.7}, {72.0, 78.0}}, identifier: 'map.level.66', label: 'Vergrendel', Disabled
+      Button, 0x1070612c0, {{245.7, 10249.7}, {72.0, 78.0}}, identifier: 'map.level.67', label: 'Vergrendel', Disabled
+      Button, 0x107061680, {{165.0, 10424.7}, {72.0, 78.0}}, identifier: 'map.level.68', label: 'Vergrendel', Disabled
+      Button, 0x107061a40, {{84.3, 10599.7}, {72.0, 78.0}}, identifier: 'map.level.69', label: 'Vergrendel', Disabled
+      Button, 0x107061e00, {{156.0, 10765.7}, {90.0, 96.0}}, identifier: 'map.level.70', label: 'Kroon, Gevuld, Vergrendel', Disabled
+      Button, 0x1070626c0, {{84.3, 11295.7}, {72.0, 78.0}}, identifier: 'map.level.71', label: 'Vergrendel', Disabled
+      Button, 0x107062a80, {{165.0, 11470.7}, {72.0, 78.0}}, identifier: 'map.level.72', label: 'Vergrendel', Disabled
+      Button, 0x107062e40, {{245.7, 11645.7}, {72.0, 78.0}}, identifier: 'map.level.73', label: 'Vergrendel', Disabled
+      Button, 0x107063200, {{165.0, 11820.7}, {72.0, 78.0}}, identifier: 'map.level.74', label: 'Vergrendel', Disabled
+      Button, 0x1070635c0, {{84.3, 11995.7}, {72.0, 78.0}}, identifier: 'map.level.75', label: 'Vergrendel', Disabled
+      Button, 0x107063980, {{165.0, 12170.7}, {72.0, 78.0}}, identifier: 'map.level.76', label: 'Vergrendel', Disabled
+      Button, 0x107063d40, {{245.7, 12345.7}, {72.0, 78.0}}, identifier: 'map.level.77', label: 'Vergrendel', Disabled
+      Button, 0x10706c140, {{165.0, 12520.7}, {72.0, 78.0}}, identifier: 'map.level.78', label: 'Vergrendel', Disabled
+      Button, 0x10706c500, {{84.3, 12695.7}, {72.0, 78.0}}, identifier: 'map.level.79', label: 'Vergrendel', Disabled
+      Button, 0x10706c8c0, {{156.0, 12861.7}, {90.0, 96.0}}, identifier: 'map.level.80', label: 'Kroon, Gevuld, Vergrendel', Disabled
+      Button, 0x10706d180, {{84.3, 13391.3}, {72.0, 78.0}}, identifier: 'map.level.81', label: 'Vergrendel', Disabled
+      Button, 0x10706d540, {{165.0, 13566.3}, {72.0, 78.0}}, identifier: 'map.level.82', label: 'Vergrendel', Disabled
+      Button, 0x10706d900, {{245.7, 13741.3}, {72.0, 78.0}}, identifier: 'map.level.83', label: 'Vergrendel', Disabled
+      Button, 0x10706dcc0, {{165.0, 13916.3}, {72.0, 78.0}}, identifier: 'map.level.84', label: 'Vergrendel', Disabled
+      Button, 0x10706e080, {{84.3, 14091.3}, {72.0, 78.0}}, identifier: 'map.level.85', label: 'Vergrendel', Disabled
+      Button, 0x10706e440, {{165.0, 14266.3}, {72.0, 78.0}}, identifier: 'map.level.86', label: 'Vergrendel', Disabled
+      Button, 0x10706e800, {{245.7, 14441.3}, {72.0, 78.0}}, identifier: 'map.level.87', label: 'Vergrendel', Disabled
+      Button, 0x10706ebc0, {{165.0, 14616.3}, {72.0, 78.0}}, identifier: 'map.level.88', label: 'Vergrendel', Disabled
+      Button, 0x10706ef80, {{84.3, 14791.3}, {72.0, 78.0}}, identifier: 'map.level.89', label: 'Vergrendel', Disabled
+      Button, 0x10706f340, {{156.0, 14957.3}, {90.0, 96.0}}, identifier: 'map.level.90', label: 'Kroon, Gevuld, Vergrendel', Disabled
+      Button, 0x10706fc00, {{84.3, 15487.3}, {72.0, 78.0}}, identifier: 'map.level.91', label: 'Vergrendel', Disabled
+      Button, 0x107078000, {{165.0, 15662.3}, {72.0, 78.0}}, identifier: 'map.level.92', label: 'Vergrendel', Disabled
+      Button, 0x1070783c0, {{245.7, 15837.3}, {72.0, 78.0}}, identifier: 'map.level.93', label: 'Vergrendel', Disabled
+      Button, 0x107078780, {{165.0, 16012.3}, {72.0, 78.0}}, identifier: 'map.level.94', label: 'Vergrendel', Disabled
+      Button, 0x107078b40, {{84.3, 16187.3}, {72.0, 78.0}}, identifier: 'map.level.95', label: 'Vergrendel', Disabled
+      Button, 0x107078f00, {{165.0, 16362.3}, {72.0, 78.0}}, identifier: 'map.level.96', label: 'Vergrendel', Disabled
+      Button, 0x1070792c0, {{245.7, 16537.3}, {72.0, 78.0}}, identifier: 'map.level.97', label: 'Vergrendel', Disabled
+      Button, 0x107079680, {{165.0, 16712.3}, {72.0, 78.0}}, identifier: 'map.level.98', label: 'Vergrendel', Disabled
+      Button, 0x107079a40, {{84.3, 16887.3}, {72.0, 78.0}}, identifier: 'map.level.99', label: 'Vergrendel', Disabled
+      Button, 0x107079e00, {{156.0, 17053.3}, {90.0, 96.0}}, identifier: 'map.level.100', label: 'Kroon, Gevuld, Vergrendel', Disabled
+    }
+    ↪︎Find: Elements matching predicate '"map.level.21" IN identifiers'
+      Output: {
+        Button, 0x106ba2580, {{84.3, 641.7}, {72.0, 78.0}}, identifier: 'map.level.21', label: '21'
+      }
+
+    t =    27.91s Tap "map.level.21" Button[0.50, 0.50]
+    t =    27.91s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    27.91s     Find the "map.level.21" Button
+    t =    28.37s     Check for interrupting elements affecting "map.level.21" Button
+    t =    28.60s     Synthesize event
+    t =    28.60s         Find the "map.level.21" Button
+    t =    28.98s         Find the "map.level.21" Button
+    t =    29.34s         Find the "map.level.21" Button
+    t =    29.95s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    30.17s Added attachment named 'volcano-tap-after-center'
+    t =    30.17s Requesting snapshot of accessibility hierarchy for app with pid 31600
+    t =    30.33s Requesting snapshot of accessibility hierarchy for app with pid 31600
+VOLCANO TREE AFTER CENTER Optional(Attributes: Application, 0x106a73d40, pid: 31600, label: 'Tijd Dino'
+Element subtree:
+ →Application, 0x106a73d40, pid: 31600, label: 'Tijd Dino'
+    Window (Main), 0x106a72bc0, {{0.0, 0.0}, {402.0, 874.0}}
+      Other, 0x106a73e80, {{0.0, 0.0}, {402.0, 874.0}}
+        Other, 0x106a73ac0, {{0.0, 0.0}, {402.0, 874.0}}
+          Other, 0x106a73480, {{0.0, 0.0}, {402.0, 874.0}}
+            Other, 0x106a72f80, {{0.0, 0.0}, {402.0, 874.0}}
+              ScrollView, 0x106a73200, {{0.0, 0.0}, {402.0, 874.0}}, identifier: 'map.route', Disabled
+                Other, 0x106a730c0, {{0.0, -4320.3}, {402.0, 21854.0}}
+                Other, 0x106a72e40, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x106a72d00, {{0.0, 0.0}, {402.0, 102.0}}
+                Other, 0x106a726c0, {{0.0, 0.0}, {402.0, 874.0}}
+                  Other, 0x106a72a80, {{0.0, 0.0}, {402.0, 102.0}}
+              Button, 0x106a72940, {{4.1, 74.4}, {86.6, 103.1}}, identifier: 'header.dino', Disabled
+                Other, 0x106a72800, {{1.9, 76.2}, {103.8, 99.6}}, Disabled
+                Image, 0x106a72300, {{-14.4, 88.5}, {129.5, 129.5}}, Disabled
+                Image, 0x106a72580, {{-14.4, 88.5}, {129.5, 129.5}}, Disabled
+              Other, 0x106a72440, {{53.6, 85.7}, {338.1, 80.4}}, identifier: 'header.world.2', Disabled
+              Button, 0x106a71f40, {{93.8, 91.9}, {66.3, 68.0}}, identifier: 'header.level', label: 'Level, 20', Disabled
+                StaticText, 0x106a721c0, {{114.9, 101.2}, {24.1, 10.3}}, identifier: 'header.level', label: 'Level', Disabled
+                StaticText, 0x106a72080, {{100.3, 110.7}, {53.3, 46.7}}, identifier: 'header.level', label: '20', Disabled
+              Button, 0x106a71b80, {{167.3, 91.9}, {66.3, 68.0}}, identifier: 'header.stars', label: 'Sterren, 0', Disabled
+                StaticText, 0x106a71e00, {{183.5, 101.2}, {34.0, 10.3}}, identifier: 'header.stars', label: 'Sterren', Disabled
+                StaticText, 0x106a71cc0, {{187.1, 110.7}, {26.8, 46.7}}, identifier: 'header.stars', label: '0', Disabled
+              Button, 0x106a717c0, {{240.9, 91.9}, {66.0, 68.0}}, identifier: 'header.practice', label: 'Oefenen', Disabled
+                StaticText, 0x106a71a40, {{240.9, 91.9}, {66.0, 68.0}}, label: 'Oefenen', Disabled
+                Other, 0x106a71900, {{258.4, 118.7}, {30.9, 30.9}}, Disabled
+              Button, 0x106a71400, {{314.0, 91.9}, {66.3, 68.0}}, identifier: 'header.settings', label: 'Instellingen', Disabled
+                StaticText, 0x106a71680, {{320.4, 101.2}, {53.6, 10.3}}, label: 'Instellingen', Disabled
+                Image, 0x106a71540, {{329.8, 117.0}, {34.7, 34.7}}, identifier: 'gearshape.fill', label: 'Tandwielvorm, Gevuld', Disabled
+              Other, 0x106a71040, {{364.3, 91.6}, {37.4, 65.1}}, Disabled
+              Other, 0x106a712c0, {{163.2, 100.8}, {1.0, 50.2}}, Disabled
+              Other, 0x106a71180, {{236.7, 100.8}, {1.0, 50.2}}, Disabled
+              Other, 0x106a70c80, {{309.9, 100.8}, {1.0, 50.2}}, Disabled
+              Other, 0x106a70f00, {{12.0, 208.0}, {378.0, 28.0}}, identifier: 'level.startCard'
+              Other, 0x106a70dc0, {{12.0, 236.0}, {378.0, 542.0}}, identifier: 'level.startCard'
+              StaticText, 0x106a708c0, {{157.7, 261.9}, {86.7, 26.3}}, identifier: 'level.startCard', label: 'Level 21'
+              ScrollView, 0x106a70b40, {{38.0, 306.3}, {326.0, 28.0}}, identifier: 'level.startCard'
+                Other, 0x106a70a00, {{38.0, 306.3}, {326.0, 28.0}}
+                  StaticText, 0x106a703c0, {{38.0, 306.3}, {326.0, 28.0}}, identifier: 'level.questions', label: '1, Kies de analoge klok, Kwartieren'
+                    StaticText, 0x106a70280, {{38.0, 306.3}, {28.0, 28.0}}, identifier: 'level.question.0.number', label: '1'
+                    StaticText, 0x106a70140, {{76.0, 311.3}, {143.7, 18.0}}, label: 'Kies de analoge klok'
+                    StaticText, 0x106a70000, {{294.3, 312.5}, {69.7, 15.7}}, label: 'Kwartieren'
+                Other, 0x10711b840, {{331.0, 306.3}, {30.0, 28.0}}, label: 'Verticale schuifbalk, 1 pagina', value: 0%
+                  Other, 0x10711b980, {{358.0, 323.3}, {3.0, 8.0}}
+                Other, 0x10711bac0, {{331.0, 306.3}, {30.0, 28.0}}, label: 'Verticale schuifbalk, 1 pagina', value: 0%
+                  Other, 0x10711bc00, {{358.0, 323.3}, {3.0, 8.0}}
+              Button, 0x10711bd40, {{37.0, 351.3}, {328.0, 60.0}}, identifier: 'level.startCard', label: 'Spelen'
+                StaticText, 0x10711be80, {{157.3, 369.3}, {89.8, 24.0}}, label: 'Spelen'
+                Image, 0x106be9f40, {{157.3, 372.3}, {16.3, 18.0}}, identifier: 'play.fill', label: 'Speel Af'
+              Button, 0x106be9e00, {{37.2, 427.6}, {327.5, 53.5}}, identifier: 'level.startCard', label: 'Game Center gebruiken'
+                StaticText, 0x106be9cc0, {{90.0, 443.9}, {224.0, 20.3}}, label: 'Game Center gebruiken'
+                Image, 0x106be9b80, {{90.0, 446.7}, {24.3, 16.7}}, identifier: 'person.2.fill', label: 'Twee Personen, Gevuld'
+              Other, 0x106be9a40, {{201.0, 451.0}, {0.0, 0.0}}
+              Button, 0x106be9680, {{37.2, 497.6}, {327.5, 53.5}}, identifier: 'level.startCard', label: 'Levelkaart'
+Path to element:
+ →Application, 0x106a73d40, pid: 31600, label: 'Tijd Dino'
+Query chain:
+ →Find: Target Application 'Hakketjak.Dino-Klokkijken'
+  Output: {
+    Application, 0x106be9900, pid: 31600, label: 'Tijd Dino'
+  }
+)
+    t =    30.39s Checking existence of `"level.play" Button`
+    t =    30.43s Tap "map.level.21" Button
+    t =    30.43s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    30.44s     Find the "map.level.21" Button
+    t =    31.48s         Find the "map.level.21" Button (retry 1)
+    t =    32.53s         Find the "map.level.21" Button (retry 2)
+    t =    32.58s Requesting snapshot of accessibility hierarchy for app with pid 31600
+/tmp/dino-volcano-baseline/Tests/DinoUITests.swift:331: error: -[DinoUITests.DinoUITests testVolcanoTapDiagnostic] : Failed to tap "map.level.21" Button: No matches found for Elements matching predicate '"map.level.21" IN identifiers' from input {(
+    Button, identifier: 'header.dino', Disabled,
+    Button, identifier: 'header.level', label: 'Level, 20', Disabled,
+    Button, identifier: 'header.stars', label: 'Sterren, 0', Disabled,
+    Button, identifier: 'header.practice', label: 'Oefenen', Disabled,
+    Button, identifier: 'header.settings', label: 'Instellingen', Disabled,
+    Button, identifier: 'level.startCard', label: 'Spelen',
+    Button, identifier: 'level.startCard', label: 'Game Center gebruiken',
+    Button, identifier: 'level.startCard', label: 'Levelkaart'
+)}
+    t =    32.77s Tear Down
+Test Case '-[DinoUITests.DinoUITests testVolcanoTapDiagnostic]' failed (33.033 seconds).
+Test Suite 'DinoUITests' failed at 2026-10-18 08:28:27.747.
+	 Executed 1 test, with 1 failure (0 unexpected) in 33.033 (33.038) seconds
+Test Suite 'DinoUITests.xctest' failed at 2026-10-18 08:28:27.747.
+	 Executed 1 test, with 1 failure (0 unexpected) in 33.033 (33.038) seconds
+Test Suite 'Selected tests' failed at 2026-10-18 08:28:27.748.
+	 Executed 1 test, with 1 failure (0 unexpected) in 33.033 (33.039) seconds
+** BUILD INTERRUPTED **

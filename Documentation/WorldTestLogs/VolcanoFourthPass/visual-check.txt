@@ -1,0 +1,3 @@
+32 native animation frames differ from the first frame.
+Two reduced-motion renders at different times are pixel-identical.
+Native compositions inspected at 320, 393, 834 and 1194 points.

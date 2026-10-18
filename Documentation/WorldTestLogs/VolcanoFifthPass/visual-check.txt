@@ -1,0 +1,4 @@
+48 native animation frames differ from the first frame.
+Two reduced-motion renders at different times are pixel-identical.
+Native compositions inspected at 320, 393, 834 and 1194 points.
+Rock groups: [(320, 72), (375, 72), (393, 72), (402, 72), (430, 72), (600, 75), (744, 93), (834, 104), (1024, 128), (1194, 149)]

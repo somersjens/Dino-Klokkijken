@@ -1,0 +1,31 @@
+{
+  "widths": [
+    320,
+    393,
+    834,
+    1194
+  ],
+  "cascade_centerline_max_error_points": 0.001,
+  "right_brook_lead_points": {
+    "320": 169,
+    "393": 164,
+    "834": 167,
+    "1194": 170
+  },
+  "reduced_motion_rgb_identical": true,
+  "frozen_files_identical": true,
+  "motion_changed_pixels": [
+    63592,
+    73598,
+    80649
+  ],
+  "ui_tests": {
+    "world_ids": [
+      2,
+      3
+    ],
+    "iphone_passed": 2,
+    "ipad_passed": 2,
+    "failed": 0
+  }
+}

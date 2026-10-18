@@ -1,0 +1,34 @@
+Rendered 320
+Rendered 393
+Rendered 834
+Rendered 1194
+Sources at 320: ["0:(297.3538461538461, 126.0), size 0.21825641025641024", "1:(30.030769230769238, 430.0), size 0.47261538461538455", "2:(282.58461538461535, 780.0), size 0.37743589743589745", "3:(22.64615384615385, 1130.0), size 0.41025641025641024", "4:(289.96923076923076, 1464.0), size 0.33936410256410254"]
+Volcano audit: 320pt, 5 volcanoes, 5460 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 320pt, 28 placements, 0 lava contacts
+Sources at 375: ["0:(348.46153846153845, 126.0), size 0.25576923076923075", "1:(35.1923076923077, 430.0), size 0.4615384615384615", "2:(339.8076923076923, 780.0), size 0.44230769230769235", "3:(26.538461538461544, 1130.0), size 0.4807692307692308", "4:(357.11538461538464, 1440.0), size 0.3434615384615385"]
+Volcano audit: 375pt, 5 volcanoes, 5460 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 375pt, 28 placements, 0 lava contacts
+Sources at 393: ["0:(365.1876923076923, 102.0), size 0.2680461538461538", "1:(36.88153846153847, 430.0), size 0.48369230769230764", "2:(365.1876923076923, 780.0), size 0.46353846153846157", "3:(27.812307692307698, 1130.0), size 0.5038461538461538", "4:(374.2569230769231, 1440.0), size 0.35994769230769225"]
+Volcano audit: 393pt, 5 volcanoes, 5460 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 393pt, 28 placements, 0 lava contacts
+Sources at 402: ["0:(373.5507692307692, 126.0), size 0.27418461538461536", "1:(28.44923076923078, 430.0), size 0.4947692307692307", "2:(364.27384615384614, 780.0), size 0.47415384615384615", "3:(28.44923076923078, 1130.0), size 0.5153846153846153", "4:(382.82769230769225, 1440.0), size 0.36819076923076915"]
+Volcano audit: 402pt, 5 volcanoes, 5460 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 402pt, 28 placements, 0 lava contacts
+Sources at 430: ["0:(399.5692307692308, 102.0), size 0.2932820512820513", "1:(30.430769230769233, 430.0), size 0.5292307692307693", "2:(399.5692307692308, 780.0), size 0.5071794871794872", "3:(30.430769230769233, 1106.0), size 0.5512820512820513", "4:(409.4923076923077, 1440.0), size 0.3938358974358974"]
+Volcano audit: 430pt, 5 volcanoes, 5460 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 430pt, 25 placements, 0 lava contacts
+Sources at 600: ["0:(551.1, 126.0), size 0.5459999999999999", "1:(48.90000000000001, 454.0), size 0.8735999999999999", "2:(562.8, 780.0), size 0.7176000000000001", "3:(48.90000000000001, 1130.0), size 0.9099999999999999", "4:(562.8, 1440.0), size 0.611"]
+Volcano audit: 600pt, 5 volcanoes, 5460 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 600pt, 25 placements, 0 lava contacts
+Sources at 744: ["0:(686.64, 150.0), size 0.728", "1:(80.76, 430.0), size 1.1232", "2:(686.64, 780.0), size 1.0764000000000002", "3:(69.06, 1106.0), size 1.3", "4:(674.94, 1416.0), size 0.8553999999999999"]
+Volcano audit: 744pt, 5 volcanoes, 5460 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 744pt, 35 placements, 0 lava contacts
+Sources at 834: ["0:(764.04, 174.0), size 0.9099999999999999", "1:(105.06, 430.0), size 1.248", "2:(740.64, 780.0), size 1.1960000000000002", "3:(93.36, 1130.0), size 1.3", "4:(764.04, 1416.0), size 1.222"]
+Volcano audit: 834pt, 5 volcanoes, 5460 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 834pt, 44 placements, 0 lava contacts
+Sources at 1024: ["0:(915.74, 150.0), size 0.9099999999999999", "1:(143.36, 430.0), size 1.248", "2:(880.64, 780.0), size 1.1960000000000002", "3:(143.36, 1130.0), size 1.3", "4:(880.64, 1416.0), size 1.222"]
+Volcano audit: 1024pt, 5 volcanoes, 5460 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 1024pt, 73 placements, 0 lava contacts
+Sources at 1194: ["0:(1038.54, 150.0), size 0.9099999999999999", "1:(167.16000000000003, 430.0), size 1.248", "2:(1026.84, 780.0), size 1.1960000000000002", "3:(167.16000000000003, 1130.0), size 1.3", "4:(1026.84, 1416.0), size 1.222"]
+Volcano audit: 1194pt, 5 volcanoes, 5460 terrain samples, 0 lava contacts, 0 road contacts
+Stone audit: 1194pt, 85 placements, 0 lava contacts

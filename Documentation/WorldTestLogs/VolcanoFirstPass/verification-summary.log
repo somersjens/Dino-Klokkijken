@@ -1,0 +1,11 @@
+Final iOS build: True
+PASS: 795547 checks — gameplay, persistence, social progress, privacy guards, offline sync and international names.
+iphone: 2 review test cases; execute succeeded: True
+Test Case '-[DinoUITests.DinoUITests testNativeWorldChaptersAndMinuteQuestions]' passed (46.226 seconds).
+Test Case '-[DinoUITests.DinoUITests testWorldBossSceneryRemainsPlayable]' passed (25.442 seconds).
+ipad: 2 review test cases; execute succeeded: True
+Test Case '-[DinoUITests.DinoUITests testNativeWorldChaptersAndMinuteQuestions]' passed (58.110 seconds).
+Test Case '-[DinoUITests.DinoUITests testWorldBossSceneryRemainsPlayable]' passed (30.721 seconds).
+motion pixel differences from first render: [True, True, True]
+reduced pixel differences from first render: [False]
+UI review uses visible Spelen label as an additional selector; standard identifier failure is reproduced on the original map.

@@ -1,0 +1,22 @@
+{
+  "widths": [
+    320,
+    393,
+    834,
+    1194
+  ],
+  "water_geometry": {
+    "lily_pads_per_width": 15,
+    "lily_boundary_samples": 24,
+    "level_rings_per_width": 10,
+    "level_ring_radius_points": 48,
+    "samples_per_ring": 48,
+    "all_passed": true
+  },
+  "reduced_motion_rgb_identical": true,
+  "motion_changed_pixels": [
+    99645,
+    117912,
+    124332
+  ]
+}

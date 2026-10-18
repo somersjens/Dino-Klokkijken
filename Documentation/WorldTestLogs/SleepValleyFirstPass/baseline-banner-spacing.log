@@ -1,0 +1,86 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /private/tmp/DinoSleepValleyBaselineBuild/Build/Products/SleepBaseline.xctestrun -destination id=C52CEAA1-9B58-4446-9A39-93DBC1FA3B1F "-only-testing:DinoUITests/DinoUITests/testWorldBannersHaveBalancedClearance" -parallel-testing-enabled NO -resultBundlePath /private/tmp/DinoSleepValley-BaselineSpacing.xcresult
+
+Writing result bundle at path:
+	/private/tmp/DinoSleepValley-BaselineSpacing.xcresult
+
+2026-10-18 13:27:51.753347+0200 DinoUITests-Runner[63077:35532595] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-18 13:27:52.566.
+Test Suite 'DinoUITests.xctest' started at 2026-10-18 13:27:52.567.
+Test Suite 'DinoUITests' started at 2026-10-18 13:27:52.567.
+Test Case '-[DinoUITests.DinoUITests testWorldBannersHaveBalancedClearance]' started.
+    t =     0.00s Start Test at 2026-10-18 13:27:52.568
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.03s         Wait for com.apple.springboard to idle
+    t =     0.04s     Open Hakketjak.Dino-Klokkijken
+    t =     0.04s         Launch Hakketjak.Dino-Klokkijken
+2026-10-18 13:27:52.703 xcodebuild[63070:35532213] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-18 13:27:52.703 xcodebuild[63070:35532213] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[63077]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x107a6c310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1079cc398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.95s             Setting up automation session
+    t =     2.45s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.93s Terminate Hakketjak.Dino-Klokkijken:63095
+    t =     4.98s Open Hakketjak.Dino-Klokkijken
+    t =     4.98s     Launch Hakketjak.Dino-Klokkijken
+2026-10-18 13:27:57.554 xcodebuild[63070:35532213] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-18 13:27:57.554 xcodebuild[63070:35532213] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     5.19s         Setting up automation session
+    t =     6.25s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     9.61s Waiting 8.0s for "header.settings" Button to exist
+    t =    10.65s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    10.65s         Checking existence of `"header.settings" Button`
+    t =    11.04s Find the "header.settings" Button
+    t =    11.35s Find the "map.level.11" Button
+    t =    11.68s Checking existence of `"map.level.11" Button`
+    t =    11.96s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.11s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.72] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.47] with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    12.11s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    12.11s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.27s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    12.43s     Synthesize event
+    t =    12.44s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.59s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.74s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.88s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.03s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.92s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    15.47s Find the "header.settings" Button
+    t =    15.86s Find the "map.level.11" Button
+    t =    16.25s Checking existence of `"map.level.11" Button`
+    t =    16.64s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    16.83s Checking existence of `"map.level.11" Button`
+    t =    17.23s Find the "map.level.11" Button
+    t =    17.61s Find the "map.level.11" Button
+    t =    17.96s Find the "header.settings" Button
+    t =    18.30s Find the "map.level.11" Button
+    t =    18.62s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.79s Checking existence of `"map.level.10" Button`
+    t =    19.11s Checking existence of `"map.world.2" StaticText`
+    t =    19.43s Find the "map.world.2" StaticText
+    t =    19.73s Find the "map.level.10" Button
+    t =    20.01s Find the "map.level.11" Button
+    t =    20.30s Find the "map.world.2" StaticText
+/tmp/DinoSleepValleyBaseline/Tests/DinoUITests.swift:408: error: -[DinoUITests.DinoUITests testWorldBannersHaveBalancedClearance] : XCTAssertEqualWithAccuracy failed: ("188.1117948717947") is not equal to ("200.22153846153878") +/- ("4.0") - World 2 uses the same clear space on both sides of its banner
+    t =    20.68s Tear Down
+Test Case '-[DinoUITests.DinoUITests testWorldBannersHaveBalancedClearance]' failed (20.957 seconds).
+Test Suite 'DinoUITests' failed at 2026-10-18 13:28:13.525.
+	 Executed 1 test, with 1 failure (0 unexpected) in 20.957 (20.958) seconds
+Test Suite 'DinoUITests.xctest' failed at 2026-10-18 13:28:13.526.
+	 Executed 1 test, with 1 failure (0 unexpected) in 20.957 (20.959) seconds
+Test Suite 'Selected tests' failed at 2026-10-18 13:28:13.526.
+	 Executed 1 test, with 1 failure (0 unexpected) in 20.957 (20.960) seconds
+2026-10-18 13:28:28.969 xcodebuild[63070:35532213] [MT] IDETestOperationsObserverDebug: 38.211 elapsed -- Testing started completed.
+2026-10-18 13:28:28.969 xcodebuild[63070:35532213] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-18 13:28:28.969 xcodebuild[63070:35532213] [MT] IDETestOperationsObserverDebug: 38.211 sec, +38.211 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/DinoSleepValley-BaselineSpacing.xcresult
+
+Failing tests:
+	DinoUITests.testWorldBannersHaveBalancedClearance()
+
+** TEST EXECUTE FAILED **
+
+Testing started

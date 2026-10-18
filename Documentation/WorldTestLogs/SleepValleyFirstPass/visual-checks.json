@@ -1,0 +1,30 @@
+{
+  "native_widths": [
+    320,
+    393,
+    834,
+    1194
+  ],
+  "frozen_frames_identical": true,
+  "changed_pixels_between_motion_frames": [
+    84352,
+    92224,
+    93593
+  ],
+  "final_ui_tests": {
+    "iphone": {
+      "passed": 2,
+      "failed": 0
+    },
+    "ipad": {
+      "passed": 2,
+      "failed": 0
+    }
+  },
+  "baseline_banner_spacing": {
+    "above": 188.1117948717947,
+    "below": 200.22153846153878,
+    "tolerance": 4,
+    "fails_before_redesign": true
+  }
+}
