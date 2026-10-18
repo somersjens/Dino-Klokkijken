@@ -86,7 +86,6 @@ struct DinoGameView: View {
                         InteractionDemonstration(kind: kind, theme: player.profile.clockTheme, minuteStep: session.minuteStep,
                                                  practiceTime: session.practice?.time ?? .whole,
                                                  worldMinutes: session.practice == nil ? session.level.allowedMinutes : nil,
-                                                 digitalAdjustingMinutes: session.adjustingDigitalMinutes,
                                                  width: min(380, max(230, g.size.width - 80)), done: session.dismissDemonstration)
                             .padding(16)
                     }.scrollBounceBehavior(.basedOnSize)
@@ -205,13 +204,11 @@ struct InteractionDemonstration: View {
     var minuteStep = 60
     var practiceTime: DinoPracticeTime = .whole
     var worldMinutes: [Int]? = nil
-    var digitalAdjustingMinutes = false
     var width: CGFloat = 280
     var done: () -> Void
     @State private var exampleHour = 3
     @State private var exampleMinute = 0
     @State private var exampleIndex = 0
-    @State private var adjustingMinutes = false
     @State private var matchingSelections: [Int: ClockTime] = [:]
     private var minutes: [Int] { worldMinutes ?? practiceTime.minutes }
     private var exampleTime: ClockTime { ClockTime(hour: exampleHour, minute: exampleMinute) }
@@ -248,11 +245,11 @@ struct InteractionDemonstration: View {
                 AnalogClock(time: exampleTime, theme: theme, size: min(170, width / 1.48), showHandHints: true)
                     .accessibilityIdentifier("demo.analog")
                 if kind == .setDigital {
-                    DigitalClockControl(hour: $exampleHour, adjustingMinutes: $adjustingMinutes,
-                                        theme: theme, minute: exampleMinute, fontSize: min(30, width * 0.095),
+                    DigitalClockControl(hour: $exampleHour,
+                                        theme: theme, minute: exampleMinute, fontSize: min(38, width * 0.14),
                                         onMinuteChange: { exampleMinute = $0 }, minuteStep: minuteStep,
                                         valueIdentifier: "demo.digital", showHandHints: true)
-                    Text("dino.clock.switchField").font(.system(size: 14, weight: .semibold, design: .rounded))
+                    Text("dino.clock.arrowControls").font(.system(size: 14, weight: .semibold, design: .rounded))
                         .multilineTextAlignment(.center)
                 } else {
                     DigitalClock(time: ClockTime(hour: exampleHour, minute: exampleMinute), theme: theme, fontSize: 30, showHandHints: true)
@@ -276,7 +273,6 @@ struct InteractionDemonstration: View {
         exampleHour = kind == .activity ? DinoDemonstrationExamples.activity(index: exampleIndex).hour : time.hour
         exampleMinute = time.minute
         matchingSelections = [:]
-        adjustingMinutes = kind == .setDigital ? !digitalAdjustingMinutes : false
     }
 }
 
@@ -311,12 +307,13 @@ struct DinoAnalogSettingDemonstration: View {
             DigitalClock(time: script.target, theme: theme, fontSize: min(32, width * 0.1))
                 .accessibilityIdentifier("demo.digital")
             AnalogClock(time: time, theme: theme, size: min(180, width * 0.57),
-                        onHourChange: adjustingMinutes ? nil : { hour in
+                        onHourChange: { hour in
                             stopDemonstration()
                             time = ClockTime(hour: hour, minute: time.minute)
                         },
-                        onMinuteChange: adjustingMinutes ? { next in stopDemonstration(); time = next } : nil,
-                        minuteStep: minuteStep,
+                        onMinuteChange: minuteStep < 60 ? { next in stopDemonstration(); time = next } : nil,
+                        minuteStep: minuteStep, adjustingMinutes: adjustingMinutes,
+                        onHandSelection: { stopDemonstration(); adjustingMinutes = $0 },
                         displayedHourAngle: manuallyAdjusting ? nil : hourAngle,
                         displayedMinuteAngle: manuallyAdjusting ? nil : minuteAngle)
                 .padding(6)
@@ -339,7 +336,7 @@ struct DinoAnalogSettingDemonstration: View {
                 Label(LocalizedStringKey(confirmed ? "dino.ready" : "dino.clock.check"), systemImage: "checkmark")
                     .lineLimit(1).minimumScaleFactor(0.75)
                     .contentTransition(.opacity)
-            }.buttonStyle(DinoButtonStyle())
+            }.buttonStyle(DinoClockControlButtonStyle())
                 .accessibilityIdentifier(confirmed ? "demo.ready" : "demo.confirm")
                 .overlay(alignment: .bottomTrailing) { if demonstratedAction == .confirm { DinoClockTapCue() } }
             DinoDemonstrationActions(showsReady: false, done: done) {
@@ -441,12 +438,13 @@ struct DinoAnalogAdvanceDemonstration: View {
                     .accessibilityIdentifier("demo.startClock")
                 DinoAdvanceDifference(minutes: question.durationMinutes, language: language.effective.code, prefix: "demo")
                 AnalogClock(time: time, theme: theme, size: face,
-                            onHourChange: adjustingMinutes ? nil : { hour in
+                            onHourChange: { hour in
                                 stopDemonstration()
                                 time = ClockTime(hour: hour, minute: time.minute)
                             },
-                            onMinuteChange: adjustingMinutes ? { next in stopDemonstration(); time = next } : nil,
-                            minuteStep: minuteStep,
+                            onMinuteChange: minuteStep < 60 ? { next in stopDemonstration(); time = next } : nil,
+                            minuteStep: minuteStep, adjustingMinutes: adjustingMinutes,
+                            onHandSelection: { stopDemonstration(); adjustingMinutes = $0 },
                             displayedHourAngle: manuallyAdjusting ? nil : hourAngle,
                             displayedMinuteAngle: manuallyAdjusting ? nil : minuteAngle)
                     .padding(4)
@@ -467,7 +465,7 @@ struct DinoAnalogAdvanceDemonstration: View {
             } label: {
                 Label("dino.clock.check", systemImage: "checkmark")
                     .lineLimit(1).minimumScaleFactor(0.75)
-            }.buttonStyle(DinoButtonStyle())
+            }.buttonStyle(DinoClockControlButtonStyle())
                 .accessibilityIdentifier("demo.confirm")
                 .overlay(alignment: .bottomTrailing) { if demonstratedAction == .confirm { DinoClockTapCue() } }
             DinoDemonstrationActions(done: done) {

@@ -14,11 +14,13 @@ private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
 struct DinoCoreTests {
     static func main() async {
         testClocks()
+        testHandSelection()
         testHandHintClearance()
         testAnimation()
         testCrystalMinerPatrols()
         testQuestions()
         testWorlds()
+        testLevelQuestionOutline()
         testJungleSceneryClearance()
         testAttempt()
         testRepeatedAnswerControls()
@@ -289,6 +291,36 @@ struct DinoCoreTests {
                         expect((moved.minutesOfDay - time.minutesOfDay - delta) % 720 == 0, "minute adjustments preserve the full time delta")
                     }
                 }
+            }
+        }
+    }
+
+    static func testHandSelection() {
+        func selected(_ x: Double, _ y: Double, time: ClockTime = ClockTime(hour: 3), minutes: Bool) -> Bool {
+            ClockHandSelection.minutes(at: CGPoint(x: x, y: y), hourAngle: time.hourAngle,
+                                       minuteAngle: time.minuteAngle, preferredMinutes: minutes)
+        }
+        expect(!selected(0.20, 0, minutes: true), "touching the hour hand switches away from minutes")
+        expect(selected(0, -0.31, minutes: false), "touching the minute hand switches away from hours")
+        expect(!selected(-0.4, 0, minutes: false) && selected(-0.4, 0, minutes: true),
+               "tapping the empty dial retains the selected hand")
+        expect(!selected(0, 0, minutes: false) && selected(0, 0, minutes: true),
+               "the shared centre does not select another hand")
+        expect(!selected(0, -0.20, time: ClockTime(hour: 12), minutes: false),
+               "overlapping hands retain the hour selection")
+        expect(selected(0, -0.20, time: ClockTime(hour: 12), minutes: true),
+               "overlapping hands retain the minute selection")
+        expect(selected(0, -0.33, time: ClockTime(hour: 12), minutes: false),
+               "the exposed minute tip can be selected when the hands overlap")
+        for hour in 1...12 {
+            for minute in 0..<60 {
+                let time = ClockTime(hour: hour, minute: minute)
+                let tip = ClockHandHintGeometry.point(radius: 0.33, angle: time.minuteAngle)
+                expect(selected(tip.x, tip.y, time: time, minutes: false),
+                       "the long minute tip remains selectable at every clock time")
+                let hourPoint = ClockHandHintGeometry.point(radius: 0.20, angle: time.hourAngle)
+                expect(!selected(hourPoint.x, hourPoint.y, time: time, minutes: false),
+                       "touching the selected hour hand retains it at every clock time")
             }
         }
     }
@@ -1113,6 +1145,28 @@ struct DinoCoreTests {
                 }
             }
         }
+    }
+
+    static func testLevelQuestionOutline() {
+        let digital = DinoLevelCatalog.level(4)!
+        expect(digital.questionOutline.count == 1, "one repeated exercise stays one row")
+        expect(digital.questionOutline[0].practiceNumber == DinoPracticeQuestion.chooseDigital.number, "level 4 uses the practice number for reading the analog clock")
+        expect(digital.questionOutline[0].titleKey == DinoPracticeQuestion.chooseDigital.titleKey, "level card uses the practice name")
+        expect(digital.questionOutline[0].timeTitleKey == "dino.practice.time.whole", "jungle levels use whole hours")
+        let activity = DinoLevelCatalog.level(5)!
+        expect(activity.questionOutline[0].practiceNumber == nil && activity.questionOutline[0].titleKey == "dino.practice.question.activity", "retired activity has a name and no practice number")
+        let mixed = DinoLevelCatalog.level(9)!
+        expect(mixed.questionOutline.map(\.practiceNumber) == [
+            DinoPracticeQuestion.chooseAnalog.number, DinoPracticeQuestion.chooseDigital.number,
+            DinoPracticeQuestion.setAnalog.number, DinoPracticeQuestion.setDigital.number,
+            DinoPracticeQuestion.chooseAnalog.number
+        ], "mixed level keeps the ask order, including a repeated exercise")
+        expect(DinoLevelCatalog.level(11)!.practiceTimeTitleKey == "dino.practice.time.half", "half hours")
+        expect(DinoLevelCatalog.level(21)!.practiceTimeTitleKey == "dino.practice.time.quarter", "quarter hours")
+        expect(DinoLevelCatalog.level(31)!.practiceTimeTitleKey == "dino.practice.time.mix", "five-minute steps match the practice mix")
+        expect(DinoLevelCatalog.level(41)!.practiceTimeTitleKey == "dino.level.time.minute", "exact minutes")
+        let boss = DinoLevelCatalog.level(20)!
+        expect(boss.questionOutline.count == boss.recipes.count && boss.questionOutline.allSatisfy { $0.timeTitleKey == "dino.practice.time.half" }, "boss lists every question in order")
     }
 
     static func testAttempt() {

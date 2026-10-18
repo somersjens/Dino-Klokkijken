@@ -61,6 +61,25 @@ struct ClockTime: Codable, Equatable, Hashable, Sendable {
     }
 }
 
+/// Select a touched hand without changing the selection for taps elsewhere on the dial.
+enum ClockHandSelection {
+    static func minutes(at point: CGPoint, hourAngle: Double, minuteAngle: Double,
+                        preferredMinutes: Bool) -> Bool {
+        guard hypot(point.x, point.y) > 0.10 else { return preferredMinutes }
+        func distance(angle: Double, length: Double) -> Double {
+            let radians = angle * .pi / 180
+            let dx = sin(radians), dy = -cos(radians)
+            let projection = min(length, max(0, point.x * dx + point.y * dy))
+            return hypot(point.x - projection * dx, point.y - projection * dy)
+        }
+        let hour = distance(angle: hourAngle, length: 0.23)
+        let minute = distance(angle: minuteAngle, length: 0.34)
+        // Overlapping hands retain the selected hand; the exposed minute tip remains selectable.
+        guard min(hour, minute) <= 0.075, abs(hour - minute) > 0.015 else { return preferredMinutes }
+        return minute < hour
+    }
+}
+
 /// Coordinates are relative to the centre of a face with diameter 1.
 enum ClockHandHintGeometry {
     struct Pointer {

@@ -97,23 +97,71 @@ actor DinoSpriteLoader {
     }
 }
 
-/// A cut-out head in the HUD, or a circular avatar beside a level result.
+/// A circular bust. Bandana tails and the top spikes sit in front of the rim, with a little more body than the HUD.
 struct DinoPortrait: View {
     let appearance: DinoAppearance
     let size: CGFloat
     var circular = true
 
+    private var footprint: CGFloat { size * 68 / 52 }
+    /// Slightly higher than the HUD so more of the torso stays inside the circle.
+    private let placement = CGFloat(0.28)
+
     var body: some View {
         if circular {
-            portrait.background(Color(dinoHex: 0xD9EDAD))
-                .clipShape(Circle()).overlay(Circle().stroke(.white, lineWidth: 2))
+            ZStack {
+                Circle().fill(Color(dinoHex: 0xD9EDAD))
+                    .overlay(Circle().strokeBorder(.white, lineWidth: 2))
+                    .frame(width: size, height: size)
+                DinoBustImage(appearance: appearance, diameter: size, placement: placement)
+                    .clipShape(Circle())
+                Circle().strokeBorder(.white, lineWidth: 2)
+                    .frame(width: size, height: size)
+                DinoBustImage(appearance: appearance, diameter: size, placement: placement)
+                    .frame(width: footprint, height: footprint)
+                    .mask(DinoBustOverflowMask(diameter: size, placement: placement))
+            }
+            .frame(width: footprint, height: footprint)
         } else {
-            portrait.shadow(color: DinoStyle.deepGreen.opacity(0.10), radius: 2, y: 2)
+            DinoAvatar(appearance: appearance, portrait: true)
+                .frame(width: size, height: size)
+                .shadow(color: DinoStyle.deepGreen.opacity(0.10), radius: 2, y: 2)
         }
     }
+}
 
-    private var portrait: some View {
-        DinoAvatar(appearance: appearance, portrait: true).frame(width: size, height: size)
+/// Show the neck and upper body; the original recolored sprite remains intact.
+struct DinoBustImage: View {
+    let appearance: DinoAppearance
+    let diameter: CGFloat
+    var placement: CGFloat = 0.339
+    var body: some View {
+        DinoAvatar(appearance: appearance)
+            .frame(width: diameter / 0.62, height: diameter / 0.62)
+            .offset(x: -diameter * 0.065, y: diameter * placement)
+            .frame(width: diameter, height: diameter)
+            .accessibilityHidden(true)
+    }
+}
+
+/// The bandana tails and both top spikes cross the portrait and its rim.
+struct DinoBustOverflowMask: Shape {
+    let diameter: CGFloat
+    var placement: CGFloat = 0.339
+    func path(in rect: CGRect) -> Path {
+        let origin = CGPoint(x: rect.midX - diameter / 2, y: rect.midY - diameter / 2)
+        let bandanaLift = (0.339 - placement) * diameter
+        var path = Path(CGRect(x: origin.x - diameter * 0.23 / 0.62,
+                               y: origin.y + diameter * 0.165 / 0.62 - bandanaLift,
+                               width: diameter * 0.355 / 0.62, height: diameter * 0.192 / 0.62 + bandanaLift))
+        // Follow the sprite placement; transparent pixels keep the curved silhouette.
+        let spriteSize = diameter / 0.62
+        let spriteOrigin = CGPoint(x: rect.midX - spriteSize / 2 - diameter * 0.065,
+                                   y: rect.midY - spriteSize / 2 + diameter * placement)
+        path.addRect(CGRect(x: spriteOrigin.x + spriteSize * 0.31,
+                            y: spriteOrigin.y,
+                            width: spriteSize * 0.22, height: spriteSize * 0.19))
+        return path
     }
 }
 

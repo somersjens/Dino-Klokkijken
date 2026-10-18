@@ -198,7 +198,6 @@ final class DinoSession: ObservableObject, Identifiable {
     @Published private(set) var attempt: LevelAttempt
     @Published var inputHour = 12
     @Published var inputMinute = 0
-    @Published var adjustingDigitalMinutes = false
     @Published var selectedOrder: [ClockTime] = []
     @Published var pairSelections: [Int: ClockTime] = [:]
     @Published private(set) var rejectedResponses: Set<ClockAnswer> = []
@@ -370,7 +369,7 @@ final class DinoSession: ObservableObject, Identifiable {
             inputHour = question.target.hour == 12 ? 1 : 12
             inputMinute = 0
         }
-        selectedOrder = []; pairSelections = [:]; adjustingDigitalMinutes = false
+        selectedOrder = []; pairSelections = [:]
     }
 
     private func refreshPracticeProgress() {

@@ -142,13 +142,13 @@ struct AdventureHeader: View {
                                             startPoint: .topLeading, endPoint: .bottomTrailing))
                     .overlay(Circle().strokeBorder(palette.outline, lineWidth: 2))
                     .frame(width: size, height: size)
-                HUDDinoBust(appearance: player.profile.dinoAppearance ?? .standard, diameter: size)
+                DinoBustImage(appearance: player.profile.dinoAppearance ?? .standard, diameter: size)
                     .clipShape(Circle())
                 Circle().strokeBorder(palette.rim, lineWidth: 4)
                     .frame(width: size, height: size)
-                HUDDinoBust(appearance: player.profile.dinoAppearance ?? .standard, diameter: size)
+                DinoBustImage(appearance: player.profile.dinoAppearance ?? .standard, diameter: size)
                     .frame(width: metrics.portraitFootprint, height: metrics.portraitFootprint)
-                    .mask(HUDDinoForegroundMask(diameter: size))
+                    .mask(DinoBustOverflowMask(diameter: size))
                     .shadow(color: DinoStyle.ink.opacity(0.14), radius: 0.7, y: 0.7)
             }
             .frame(width: metrics.portraitFootprint, height: metrics.portraitFootprint)
@@ -407,39 +407,6 @@ private enum HUDNumberAlignment {
         let correction = min(0.06, max(-0.06, (advance / 2 - center) / referenceSize))
         corrections[value] = correction
         return correction * fontSize
-    }
-}
-
-/// Show the neck and upper body; the original recolored sprite remains intact.
-private struct HUDDinoBust: View {
-    let appearance: DinoAppearance
-    let diameter: CGFloat
-    var body: some View {
-        DinoAvatar(appearance: appearance)
-            .frame(width: diameter / 0.62, height: diameter / 0.62)
-            .offset(x: -diameter * 0.065, y: diameter * 0.339)
-            .frame(width: diameter, height: diameter)
-            .accessibilityHidden(true)
-    }
-}
-
-/// The bandana tails and both top spikes cross the portrait and its rim.
-private struct HUDDinoForegroundMask: Shape {
-    let diameter: CGFloat
-    func path(in rect: CGRect) -> Path {
-        let origin = CGPoint(x: rect.midX - diameter / 2, y: rect.midY - diameter / 2)
-        var path = Path(CGRect(x: origin.x - diameter * 0.23 / 0.62,
-                               y: origin.y + diameter * 0.165 / 0.62,
-                               width: diameter * 0.355 / 0.62, height: diameter * 0.192 / 0.62))
-        // Follow HUDDinoBust's sprite placement; transparent pixels retain the
-        // original curved silhouettes, including their antialiased edges.
-        let spriteSize = diameter / 0.62
-        let spriteOrigin = CGPoint(x: rect.midX - spriteSize / 2 - diameter * 0.065,
-                                   y: rect.midY - spriteSize / 2 + diameter * 0.339)
-        path.addRect(CGRect(x: spriteOrigin.x + spriteSize * 0.31,
-                            y: spriteOrigin.y,
-                            width: spriteSize * 0.22, height: spriteSize * 0.19))
-        return path
     }
 }
 

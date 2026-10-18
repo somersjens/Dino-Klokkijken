@@ -140,8 +140,10 @@
 				"INFOPLIST_FILE" = "DinoInfo.plist";
 				"DINO_SAFETY_CONTACT" = "";
 				"DINO_PRIVACY_POLICY_URL" = "";
+				"DINO_APP_STORE_URL" = "";
 				"INFOPLIST_KEY_DinoSafetyContact" = "$(DINO_SAFETY_CONTACT)";
 				"INFOPLIST_KEY_DinoPrivacyPolicyURL" = "$(DINO_PRIVACY_POLICY_URL)";
+				"INFOPLIST_KEY_DinoAppStoreURL" = "$(DINO_APP_STORE_URL)";
 				"CODE_SIGN_ENTITLEMENTS" = "Dino.entitlements";
 				"INFOPLIST_KEY_NSGKFriendListUsageDescription" = "Show the progress and stars of friends who allow Game Center access.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = "YES";
@@ -313,8 +315,10 @@
 				"INFOPLIST_FILE" = "DinoInfo.plist";
 				"DINO_SAFETY_CONTACT" = "";
 				"DINO_PRIVACY_POLICY_URL" = "";
+				"DINO_APP_STORE_URL" = "";
 				"INFOPLIST_KEY_DinoSafetyContact" = "$(DINO_SAFETY_CONTACT)";
 				"INFOPLIST_KEY_DinoPrivacyPolicyURL" = "$(DINO_PRIVACY_POLICY_URL)";
+				"INFOPLIST_KEY_DinoAppStoreURL" = "$(DINO_APP_STORE_URL)";
 				"CODE_SIGN_ENTITLEMENTS" = "Dino.entitlements";
 				"INFOPLIST_KEY_NSGKFriendListUsageDescription" = "Show the progress and stars of friends who allow Game Center access.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = "YES";

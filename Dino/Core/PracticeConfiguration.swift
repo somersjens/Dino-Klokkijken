@@ -38,6 +38,37 @@ enum DinoPracticeQuestion: String, CaseIterable, Sendable {
     }
 }
 
+/// One row on the level card: the practice number, the exercise name, and the clock steps used.
+struct LevelQuestionOutline: Equatable, Sendable {
+    let practiceNumber: Int?
+    let titleKey: String
+    let timeTitleKey: String
+}
+
+extension LevelConfiguration {
+    /// The practice-screen time family for this level, so the card uses the same words as the exercise list.
+    var practiceTimeTitleKey: String {
+        switch minuteStep {
+        case 60: return "dino.practice.time.whole"
+        case 30: return "dino.practice.time.half"
+        case 15: return "dino.practice.time.quarter"
+        case 10: return "dino.practice.time.tenMinutes"
+        case 5: return allowedMinutes.contains(0) ? "dino.practice.time.mix" : "dino.practice.time.fiveMinutes"
+        default: return "dino.level.time.minute"
+        }
+    }
+
+    /// Question types in the order they are asked. One recipe used for the whole level stays a single row.
+    var questionOutline: [LevelQuestionOutline] {
+        recipes.map { recipe in
+            let practice = DinoPracticeQuestion(rawValue: recipe.kind.rawValue)
+            return LevelQuestionOutline(practiceNumber: practice?.number,
+                                        titleKey: practice?.titleKey ?? "dino.practice.question.\(recipe.kind.rawValue)",
+                                        timeTitleKey: practiceTimeTitleKey)
+        }
+    }
+}
+
 enum DinoPracticeOrder: Equatable, Sendable {
     case specific(DinoPracticeQuestion), ascending, mix
 }

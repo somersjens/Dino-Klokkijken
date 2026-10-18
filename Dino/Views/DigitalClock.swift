@@ -1,13 +1,13 @@
 import SwiftUI
 
-private enum DigitalControlAnchor: Hashable {
-    case digits, display, decrease, increase
+private enum DigitalClockField: CaseIterable, Hashable {
+    case hours, minutes
 }
 
-private struct DigitalControlAnchors: PreferenceKey {
-    static var defaultValue: [DigitalControlAnchor: Anchor<CGRect>] { [:] }
-    static func reduce(value: inout [DigitalControlAnchor: Anchor<CGRect>],
-                       nextValue: () -> [DigitalControlAnchor: Anchor<CGRect>]) {
+private struct DigitalClockFieldAnchors: PreferenceKey {
+    static var defaultValue: [DigitalClockField: Anchor<CGRect>] { [:] }
+    static func reduce(value: inout [DigitalClockField: Anchor<CGRect>],
+                       nextValue: () -> [DigitalClockField: Anchor<CGRect>]) {
         value.merge(nextValue(), uniquingKeysWith: { _, new in new })
     }
 }
@@ -39,8 +39,7 @@ struct DigitalClock: View {
     var fontSize: CGFloat = 42
     var showsDisplay = true
     var showHandHints = false
-    /// nil for a read-only clock; false underlines hours, true underlines minutes.
-    var activeMinutes: Bool? = nil
+    var exposesControlFields = false
     var body: some View {
         HStack(spacing: theme.numerals == .digital ? fontSize * 0.1 : 0) {
             pair(String(time.digitalText.prefix(2)), number: 1, ink: theme.hourHex)
@@ -51,7 +50,7 @@ struct DigitalClock: View {
             }
             pair(String(time.digitalText.suffix(2)), number: 2, ink: theme.minuteHex)
         }
-        .font(.system(size: fontSize, weight: .heavy, design: numeralDesign))
+        .font(.system(size: fontSize, weight: .heavy, design: theme.numerals.fontDesign))
         .monospacedDigit()
         .padding(.vertical, theme.numerals == .digital ? fontSize * 0.08 : 0)
         .foregroundStyle(Color(dinoHex: theme.digitalInkHex))
@@ -68,44 +67,56 @@ struct DigitalClock: View {
                     .strokeBorder(DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: highContrast ? 3 : 2)
             }
         }
-        .transformAnchorPreference(key: DigitalControlAnchors.self, value: .bounds) { anchors, display in
-            if activeMinutes != nil { anchors[.display] = display }
-        }
         .padding(.top, showHandHints ? 48 : 0)
         .environment(\.layoutDirection, .leftToRight)
     }
 
-    private var numeralDesign: Font.Design {
-        switch theme.numerals {
+    private func pair(_ text: String, number: Int, ink: UInt32) -> some View {
+        DigitalClockDigits(text: text, numerals: theme.numerals, fontSize: fontSize)
+            .anchorPreference(key: DigitalClockFieldAnchors.self, value: .bounds) { anchor in
+                exposesControlFields ? [number == 2 ? .minutes : .hours: anchor] : [:]
+            }
+            .overlay(alignment: .top) {
+                if showHandHints {
+                    ClockHintBadgeArrow(number: number, badge: CGPoint(x: 15, y: 14.5),
+                                        tip: CGPoint(x: 15, y: 43.75),
+                                        wings: [CGPoint(x: 10.5, y: 38), CGPoint(x: 19.5, y: 38)],
+                                        ink: ink, bounds: CGSize(width: 30, height: 48))
+                        .offset(y: -48 - fontSize * (theme.numerals == .digital ? 0.3 : 0.22))
+                        .accessibilityHidden(true)
+                }
+            }
+    }
+}
+
+private extension DigitalNumerals {
+    var fontDesign: Font.Design {
+        switch self {
         case .rounded: return .rounded
         case .digital, .modern: return .monospaced
         case .classic: return .serif
         }
     }
+}
 
-    private func pair(_ text: String, number: Int, ink: UInt32) -> some View {
+private struct DigitalClockDigits: View {
+    let text: String
+    let numerals: DigitalNumerals
+    let fontSize: CGFloat
+
+    var body: some View {
         Group {
-            if theme.numerals == .digital {
+            if numerals == .digital {
                 HStack(spacing: fontSize * 0.1) {
                     ForEach(Array(text.enumerated()), id: \.offset) { _, character in
-                        SevenSegmentDigit(character: character).frame(width: fontSize * 0.5, height: fontSize * 0.86)
+                        SevenSegmentDigit(character: character)
+                            .frame(width: fontSize * 0.5, height: fontSize * 0.86)
                     }
                 }
             } else { Text(verbatim: text) }
         }
-        .anchorPreference(key: DigitalControlAnchors.self, value: .bounds) {
-            activeMinutes == (number == 2) ? [.digits: $0] : [:]
-        }
-        .overlay(alignment: .top) {
-            if showHandHints {
-                ClockHintBadgeArrow(number: number, badge: CGPoint(x: 15, y: 14.5),
-                                    tip: CGPoint(x: 15, y: 43.75),
-                                    wings: [CGPoint(x: 10.5, y: 38), CGPoint(x: 19.5, y: 38)],
-                                    ink: ink, bounds: CGSize(width: 30, height: 48))
-                    .offset(y: -48 - fontSize * (theme.numerals == .digital ? 0.3 : 0.22))
-                    .accessibilityHidden(true)
-            }
-        }
+        .font(.system(size: fontSize, weight: .heavy, design: numerals.fontDesign))
+        .monospacedDigit()
     }
 }
 
@@ -144,8 +155,8 @@ private struct SevenSegmentDigit: View {
 }
 
 struct DigitalClockControl: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     @Binding var hour: Int
-    @Binding var adjustingMinutes: Bool
     let theme: ClockTheme
     var minute = 0
     var fontSize: CGFloat = 38
@@ -154,65 +165,69 @@ struct DigitalClockControl: View {
     var valueIdentifier = "clock.value"
     var showHandHints = false
     var feedbackCorrect: Bool? = nil
+    private var time: ClockTime { ClockTime(hour: hour, minute: minute) }
+
     var body: some View {
-        HStack(spacing: 8) {
-            DinoIconButton(icon: "minus", labelKey: adjustingMinutes ? "dino.minuteLess" : "dino.hourLess") { adjust(-1) }
-                .accessibilityIdentifier(adjustingMinutes ? "clock.minute.less" : "clock.hour.less")
-                .anchorPreference(key: DigitalControlAnchors.self, value: .bounds) { [.decrease: $0] }
-            Button {
-                if onMinuteChange != nil { adjustingMinutes.toggle() }
-            } label: {
-                DigitalClock(time: ClockTime(hour: hour, minute: minute), theme: theme, fontSize: fontSize,
-                             showHandHints: showHandHints, activeMinutes: adjustingMinutes)
-                    .modifier(ClockAnswerOutline(visible: feedbackCorrect != nil, correct: feedbackCorrect == true))
-            }
-            .buttonStyle(.plain).contentShape(Rectangle())
-            // Align the buttons with the display, below its numbered annotations.
-            .alignmentGuide(VerticalAlignment.center) { dimensions in
-                dimensions[VerticalAlignment.center] + (showHandHints ? 24 : 0)
-            }
-            .accessibilityIdentifier(valueIdentifier)
-            DinoIconButton(icon: "plus", labelKey: adjustingMinutes ? "dino.minuteMore" : "dino.hourMore") { adjust(1) }
-                .accessibilityIdentifier(adjustingMinutes ? "clock.minute.more" : "clock.hour.more")
-                .anchorPreference(key: DigitalControlAnchors.self, value: .bounds) { [.increase: $0] }
-        }
-        .backgroundPreferenceValue(DigitalControlAnchors.self) { anchors in
-            GeometryReader { geometry in
-                if let digits = anchors[.digits], let display = anchors[.display],
-                   let decrease = anchors[.decrease], let increase = anchors[.increase] {
-                    let field = geometry[digits]
-                    let screen = geometry[display]
-                    let minus = geometry[decrease]
-                    let plus = geometry[increase]
-                    let underlineY = screen.maxY + 5
-                    let connectorY = max(underlineY, minus.maxY, plus.maxY) + 12
-                    Path { path in
-                        path.move(to: CGPoint(x: field.minX, y: underlineY))
-                        path.addLine(to: CGPoint(x: field.maxX, y: underlineY))
-                        path.move(to: CGPoint(x: field.midX, y: underlineY))
-                        path.addLine(to: CGPoint(x: field.midX, y: connectorY))
-                        path.move(to: CGPoint(x: minus.midX, y: minus.maxY + 2))
-                        path.addLine(to: CGPoint(x: minus.midX, y: connectorY))
-                        path.addLine(to: CGPoint(x: plus.midX, y: connectorY))
-                        path.addLine(to: CGPoint(x: plus.midX, y: plus.maxY + 2))
+        DigitalClock(time: time, theme: theme, fontSize: fontSize, exposesControlFields: true)
+            .accessibilityHidden(true)
+            .modifier(ClockAnswerOutline(visible: feedbackCorrect != nil, correct: feedbackCorrect == true))
+            .padding(.vertical, 48)
+            .overlayPreferenceValue(DigitalClockFieldAnchors.self) { anchors in
+                GeometryReader { geometry in
+                    ForEach(DigitalClockField.allCases, id: \.self) { field in
+                        if let anchor = anchors[field] {
+                            let center = geometry[anchor].midX
+                            arrow(field: field, direction: 1)
+                                .position(x: center, y: 22)
+                            arrow(field: field, direction: -1)
+                                .position(x: center, y: geometry.size.height - 22)
+                            if showHandHints {
+                                ClockHintBadgeArrow(number: field == .minutes ? 2 : 1,
+                                                    badge: CGPoint(x: 15, y: 14.5),
+                                                    tip: CGPoint(x: 15, y: 43.75),
+                                                    wings: [CGPoint(x: 10.5, y: 38), CGPoint(x: 19.5, y: 38)],
+                                                    ink: field == .minutes ? theme.minuteHex : theme.hourHex,
+                                                    bounds: CGSize(width: 30, height: 48))
+                                    .position(x: center, y: -24)
+                                    .accessibilityHidden(true)
+                            }
+                        }
                     }
-                    .stroke(DinoStyle.ink, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
-                    .accessibilityIdentifier("\(valueIdentifier).connectors")
                 }
-            }.allowsHitTesting(false).accessibilityHidden(true)
-        }
-        .padding(.bottom, 22)
-        .environment(\.layoutDirection, .leftToRight)
+            }
+            .padding(.top, showHandHints ? 48 : 0)
+            .disabled(feedbackCorrect != nil)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(time.digitalText)
+            .accessibilityIdentifier(valueIdentifier)
+            .environment(\.layoutDirection, .leftToRight)
     }
 
-    private func adjust(_ direction: Int) {
+    private func arrow(field: DigitalClockField, direction: Int) -> some View {
+        let minutes = field == .minutes
+        let labelKey = minutes
+            ? (direction > 0 ? "dino.minuteMore" : "dino.minuteLess")
+            : (direction > 0 ? "dino.hourMore" : "dino.hourLess")
+        let value = String(minutes ? time.digitalText.suffix(2) : time.digitalText.prefix(2))
+        return Button { adjust(direction, minutes: minutes) } label: {
+            Image(systemName: direction > 0 ? "chevron.up" : "chevron.down")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(DinoStyle.ink.opacity(highContrast ? 1 : 0.75))
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(minutes && onMinuteChange == nil)
+        .accessibilityLabel(LocalizedStringKey(labelKey))
+        .accessibilityValue(value)
+        .accessibilityIdentifier("clock.\(minutes ? "minute" : "hour").\(direction > 0 ? "more" : "less")")
+    }
+
+    private func adjust(_ direction: Int, minutes: Bool) {
         guard feedbackCorrect == nil else { return }
-        if adjustingMinutes, let onMinuteChange {
-            let shifted = ClockTime(hour: hour, minute: minute)
-                .shiftingMinutes(by: direction * (minuteStep < 60 ? minuteStep : 5))
-            hour = shifted.hour
-            onMinuteChange(shifted.minute)
-        } else {
+        if minutes, let onMinuteChange {
+            onMinuteChange(ClockTime.shiftedMinute(minute, by: direction * (minuteStep < 60 ? minuteStep : 5)))
+        } else if !minutes {
             hour = ClockTime.shiftedHour(hour, by: direction)
         }
     }

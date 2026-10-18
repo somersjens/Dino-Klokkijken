@@ -4,6 +4,8 @@
 <dict>
 	<key>DinoPrivacyPolicyURL</key>
 	<string>$(DINO_PRIVACY_POLICY_URL)</string>
+	<key>DinoAppStoreURL</key>
+	<string>$(DINO_APP_STORE_URL)</string>
 	<key>DinoSafetyContact</key>
 	<string>$(DINO_SAFETY_CONTACT)</string>
 </dict>

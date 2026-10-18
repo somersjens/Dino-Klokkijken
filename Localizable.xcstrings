@@ -677,6 +677,23 @@
         }
       }
     },
+    "dino.clock.arrowControls" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use the arrows above and below each number to adjust the hours and minutes."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruik de pijltjes boven en onder de cijfers om de uren en minuten in te stellen."
+          }
+        }
+      }
+    },
     "dino.clock.check" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -775,23 +792,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Herstel oorspronkelijke stijl"
-          }
-        }
-      }
-    },
-    "dino.clock.switchField" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap the clock to switch between hours and minutes."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tik op het klokje om te wisselen tussen uren en minuten."
           }
         }
       }
@@ -2819,6 +2819,74 @@
         }
       }
     },
+    "dino.friends.showAllScores" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All scores"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle scores"
+          }
+        }
+      }
+    },
+    "dino.friends.showFewerScores" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fewer scores"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minder scores"
+          }
+        }
+      }
+    },
+    "dino.friends.shareGame" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share the game with friends"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel het spel met vrienden"
+          }
+        }
+      }
+    },
+    "dino.friends.shareGame.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play Dino Time with me."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speel Dino Klokkijken met mij."
+          }
+        }
+      }
+    },
     "dino.friends.share" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3648,6 +3716,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Level"
+          }
+        }
+      }
+    },
+    "dino.level.time.minute" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minute"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minuut"
           }
         }
       }

@@ -10,7 +10,7 @@ De nummers hieronder volgen de aangeleverde feedback. De oefenlijst bevat nu twi
 | 7 | De uitspraak staat in de titel: ‘Het is nu drie uur.’ De tijd heeft dezelfde blauwe tint. De antwoorden zijn Goed en Fout. Het voorbeeld volgt dezelfde opbouw. |
 | 9 | Drie analoge klokken staan naast drie digitale tijden. Tik eerst op de ene kaart en daarna op de andere om een lijn te maken. Beide tapvolgordes werken. Een tijd kan aan één klok gekoppeld zijn. Een tik op een verbonden klok of tijd verbreekt het paar en wist de pending selectie; daarna kan een nieuw paar worden gekozen. Bevestigen kan zodra alle drie verbonden zijn. |
 | 9, voorbeeld | Een handje met 1 kiest een klok, daarna kiest een handje met 2 de tijd. Vervolgens verschijnt de lijn. Dit herhaalt zich voor alle drie de paren. De speler kan de demonstratie overnemen. |
-| 10 | Plus en min staan naast de digitale display en bedienen het onderstreepte cijferpaar. Tik ergens op het klokje om tussen uren en minuten te wisselen. Het voorbeeld opent met het andere paar geselecteerd dan de echte vraag. Bij een uurovergang bewegen de uren mee: 05:55 + 5 minuten = 06:00 en terug = 05:55. Analoge knoppen en het slepen van de minutenwijzer volgen dezelfde regel. |
+| 10 (nu vraagtype 8) | De volledige gekozen digitale klok blijft behouden, met losse pijltjes boven en onder de uren en minuten. De compacte controleknop heeft vaste donkerblauwe en witte kleuren. Alle vier pijltjes zijn direct beschikbaar, in de vraag en in het voorbeeld. Digitale minuten worden apart ingesteld: 05:55 → 05:00 → 05:55. Bij de analoge klok blijven de uren bij een uurovergang meebewegen. |
 
 Bij een fout meerkeuzeantwoord met meer dan twee opties blijven de andere keuzes beschikbaar. Linksonder verschijnt **Toon antwoord** of **Show answer**. Eerdere foute keuzes blijven rood; het juiste antwoord blijft verborgen tot de speler goed kiest of de knop gebruikt. Daarna verschijnt **Verder/Next**, met behoud van de verloren punt en de oorspronkelijke antwoordtijd. Oefenrecords en vragentellers veranderen slechts één keer per vraag. Twee-optievragen houden de directe feedback.
 
@@ -23,10 +23,10 @@ Een nieuw voorbeeld wist alleen de voorbeeldselecties. De echte vraag, koppeling
 - iPhone 17 en iPhone 17 Pro / iOS 26.5 en iPad Pro 11-inch (M5) / iOS 26.5: de tijdtitels, veldwisseling en koppelvraag zijn met echte taps gecontroleerd. De screenshots zijn visueel bekeken.
 - `testQuestionTitlesIncludeTimeInWords`: tijden in beide titels en voorbeelden, geen dubbele tijdkaart, Goed/Fout en geen activiteitkeuze.
 - `testThreePairMatchingAndTapDemonstration`: drie kaarten per kolom, beide tapvolgordes, verbreken via beide kanten van een paar, wissen van pending selecties, opnieuw verbinden, bevestigen, voorbeeldanimatie, vernieuwen, behoud van echte antwoorden en foutfeedback.
-- `testDigitalClockSwitchesFieldsAndExampleUsesOtherField`: aantikken aan de rand, plus/min voor het geselecteerde paar, knoppen naast de display, beide voorbeeldvarianten en behoud van echte invoer.
+- `testDigitalClockHasIndependentHourAndMinuteArrows`: vier direct beschikbare knoppen van minstens 44 × 44 punten, pijltjes boven en onder het bijbehorende cijferpaar, afwisselend uren en minuten aanpassen, een volgend voorbeeld en behoud van de echte invoer.
 - `testNumberedExamplesAdvanceWholeHours`, `testManualExamplesAndClockComparison` en `testPracticeSelectionAndEndlessDigitalMinutes`: voorbeelden bij twaalf uur, gewone levels en herhaald beantwoorden met de gewijzigde klokbediening.
 - De drie interactiewijzigingen zijn gecontroleerd met vier geslaagde schermtests op iPhone 18 Pro / iOS 27.0 en vijf op iPad Air 13-inch (M4) / iOS 27.0, zonder fouten. De relevante screenshots zijn visueel bekeken.
-- `testClockMinuteControlsCarryTheHourBothWays`: 05:55 → 06:00 → 05:55 via digitale knoppen, de analoge minutenwijzer en analoge knoppen; het digitale voorbeeld gaat mee over het uur en behoudt de echte invoer.
+- `testDigitalMinutesWrapAndAnalogMinutesCarry`: digitale minuten gaan van 55 naar 00 en terug zonder het uur te wijzigen; analoge minuten blijven het uur meenemen. Het digitale voorbeeld behoudt de echte invoer.
 - `testMultipleChoiceRetriesKeepTheLostPoint` en `testFourChoicesAndPersistentWrongAnswer`: foute keuzes uitschakelen, andere opties beschikbaar houden, handmatig verder na correctie of tonen, en geen herstelde oefenreeks of extra vraag.
 - `testShowAnswerEnglishAndTwoChoiceFeedback`: Engelse knopteksten **Show answer/Next** en directe eindfeedback bij twee opties.
 
@@ -55,7 +55,7 @@ Ook `testThreePairMatchingAndTapDemonstration` slaagt op beide apparaten, inclus
 
 - **Dagdeel kiezen:** vragen gebruiken geen 06:00–06:59 of 22:00–23:59. De voorbeelden blijven de volledige dag doorlopen, inclusief deze tijden. De vier dagdelen blijven beschikbaar.
 - **Verbind de klokken:** tijdens het spelen staat alleen de titel boven het bord. Het voorbeeld bevat de volledige beschrijving van de twee tikvolgordes. De genummerde handjes en het opbouwen van de verbindingen blijven zichtbaar; de beschrijving wisselt niet meer tussendoor.
-- **Stel de juiste tijd in:** het geselecteerde cijferpaar krijgt een streepje direct onder de display. Vanuit zowel min als plus loopt een lijn onderlangs naar dat streepje. Spel en voorbeeld gebruiken dezelfde component; de lijnen volgen ook een wissel tussen uren en minuten.
+- **Stel de juiste tijd in (vraagtype 8):** sinds 18 oktober hebben uren en minuten eigen pijltjes boven en onder de cijfers. Spel en voorbeeld gebruiken dezelfde component. De veldselectie, onderstreping en verbindingslijnen zijn vervangen door de directe bediening.
 - **Draai de korte wijzer:** bij een fout antwoord blijft de invoerklok dezelfde view en schuift hij verkleind naar links. De juiste klok verschijnt rechts op zijn uiteindelijke schaal. Dezelfde vergelijking wordt gebruikt bij het vooruitzetten van de analoge klok.
 - **Lees de tijd en het dagdeel af:** het voorbeeld reserveert een vaste hoogte voor het antwoord. Een langer antwoord of een extra tekstregel verschuift de onderknoppen niet. Een nieuw voorbeeld vervangt de inhoud zonder overgangsanimatie.
 - **Van vroeg naar laat:** 00:00 komt niet voor op het sorteerbord. De extra instructie staat alleen in het voorbeeld. Daar zijn alle vier klokken al geselecteerd en genummerd van vroeg naar laat, met de uitgewerkte volgorde eronder en zonder bevestigingsknop voor het antwoord.
@@ -83,3 +83,34 @@ De Debug-build voor iOS Simulator slaagt. `testExpandedMultipleChoiceExamplesSho
 De iPad-schermcontrole kon niet worden afgerond: de testrunner op iPad Pro 11-inch / iOS 26.5 werd beëindigd met `signal kill`. Een afzonderlijke herhaling brak eveneens af. De iPad-weergave is hiermee niet bevestigd.
 
 Beelden: [tijdenreeks in het voorbeeld](Screenshots/QuestionFeedback/sequence-example-vertical-iphone.png), [vooruitrekenen](Screenshots/QuestionFeedback/add-time-question-clean-iphone.png), [voorbeeld vooruitrekenen](Screenshots/QuestionFeedback/add-time-example-clean-iphone.png), [terugrekenen](Screenshots/QuestionFeedback/subtract-time-question-clean-iphone.png) en [voorbeeld terugrekenen](Screenshots/QuestionFeedback/subtract-time-example-clean-iphone.png).
+
+## Directe digitale bediening — 18 oktober 2026
+
+Vraagtype **8 – Digitale klok instellen** behoudt de volledige `DigitalClock` van de speler, inclusief achtergrond, vorm, cijfers en dubbele punt. Vier losse pijltjes staan erboven en eronder, gecentreerd op de werkelijke posities van de uren en minuten. De pijltjes hebben een aanraakvlak van 44 × 44 punten en eigen VoiceOver-labels en waarden. Ze zijn ook zichtbaar bij witte digitale cijfers, doordat hun kleur onafhankelijk van het display is.
+
+**Controleer mijn klok** staat compact direct onder de bediening en behoudt de vaste donkerblauwe achtergrond met witte tekst, onafhankelijk van de gekozen klokkleuren. De vraag en het voorbeeld delen dezelfde digitale bediening. Het voorbeeld licht de pijltjes toe in Nederlands en Engels; sluiten behoudt de echte invoertijd.
+
+De digitale instelvelden werken onafhankelijk: 05:55 → 05:00 → 05:55 via de minuutknoppen laat het uur op vijf staan. De stapgrootte blijft de gekozen tijdsoort volgen. Voor analoge wijzers blijft de bestaande uurovergang behouden.
+
+De actuele projectbuild voor iOS Simulator slaagt. `testDigitalClockHasIndependentHourAndMinuteArrows` slaagt op iPhone 17 en iPad Pro 11-inch (M5), beide met iOS 26.5. De test controleert de vier losse pijltjes, de compacte gecentreerde controleknop, het voorbeeld, behoud van de invoer en live omschakelen naar een gele klok met digitale cijfers en donkerblauwe tekst. De controleknop behoudt daarbij zijn standaardkleuren. De schermbeelden zijn visueel gecontroleerd.
+
+`testDigitalMinutesWrapAndAnalogMinutesCarry` slaagt op iPhone 17 / iOS 26.5: 05:55 → 05:00 → 05:55 bij digitaal instellen, ook in het voorbeeld, met behoud van de bestaande analoge uurovergang.
+
+Beelden: [standaardklok op iPhone](Screenshots/QuestionFeedback/digital-preserved-display-iphone.png), [gekozen klok en bijpassende knop](Screenshots/QuestionFeedback/digital-preserved-display-custom-iphone.png), [gekozen klok op iPad](Screenshots/QuestionFeedback/digital-preserved-display-custom-ipad.png) en [het voorbeeld op iPad](Screenshots/QuestionFeedback/digital-preserved-display-example-ipad.png).
+
+
+## Vaste knopstijl en automatische wijzerselectie — 18 oktober 2026
+
+Vraagtypen **8** en **9** gebruiken één compacte knopstijl met donkerblauw en wit. De controleknop verandert niet mee met een ander klokontwerp. Dezelfde stijl geldt voor vooruit/achteruit en de uren/minutenswitch: de geselecteerde stand is donkerblauw met witte tekst, de andere stand wit met donkerblauwe tekst en een rand.
+
+Bij het vastpakken van een wijzer selecteert de analoge klok automatisch die wijzer en werkt de switch direct mee. De keuze blijft tijdens dezelfde sleepbeweging vast, ook wanneer de wijzers elkaar kruisen. Bij overlappende wijzers behoudt het gedeelde deel de bestaande selectie; de uitstekende punt van de minutenwijzer is afzonderlijk te kiezen. Tikken op een leeg deel van de wijzerplaat blijft de handmatig gekozen stand volgen. De middenknop kiest geen andere wijzer. Dit geldt ook voor de handmatig bediende voorbeelden en vooruitdraai-vragen.
+
+De analoge klok biedt voor toegankelijkheid één tijdwaarde; de switch geeft ook aan welke wijzer is geselecteerd.
+
+De iOS Simulator-build slaagt. `Tools/test-dino.sh` slaagt met **796.994 controles**, inclusief aanraken van beide wijzers, een leeg deel van de wijzerplaat, de middenknop, overlappende wijzers en de minutenpunt bij alle 720 klokstanden.
+
+`testAnalogClockSelectsTheTouchedHandAndUpdatesControls` slaagt op iPhone 17 en iPad Pro 11-inch (M5), beide met iOS 26.5. De test sleept eerst de minutenwijzer terwijl Uren geselecteerd is, daarna de uurwijzer terwijl Minuten geselecteerd is. Hij controleert de tijd, geselecteerde knop, stapgrootte van vooruit/achteruit en het vasthouden van de selectie bij het kruisen van de andere wijzer. Ook het voorbeeld schakelt automatisch mee.
+
+`testDigitalClockHasIndependentHourAndMinuteArrows` slaagt op iPhone 17 / iOS 26.5, met een gele digitale klok en een controleknop die donkerblauw blijft. De schermbeelden zijn visueel gecontroleerd.
+
+Beelden: [vaste knopkleur bij een andere digitale klok](Screenshots/QuestionFeedback/clock-controls-fixed-color-iphone.png), [analoge bediening op iPhone](Screenshots/QuestionFeedback/analog-controls-auto-hand-iphone.png) en [automatische wijzerselectie in het voorbeeld op iPad](Screenshots/QuestionFeedback/analog-controls-auto-hand-example-ipad.png).

@@ -431,13 +431,10 @@ struct LevelNode: View {
             .buttonStyle(DinoAnswerButtonStyle()).disabled(!unlocked)
             .accessibilityIdentifier("map.level.\(level.id)")
             .overlay(alignment: .bottom) {
-                Group {
-                    if level.isBoss {
-                        Text("dino.boss").font(.system(size: 11, weight: .heavy, design: .rounded)).tracking(1.5)
-                    } else {
-                        DinoStars(count: record.stars, size: 17, showEmpty: record.stars > 0).frame(height: 20)
-                    }
-                }.offset(y: 32).allowsHitTesting(false)
+                if !level.isBoss {
+                    DinoStars(count: record.stars, size: 17, showEmpty: record.stars > 0)
+                        .frame(height: 20).offset(y: 32).allowsHitTesting(false)
+                }
             }
             .overlay {
                 if showsGuide {
@@ -941,7 +938,7 @@ private struct WorldChapter: View {
                     }
                 }.padding(.top, -7.5)
                 }
-            }.frame(height: WorldRouteTrail.chapterRouteHeight(topClearance: topClearance)).padding(.horizontal, 18)
+            }.frame(height: WorldRouteTrail.chapterRouteHeight(topClearance: topClearance, worldID: world.id)).padding(.horizontal, 18)
                 .frame(maxWidth: 600).frame(maxWidth: .infinity)
         }.background {
             MapScenery(viewportHeight: viewportHeight) {
@@ -968,43 +965,59 @@ private struct WorldChapter: View {
 
 struct LevelInfoPanel: View {
     @Environment(\.dinoHighContrast) private var highContrast
-    @EnvironmentObject private var player: DinoPlayer
     @Environment(\.dismiss) private var dismiss
     let level: LevelConfiguration
     var start: () -> Void
     var close: (() -> Void)? = nil
     var body: some View {
         ScrollView {
-            VStack(spacing: 18) {
-                if level.isBoss {
-                    WorldThemePreview(world: DinoWorldCatalog.world(level.worldID)!)
-                        .frame(width: 240, height: 160)
-                        .accessibilityIdentifier("level.bossArtwork.\(level.worldID)")
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
-                }
-                else {
-                    HStack(spacing: 20) {
-                        DinoCharacter(size: 72)
-                        Image(systemName: level.icon).font(.system(size: 44, weight: .bold)).foregroundStyle(DinoStyle.green)
-                    }
-                }
-                Text("dino.levelNumber \(level.id)").font(.system(size: 13, weight: .heavy, design: .rounded)).foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-                Text(LocalizedStringKey(level.titleKey)).font(.system(size: 28, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
-                if level.isBoss {
-                    HStack(spacing: 8) { ForEach(0..<10) { _ in Image(systemName: "diamond.fill").foregroundStyle(DinoStyle.green) } }
-                    VStack(spacing: 10) {
-                        Label("dino.bossPerfectRule", systemImage: "trophy.fill")
-                        Label("dino.bossNormalRule", systemImage: "star.fill")
-                    }.font(.system(size: 14, weight: .semibold, design: .rounded)).multilineTextAlignment(.center)
-                } else {
-                    DinoStars(count: player.profile.record(level.id).stars, size: 28)
-                }
+            VStack(spacing: 12) {
+                Text("dino.levelNumber \(level.id)")
+                    .font(.system(size: 22, weight: .heavy, design: .rounded))
+                    .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.deepGreen)
+                    .accessibilityIdentifier("level.number")
+                LevelQuestionOutlineList(items: level.questionOutline)
                 Button(action: start) { Label("dino.play", systemImage: "play.fill") }
                     .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("level.play")
                 LevelFriendsView(levelID: level.id)
-                Button("dino.map") { if let close { close() } else { dismiss() } }.buttonStyle(DinoSecondaryButtonStyle())
-            }.padding(26).frame(maxWidth: 450).frame(maxWidth: .infinity)
-        }.background(JungleBackground(quiet: true)).foregroundStyle(DinoStyle.ink)
+                Button("dino.map") { if let close { close() } else { dismiss() } }
+                    .buttonStyle(DinoSecondaryButtonStyle())
+                    .accessibilityIdentifier("level.map")
+            }
+            .padding(26).frame(maxWidth: 450).frame(maxWidth: .infinity, alignment: .top)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .background(JungleBackground(quiet: true)).foregroundStyle(DinoStyle.ink)
+    }
+}
+
+/// Practice number, exercise name, and time family, in the order the level asks them.
+private struct LevelQuestionOutlineList: View {
+    let items: [LevelQuestionOutline]
+    var body: some View {
+        VStack(spacing: 8) {
+            ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                HStack(spacing: 10) {
+                    Text(verbatim: item.practiceNumber.map(String.init) ?? "–")
+                        .font(.system(size: 13, weight: .heavy, design: .rounded))
+                        .frame(width: 28, height: 28)
+                        .background(DinoStyle.green.opacity(0.16), in: Circle())
+                        .accessibilityIdentifier("level.question.\(index).number")
+                    Text(LocalizedStringKey(item.titleKey))
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(LocalizedStringKey(item.timeTitleKey))
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundStyle(DinoStyle.deepGreen)
+                        .multilineTextAlignment(.trailing)
+                        .fixedSize(horizontal: true, vertical: false)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("level.question.\(index)")
+            }
+        }
+        .accessibilityIdentifier("level.questions")
     }
 }
 

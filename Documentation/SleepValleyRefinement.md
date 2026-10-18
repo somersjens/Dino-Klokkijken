@@ -38,3 +38,7 @@ Ook `testDirectPerfectBoss` slaagde op iPad: de jungle voltooien ontgrendelt de 
 De eerste brede hoofdstukrun werd op iPhone na de geslaagde wereld-2-stappen door een signal kill beëindigd. De brede iPad-run bereikte wereld 8, waar de bestaande aanname dat de eerste vraag meerkeuzeknoppen heeft niet klopte. Dit is geen geslaagde controle van alle werelden; de afronding van deze opdracht gebruikt daarom de gerichte wereld-2-runs. [Brede iPhone-run](WorldTestLogs/SleepValleyRefinement/iphone.log) · [Brede iPad-run](WorldTestLogs/SleepValleyRefinement/chapters-ipad.log).
 
 Alle schermcontroles gebruiken afzonderlijke Debug-testopslag. Echte spelersvoortgang is niet gewijzigd.
+
+## Eerste redesignronde — 18 oktober 2026
+
+De Slaapvallei heeft een verdere verbeterslag gekregen met vollere bewegende wilgen, hangende lantaarns, doorlopende beekjes, vier kleine watervallen, rijkere oevers en subtiele lichtanimaties. [Uitwerking en verificatie](SleepValleyFirstPass.md).

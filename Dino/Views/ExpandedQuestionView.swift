@@ -95,7 +95,7 @@ struct DinoExpandedQuestionView: View {
             if let schedule = q.daySchedule {
                 DinoTrainJourneyCard(schedule: schedule,
                                      showsAnswer: isDemonstration || session.showsCorrectResponse,
-                                     countsTotal: isDemonstration || showsTrainSum, minuteStep: session.minuteStep,
+                                     countsTotal: isDemonstration || showsTrainSum,
                                      isDemonstration: isDemonstration, language: code)
             }
         default:
@@ -309,8 +309,8 @@ struct DinoExpandedQuestionView: View {
     }
 
     private var analogAdvance: some View {
-        let hourChange: ((Int) -> Void)? = session.hasFeedback || movingMinutes ? nil : { session.inputHour = $0 }
-        let minuteChange: ((ClockTime) -> Void)? = session.hasFeedback || !movingMinutes ? nil : { session.setInputTime($0) }
+        let hourChange: ((Int) -> Void)? = session.hasFeedback ? nil : { session.inputHour = $0 }
+        let minuteChange: ((ClockTime) -> Void)? = session.hasFeedback || !session.allowsMinutes ? nil : { session.setInputTime($0) }
         let shown = session.attempt.submittedAnswer ?? session.inputTime
         return VStack(spacing: 12) {
             HStack(alignment: .center, spacing: 6) {
@@ -324,7 +324,9 @@ struct DinoExpandedQuestionView: View {
                     }
                 } else {
                     AnalogClock(time: shown, theme: theme, size: advanceFace,
-                                onHourChange: hourChange, onMinuteChange: minuteChange, minuteStep: session.minuteStep)
+                                onHourChange: hourChange, onMinuteChange: minuteChange, minuteStep: session.minuteStep,
+                                adjustingMinutes: movingMinutes,
+                                onHandSelection: session.hasFeedback ? nil : { movingMinutes = $0 })
                         .padding(4)
                         .modifier(ClockAnswerOutline(visible: session.hasFeedback, correct: session.correctFeedback))
                         .accessibilityIdentifier("question.analogControl")
@@ -336,10 +338,10 @@ struct DinoExpandedQuestionView: View {
                 Button { session.submit(.time(session.inputTime)) } label: {
                     Label("dino.clock.check", systemImage: "checkmark")
                         .lineLimit(1).minimumScaleFactor(0.75)
-                }.buttonStyle(DinoButtonStyle())
+                }.buttonStyle(DinoClockControlButtonStyle())
                     .accessibilityIdentifier("question.confirm")
             }
-            .frame(maxWidth: min(380, width))
+            .frame(maxWidth: min(320, width))
             .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
         }.id("question.answers")
     }
@@ -477,18 +479,27 @@ private struct DinoTrainJourneyCard: View {
     let schedule: DinoDaySchedule
     let showsAnswer: Bool
     let countsTotal: Bool
-    let minuteStep: Int
     let isDemonstration: Bool
     let language: String
-    @State private var summedMinutes = 0
-    @State private var showsTotal = false
+    /// Examples are born with the total already open, so refreshing one does not replay the reveal.
+    @State private var showsTotal: Bool
     private var prefix: String { isDemonstration ? "demo" : "question" }
 
     private let ride = Color(dinoHex: 0x6A4300)
     private let rideFill = Color(dinoHex: 0xFFF4C8)
     private let rideChip = Color(dinoHex: 0xFFD56A)
-    private let transferFill = Color(dinoHex: 0xFFF3DF)
-    private let transferChip = Color(dinoHex: 0xFFE0B8)
+    private let transferInk = Color(dinoHex: 0x154A86)
+    private let transferFill = Color(dinoHex: 0xE7F1FB)
+    private let transferChip = Color(dinoHex: 0xD3E6F8)
+
+    init(schedule: DinoDaySchedule, showsAnswer: Bool, countsTotal: Bool, isDemonstration: Bool, language: String) {
+        self.schedule = schedule
+        self.showsAnswer = showsAnswer
+        self.countsTotal = countsTotal
+        self.isDemonstration = isDemonstration
+        self.language = language
+        _showsTotal = State(initialValue: isDemonstration && countsTotal)
+    }
     private let arrivalFill = Color(dinoHex: 0xE7F7DC)
     private let arrivalChip = Color(dinoHex: 0xD5F0C2)
     private let totalInk = Color(dinoHex: 0x5E6A70)
@@ -508,7 +519,7 @@ private struct DinoTrainJourneyCard: View {
                     }
                 }
                 .clipped()
-                .animation(.spring(duration: 0.55, bounce: 0.04), value: showsTotal)
+                .animation(isDemonstration || reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.16), value: showsTotal)
             } else {
                 trainOne
                 connector
@@ -526,7 +537,14 @@ private struct DinoTrainJourneyCard: View {
             .stroke(highContrast ? DinoStyle.ink : DinoStyle.deepGreen.opacity(0.16), lineWidth: highContrast ? 2 : 1.5))
         .shadow(color: DinoStyle.deepGreen.opacity(0.08), radius: 16, y: 6)
         .accessibilityIdentifier("\(prefix).schedule.card")
-        .task(id: walkIdentity) { await play() }
+        .onChange(of: countsTotal, initial: false) { _, show in
+            guard show, !isDemonstration else { return }
+            if reduceMotion {
+                showsTotal = true
+            } else {
+                withAnimation(.spring(duration: 0.5, bounce: 0.16).delay(0.08)) { showsTotal = true }
+            }
+        }
     }
 
     /// The two trains and the transfer become one sum, so the arrows between them go away.
@@ -538,7 +556,7 @@ private struct DinoTrainJourneyCard: View {
         }
         .padding(6)
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .strokeBorder(highContrast ? DinoStyle.ink : ride,
+            .strokeBorder(highContrast ? DinoStyle.ink : DinoStyle.ink.opacity(0.45),
                           style: StrokeStyle(lineWidth: highContrast ? 2 : 1.5, dash: [5, 4])))
         .accessibilityIdentifier("\(prefix).schedule.group")
     }
@@ -553,7 +571,7 @@ private struct DinoTrainJourneyCard: View {
     private var transfer: some View {
         leg(symbol: "figure.walk", title: "dino.train.transfer",
             value: DinoTimeWords.duration(schedule.breakMinutes, language: language),
-            ink: DinoStyle.deepOrange, fill: transferFill, chip: transferChip,
+            ink: transferInk, fill: transferFill, chip: transferChip,
             identifier: "\(prefix).schedule.break")
     }
 
@@ -571,7 +589,7 @@ private struct DinoTrainJourneyCard: View {
             .accessibilityHidden(true)
     }
 
-    /// The two trains and the transfer, counted the same way as a flight duration.
+    /// The finished sum of the two trains and the transfer. It opens once; it does not count up.
     private var totalRow: some View {
         HStack(spacing: 8) {
             ZStack {
@@ -588,10 +606,9 @@ private struct DinoTrainJourneyCard: View {
                 .font(.system(size: 14, weight: .heavy, design: .rounded))
                 .lineLimit(1).minimumScaleFactor(0.7)
             Spacer(minLength: 8)
-            Text(verbatim: DinoTimeWords.duration(summedMinutes, language: language))
+            Text(verbatim: DinoTimeWords.duration(schedule.totalMinutes, language: language))
                 .font(.system(size: 14, weight: .heavy, design: .rounded))
                 .monospacedDigit().lineLimit(1).minimumScaleFactor(0.55)
-                .contentTransition(.numericText())
                 .padding(.horizontal, 10).padding(.vertical, 4)
                 .background((highContrast ? DinoStyle.ink : totalInk).opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .layoutPriority(1)
@@ -600,7 +617,7 @@ private struct DinoTrainJourneyCard: View {
         .padding(.horizontal, 10).padding(.vertical, 5)
         .background((highContrast ? DinoStyle.ink : totalInk).opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .padding(.top, 4)
-        .transition(.move(edge: .top).combined(with: .opacity))
+        .transition(.opacity.combined(with: .scale(scale: 0.94, anchor: .top)).combined(with: .offset(y: -6)))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("\(prefix).schedule.total")
     }
@@ -665,42 +682,6 @@ private struct DinoTrainJourneyCard: View {
             .stroke(highContrast ? ink : .clear, lineWidth: 1.5))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier(identifier)
-    }
-
-    private var walkIdentity: String {
-        "\(countsTotal)-\(schedule.start.digitalText)-\(schedule.totalMinutes)-\(minuteStep)-\(language)"
-    }
-
-    private var walkSteps: [Int] {
-        DinoFlightArrivalWork(departure: schedule.start, durationMinutes: schedule.totalMinutes,
-                              offsetHours: 0, arrival: schedule.end).walkMinutes(step: minuteStep)
-    }
-
-    @MainActor private func play() async {
-        guard countsTotal else {
-            summedMinutes = 0
-            showsTotal = false
-            return
-        }
-        let steps = walkSteps
-        if reduceMotion || steps.isEmpty {
-            showsTotal = true
-            summedMinutes = schedule.totalMinutes
-            return
-        }
-        summedMinutes = 0
-        withAnimation(.spring(duration: 0.55, bounce: 0.04)) { showsTotal = true }
-        do {
-            try await Task.sleep(for: .milliseconds(700))
-            for step in steps {
-                try Task.checkCancellation()
-                let minute = step % 60 != 0
-                withAnimation(.easeInOut(duration: minute ? 0.28 : 0.35)) { summedMinutes = step }
-                if step != steps.last {
-                    try await Task.sleep(for: .milliseconds(minute ? 420 : 700))
-                }
-            }
-        } catch { /* The next question cancels the count. */ }
     }
 }
 

@@ -300,11 +300,19 @@ final class DinoUITests: XCTestCase {
             let node = revealMapNode(world * 10)
             saveScreenshot(world == 1 ? "jungle-guardian-map" : "boss-\(world)-map")
             node.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-            let artwork = app.descendants(matching: .any)["level.bossArtwork.\(world)"]
-            XCTAssertTrue(artwork.waitForExistence(timeout: 5))
-            XCTAssertGreaterThan(artwork.frame.minY, app.buttons["header.settings"].frame.maxY)
+            let questions = app.descendants(matching: .any)["level.questions"]
+            XCTAssertTrue(questions.waitForExistence(timeout: 5))
+            XCTAssertGreaterThan(questions.frame.minY, app.buttons["header.settings"].frame.maxY)
+            XCTAssertFalse(app.descendants(matching: .any)["level.bossArtwork.\(world)"].exists)
+            XCTAssertTrue(app.staticTexts["Level \(world * 10)"].exists)
+            let firstQuestion = app.descendants(matching: .any)["level.question.0"]
+            XCTAssertTrue(firstQuestion.exists)
+            if world == 1 {
+                XCTAssertTrue(firstQuestion.label.contains("Kies de analoge klok"))
+                XCTAssertTrue(firstQuestion.label.contains("Hele uren"))
+                XCTAssertFalse(app.staticTexts["Tiko de Junglewachter"].exists)
+            }
             XCTAssertTrue(app.buttons["level.play"].isEnabled)
-            if world == 1 { XCTAssertTrue(app.staticTexts["Tiko de Junglewachter"].exists) }
             saveScreenshot("boss-\(world)-start")
         }
     }
@@ -386,13 +394,20 @@ final class DinoUITests: XCTestCase {
             XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 8))
             let first = revealMapNode((world - 1) * 10 + 1)
             let boss = app.buttons["map.level.\((world - 1) * 10)"]
-            let banner = app.descendants(matching: .any)["map.world.\(world)"]
+            // SwiftUI passes the banner identifier to all three text labels.
+            // Measure the central title, whose centre matches the sign's face.
+            let banner = app.staticTexts.matching(identifier: "map.world.\(world)").element(boundBy: 1)
             XCTAssertTrue(boss.exists && banner.exists)
             let above = banner.frame.minY - boss.frame.maxY
             let below = first.frame.minY - banner.frame.maxY
             XCTAssertGreaterThan(above, 40, "Boss leaves room above world \(world)")
-            XCTAssertEqual(above, below, accuracy: 4,
-                           "World \(world) uses the same clear space on both sides of its banner")
+            if world == 6 {
+                XCTAssertGreaterThan(above, below + 100,
+                                     "The full-size cave exit leaves extra room after level 50")
+            } else {
+                XCTAssertEqual(above, below, accuracy: 4,
+                               "World \(world) uses the same clear space on both sides of its banner")
+            }
             saveScreenshot("world-banner-spacing-\(world)")
         }
     }
@@ -917,23 +932,24 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("practice-order-choices")
         tap("practice.start")
         XCTAssertFalse(app.buttons["demo.ready"].exists)
-        tap("question.digitalControl")
         tap("clock.minute.more")
         XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "12:30")).firstMatch.exists
                       || app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "01:30")).firstMatch.exists)
         saveScreenshot("practice-digital-minutes")
         for index in 0..<12 {
-            XCTAssertEqual(app.staticTexts["practice.questionNumber"].label, "\(index + 1)")
-            if index > 0 { tap("question.digitalControl") }
+            XCTAssertTrue(app.staticTexts.matching(identifier: "header.questions")
+                .matching(NSPredicate(format: "label == %@", "\(index + 1)")).firstMatch.exists)
             XCTAssertTrue(app.buttons["clock.minute.more"].exists)
             // Initial hours deliberately differ, so this tests feedback and Next indefinitely.
             tap("question.confirm")
-            XCTAssertTrue(app.descendants(matching: .any)["question.correctClock"].waitForExistence(timeout: 4))
+            XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "question.correctClock").firstMatch.waitForExistence(timeout: 4))
             if index == 0 { saveScreenshot("practice-digital-comparison") }
             tap("question.next")
-            XCTAssertTrue(app.staticTexts["practice.questionNumber"].waitForExistence(timeout: 4))
+            XCTAssertTrue(app.staticTexts.matching(identifier: "header.questions")
+                .matching(NSPredicate(format: "label == %@", "\(index + 2)")).firstMatch.waitForExistence(timeout: 4))
         }
-        XCTAssertEqual(app.staticTexts["practice.questionNumber"].label, "13")
+        XCTAssertTrue(app.staticTexts.matching(identifier: "header.questions")
+            .matching(NSPredicate(format: "label == %@", "13")).firstMatch.exists)
         XCTAssertFalse(app.buttons["result.map"].exists)
         tap("header.pause")
         XCTAssertTrue(app.buttons["practice.start"].waitForExistence(timeout: 5))
@@ -1287,6 +1303,54 @@ final class DinoUITests: XCTestCase {
         tap("header.pause")
     }
 
+    func testAnalogClockSelectsTheTouchedHandAndUpdatesControls() {
+        openPractice()
+        tap("practice.time.fiveMinutes")
+        selectPractice("practice.type.setAnalog")
+        tap("practice.start")
+        let clock = app.descendants(matching: .any)["question.analogControl"]
+        func time(_ element: XCUIElement) -> ClockTime {
+            let parts = element.label.split(separator: ":").map { Int($0)! }
+            return ClockTime(hour: parts[0], minute: parts[1])
+        }
+        func drag(_ element: XCUIElement, from angle: Double, to target: Double, radius: Double) {
+            func point(_ degrees: Double) -> XCUICoordinate {
+                let radians = degrees * .pi / 180
+                return element.coordinate(withNormalizedOffset: CGVector(
+                    dx: 0.5 + sin(radians) * radius, dy: 0.5 - cos(radians) * radius))
+            }
+            point(angle).press(forDuration: 0.15, thenDragTo: point(target))
+        }
+        let initial = time(clock)
+        for _ in 0..<((3 - initial.hour + 12) % 12) { app.buttons["question.analog.more"].tap() }
+        XCTAssertEqual(clock.label, "03:00")
+        XCTAssertTrue(app.buttons["question.hand.hours"].isSelected)
+        drag(clock, from: 0, to: 120, radius: 0.31)
+        XCTAssertEqual(clock.label, "03:20")
+        XCTAssertTrue(app.buttons["question.hand.minutes"].isSelected)
+        XCTAssertTrue(app.buttons["question.analog.more"].label.contains("+5"))
+        drag(clock, from: 100, to: 160, radius: 0.20)
+        XCTAssertEqual(clock.label, "05:20", "The hour drag remains on that hand while crossing the minute hand")
+        XCTAssertTrue(app.buttons["question.hand.hours"].isSelected)
+        XCTAssertTrue(app.buttons["question.analog.more"].label.contains("+1"))
+        tap("question.analog.more")
+        XCTAssertEqual(clock.label, "06:20")
+        tap("question.analog.less")
+        XCTAssertEqual(clock.label, "05:20")
+        saveScreenshot("analog-fixed-controls-auto-hand-selection")
+        tap("question.example")
+        tap("demo.hand.minutes")
+        let example = app.descendants(matching: .any)["demo.analog"]
+        for _ in 0..<(time(example).minute / 5) { app.buttons["demo.analog.less"].tap() }
+        tap("demo.hand.hours")
+        for _ in 0..<((3 - time(example).hour + 12) % 12) { app.buttons["demo.analog.more"].tap() }
+        XCTAssertEqual(example.label, "03:00")
+        drag(example, from: 0, to: 120, radius: 0.31)
+        XCTAssertEqual(example.label, "03:20")
+        XCTAssertTrue(app.buttons["demo.hand.minutes"].isSelected)
+        saveScreenshot("analog-example-fixed-controls-auto-hand-selection")
+    }
+
     func testAnalogSettingExampleShowsTapsAndRestartsAtOppositeTime() {
         openPractice()
         selectPractice("practice.type.setAnalog")
@@ -1554,30 +1618,28 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts.matching(identifier: "practice.questionNumber").matching(NSPredicate(format: "label == %@", "2")).firstMatch.waitForExistence(timeout: 5))
     }
 
-    func testClockMinuteControlsCarryTheHourBothWays() {
+    func testDigitalMinutesWrapAndAnalogMinutesCarry() {
         openPractice()
         tap("practice.time.fiveMinutes")
         selectPractice("practice.type.setDigital")
         tap("practice.start")
-        let digital = app.buttons["question.digitalControl"]
+        let digital = app.descendants(matching: .any)["question.digitalControl"]
         let initialHour = Int(digital.label.prefix(2))!
         for _ in 0..<((5 - initialHour + 12) % 12) { app.buttons["clock.hour.more"].tap() }
-        tap("question.digitalControl")
         for _ in 0..<11 { app.buttons["clock.minute.more"].tap() }
         XCTAssertEqual(digital.label, "05:55")
         tap("clock.minute.more")
-        XCTAssertEqual(digital.label, "06:00")
+        XCTAssertEqual(digital.label, "05:00")
         tap("clock.minute.less")
         XCTAssertEqual(digital.label, "05:55")
-        saveScreenshot("digital-minute-hour-carry")
+        saveScreenshot("digital-minute-wrap-independent-hour")
         tap("question.example")
-        let example = app.buttons["demo.digital"]
+        let example = app.descendants(matching: .any)["demo.digital"]
         XCTAssertEqual(example.label, "03:05")
-        tap("demo.digital")
         tap("clock.minute.less")
         XCTAssertEqual(example.label, "03:00")
         tap("clock.minute.less")
-        XCTAssertEqual(example.label, "02:55")
+        XCTAssertEqual(example.label, "03:55")
         tap("clock.minute.more")
         XCTAssertEqual(example.label, "03:00")
         tap("demo.ready")
@@ -1589,11 +1651,11 @@ final class DinoUITests: XCTestCase {
         let analog = app.descendants(matching: .any)["question.analogControl"]
         func moveHand(to angle: Double) {
             let radians = angle * .pi / 180
-            analog.coordinate(withNormalizedOffset: CGVector(dx: 0.5 + sin(radians) * 0.34,
-                                                              dy: 0.5 - cos(radians) * 0.34)).tap()
+            analog.coordinate(withNormalizedOffset: CGVector(dx: 0.5 + sin(radians) * 0.43,
+                                                              dy: 0.5 - cos(radians) * 0.43)).tap()
         }
         moveHand(to: 150)
-        tap("question.hand.minutes")
+        app.buttons["Minuten"].tap()
         moveHand(to: 180)
         moveHand(to: 330)
         moveHand(to: 0)
@@ -1666,36 +1728,65 @@ final class DinoUITests: XCTestCase {
         XCTAssertFalse(app.buttons["question.option.1"].isEnabled)
     }
 
-    func testDigitalClockSwitchesFieldsAndExampleUsesOtherField() {
+    func testDigitalClockHasIndependentHourAndMinuteArrows() {
         openPractice()
         tap("practice.time.half")
         selectPractice("practice.type.setDigital")
         tap("practice.start")
-        let clock = app.buttons["question.digitalControl"]
-        let initial = clock.label
+        let clock = app.descendants(matching: .any)["question.digitalControl"]
+        let initialHour = Int(clock.label.prefix(2))!
+        let hourUp = app.buttons["clock.hour.more"]
+        let hourDown = app.buttons["clock.hour.less"]
+        let minuteUp = app.buttons["clock.minute.more"]
+        let minuteDown = app.buttons["clock.minute.less"]
+        for button in [hourUp, hourDown, minuteUp, minuteDown] {
+            XCTAssertTrue(button.isHittable)
+            XCTAssertGreaterThanOrEqual(button.frame.width + 0.01, 44)
+            XCTAssertGreaterThanOrEqual(button.frame.height + 0.01, 44)
+        }
+        XCTAssertEqual(hourUp.frame.midX, hourDown.frame.midX, accuracy: 1)
+        XCTAssertEqual(minuteUp.frame.midX, minuteDown.frame.midX, accuracy: 1)
+        XCTAssertLessThan(hourUp.frame.maxY, hourDown.frame.minY)
+        XCTAssertLessThan(minuteUp.frame.maxY, minuteDown.frame.minY)
+        XCTAssertLessThan(hourUp.frame.maxX, minuteUp.frame.minX)
+        let confirm = app.buttons["question.confirm"]
+        XCTAssertEqual(confirm.frame.midX, clock.frame.midX, accuracy: 1)
+        XCTAssertLessThan(confirm.frame.width, app.frame.width * 0.85)
+        XCTAssertLessThan(confirm.frame.minY - minuteDown.frame.maxY, 16)
+        tap("clock.minute.more")
+        XCTAssertEqual(clock.label, ClockTime(hour: initialHour, minute: 30).digitalText)
+        tap("clock.hour.more")
+        XCTAssertEqual(clock.label, ClockTime(hour: ClockTime.shiftedHour(initialHour, by: 1), minute: 30).digitalText)
+        tap("clock.minute.less")
+        tap("clock.hour.less")
+        XCTAssertEqual(clock.label, ClockTime(hour: initialHour).digitalText)
+        saveScreenshot("digital-question-independent-arrows")
         tap("question.example")
-        let example = app.buttons["demo.digital"]
-        let minus = app.buttons["clock.minute.less"]
-        let plus = app.buttons["clock.minute.more"]
-        XCTAssertLessThan(minus.frame.maxX, example.frame.minX)
-        XCTAssertLessThan(example.frame.maxX, plus.frame.minX)
-        XCTAssertLessThan(example.frame.minX - minus.frame.maxX, 12)
-        XCTAssertLessThan(plus.frame.minX - example.frame.maxX, 12)
-        saveScreenshot("digital-example-minutes-selected")
-        tap("demo.digital")
+        let example = app.descendants(matching: .any)["demo.digital"]
+        XCTAssertEqual(example.label, "03:30")
         tap("clock.hour.more")
         XCTAssertEqual(example.label, "04:30")
-        saveScreenshot("digital-example-hours-selected")
-        tap("demo.ready")
-        XCTAssertEqual(clock.label, initial)
-        // A tap near the edge of the display also switches the active pair.
-        clock.coordinate(withNormalizedOffset: CGVector(dx: 0.08, dy: 0.8)).tap()
+        tap("clock.minute.less")
+        XCTAssertEqual(example.label, "04:00")
         tap("clock.minute.more")
-        XCTAssertEqual(String(clock.label.suffix(2)), "30")
-        saveScreenshot("digital-question-minutes-selected")
-        tap("question.example")
-        saveScreenshot("digital-example-other-field")
+        tap("clock.hour.less")
+        XCTAssertEqual(example.label, "03:30")
+        saveScreenshot("digital-example-independent-arrows")
+        tap("demo.nextExample")
+        XCTAssertEqual(example.label, "04:30")
         tap("demo.ready")
+        XCTAssertEqual(clock.label, ClockTime(hour: initialHour).digitalText,
+                       "Example adjustments preserve the live input")
+        tap("header.dino")
+        tap("personalize.page.digital")
+        tap("theme.numerals.digital")
+        tap("theme.dino.display.yellow")
+        tap("theme.dino.digitColor.navy")
+        tap("personalize.done")
+        XCTAssertEqual(clock.label, ClockTime(hour: initialHour).digitalText)
+        XCTAssertTrue(app.buttons["clock.hour.more"].isHittable)
+        XCTAssertTrue(app.buttons["clock.minute.more"].isHittable)
+        saveScreenshot("digital-original-display-custom-theme")
     }
 
     func testPracticeAscendingAndMixCoverAllTypes() {
@@ -1881,15 +1972,20 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("friends-level-timing-rows")
         XCTAssertTrue(app.buttons["level.friend.test-0"].label.contains("0:20"))
         XCTAssertTrue(app.buttons["level.friend.test-1"].label.contains("0:35"))
+        XCTAssertFalse(app.buttons["level.friend.test-4"].exists, "Only the top three friends show before the fold")
+        XCTAssertFalse(app.staticTexts["level.ownName"].exists, "An unfinished level does not pin the player's score")
+        XCTAssertTrue(app.buttons["level.friends.share"].exists)
+        tap("level.friends.more")
         let orderedIDs = ["test-0", "test-3", "test-1", "test-4", "test-2"]
         for (first, next) in zip(orderedIDs, orderedIDs.dropFirst()) {
             XCTAssertLessThan(app.buttons["level.friend.\(first)"].frame.minY,
                               app.buttons["level.friend.\(next)"].frame.minY,
                               "Most stars first; equal stars use the shortest time")
         }
-        XCTAssertLessThan(app.buttons["level.friend.test-2"].frame.minY,
-                          app.staticTexts["level.ownName"].frame.minY,
-                          "The player's unplayed result also participates in the ranking")
+        let share = app.buttons["level.friends.share"]
+        let map = app.buttons["level.map"]
+        XCTAssertEqual(map.frame.minY - share.frame.maxY, share.frame.minY - app.buttons["level.friends.more"].frame.maxY, accuracy: 2,
+                       "Share and the level map keep the same gap as the rest of the menu")
         tap("level.friend.test-0")
         XCTAssertTrue(app.buttons["friend.close"].waitForExistence(timeout: 5))
         tap("friend.close")

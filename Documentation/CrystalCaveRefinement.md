@@ -158,3 +158,19 @@ Bij de uitgang is het gezamenlijke afknipmasker voor de steenlagen verwijderd. Z
 De definitieve native beelden zijn visueel gecontroleerd op 320, 393, 834 en 1194 punten breed. De iOS-build slaagt. De bestaande schermtests `testNativeWorldChaptersAndMinuteQuestions`, `testWorldBannersHaveBalancedClearance` en `testWorldBossSceneryRemainsPlayable` slagen met `DINO_TEST_WORLD_IDS=5,6` op iPhone 17 en iPad Pro 11-inch: **zes geslaagde testuitvoeringen, nul fouten**. Ze controleren de eerste levels en vragen van beide werelden, de bordafstand en de toegang tot beide eindbazen. De echte appbeelden zijn op beide apparaten nagekeken. `git diff --check` is schoon.
 
 [Voor/na buitenwanden](Screenshots/CrystalRockWalls/walls-before-after.jpg) · [Voor/na uitgang](Screenshots/CrystalRockWalls/exit-before-after.jpg) · [Ingang iPhone](Screenshots/CrystalRockWalls/entrance-iphone.png) · [Uitgang iPhone](Screenshots/CrystalRockWalls/exit-iphone.png) · [Uitgang iPad](Screenshots/CrystalRockWalls/exit-ipad.png) · [Build](WorldTestLogs/CrystalRockWalls/build.log) · [iPhone-tests](WorldTestLogs/CrystalRockWalls/iphone.log) · [iPad-tests](WorldTestLogs/CrystalRockWalls/ipad.log).
+
+## Ruimere doorgang naar Dino Stad — 18 oktober 2026
+
+De binnenopening van de uitgang schaalt nu met de volledige kaartdino, met 16 punten extra breedte. De wereldgrens onder level 50 schuift mee omlaag, zodat de rotskap minstens 85 punten onder het midden van de bosssteen begint. De korte voorgrondlaag krijgt voldoende hoogte om de grotere boog volledig te tekenen.
+
+Native beelden op 320, 393, 834 en 1194 punten breed zijn gecontroleerd met een tijdelijke dino op zijn werkelijke kaartgrootte in de doorgang. De iOS-build slaagt. De bestaande hoofdstuk- en afstandscontroles slagen op iPhone 17 en iPad Pro 11-inch: vier geslaagde schermtests. De afstandstest meet de middelste bordtitel en houdt rekening met de extra ruimte voor de grotuitgang.
+
+[Uitgang iPhone](Screenshots/LargerCaveOpening/exit-iphone.png) · [Uitgang iPad](Screenshots/LargerCaveOpening/exit-ipad.png) · [Dino in de opening op 320 punten](Screenshots/LargerCaveOpening/dino-fit-320.png) · [Dino in de opening op 1194 punten](Screenshots/LargerCaveOpening/dino-fit-1194.png).
+
+## Natuurlijkere poortvoet en bestrating — 18 oktober 2026
+
+Overlappende rotsen, losse voetstenen, mos en varens verbinden de onderste zijkanten van de poort met de grotwand en de grond buiten. Links en rechts verschillen in silhouet en hoogte. De stenen vloer begint 40 ontwerppunten eerder in de doorgang. De eerste stenen hebben een verspringende achterrand; hun koele tint en tunnelschaduw gaan geleidelijk over naar de warmere stadsbestrating.
+
+De native aansluiting is visueel gecontroleerd op 320, 393, 834 en 1194 punten breed. De simulatorbuild en de gerichte kaartafstandstest slagen op iPhone 17 en iPad Pro 11-inch. De volledige hoofdstuktest stopt op beide apparaten bij het zoeken naar `level.play`: de huidige startkaart toont de knop Spelen met het geërfde ID `level.startCard`. Die afzonderlijke toegankelijkheidskwestie is in deze landschapswijziging niet aangepast.
+
+[Aansluiting op 320 punten](Screenshots/CaveGroundBlend/native-exit-320.png) · [Aansluiting op 1194 punten](Screenshots/CaveGroundBlend/native-exit-1194.png).

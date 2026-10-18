@@ -89,6 +89,8 @@ struct PracticeClockPreview: View {
 
 struct AnalogClock: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    @GestureState private var touchingClock = false
+    @State private var draggingMinutes: Bool?
     let time: ClockTime
     let theme: ClockTheme
     var size: CGFloat = 230
@@ -96,6 +98,8 @@ struct AnalogClock: View {
     var showHandHints = false
     var onMinuteChange: ((ClockTime) -> Void)? = nil
     var minuteStep = 1
+    var adjustingMinutes = false
+    var onHandSelection: ((Bool) -> Void)? = nil
     /// Unwrapped demonstration angles preserve the direction when passing twelve.
     var displayedHourAngle: Double? = nil
     var displayedMinuteAngle: Double? = nil
@@ -122,18 +126,40 @@ struct AnalogClock: View {
         }
         .frame(width: size, height: size)
         .contentShape(AnalogClockOutline(shape: theme.analogShape))
-        .gesture(DragGesture(minimumDistance: 0).onChanged { value in
-            let x = value.location.x - size / 2
-            let y = value.location.y - size / 2
-            guard hypot(x, y) > size * 0.10 else { return }
-            if let onMinuteChange {
-                let next = time.settingMinute(ClockTime.snappedMinute(x: Double(x), y: Double(y), step: minuteStep))
-                if next != time { onMinuteChange(next) }
-            } else {
-                let next = ClockTime.snappedHour(x: Double(x), y: Double(y), minute: time.minute)
-                if next != time.hour { onHourChange?(next) }
+        .gesture(DragGesture(minimumDistance: 0)
+            .updating($touchingClock) { _, active, _ in active = true }
+            .onChanged { value in
+                let x = value.location.x - size / 2
+                let y = value.location.y - size / 2
+                guard size > 0, hypot(x, y) > size * 0.10 else { return }
+                if draggingMinutes == nil {
+                    let minutes: Bool
+                    if onHandSelection != nil, onHourChange != nil, onMinuteChange != nil {
+                        minutes = ClockHandSelection.minutes(at: CGPoint(x: x / size, y: y / size),
+                            hourAngle: displayedHourAngle ?? time.hourAngle,
+                            minuteAngle: displayedMinuteAngle ?? time.minuteAngle,
+                            preferredMinutes: adjustingMinutes)
+                    } else {
+                        minutes = onMinuteChange != nil
+                    }
+                    draggingMinutes = minutes
+                    onHandSelection?(minutes)
+                }
+                if draggingMinutes == true, let onMinuteChange {
+                    let next = time.settingMinute(ClockTime.snappedMinute(x: Double(x), y: Double(y), step: minuteStep))
+                    if next != time { onMinuteChange(next) }
+                } else {
+                    let next = ClockTime.snappedHour(x: Double(x), y: Double(y), minute: time.minute)
+                    if next != time.hour { onHourChange?(next) }
+                }
             }
-        }, including: onHourChange == nil && onMinuteChange == nil ? .none : .all)
+            .onEnded { _ in draggingMinutes = nil },
+            including: onHourChange == nil && onMinuteChange == nil ? .none : .all)
+        .onChange(of: touchingClock) { _, active in
+            if !active { draggingMinutes = nil }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(time.digitalText)
         .overlay {
             if showHandHints {
                 let pointers = ClockHandHintGeometry.pointers(time: time, hourWidth: hourWidth / size, minuteWidth: minuteWidth / size)

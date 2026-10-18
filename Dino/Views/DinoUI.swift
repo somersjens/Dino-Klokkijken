@@ -230,6 +230,28 @@ struct ClockHintBadgeArrow: View {
     }
 }
 
+/// Clock controls keep the same colors regardless of the player's clock theme.
+struct DinoClockControlButtonStyle: ButtonStyle {
+    @Environment(\.dinoHighContrast) private var highContrast
+    var selected = true
+    var expands = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 17, weight: .bold, design: .rounded))
+            .foregroundStyle(selected ? Color.white : DinoStyle.ink)
+            .padding(.horizontal, 18)
+            .frame(minHeight: 48)
+            .frame(maxWidth: expands ? .infinity : nil)
+            .background(selected ? DinoStyle.ink : .white, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14)
+                .strokeBorder(DinoStyle.ink.opacity(highContrast || selected ? 1 : 0.22),
+                              lineWidth: highContrast ? 3 : 1.5))
+            .opacity(configuration.isPressed ? 0.85 : 1)
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+    }
+}
+
 struct DinoButtonStyle: ButtonStyle {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.customizationTypeScale) private var customizationScale

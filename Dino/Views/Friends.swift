@@ -12,6 +12,16 @@ private enum LevelSocialSheet: Identifiable {
     }
 }
 
+/// The App Store page friends open from the level card. Empty until the store link is set.
+enum DinoAppDownload {
+    static var url: URL? {
+        guard let value = Bundle.main.object(forInfoDictionaryKey: "DinoAppStoreURL") as? String,
+              let url = URL(string: value), url.scheme?.lowercased() == "https",
+              let host = url.host, !host.isEmpty else { return nil }
+        return url
+    }
+}
+
 private enum ParentAction: String, Identifiable {
     case enable, access, invite, share, appleProfile
     var id: String { rawValue }
@@ -272,50 +282,76 @@ struct LevelFriendsView: View {
     @EnvironmentObject private var manager: FriendsManager
     @EnvironmentObject private var player: DinoPlayer
     @State private var socialSheet: LevelSocialSheet?
+    @State private var showsAllFriends = false
     let levelID: Int
+    private let menuSpacing: CGFloat = 12
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            if manager.authenticated && manager.state == .ready {
-                let completed = manager.friends(completed: levelID)
-                if !completed.isEmpty {
-                    Text("dino.friends.levelResults").font(.system(size: 14, weight: .heavy, design: .rounded))
+        let friends = rankedFriends
+        let visibleFriends = showsAllFriends ? friends : Array(friends.prefix(3))
+        VStack(spacing: menuSpacing) {
+            if hasOwnScore, let name = manager.playerDisplayName {
+                ownResult(name: name)
+            }
+            ForEach(visibleFriends) { row in
+                if let friend = row.friend { friendResult(friend) }
+            }
+            if friends.count > 3 {
+                Button { withAnimation(.easeOut(duration: 0.2)) { showsAllFriends.toggle() } } label: {
+                    Label(LocalizedStringKey(showsAllFriends ? "dino.friends.showFewerScores" : "dino.friends.showAllScores"),
+                          systemImage: showsAllFriends ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .frame(maxWidth: .infinity, minHeight: 44)
                 }
-                ForEach(rankedRows(completed: completed)) { row in
-                    if let friend = row.friend { friendResult(friend) }
-                    else { ownResult(name: row.name) }
-                }
-                if completed.isEmpty {
-                    let known = manager.friends.allSatisfy { $0.progress.levels[levelID] != nil }
-                    let ownCompleted = FriendProgress.local(player.profile).levels[levelID]?.completed == true
-                    Label(LocalizedStringKey(known ? (ownCompleted ? "dino.friends.firstHere" : "dino.friends.beFirstHere") : "dino.friends.noResultsHere"),
-                          systemImage: known ? "flag.checkered" : "person.2.fill")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .foregroundStyle(DinoStyle.deepGreen)
-                        .accessibilityIdentifier("level.friends.empty")
-                }
+                .buttonStyle(.plain)
+                .foregroundStyle(DinoStyle.deepGreen)
+                .accessibilityIdentifier("level.friends.more")
+            }
+            if manager.authenticated {
+                shareButton
             } else {
-                if manager.authenticated, let name = manager.playerDisplayName { ownResult(name: name) }
                 Button { socialSheet = .connection } label: {
                     Label("dino.friends.connect", systemImage: "person.2.fill")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                }.buttonStyle(.plain).foregroundStyle(DinoStyle.deepGreen)
+                }.buttonStyle(DinoSecondaryButtonStyle())
                     .accessibilityIdentifier("level.friends.connect")
             }
-        }.frame(maxWidth: .infinity, alignment: .leading).dinoCard()
-            .sheet(item: $socialSheet) { sheet in
-                switch sheet {
-                case .connection:
-                    DinoFriendsView().gameEnvironment()
-                case .profile(let id):
-                    NavigationStack {
-                        FriendProfileView(friendID: id)
-                            .toolbar { ToolbarItem(placement: .confirmationAction) {
-                                Button("dino.done") { socialSheet = nil }.accessibilityIdentifier("friend.close")
-                            } }
-                    }.gameEnvironment()
-                }
+        }
+        .sheet(item: $socialSheet) { sheet in
+            switch sheet {
+            case .connection:
+                DinoFriendsView().gameEnvironment()
+            case .profile(let id):
+                NavigationStack {
+                    FriendProfileView(friendID: id)
+                        .toolbar { ToolbarItem(placement: .confirmationAction) {
+                            Button("dino.done") { socialSheet = nil }.accessibilityIdentifier("friend.close")
+                        } }
+                }.gameEnvironment()
             }
+        }
+    }
+
+    /// A finished level keeps the player's own row above the invite, before any friend has a score here.
+    private var hasOwnScore: Bool {
+        FriendProgress.local(player.profile).levels[levelID]?.completed == true
+    }
+
+    /// Same width and height as the level-card buttons until friend scores need the taller list.
+    private var shareButton: some View {
+        Group {
+            if let url = DinoAppDownload.url {
+                ShareLink(item: url, subject: Text("dino.friends.shareGame"), message: Text("dino.friends.shareGame.message")) {
+                    Label("dino.friends.shareGame", systemImage: "square.and.arrow.up")
+                }
+                .buttonStyle(DinoSecondaryButtonStyle())
+                .accessibilityIdentifier("level.friends.share")
+            } else {
+                ShareLink(item: L("dino.friends.shareGame.message")) {
+                    Label("dino.friends.shareGame", systemImage: "square.and.arrow.up")
+                }
+                .buttonStyle(DinoSecondaryButtonStyle())
+                .accessibilityIdentifier("level.friends.share")
+            }
+        }
     }
 
     private struct ResultRow: Identifiable {
@@ -325,15 +361,13 @@ struct LevelFriendsView: View {
         var friend: DinoFriend?
     }
 
-    private func rankedRows(completed: [DinoFriend]) -> [ResultRow] {
-        var rows = completed.compactMap { friend -> ResultRow? in
+    /// Friend scores only. The player's finished result stays pinned above this list.
+    private var rankedFriends: [ResultRow] {
+        guard manager.authenticated, manager.state == .ready else { return [] }
+        return manager.friends(completed: levelID).compactMap { friend -> ResultRow? in
             guard let result = friend.progress.levels[levelID] else { return nil }
             return ResultRow(id: "friend." + friend.id, name: friend.displayName, result: result, friend: friend)
-        }
-        if let name = manager.playerDisplayName, let result = FriendProgress.local(player.profile).levels[levelID] {
-            rows.append(ResultRow(id: "own", name: name, result: result))
-        }
-        return rows.sorted { lhs, rhs in
+        }.sorted { lhs, rhs in
             let order = lhs.result.ranking(comparedTo: rhs.result)
             if order != .orderedSame { return order == .orderedAscending }
             let nameOrder = lhs.name.localizedStandardCompare(rhs.name)
