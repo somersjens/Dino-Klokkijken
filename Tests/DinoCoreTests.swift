@@ -21,6 +21,7 @@ struct DinoCoreTests {
         testWorlds()
         testJungleSceneryClearance()
         testAttempt()
+        testRepeatedAnswerControls()
         testAnswerRetries()
         testTiming()
         testPractice()
@@ -1132,6 +1133,42 @@ struct DinoCoreTests {
         expect(attempt.isComplete && attempt.correctCount == 2, "final result after five")
         expect(attempt.submit(attempt.current.target) == nil, "cannot score after completion")
         for score in 0...5 { expect(StarCalculator.stars(correct: score) == [0,0,0,1,2,3][score], "star thresholds") }
+    }
+
+    @MainActor
+    static func testRepeatedAnswerControls() {
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        let player = DinoPlayer(store: store)
+        let practice = DinoPracticeConfiguration(time: .fiveMinutes, order: .specific(.advanceAnalog))
+        let session = DinoSession(level: practice.level, player: player, practice: practice, now: { 0 })
+        expect(!session.retainsAnswerControls && !session.hidesAnswerControls, "controls stay until an answer arrives")
+        session.submit(wrongAnswer(for: session.question))
+        expect(session.hidesAnswerControls && !session.retainsAnswerControls, "a wrong answer still dismisses the buttons")
+        session.advance()
+        session.submit(session.question.expectedAnswer)
+        expect(session.retainsAnswerControls && !session.hidesAnswerControls, "the next identical advance question keeps its buttons")
+
+        let ascending = DinoSession(level: practice.level, player: player,
+                                    practice: .init(time: .whole, order: .ascending), now: { 0 })
+        ascending.submit(ascending.question.expectedAnswer)
+        expect(!ascending.retainsAnswerControls && ascending.hidesAnswerControls, "a different following question dismisses its buttons")
+
+        let level = DinoSession(level: DinoLevelCatalog.level(6)!, player: player, now: { 0 })
+        for index in 0..<4 {
+            expect(level.question.kind == .setAnalog, "level six keeps the analog controls")
+            level.submit(level.question.expectedAnswer)
+            expect(level.retainsAnswerControls, "question \(index + 1) is followed by the same buttons")
+            level.advance()
+        }
+        level.submit(level.question.expectedAnswer)
+        expect(!level.retainsAnswerControls && level.hidesAnswerControls, "the last question has no following buttons to keep")
+
+        var mixed = DinoPracticeGenerator(configuration: .init(time: .mix, order: .mix), seed: 11)
+        for index in 0..<45 {
+            let question = mixed.next(index: index)
+            expect(mixed.upcomingKind(after: index) != nil, "every mixed question knows which buttons come next")
+            _ = question
+        }
     }
 
     @MainActor

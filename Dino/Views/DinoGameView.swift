@@ -424,7 +424,10 @@ struct DinoAnalogAdvanceDemonstration: View {
     @State private var minuteAngle = 0.0
 
     private var script: DinoAnalogAdvanceExample { DinoAnalogAdvanceExample(question: question, minuteStep: minuteStep) }
-    private var face: CGFloat { min(118, max(72, (width - 96) / 2)) }
+    private var face: CGFloat {
+        let reserve = DinoAdvanceDifference.columnWidth(minutes: question.durationMinutes) + 18
+        return min(118, max(0, width - reserve) / 2)
+    }
 
     var body: some View {
         VStack(spacing: 12) {

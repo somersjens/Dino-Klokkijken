@@ -95,7 +95,7 @@ struct DinoExpandedQuestionView: View {
             if let schedule = q.daySchedule {
                 DinoTrainJourneyCard(schedule: schedule,
                                      showsAnswer: isDemonstration || session.showsCorrectResponse,
-                                     countsTotal: showsTrainSum, minuteStep: session.minuteStep,
+                                     countsTotal: isDemonstration || showsTrainSum, minuteStep: session.minuteStep,
                                      isDemonstration: isDemonstration, language: code)
             }
         default:
@@ -303,8 +303,9 @@ struct DinoExpandedQuestionView: View {
     private var advanceComparing: Bool { session.hasFeedback && !session.correctFeedback }
 
     private var advanceFace: CGFloat {
+        let reserve = DinoAdvanceDifference.columnWidth(minutes: q.durationMinutes) + 18
         let limit: CGFloat = advanceComparing ? 96 : (compactLayout ? 112 : 148)
-        return min(limit, max(72, (width - 96) / 2))
+        return min(limit, max(0, width - reserve) / 2)
     }
 
     private var analogAdvance: some View {
@@ -339,10 +340,7 @@ struct DinoExpandedQuestionView: View {
                     .accessibilityIdentifier("question.confirm")
             }
             .frame(maxWidth: min(380, width))
-            .opacity(session.hasFeedback ? 0 : 1)
-            .allowsHitTesting(!session.hasFeedback)
-            .accessibilityHidden(session.hasFeedback)
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.5), value: session.hasFeedback)
+            .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
         }.id("question.answers")
     }
 
@@ -357,13 +355,16 @@ struct DinoExpandedQuestionView: View {
     }
 
     private func adjust(_ direction: Int) {
+        guard !session.hasFeedback else { return }
         if movingMinutes { session.adjustInputMinutes(by: direction * session.minuteStep) }
         else { session.inputHour = ClockTime.shiftedHour(session.inputHour, by: direction) }
     }
     @ViewBuilder private func confirm(_ answer: ClockAnswer, enabled: Bool) -> some View {
-        if !session.hasFeedback {
+        if !session.hidesAnswerControls {
             Button { session.submit(answer) } label: { Image(systemName: "checkmark").font(.title2.bold()) }
                 .buttonStyle(DinoButtonStyle()).frame(maxWidth: 260).disabled(!enabled)
+                .allowsHitTesting(!session.hasFeedback)
+                .accessibilityHidden(session.hasFeedback)
                 .accessibilityIdentifier("question.confirm")
         }
     }
@@ -374,21 +375,45 @@ struct DinoAdvanceDifference: View {
     let language: String
     var prefix = "question"
 
+    /// Hours and minutes share one line. A single unit keeps the narrower gap between the clocks.
+    static func columnWidth(minutes: Int) -> CGFloat {
+        let hours = minutes / 60
+        return hours > 0 && minutes % 60 > 0 ? 124 : 78
+    }
+
     var body: some View {
+        let combined = minutes / 60 > 0 && minutes % 60 > 0
         VStack(spacing: 4) {
             Text(verbatim: "+\(DinoTimeWords.duration(minutes, language: language))")
-                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                .font(.system(size: combined ? 14 : 13, weight: .heavy, design: .rounded))
                 .multilineTextAlignment(.center)
-                .lineLimit(3)
+                .lineLimit(1)
                 .minimumScaleFactor(0.65)
-                .fixedSize(horizontal: false, vertical: true)
             Image(systemName: "arrow.right")
                 .font(.system(size: 18, weight: .bold))
                 .accessibilityHidden(true)
         }
         .foregroundStyle(DinoStyle.deepGreen)
-        .frame(width: 78)
+        .frame(width: Self.columnWidth(minutes: minutes))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: "+\(DinoTimeWords.duration(minutes, language: language))"))
         .accessibilityIdentifier("\(prefix).advance.difference")
+    }
+}
+
+/// Keeps a button group in place when the following question uses that same group.
+struct AnswerControlVisibility: ViewModifier {
+    @ObservedObject var session: DinoSession
+    var reduceMotion: Bool
+
+    func body(content: Content) -> some View {
+        content
+            // Keep the buttons' space while they fade, so the clock and the
+            // centered question do not slide after checking.
+            .opacity(session.hidesAnswerControls ? 0 : 1)
+            .allowsHitTesting(!session.hasFeedback)
+            .accessibilityHidden(session.hasFeedback)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.5), value: session.hidesAnswerControls)
     }
 }
 
@@ -459,9 +484,9 @@ private struct DinoTrainJourneyCard: View {
     @State private var showsTotal = false
     private var prefix: String { isDemonstration ? "demo" : "question" }
 
-    private let ride = Color(dinoHex: 0x1A4E86)
-    private let rideFill = Color(dinoHex: 0xE7F1FB)
-    private let rideChip = Color(dinoHex: 0xD4E6F8)
+    private let ride = Color(dinoHex: 0x6A4300)
+    private let rideFill = Color(dinoHex: 0xFFF4C8)
+    private let rideChip = Color(dinoHex: 0xFFD56A)
     private let transferFill = Color(dinoHex: 0xFFF3DF)
     private let transferChip = Color(dinoHex: 0xFFE0B8)
     private let arrivalFill = Color(dinoHex: 0xE7F7DC)
@@ -471,28 +496,26 @@ private struct DinoTrainJourneyCard: View {
     var body: some View {
         VStack(spacing: 2) {
             leg(symbol: "building.columns.fill", title: "dino.train.departure",
-                value: schedule.start.digitalText, ink: ride, fill: rideFill, chip: rideChip,
+                value: schedule.start.digitalText, ink: DinoStyle.deepGreen, fill: arrivalFill, chip: arrivalChip,
                 identifier: "\(prefix).schedule.start")
             connector
-            leg(symbol: "train.side.front.car", title: "dino.train.one",
-                value: DinoTimeWords.duration(schedule.firstMinutes, language: language),
-                ink: ride, fill: rideFill, chip: rideChip,
-                identifier: "\(prefix).schedule.activity.1")
-            connector
-            leg(symbol: "figure.walk", title: "dino.train.transfer",
-                value: DinoTimeWords.duration(schedule.breakMinutes, language: language),
-                ink: DinoStyle.deepOrange, fill: transferFill, chip: transferChip,
-                identifier: "\(prefix).schedule.break")
-            connector
-            leg(symbol: "train.side.front.car", title: "dino.train.two",
-                value: DinoTimeWords.duration(schedule.secondMinutes, language: language),
-                ink: ride, fill: rideFill, chip: rideChip,
-                identifier: "\(prefix).schedule.activity.2")
-            VStack(spacing: 0) {
-                if showsTotal { totalRow }
+            if countsTotal {
+                durationGroup
+                VStack(spacing: 2) {
+                    if showsTotal {
+                        connector
+                        totalRow
+                    }
+                }
+                .clipped()
+                .animation(.spring(duration: 0.55, bounce: 0.04), value: showsTotal)
+            } else {
+                trainOne
+                connector
+                transfer
+                connector
+                trainTwo
             }
-            .clipped()
-            .animation(.spring(duration: 0.55, bounce: 0.04), value: showsTotal)
             connector
             arrival
         }
@@ -504,6 +527,41 @@ private struct DinoTrainJourneyCard: View {
         .shadow(color: DinoStyle.deepGreen.opacity(0.08), radius: 16, y: 6)
         .accessibilityIdentifier("\(prefix).schedule.card")
         .task(id: walkIdentity) { await play() }
+    }
+
+    /// The two trains and the transfer become one sum, so the arrows between them go away.
+    private var durationGroup: some View {
+        VStack(spacing: 4) {
+            trainOne
+            transfer
+            trainTwo
+        }
+        .padding(6)
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .strokeBorder(highContrast ? DinoStyle.ink : ride,
+                          style: StrokeStyle(lineWidth: highContrast ? 2 : 1.5, dash: [5, 4])))
+        .accessibilityIdentifier("\(prefix).schedule.group")
+    }
+
+    private var trainOne: some View {
+        leg(symbol: "train.side.front.car", title: "dino.train.one",
+            value: DinoTimeWords.duration(schedule.firstMinutes, language: language),
+            ink: ride, fill: rideFill, chip: rideChip,
+            identifier: "\(prefix).schedule.activity.1")
+    }
+
+    private var transfer: some View {
+        leg(symbol: "figure.walk", title: "dino.train.transfer",
+            value: DinoTimeWords.duration(schedule.breakMinutes, language: language),
+            ink: DinoStyle.deepOrange, fill: transferFill, chip: transferChip,
+            identifier: "\(prefix).schedule.break")
+    }
+
+    private var trainTwo: some View {
+        leg(symbol: "train.side.front.car", title: "dino.train.two",
+            value: DinoTimeWords.duration(schedule.secondMinutes, language: language),
+            ink: ride, fill: rideFill, chip: rideChip,
+            identifier: "\(prefix).schedule.activity.2")
     }
 
     private var connector: some View {
@@ -631,12 +689,8 @@ private struct DinoTrainJourneyCard: View {
             return
         }
         summedMinutes = 0
-        var reset = Transaction()
-        reset.disablesAnimations = true
-        withTransaction(reset) { showsTotal = false }
+        withAnimation(.spring(duration: 0.55, bounce: 0.04)) { showsTotal = true }
         do {
-            try await Task.sleep(for: .milliseconds(280))
-            withAnimation(.spring(duration: 0.55, bounce: 0.04)) { showsTotal = true }
             try await Task.sleep(for: .milliseconds(700))
             for step in steps {
                 try Task.checkCancellation()

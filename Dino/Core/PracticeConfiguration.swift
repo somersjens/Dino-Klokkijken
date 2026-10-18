@@ -130,6 +130,14 @@ struct DinoPracticeGenerator {
             if mixedTypes.isEmpty { mixedTypes = DinoPracticeQuestion.allCases.shuffled(using: &rng) }
             type = mixedTypes.removeLast()
         }
+        let question = make(type, index: index)
+        if case .mix = configuration.order, mixedTypes.isEmpty {
+            mixedTypes = DinoPracticeQuestion.allCases.shuffled(using: &rng)
+        }
+        return question
+    }
+
+    private mutating func make(_ type: DinoPracticeQuestion, index: Int) -> ClockQuestion {
         var recipe = type.recipe
         if recipe.kind.isExpanded {
             let question = DinoExpandedQuestions.generate(kind: recipe.kind, time: configuration.time,
@@ -150,5 +158,19 @@ struct DinoPracticeGenerator {
         let question = ClockQuestion(id: index, kind: recipe.kind, target: target, options: options,
                                     activity: nil, companionClocks: Array(otherTimes.prefix(2)))
         return DinoMatchingQuestions.configure(question, using: &rng)
+    }
+
+    /// The kind that `next(index:)` will draw after the question identified by `index`.
+    func upcomingKind(after index: Int) -> ClockQuestionKind? {
+        switch configuration.order {
+        case .specific(let selected):
+            return ClockQuestionKind(rawValue: selected.rawValue)
+        case .ascending:
+            let next = DinoPracticeQuestion.allCases[(index + 1) % DinoPracticeQuestion.allCases.count]
+            return ClockQuestionKind(rawValue: next.rawValue)
+        case .mix:
+            guard let next = mixedTypes.last else { return nil }
+            return ClockQuestionKind(rawValue: next.rawValue)
+        }
     }
 }

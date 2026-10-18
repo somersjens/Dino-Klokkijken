@@ -275,6 +275,19 @@ final class DinoSession: ObservableObject, Identifiable {
     }
     var showsCorrectResponse: Bool { hasFeedback && !canRetry }
     var shouldAutoAdvance: Bool { hasFeedback && attempt.answers.last == true }
+    /// A correct answer is about to show another question with the same buttons.
+    var retainsAnswerControls: Bool {
+        guard shouldAutoAdvance, let next = upcomingKind else { return false }
+        return next == question.kind && question.kind.reusesAnswerControls
+    }
+    /// Hide the buttons while feedback is on screen, unless the next question brings those same buttons back.
+    var hidesAnswerControls: Bool { hasFeedback && !retainsAnswerControls }
+    private var upcomingKind: ClockQuestionKind? {
+        if let practiceGenerator { return practiceGenerator.upcomingKind(after: question.id) }
+        let nextIndex = attempt.index + 1
+        guard nextIndex < attempt.questions.count else { return nil }
+        return attempt.questions[nextIndex].kind
+    }
     var minuteStep: Int { exampleMinuteStep ?? practice?.time.minuteStep ?? level.minuteStep }
     var allowsMinutes: Bool { minuteStep < 60 }
     var inputTime: ClockTime { ClockTime(hour: inputHour, minute: inputMinute) }

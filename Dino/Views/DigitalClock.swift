@@ -153,6 +153,7 @@ struct DigitalClockControl: View {
     var minuteStep = 1
     var valueIdentifier = "clock.value"
     var showHandHints = false
+    var feedbackCorrect: Bool? = nil
     var body: some View {
         HStack(spacing: 8) {
             DinoIconButton(icon: "minus", labelKey: adjustingMinutes ? "dino.minuteLess" : "dino.hourLess") { adjust(-1) }
@@ -163,6 +164,7 @@ struct DigitalClockControl: View {
             } label: {
                 DigitalClock(time: ClockTime(hour: hour, minute: minute), theme: theme, fontSize: fontSize,
                              showHandHints: showHandHints, activeMinutes: adjustingMinutes)
+                    .modifier(ClockAnswerOutline(visible: feedbackCorrect != nil, correct: feedbackCorrect == true))
             }
             .buttonStyle(.plain).contentShape(Rectangle())
             // Align the buttons with the display, below its numbered annotations.
@@ -204,6 +206,7 @@ struct DigitalClockControl: View {
     }
 
     private func adjust(_ direction: Int) {
+        guard feedbackCorrect == nil else { return }
         if adjustingMinutes, let onMinuteChange {
             let shifted = ClockTime(hour: hour, minute: minute)
                 .shiftingMinutes(by: direction * (minuteStep < 60 ? minuteStep : 5))

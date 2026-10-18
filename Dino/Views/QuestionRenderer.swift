@@ -33,12 +33,7 @@ struct QuestionRenderer: View {
                     clockCheckButton
                 }
                 .frame(maxWidth: min(380, width))
-                // Retain the controls' space while they fade, so neither the
-                // clock nor the centered scroll content slides after checking.
-                .opacity(session.hasFeedback ? 0 : 1)
-                .allowsHitTesting(!session.hasFeedback)
-                .accessibilityHidden(session.hasFeedback)
-                .animation(reduceMotion ? nil : .easeOut(duration: 0.5), value: session.hasFeedback)
+                .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
             case .setDigital:
                 analogTarget
                 digitalInput.id("question.answers")
@@ -48,11 +43,13 @@ struct QuestionRenderer: View {
                                    selections: $session.pairSelections, theme: theme, width: width,
                                    hasFeedback: session.hasFeedback)
                     .id("question.answers")
-                if !session.hasFeedback {
+                if !session.hidesAnswerControls {
                     Button { session.submit(.pairs(question.relatedTimes.indices.compactMap { session.pairSelections[$0] })) } label: {
                         Image(systemName: "checkmark").font(.system(size: 25, weight: .heavy))
                     }.buttonStyle(DinoButtonStyle()).frame(maxWidth: 260)
                         .disabled(session.pairSelections.count != question.relatedTimes.count)
+                        .allowsHitTesting(!session.hasFeedback)
+                        .accessibilityHidden(session.hasFeedback)
                         .accessibilityIdentifier("question.confirm")
                 }
             default:
@@ -74,7 +71,7 @@ struct QuestionRenderer: View {
     }
 
     @ViewBuilder private var digitalInput: some View {
-        if session.hasFeedback {
+        if session.hasFeedback && !session.retainsAnswerControls {
             HStack(alignment: .top, spacing: 14) {
                 VStack(spacing: 10) {
                     DigitalClock(time: session.attempt.submittedAnswer ?? session.inputTime, theme: theme, fontSize: comparing ? min(28, width * 0.075) : 38)
@@ -96,7 +93,8 @@ struct QuestionRenderer: View {
             DigitalClockControl(hour: $session.inputHour, adjustingMinutes: $session.adjustingDigitalMinutes,
                                 theme: theme, minute: session.inputMinute, fontSize: width < 350 ? 32 : 38,
                                 onMinuteChange: { session.inputMinute = $0 },
-                                minuteStep: session.minuteStep, valueIdentifier: "question.digitalControl")
+                                minuteStep: session.minuteStep, valueIdentifier: "question.digitalControl",
+                                feedbackCorrect: session.hasFeedback ? session.correctFeedback : nil)
         }
     }
 
@@ -151,8 +149,10 @@ struct QuestionRenderer: View {
 
     private var confirmButton: some View {
         Group {
-            if !session.hasFeedback {
+            if !session.hidesAnswerControls {
                 clockCheckButton.frame(maxWidth: min(380, width))
+                    .allowsHitTesting(!session.hasFeedback)
+                    .accessibilityHidden(session.hasFeedback)
             }
         }
     }

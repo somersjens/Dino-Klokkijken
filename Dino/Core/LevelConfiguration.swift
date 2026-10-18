@@ -29,6 +29,13 @@ enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
     }
     var usesOptions: Bool { ![.setAnalog, .setDigital, .match, .advanceAnalog, .sortTimes].contains(self) }
     var isExpanded: Bool { ![.chooseAnalog, .chooseDigital, .activity, .setAnalog, .setDigital, .match].contains(self) }
+    /// These controls look the same on every question of this kind, so a correct answer can leave them in place.
+    var reusesAnswerControls: Bool {
+        switch self {
+        case .setAnalog, .advanceAnalog, .setDigital, .match, .sortTimes: return true
+        default: return false
+        }
+    }
 }
 
 enum DinoActivity: String, Codable, CaseIterable, Sendable {
