@@ -2,7 +2,7 @@ import Foundation
 
 enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
     case chooseAnalog, chooseDigital, activity, setAnalog, setDigital, match
-    case readDigital, spokenTime, trueFalse, dayPart, read24Hour, sortTimes, timeSequence
+    case readDigital, spokenTime, trueFalse, dayPart, read24Hour, sortTimes, sayTime, timeSequence
     case addTime, advanceAnalog, subtractTime, flightArrival, timeZone, daySchedule, minutesBetween
     var instructionKey: String { "dino.question.\(rawValue)" }
     var symbol: String {
@@ -18,6 +18,7 @@ enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
         case .trueFalse: return "checkmark.circle.fill"
         case .dayPart: return "sun.horizon.fill"
         case .sortTimes: return "list.number"
+        case .sayTime: return "captions.bubble.fill"
         case .timeSequence: return "ellipsis"
         case .addTime, .advanceAnalog: return "clock.arrow.2.circlepath"
         case .minutesBetween: return "arrow.right.to.line"
@@ -27,12 +28,12 @@ enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
         case .daySchedule: return "train.side.front.car"
         }
     }
-    var usesOptions: Bool { ![.setAnalog, .setDigital, .match, .advanceAnalog, .sortTimes].contains(self) }
+    var usesOptions: Bool { ![.setAnalog, .setDigital, .match, .advanceAnalog, .sortTimes, .sayTime].contains(self) }
     var isExpanded: Bool { ![.chooseAnalog, .chooseDigital, .activity, .setAnalog, .setDigital, .match].contains(self) }
     /// These controls look the same on every question of this kind, so a correct answer can leave them in place.
     var reusesAnswerControls: Bool {
         switch self {
-        case .setAnalog, .advanceAnalog, .setDigital, .match, .sortTimes: return true
+        case .setAnalog, .advanceAnalog, .setDigital, .match, .sortTimes, .sayTime: return true
         default: return false
         }
     }

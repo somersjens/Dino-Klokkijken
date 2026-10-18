@@ -169,9 +169,12 @@ final class DinoUITests: XCTestCase {
         onboard()
         let pointer = app.descendants(matching: .any)["map.levelPointer.1"]
         XCTAssertTrue(pointer.waitForExistence(timeout: 5))
-        let first = app.buttons["map.level.1"]
-        XCTAssertGreaterThan(first.frame.minY, app.buttons["header.settings"].frame.maxY)
-        XCTAssertLessThan(first.frame.maxY + 85, app.frame.maxY)
+        let start = app.descendants(matching: .any)["map.start"]
+        let world = app.descendants(matching: .any)["map.world.1"]
+        XCTAssertTrue(start.waitForExistence(timeout: 5))
+        XCTAssertGreaterThan(world.frame.minY, -20, "a fresh map stays scrolled to the top")
+        XCTAssertLessThan(world.frame.minY, app.frame.height * 0.45)
+        XCTAssertGreaterThan(start.frame.minY, app.buttons["header.settings"].frame.maxY)
         saveScreenshot("map-first-level-pointer")
         if UIDevice.current.userInterfaceIdiom == .pad {
             XCUIDevice.shared.orientation = .landscapeLeft
@@ -1497,6 +1500,16 @@ final class DinoUITests: XCTestCase {
                 XCTAssertEqual(correctOrder.label, times.map(\.digitalText).joined(separator: " → "))
             }
             XCTAssertFalse(app.staticTexts["Goede volgorde"].exists)
+        case .sayTime:
+            let prompt = question.spokenPrompt!
+            for (slotIndex, slot) in prompt.slots.enumerated() {
+                let correct = prompt.correct.choiceIDs[slotIndex]
+                let wrong = slot.choices.first { $0.id != correct }!
+                let choiceIndex = slot.choices.firstIndex { $0.id == wrong.id }!
+                tap("question.spoken.\(slotIndex).\(choiceIndex)")
+            }
+            tap("question.confirm")
+            XCTAssertTrue(app.descendants(matching: .any)["question.spoken.phrase"].waitForExistence(timeout: 5))
         case .match:
             connectMatchingQuestion(question, correct: false)
         case .advanceAnalog, .setAnalog, .setDigital:
@@ -3442,7 +3455,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertFalse(marker.label.contains("Sam"))
         XCTAssertFalse(app.buttons["map.level.0"].exists)
         saveScreenshot("map-start")
-        revealMapNode(1).tap()
+        start.tap()
         XCTAssertFalse(app.staticTexts["5 vragen"].exists)
         XCTAssertFalse(app.staticTexts["Kies de analoge klok bij de tijd."].exists)
         saveScreenshot("level-start-card")

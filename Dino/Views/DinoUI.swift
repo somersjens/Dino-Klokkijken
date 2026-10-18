@@ -258,17 +258,20 @@ struct DinoButtonStyle: ButtonStyle {
     var color = DinoStyle.green
     var compact = false
     var customization = false
+    var inkLabel = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: customization ? 17 * customizationScale : compact ? 17 : 20, weight: .bold, design: .rounded))
-            .foregroundStyle(color == DinoStyle.green ? DinoStyle.ink : .white)
+            .foregroundStyle(inkLabel || color == DinoStyle.green ? DinoStyle.ink : .white)
             .padding(.horizontal, compact ? 16 : 24)
             .frame(minHeight: customization ? max(58, 58 * customizationScale) : compact ? 48 : 58)
             .frame(maxWidth: .infinity)
-            .background(LinearGradient(colors: [color, color.opacity(highContrast ? 1 : 0.88)], startPoint: .top, endPoint: .bottom),
-                        in: RoundedRectangle(cornerRadius: 20))
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(highContrast ? DinoStyle.ink : .white.opacity(0.22), lineWidth: highContrast ? 3 : 2))
-            .shadow(color: color.opacity(0.36), radius: 0, y: configuration.isPressed ? 1 : 5)
+            .background {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(LinearGradient(colors: [color, color.opacity(highContrast ? 1 : 0.88)], startPoint: .top, endPoint: .bottom))
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(inkLabel ? DinoStyle.ink.opacity(highContrast ? 1 : 0.12) : (highContrast ? DinoStyle.ink : .white.opacity(0.22)), lineWidth: highContrast ? 3 : 2))
+                    .shadow(color: (inkLabel ? DinoStyle.ink : color).opacity(inkLabel ? 0.22 : 0.36), radius: 0, y: configuration.isPressed ? 1 : 5)
+            }
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }

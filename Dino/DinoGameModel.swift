@@ -200,6 +200,8 @@ final class DinoSession: ObservableObject, Identifiable {
     @Published var inputMinute = 0
     @Published var selectedOrder: [ClockTime] = []
     @Published var pairSelections: [Int: ClockTime] = [:]
+    /// One entry per spoken-time slot. Nil means the player has not chosen yet.
+    @Published var spokenChoices: [String?] = []
     @Published private(set) var rejectedResponses: Set<ClockAnswer> = []
     @Published private(set) var answerRevealed = false
     @Published private(set) var retryAnsweredCorrectly = false
@@ -369,7 +371,15 @@ final class DinoSession: ObservableObject, Identifiable {
             inputHour = question.target.hour == 12 ? 1 : 12
             inputMinute = 0
         }
-        selectedOrder = []; pairSelections = [:]
+        selectedOrder = []; pairSelections = [:]; spokenChoices = []
+    }
+
+    func chooseSpoken(slot: Int, choiceID: String) {
+        guard !hasFeedback, let count = question.spokenPrompt?.slots.count, (0..<count).contains(slot) else { return }
+        var next = spokenChoices.count == count ? spokenChoices : Array(repeating: nil, count: count)
+        guard next[slot] != choiceID else { return }
+        next[slot] = choiceID
+        spokenChoices = next
     }
 
     private func refreshPracticeProgress() {

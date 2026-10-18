@@ -4058,33 +4058,57 @@ private enum VolcanoWorldLayout {
         var bounds: CGRect { points.reduce(CGRect.null) { $0.union(CGRect(origin: $1, size: .zero)) } }
     }
 
+    /// Portrait phones keep the original entrance. On a wide map the same
+    /// short blend becomes a corner, because the bank is much farther from the edge.
+    static func isBroad(_ width: CGFloat) -> Bool { width >= 520 }
+
+    /// How far the entrance has joined the trail. Nil on phone widths.
+    /// The run-in finishes at the top of the world, so the visible crown
+    /// already shares the trail's swirl instead of kinking inward.
+    static func broadEntrance(layout: WorldSceneryLayout, sectionY: CGFloat) -> CGFloat? {
+        guard isBroad(layout.width) else { return nil }
+        let span = max(520, layout.width * 0.72)
+        let t = min(1, max(0, (sectionY + span - 36) / span))
+        return t * t * (3 - 2 * t)
+    }
+
     static func bankPoint(layout: WorldSceneryLayout, right: Bool, y: CGFloat) -> CGPoint {
-        let start = -layout.routeOffset + 90, end = layout.height - layout.routeOffset - 70
-        let fade = min(1, max(0, min((y - start) / 185, (end - y) / 180)))
+        let end = layout.height - layout.routeOffset - 70
         let roadside = layout.centerX(at: y) + (right ? 1 : -1) *
             (74 + sin(y / 53) * 4 + sin(y / 21) * 2) * layout.scale
         let outside = right ? layout.width + 45 : -45
+        if let fadeIn = broadEntrance(layout: layout, sectionY: y + layout.routeOffset) {
+            let exit = min(1, max(0, (end - y) / 180))
+            let fadeOut = exit * exit * (3 - 2 * exit)
+            return CGPoint(x: outside + (roadside - outside) * min(fadeIn, fadeOut), y: y)
+        }
+        let start = -layout.routeOffset + 90
+        let fade = min(1, max(0, min((y - start) / 185, (end - y) / 180)))
         return CGPoint(x: outside + (roadside - outside) * fade * fade * (3 - 2 * fade), y: y)
     }
 
     /// Every block has its own finished silhouette. Fit the entire block on
     /// the bank instead of cutting facets against the curved shoreline.
     static func terrainSlabs(layout: WorldSceneryLayout) -> [TerrainSlab] {
-        let s = layout.scale, start = -layout.routeOffset + 150
+        let s = layout.scale
+        // iPad blocks stay a little smaller and begin at the top, so the
+        // entrance streams sit in the same basalt as the bends below.
+        let unit = isBroad(layout.width) ? s * 0.82 : s
+        let start = isBroad(layout.width) ? -layout.routeOffset + 12 : -layout.routeOffset + 150
         let end = layout.height - layout.routeOffset - 120
         var result: [TerrainSlab] = []
         for right in [false, true] {
-            for row in 0..<max(1, Int((end - start) / (72 * s))) {
-                let y = start + CGFloat(row) * 72 * s
-                let halfH = (35 + CGFloat(row % 4) * 4) * s
+            for row in 0..<max(1, Int((end - start) / (72 * unit))) {
+                let y = start + CGFloat(row) * 72 * unit
+                let halfH = (35 + CGFloat(row % 4) * 4) * unit
                 let edges = (0...12).map { index in
                     bankPoint(layout: layout, right: right,
                               y: y - halfH + 2 * halfH * CGFloat(index) / 12).x
                 }
                 let inner = right ? max(0, edges.max()! + 6 * s) : min(layout.width, edges.min()! - 6 * s)
                 let available = right ? layout.width - 4 * s - inner : inner - 4 * s
-                guard available > 43 * s else { continue }
-                let halfW = min((40 + CGFloat(row % 3) * 5) * s, (available - 6 * s) / 2)
+                guard available > 43 * unit else { continue }
+                let halfW = min((40 + CGFloat(row % 3) * 5) * unit, (available - 6 * s) / 2)
                 let columns = max(1, Int(available / (halfW * 1.8)))
                 for column in 0..<columns {
                     let x = right ? inner + halfW + CGFloat(column) * (halfW * 1.8)
@@ -4162,10 +4186,29 @@ private enum VolcanoWorldLayout {
         }
     }
 
-    static let channelLanes: [CGFloat] = [-9, -6, -3, 0, 3, 6, 9]
+    static func channelLanes(width: CGFloat) -> [CGFloat] {
+        if isBroad(width) {
+            return [-13, -10, -7.2, -4.6, -2.2, 0, 2.2, 4.6, 7.2, 10, 13]
+        }
+        return [-9, -6, -3, 0, 3, 6, 9]
+    }
 
-    static func channelWidth(lane: CGFloat, scale: CGFloat) -> CGFloat {
-        (lane == 0 ? 4.2 : abs(lane) == 3 ? 1.2 : abs(lane) == 6 ? 0.8 : 0.6) * scale
+    static func channelWidth(lane: CGFloat, scale: CGFloat, width: CGFloat = 390) -> CGFloat {
+        if !isBroad(width) {
+            return (lane == 0 ? 4.2 : abs(lane) == 3 ? 1.2 : abs(lane) == 6 ? 0.8 : 0.6) * scale
+        }
+        let magnitude = abs(lane)
+        let base: CGFloat
+        if magnitude < 0.5 { base = 5.2 }
+        else if magnitude <= 2.4 { base = 1.85 }
+        else if magnitude <= 5 { base = 1.35 }
+        else if magnitude <= 8 { base = 1.05 }
+        else { base = 0.85 }
+        return base * scale
+    }
+
+    static func channelBedWidth(scale: CGFloat, width: CGFloat) -> CGFloat {
+        (isBroad(width) ? 44 : 27) * scale
     }
 
     /// Every slope drains through its visible foot into the nearest side river.
@@ -4242,6 +4285,9 @@ private enum VolcanoWorldLayout {
         let key = "\(layout.width):\(layout.height):\(layout.routeOffset)" as NSString
         if let field = rockFields.object(forKey: key) { return field.rocks }
         let s = layout.scale
+        let broad = isBroad(layout.width)
+        // Wide maps keep boulders closer to phone size so the cones stay the landmarks.
+        let stone = broad ? max(0.74, 0.90 - (layout.width - 520) / 2600) : 1
         var exclusions: [CGRect] = []
         let rivers = [false, true].map { channel(layout: layout, right: $0, from: -layout.routeOffset,
                                                to: layout.height - layout.routeOffset) }
@@ -4272,16 +4318,18 @@ private enum VolcanoWorldLayout {
             return CGFloat(state >> 8) / CGFloat(0x00FF_FFFF)
         }
         var rocks: [LooseRock] = []
-        let target = max(110, Int(layout.width / 5.6))
+        let target = max(110, Int(layout.width / (broad ? 4.6 : 5.6)))
+        let top = broad ? -layout.routeOffset + 24 : 112
+        let span = max(1, layout.height - layout.routeOffset - (broad ? 250 : 340) - top)
         for attempt in 0..<(target * 160) {
             let point = CGPoint(x: 8 + random() * (layout.width - 16),
-                                y: 112 + random() * max(1, layout.height - layout.routeOffset - 340))
+                                y: top + random() * span)
             // Boulders establish the terrain; small rubble fills the dry gaps.
             let size: CGFloat
             if attempt < target * 3 { size = 0.32 + random() * 0.40 }
             else if attempt < target * 8 { size = 0.20 + random() * 0.22 }
             else { size = 0.12 + random() * 0.19 }
-            let rock = LooseRock(point: point, size: s * size, variation: attempt)
+            let rock = LooseRock(point: point, size: s * stone * size, variation: attempt)
             let frame = rock.bounds
             let clearsRoad = (0...8).allSatisfy { index in
                 let y = frame.minY + frame.height * CGFloat(index) / 8
@@ -4349,6 +4397,12 @@ private enum VolcanoWorldLayout {
         // On a broad bank the final cone sits higher, leaving room for its
         // tributary to descend before the boss clearing instead of running flat.
         let finalBendY: CGFloat = w >= 600 ? 1380 : 1428
+        // Phones stay on the 1.08 cap. Extra iPad width goes into the cones.
+        let boost = coneBoost(w)
+        let phoneFactors: [CGFloat] = [1.08, 1, 0.94, 0.88, 0.82]
+        let factors = boost > 1
+            ? [1.08, 1, 0.94, 0.88, 0.80, 0.72].map { $0 * boost } + phoneFactors
+            : phoneFactors
         var result: [Source] = []
         for (id, kind, y, right, baseSize): (Int, Kind, CGFloat, Bool, CGFloat) in [
             (0, .summit, 112, true, 0.72), (1, .summit, 430, false, 0.74),
@@ -4358,11 +4412,12 @@ private enum VolcanoWorldLayout {
             var chosen: Source? = nil
             // The closer river leaves broad outer clearings for full-size cones.
             // Search the bend before allowing a small adjustment in their size.
-            search: for factor: CGFloat in [1.08, 1, 0.94, 0.88, 0.82] {
+            search: for factor: CGFloat in factors {
                 for dy: CGFloat in [0, -24, 24, -48, 48, -72, 72, -96, 96] {
                     for candidate in 0..<45 {
                         let offset = candidate == 0 ? 0 : CGFloat((candidate + 1) / 2) * 9 * s * (candidate % 2 == 0 ? 1 : -1)
-                        let x = w * (right ? 0.86 : 0.14) + offset
+                        let anchor: CGFloat = boost > 1 ? (right ? 0.84 : 0.16) : (right ? 0.86 : 0.14)
+                        let x = w * anchor + offset
                         let source = Source(id: id, kind: kind, point: CGPoint(x: x, y: y + dy),
                                             size: baseSize * s * factor, mirrored: !right)
                         let bands = source.terrainBands
@@ -4392,13 +4447,25 @@ private enum VolcanoWorldLayout {
         return result
     }
 
+    /// Grow cones with spare iPad width. The scenery scale itself stays capped,
+    /// so phone maps and the trail keep their present size.
+    static func coneBoost(_ width: CGFloat) -> CGFloat {
+        let t = min(1, max(0, (width - 520) / 340))
+        return 1 + t * 0.55
+    }
+
     static func channelPoint(layout: WorldSceneryLayout, right: Bool, y: CGFloat) -> CGPoint {
         let sectionY = y + layout.routeOffset
-        let entry = right ? (sectionY + 250) / 360 : (sectionY - 110) / 110
-        let blend = min(1, max(0, min(entry, (layout.height - 110 - sectionY) / 210)))
         let outside: CGFloat = right ? layout.width + 75 : -75
         let wander = sin(y / 97 + (right ? 1.8 : 0)) * 6 + sin(y / 43) * 3
         let bank = layout.centerX(at: y) + (right ? 1 : -1) * (102 + wander) * layout.scale
+        if let fadeIn = broadEntrance(layout: layout, sectionY: sectionY) {
+            let exit = min(1, max(0, (layout.height - 110 - sectionY) / 210))
+            let fadeOut = exit * exit * (3 - 2 * exit)
+            return CGPoint(x: outside + (bank - outside) * min(fadeIn, fadeOut), y: y)
+        }
+        let entry = right ? (sectionY + 250) / 360 : (sectionY - 110) / 110
+        let blend = min(1, max(0, min(entry, (layout.height - 110 - sectionY) / 210)))
         return CGPoint(x: outside + (bank - outside) * blend * blend * (3 - 2 * blend), y: y)
     }
 
@@ -4446,7 +4513,8 @@ private struct SleepVolcanoInlet: View {
             let clearance = routeOffset - WorldRouteTrail.bannerHeight - WorldRouteTrail.bannerTopPadding - WorldRouteTrail.bannerBottomPadding
             let height = routeOffset + WorldRouteTrail.chapterRouteHeight(topClearance: clearance, worldID: 3)
             let layout = WorldSceneryLayout(width: geometry.size.width, height: height, routeOffset: routeOffset)
-            let lines = VolcanoWorldLayout.channelLanes.map { lane in
+            let lanes = VolcanoWorldLayout.channelLanes(width: geometry.size.width)
+            let lines = lanes.map { lane in
                 VolcanoWorldLayout.FlowLine(VolcanoWorldLayout.channel(layout: layout, right: true,
                     from: -routeOffset - 220, to: height - routeOffset, lane: lane * layout.scale))
             }
@@ -4462,7 +4530,8 @@ private struct SleepVolcanoInlet: View {
                         var c = context; c.translateBy(x: 0, y: routeOffset - sectionStart)
                         let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSinceReferenceDate)
                         VolcanoLifePainter(context: c, time: time, seed: 0)
-                            .channels(lines: lines, scale: layout.scale, indexOffset: VolcanoWorldLayout.channelLanes.count)
+                            .channels(lines: lines, scale: layout.scale, lanes: lanes,
+                                      mapWidth: geometry.size.width, indexOffset: lanes.count)
                     }
                 }
             }
@@ -4570,8 +4639,9 @@ private struct VolcanoLifeSurface: View {
     @State private var visible = false
 
     var body: some View {
+        let lanes = VolcanoWorldLayout.channelLanes(width: layout.width)
         let channels = source == nil ? [false, true].flatMap { right in
-            VolcanoWorldLayout.channelLanes.map { lane in
+            lanes.map { lane in
                 VolcanoWorldLayout.FlowLine(VolcanoWorldLayout.channel(layout: layout, right: right,
                                            from: -layout.routeOffset - (right ? 220 : 0), to: layout.height - layout.routeOffset,
                                            lane: lane * layout.scale))
@@ -4593,7 +4663,7 @@ private struct VolcanoLifeSurface: View {
                     VolcanoLifePainter(context: c, time: time, seed: source.id).source(source.kind, slopes: slopes)
                 } else {
                     let painter = VolcanoLifePainter(context: c, time: time, seed: 0)
-                    painter.channels(lines: channels, scale: layout.scale)
+                    painter.channels(lines: channels, scale: layout.scale, lanes: lanes, mapWidth: layout.width)
                     painter.tributaries(tributaries, scale: layout.scale)
                 }
             }
@@ -4654,13 +4724,17 @@ private struct VolcanoLifePainter {
         }
     }
 
-    func channels(lines: [VolcanoWorldLayout.FlowLine], scale: CGFloat, indexOffset: Int = 0) {
+    func channels(lines: [VolcanoWorldLayout.FlowLine], scale: CGFloat, lanes: [CGFloat], mapWidth: CGFloat, indexOffset: Int = 0) {
         for (localIndex, river) in lines.enumerated() {
             let index = localIndex + indexOffset
-            let lane = index % VolcanoWorldLayout.channelLanes.count
-            let central = VolcanoWorldLayout.channelLanes[lane] == 0
-            flowing(river, width: (central ? 2.8 : 0.8) * scale,
-                    speed: 5.8 + Double(lane) * 0.16, spacing: (137 + CGFloat(lane) * 17) * scale,
+            let slot = index % lanes.count
+            let lane = lanes[slot]
+            let central = abs(lane) < 0.5
+            let width = mapWidth < 520
+                ? (central ? 2.8 : 0.8) * scale
+                : VolcanoWorldLayout.channelWidth(lane: lane, scale: scale, width: mapWidth) * (central ? 0.62 : 0.72)
+            flowing(river, width: width,
+                    speed: 5.8 + Double(slot) * 0.16, spacing: (137 + CGFloat(slot) * 17) * scale,
                     tongue: (central ? 28 : 18) * scale, offset: Double(index) * 43.7,
                     intensity: central ? 1 : 0.64)
         }
@@ -4928,18 +5002,19 @@ private struct VolcanoWorldPainter {
         let temperature = (-layout.routeOffset)...(layout.height - layout.routeOffset)
         let bed = VolcanoWorldLayout.channel(layout: layout, right: right, from: start, to: end)
         context.stroke(bed, with: .color(Color(dinoHex: 0x3E384D).opacity(0.28)),
-                       style: StrokeStyle(lineWidth: 27 * layout.scale, lineCap: .round, lineJoin: .round))
-        for lane in VolcanoWorldLayout.channelLanes {
+                       style: StrokeStyle(lineWidth: VolcanoWorldLayout.channelBedWidth(scale: layout.scale, width: layout.width), lineCap: .round, lineJoin: .round))
+        for lane in VolcanoWorldLayout.channelLanes(width: layout.width) {
             let path = VolcanoWorldLayout.channel(layout: layout, right: right, from: start, to: end, lane: lane * layout.scale)
             var c = context; c.opacity = lane == 0 ? 1 : abs(lane) < 6 ? 0.78 : 0.55
             VolcanoWorldPainter(context: c).lava(path,
-                width: VolcanoWorldLayout.channelWidth(lane: lane, scale: layout.scale), moving: true, temperature: temperature)
+                width: VolcanoWorldLayout.channelWidth(lane: lane, scale: layout.scale, width: layout.width), moving: true, temperature: temperature)
         }
     }
 
     private func riverbeds(layout: WorldSceneryLayout) {
         for right in [false, true] {
-            let start = -layout.routeOffset + 90, end = layout.height - layout.routeOffset - 70
+            let start = VolcanoWorldLayout.isBroad(layout.width) ? -layout.routeOffset - 8 : -layout.routeOffset + 90
+            let end = layout.height - layout.routeOffset - 70
             let count = max(1, Int((end - start) / 12))
             var bank = Path()
             for i in 0...count {
@@ -4957,21 +5032,22 @@ private struct VolcanoWorldPainter {
             let bed = VolcanoWorldLayout.channel(layout: layout, right: right,
                                                 from: -layout.routeOffset, to: layout.height - layout.routeOffset)
             context.stroke(bed, with: .color(Color(dinoHex: 0x3E384D).opacity(0.28)),
-                           style: StrokeStyle(lineWidth: 27 * layout.scale, lineCap: .round, lineJoin: .round))
+                           style: StrokeStyle(lineWidth: VolcanoWorldLayout.channelBedWidth(scale: layout.scale, width: layout.width), lineCap: .round, lineJoin: .round))
         }
         // The downstream section lies on the main channel. Paint the latter
         // last, so no outlined end cap can protrude through the confluence.
+        let flowScale = VolcanoWorldLayout.isBroad(layout.width) ? 1.22 : 1
         for tributary in VolcanoWorldLayout.tributaries(layout: layout) {
-            lava(tributary.path, width: 3.1 * layout.scale, moving: true, temperature: temperature)
+            lava(tributary.path, width: 3.1 * layout.scale * flowScale, moving: true, temperature: temperature)
         }
         for right in [false, true] {
-            for lane in VolcanoWorldLayout.channelLanes {
+            for lane in VolcanoWorldLayout.channelLanes(width: layout.width) {
                 let fissure = VolcanoWorldLayout.channel(layout: layout, right: right,
                     from: -layout.routeOffset, to: layout.height - layout.routeOffset, lane: lane * layout.scale)
                 var layer = context
                 layer.opacity = lane == 0 ? 1 : abs(lane) < 6 ? 0.78 : 0.55
                 VolcanoWorldPainter(context: layer).lava(fissure,
-                    width: VolcanoWorldLayout.channelWidth(lane: lane, scale: layout.scale), moving: true, temperature: temperature)
+                    width: VolcanoWorldLayout.channelWidth(lane: lane, scale: layout.scale, width: layout.width), moving: true, temperature: temperature)
             }
         }
     }

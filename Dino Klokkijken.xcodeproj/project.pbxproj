@@ -23,6 +23,11 @@
 		"DA121026AC02000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/ExpandedQuestions.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
 		"DB121026AC02000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000001"; };
 		"DC121026AC02000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000001"; };
+		"DA1820261018000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/SpokenTime.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+		"DB1820261018000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1820261018000000000001"; };
+		"DC1820261018000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1820261018000000000001"; };
+		"DA1820261018000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/SpokenTimeQuestion.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
+		"DB1820261018000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1820261018000000000002"; };
 		"DA121026AC02000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/ExpandedQuestionView.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
 		"DB121026AC02000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000002"; };
         "DA212026BD01000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/MinutesBetweenQuestion.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
@@ -214,6 +219,7 @@
 			"buildActionMask" = "2147483647";
 			"files" = (
 				"DC121026AC02000000000001",
+				"DC1820261018000000000001",
                 "DC192026BD01000000000001",
 				"DC121026AC01000000000001",
 				"DC121026AB13000000000001",
@@ -257,6 +263,8 @@
 			"files" = (
                 "DB152026BD03000000000001",
 				"DB121026AC02000000000001",
+				"DB1820261018000000000001",
+				"DB1820261018000000000002",
                 "DB192026BD01000000000001",
                 "DB192026BD01000000000002",
 				"DB121026AC01000000000001",
@@ -883,6 +891,7 @@
 			"children" = (
                 "DA152026BD03000000000001",
 				"DA121026AC02000000000001",
+				"DA1820261018000000000001",
                 "DA192026BD01000000000001",
 				"DA121026AC01000000000001",
 				"DA121026AB13000000000001",
@@ -909,6 +918,7 @@
 			"name" = "Views";
 			"children" = (
 				"DA121026AC02000000000002",
+				"DA1820261018000000000002",
                 "DA212026BD01000000000001",
                 "DA192026BD01000000000002",
 				"DA121026AC01000000000002",

@@ -4410,6 +4410,23 @@
         }
       }
     },
+    "dino.playAgain" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play again"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opnieuw spelen"
+          }
+        }
+      }
+    },
     "dino.practice.ascending" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4882,6 +4899,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zet tijden op volgorde"
+          }
+        }
+      }
+    },
+    "dino.practice.question.sayTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Say the time"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeg de tijd"
           }
         }
       }
@@ -5494,6 +5528,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Van vroeg naar laat"
+          }
+        }
+      }
+    },
+    "dino.question.sayTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How do you say this time?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoe zeg je deze tijd?"
+          }
+        }
+      }
+    },
+    "dino.spoken.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the right word in each row."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies steeds het juiste antwoord."
           }
         }
       }

@@ -29,6 +29,7 @@ struct DinoCoreTests {
         testPractice()
         testPracticeRecords()
         testExpandedQuestions()
+        testSpokenTime()
         testFlightArrivals()
         testMinutesBetweenQuestions()
         testDaySchedules()
@@ -494,12 +495,14 @@ struct DinoCoreTests {
     }
 
     static func testPractice() {
-        expect(DinoPracticeQuestion.allCases.count == 19, "practice contains nineteen distinct question types")
-        expect(DinoPracticeQuestion.minutesBetween.number == 19, "minute differences follow the removed duplicate exercises")
-        expect(DinoPracticeQuestion.daySchedule.number == 18, "day planning precedes minute differences")
+        expect(DinoPracticeQuestion.allCases.count == 20, "practice contains twenty distinct question types")
+        expect(DinoPracticeQuestion.sortTimes.number == 11 && DinoPracticeQuestion.sayTime.number == 12
+               && DinoPracticeQuestion.timeSequence.number == 13, "saying the time sits between sorting and sequences")
+        expect(DinoPracticeQuestion.minutesBetween.number == 20, "minute differences follow saying the time")
+        expect(DinoPracticeQuestion.daySchedule.number == 19, "day planning precedes minute differences")
         expect(DinoPracticeQuestion.match.number == 7, "matching remains question type seven")
-        expect(DinoPracticeQuestion.addTime.number == 13 && DinoPracticeQuestion.timeZone.number == 17,
-               "question numbers close the gap after the removed lesson exercise")
+        expect(DinoPracticeQuestion.addTime.number == 14 && DinoPracticeQuestion.timeZone.number == 18,
+               "later question numbers shift by one after saying the time")
         expect(DinoPracticeQuestion(rawValue: "schoolEnd") == nil && ClockQuestionKind(rawValue: "schoolEnd") == nil,
                "the duplicate lesson exercise is retired from practice and levels")
         expect(DinoPracticeQuestion(rawValue: "elapsedTime") == nil && ClockQuestionKind(rawValue: "elapsedTime") == nil,
@@ -596,7 +599,7 @@ struct DinoCoreTests {
             expect(session.attempt.answers.isEmpty && session.attempt.questions.count == 1, "endless practice retains only current question")
             let expectedMinute = session.question.kind == .advanceAnalog ? session.question.relatedTimes[0].minute : 0
             expect(session.result == nil && session.inputMinute == expectedMinute, "practice never finishes and initializes the appropriate clock")
-            expect(session.selectedOrder.isEmpty && session.pairSelections.isEmpty, "board selections reset for every question")
+            expect(session.selectedOrder.isEmpty && session.pairSelections.isEmpty && session.spokenChoices.isEmpty, "board selections reset for every question")
         }
         expect(session.practiceCorrect == 500, "practice keeps a correct running count")
         expect(player.profile == original && store.load() == original && uploads == 0, "practice and help never save progress or upload level scores")
@@ -611,6 +614,10 @@ struct DinoCoreTests {
         case .dayPart(let part): return .dayPart(DinoDayPart.allCases.first { $0 != part }!)
         case .ordering(let times): return .ordering(Array(times.reversed()))
         case .pairs(let times): return .pairs(Array(times.reversed()))
+        case .spoken(let spoken):
+            var ids = spoken.choiceIDs
+            if let first = ids.indices.first { ids[first] = ids[first] == SpokenTimeChoice.emptyID ? "wrong" : SpokenTimeChoice.emptyID }
+            return .spoken(SpokenTimeAnswer(choiceIDs: ids))
         }
     }
 
@@ -892,6 +899,111 @@ struct DinoCoreTests {
             }
             expect(seenActivities == Set(DinoScheduleActivity.allCases), "day schedules vary their activities")
         }
+    }
+
+    static func testSpokenTime() {
+        let dutch = SpokenTimeCatalog.language(code: "nl")
+        let english = SpokenTimeCatalog.language(code: "en")
+        expect(SpokenTimeCatalog.language(code: "fr").code == "nl", "an unknown language keeps the Dutch clock until it is added")
+        expect(SpokenTimeCatalog.language(code: "en-GB").code == "en" && SpokenTimeCatalog.language(code: "EN").code == "en",
+               "region codes use the registered language")
+        let dutchPhrases = [
+            (3, 0, "Drie uur"), (3, 5, "Vijf over drie"), (3, 10, "Tien over drie"), (3, 15, "Kwart over drie"),
+            (3, 20, "Tien voor half vier"), (3, 25, "Vijf voor half vier"), (3, 30, "Half vier"),
+            (3, 35, "Vijf over half vier"), (3, 40, "Tien over half vier"), (3, 45, "Kwart voor vier"),
+            (3, 50, "Tien voor vier"), (3, 55, "Vijf voor vier"),
+            (12, 0, "Twaalf uur"), (12, 30, "Half een"), (12, 35, "Vijf over half een"), (11, 45, "Kwart voor twaalf"),
+            (8, 45, "Kwart voor negen")
+        ]
+        let englishPhrases = [
+            (3, 0, "Three o\u{2019}clock"), (3, 5, "Five past three"), (3, 10, "Ten past three"),
+            (3, 15, "Quarter past three"), (3, 20, "Twenty past three"), (3, 25, "Twenty-five past three"),
+            (3, 30, "Half past three"), (3, 35, "Twenty-five to four"), (3, 40, "Twenty to four"),
+            (3, 45, "Quarter to four"), (3, 50, "Ten to four"), (3, 55, "Five to four"),
+            (12, 0, "Twelve o\u{2019}clock"), (12, 30, "Half past twelve"), (1, 30, "Half past one"),
+            (12, 55, "Five to one"), (1, 20, "Twenty past one")
+        ]
+        for (hour, minute, phrase) in dutchPhrases {
+            let got = spokenPhrase("nl", hour: hour, minute: minute)
+            expect(got == phrase, "Dutch \(hour):\(minute) expected \(phrase), got \(got)")
+        }
+        for (hour, minute, phrase) in englishPhrases {
+            let got = spokenPhrase("en", hour: hour, minute: minute)
+            expect(got == phrase, "English \(hour):\(minute) expected \(phrase), got \(got)")
+        }
+        var rng = SeededGenerator(seed: 7)
+        let quarterTo = dutch.prompt(for: ClockTime(hour: 8, minute: 45), using: &rng)
+        let halfFour = english.prompt(for: ClockTime(hour: 3, minute: 20), using: &rng)
+        expect(quarterTo.slots.map(\.id) == ["minutes", "direction", "half", "hour", "closing"], "Dutch keeps half as its own choice")
+        expect(halfFour.slots.map(\.id) == ["minutes", "direction", "hour", "closing"], "English puts half with the minutes")
+        expect(quarterTo.correct.choiceIDs == ["kwart", "voor", "-", "h9", "-"], "quarter to nine is checked by choice, not by the sentence")
+        expect(halfFour.correct.choiceIDs == ["twenty", "past", "h3", "-"], "twenty past three does not borrow the Dutch half-hour form")
+        for prompt in [quarterTo, halfFour] {
+            let hour = prompt.slots.first { $0.id == "hour" }!
+            expect(hour.choices.count == 3 && Set(hour.choices.map(\.id)).count == 3, "the hour row offers three different hours")
+            expect(!hour.choices.contains { $0.id == SpokenTimeChoice.emptyID }, "the hour itself cannot be left empty")
+            for (slot, correct) in zip(prompt.slots, prompt.correct.choiceIDs) {
+                expect(slot.choices.contains { $0.id == correct }, "every correct word is one of the choices")
+                if slot.id != "hour" {
+                    expect(slot.choices.contains { $0.id == SpokenTimeChoice.emptyID }, "every other row can stay empty")
+                }
+            }
+        }
+        expect(quarterTo.slots.first { $0.id == "half" }!.choices.map(\.id) == ["-", "half"], "half can be left empty")
+        let almost = SpokenTimeAnswer(choiceIDs: ["kwart", "voor", "half", "h9", "-"])
+        let question = spokenQuestion(prompt: quarterTo, time: ClockTime(hour: 8, minute: 45))
+        expect(AnswerValidator.isCorrect(.spoken(quarterTo.correct), for: question), "the matching choices are correct")
+        expect(!AnswerValidator.isCorrect(.spoken(almost), for: question), "adding half changes the time even when the other words match")
+        expect(!AnswerValidator.isCorrect(.time(question.target), for: question), "a clock time is not a spoken answer")
+
+        let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+        let config = DinoPracticeConfiguration(time: .quarter, order: .specific(.sayTime))
+        let session = DinoSession(level: config.level, player: player, practice: config, example: question)
+        for (index, id) in quarterTo.correct.choiceIDs.enumerated() { session.chooseSpoken(slot: index, choiceID: id) }
+        session.chooseSpoken(slot: 0, choiceID: quarterTo.correct.choiceIDs[0])
+        session.submit(.spoken(SpokenTimeAnswer(choiceIDs: quarterTo.correct.choiceIDs)))
+        expect(session.correctFeedback && session.shouldAutoAdvance, "a complete spoken answer is checked immediately")
+        session.chooseSpoken(slot: 0, choiceID: "-")
+        expect(session.spokenChoices[0] == "kwart", "feedback locks the chosen words")
+
+        let live = DinoSession(level: config.level, player: player, practice: config, language: "nl")
+        let livePrompt = live.question.spokenPrompt!
+        var wrongIDs = livePrompt.correct.choiceIDs
+        wrongIDs[0] = wrongIDs[0] == SpokenTimeChoice.emptyID ? "wrong" : SpokenTimeChoice.emptyID
+        live.submit(.spoken(SpokenTimeAnswer(choiceIDs: wrongIDs)))
+        expect(live.hasFeedback && !live.correctFeedback && !live.canRetry, "a wrong sentence finishes this question")
+        live.advance()
+        expect(live.question.id == 1 && live.spokenChoices.isEmpty && live.result == nil, "the next spoken question starts with no words selected")
+
+        for time in DinoPracticeTime.allCases {
+            for code in ["nl", "en"] {
+                var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.sayTime)), seed: 18, language: code)
+                var previous: ClockTime?
+                for index in 0..<40 {
+                    let generated = generator.next(index: index)
+                    let prompt = generated.spokenPrompt!
+                    expect(generated.kind == .sayTime && generated.options.isEmpty, "saying the time has no clock choices")
+                    expect((1...12).contains(generated.target.hour) && time.minutes.contains(generated.target.minute), "spoken questions use the selected minutes on a twelve-hour clock")
+                    expect(generated.target != previous, "spoken questions do not repeat the previous clock")
+                    expect(!prompt.phrase.isEmpty && AnswerValidator.isCorrect(generated.expectedAnswer, for: generated), "the generated sentence matches that clock")
+                    expect(!AnswerValidator.isCorrect(wrongAnswer(for: generated), for: generated), "one changed word is rejected")
+                    expect((prompt.slots.first { $0.id == "half" } != nil) == (code == "nl"), "only Dutch shows the half row")
+                    previous = generated.target
+                }
+            }
+        }
+    }
+
+    static func spokenPhrase(_ code: String, hour: Int, minute: Int) -> String {
+        var rng = SeededGenerator(seed: 1)
+        return SpokenTimeCatalog.language(code: code).prompt(for: ClockTime(hour: hour, minute: minute), using: &rng).phrase
+    }
+
+    static func spokenQuestion(prompt: SpokenTimePrompt, time: ClockTime) -> ClockQuestion {
+        var question = ClockQuestion(id: 0, kind: .sayTime, target: time, options: [], activity: nil, companionClocks: [])
+        question.spokenPrompt = prompt
+        question.answer = .spoken(prompt.correct)
+        return question
     }
 
     static func testExpandedQuestions() {

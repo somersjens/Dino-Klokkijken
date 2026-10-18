@@ -23,7 +23,7 @@ enum DinoDayPart: String, CaseIterable, Sendable {
 
 enum ClockAnswer: Equatable, Hashable, Sendable {
     case time(ClockTime), duration(Int), truth(Bool), dayPart(DinoDayPart)
-    case ordering([ClockTime]), pairs([ClockTime])
+    case ordering([ClockTime]), pairs([ClockTime]), spoken(SpokenTimeAnswer)
 }
 
 enum DinoScheduleActivity: String, CaseIterable, Sendable {
@@ -71,9 +71,11 @@ enum DinoExpandedQuestions {
         let scheduleDurations = kind == .daySchedule
             ? [minuteStep * Int.random(in: 1...2, using: &rng), minuteStep,
                minuteStep * Int.random(in: 1...3, using: &rng)] : []
-        let hours = [.readDigital, .spokenTime, .trueFalse].contains(kind) ? Array(1...12) : Array(0...23)
+        let hours = [.readDigital, .spokenTime, .trueFalse, .sayTime].contains(kind) ? Array(1...12) : Array(0...23)
+        let spoken = kind == .sayTime ? SpokenTimeCatalog.language(code: language) : nil
         let pool = hours.flatMap { hour in minutes.map { ClockTime(hour: hour, minute: $0) } }
             .filter { time in
+                if kind == .sayTime { return spoken!.supports(minute: time.minute) }
                 if kind == .dayPart && !isDemonstration { return time.hour != 6 && time.hour < 22 }
                 if kind == .sortTimes { return time.minutesOfDay != 0 }
                 // Leave room for an earlier time in the same selected minute family.
@@ -95,6 +97,10 @@ enum DinoExpandedQuestions {
         let duration = step * Int.random(in: 1...3, using: &rng)
         switch kind {
         case .readDigital, .spokenTime, .read24Hour: break
+        case .sayTime:
+            q.options = []
+            q.spokenPrompt = SpokenTimeCatalog.language(code: language).prompt(for: target, using: &rng)
+            q.answer = .spoken(q.spokenPrompt!.correct)
         case .trueFalse:
             let truthful = Bool.random(using: &rng)
             q.statement = truthful ? target : other[0]

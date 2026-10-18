@@ -31,6 +31,9 @@ struct DinoExpandedQuestionView: View {
             }
             switch q.kind {
             case .sortTimes: sorting
+            case .sayTime:
+                SpokenTimeQuestion(session: session, theme: theme, width: width,
+                                   isDemonstration: isDemonstration, compact: compactLayout)
             case .advanceAnalog: analogAdvance
             case .timeSequence:
                 if !isDemonstration { responses }
@@ -249,6 +252,7 @@ struct DinoExpandedQuestionView: View {
         case .truth(let value): return L(key: value ? "dino.expanded.true" : "dino.expanded.false")
         case .dayPart(let part): return L(key: part.titleKey)
         case .ordering(let times), .pairs(let times): return times.map(\.digitalText).joined(separator: " → ")
+        case .spoken(let spoken): return q.spokenPrompt?.phrase(for: spoken) ?? ""
         }
     }
 
@@ -1246,7 +1250,7 @@ struct DinoExpandedDemonstration: View {
                 }
                 DinoExpandedQuestionView(session: sample, theme: theme, width: width, clockSize: 150, isDemonstration: true)
                     .id(sample.question.id)
-                if !kind.usesOptions && ![.sortTimes, .advanceAnalog].contains(kind) {
+                if !kind.usesOptions && ![.sortTimes, .advanceAnalog, .sayTime].contains(kind) {
                     Text(verbatim: answer(sample.question)).font(.system(size: 15, weight: .medium, design: .rounded))
                         .multilineTextAlignment(.center).accessibilityIdentifier("demo.answer")
                 }
@@ -1310,6 +1314,7 @@ struct DinoExpandedDemonstration: View {
         case .dayPart(let part): answer = "\(q.target.digitalText) → \(L(key: part.titleKey))"
         case .ordering(let times): answer = times.map(\.digitalText).joined(separator: " → ")
         case .pairs(let times): answer = times.map { "\(DinoTimeWords.time($0, language: code, dayPart: true)) = \($0.digitalText)" }.joined(separator: "\n")
+        case .spoken(let spoken): answer = q.spokenPrompt?.phrase(for: spoken) ?? ""
         }
         return answer
     }

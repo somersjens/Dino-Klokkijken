@@ -120,3 +120,10 @@ Beelden: [vaste knopkleur bij een andere digitale klok](Screenshots/QuestionFeed
 Uren en Minuten vormen één aaneengesloten switch in een gezamenlijke rand, met twee even brede aanraakvlakken en een schuivende donkerblauwe selectie. De totale breedte blijft gelijk aan die van de rij met draaiknoppen. De geselecteerde helft heeft witte tekst, de andere helft donkerblauwe tekst. Automatische wijzerselectie werkt ook de switch bij.
 
 Bij vraagtype **9** staat **Controleer mijn klok** 24 punten onder de draaiknoppen. Bij vraagtype **8** is de afstand tot de onderste digitale pijltjes eveneens 24 punten. Het analoge voorbeeld gebruikt dezelfde afstand. De tussenruimte houdt de aanraakvlakken van instellen en bevestigen uit elkaar.
+
+De iPhone-controle voor de aaneengesloten switch en bevestigingsafstand slaagt. De actuele iOS Simulator-build en beide gerichte schermtests eindigen met **TEST SUCCEEDED** op iPhone 17 / iOS 26.5:
+
+- `testAnalogClockSelectsTheTouchedHandAndUpdatesControls`: twee even brede switchhelften zonder tussenruimte, voldoende afstand tot bevestigen, behoud van de automatische wijzerselectie en dezelfde indeling in het voorbeeld.
+- `testDigitalClockHasIndependentHourAndMinuteArrows`: voldoende afstand tussen de onderste pijltjes en bevestigen bij type 8, ook met een ander klokontwerp.
+
+De schermbeelden zijn visueel gecontroleerd: [switch bij vraagtype 9](Screenshots/QuestionFeedback/clock-hand-segmented-switch-iphone.png), [de switch in het voorbeeld](Screenshots/QuestionFeedback/clock-hand-segmented-switch-example-iphone.png) en [afstand bij vraagtype 8](Screenshots/QuestionFeedback/digital-confirm-spacing-iphone.png).

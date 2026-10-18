@@ -28,7 +28,7 @@ enum DinoPracticeTime: String, CaseIterable, Sendable {
 /// Each distinct exercise, ordered by difficulty. Choice counts are an internal variation.
 enum DinoPracticeQuestion: String, CaseIterable, Sendable {
     case chooseAnalog, chooseDigital, readDigital, spokenTime, trueFalse, dayPart, match
-    case setDigital, setAnalog, read24Hour, sortTimes, timeSequence
+    case setDigital, setAnalog, read24Hour, sortTimes, sayTime, timeSequence
     case addTime, advanceAnalog, subtractTime, flightArrival, timeZone, daySchedule, minutesBetween
     var titleKey: String { "dino.practice.question.\(rawValue)" }
     var number: Int { Self.allCases.firstIndex(of: self)! + 1 }

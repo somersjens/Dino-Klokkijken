@@ -72,7 +72,9 @@ struct WorldMap: View {
                             hintedLevel = nil
                             celebrationID = nil
                             let requested = focusRequest > 0
-                            let target = requested || player.needsFirstLevelHint
+                            // A fresh install keeps the route at the top. The finger still
+                            // marks level 1, and the start stone opens that level.
+                            let target = requested
                                 ? player.profile.nextAdventureLevel ?? player.profile.dinoLevel
                                 : player.profile.dinoLevel
                             guard target > 0 else { return }
@@ -270,7 +272,7 @@ struct WorldMap: View {
     }
 
     private var startPoint: some View {
-        JungleLevelStone(unlocked: true, occupied: player.profile.dinoLevel == 0, start: true, highContrast: highContrast)
+        let marker = JungleLevelStone(unlocked: true, occupied: player.profile.dinoLevel == 0, start: true, highContrast: highContrast)
             .frame(width: 96, height: 96)
             .shadow(color: DinoStyle.deepGreen.opacity(0.18), radius: 12, y: 8)
             .overlay(alignment: .bottom) {
@@ -281,6 +283,16 @@ struct WorldMap: View {
                     .offset(y: 25)
             }
             .accessibilityIdentifier("map.start")
+        // Until the first star, the stone the dino stands on is the way in.
+        return Group {
+            if player.profile.dinoLevel == 0, let first = DinoLevelCatalog.level(1) {
+                Button { selectLevel(first) } label: { marker }
+                    .buttonStyle(.plain)
+                    .contentShape(Rectangle())
+            } else {
+                marker
+            }
+        }
     }
 
     private func routePoint(_ index: Int, width: CGFloat, topClearance: CGFloat) -> CGPoint {
@@ -990,7 +1002,7 @@ struct LevelInfoPanel: View {
 }
 
 /// A small trail sign for the level number, in the same cream-and-leaf colors as the world banners.
-private struct LevelBanner: View {
+struct LevelBanner: View {
     let levelID: Int
     let highContrast: Bool
     var body: some View {

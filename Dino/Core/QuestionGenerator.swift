@@ -14,6 +14,7 @@ struct ClockQuestion: Identifiable, Equatable, Sendable {
     var timeZoneJourney: DinoTimeZoneJourney? = nil
     var daySchedule: DinoDaySchedule? = nil
     var statement: ClockTime? = nil
+    var spokenPrompt: SpokenTimePrompt? = nil
     var answerChoices: [ClockAnswer] = []
     var answer: ClockAnswer? = nil
     var expectedAnswer: ClockAnswer { answer ?? .time(target) }
