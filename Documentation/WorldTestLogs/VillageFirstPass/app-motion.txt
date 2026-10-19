@@ -1,0 +1,3 @@
+Two stationary iPhone app captures; no scrolling or touches.
+Full frame changed pixels above 18 RGB levels: 12703
+Canopy crop changed pixels above 18 RGB levels: 3201

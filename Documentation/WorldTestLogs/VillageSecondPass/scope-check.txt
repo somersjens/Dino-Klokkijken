@@ -1,0 +1,5 @@
+Original river-path builder unchanged: True
+Village uses original builder, rather than the first-pass edge rerouting: True
+Other artwork after village section unchanged: True
+Shared city canal point helper retains the city entry/exit settings.
+City helper with city=true equals the previous city function body: True

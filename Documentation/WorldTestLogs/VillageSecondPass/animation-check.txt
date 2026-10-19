@@ -1,0 +1,2 @@
+Distinct native frames: 24/24
+Reduce Motion frames pixel-identical: True

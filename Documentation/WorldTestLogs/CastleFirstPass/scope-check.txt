@@ -1,0 +1,5 @@
+Castle renderer and layout SHA-256: f1442512ecd15322a392e0990b704e921c9afd9212d77583808568628d02bd0e
+No gameplay, route, level stone or HUD edits made for this redesign.
+Concurrent village and other existing workspace edits retained.
+Native renders inspected at 320, 393, 834 and 1194 points.
+Six UI test executions passed on iOS 27; no test changes made for this redesign.

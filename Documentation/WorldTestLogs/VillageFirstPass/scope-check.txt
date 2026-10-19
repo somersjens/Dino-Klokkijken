@@ -1,0 +1,2 @@
+Artwork before village section unchanged: True
+Artwork after village section unchanged, apart from VillageWorldLife overlay: True

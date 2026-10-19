@@ -1,0 +1,3 @@
+Native audit build: swiftc -parse-as-library -module-cache-path /tmp/dino-castle-module-cache -target arm64-apple-macos15.0 /tmp/dino-castle-second-audit.swift -o /tmp/dino-castle-second-pass-render
+Exit status: 0
+Render and geometry results: native-render.log

@@ -1,0 +1,19 @@
+{
+  "moving_alpha_pixels_vs_first_frame": [
+    5097,
+    6223,
+    5624
+  ],
+  "frozen_frames_identical": true,
+  "frozen_pixel_sha256": "6cb8c9539f5bf879951308b0a40bf215bc3046581a36a2da3860dc488806a87e",
+  "level_clearance_samples": 6720,
+  "max_level_clearance_alpha": 0,
+  "solid_arch_alpha": 0,
+  "open_arch_alpha": 255,
+  "render_widths": [
+    320,
+    393,
+    834,
+    1194
+  ]
+}

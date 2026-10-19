@@ -1,0 +1,4 @@
+right river (under HUD): 1558 pixels differ by more than 18 RGB levels
+left bridge and river: 1607 pixels differ by more than 18 RGB levels
+lower right bridge: 719 pixels differ by more than 18 RGB levels
+Middle keeper-only crop (537,1488)-(650,1660): 481 pixels differ by more than 18 RGB levels.

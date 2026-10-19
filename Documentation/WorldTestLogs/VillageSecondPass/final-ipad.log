@@ -1,0 +1,129 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -destination "platform=iOS Simulator,id=CD5048F9-F217-4BE9-8A78-37A684D8710B" -derivedDataPath /tmp/dino-village-second-pass-20261019-build -resultBundlePath /tmp/dino-village-second-pass-20261019-final-ipad.xcresult -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testNativeWorldChaptersAndMinuteQuestions" "-only-testing:DinoUITests/DinoUITests/testWorldBossSceneryRemainsPlayable" CODE_SIGNING_ALLOWED=NO test-without-building
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Writing result bundle at path:
+	/tmp/dino-village-second-pass-20261019-final-ipad.xcresult
+
+2026-10-19 07:44:32.260476+0200 DinoUITests-Runner[1129:38056940] [Default] Running tests...
+2026-10-19 07:44:32.276447+0200 DinoUITests-Runner[1129:38056940] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-19 07:44:32.783.
+Test Suite 'DinoUITests.xctest' started at 2026-10-19 07:44:32.784.
+Test Suite 'DinoUITests' started at 2026-10-19 07:44:32.784.
+Test Case '-[DinoUITests.DinoUITests testNativeWorldChaptersAndMinuteQuestions]' started.
+    t =     0.00s Start Test at 2026-10-19 07:44:32.785
+    t =     0.01s Set Up
+    t =     0.01s     Setting device orientation to Portrait
+    t =     0.02s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     0.03s         Wait for com.apple.springboard to idle
+    t =     0.03s     Open Hakketjak.Dino-Klokkijken
+    t =     0.03s         Launch Hakketjak.Dino-Klokkijken
+    t =     0.03s             Terminate Hakketjak.Dino-Klokkijken:1066
+objc[1129]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x10a1a0310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10a100398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+2026-10-19 07:44:33.889 xcodebuild[1047:38056260] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-19 07:44:33.889 xcodebuild[1047:38056260] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.72s             Setting up automation session
+    t =     2.31s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.65s Terminate Hakketjak.Dino-Klokkijken:1180
+    t =     4.70s Open Hakketjak.Dino-Klokkijken
+    t =     4.71s     Launch Hakketjak.Dino-Klokkijken
+2026-10-19 07:44:37.490 xcodebuild[1047:38056260] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-19 07:44:37.490 xcodebuild[1047:38056260] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     4.91s         Setting up automation session
+    t =     5.64s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     8.02s Waiting 8.0s for "header.settings" Button to exist
+    t =     9.06s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =     9.06s         Checking existence of `"header.settings" Button`
+    t =     9.45s Checking existence of `"map.bossShortcut" Button`
+    t =     9.94s Added attachment named 'jungle-native-entrance'
+    t =     9.94s Terminate Hakketjak.Dino-Klokkijken:1206
+    t =    11.03s Open Hakketjak.Dino-Klokkijken
+    t =    11.03s     Launch Hakketjak.Dino-Klokkijken
+2026-10-19 07:44:43.817 xcodebuild[1047:38056260] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-19 07:44:43.817 xcodebuild[1047:38056260] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    11.24s         Setting up automation session
+    t =    11.89s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    16.41s Waiting 8.0s for "header.settings" Button to exist
+2026-10-19 07:45:10.086547+0200 DinoUITests-Runner[1546:38060078] [Default] Running tests...
+2026-10-19 07:45:10.100778+0200 DinoUITests-Runner[1546:38060078] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Portrait
+
+Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches.
+
+Test Suite 'Selected tests' started at 2026-10-19 07:45:10.499.
+Test Suite 'DinoUITests.xctest' started at 2026-10-19 07:45:10.500.
+Test Suite 'DinoUITests' started at 2026-10-19 07:45:10.500.
+Test Case '-[DinoUITests.DinoUITests testWorldBossSceneryRemainsPlayable]' started.
+    t =     0.00s Start Test at 2026-10-19 07:45:10.500
+    t =     0.01s Set Up
+    t =     0.01s     Setting device orientation to Portrait
+    t =     0.02s         Wait for com.apple.DocumentManager.DockFolderViewService to idle
+    t =     0.03s         Wait for com.apple.springboard to idle
+    t =     0.08s     Open Hakketjak.Dino-Klokkijken
+    t =     0.08s         Launch Hakketjak.Dino-Klokkijken
+2026-10-19 07:45:10.583 xcodebuild[1047:38056260] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-19 07:45:10.583 xcodebuild[1047:38056260] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.29s             Setting up automation session
+objc[1546]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x1064b0310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x106834398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.93s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     2.24s Terminate Hakketjak.Dino-Klokkijken:1550
+    t =     3.31s Open Hakketjak.Dino-Klokkijken
+    t =     3.31s     Launch Hakketjak.Dino-Klokkijken
+2026-10-19 07:45:13.813 xcodebuild[1047:38056260] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-19 07:45:13.813 xcodebuild[1047:38056260] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     3.52s         Setting up automation session
+    t =     4.17s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     8.36s Waiting 8.0s for "header.settings" Button to exist
+    t =     9.40s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =     9.40s         Checking existence of `"header.settings" Button`
+    t =     9.71s Find the "header.settings" Button
+    t =     9.98s Find the "map.level.40" Button
+    t =    10.26s Checking existence of `"map.level.40" Button`
+    t =    10.47s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    10.64s Checking existence of `"map.level.40" Button`
+    t =    10.85s Find the "map.level.40" Button
+    t =    11.07s Find the "map.level.40" Button
+    t =    11.31s Find the "header.settings" Button
+    t =    11.56s Find the "map.level.40" Button
+    t =    11.77s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    11.94s Find the "map.level.40" Button
+    t =    12.13s Find the "map.level.40" Button
+    t =    12.51s Added attachment named 'scenery-depth-world-4'
+    t =    12.53s Tap "map.level.40" Button[0.50, 0.50]
+    t =    12.53s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    12.54s     Find the "map.level.40" Button
+    t =    12.75s     Check for interrupting elements affecting "map.level.40" Button
+    t =    12.92s         Wait for com.apple.springboard to idle
+    t =    12.94s     Synthesize event
+    t =    12.94s         Find the "map.level.40" Button
+    t =    13.24s         Find the "map.level.40" Button
+    t =    13.47s         Find the "map.level.40" Button
+    t =    13.97s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    13.98s Waiting 5.0s for "level.play" Button to exist
+    t =    15.02s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =    15.02s         Checking existence of `"level.play" Button`
+    t =    15.04s Tear Down
+Test Case '-[DinoUITests.DinoUITests testWorldBossSceneryRemainsPlayable]' passed (15.334 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-19 07:45:25.835.
+	 Executed 1 test, with 0 failures (0 unexpected) in 15.334 (15.335) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-19 07:45:25.835.
+	 Executed 1 test, with 0 failures (0 unexpected) in 15.334 (15.336) seconds
+Test Suite 'Selected tests' passed at 2026-10-19 07:45:25.836.
+	 Executed 1 test, with 0 failures (0 unexpected) in 15.334 (15.337) seconds
+2026-10-19 07:55:26.138 xcodebuild[1047:38056509]  IDETestOperationsObserverDebug: Failure collecting diagnostics from simulator: Timed out after 600.0 seconds while waiting for a response from the invoked process
+2026-10-19 07:55:26.147 xcodebuild[1047:38056260] [MT] IDETestOperationsObserverDebug: 656.922 elapsed -- Testing started completed.
+2026-10-19 07:55:26.147 xcodebuild[1047:38056260] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-19 07:55:26.147 xcodebuild[1047:38056260] [MT] IDETestOperationsObserverDebug: 656.922 sec, +656.922 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-village-second-pass-20261019-final-ipad.xcresult
+
+Failing tests:
+	DinoUITests.testNativeWorldChaptersAndMinuteQuestions()
+
+** TEST EXECUTE FAILED **
+
+Testing started

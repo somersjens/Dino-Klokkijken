@@ -1,0 +1,4 @@
+64 rendered passage frames: 64 distinct frames.
+Reduced motion: all village/traffic pixels below the static banner (y >= 200) are identical at times 18.5 and 29.5.
+The static banner differs in 33 antialias pixels by at most 1 RGB level; no animated scenery differs.
+Bridge cycle spans 16 seconds of simulated time; GIF playback is 2x for concise inspection.

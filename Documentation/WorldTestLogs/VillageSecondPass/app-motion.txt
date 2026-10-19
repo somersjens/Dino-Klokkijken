@@ -1,0 +1,3 @@
+Two stationary iPhone app screenshots, without scrolling or touching.
+Water-only crop at (383, 1661)-(478, 1761).
+Changed pixels above 18 RGB levels: 234

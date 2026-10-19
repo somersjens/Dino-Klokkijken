@@ -1,0 +1,27 @@
+{
+  "routeChecks": 48000,
+  "offscreenTurns": 261,
+  "reduceMotionPixelIdentical": true,
+  "activeChangedPixels": 11230,
+  "activeCoveredPixels": [
+    5248,
+    5982
+  ],
+  "nativeWidths": [
+    320,
+    393,
+    834,
+    1194
+  ],
+  "liveFlightCorridorPixelsChanged": [
+    19674,
+    19393
+  ],
+  "liveCaptureIntervalSeconds": 2.5,
+  "liveFlightCorridorBox": [
+    0,
+    1735,
+    1206,
+    1880
+  ]
+}

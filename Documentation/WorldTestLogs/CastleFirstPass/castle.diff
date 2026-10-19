@@ -1,0 +1,710 @@
+--- before/CastleWorldPainter
++++ after/CastleKingdomLayout-and-painter
+@@ -1,3 +1,70 @@
++private struct CastleKingdomLayout {
++    enum Kind { case clockTower, statue, stairs, fountain, palace, gate }
++    struct Landmark {
++        let kind: Kind
++        let point: CGPoint
++        let scale: CGFloat
++        let right: Bool
++        let halfWidth: CGFloat
++        let rise: CGFloat
++    }
++    let scenery: WorldSceneryLayout
++    var scale: CGFloat { scenery.scale }
++
++    var landmarks: [Landmark] {
++        let plan: [(Kind, CGFloat, Bool, CGFloat, CGFloat, CGFloat)] = [
++            (.clockTower, 225, true, 53, 238, 1.02),
++            (.statue, 420, false, 62, 177, 1.02),
++            (.stairs, 590, false, 67, 172, 1.06),
++            (.fountain, 790, true, 67, 133, 1.12),
++            (.palace, 990, true, 88, 247, 0.98),
++            (.stairs, 1135, false, 67, 172, 1.02),
++            (.statue, 1310, false, 62, 177, 1.08),
++            (.fountain, 1510, false, 67, 133, 0.78),
++            (.gate, 1560, true, 90, 208, 0.86)
++        ]
++        return plan.map { kind, y, right, half, rise, factor in
++            let s = scale * factor
++            // The edge of every horizontal slice clears the complete 46pt
++            // trail and its level stones, even above an incoming bend.
++            var x: CGFloat = right ? 0 : scenery.width
++            for i in 0...32 {
++                let localY = -rise + (rise + 28) * CGFloat(i) / 32
++                let sampleY = y + localY * s
++                let roofTaper: CGFloat = localY < -rise * 0.68 ? 0.64 : 1
++                let boundary = scenery.centerX(at: sampleY) + (right ? 1 : -1) * (half * s * roofTaper + 53)
++                x = right ? max(x, boundary) : min(x, boundary)
++            }
++            return Landmark(kind: kind, point: CGPoint(x: x, y: y), scale: s, right: right,
++                            halfWidth: half, rise: rise)
++        }
++    }
++
++    func waterway(right: Bool) -> Path {
++        let start = -scenery.routeOffset
++        let end = scenery.height - scenery.routeOffset
++        return Path { path in
++            for i in 0...240 {
++                let y = start + (end - start) * CGFloat(i) / 240
++                let point = waterPoint(at: y, right: right)
++                if i == 0 { path.move(to: point) } else { path.addLine(to: point) }
++            }
++        }
++    }
++
++    func waterPoint(at y: CGFloat, right: Bool) -> CGPoint {
++        // Channels enter and leave through the side gardens, allowing
++        // both chapter boundaries to share uninterrupted stone ground.
++        let entry = min(1, max(0, (y - 5) / 170))
++        let exit = min(1, max(0, (1740 - y) / 155))
++        let blend = min(entry, exit), eased = blend * blend * (3 - 2 * blend)
++        let innerX = scenery.centerX(at: y) + (right ? 1 : -1) * 109 * scale
++        let outerX = right ? scenery.width + 70 * scale : -70 * scale
++        return CGPoint(x: outerX + (innerX - outerX) * eased, y: y)
++    }
++}
++
++/// The final chapter is a royal garden of blue roofs, pale stone and running water.
+ private struct CastleWorldPainter {
+     let context: GraphicsContext
+     var scenery: WorldSceneryLayout? = nil
+@@ -43,90 +110,398 @@
+         let w = size.width, h = size.height, scale = min(1.30, max(0.82, size.width / 390))
+         context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
+             .init(color: Color(dinoHex: 0xE8DFCC), location: 0),
+-            .init(color: Color(dinoHex: 0xB2D9EC), location: 0.035),
+-            .init(color: Color(dinoHex: 0xE1E9DA), location: (routeOffset - 100) / h),
+-            .init(color: Color(dinoHex: 0xEFE4C5), location: (routeOffset + 230) / h),
+-            .init(color: Color(dinoHex: 0xDFE1C6), location: (routeOffset + 900) / h),
+-            .init(color: Color(dinoHex: 0xF1E1B9), location: (routeOffset + 1550) / h),
++            .init(color: Color(dinoHex: 0xEEE5CB), location: (routeOffset + 60) / h),
++            .init(color: Color(dinoHex: 0xD3DCC0), location: (routeOffset + 440) / h),
++            .init(color: Color(dinoHex: 0xEAE0BF), location: (routeOffset + 950) / h),
++            .init(color: Color(dinoHex: 0xD5DABB), location: (routeOffset + 1450) / h),
+             .init(color: Color(dinoHex: 0xE8DFCC), location: 1)
+         ]), startPoint: .zero, endPoint: .init(x: 0, y: h)))
+-        entrance(width: w, scale: scale)
+         var c = context; c.translateBy(x: 0, y: routeOffset)
+         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
++        let layout = CastleKingdomLayout(scenery: scenery)
++        let landmarks = layout.landmarks
+         scenery.drawBanks(in: c, worldID: 10)
++        let ground = CastleWorldPainter(context: c)
++        ground.royalGround(layout: layout)
++        entrance(width: w, scale: scale)
+         let p = CastleWorldPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset)
+-        for side in 0..<2 {
+-            for i in 0..<12 {
+-                let y = 35 + CGFloat(i) * 145
+-                p.at(CGPoint(x: side == 0 ? 0 : w, y: y), size: scale, mirror: side == 1) { edge in
+-                    edge.at(CGPoint(x: 5, y: 0)) { garden in
+-                        garden.terrace(width: 68)
+-                        if i % 3 == 0 { garden.cypress(at: CGPoint(x: 0, y: -7), size: 0.77) }
+-                        else { garden.rock(at: CGPoint(x: -4, y: -6), size: 0.67) }
+-                        garden.flowers(at: CGPoint(x: 13, y: 1), size: 0.74)
+-                        if i % 3 == 1 { garden.crystals(at: CGPoint(x: 14, y: -6), size: 0.56) }
++        for (y, right): (CGFloat, Bool) in [(510, true), (1080, false)] {
++            depth.add(at: routeOffset + y + 24 * scale) {
++                ground.cascade(layout: layout, at: y, right: right)
++            }
++        }
++        // The architecture shares the same ground-contact ordering as Chronos.
++        // These points have already been fitted against the whole silhouette.
++        for (index, item) in landmarks.enumerated() {
++            depth.add(at: routeOffset + item.point.y + 28 * item.scale) {
++                ground.at(item.point, size: item.scale) { royal in
++                    let outside = item.right ? (w - item.point.x) / item.scale : item.point.x / item.scale
++                    royal.court(kind: item.kind, right: item.right, variation: index, outerExtent: outside + 12)
++                }
++            }
++        }
++        for right in [false, true] {
++            for i in 0..<18 {
++                let y = 75 + CGFloat(i) * 94
++                let x = scenery.centerX(at: y) + (right ? 1 : -1) * (155 + CGFloat(i % 3) * 16) * scale
++                let point = CGPoint(x: x, y: y)
++                // Small garden pieces fill the margins without sitting inside
++                // a staircase, fountain basin or statue pedestal.
++                let occupied = landmarks.contains { item in
++                    abs(point.x - item.point.x) < (item.halfWidth + 20) * item.scale &&
++                    y > item.point.y - item.rise * item.scale && y < item.point.y + 42 * item.scale
++                }
++                if occupied { continue }
++                p.at(CGPoint(x: right ? w - 5 : 5, y: y), size: scale * (i % 3 == 0 ? 0.9 : 0.68)) { garden in
++                    if i % 3 == 0 { garden.cypress(at: .zero, size: 0.92) }
++                    else if i % 3 == 1 { garden.planter(at: .zero, size: 1) }
++                    else { garden.flowers(at: .zero, size: 0.94) }
++                    if i % 5 == 0 { garden.lantern(at: CGPoint(x: right ? -21 : 21, y: 7), size: 0.68) }
++                }
++            }
++        }
++        // On tablets the outer gardens extend beyond the central 600pt route.
++        if w > 650 {
++            for right in [false, true] {
++                for i in 0..<8 {
++                    let x: CGFloat = right ? w - 64 * scale : 64 * scale
++                    let y = 150 + CGFloat(i) * 210
++                    depth.add(at: routeOffset + y) {
++                        ground.at(CGPoint(x: x, y: y), size: scale * 0.9) { garden in
++                            garden.terrace(width: 106)
++                            if i % 3 == 0 { garden.tower(at: .zero, size: 0.77, time: nil) }
++                            else if i % 3 == 1 { garden.dinoStatue(at: .zero, size: 0.78, mirror: right) }
++                            else { garden.cypress(at: .zero, size: 1.13) }
++                            garden.planter(at: CGPoint(x: 35, y: 9), size: 0.65)
++                        }
+                     }
+                 }
+             }
+         }
+-        // Waterfalls and crossings are painted before the larger clock gardens.
+-        p.waterfall(at: CGPoint(x: 13 * scale, y: 625), size: scale * 0.95)
+-        p.at(CGPoint(x: w - 12 * scale, y: 1165), size: scale, mirror: true) { $0.waterfall(at: .zero, size: 0.92) }
+-        p.bridge(at: CGPoint(x: 21 * scale, y: 940), size: scale * 0.88)
+-        p.bridge(at: CGPoint(x: w - 20 * scale, y: 1350), size: scale * 0.86)
+-        for index in 0..<9 {
+-            let onRight = index % 4 == 0 || index % 4 == 3
+-            let x = index == 8 ? w - 151 * scale : onRight ? w - 63 * scale : 63 * scale
+-            p.scene(at: CGPoint(x: x, y: 185 + CGFloat(index) * 175 - (index == 8 ? 30 : 0)), size: scale * 0.94, variation: index)
+-            p.at(CGPoint(x: onRight ? 6 * scale : w - 6 * scale, y: 274 + CGFloat(index) * 175), size: scale) { garden in
+-                garden.terrace(width: 77)
+-                garden.planter(at: CGPoint(x: 0, y: -3), size: 0.80)
+-                if index % 2 == 0 { garden.brazier(at: CGPoint(x: onRight ? 27 : -27, y: 1), size: 0.66) }
+-            }
+-        }
+-        for i in 0..<28 {
+-            let x = i % 2 == 0 ? CGFloat(72 + (i * 7) % 23) * scale : w - CGFloat(72 + (i * 11) % 23) * scale
+-            let y = 50 + CGFloat(i) * 58
+-            p.oval(CGRect(x: x, y: y, width: 3, height: 1.5), [0xFFF2CE, 0xC7BC94])
+-        }
+     }
+ 
+     private func entrance(width: CGFloat, scale: CGFloat) {
+-        let sun = CGPoint(x: width * 0.78, y: 52 * scale)
+-        glow(sun, radius: 135 * scale, color: 0xFFF0B8, opacity: 0.68)
+-        oval(CGRect(x: sun.x - 23 * scale, y: sun.y - 23 * scale, width: 46 * scale, height: 46 * scale), [0xFFFFDE, 0xFFE2A3])
+-        for i in 0..<5 {
+-            at(CGPoint(x: width * CGFloat(i) / 4, y: CGFloat(30 + (i % 2) * 36) * scale), size: scale * 0.83) { p in
+-                p.context.drawLayer { c in
+-                    c.addFilter(.blur(radius: 2.2))
+-                    var cloud = Path()
+-                    for r in [CGRect(x: -54, y: 0, width: 116, height: 20), CGRect(x: -33, y: -18, width: 48, height: 35), CGRect(x: 2, y: -29, width: 52, height: 46)] { cloud.addEllipse(in: r) }
+-                    c.fill(cloud, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xFFFFEE).opacity(0.93), Color(dinoHex: 0xE6ECDD).opacity(0)]), startPoint: .init(x: 0, y: -29), endPoint: .init(x: 0, y: 22)))
+-                }
+-            }
+-        }
+-        var far = context; far.opacity = 0.42
++        // Ground and mist continue from the coast; there is no new sky band.
++        var far = context; far.opacity = 0.34
+         far.clipToLayer { mask in
+-            mask.fill(Path(CGRect(x: 0, y: 0, width: width, height: 300 * scale)),
+-                      with: .linearGradient(Gradient(stops: [.init(color: .white, location: 0), .init(color: .white, location: 0.42), .init(color: .white.opacity(0), location: 1)]), startPoint: .init(x: 0, y: 40 * scale), endPoint: .init(x: 0, y: 230 * scale)))
++            mask.fill(Path(CGRect(x: 0, y: 0, width: width, height: 270 * scale)),
++                      with: .linearGradient(Gradient(stops: [.init(color: .clear, location: 0), .init(color: .white, location: 0.25), .init(color: .white, location: 0.62), .init(color: .clear, location: 1)]), startPoint: .zero, endPoint: .init(x: 0, y: 270 * scale)))
+         }
+         let distant = CastleWorldPainter(context: far)
+         for i in 0..<5 {
+-            distant.at(CGPoint(x: width * CGFloat(i) / 4, y: CGFloat(177 + (i % 2) * 17) * scale), size: scale * 0.75) { p in
+-                p.rock(at: .zero, size: 2.15)
+-                p.tower(at: CGPoint(x: 0, y: -70), size: 0.66, time: nil)
+-                if i % 2 == 0 { p.waterfall(at: CGPoint(x: 23, y: -16), size: 0.92) }
+-                p.cypress(at: CGPoint(x: -33, y: -55), size: 0.52)
+-            }
+-        }
+-        gate(at: CGPoint(x: width * 0.76, y: 186 * scale), size: scale * 0.73)
+-        tower(at: CGPoint(x: 45 * scale, y: 199 * scale), size: scale * 0.83, time: .init(hour: 10, minute: 25))
+-        waterfall(at: CGPoint(x: 10 * scale, y: 215 * scale), size: scale * 1.03)
+-        cypress(at: CGPoint(x: width - 13 * scale, y: 220 * scale), size: scale * 0.90)
+-        planter(at: CGPoint(x: 11 * scale, y: 226 * scale), size: scale * 0.95)
+-    }
++            distant.at(CGPoint(x: width * CGFloat(i) / 4, y: CGFloat(191 + (i % 2) * 22) * scale), size: scale * 0.71) { p in
++                p.retainingWall(width: 162, height: 62, arches: 3)
++                p.palace(at: CGPoint(x: 0, y: -38), size: 0.74)
++                p.cypress(at: CGPoint(x: -62, y: 1), size: 0.73)
++                p.cypress(at: CGPoint(x: 57, y: 10), size: 0.56)
++            }
++        }
++        tower(at: CGPoint(x: 17 * scale, y: 212 * scale), size: scale * 0.84, time: nil)
++        tower(at: CGPoint(x: width - 19 * scale, y: 227 * scale), size: scale * 0.95, time: nil)
++        planter(at: CGPoint(x: 21 * scale, y: 234 * scale), size: scale)
++        planter(at: CGPoint(x: width - 17 * scale, y: 246 * scale), size: scale)
++    }
++    private func royalGround(layout: CastleKingdomLayout) {
++        let s = layout.scale, scenery = layout.scenery
++        for right in [false, true] {
++            let sign: CGFloat = right ? 1 : -1
++            // Broad planted banks connect the courts instead of leaving little
++            // isolated circular platforms in an otherwise empty landscape.
++            var garden = Path()
++            let start = -scenery.routeOffset + 32
++            let end = scenery.height - scenery.routeOffset - 25
++            for i in 0...160 {
++                let y = start + (end - start) * CGFloat(i) / 160
++                let x = scenery.centerX(at: y) + sign * 139 * s
++                if i == 0 { garden.move(to: .init(x: x, y: y)) }
++                else { garden.addLine(to: .init(x: x, y: y)) }
++            }
++            garden.addLine(to: .init(x: right ? scenery.width + 1 : -1, y: end))
++            garden.addLine(to: .init(x: right ? scenery.width + 1 : -1, y: start)); garden.closeSubpath()
++            context.fill(garden, with: .linearGradient(Gradient(stops: [
++                .init(color: .clear, location: 0),
++                .init(color: Color(dinoHex: 0xA5BC89).opacity(0.24), location: 0.12),
++                .init(color: Color(dinoHex: 0x83A579).opacity(0.44), location: 0.5),
++                .init(color: Color(dinoHex: 0xC5CBA0).opacity(0.24), location: 0.87),
++                .init(color: .clear, location: 1)
++            ]), startPoint: .init(x: 0, y: start), endPoint: .init(x: 0, y: end)))
++            let water = layout.waterway(right: right)
++            for (width, color): (CGFloat, UInt32) in [(38, 0xA4AA8C), (33, 0xFFF0CC), (25, 0xB3CFBD), (19, 0x53B5C7)] {
++                context.stroke(water, with: .color(Color(dinoHex: color)), style: StrokeStyle(lineWidth: width * s, lineCap: .round, lineJoin: .round))
++            }
++            for i in 0..<47 {
++                let y = 177 + CGFloat(i) * 31
++                let point = layout.waterPoint(at: y, right: right)
++                let r = CGFloat(3 + i % 4) * s
++                var ripple = Path(); ripple.move(to: .init(x: point.x - r, y: y))
++                ripple.addQuadCurve(to: .init(x: point.x + r, y: y + 1.5 * s), control: .init(x: point.x, y: y + 3 * s))
++                context.stroke(ripple, with: .color(Color(dinoHex: 0xDCFFF1).opacity(i % 3 == 0 ? 0.85 : 0.46)), style: StrokeStyle(lineWidth: 0.9 * s, lineCap: .round))
++            }
++            // The low terrace rims stay out of the entry/exit joins.
++            for (i, baseY) in [142, 380, 651, 910, 1175, 1455, 1680].enumerated() {
++                let y = CGFloat(baseY + (right ? (i % 2 == 0 ? 16 : -27) : 0))
++                let edgeX = scenery.centerX(at: y) + sign * 154 * s
++                let width = right ? scenery.width - edgeX + 24 * s : edgeX + 24 * s
++                if width < 28 * s { continue }
++                let centerX = right ? edgeX + width / 2 : edgeX - width / 2
++                at(CGPoint(x: centerX, y: y), size: s) { p in
++                    p.retainingWall(width: width / s, height: CGFloat(34 + (i % 3) * 9), arches: max(1, Int(width / s / 39)))
++                    for j in 0..<max(1, Int(width / s / 57)) {
++                        let x = -width / s / 2 + 18 + CGFloat(j) * 57
++                        p.flowers(at: CGPoint(x: x, y: -CGFloat(36 + (i % 3) * 9)), size: 0.58 + CGFloat((j + i) % 3) * 0.1)
++                        if j % 3 == 1 { p.ivy(at: CGPoint(x: x - 8, y: -CGFloat(31 + (i % 3) * 9)), size: 0.51) }
++                    }
++                }
++            }
++        }
++    }
++
++    private func cascade(layout: CastleKingdomLayout, at y: CGFloat, right: Bool) {
++        let s = layout.scale
++        let top = layout.waterPoint(at: y - 38 * s, right: right)
++        let base = layout.waterPoint(at: y + 20 * s, right: right)
++        let middle = layout.waterPoint(at: y, right: right)
++        at(middle, size: s) { p in
++            p.retainingWall(width: 64, height: 39, arches: 2)
++            let x0 = (top.x - middle.x) / s, x1 = (base.x - middle.x) / s
++            var curtain = Path(); curtain.move(to: .init(x: x0 - 11, y: -41))
++            curtain.addQuadCurve(to: .init(x: x1 - 16, y: 21), control: .init(x: x0 - 15, y: -6))
++            curtain.addLine(to: .init(x: x1 + 16, y: 21))
++            curtain.addQuadCurve(to: .init(x: x0 + 11, y: -41), control: .init(x: x0 + 12, y: -8)); curtain.closeSubpath()
++            p.material(curtain, [0xDFFFF5, 0x75C6D3, 0x469DBD, 0xBCE9DE])
++            for i in 0..<7 {
++                let offset = CGFloat(i - 3) * 3
++                var thread = Path(); thread.move(to: .init(x: x0 + offset, y: -39))
++                thread.addQuadCurve(to: .init(x: x1 + offset * 1.3, y: 21), control: .init(x: x0 + offset - 3, y: -7))
++                p.context.stroke(thread, with: .color(Color(dinoHex: 0xF3FFF7).opacity(i % 2 == 0 ? 0.85 : 0.48)), style: StrokeStyle(lineWidth: i % 3 == 0 ? 1.6 : 0.7, lineCap: .round))
++            }
++            p.oval(CGRect(x: x1 - 34, y: 12, width: 68, height: 22), [0xE5FFF0, 0x81CCD0, 0x5EB3C1])
++            for i in 0..<8 {
++                p.oval(CGRect(x: x1 - 23 + CGFloat(i) * 6, y: 17 + CGFloat(i % 3) * 2, width: 8, height: 3), [0xFCFFF1, 0xB5E5DC])
++            }
++            p.planter(at: CGPoint(x: -30, y: -40), size: 0.44)
++            p.ivy(at: CGPoint(x: 27, y: -38), size: 0.49)
++        }
++    }
++
++    private func retainingWall(width: CGFloat, height: CGFloat, arches: Int) {
++        masonry(CGRect(x: -width / 2, y: -height, width: width, height: height + 8))
++        for i in 0..<arches {
++            let step = width / CGFloat(arches), x = -width / 2 + step * (CGFloat(i) + 0.5)
++            let archWidth = min(24, step - 12)
++            guard archWidth > 5 else { continue }
++            let rect = CGRect(x: x - archWidth / 2, y: -height + 12, width: archWidth, height: height - 11)
++            rounded(rect.insetBy(dx: -2, dy: -2), archWidth / 2 + 2, [0xFFF0CF, 0xCFBC94])
++            rounded(rect, archWidth / 2, [0x8A9B8A, 0xB2BBA0, 0xC5C7A7])
++            line([.init(x: rect.minX + 2, y: rect.maxY - 2), .init(x: rect.maxX - 2, y: rect.maxY - 2)], 0xDCD5AE, 2)
++        }
++        rounded(CGRect(x: -width / 2 - 3, y: -height - 4, width: width + 6, height: 8), 2, [0xFFF5D9, 0xC6BB97])
++        line([.init(x: -width / 2, y: -height - 4), .init(x: width / 2, y: -height - 4)], 0xFFFFE5, 1.2)
++        for i in 0..<max(1, Int(width / 25)) {
++            let x = -width / 2 + 12 + CGFloat(i) * 25
++            line([.init(x: x, y: -height - 3), .init(x: x + 2, y: -height + 3)], 0xAFA88A, 0.7, opacity: 0.7)
++        }
++    }
++
++    private func court(kind: CastleKingdomLayout.Kind, right: Bool, variation: Int, outerExtent: CGFloat) {
++        let width: CGFloat = kind == .palace || kind == .gate ? 170 : 128
++        let left = right ? -width / 2 : -max(width / 2, outerExtent)
++        let edge = right ? max(width / 2, outerExtent) : width / 2
++        rounded(CGRect(x: left - 3, y: 9, width: edge - left + 6, height: 14), 5, [0xAAB491, 0xC3C59E, 0xCDD1AB])
++        at(CGPoint(x: (left + edge) / 2, y: 0)) { p in
++            p.retainingWall(width: edge - left, height: 23, arches: max(3, Int((edge - left) / 36)))
++        }
++        polygon([.init(x: left - 3, y: -27), .init(x: edge - 3, y: -36), .init(x: edge + 4, y: -11), .init(x: left, y: -2)], [0xFFF2D2, 0xE3D2A9, 0xC7C49E])
++        for i in 0..<max(7, Int((edge - left) / 19)) {
++            let x = left + CGFloat(i) * 19
++            line([.init(x: x, y: -22), .init(x: x + 9, y: -6)], 0xB7B39A, 0.7, opacity: 0.6)
++        }
++        switch kind {
++        case .clockTower:
++            tower(at: CGPoint(x: -3, y: -20), size: 1.03, time: .init(hour: 10, minute: 25))
++            cypress(at: CGPoint(x: right ? 36 : -36, y: -9), size: 0.82)
++            lantern(at: CGPoint(x: -42, y: 2), size: 0.83)
++        case .statue:
++            cypress(at: CGPoint(x: right ? 39 : -39, y: -36), size: 1.13)
++            dinoStatue(at: CGPoint(x: 0, y: -9), size: 0.94, mirror: right)
++            fountain(at: CGPoint(x: 2, y: 17), size: 0.58)
++            lantern(at: CGPoint(x: right ? -48 : 48, y: 8), size: 0.78)
++        case .stairs:
++            grandStaircase(at: CGPoint(x: 0, y: -3), size: 1, mirror: right)
++        case .fountain:
++            cypress(at: CGPoint(x: -40, y: -28), size: 0.88)
++            cypress(at: CGPoint(x: 43, y: -30), size: 1.03)
++            fountain(at: CGPoint(x: 0, y: -4), size: 1.14)
++            for x: CGFloat in [-48, 48] { lantern(at: CGPoint(x: x, y: 8), size: 0.79) }
++        case .palace:
++            palace(at: CGPoint(x: 0, y: -15), size: 1)
++            for x: CGFloat in [-63, 65] { lantern(at: CGPoint(x: x, y: 4), size: 0.85) }
++        case .gate:
++            gate(at: CGPoint(x: 0, y: -10), size: 0.95)
++        }
++        flowers(at: CGPoint(x: -width / 2 + 8, y: 13), size: variation % 2 == 0 ? 0.69 : 0.83)
++        planter(at: CGPoint(x: width / 2 - 9, y: 17), size: 0.73)
++        ivy(at: CGPoint(x: -width / 2 + 12, y: -20), size: 0.47)
++    }
++
++    private func grandStaircase(at point: CGPoint, size: CGFloat, mirror: Bool) {
++        at(point, size: size, mirror: mirror) { p in
++            // A tall flight narrows towards the upper landing. Side walls,
++            // treads and individual balusters all share these vanishing lines.
++            func edge(_ t: CGFloat, side: CGFloat) -> CGPoint {
++                CGPoint(x: -17 + 24 * t + side * (21 + 32 * t), y: -148 + 157 * t)
++            }
++            for side: CGFloat in [-1, 1] {
++                let top = edge(0, side: side), bottom = edge(1, side: side)
++                p.polygon([.init(x: top.x + side * 8, y: top.y - 12), .init(x: bottom.x + side * 10, y: bottom.y - 15), .init(x: bottom.x + side * 10, y: bottom.y + 17), .init(x: top.x + side * 8, y: top.y + 34)], [0xF7E7C3, 0xC2BC9C, 0x9DA78E])
++            }
++            for i in 0..<15 {
++                let t = CGFloat(i) / 15, next = CGFloat(i + 1) / 15
++                let left = edge(t, side: -1), right = edge(t, side: 1)
++                let a = edge(next, side: -1), b = edge(next, side: 1)
++                p.polygon([left, right, .init(x: b.x, y: b.y - 4), .init(x: a.x, y: a.y - 4)], [0xFFEFCE, 0xDFD2B4, 0xCCC4A9])
++                p.polygon([.init(x: a.x, y: a.y - 4), .init(x: b.x, y: b.y - 4), b, a], [0xB6B39F, 0xA2A893])
++                p.line([.init(x: a.x, y: a.y - 4), .init(x: b.x, y: b.y - 4)], 0xFFF7DC, 1.5)
++                if i % 3 == 0 { p.line([.init(x: (a.x + b.x) / 2, y: a.y - 8), .init(x: (a.x + b.x) / 2 + 1, y: a.y - 5)], 0xB6AD92, 0.7) }
++            }
++            for side: CGFloat in [-1, 1] {
++                for i in 0...7 {
++                    let t = CGFloat(i) / 7, e = edge(t, side: side)
++                    p.rounded(CGRect(x: e.x + side * 5 - 2.5, y: e.y - 25, width: 5, height: 21), 2, [0xFFF1CE, 0xC6BE9D])
++                    p.oval(CGRect(x: e.x + side * 5 - 4, y: e.y - 22, width: 8, height: 8), [0xF4E8C7, 0xBDB79B])
++                }
++                let a = edge(0, side: side), b = edge(1, side: side)
++                p.line([.init(x: a.x + side * 5, y: a.y - 26), .init(x: b.x + side * 5, y: b.y - 26)], 0xAFAE94, 7)
++                p.line([.init(x: a.x + side * 5, y: a.y - 28), .init(x: b.x + side * 5, y: b.y - 28)], 0xFFF1D1, 4)
++                for t: CGFloat in [0, 0.53, 1] {
++                    let e = edge(t, side: side)
++                    p.masonry(CGRect(x: e.x + side * 5 - 6, y: e.y - 31, width: 12, height: 33))
++                    p.rounded(CGRect(x: e.x + side * 5 - 8, y: e.y - 34, width: 16, height: 5), 1, [0xFFF5D8, 0xCCC09B])
++                    if t == 0 || t == 1 { p.lantern(at: CGPoint(x: e.x + side * 5, y: e.y - 34), size: 0.52) }
++                    else { p.banner(at: CGPoint(x: e.x + side * 5, y: e.y - 6), size: 0.42) }
++                }
++            }
++            p.planter(at: CGPoint(x: -19, y: -147), size: 0.62)
++            p.flowers(at: CGPoint(x: -48, y: 14), size: 0.59)
++        }
++    }
++
++    private func lantern(at point: CGPoint, size: CGFloat) {
++        at(point, size: size) { p in
++            p.rounded(CGRect(x: -7, y: -9, width: 14, height: 11), 2, [0xFFF0C0, 0xBCA16A])
++            p.rounded(CGRect(x: -3, y: -27, width: 6, height: 21), 2, [0xFFE7A4, 0xAC8C54])
++            p.glow(.init(x: 0, y: -42), radius: 23, color: 0xFFD679, opacity: 0.34)
++            p.polygon([.init(x: -10, y: -55), .init(x: 10, y: -55), .init(x: 7, y: -29), .init(x: -7, y: -29)], [0xFFF8CD, 0xFFDC83, 0xE3AF52])
++            p.polygon([.init(x: -13, y: -55), .init(x: 0, y: -68), .init(x: 13, y: -55)], [0xFFF0B6, 0xCCA45F, 0xAA864C])
++            for x: CGFloat in [-9, 0, 9] { p.line([.init(x: x, y: -54), .init(x: x * 0.73, y: -29)], 0xB9914F, x == 0 ? 1.4 : 2.2) }
++            p.line([.init(x: -8, y: -29), .init(x: 8, y: -29)], 0xBC9655, 3)
++            p.line([.init(x: -4, y: -49), .init(x: -3, y: -36)], 0xFFFFED, 2)
++            p.oval(CGRect(x: -2.5, y: -73, width: 5, height: 7), [0xFFF4C5, 0xCBA55C])
++        }
++    }
++
++    private func dinoStatue(at point: CGPoint, size: CGFloat, mirror: Bool) {
++        at(point, size: size, mirror: mirror) { p in
++            p.masonry(CGRect(x: -32, y: -5, width: 64, height: 24))
++            p.rounded(CGRect(x: -39, y: 17, width: 78, height: 7), 2, [0xFBEDCE, 0xC2BA98])
++            p.oval(CGRect(x: -39, y: -14, width: 78, height: 21), [0xFFF3D1, 0xD1C4A0, 0xA9AE94])
++            p.rounded(CGRect(x: -12, y: 1, width: 24, height: 13), 2, [0xCFB36E, 0xA68F59])
++            p.crown(at: CGPoint(x: 0, y: 7), size: 0.37)
++            var stone = Path()
++            // Tail, belly, long neck and a friendly broad dino muzzle form one
++            // carved silhouette; the near legs sit over its far-side limbs.
++            stone.move(to: .init(x: -17, y: -24))
++            stone.addCurve(to: .init(x: -59, y: -50), control1: .init(x: -39, y: -23), control2: .init(x: -63, y: -27))
++            stone.addCurve(to: .init(x: -24, y: -45), control1: .init(x: -53, y: -42), control2: .init(x: -37, y: -43))
++            stone.addCurve(to: .init(x: 2, y: -80), control1: .init(x: -47, y: -99), control2: .init(x: -8, y: -104))
++            stone.addCurve(to: .init(x: 6, y: -127), control1: .init(x: 9, y: -91), control2: .init(x: -1, y: -112))
++            stone.addCurve(to: .init(x: 30, y: -147), control1: .init(x: 9, y: -146), control2: .init(x: 17, y: -151))
++            stone.addCurve(to: .init(x: 45, y: -133), control1: .init(x: 42, y: -147), control2: .init(x: 43, y: -141))
++            stone.addCurve(to: .init(x: 51, y: -117), control1: .init(x: 62, y: -135), control2: .init(x: 61, y: -120))
++            stone.addQuadCurve(to: .init(x: 29, y: -120), control: .init(x: 39, y: -112))
++            stone.addCurve(to: .init(x: 22, y: -54), control1: .init(x: 19, y: -100), control2: .init(x: 37, y: -76))
++            stone.addCurve(to: .init(x: 9, y: -21), control1: .init(x: 28, y: -35), control2: .init(x: 23, y: -24))
++            stone.closeSubpath()
++            p.rounded(CGRect(x: -18, y: -39, width: 14, height: 35), 6, [0xC7C6B4, 0xA4AE9E])
++            p.rounded(CGRect(x: 11, y: -42, width: 13, height: 37), 5, [0xB8BCAA, 0x8E9C92])
++            p.material(stone, [0xFFF0CF, 0xDDD5B9, 0xBABDA9, 0x8F9F95])
++            p.oval(CGRect(x: -34, y: -75, width: 47, height: 46), [0xECE3C7, 0xC3C4AF, 0xA1AF9D])
++            p.rounded(CGRect(x: -30, y: -43, width: 18, height: 39), 7, [0xEEE3C4, 0xC5C6AE, 0xA0AD9A])
++            p.rounded(CGRect(x: 3, y: -46, width: 16, height: 42), 6, [0xF5E8C6, 0xC6C6AC, 0xA1AD98])
++            // Fine staggered joints are clipped into the carved stone.
++            var joints = p.context; joints.clip(to: stone)
++            let seams = CastleWorldPainter(context: joints)
++            for row in 0..<9 {
++                let y = -139 + CGFloat(row) * 15
++                seams.line([.init(x: -58, y: y), .init(x: 58, y: y + 2)], 0xA4AD9B, 0.75, opacity: 0.66)
++                for col in 0..<5 {
++                    let x = -46 + CGFloat(col) * 23 + CGFloat(row % 2) * 11
++                    seams.line([.init(x: x, y: y + 1), .init(x: x - 2, y: y + 15)], 0xA4AD9B, 0.65, opacity: 0.63)
++                }
++                seams.line([.init(x: -58, y: y + 2), .init(x: 58, y: y + 4)], 0xFFF5D9, 0.6, opacity: 0.65)
++            }
++            p.oval(CGRect(x: 29, y: -139, width: 6, height: 8), [0x667E78, 0x364F50])
++            p.oval(CGRect(x: 30, y: -138, width: 1.8, height: 2.2), [0xFFF3D4, 0xD4D7C0])
++            p.oval(CGRect(x: 49, y: -128, width: 3, height: 3), [0x9BA797, 0x6F8980])
++            var smile = Path(); smile.move(to: .init(x: 31, y: -125))
++            smile.addQuadCurve(to: .init(x: 52, y: -122), control: .init(x: 40, y: -118))
++            p.context.stroke(smile, with: .color(Color(dinoHex: 0x8D9D8D)), style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
++            for x: CGFloat in [-27, -21, 7, 12] { p.line([.init(x: x, y: -9), .init(x: x, y: -5)], 0x8C9F8F, 0.8) }
++            p.crown(at: CGPoint(x: 24, y: -149), size: 1.06)
++            p.polygon([.init(x: 24, y: -153), .init(x: 27, y: -149), .init(x: 24, y: -145), .init(x: 21, y: -149)], [0xB8E2E6, 0x347CA5])
++            p.ivy(at: CGPoint(x: -29, y: 1), size: 0.26)
++        }
++    }
++
++    private func palace(at point: CGPoint, size: CGFloat) {
++        at(point, size: size) { p in
++            // Rear keep and thin spires give the castle several distinct depths.
++            p.tower(at: CGPoint(x: 31, y: -54), size: 0.75, time: nil)
++            p.masonry(CGRect(x: -47, y: -146, width: 94, height: 143))
++            p.roof(at: CGPoint(x: 0, y: -150), size: 1.18)
++            p.rounded(CGRect(x: -51, y: -85, width: 102, height: 7), 2, [0xFFF5D6, 0xCCBA93])
++            for x: CGFloat in [-27, 0, 27] {
++                p.rounded(CGRect(x: x - 7, y: -129, width: 14, height: 29), 7, [0xD8C7A3, 0xB2AA8D])
++                p.rounded(CGRect(x: x - 4.5, y: -126, width: 9, height: 25), 4.5, [0xA7CCD2, 0x456D8F])
++                p.line([.init(x: x, y: -124), .init(x: x, y: -103)], 0xEFD69F, 1)
++            }
++            p.rounded(CGRect(x: -20, y: -67, width: 40, height: 63), 19, [0xC1B28D, 0x8A9D95])
++            p.rounded(CGRect(x: -15, y: -62, width: 30, height: 58), 14, [0x729EB7, 0x254C7D])
++            p.line([.init(x: 0, y: -57), .init(x: 0, y: -7)], 0xE3C17F, 1.4)
++            p.crown(at: CGPoint(x: 0, y: -34), size: 0.61)
++            for (x, s): (CGFloat, CGFloat) in [(-59, 0.83), (59, 0.95)] {
++                p.tower(at: CGPoint(x: x, y: -4), size: s, time: nil)
++            }
++            for i in 0..<4 {
++                p.rounded(CGRect(x: -27 - CGFloat(i) * 4, y: -3 + CGFloat(i) * 6, width: 54 + CGFloat(i) * 8, height: 6), 1, [0xFFF0CC, 0xB9B79A])
++            }
++            p.ivy(at: CGPoint(x: -43, y: -83), size: 0.76)
++            p.planter(at: CGPoint(x: 43, y: 11), size: 0.7)
++        }
++    }
++
+     private func masonry(_ rect: CGRect) {
+         rounded(rect, 7, [0xFFF1D0, 0xE2D0AC, 0xB6B49D])
++        var blocks = context; blocks.clip(to: Path(roundedRect: rect, cornerRadius: 7))
++        let texture = CastleWorldPainter(context: blocks)
++        for row in 0...Int(rect.height / 18) {
++            let y = rect.minY + CGFloat(row) * 18
++            let cellWidth = max(14, min(31, rect.width / 3))
++            for col in -1...Int(rect.width / cellWidth) {
++                let x = rect.minX + CGFloat(col) * cellWidth + (row % 2 == 0 ? 0 : cellWidth / 2)
++                let light = (row * 17 + col * 11 + 73) % 5
++                let block = CGRect(x: x + 1, y: y + 1, width: cellWidth - 2, height: 16)
++                if light == 0 {
++                    blocks.fill(Path(roundedRect: block, cornerRadius: 2), with: .color(Color(dinoHex: 0xFFF9DE).opacity(0.3)))
++                } else if light == 2 {
++                    blocks.fill(Path(roundedRect: block, cornerRadius: 2), with: .color(Color(dinoHex: 0x9DA790).opacity(0.14)))
++                }
++                texture.line([.init(x: block.minX + 2, y: block.minY), .init(x: block.maxX - 3, y: block.minY)], 0xFFFAE1, 0.65, opacity: 0.55)
++                if light == 3 && rect.width > 25 {
++                    texture.line([.init(x: x + 9, y: y + 6), .init(x: x + 12, y: y + 8), .init(x: x + 11, y: y + 12)], 0x9FA68D, 0.5, opacity: 0.5)
++                }
++            }
++        }
+         let rows = Int(rect.height / 18)
+         for i in 1...max(1, rows) {
+             let y = rect.minY + CGFloat(i) * 18
+@@ -149,7 +524,8 @@
+                 r.move(to: .init(x: -38, y: 0)); r.addLine(to: .init(x: -1, y: -57))
+                 r.addLine(to: .init(x: 7, y: -55)); r.addLine(to: .init(x: 39, y: 0)); r.closeSubpath()
+             }
+-            p.material(roof, [0xA4BCD9, 0x6589BA, 0x3C5E94])
++            p.material(roof, [0x94B9DE, 0x346FB2, 0x203F7F])
++            p.polygon([.init(x: -1, y: -57), .init(x: 8, y: -55), .init(x: 39, y: 0), .init(x: 7, y: -1)], [0x4B78B0, 0x233F78])
+             var tiles = p.context; tiles.clip(to: roof)
+             let local = CastleWorldPainter(context: tiles)
+             for row in 0..<7 {
+@@ -166,7 +542,7 @@
+             for x: CGFloat in [-29, -10, 10, 29] { p.oval(CGRect(x: x - 1.5, y: 1, width: 3, height: 3), [0xFFF5C4, 0xBA955A]) }
+             p.oval(CGRect(x: -4, y: -64, width: 12, height: 12), [0xFFF0AE, 0xD7B470, 0xB09560])
+             p.line([.init(x: 2, y: -63), .init(x: 2, y: -87)], 0xD4B16C, 1.6)
+-            p.polygon([.init(x: 3, y: -87), .init(x: 28, y: -81), .init(x: 18, y: -72), .init(x: 3, y: -76)], [0x98B9DA, 0x4D75AB])
++            p.polygon([.init(x: 3, y: -87), .init(x: 28, y: -81), .init(x: 18, y: -72), .init(x: 3, y: -76)], [0x6FA6D4, 0x285D9E])
+             p.line([.init(x: 5, y: -85), .init(x: 23, y: -81), .init(x: 17, y: -75)], 0xFFE6A4, 0.9)
+         }
+     }
+@@ -179,7 +555,8 @@
+     }
+     private func banner(at point: CGPoint, size: CGFloat) {
+         at(point, size: size) { p in
+-            p.polygon([.init(x: -15, y: -40), .init(x: 15, y: -40), .init(x: 15, y: 9), .init(x: 0, y: 23), .init(x: -15, y: 9)], [0x95B3D4, 0x527CB5, 0x385D95])
++            p.polygon([.init(x: -15, y: -40), .init(x: 15, y: -40), .init(x: 15, y: 9), .init(x: 0, y: 23), .init(x: -15, y: 9)], [0x659ACC, 0x2F65AC, 0x244A88])
++            p.polygon([.init(x: -10, y: -38), .init(x: -4, y: -38), .init(x: -5, y: 12), .init(x: -10, y: 7)], [0x92B6DD, 0x386CAD])
+             p.line([.init(x: -13, y: -38), .init(x: -13, y: 7), .init(x: 0, y: 20), .init(x: 13, y: 7), .init(x: 13, y: -38)], 0xE9C984, 1)
+             p.line([.init(x: -19, y: -42), .init(x: 19, y: -42)], 0xD8B371, 3)
+             p.crown(at: CGPoint(x: 0, y: -14), size: 0.68)
+@@ -194,6 +571,9 @@
+                 let a = Double(i) * .pi / 30, inner = radius * (i % 5 == 0 ? 0.77 : 0.88)
+                 p.line([.init(x: CGFloat(sin(a)) * inner, y: -CGFloat(cos(a)) * inner), .init(x: CGFloat(sin(a)) * radius * 0.94, y: -CGFloat(cos(a)) * radius * 0.94)], 0x466477, i % 5 == 0 ? 1.2 : 0.5, opacity: i % 5 == 0 ? 1 : 0.6)
+             }
++            for (label, x, y): (String, CGFloat, CGFloat) in [("XII", 0, -0.61), ("III", 0.63, 0), ("VI", 0, 0.64), ("IX", -0.63, 0)] {
++                p.context.draw(Text(verbatim: label).font(.system(size: radius * 0.24, weight: .semibold, design: .serif)).canvasInk(Color(dinoHex: 0x36546D)), at: CGPoint(x: x * radius, y: y * radius))
++            }
+             for (angle, length, width) in [(time.hourAngle, radius * 0.46, CGFloat(2.8)), (time.minuteAngle, radius * 0.72, CGFloat(1.8))] {
+                 let a = angle * .pi / 180
+                 p.line([.zero, .init(x: CGFloat(sin(a)) * length, y: -CGFloat(cos(a)) * length)], 0x36546D, width)
+@@ -211,9 +591,24 @@
+     private func tower(at point: CGPoint, size: CGFloat, time: ClockTime?) {
+         at(point, size: size) { p in
+             p.masonry(CGRect(x: -29, y: -126, width: 58, height: 130))
++            var barrel = p.context
++            barrel.clip(to: Path(roundedRect: CGRect(x: -29, y: -126, width: 58, height: 130), cornerRadius: 7))
++            barrel.fill(Path(CGRect(x: -29, y: -126, width: 58, height: 130)), with: .linearGradient(Gradient(stops: [
++                .init(color: Color(dinoHex: 0xFFF7DB).opacity(0.4), location: 0),
++                .init(color: .clear, location: 0.35),
++                .init(color: Color(dinoHex: 0x607C80).opacity(0.28), location: 1)
++            ]), startPoint: .init(x: -29, y: 0), endPoint: .init(x: 29, y: 0)))
++            p.line([.init(x: -25, y: -115), .init(x: -25, y: -9)], 0xFFF9DD, 1.2, opacity: 0.6)
++            p.rounded(CGRect(x: -32, y: -125, width: 64, height: 9), 3, [0xE5D3AA, 0xB1AC8D])
+             p.rounded(CGRect(x: -33, y: -130, width: 66, height: 10), 3, [0xFFF2D3, 0xD2C5A5])
++            for x: CGFloat in [-25, -15, -5, 5, 15, 25] {
++                p.rounded(CGRect(x: x - 3.5, y: -121, width: 7, height: 9), 1.5, [0xF9E9C7, 0xB6AC8D])
++            }
+             p.roof(at: CGPoint(x: 0, y: -133), size: 0.88)
++            p.rounded(CGRect(x: -19, y: -33, width: 38, height: 39), 18, [0xC6BB9A, 0x9EA58E])
+             p.rounded(CGRect(x: -15, y: -30, width: 30, height: 34), 14, [0x7F9EB5, 0x446D91])
++            for x: CGFloat in [-8, 0, 8] { p.line([.init(x: x, y: -22), .init(x: x, y: 1)], 0x2C527B, 0.7, opacity: 0.7) }
++            p.crown(at: CGPoint(x: 0, y: -12), size: 0.39)
+             p.line([.init(x: -10, y: 0), .init(x: -10, y: -14)], 0xBCD3D6, 1, opacity: 0.7)
+             if let time {
+                 p.clock(at: CGPoint(x: 0, y: -89), radius: 23, time: time)
+@@ -224,6 +619,7 @@
+                 p.banner(at: CGPoint(x: 0, y: -31), size: 0.60)
+             }
+             p.rounded(CGRect(x: -34, y: 1, width: 68, height: 8), 3, [0xEEE4C5, 0xAEB39E])
++            p.rounded(CGRect(x: -38, y: 8, width: 76, height: 7), 2, [0xFFF0CD, 0xB5B396])
+             p.ivy(at: CGPoint(x: -26, y: -108), size: 0.87)
+             p.flowers(at: CGPoint(x: 25, y: 7), size: 0.63)
+         }
+@@ -271,10 +667,10 @@
+     private func flowers(at point: CGPoint, size: CGFloat) {
+         at(point, size: size) { p in
+             p.oval(CGRect(x: -31, y: -20, width: 62, height: 30), [0xB4CB91, 0x689E7D, 0x4D7E6B])
+-            for i in 0..<8 {
++            for i in 0..<12 {
+                 let x = CGFloat((i * 13) % 49) - 24, y = -CGFloat((i * 7) % 19)
+                 p.leaf(from: .init(x: x, y: y + 5), to: .init(x: x + (i % 2 == 0 ? 10 : -10), y: y - 10), width: 4)
+-                let colors: [UInt32] = i % 3 == 0 ? [0xFFFFE8, 0xEAE6C1] : [0xFFD8C8, 0xECA2A2, 0xCE8699]
++                let colors: [UInt32] = i % 3 == 0 ? [0xFFFFF1, 0xEDE8CC] : [0xFFE0EC, 0xEF9CBB, 0xCF648E]
+                 for j in 0..<5 {
+                     let a = Double(j) * .pi * 2 / 5
+                     p.oval(CGRect(x: x + CGFloat(cos(a)) * 3 - 2.8, y: y + CGFloat(sin(a)) * 3 - 3, width: 5.6, height: 6), colors)
+@@ -310,10 +706,16 @@
+             tree.addCurve(to: .init(x: 17, y: -20), control1: .init(x: 10, y: -110), control2: .init(x: 26, y: -40))
+             tree.addQuadCurve(to: .init(x: -17, y: -20), control: .init(x: 0, y: -5))
+             tree.addCurve(to: .init(x: 0, y: -113), control1: .init(x: -28, y: -39), control2: .init(x: -10, y: -108)); tree.closeSubpath()
+-            p.material(tree, [0xB9CD99, 0x7CA284, 0x4F7A70])
+-            for i in 0..<17 {
+-                let y = -97 + CGFloat(i) * 4.5, x = CGFloat((i * 7) % 19) - 9
+-                p.line([.init(x: x - 2, y: y + 2), .init(x: x, y: y), .init(x: x + 2, y: y + 2)], 0xD3DBA9, 0.9, opacity: 0.45)
++            p.material(tree, [0xB4D082, 0x6B9B64, 0x346D52])
++            var foliage = p.context; foliage.clip(to: tree)
++            let needles = CastleWorldPainter(context: foliage)
++            for i in 0..<73 {
++                let y = -105 + CGFloat((i * 17) % 92)
++                let x = CGFloat((i * 31) % 37) - 19
++                let width = CGFloat(3 + i % 3)
++                needles.oval(CGRect(x: x - width / 2, y: y, width: width, height: 7 + CGFloat(i % 4)),
++                             i % 4 == 0 ? [0xC5DA91, 0x7EA768, 0x55845B] : [0x91B578, 0x5C8D5D, 0x3F7354])
++                if i % 3 == 0 { needles.line([.init(x: x, y: y + 1), .init(x: x + 1, y: y + 4)], 0xD9E3A8, 0.55, opacity: 0.64) }
+             }
+             p.flowers(at: CGPoint(x: 0, y: 4), size: 0.57)
+         }
+@@ -361,15 +763,32 @@
+     }
+     private func fountain(at point: CGPoint, size: CGFloat) {
+         at(point, size: size) { p in
++            p.oval(CGRect(x: -56, y: -14, width: 112, height: 37), [0xB8B89B, 0x94A997, 0xC8CAA7])
+             p.oval(CGRect(x: -52, y: -17, width: 104, height: 34), [0xF7E7BF, 0xC5C4AA, 0xA2B6A7])
+             p.oval(CGRect(x: -45, y: -13, width: 90, height: 25), [0xD8FFF0, 0x9BD7D8, 0x6FB8CD])
++            p.context.stroke(Path(ellipseIn: CGRect(x: -49, y: -15, width: 98, height: 30)), with: .color(Color(dinoHex: 0xFFF6D8)), lineWidth: 2.6)
++            for i in 0..<9 {
++                let a = Double(i) * .pi / 8
++                let x = CGFloat(cos(a)) * 49, y = CGFloat(sin(a)) * 14 - 1
++                p.line([.init(x: x, y: y), .init(x: x * 0.9, y: y - 1)], 0xA8AE95, 0.8)
++            }
+             p.rounded(CGRect(x: -9, y: -54, width: 18, height: 48), 5, [0xFFF0C6, 0xD5C8A6, 0xABB59F])
++            for x: CGFloat in [-5, 0, 5] { p.line([.init(x: x, y: -48), .init(x: x, y: -11)], 0xAEB69C, 0.7, opacity: 0.6) }
+             p.oval(CGRect(x: -33, y: -35, width: 66, height: 19), [0xFFF0CB, 0xC4C8B0, 0x91AAA3])
+             p.oval(CGRect(x: -28, y: -35, width: 56, height: 11), [0xE7FFF0, 0x8DD3D8])
+             p.oval(CGRect(x: -21, y: -62, width: 42, height: 12), [0xFFEACA, 0xB8C2AE])
+             p.oval(CGRect(x: -17, y: -62, width: 34, height: 7), [0xDCFFF0, 0x8DCCD4])
+             p.oval(CGRect(x: -5, y: -80, width: 10, height: 16), [0xFFF0B5, 0xCBA96C])
+             for side: CGFloat in [-1, 1] {
++                for i in 0..<4 {
++                    let x = side * (19 + CGFloat(i) * 3.8)
++                    var sheet = Path(); sheet.move(to: .init(x: x, y: -30))
++                    sheet.addCurve(to: .init(x: x + side * 5, y: 2), control1: .init(x: x + side * 2, y: -20), control2: .init(x: x + side * 2, y: -6))
++                    p.context.stroke(sheet, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xEDFDF3), Color(dinoHex: 0x6EBECA).opacity(0.75), Color(dinoHex: 0xF7FFF3)]), startPoint: .init(x: x, y: -30), endPoint: .init(x: x, y: 2)), style: StrokeStyle(lineWidth: i % 2 == 0 ? 2.3 : 1, lineCap: .round))
++                    p.oval(CGRect(x: x + side * 5 - 3, y: -1, width: 7, height: 2.5), [0xF6FFF6, 0xA3DFD8])
++                }
++            }
++            for side: CGFloat in [-1, 1] {
+                 for i in 0..<3 {
+                     let spout = -79 + CGFloat(i) * 13
+                     var water = Path(); water.move(to: .init(x: 0, y: spout))
+@@ -380,6 +799,9 @@
+             for i in 0..<7 {
+                 let x = CGFloat(i) * 12 - 37
+                 p.line([.init(x: x, y: 1), .init(x: x + 7, y: 2)], 0xF3FFF0, 1, opacity: 0.9)
++            }
++            for (x, y, r): (CGFloat, CGFloat, CGFloat) in [(-28, 3, 9), (29, 0, 10), (4, 6, 13)] {
++                p.context.stroke(Path(ellipseIn: CGRect(x: x - r, y: y - r * 0.16, width: r * 2, height: r * 0.32)), with: .color(Color(dinoHex: 0xF2FFF2).opacity(0.8)), lineWidth: 0.7)
+             }
+         }
+     }
+@@ -452,17 +874,14 @@
+                     p.brazier(at: CGPoint(x: -48, y: 9), size: 0.75)
+                 case 1:
+                     p.cypress(at: CGPoint(x: -42, y: -4), size: 0.92)
+-                    p.cypress(at: CGPoint(x: 40, y: -4), size: 0.78)
+-                    p.fountain(at: CGPoint(x: 0, y: -1), size: 0.98)
+-                    p.planter(at: CGPoint(x: -48, y: 15), size: 0.67)
++                    p.dinoStatue(at: CGPoint(x: 0, y: -8), size: 0.95, mirror: false)
++                    p.fountain(at: CGPoint(x: 13, y: 14), size: 0.54)
++                    p.lantern(at: CGPoint(x: 46, y: 8), size: 0.69)
+                 case 2:
+-                    p.cypress(at: CGPoint(x: 38, y: -11), size: 0.98)
+-                    p.bridge(at: CGPoint(x: -2, y: 0), size: 1.0)
+-                    p.banner(at: CGPoint(x: -31, y: -55), size: 0.60)
+-                    p.crystals(at: CGPoint(x: 41, y: 16), size: 0.67)
++                    p.grandStaircase(at: CGPoint(x: -2, y: 0), size: 0.91, mirror: false)
++                    p.cypress(at: CGPoint(x: 45, y: 1), size: 0.71)
+                 default:
+-                    p.pavilion(at: CGPoint(x: -3, y: -7), size: 0.94)
+-                    p.planter(at: CGPoint(x: 45, y: 12), size: 0.70)
++                    p.palace(at: CGPoint(x: -3, y: -7), size: 0.85)
+                 }
+             }
+             p.flowers(at: CGPoint(x: -51, y: 16), size: 0.73)

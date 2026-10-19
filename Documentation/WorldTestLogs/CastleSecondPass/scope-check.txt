@@ -1,0 +1,7 @@
+All source outside the castle layout/painter unchanged from the second-pass baseline.
+WorldMap.swift unchanged.
+Existing tests unchanged by this task.
+Castle source SHA-256: 56442863b0a81e183873ebd692bd598069f452f1b50a412f296473cfb889269f
+Native audit: 58,920 flight-footprint points clear of the trail and channel banks across 10 widths; all 9 bridge pairs reach dry banks.
+Bridge render audit: 36 transparent river-centre points inside 9 actual arch cutouts at 393pt.
+UI verification: 3 tests passed on iPhone, 3 passed on iPad; 0 failures.

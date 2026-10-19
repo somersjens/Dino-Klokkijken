@@ -1,0 +1,1328 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -destination "generic/platform=iOS Simulator" -derivedDataPath /tmp/dino-village-second-pass-20261019-build CODE_SIGNING_ALLOWED=NO build
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+    Target 'Dino Klokkijken' in project 'Dino Klokkijken' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/xcstringstool compile --dry-run --output-directory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build /Users/jenssomers/Desktop/Dino Klokkijken/InfoPlist.xcstrings
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/xcstringstool compile --dry-run --output-directory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build /Users/jenssomers/Desktop/Dino Klokkijken/Localizable.xcstrings
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 310e9122922c1c4c65a80cb865d2665d
+Build description path: /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/XCBuildData/310e9122922c1c4c65a80cb865d2665d.xcbuilddata
+CreateBuildDirectory /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino\ Klokkijken.xcodeproj
+    builtin-create-build-directory /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino\ Klokkijken.xcodeproj
+    builtin-create-build-directory /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex
+
+CreateBuildDirectory /tmp/dino-village-second-pass-20261019-build/CompilationCache.noindex
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino\ Klokkijken.xcodeproj
+    builtin-create-build-directory /tmp/dino-village-second-pass-20261019-build/CompilationCache.noindex
+
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk /tmp/dino-village-second-pass-20261019-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino\ Klokkijken.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -o /tmp/dino-village-second-pass-20261019-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache
+
+CreateBuildDirectory /tmp/dino-village-second-pass-20261019-build/Build/Products
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino\ Klokkijken.xcodeproj
+    builtin-create-build-directory /tmp/dino-village-second-pass-20261019-build/Build/Products
+
+CreateBuildDirectory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino\ Klokkijken.xcodeproj
+    builtin-create-build-directory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex
+
+CreateBuildDirectory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino\ Klokkijken.xcodeproj
+    builtin-create-build-directory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/ExplicitPrecompiledModules
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino\ Klokkijken.xcodeproj
+    builtin-create-build-directory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino\ Klokkijken.xcodeproj
+    builtin-create-build-directory /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator
+
+CreateBuildDirectory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/PrecompiledHeaders
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino\ Klokkijken.xcodeproj
+    builtin-create-build-directory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/PrecompiledHeaders
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken-9de2bd87ffe14d84229f232d27b0c3c1-VFS-iphonesimulator/all-product-headers.yaml
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino\ Klokkijken.xcodeproj
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken-9de2bd87ffe14d84229f232d27b0c3c1-VFS-iphonesimulator/all-product-headers.yaml
+
+CreateBuildDirectory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino\ Klokkijken.xcodeproj
+    builtin-create-build-directory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-own-target-headers.hmap (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-own-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-generated-files.hmap (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-generated-files.hmap
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-project-headers.hmap (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-project-headers.hmap
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-target-headers.hmap (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibPath-normal-x86_64.txt (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibPath-normal-x86_64.txt
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-non-framework-target-headers.hmap (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time.hmap (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time.hmap
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibPath-normal-arm64.txt (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibPath-normal-arm64.txt
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Klokkijken-OutputFileMap.json (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Klokkijken-OutputFileMap.json
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time.LinkFileList (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time.LinkFileList
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Klokkijken_const_extract_protocols.json (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Klokkijken_const_extract_protocols.json
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.LinkFileList (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.LinkFileList
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken_const_extract_protocols.json (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken_const_extract_protocols.json
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time.SwiftFileList (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time.SwiftFileList
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken-OutputFileMap.json (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken-OutputFileMap.json
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time.SwiftConstValuesFileList (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftFileList (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftFileList
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time.DependencyStaticMetadataFileList (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time.DependencyMetadataFileList (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time.DependencyMetadataFileList
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibInstallName-normal-x86_64.txt (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibInstallName-normal-x86_64.txt
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibInstallName-normal-arm64.txt (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibInstallName-normal-arm64.txt
+
+WriteAuxiliaryFile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftConstValuesFileList (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    write-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftConstValuesFileList
+
+MkDir /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /bin/mkdir -p /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app
+
+MkDir /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_output/thinned (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /bin/mkdir -p /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_output/thinned
+
+MkDir /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_output/unthinned (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /bin/mkdir -p /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_output/unthinned
+
+GenerateStringSymbols /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedStringSymbols_Localizable.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Localizable.xcstrings (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcstringstool generate-symbols --language swift --output-directory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources /Users/jenssomers/Desktop/Dino\ Klokkijken/Localizable.xcstrings
+
+CpResource /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/TimeZoneMap.json /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Resources/TimeZoneMap.json (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Resources/TimeZoneMap.json /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app
+
+GenerateAssetSymbols /Users/jenssomers/Desktop/Dino\ Klokkijken/Assets.xcassets (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/usr/bin/actool /Users/jenssomers/Desktop/Dino\ Klokkijken/Assets.xcassets --compile /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app --output-format human-readable-text --notices --warnings --export-dependency-info /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_dependencies --output-partial-info-plist /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_generated_info.plist --app-icon AppIcon --accent-color AccentColor --compress-pngs --enable-on-demand-resources YES --development-region en --target-device iphone --target-device ipad --minimum-deployment-target 16.0 --platform iphonesimulator --bundle-identifier Hakketjak.Dino-Klokkijken --generate-swift-asset-symbols /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedAssetSymbols.swift --generate-objc-asset-symbols /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedAssetSymbols.h --generate-asset-symbol-index /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/* com.apple.actool.compilation-results */
+/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/DerivedSources/GeneratedAssetSymbols.h
+/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/DerivedSources/GeneratedAssetSymbols.swift
+
+
+GenerateStringSymbols /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedStringSymbols_InfoPlist.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/InfoPlist.xcstrings (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcstringstool generate-symbols --language swift --output-directory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources /Users/jenssomers/Desktop/Dino\ Klokkijken/InfoPlist.xcstrings
+
+CpResource /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/PrivacyInfo.xcprivacy /Users/jenssomers/Desktop/Dino\ Klokkijken/PrivacyInfo.xcprivacy (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/jenssomers/Desktop/Dino\ Klokkijken/PrivacyInfo.xcprivacy /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app
+
+Ld /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Binary/__preview.dylib normal x86_64 (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target x86_64-apple-ios16.0-simulator -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -F/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -install_name @rpath/Dino\ Time.debug.dylib -Xlinker -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time_dependency_info.dat -o /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Binary/__preview.dylib
+
+CompileXCStrings /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/ /Users/jenssomers/Desktop/Dino\ Klokkijken/Localizable.xcstrings (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcstringstool compile --output-directory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build /Users/jenssomers/Desktop/Dino\ Klokkijken/Localizable.xcstrings
+
+Ld /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Binary/__preview.dylib normal arm64 (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0-simulator -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -F/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -install_name @rpath/Dino\ Time.debug.dylib -Xlinker -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time_dependency_info.dat -o /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Binary/__preview.dylib
+
+CompileXCStrings /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/ /Users/jenssomers/Desktop/Dino\ Klokkijken/InfoPlist.xcstrings (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcstringstool compile --output-directory /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build /Users/jenssomers/Desktop/Dino\ Klokkijken/InfoPlist.xcstrings
+
+CompileAssetCatalogVariant thinned /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app /Users/jenssomers/Desktop/Dino\ Klokkijken/Assets.xcassets (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/usr/bin/actool /Users/jenssomers/Desktop/Dino\ Klokkijken/Assets.xcassets --compile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_output/thinned --output-format human-readable-text --notices --warnings --export-dependency-info /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_dependencies_thinned --output-partial-info-plist /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_generated_info.plist_thinned --app-icon AppIcon --accent-color AccentColor --compress-pngs --enable-on-demand-resources YES --development-region en --target-device iphone --target-device ipad --minimum-deployment-target 16.0 --platform iphonesimulator
+/* com.apple.actool.compilation-results */
+/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/assetcatalog_generated_info.plist_thinned
+/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/assetcatalog_output/thinned/AppIcon60x60@2x.png
+/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/assetcatalog_output/thinned/AppIcon76x76@2x~ipad.png
+/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/assetcatalog_output/thinned/Assets.car
+
+
+CopyStringsFile /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/en.lproj/InfoPlist.strings /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/en.lproj/InfoPlist.strings (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copyStrings --validate --outputencoding binary --outfilename InfoPlist.strings --outdir /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/en.lproj -- /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/en.lproj/InfoPlist.strings
+/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/en.lproj/InfoPlist.strings:1:1: note: detected encoding of input file as Unicode (UTF-8) (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+CopyStringsFile /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/nl.lproj/InfoPlist.strings /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/nl.lproj/InfoPlist.strings (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copyStrings --validate --outputencoding binary --outfilename InfoPlist.strings --outdir /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/nl.lproj -- /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/nl.lproj/InfoPlist.strings
+/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/nl.lproj/InfoPlist.strings:1:1: note: detected encoding of input file as Unicode (UTF-8) (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+CreateUniversalBinary /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/__preview.dylib normal arm64\ x86_64 (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo -create /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Binary/__preview.dylib /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Binary/__preview.dylib -output /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/__preview.dylib
+
+CopyStringsFile /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/en.lproj/Localizable.strings /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/en.lproj/Localizable.strings (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copyStrings --validate --outputencoding binary --outfilename Localizable.strings --outdir /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/en.lproj -- /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/en.lproj/Localizable.strings
+/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/en.lproj/Localizable.strings:1:1: note: detected encoding of input file as Unicode (UTF-8) (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+CopyStringsFile /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/nl.lproj/Localizable.strings /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/nl.lproj/Localizable.strings (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copyStrings --validate --outputencoding binary --outfilename Localizable.strings --outdir /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/nl.lproj -- /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/nl.lproj/Localizable.strings
+/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/nl.lproj/Localizable.strings:1:1: note: detected encoding of input file as Unicode (UTF-8) (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriver Dino\ Klokkijken normal x86_64 com.apple.xcode.tools.swift.compiler (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Dino_Time -Onone @/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target x86_64-apple-ios16.0-simulator -g -module-cache-path /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-village-second-pass-20261019-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -F /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-village-second-pass-20261019-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Klokkijken-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Klokkijken_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-generated-files.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-own-target-headers.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-project-headers.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources-normal/x86_64 -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/x86_64 -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+SwiftDriver Dino\ Klokkijken normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Dino_Time -Onone @/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios16.0-simulator -g -module-cache-path /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-village-second-pass-20261019-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -F /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-village-second-pass-20261019-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-generated-files.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-own-target-headers.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-project-headers.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources-normal/arm64 -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/arm64 -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/ptrauth-E40YW3RRTTU3ZU93XH3PP1TKF.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/DeveloperToolsSupport-8I8TMPGD0BTE228UR7KT11YQM.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_AvailabilityInternal-2MPMKW5NZJ8P95VKQAS0IGIXJ.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_stdarg-QBY9PHNQC9HCS6ZQK38BP0UN.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_stdbool-79FM1WWYQK9WDWH15V1X3PNDB.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_SwiftConcurrencyShims-6MO5ARWU4JK37022FZ0F92SSQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_AvailabilityInternal-AEAE7RHAKS9L7QC8OBN8MKSBB.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/SwiftShims-EMPWJPW0JIZP0NBLHOUYWC3Z8.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_stdarg-9S1M1G9NPWU0NZTJAJXWYE8AD.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/ptrauth-9FVCVYGY3YXCRTK0PM168O9V2.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/ptrcheck-1HRNPJGUPEVP4R0B4N2V03T3D.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/SwiftShims-1KR5CC6P1BEEVE1I1ZMDGPU8C.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_stddef-3HEF4I4GQS9CM1A5L9UEBFWNF.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_stdbool-CRET9CGHKZQK5WHI4LBDYAY42.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_stddef-7B3H4QA74OC35SGMAPZSKDCII.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_SwiftConcurrencyShims-C7JN8BOQLGEFQV7QF8EW9RLVU.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_float-9AWFH2LMAKG79U79PTXIUR2T4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/DeveloperToolsSupport-BQUIA7GTVE24TSPMDK3S5BI62.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/ptrcheck-995B41TF8QBARVF1GWSO2TZXG.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_float-83UMCCN58II312T5ILEXFPQ6X.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_DarwinFoundation1-7PKAUK3XV152YI2OWFUWLND7Q.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_DarwinFoundation1-5IP5CN1XMYZMG4NOIVCCWAUCH.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_limits-7TR8KT9IZGR9RLS3UWBOFPPYY.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_DarwinFoundation2-6KS2S9DHTO53LHIKS08DQOYAW.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_limits-8UIJO6J47EGA1IISU8OADDDNX.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_DarwinFoundation2-4Z8E4YCE4JJYJJNZYL0R46JZW.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_stdint-2OH0TQ12WVSSQR8O3JSZUMVZ.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/string_h-6FW5P6BYWV8IHQ6E2B7SKCLR8.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_tgmath-11KVJEH7V1DJPR6I57ZE3U313.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/sys_types-3AQDETY08O38H0VV11MV326U9.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_DarwinFoundation3-H1BWR3JBBAM0OGKZB19LD23F.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_stdatomic-DIDWYV0U5BG59KD68O6CHDRID.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/sys_types-CHZ00M2AWOMLCIIESXZZ7LEXQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_stdint-302II29R0F6GK4QRSI0VQQMMM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/string_h-A3W91B1BWDKPB7S6ZAIXP2R4Z.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_tgmath-C1OBEXZEOX9HNU9MWL408CSP7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_DarwinFoundation3-8LIAPVRE7YDKK7V6UE2W09G75.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_intrinsics-CV9B7XEN8H0QGJZ9ZVT4C4UBR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_stdatomic-2RLWEVN7EUI1WB6FCET66D2IO.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_intrinsics-2DFNEZ6PJMI2AFAVPFGU77Y0U.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_inttypes-ESWLWUR8HQCZNUBL1SGZYL3RO.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Darwin-BAHX0T91VKA2UEJFX5MZPD8TD.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_Builtin_inttypes-CEDLS8HAM8K0RIMQNOT1SS32F.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Darwin-90CDESO2BDGAGQXDWN0FS4IDT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/simd-D02GSGD2IHN112GA15LQQH0MC.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/simd-3DC1VFBOZMOS8O8LN6XUNJIEE.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/MachO-3IKE3IAUBGQHAGZKHO3DCYLXT.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/ObjectiveC-5AY3NOMQQB5MZVQKPU8NX2H78.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/ObjectiveC-249BHSW0GARFSAF8BEH1QX2AZ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/MachO-X9VAL1U456521UE3F054R1ZK.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/os_object-5SJD3KDWANLPWRHQYTK76CNA.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/os_workgroup-282SE3IKBPXV2GKLF0G76WFT4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/os_object-9QULMNS4QSXPP70TTG7OI1QNN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Spatial-ETSD2Z0C1H55S8P31NJIZ8OT.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Dispatch-2RLBDRGKMW3QLR3WF71VA4GUE.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/os_workgroup-3W5GQ98M8MRZYN2W6L8GTKQ0T.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreFoundation-9PBUKQ7KWPSHLYS316NO8BCC8.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/XPC-P3KXEA775P3LS8G0T6RLQ6Q.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/dnssd-39A94RCZLVQ0IF7SLYLBQFSL7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Dispatch-C8WTPIWPN5SJW16MJ8VN9L3GK.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Spatial-EME9RJM90IXTORY2D0DKCQRN2.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/os-EVVAL7KVQJVFUGYAX1GP6PNHQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/dnssd-1PWOO66LLD2DLQSOA2R1TSLZB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/XPC-CQ8PL5N3LWFK5LGXRY28OEL3Z.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreFoundation-3P50OM3H6DDT6BZEP4KZIPAJI.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreAudioTypes-64E3MWWW0P4ED41UEIPD88LQZ.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreGraphics-C1SPE807AW51QDUIXD1Q17B4C.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CFNetwork-BF7RELJJMRBJO3XNZ6MB0ASDU.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Security-CCJ9RYNVB92SLAYEGQOXUQOS8.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/os-E2L0RPY53RKY9H5Q9TFDRDPWT.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreAudio-DYR386RMLDQUEFAG1DVYFLJVU.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Foundation-DISYDVAI0XFZC5PBSB8KAVRZI.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreAudioTypes-4ET9CLPC3PNFZHU98KXPK6UV3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CFNetwork-3HW94LJKBCC2GU5M02MC86CBZ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Security-BSR67JFAZYZ5ZD2A8G9A6TRB5.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreGraphics-407LSMP43R3X72O8CS16CUKWR.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreText-1DSF6U480BTUAFCDO0RC3SVD2.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/ImageIO-D6J8DC13CHANEBZ4543OE6O8Z.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreAudio-31KJM2V89JS0N2DBSTLRQ8I67.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Foundation-33AYF213BCBN7T9IOATFLEHZT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreText-23L4WFTOX9EZY9US8V1TO0NE8.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/ImageIO-252FXSP1CIZGZOHGWIFCVQ7AW.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/UIUtilities-DDEO2APA94SP7BMD2KC5DZJ8X.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/FileProvider-2Q0UKM7BXM29VY9SQ2X7NPDYJ.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreTransferable-A7QXIJO37PL5BNPFGP5PYVK82.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreData-AQYTYC4SH1EHWMSBTT9QE1HUB.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/UniformTypeIdentifiers-J2F46QOIGTGJGLU7DT06GWDO.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/IOSurface-CV6L5KYV52WGXBSXH7WWAM8AB.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_LocationEssentials-6Q41XGOONA333VTT61OVRJ99C.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Contacts-DDQZILCYA3JFFXCLJ37NK4NFN.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/ModelIO-J9TPBMYI7FGKHFUX9W3OY8GW.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/DataDetection-I58IM3BHLQ9R4B9BEB6TXR3T.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Accessibility-5WSLXNOOKPJZAGWOE5EJPPO18.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreMIDI-54IQ5FAPDNXARUOSHJDK5VJ6A.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Symbols-37PO3D0NF8XK7UKAFW96QOSTJ.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/UserNotifications-1KG303AN2TUAXC6WP986H3EZZ.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/OpenGLES-7PWYOV8573J10X78UOPUFMTVW.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Network-E33D2NW8NCFSBQKZGC35VWAAD.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/OSLog-CI1N5HGN9HREXYA48WEHEKSYQ.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreLocation-73YX84FBUJ1H4CH2O163NZXXZ.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Metal-6KXH1T9TTZJJ0TYGWHRTPLRVV.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/DataDetection-CJU0QATCK7YXIMXVLK912ZKJG.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/IOSurface-38TSNTNYP7XS55RF82N594M9E.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreTransferable-7TJ7S1V1TT0I7B18D0GGXVXJB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/FileProvider-CYWCTSXFAV5E3C4TEG3Z5MO26.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Symbols-9781IAGTE8HQ2HHTFI3N02VC4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/OpenGLES-32TNPXCIZK6DPLK46LVVH3AO6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/UserNotifications-DPU1LQH9TTV02O251MME865UM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/OSLog-BIGUVOYJ6WSVGK3IE71ME6CYG.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/_LocationEssentials-36UXDWDEUZGW7Q8TOQSKX1VDG.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreData-7YNQGM6S3YNQYOUZFG4ZT4IL6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/ModelIO-EBOCZMSMG92SAR6YI2JEU48LO.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Accessibility-EL7NB9F9RWPKIE8ZKZ2AT5M4R.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/AudioToolbox-9ULW3WTOWT80WJLGMLN98KFHB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/UniformTypeIdentifiers-8ZG87JON1W64DAF8Y7DV3DIVR.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/AVRouting-67JB4P3YGDQQJD7S1LTQI3EY9.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/UIUtilities-E1FGWG4OBEBSMNLZMAZX8CZSA.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreMIDI-8WT96CAK7OSBV0U81XU4YMT8L.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Contacts-596571EO4WPLA5UQ2EHK8E7HM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreLocation-DS7XXMVVCYMPI0SADD348ZUO1.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Network-7DJX54CP7H41LHNVMI3F38ROD.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreMotion-1FW1UMIO1UME4JSLI55N9NVWT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/Metal-C14LL0NZLZA8Y6XVPFZDEUUHC.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreVideo-Y3JGMUIGI24DPJFAFCN95TF4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreMotion-BBEMTHM1PZ63AMD5YAUGDW72A.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/AudioToolbox-39NYUOW0PL0WWZL8UASUDS5TI.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/AVRouting-30T8IIV83Y1LELD6PKUH8I30Y.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreMedia-5SL3OHO5QZ1ZWS2EELXMLNX8R.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreImage-EUANG6GUQ4PDTDX0KST3E1LP7.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/QuartzCore-880N7MOYYXLVSDYB7WDPHGC23.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreVideo-E0FUV54CHSKKJQC5XVW2GLWPB.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/SwiftUICore-CLFKXDY1GJG940WY6Y4Z2851Q.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreImage-BOEXZ18RGTJ58R5U8QTAC9ZG3.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/CoreMedia-DULDU9RE7VH5RUTTXJ7B194W9.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/QuartzCore-CCSGZIWDGBY9Y5XA4X98E84I0.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/MediaToolbox-4A91HDPCWUP3389NRCH4LRD5X.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/AVFAudio-EMCV9QNM7TOXP40GIWPAUW783.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/VideoToolbox-3D4MLPWV5ELBIWF6UXG3ZAVVC.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/UIKit-9E4GZ5NMANQK4IKR8XP3MAYK9.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/SwiftUICore-ZJ885UZYS1TI4A09A11E5LPB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/MediaToolbox-3KKFYUSDSV6NIPEJGT4FTL4IR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/AVFAudio-1XMAXGLYA29D9ISN4BCJA13MP.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/VideoToolbox-DEI1ZK74ECZ4JDN1LT3JCR3F0.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/UIKit-6P5X4CM2RVH6MGIJLZLC2FK6.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/AVFoundation-1267RL6WWIR858R48V3Q2P0I1.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/AVFoundation-3O8HD37EOFOD3Y203YKLV0AV4.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/GLKit-CBYWB0LENRHS7KG1PB8QWVN5I.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/GameController-8PK51AOD8I8M7C0B4LY9ZU4IG.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/SwiftUI-9TXDIZ9RRBWNFRIXBKD5KZT7E.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/SwiftUI-52W57S6305SKHU9HKBS078CYP.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/GameController-DRJCM1MC239YFL80HJ9WBKE5O.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/GLKit-1ZWZB04A7JIFX3F8IYJHRTR03.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/SpriteKit-ERJ2GVKG6Y6PTBCTRMNB42IFH.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/SceneKit-6B9PKUIMROWTT8MGKBMSR8OQ9.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/SceneKit-7LUZDEJ6UFNE8QHY1U15J6YC0.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/SpriteKit-9RI9TPI0RO4BUU3KQHKUQOTU1.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/GameplayKit-94P1TQOA8XRM2YCI8I9EY2L93.pcm
+
+SwiftExplicitDependencyGeneratePcm x86_64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/GameKit-39HIT8WBVEZZRBIYWWMTGRV9K.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/GameplayKit-3UQEKFPRJZ1YVYT5T46U2PIKQ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules/GameKit-9SDXF9UACRQ8I6GXOLHWFC4WF.pcm
+
+SwiftEmitModule normal x86_64 Emitting\ module\ for\ Dino_Time (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    
+
+SwiftCompile normal x86_64 Compiling\ Settings.swift,\ WorldMap.swift,\ DinoCharacter.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Settings.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/WorldMap.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoCharacter.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Settings.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile Settings.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/WorldMap.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile WorldMap.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoCharacter.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoCharacter.swift
+
+SwiftCompile normal x86_64 Compiling\ DigitalClock.swift,\ DinoGameView.swift,\ DinoUI.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DigitalClock.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoGameView.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoUI.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DigitalClock.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DigitalClock.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoGameView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoGameView.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoUI.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoUI.swift
+
+SwiftCompile normal x86_64 Compiling\ LevelResult.swift,\ OnboardingFlow.swift,\ QuestionRenderer.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/LevelResult.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/OnboardingFlow.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/QuestionRenderer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/LevelResult.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile LevelResult.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/OnboardingFlow.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile OnboardingFlow.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/QuestionRenderer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile QuestionRenderer.swift
+
+SwiftCompile normal x86_64 Compiling\ ProgressManager.swift,\ QuestionGenerator.swift,\ DinoGameModel.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ProgressManager.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/QuestionGenerator.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/DinoGameModel.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ProgressManager.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ProgressManager.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/QuestionGenerator.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile QuestionGenerator.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/DinoGameModel.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoGameModel.swift
+
+SwiftCompile normal x86_64 Compiling\ KeyValueStore.swift,\ LevelConfiguration.swift,\ PlayerProfile.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/KeyValueStore.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/LevelConfiguration.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/PlayerProfile.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/KeyValueStore.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile KeyValueStore.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/LevelConfiguration.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile LevelConfiguration.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/PlayerProfile.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile PlayerProfile.swift
+
+SwiftCompile normal x86_64 Compiling\ DinoRootView.swift,\ AnalogClock.swift,\ ClockCustomizer.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/DinoRootView.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/AnalogClock.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ClockCustomizer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/DinoRootView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoRootView.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/AnalogClock.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile AnalogClock.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ClockCustomizer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ClockCustomizer.swift
+
+SwiftCompile normal x86_64 Compiling\ GeneratedStringSymbols_InfoPlist.swift,\ GeneratedStringSymbols_Localizable.swift,\ GeneratedAssetSymbols.swift /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedStringSymbols_InfoPlist.swift /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedStringSymbols_Localizable.swift /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedStringSymbols_InfoPlist.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile GeneratedStringSymbols_InfoPlist.swift
+
+SwiftCompile normal x86_64 /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedStringSymbols_Localizable.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile GeneratedStringSymbols_Localizable.swift
+
+SwiftCompile normal x86_64 /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile GeneratedAssetSymbols.swift
+
+SwiftCompile normal x86_64 Compiling\ DinoSettings.swift,\ CloudProgress.swift,\ AnswerFeedback.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoSettings.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/CloudProgress.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/AnswerFeedback.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoSettings.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoSettings.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/CloudProgress.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile CloudProgress.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/AnswerFeedback.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile AnswerFeedback.swift
+
+SwiftCompile normal x86_64 Compiling\ ProgressSyncService.swift,\ SocialProgress.swift,\ DinoAnimation.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ProgressSyncService.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SocialProgress.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAnimation.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ProgressSyncService.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ProgressSyncService.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SocialProgress.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile SocialProgress.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAnimation.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoAnimation.swift
+
+SwiftCompile normal x86_64 Compiling\ Localization.swift,\ ClockTheme.swift,\ ClockTime.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Localization.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ClockTheme.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ClockTime.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Localization.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile Localization.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ClockTheme.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ClockTheme.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ClockTime.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ClockTime.swift
+
+SwiftCompile normal x86_64 Compiling\ PracticeConfiguration.swift,\ ExpandedQuestionView.swift,\ MinutesBetweenQuestion.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/PracticeConfiguration.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ExpandedQuestionView.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/MinutesBetweenQuestion.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/PracticeConfiguration.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile PracticeConfiguration.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ExpandedQuestionView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ExpandedQuestionView.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/MinutesBetweenQuestion.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile MinutesBetweenQuestion.swift
+
+SwiftCompile normal x86_64 Compiling\ DinoPersonalizer.swift,\ DinoAvatar.swift,\ DinoAppearance.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoPersonalizer.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoAvatar.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAppearance.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoPersonalizer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoPersonalizer.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoAvatar.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoAvatar.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAppearance.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoAppearance.swift
+
+SwiftCompile normal x86_64 Compiling\ Friends.swift,\ FriendsManager.swift,\ NameValidator.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Friends.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Social/FriendsManager.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/NameValidator.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Friends.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile Friends.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Social/FriendsManager.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile FriendsManager.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/NameValidator.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile NameValidator.swift
+
+SwiftCompile normal x86_64 Compiling\ AdventureHeader.swift,\ SeededGenerator.swift,\ DinoTimeAdventureApp.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/AdventureHeader.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SeededGenerator.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/DinoTimeAdventureApp.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/AdventureHeader.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile AdventureHeader.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SeededGenerator.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile SeededGenerator.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/DinoTimeAdventureApp.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoTimeAdventureApp.swift
+
+SwiftCompile normal x86_64 Compiling\ Practice.swift,\ StarsOverview.swift,\ DinoAvatarMask.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Practice.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/StarsOverview.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAvatarMask.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Practice.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile Practice.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/StarsOverview.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile StarsOverview.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAvatarMask.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoAvatarMask.swift
+
+SwiftCompile normal x86_64 Compiling\ JungleMapLayout.swift,\ ExpandedQuestions.swift,\ SpokenTime.swift,\ QuestionDifficulty.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/JungleMapLayout.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ExpandedQuestions.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SpokenTime.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/QuestionDifficulty.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/JungleMapLayout.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile JungleMapLayout.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ExpandedQuestions.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ExpandedQuestions.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SpokenTime.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile SpokenTime.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/QuestionDifficulty.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile QuestionDifficulty.swift
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ Dino_Time (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    
+
+SwiftCompile normal arm64 Compiling\ DinoSettings.swift,\ CloudProgress.swift,\ AnswerFeedback.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoSettings.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/CloudProgress.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/AnswerFeedback.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoSettings.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoSettings.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/CloudProgress.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile CloudProgress.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/AnswerFeedback.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile AnswerFeedback.swift
+
+SwiftDriverJobDiscovery normal x86_64 Compiling KeyValueStore.swift, LevelConfiguration.swift, PlayerProfile.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ Practice.swift,\ StarsOverview.swift,\ DinoAvatarMask.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Practice.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/StarsOverview.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAvatarMask.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Practice.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile Practice.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/StarsOverview.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile StarsOverview.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAvatarMask.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoAvatarMask.swift
+
+SwiftDriverJobDiscovery normal x86_64 Compiling ProgressSyncService.swift, SocialProgress.swift, DinoAnimation.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ SpokenTimeQuestion.swift,\ TimeZoneQuestions.swift,\ TimeZoneMap.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/SpokenTimeQuestion.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/TimeZoneQuestions.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/TimeZoneMap.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/SpokenTimeQuestion.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile SpokenTimeQuestion.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/TimeZoneQuestions.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile TimeZoneQuestions.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/TimeZoneMap.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile TimeZoneMap.swift
+
+SwiftDriverJobDiscovery normal x86_64 Compiling JungleMapLayout.swift, ExpandedQuestions.swift, SpokenTime.swift, QuestionDifficulty.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ DinoPersonalizer.swift,\ DinoAvatar.swift,\ DinoAppearance.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoPersonalizer.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoAvatar.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAppearance.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoPersonalizer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoPersonalizer.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoAvatar.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoAvatar.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAppearance.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoAppearance.swift
+
+SwiftDriverJobDiscovery normal x86_64 Compiling DinoSettings.swift, CloudProgress.swift, AnswerFeedback.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+LinkAssetCatalog /Users/jenssomers/Desktop/Dino\ Klokkijken/Assets.xcassets (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-linkAssetCatalog --thinned /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_output/thinned --thinned-dependencies /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_dependencies_thinned --thinned-info-plist-content /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_generated_info.plist_thinned --unthinned /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_output/unthinned --unthinned-dependencies /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_dependencies_unthinned --unthinned-info-plist-content /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_generated_info.plist_unthinned --output /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app --plist-output /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_generated_info.plist
+note: Emplaced /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino Time.app/AppIcon60x60@2x.png (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+note: Emplaced /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino Time.app/Assets.car (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+note: Emplaced /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino Time.app/AppIcon76x76@2x~ipad.png (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal x86_64 Compiling GeneratedStringSymbols_InfoPlist.swift, GeneratedStringSymbols_Localizable.swift, GeneratedAssetSymbols.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ GeneratedStringSymbols_InfoPlist.swift,\ GeneratedStringSymbols_Localizable.swift,\ GeneratedAssetSymbols.swift /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedStringSymbols_InfoPlist.swift /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedStringSymbols_Localizable.swift /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedStringSymbols_InfoPlist.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile GeneratedStringSymbols_InfoPlist.swift
+
+SwiftCompile normal arm64 /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedStringSymbols_Localizable.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile GeneratedStringSymbols_Localizable.swift
+
+SwiftCompile normal arm64 /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile GeneratedAssetSymbols.swift
+
+SwiftCompile normal arm64 Compiling\ JungleLandscape.swift,\ WorldBossArt.swift,\ DinoDesert.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/JungleLandscape.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/WorldBossArt.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoDesert.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/JungleLandscape.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile JungleLandscape.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/WorldBossArt.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile WorldBossArt.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoDesert.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoDesert.swift
+
+SwiftCompile normal arm64 Compiling\ LevelResult.swift,\ OnboardingFlow.swift,\ QuestionRenderer.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/LevelResult.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/OnboardingFlow.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/QuestionRenderer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/LevelResult.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile LevelResult.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/OnboardingFlow.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile OnboardingFlow.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/QuestionRenderer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile QuestionRenderer.swift
+
+SwiftDriverJobDiscovery normal x86_64 Compiling Localization.swift, ClockTheme.swift, ClockTime.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal x86_64 Compiling ProgressManager.swift, QuestionGenerator.swift, DinoGameModel.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+ProcessInfoPlistFile /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Info.plist /Users/jenssomers/Desktop/Dino\ Klokkijken/DinoInfo.plist (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-infoPlistUtility /Users/jenssomers/Desktop/Dino\ Klokkijken/DinoInfo.plist -producttype com.apple.product-type.application -genpkginfo /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/PkgInfo -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_generated_info.plist -o /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Info.plist
+
+SwiftDriverJobDiscovery normal x86_64 Compiling Practice.swift, StarsOverview.swift, DinoAvatarMask.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 Compiling\ SpokenTimeQuestion.swift,\ TimeZoneQuestions.swift,\ TimeZoneMap.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/SpokenTimeQuestion.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/TimeZoneQuestions.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/TimeZoneMap.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/SpokenTimeQuestion.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile SpokenTimeQuestion.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/TimeZoneQuestions.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile TimeZoneQuestions.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/TimeZoneMap.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile TimeZoneMap.swift
+
+SwiftCompile normal arm64 Compiling\ DinoRootView.swift,\ AnalogClock.swift,\ ClockCustomizer.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/DinoRootView.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/AnalogClock.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ClockCustomizer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/DinoRootView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoRootView.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/AnalogClock.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile AnalogClock.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ClockCustomizer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ClockCustomizer.swift
+
+SwiftDriverJobDiscovery normal x86_64 Compiling DinoPersonalizer.swift, DinoAvatar.swift, DinoAppearance.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ Localization.swift,\ ClockTheme.swift,\ ClockTime.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Localization.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ClockTheme.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ClockTime.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Localization.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile Localization.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ClockTheme.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ClockTheme.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ClockTime.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ClockTime.swift
+
+SwiftDriverJobDiscovery normal x86_64 Compiling AdventureHeader.swift, SeededGenerator.swift, DinoTimeAdventureApp.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ AdventureHeader.swift,\ SeededGenerator.swift,\ DinoTimeAdventureApp.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/AdventureHeader.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SeededGenerator.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/DinoTimeAdventureApp.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/AdventureHeader.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile AdventureHeader.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SeededGenerator.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile SeededGenerator.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/DinoTimeAdventureApp.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoTimeAdventureApp.swift
+
+SwiftDriverJobDiscovery normal x86_64 Emitting module for Dino_Time (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriver\ Compilation\ Requirements Dino\ Klokkijken normal x86_64 com.apple.xcode.tools.swift.compiler (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Dino_Time -Onone @/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target x86_64-apple-ios16.0-simulator -g -module-cache-path /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-village-second-pass-20261019-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -F /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-village-second-pass-20261019-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Klokkijken-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Klokkijken_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-generated-files.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-own-target-headers.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-project-headers.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources-normal/x86_64 -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/x86_64 -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal x86_64 Compiling DinoRootView.swift, AnalogClock.swift, ClockCustomizer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ KeyValueStore.swift,\ LevelConfiguration.swift,\ PlayerProfile.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/KeyValueStore.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/LevelConfiguration.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/PlayerProfile.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/KeyValueStore.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile KeyValueStore.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/LevelConfiguration.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile LevelConfiguration.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/PlayerProfile.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile PlayerProfile.swift
+
+Copy /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/x86_64-apple-ios-simulator.swiftmodule /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time.swiftmodule (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time.swiftmodule /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/x86_64-apple-ios-simulator.swiftmodule
+
+SwiftDriverJobDiscovery normal x86_64 Compiling Friends.swift, FriendsManager.swift, NameValidator.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+Copy /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/x86_64-apple-ios-simulator.swiftdoc /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time.swiftdoc (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time.swiftdoc /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/x86_64-apple-ios-simulator.swiftdoc
+
+Copy /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/x86_64-apple-ios-simulator.abi.json /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time.abi.json (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time.abi.json /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/x86_64-apple-ios-simulator.abi.json
+
+Copy /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time.swiftsourceinfo (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time.swiftsourceinfo /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo
+
+SwiftCompile normal arm64 Compiling\ JungleMapLayout.swift,\ ExpandedQuestions.swift,\ SpokenTime.swift,\ QuestionDifficulty.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/JungleMapLayout.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ExpandedQuestions.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SpokenTime.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/QuestionDifficulty.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/JungleMapLayout.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile JungleMapLayout.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ExpandedQuestions.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ExpandedQuestions.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SpokenTime.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile SpokenTime.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/QuestionDifficulty.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile QuestionDifficulty.swift
+
+SwiftCompile normal arm64 Compiling\ PracticeConfiguration.swift,\ ExpandedQuestionView.swift,\ MinutesBetweenQuestion.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/PracticeConfiguration.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ExpandedQuestionView.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/MinutesBetweenQuestion.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/PracticeConfiguration.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile PracticeConfiguration.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ExpandedQuestionView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ExpandedQuestionView.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/MinutesBetweenQuestion.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile MinutesBetweenQuestion.swift
+
+SwiftDriverJobDiscovery normal x86_64 Compiling DigitalClock.swift, DinoGameView.swift, DinoUI.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 Compiling\ JungleLandscape.swift,\ WorldBossArt.swift,\ DinoDesert.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/JungleLandscape.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/WorldBossArt.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoDesert.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/JungleLandscape.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile JungleLandscape.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/WorldBossArt.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile WorldBossArt.swift
+
+SwiftCompile normal x86_64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoDesert.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoDesert.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling KeyValueStore.swift, LevelConfiguration.swift, PlayerProfile.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ Friends.swift,\ FriendsManager.swift,\ NameValidator.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Friends.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Social/FriendsManager.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/NameValidator.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Friends.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile Friends.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Social/FriendsManager.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile FriendsManager.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/NameValidator.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile NameValidator.swift
+
+SwiftDriverJobDiscovery normal x86_64 Compiling LevelResult.swift, OnboardingFlow.swift, QuestionRenderer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ DigitalClock.swift,\ DinoGameView.swift,\ DinoUI.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DigitalClock.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoGameView.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoUI.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DigitalClock.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DigitalClock.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoGameView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoGameView.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoUI.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoUI.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling JungleMapLayout.swift, ExpandedQuestions.swift, SpokenTime.swift, QuestionDifficulty.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ ProgressManager.swift,\ QuestionGenerator.swift,\ DinoGameModel.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ProgressManager.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/QuestionGenerator.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/DinoGameModel.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ProgressManager.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ProgressManager.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/QuestionGenerator.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile QuestionGenerator.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/DinoGameModel.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoGameModel.swift
+
+SwiftDriverJobDiscovery normal x86_64 Compiling SpokenTimeQuestion.swift, TimeZoneQuestions.swift, TimeZoneMap.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ Settings.swift,\ WorldMap.swift,\ DinoCharacter.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Settings.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/WorldMap.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoCharacter.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Settings.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile Settings.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/WorldMap.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile WorldMap.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoCharacter.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoCharacter.swift
+
+SwiftDriverJobDiscovery normal x86_64 Compiling PracticeConfiguration.swift, ExpandedQuestionView.swift, MinutesBetweenQuestion.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ ProgressSyncService.swift,\ SocialProgress.swift,\ DinoAnimation.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ProgressSyncService.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SocialProgress.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAnimation.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ProgressSyncService.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ProgressSyncService.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SocialProgress.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile SocialProgress.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAnimation.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoAnimation.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling DinoSettings.swift, CloudProgress.swift, AnswerFeedback.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling SpokenTimeQuestion.swift, TimeZoneQuestions.swift, TimeZoneMap.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling DinoPersonalizer.swift, DinoAvatar.swift, DinoAppearance.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling Localization.swift, ClockTheme.swift, ClockTime.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling Practice.swift, StarsOverview.swift, DinoAvatarMask.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for Dino_Time (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriver\ Compilation\ Requirements Dino\ Klokkijken normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Dino_Time -Onone @/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios16.0-simulator -g -module-cache-path /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-village-second-pass-20261019-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -F /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-village-second-pass-20261019-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-generated-files.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-own-target-headers.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-project-headers.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources-normal/arm64 -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/arm64 -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+SwiftMergeGeneratedHeaders /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/Dino_Time-Swift.h /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-Swift.h /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time-Swift.h (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-swiftHeaderTool -arch arm64 /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-Swift.h -arch x86_64 /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time-Swift.h -o /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/Dino_Time-Swift.h
+
+Copy /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/arm64-apple-ios-simulator.swiftmodule /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/arm64-apple-ios-simulator.swiftmodule
+
+Copy /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/arm64-apple-ios-simulator.swiftdoc /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftdoc (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftdoc /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/arm64-apple-ios-simulator.swiftdoc
+
+Copy /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/arm64-apple-ios-simulator.abi.json /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.abi.json (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.abi.json /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/arm64-apple-ios-simulator.abi.json
+
+Copy /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftsourceinfo (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftsourceinfo /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo
+
+SwiftDriverJobDiscovery normal arm64 Compiling GeneratedStringSymbols_InfoPlist.swift, GeneratedStringSymbols_Localizable.swift, GeneratedAssetSymbols.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal x86_64 Compiling Settings.swift, WorldMap.swift, DinoCharacter.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling ProgressSyncService.swift, SocialProgress.swift, DinoAnimation.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling AdventureHeader.swift, SeededGenerator.swift, DinoTimeAdventureApp.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling ProgressManager.swift, QuestionGenerator.swift, DinoGameModel.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling DinoRootView.swift, AnalogClock.swift, ClockCustomizer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling LevelResult.swift, OnboardingFlow.swift, QuestionRenderer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling Friends.swift, FriendsManager.swift, NameValidator.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling PracticeConfiguration.swift, ExpandedQuestionView.swift, MinutesBetweenQuestion.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling DigitalClock.swift, DinoGameView.swift, DinoUI.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling Settings.swift, WorldMap.swift, DinoCharacter.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling JungleLandscape.swift, WorldBossArt.swift, DinoDesert.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriver\ Compilation Dino\ Klokkijken normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Dino_Time -Onone @/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios16.0-simulator -g -module-cache-path /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-village-second-pass-20261019-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -F /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-village-second-pass-20261019-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-generated-files.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-own-target-headers.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-project-headers.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources-normal/arm64 -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/arm64 -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+Ld /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Binary/Dino\ Time.debug.dylib normal arm64 (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0-simulator -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -L/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -F/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -F/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -filelist /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.LinkFileList -install_name @rpath/Dino\ Time.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -o /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Binary/Dino\ Time.debug.dylib
+
+ConstructStubExecutorLinkFileList /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-ExecutorLinkFileList-normal-arm64.txt (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    construct-stub-executor-link-file-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Binary/Dino\ Time.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal x86_64 Compiling JungleLandscape.swift, WorldBossArt.swift, DinoDesert.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriver\ Compilation Dino\ Klokkijken normal x86_64 com.apple.xcode.tools.swift.compiler (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Dino_Time -Onone @/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target x86_64-apple-ios16.0-simulator -g -module-cache-path /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-village-second-pass-20261019-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -F /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-village-second-pass-20261019-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Klokkijken-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-village-second-pass-20261019-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Klokkijken_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-generated-files.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-own-target-headers.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-project-headers.hmap -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources-normal/x86_64 -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/x86_64 -Xcc -I/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+Ld /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Binary/Dino\ Time.debug.dylib normal x86_64 (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target x86_64-apple-ios16.0-simulator -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -L/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -F/tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -F/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -filelist /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time.LinkFileList -install_name @rpath/Dino\ Time.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino_Time.swiftmodule -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -o /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Binary/Dino\ Time.debug.dylib
+
+CreateUniversalBinary /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time.debug.dylib normal arm64\ x86_64 (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo -create /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Binary/Dino\ Time.debug.dylib /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Binary/Dino\ Time.debug.dylib -output /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time.debug.dylib
+
+ConstructStubExecutorLinkFileList /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-ExecutorLinkFileList-normal-x86_64.txt (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    construct-stub-executor-link-file-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Binary/Dino\ Time.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-ExecutorLinkFileList-normal-x86_64.txt
+note: Using stub executor library with Swift entry point. (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+Ld /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Binary/Dino\ Time normal x86_64 (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target x86_64-apple-ios16.0-simulator -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -F/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibPath-normal-x86_64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibInstallName-normal-x86_64.txt -Xlinker -filelist -Xlinker /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-ExecutorLinkFileList-normal-x86_64.txt /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Binary/Dino\ Time.debug.dylib -o /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Binary/Dino\ Time
+
+Ld /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Binary/Dino\ Time normal arm64 (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0-simulator -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -F/tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-ExecutorLinkFileList-normal-arm64.txt /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Binary/Dino\ Time.debug.dylib -o /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Binary/Dino\ Time
+
+CreateUniversalBinary /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time normal arm64\ x86_64 (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo -create /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Binary/Dino\ Time /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Binary/Dino\ Time -output /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time
+
+CopySwiftLibs /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time.debug.dylib --scan-folder /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Frameworks --scan-folder /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/PlugIns --scan-folder /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/SystemExtensions --scan-folder /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Extensions --platform iphonesimulator --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+Ignoring --strip-bitcode because --sign was not passed
+
+ExtractAppIntentsMetadata (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name Dino_Time --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk --xcode-version 27A266a --platform-family iOS --deployment-target 16.0 --bundle-identifier Hakketjak.Dino-Klokkijken --output /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app --target-triple arm64-apple-ios16.0-simulator --target-triple x86_64-apple-ios16.0-simulator --binary-file /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time --dependency-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time_dependency_info.dat --dependency-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time_dependency_info.dat --stringsdata-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --stringsdata-file /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftFileList --source-file-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time.SwiftFileList --metadata-file-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time.DependencyMetadataFileList --static-metadata-file-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftConstValuesFileList --swift-const-vals-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/x86_64/Dino\ Time.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --no-app-shortcuts-localization
+2026-10-19 07:38:04.062 appintentsmetadataprocessor[97367:38018853] Starting appintentsmetadataprocessor export
+2026-10-19 07:38:04.067 appintentsmetadataprocessor[97367:38018853] warning: Metadata extraction skipped, no AppIntents.framework dependency found
+
+AppIntentsSSUTraining (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Info.plist --temp-dir-path /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/ssu --bundle-id Hakketjak.Dino-Klokkijken --product-path /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app --extracted-metadata-path /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Metadata.appintents --metadata-file-list /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time.DependencyMetadataFileList --source-file /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Info.plist --archive-ssu-assets
+2026-10-19 07:38:04.090 appintentsnltrainingprocessor[97368:38018854] Parsing options for appintentsnltrainingprocessor
+2026-10-19 07:38:04.090 appintentsnltrainingprocessor[97368:38018854] Starting AppIntents SSU YAML Generation
+2026-10-19 07:38:04.091 appintentsnltrainingprocessor[97368:38018854] No AppShortcuts found - Skipping.
+
+RegisterExecutionPolicyException /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-RegisterExecutionPolicyException /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app
+
+Validate /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-validationUtility /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app -shallow-bundle -infoplist-subpath Info.plist
+
+Touch /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /usr/bin/touch -c /tmp/dino-village-second-pass-20261019-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app
+
+PruneExplicitPrecompiledModules /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/dino-village-second-pass-20261019-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/dino-village-second-pass-20261019-build/SDKExplicitPrecompiledModules
+
+note: Disabling hardened runtime with ad-hoc codesigning. (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+** BUILD SUCCEEDED **
+

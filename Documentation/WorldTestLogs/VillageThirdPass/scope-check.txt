@@ -1,0 +1,4 @@
+Compared with /tmp/dino-village-third-pass-before.swift.
+River path, river point helper and original passage builder are unchanged by this third pass.
+The new traffic/placement/artwork lives in the world-4 village region.
+Concurrent banner, castle and other unrelated workspace changes were preserved.
