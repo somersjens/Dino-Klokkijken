@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1E59EAAA6E25430E8B2E6841 /* Dino/Views/ResultLevelSign.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BC06D8CEF6D4051A1A0BD11 /* Dino/Views/ResultLevelSign.swift */; };
 		DB202026BD01000000000001 /* Dino/Views/DinoDesert.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA202026BD01000000000001 /* Dino/Views/DinoDesert.swift */; };
 		00BF1DDD8A1DDC39990EF9D2 /* Dino/Core/ProgressSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ED274EAFF7B807862126964 /* Dino/Core/ProgressSyncService.swift */; };
 		0E03B85644DFB788EEC72EB8 /* Dino/Views/LevelResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7BF4989C8E56DBDD0035B47 /* Dino/Views/LevelResult.swift */; };
@@ -96,6 +97,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1BC06D8CEF6D4051A1A0BD11 /* Dino/Views/ResultLevelSign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/ResultLevelSign.swift; sourceTree = SOURCE_ROOT; };
 		DA202026BD01000000000001 /* Dino/Views/DinoDesert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/DinoDesert.swift; sourceTree = SOURCE_ROOT; };
 		01881B3B65886D0F9D53F6C8 /* Dino/Core/SocialProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/SocialProgress.swift; sourceTree = SOURCE_ROOT; };
 		0B80587E32D18C0831D8ACC9 /* Dino/Views/OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/OnboardingFlow.swift; sourceTree = SOURCE_ROOT; };
@@ -279,6 +281,7 @@
 				945545C5CAAF92265CBE1BFE /* Dino/Views/DinoCharacter.swift */,
 				9CC831804F11124D46221EE6 /* Dino/Views/DigitalClock.swift */,
 				B7BF4989C8E56DBDD0035B47 /* Dino/Views/LevelResult.swift */,
+				1BC06D8CEF6D4051A1A0BD11 /* Dino/Views/ResultLevelSign.swift */,
 				B8A5B3DA16BFBAC637CDC6B5 /* Dino/Views/Settings.swift */,
 				D133564D7720CB902ED7C582 /* Dino/Views/AnalogClock.swift */,
 			);
@@ -478,6 +481,7 @@
 				A3A7FCEFEAA9FAF58F4BD046 /* Dino/Views/DinoGameView.swift in Sources */,
 				3B04AE1E8CC46A033D379434 /* Dino/Views/DinoUI.swift in Sources */,
 				0E03B85644DFB788EEC72EB8 /* Dino/Views/LevelResult.swift in Sources */,
+				1E59EAAA6E25430E8B2E6841 /* Dino/Views/ResultLevelSign.swift in Sources */,
 				DD8D8D9B86AD1F7BD4729496 /* Dino/Views/OnboardingFlow.swift in Sources */,
 				7140D2190606B1466B055EDB /* Dino/Views/QuestionRenderer.swift in Sources */,
 				DCAE59100EB467AA8769FEF8 /* Dino/Views/Settings.swift in Sources */,

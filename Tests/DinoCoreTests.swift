@@ -948,7 +948,12 @@ struct DinoCoreTests {
         case .pairs(let times): return .pairs(Array(times.reversed()))
         case .spoken(let spoken):
             var ids = spoken.choiceIDs
-            if let first = ids.indices.first { ids[first] = ids[first] == SpokenTimeChoice.emptyID ? "wrong" : SpokenTimeChoice.emptyID }
+            if let prompt = q.spokenPrompt, let hourSlot = prompt.slots.firstIndex(where: { $0.id == "hour" }),
+               let other = prompt.slots[hourSlot].choices.first(where: { $0.id != ids[hourSlot] }) {
+                ids[hourSlot] = other.id
+            } else if let first = ids.indices.first {
+                ids[first] = ids[first] == SpokenTimeChoice.emptyID ? "wrong" : SpokenTimeChoice.emptyID
+            }
             return .spoken(SpokenTimeAnswer(choiceIDs: ids))
         }
     }
@@ -1290,6 +1295,30 @@ struct DinoCoreTests {
         expect(halfFour.slots[0].choices.count == 3 && halfFour.slots[0].choices.contains { $0.id == "twenty" },
                "English minutes keep the right word and two alternatives")
         expect(quarterTo.slots.first { $0.id == "half" }!.choices.map(\.id) == ["half"], "half is only a stone when the row uses it")
+        for seed in 0..<24 {
+            var hourRng = SeededGenerator(seed: UInt64(seed))
+            let five = dutch.prompt(for: ClockTime(hour: 5, minute: 0), using: &hourRng)
+            let hours = five.slots.first { $0.id == "hour" }!.choices.map { Int($0.id.dropFirst())! }
+            expect(hours == [3, 4, 5] || hours == [4, 5, 6] || hours == [5, 6, 7], "five o'clock offers a neighbouring hour, got \(hours)")
+            var noonRng = SeededGenerator(seed: UInt64(seed))
+            let noon = english.prompt(for: ClockTime(hour: 12, minute: 0), using: &noonRng)
+            let aroundTwelve = noon.slots.first { $0.id == "hour" }!.choices.map(\.id)
+            expect(aroundTwelve == ["h10", "h11", "h0"] || aroundTwelve == ["h11", "h0", "h1"] || aroundTwelve == ["h0", "h1", "h2"],
+                   "twelve o'clock stays next to eleven and one")
+        }
+        var fiveRng = SeededGenerator(seed: 4)
+        let five = dutch.prompt(for: ClockTime(hour: 5, minute: 0), using: &fiveRng)
+        let fiveQuestion = spokenQuestion(prompt: five, time: ClockTime(hour: 5, minute: 0))
+        let fromMinutes = SpokenTimeAnswer(choiceIDs: ["vijf", "-", "-", "-", "uur"])
+        let fromBoth = SpokenTimeAnswer(choiceIDs: ["vijf", "-", "-", "h5", "uur"])
+        expect(five.phrase(for: fromMinutes) == "Vijf uur" && five.phrase(for: fromBoth) == "Vijf uur",
+               "a whole hour still reads as the hour when the same word is chosen twice")
+        expect(AnswerValidator.isCorrect(.spoken(fromMinutes), for: fiveQuestion), "five plus uur says five o'clock")
+        expect(AnswerValidator.isCorrect(.spoken(fromBoth), for: fiveQuestion), "saying five twice still says five o'clock")
+        expect(!AnswerValidator.isCorrect(.spoken(SpokenTimeAnswer(choiceIDs: ["tien", "-", "-", "h5", "uur"])), for: fiveQuestion),
+               "an extra different minute word is another time")
+        expect(!AnswerValidator.isCorrect(.spoken(fromMinutes), for: spokenQuestion(prompt: quarterTo, time: ClockTime(hour: 8, minute: 45))),
+               "the same words are not accepted once the clock leaves the whole hour")
         let almost = SpokenTimeAnswer(choiceIDs: ["kwart", "voor", "half", "h9", "-"])
         let question = spokenQuestion(prompt: quarterTo, time: ClockTime(hour: 8, minute: 45))
         expect(AnswerValidator.isCorrect(.spoken(quarterTo.correct), for: question), "the matching choices are correct")
@@ -1313,7 +1342,8 @@ struct DinoCoreTests {
         let live = DinoSession(level: config.level, player: player, practice: config, language: "nl")
         let livePrompt = live.question.spokenPrompt!
         var wrongIDs = livePrompt.correct.choiceIDs
-        wrongIDs[0] = wrongIDs[0] == SpokenTimeChoice.emptyID ? "wrong" : SpokenTimeChoice.emptyID
+        let hourSlot = livePrompt.slots.firstIndex { $0.id == "hour" }!
+        wrongIDs[hourSlot] = livePrompt.slots[hourSlot].choices.first { $0.id != wrongIDs[hourSlot] }!.id
         live.submit(.spoken(SpokenTimeAnswer(choiceIDs: wrongIDs)))
         expect(live.hasFeedback && !live.correctFeedback && !live.canRetry, "a wrong sentence finishes this question")
         live.advance()
@@ -1335,6 +1365,15 @@ struct DinoCoreTests {
                     expect(prompt.slots.allSatisfy { slot in
                         !slot.choices.contains { $0.id == SpokenTimeChoice.emptyID } && (1...3).contains(slot.choices.count)
                     }, "each spoken row shows at most three words and no empty stone")
+                    let hourChoices = prompt.slots.first { $0.id == "hour" }!.choices.map { Int($0.id.dropFirst())! }
+                    let named = prompt.correct.choiceIDs.compactMap { id -> Int? in
+                        guard id.hasPrefix("h") else { return nil }
+                        return Int(id.dropFirst())
+                    }.first!
+                    expect(hourChoices.count == 3 && hourChoices.contains(named)
+                           && hourChoices[1] == (hourChoices[0] + 1) % 12
+                           && hourChoices[2] == (hourChoices[1] + 1) % 12,
+                           "hour stones stay on three neighbouring hours")
                     previous = generated.target
                 }
             }
@@ -1501,25 +1540,40 @@ struct DinoCoreTests {
         }
         expect(previous.angle == -360 && abs(previous.height) < 0.00001, "lands upright at starting height")
         var previousTurn = DinoAnimation.sample(.pirouette, elapsed: 0)
-        var turnAssets = Set([previousTurn.pose.asset])
-        for step in 1...222 {
+        var turnAssets = [previousTurn.pose.asset]
+        for step in 1...Int((DinoAnimation.duration(.pirouette) + 0.25) * 120) {
             let sample = DinoAnimation.sample(.pirouette, elapsed: Double(step) / 120)
             expect(sample.yaw >= previousTurn.yaw && sample.yaw <= 360 && sample.angle == 0,
                    "pirouette makes one upright turn around the vertical axis")
-            expect(abs(sample.yaw - previousTurn.yaw) < 5 && abs(sample.height - previousTurn.height) < 0.02,
+            expect(abs(sample.yaw - previousTurn.yaw) < 7 && abs(sample.height - previousTurn.height) < 0.02,
                    "pirouette follows a continuous turn and jump arc")
-            expect(abs(sample.yaw - sample.pose.paintedYaw) <= 67.5 && sample.height <= 0.00001,
+            expect(abs(sample.yaw - sample.pose.paintedYaw) <= 40 && sample.height <= 0.00001,
                    "each supplied view turns toward the next without flipping its sprite over")
-            turnAssets.insert(sample.pose.asset)
+            if turnAssets.last != sample.pose.asset { turnAssets.append(sample.pose.asset) }
             previousTurn = sample
         }
-        expect(turnAssets == Set((1...8).map { String(format: "dino-pirouette-%02d", $0) }),
-               "all eight pirouette assets participate in the jump")
-        expect(previousTurn.yaw == 360 && abs(previousTurn.height) < 0.00001 && previousTurn.pose.asset == "dino-pirouette-08",
+        expect(turnAssets == (1...14).map { String(format: "dino-pirouette-%02d", $0) },
+               "all fourteen assets play once in their numbered order, including takeoff and recovery")
+        expect(previousTurn.yaw == 360 && abs(previousTurn.height) < 0.00001 && previousTurn.pose.asset == "dino-pirouette-14",
                "pirouette lands in its stable final pose")
+        expect(previousTurn.pose.offsetX == -0.012 && previousTurn.pose.offsetY == -0.029,
+               "the revised pirouette preserves the exact previous final registration on the stone")
         let landing = DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.travelDuration(.pirouette))
-        expect(abs(landing.height) < 0.00001 && landing.pose.asset == "dino-pirouette-08",
+        expect(abs(landing.height) < 0.00001 && landing.pose.asset == "dino-pirouette-12",
                "the shared character reaches the stone when its feet land")
+        let preparation = [(0.0, "01"), (0.20, "02"), (0.40, "03")]
+        for (time, pose) in preparation {
+            let sample = DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.leadIn(.pirouette) + time / DinoAnimation.pirouettePlaybackRate)
+            expect(sample.height == 0 && sample.pose.asset == "dino-pirouette-\(pose)"
+                   && time / DinoAnimation.pirouettePlaybackRate < DinoAnimation.travelDelay(.pirouette),
+                   "each preparation pose is visible before the journey leaves the bottom dock")
+        }
+        expect(DinoAnimation.travelDelay(.backflip) == 0 && DinoAnimation.travelDelay(.idle) == 0,
+               "the extra pirouette preparation does not delay the other companion movements")
+        expect(DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.leadIn(.pirouette) + 2.08 / DinoAnimation.pirouettePlaybackRate).pose.asset == "dino-pirouette-13",
+               "the arms lift through an intermediate pose before the unchanged celebration")
+        expect(DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.leadIn(.pirouette) - 0.01).pose.asset == "dino-pirouette-01",
+               "the result transition gets a standing lead-in before the short preparation poses")
         let normal = DinoLevelCatalog.level(1)!
         for (correct, clip) in [(2, DinoAnimation.Clip.idle), (3, .idle), (4, .pirouette), (5, .backflip)] {
             let result = DinoLevelResult(level: normal, correct: correct, stars: StarCalculator.stars(correct: correct), victory: .none)
@@ -1531,7 +1585,7 @@ struct DinoCoreTests {
             expect(result.animationClip == (correct == boss.questionCount ? .backflip : .idle),
                    "boss victories do not borrow the two-star animation")
         }
-        for (clip, asset) in [(DinoAnimation.Clip.backflip, "dino-backflip-08"), (.pirouette, "dino-pirouette-08"), (.thumbsUp, "dino-thumbs-up-08"), (.wrongAnswer, "dino-wrong-answer-04")] {
+        for (clip, asset) in [(DinoAnimation.Clip.backflip, "dino-backflip-08"), (.pirouette, "dino-pirouette-14"), (.thumbsUp, "dino-thumbs-up-08"), (.wrongAnswer, "dino-wrong-answer-04")] {
             for step in 0...180 {
                 let t = Double(step) / 120
                 let reduced = DinoAnimation.sample(clip, elapsed: t, reducedMotion: true)
@@ -1731,6 +1785,8 @@ struct DinoCoreTests {
             session.submit(wrong[0])
             let allowsRetry = question.responses.count > 2
             expect(session.canRetry == allowsRetry && session.showsCorrectResponse != allowsRetry, "only multiple choice with more than two options allows retries")
+            expect(session.missedFirstAnswer && session.showsWorkedExplanation == !allowsRetry,
+                   "a hint may follow the first miss, and the worked method waits until the question closes")
             expect(!session.responseIsEnabled(wrong[0]), "a rejected option cannot be selected again")
             session.submit(wrong[0])
             expect(feedback == [false], "repeated taps on a rejected answer are ignored")
@@ -1740,9 +1796,10 @@ struct DinoCoreTests {
                 expect(session.responseIsEnabled(question.expectedAnswer), "the correct answer stays available without being highlighted")
                 now += 100
                 session.submit(wrong[1])
-                expect(session.rejectedResponses == Set(wrong.prefix(2)) && session.canRetry, "additional wrong choices stay marked while retries remain available")
+                expect(session.rejectedResponses == Set(wrong.prefix(2)) && session.canRetry && !session.showsWorkedExplanation,
+                       "additional wrong choices stay marked while retries remain available")
                 session.submit(question.expectedAnswer)
-                expect(session.correctFeedback && !session.canRetry && session.showsCorrectResponse && !session.shouldAutoAdvance,
+                expect(session.correctFeedback && !session.canRetry && session.showsCorrectResponse && session.showsWorkedExplanation && !session.shouldAutoAdvance,
                        "a correct retry reveals the answer and waits for Next")
                 expect(feedback == [false, false, true], "retries emit the appropriate answer reaction")
             } else {
@@ -1760,6 +1817,18 @@ struct DinoCoreTests {
             revealed.submit(question.expectedAnswer)
             expect(revealed.answerRevealed == allowsRetry && revealed.showsCorrectResponse && !revealed.canRetry && !revealed.correctFeedback,
                    "Show answer reveals the correct choice and closes retries without awarding points")
+            expect(revealed.showsWorkedExplanation, "a closed miss shows how the question worked")
+
+            if allowsRetry {
+                let eliminated = DinoSession(level: config.level, player: player, practice: config, example: question)
+                for choice in wrong { eliminated.submit(choice) }
+                expect(eliminated.answerRevealed && eliminated.showsCorrectResponse && eliminated.showsWorkedExplanation
+                       && !eliminated.canRetry && !eliminated.correctFeedback && eliminated.attempt.answers == [false],
+                       "ruling out every wrong choice reveals the last answer without another tap")
+                expect(question.responses.allSatisfy { !eliminated.responseIsEnabled($0) }, "the remaining choice closes with the others")
+                eliminated.submit(question.expectedAnswer)
+                expect(!eliminated.correctFeedback && eliminated.attempt.answers == [false], "the revealed last choice cannot be scored afterwards")
+            }
         }
 
         let level = DinoLevelCatalog.level(10)!
@@ -1768,8 +1837,13 @@ struct DinoCoreTests {
         session.submit(session.question.expectedAnswer)
         session.advance()
         expect(session.attempt.index == 1 && session.attempt.answers == [false] && session.rejectedResponses.isEmpty &&
-               !session.retryAnsweredCorrectly && !session.answerRevealed && !session.hasFeedback,
+               !session.retryAnsweredCorrectly && !session.answerRevealed && !session.hasFeedback && !session.correctFeedback,
                "Next clears retry state for the following level question")
+        let followed = DinoSession(level: level, player: player)
+        followed.submit(followed.question.expectedAnswer)
+        followed.advance()
+        expect(!followed.hasFeedback && !followed.correctFeedback && followed.attempt.answers.last == true,
+               "a correct answer does not leave success feedback on the next question")
         for _ in 1..<level.questionCount { session.submit(session.question.expectedAnswer); session.advance() }
         expect(session.result?.correct == 9 && player.profile.record(10).bestCorrect == 9, "completed levels preserve the lost point after a correct retry")
 
@@ -2317,12 +2391,15 @@ struct DinoCoreTests {
             ("dino-backflip-07", CGRect(x: 638, y: 233, width: 256, height: 106)),
             ("dino-backflip-08", CGRect(x: 520, y: 102, width: 237, height: 109)),
             ("dino-pirouette-01", CGRect(x: 580, y: 150, width: 252, height: 105)),
-            ("dino-pirouette-02", CGRect(x: 632, y: 98, width: 266, height: 105)),
-            ("dino-pirouette-03", CGRect(x: 748, y: 126, width: 180, height: 100)),
-            ("dino-pirouette-05", CGRect(x: 704, y: 103, width: 223, height: 109)),
-            ("dino-pirouette-06", CGRect(x: 684, y: 82, width: 244, height: 117)),
-            ("dino-pirouette-07", CGRect(x: 570, y: 112, width: 235, height: 111)),
-            ("dino-pirouette-08", CGRect(x: 560, y: 118, width: 246, height: 110))
+            ("dino-pirouette-04", CGRect(x: 700, y: 135, width: 195, height: 100)),
+            ("dino-pirouette-10", CGRect(x: 390, y: 120, width: 195, height: 117)),
+            ("dino-pirouette-09", CGRect(x: 350, y: 139, width: 155, height: 94)),
+            ("dino-pirouette-14", CGRect(x: 560, y: 118, width: 246, height: 110)),
+            ("dino-pirouette-11", CGRect(x: 433, y: 208, width: 246, height: 109)),
+            ("dino-pirouette-02", CGRect(x: 696, y: 207, width: 243, height: 90)),
+            ("dino-pirouette-03", CGRect(x: 681, y: 157, width: 220, height: 104)),
+            ("dino-pirouette-12", CGRect(x: 568, y: 161, width: 245, height: 83)),
+            ("dino-pirouette-13", CGRect(x: 559, y: 112, width: 236, height: 104))
         ]
         expect(DinoAppearance.standard.bandanaLetteringHex == 0xFFFFFF,
                "the original red bandana retains white lettering")

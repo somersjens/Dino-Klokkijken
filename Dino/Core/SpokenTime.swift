@@ -28,10 +28,13 @@ struct SpokenTimePrompt: Equatable, Sendable {
     var phrase: String { phrase(for: correct) }
 
     /// Joins the chosen words. Empty choices drop out, so "drie" + "uur" becomes "Drie uur".
+    /// The same word twice in a row counts once, so "vijf" as the minutes and "vijf" as the hour still reads "Vijf uur".
     func phrase(for answer: SpokenTimeAnswer) -> String {
-        let words = zip(slots, answer.choiceIDs).compactMap { slot, id -> String? in
-            guard id != SpokenTimeChoice.emptyID else { return nil }
-            return slot.choices.first { $0.id == id }?.word
+        var words: [String] = []
+        for (slot, id) in zip(slots, answer.choiceIDs) {
+            guard id != SpokenTimeChoice.emptyID, let word = slot.choices.first(where: { $0.id == id })?.word else { continue }
+            if words.last?.lowercased() == word.lowercased() { continue }
+            words.append(word)
         }
         guard let first = words.first else { return "" }
         let head = first.prefix(1).uppercased() + first.dropFirst()
@@ -88,21 +91,38 @@ struct SpokenTimeLanguage: Sendable {
             default: return token
             }
         }
-        // The named hour and the other hour are the usual mix-up, plus one more choice.
-        var hourIndexes: Set<Int> = [thisHour, nextHour]
-        let extras = Array(0..<12).filter { !hourIndexes.contains($0) }.shuffled(using: &rng)
-        hourIndexes.insert(extras[0])
-        let presentedHours = hourIndexes.sorted()
+        // Three hours in a row, always including the hour the sentence names.
+        // The window slides so that hour can sit first, in the middle, or last.
+        let namedHour = correctIDs.compactMap { id -> Int? in
+            guard id.hasPrefix("h"), let hour = Int(id.dropFirst()), (0..<12).contains(hour) else { return nil }
+            return hour
+        }.first ?? thisHour
+        let shift = Int.random(in: 0...2, using: &rng)
+        let windowStart = (namedHour - shift + 12) % 12
+        let presentedHours = (0..<3).map { (windowStart + $0) % 12 }
 
         let built = zip(promptSlots, correctIDs).map { spec, correct -> SpokenTimeSlot in
             switch spec {
             case .words(let slot):
                 let vocabulary = slot.choiceIDs.filter { $0 != SpokenTimeChoice.emptyID }
                 var kept: [String] = correct == SpokenTimeChoice.emptyID ? [] : [correct]
-                var distractors = vocabulary.filter { $0 != correct }.shuffled(using: &rng)
+                var distractors = vocabulary.filter { $0 != correct }
+                if slot.id == "minutes" {
+                    let target = Self.minuteValue(correct) ?? 0
+                    distractors.sort { lhs, rhs in
+                        let left = abs((Self.minuteValue(lhs) ?? 99) - target)
+                        let right = abs((Self.minuteValue(rhs) ?? 99) - target)
+                        return left == right ? lhs < rhs : left < right
+                    }
+                } else {
+                    distractors.shuffle(using: &rng)
+                }
                 while kept.count < 3, !distractors.isEmpty { kept.append(distractors.removeFirst()) }
-                let shown = vocabulary.filter { kept.contains($0) }
-                return SpokenTimeSlot(id: slot.id, title: slot.title, choices: shown.map { choice($0, words: slot.words) })
+                var shown = vocabulary.filter { kept.contains($0) }.map { choice($0, words: slot.words) }
+                if slot.id == "minutes" {
+                    shown.sort { (Self.minuteValue($0.id) ?? 0) < (Self.minuteValue($1.id) ?? 0) }
+                }
+                return SpokenTimeSlot(id: slot.id, title: slot.title, choices: shown)
             case .hour(let title):
                 let hourChoices = presentedHours.map { hour in
                     SpokenTimeChoice(id: "h\(hour)", word: self.hours[hour], accessibility: self.hours[hour])
@@ -111,6 +131,21 @@ struct SpokenTimeLanguage: Sendable {
             }
         }
         return SpokenTimePrompt(slots: built, correct: SpokenTimeAnswer(choiceIDs: correctIDs))
+    }
+
+    /// How many minutes a minutes-row word stands for. Used to keep the alternatives close to the right one.
+    private static func minuteValue(_ id: String) -> Int? {
+        switch id {
+        case "vijf", "five": return 5
+        case "tien", "ten": return 10
+        case "kwart", "quarter": return 15
+        case "twenty": return 20
+        case "twentyFive": return 25
+        case "half": return 30
+        default:
+            guard id.hasPrefix("m"), let value = Int(id.dropFirst()) else { return nil }
+            return value
+        }
     }
 
     private static func minuteNumber(_ value: Int, language: String) -> String {

@@ -106,6 +106,13 @@ enum AnswerValidator {
         if question.kind == .advanceAnalog, case .time(let time) = answer {
             return time.hour % 12 == question.target.hour % 12 && time.minute == question.target.minute
         }
+        if question.kind == .sayTime, case .spoken(let spoken) = answer, let prompt = question.spokenPrompt {
+            if spoken == prompt.correct { return true }
+            // "Vijf" in the minutes row plus "uur" reads the same as the hour "vijf" plus "uur".
+            guard question.target.minute == 0 else { return false }
+            let said = prompt.phrase(for: spoken)
+            return !said.isEmpty && said == prompt.phrase
+        }
         return answer == question.expectedAnswer
     }
 }

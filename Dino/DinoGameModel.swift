@@ -313,11 +313,17 @@ final class DinoSession: ObservableObject, Identifiable {
     var hasFeedback: Bool { attempt.submittedResponse != nil }
     var canExitWithoutConfirmation: Bool { practice != nil || question.id == 0 }
     var practiceQuestionType: DinoPracticeQuestion? { DinoPracticeQuestion(rawValue: question.kind.rawValue) }
-    var correctFeedback: Bool { retryAnsweredCorrectly || attempt.answers.last == true }
+    /// Only the question on screen. Earlier correct answers stay in `attempt.answers`.
+    var correctFeedback: Bool { hasFeedback && (retryAnsweredCorrectly || attempt.answers.last == true) }
     var canRetry: Bool {
         hasFeedback && !correctFeedback && !answerRevealed && question.kind.usesOptions && question.responses.count > 2
     }
     var showsCorrectResponse: Bool { hasFeedback && !canRetry }
+    /// A hint may appear while other choices are still open.
+    var missedFirstAnswer: Bool { hasFeedback && attempt.answers.last == false }
+    /// The worked method starts only after that miss, once the question is closed:
+    /// the right choice, Show answer, or every wrong choice ruled out.
+    var showsWorkedExplanation: Bool { missedFirstAnswer && !canRetry }
     var shouldAutoAdvance: Bool { hasFeedback && attempt.answers.last == true }
     /// A correct answer is about to show another question with the same buttons.
     var retainsAnswerControls: Bool {
@@ -352,7 +358,14 @@ final class DinoSession: ObservableObject, Identifiable {
             guard canRetry, question.responses.contains(answer), !rejectedResponses.contains(answer) else { return }
             let correct = AnswerValidator.isCorrect(answer, for: question)
             if correct { retryAnsweredCorrectly = true }
-            else { rejectedResponses.insert(answer) }
+            else {
+                rejectedResponses.insert(answer)
+                // The last remaining choice is the answer, so it needs no extra tap.
+                let remaining = question.responses.filter { !rejectedResponses.contains($0) }
+                if remaining.count == 1, let last = remaining.first, AnswerValidator.isCorrect(last, for: question) {
+                    answerRevealed = true
+                }
+            }
             answerFeedback?(correct)
             return
         }

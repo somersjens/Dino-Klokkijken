@@ -22,13 +22,21 @@ enum DinoAnimation {
     static let correctAnswerDelay = 0.72
     static let spriteAssets = ["dino-idle", "dino-thumbs-up-08", "dino-wrong-answer-04",
                                "dino-backflip-01", "dino-backflip-03", "dino-backflip-07", "dino-backflip-08"]
-        + (1...8).map { String(format: "dino-pirouette-%02d", $0) }
+        + (1...14).map { String(format: "dino-pirouette-%02d", $0) }
+
+    /// Keep the painted pose sequence together while giving the jump a brisk,
+    /// natural cadence. The short lead-in matches the result screen's fade.
+    static let pirouettePlaybackRate = 1.7
+    static func leadIn(_ clip: Clip) -> Double { clip == .pirouette ? 0.24 : 0 }
+
+    /// Show the planted-foot preparation before the companion leaves the bottom dock.
+    static func travelDelay(_ clip: Clip) -> Double { clip == .pirouette ? leadIn(clip) + 0.48 / pirouettePlaybackRate : 0 }
 
     /// The shared companion reaches the rock before the reward stars appear.
     static func travelDuration(_ clip: Clip) -> Double {
         switch clip {
         case .backflip: 1.22
-        case .pirouette: 1.30
+        case .pirouette: leadIn(clip) + 1.88 / pirouettePlaybackRate
         default: 0.42
         }
     }
@@ -38,12 +46,13 @@ enum DinoAnimation {
         case .thumbsUp: 0.52
         case .wrongAnswer: 0.5
         case .backflip: 1.62
-        case .pirouette: 1.56
+        case .pirouette: leadIn(clip) + 2.36 / pirouettePlaybackRate
         }
     }
 
     static func sample(_ clip: Clip, elapsed: Double, reducedMotion: Bool = false) -> Sample {
-        let t = max(0, elapsed)
+        let rate = clip == .pirouette ? pirouettePlaybackRate : 1
+        let t = max(0, elapsed - leadIn(clip)) * rate
         switch clip {
         case .idle:
             return Sample(pose: Pose(asset: "dino-idle"))
@@ -57,33 +66,53 @@ enum DinoAnimation {
             let tilt = reducedMotion || p == 1 ? 0 : 2 * sin(2 * .pi * p) * sin(.pi * p)
             return Sample(pose: Pose(asset: "dino-wrong-answer-04"), angle: tilt)
         case .pirouette:
-            let finalPose = Pose(asset: "dino-pirouette-08", paintedYaw: 360, offsetX: -0.012, offsetY: -0.029)
+            let finalPose = Pose(asset: "dino-pirouette-14", paintedYaw: 360, offsetX: -0.012, offsetY: -0.029)
             guard !reducedMotion else {
                 // The turn is already painted into the final image; no 3D transform is needed.
                 return Sample(pose: Pose(asset: finalPose.asset, offsetX: finalPose.offsetX, offsetY: finalPose.offsetY))
             }
-            let yaw = 360 * smooth((t - 0.22) / 0.94)
+            let takeoff = (travelDelay(.pirouette) - leadIn(.pirouette)) * rate
+            let landing = (travelDuration(.pirouette) - leadIn(.pirouette)) * rate
+            let yaw = t < takeoff ? 15 * smooth((t - 0.28) / 0.20)
+                : 15 + 345 * smooth((t - takeoff) / 1.22)
             let pose: Pose
-            if t < 0.16 {
-                pose = Pose(asset: "dino-pirouette-01", offsetX: -0.010, offsetY: -0.017)
-            } else if yaw < 22.5 {
-                pose = Pose(asset: "dino-pirouette-02", offsetX: -0.040, offsetY: -0.012)
-            } else if yaw < 112.5 {
-                pose = Pose(asset: "dino-pirouette-03", paintedYaw: 45, offsetX: -0.041, offsetY: -0.006)
-            } else if yaw < 225 {
-                pose = Pose(asset: "dino-pirouette-04", paintedYaw: 180, offsetX: -0.047, offsetY: -0.006)
-            } else if yaw < 292.5 {
-                pose = Pose(asset: "dino-pirouette-05", paintedYaw: 270, offsetX: -0.014, offsetY: -0.035)
-            } else if yaw < 337.5 {
-                pose = Pose(asset: "dino-pirouette-06", paintedYaw: 315, offsetX: -0.046, offsetY: -0.014)
-            } else if t < travelDuration(.pirouette) {
-                pose = Pose(asset: "dino-pirouette-07", paintedYaw: 360, offsetX: -0.028, offsetY: 0.008)
+            // Register the airborne poses by their painted centre of mass, rather
+            // than by the moving tail or lifted toes. The landing keeps the old foot line.
+            if t < 0.14 {
+                pose = Pose(asset: "dino-pirouette-01", offsetX: -0.017, offsetY: -0.017)
+            } else if t < 0.32 {
+                pose = Pose(asset: "dino-pirouette-02", offsetX: -0.036, offsetY: -0.018)
+            } else if t < takeoff {
+                pose = Pose(asset: "dino-pirouette-03", paintedYaw: 15, offsetX: -0.023, offsetY: -0.034)
+            } else if yaw < 47.5 {
+                pose = Pose(asset: "dino-pirouette-04", paintedYaw: 30, offsetX: -0.033, offsetY: 0.018)
+            } else if yaw < 82.5 {
+                pose = Pose(asset: "dino-pirouette-05", paintedYaw: 65, offsetX: -0.030, offsetY: 0.019)
+            } else if yaw < 140 {
+                pose = Pose(asset: "dino-pirouette-06", paintedYaw: 100, offsetX: -0.051, offsetY: 0.012)
+            } else if yaw < 202.5 {
+                pose = Pose(asset: "dino-pirouette-07", paintedYaw: 180, offsetX: -0.029)
+            } else if yaw < 247.5 {
+                pose = Pose(asset: "dino-pirouette-08", paintedYaw: 225, offsetX: -0.046)
+            } else if yaw < 290 {
+                pose = Pose(asset: "dino-pirouette-09", paintedYaw: 270, offsetX: -0.007, offsetY: 0.017)
+            } else if yaw < 325 {
+                pose = Pose(asset: "dino-pirouette-10", paintedYaw: 310, offsetX: 0, offsetY: 0.004)
+            } else if t < landing {
+                pose = Pose(asset: "dino-pirouette-11", paintedYaw: 340, offsetX: -0.031, offsetY: -0.012)
+            } else if t < landing + 0.15 {
+                pose = Pose(asset: "dino-pirouette-12", paintedYaw: 350, offsetX: -0.019, offsetY: -0.022)
+            } else if t < landing + 0.30 {
+                pose = Pose(asset: "dino-pirouette-13", paintedYaw: 360, offsetX: -0.012, offsetY: -0.031)
             } else {
                 pose = finalPose
             }
-            let flight = min(max((t - 0.14) / 1.16, 0), 1)
-            let height = -0.28 * pow(sin(.pi * flight), 1.2)
-            let squash = 0.06 * pulse(t, start: 0, end: 0.16) + 0.09 * pulse(t, start: 1.30, end: 1.52)
+            let flight = min(max((t - takeoff) / (landing - takeoff), 0), 1)
+            let height = -0.32 * pow(sin(.pi * flight), 1.2)
+            // The drawings now carry the crouch and recovery. Keep only a little
+            // spring in the landing so the planted feet remain on the same line.
+            let landingSquash = 0.025 * pulse(t, start: landing, end: landing + 0.30)
+            let squash = 0.025 * pulse(t, start: 0.12, end: takeoff) + landingSquash
             return Sample(pose: pose, yaw: yaw, height: height, scaleX: 1 + squash * 0.35, scaleY: 1 - squash)
         case .backflip:
             let finalPose = Pose(asset: "dino-backflip-08", offsetX: -0.013, offsetY: -0.009)

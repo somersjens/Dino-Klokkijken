@@ -12,6 +12,7 @@ struct DinoCharacter: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var start = Date()
     @State private var finished = false
+    @State private var playbackClip: DinoAnimation.Clip = .idle
     @State private var prepared: (appearance: DinoAppearance, images: [String: UIImage])?
 
     private var appearance: DinoAppearance { player.profile.dinoAppearance ?? .standard }
@@ -31,8 +32,11 @@ struct DinoCharacter: View {
     }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clip == .idle || finished || reduceMotion || scenePhase != .active)) { context in
-            let elapsed = finished ? DinoAnimation.duration(clip) : context.date.timeIntervalSince(start)
+        TimelineView(.animation(minimumInterval: 1.0 / 60,
+                                paused: clip == .idle || (playbackClip == clip && finished) || reduceMotion || scenePhase != .active)) { context in
+            // A finished answer reaction must not lend its final time or paused
+            // schedule to the new jump before the playback task starts.
+            let elapsed = playbackClip != clip ? 0 : finished ? DinoAnimation.duration(clip) : context.date.timeIntervalSince(start)
             let sample = DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reduceMotion)
             sprite(sample.pose, angle: sample.angle, yaw: sample.yaw)
                 .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
@@ -40,6 +44,7 @@ struct DinoCharacter: View {
                 // Feedback must never inherit the answer cards' opacity/layout animation.
                 .transaction { $0.animation = nil }
         }
+        .id(clip)
         .frame(width: size, height: size)
         .shadow(color: DinoStyle.deepGreen.opacity(0.10), radius: 8, y: 5)
         .accessibilityIdentifier(animationIdentifier)
@@ -53,7 +58,7 @@ struct DinoCharacter: View {
             prepared = (colors, images)
         }
         .task(id: clip) {
-            start = Date(); finished = false
+            start = Date(); finished = false; playbackClip = clip
             guard clip != .idle else { return }
             do { try await Task.sleep(for: .seconds(DinoAnimation.duration(clip))) } catch { return }
             finished = true
@@ -72,8 +77,10 @@ struct DinoCharacter: View {
             .rotationEffect(.degrees(angle - pose.paintedAngle),
                             anchor: clip == .backflip ? UnitPoint(x: 0.5, y: 0.52) : .bottom)
         if clip == .pirouette {
-            image.rotation3DEffect(.degrees(yaw - pose.paintedYaw), axis: (x: 0, y: 1, z: 0),
-                                   anchor: UnitPoint(x: 0.5, y: 0.52), perspective: 0.45)
+            // The supplied views carry the turn. A small residual motion keeps
+            // them alive without squeezing Dino into a thin rotating card.
+            image.rotation3DEffect(.degrees(min(9, max(-9, yaw - pose.paintedYaw))), axis: (x: 0, y: 1, z: 0),
+                                   anchor: UnitPoint(x: 0.5, y: 0.52), perspective: 0.18)
         } else {
             image
         }
@@ -117,6 +124,9 @@ struct DinoCompanionLayer: View {
         DinoCharacter(state: clip == .wrongAnswer ? .sad : .idle, size: 210,
                       performsBackflip: clip == .backflip, performsPirouette: clip == .pirouette,
                       givesThumbsUp: clip == .thumbsUp)
+            // Give each reaction fresh playback state as well as a fresh timeline.
+            // Position and scale still belong to this persistent companion layer.
+            .id(clip)
             .scaleEffect(placement.width / 210)
             .position(x: placement.midX, y: placement.midY)
             .opacity(visible ? 1 : 0)
@@ -136,7 +146,14 @@ struct DinoCompanionLayer: View {
                     return
                 }
                 if arriving {
-                    withAnimation(.easeInOut(duration: DinoAnimation.travelDuration(clip))) { placement = target }
+                    let delay = DinoAnimation.travelDelay(clip)
+                    let travel = DinoAnimation.travelDuration(clip) - delay
+                    // The crouch supplies the anticipation. Leave the ground
+                    // decisively, then ease into the landing on the rock.
+                    let journey: Animation = clip == .pirouette
+                        ? .timingCurve(0.20, 0.65, 0.35, 1, duration: travel)
+                        : .easeInOut(duration: travel)
+                    withAnimation(journey.delay(delay)) { placement = target }
                 } else {
                     // Track the dock or result anchor immediately; only the journey between screens animates.
                     var transaction = Transaction()

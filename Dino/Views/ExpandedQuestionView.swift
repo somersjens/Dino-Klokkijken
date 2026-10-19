@@ -84,21 +84,21 @@ struct DinoExpandedQuestionView: View {
                                    showsAnswer: isDemonstration || session.showsCorrectResponse,
                                    isDemonstration: isDemonstration, compactLayout: compactLayout && width >= 600,
                                    theme: theme, width: min(760, width),
-                                   explainsLive: showsTimeZoneWalk)
+                                   explainsLive: session.showsWorkedExplanation)
             }
         case .addTime, .subtractTime:
             DigitalClock(time: q.relatedTimes[0], theme: theme, fontSize: min(48, width * 0.14))
                 .accessibilityIdentifier(isDemonstration ? "demo.targetClock" : "question.targetClock")
             timeChange
         case .flightArrival:
-            DinoFlightTicket(work: flightWork, showsWork: isDemonstration || showsFlightWork,
+            DinoFlightTicket(work: flightWork, showsWork: isDemonstration || session.showsWorkedExplanation,
                              minuteStep: session.minuteStep, language: code, width: min(600, width),
                              isDemonstration: isDemonstration)
         case .daySchedule:
             if let schedule = q.daySchedule {
                 DinoTrainJourneyCard(schedule: schedule,
                                      showsAnswer: isDemonstration || session.showsCorrectResponse,
-                                     countsTotal: isDemonstration || showsTrainSum,
+                                     countsTotal: isDemonstration || session.missedFirstAnswer,
                                      isDemonstration: isDemonstration, language: code)
             }
         default:
@@ -112,27 +112,6 @@ struct DinoExpandedQuestionView: View {
             Text(verbatim: "\(duration) \(L(key: q.kind == .subtractTime ? "dino.expanded.earlier" : "dino.expanded.later"))")
         } icon: { Image(systemName: q.kind == .subtractTime ? "minus.circle.fill" : "plus.circle.fill") }
             .font(.system(size: 19, weight: .bold, design: .rounded)).foregroundStyle(DinoStyle.deepGreen)
-    }
-
-    /// After a miss, the two known jumps appear before the player continues.
-    private var showsSequencePattern: Bool {
-        !isDemonstration && (session.retryAnsweredCorrectly || session.answerRevealed)
-    }
-
-    /// A wrong first try, then the right answer or Show answer, replays the hour walk.
-    private var showsTimeZoneWalk: Bool {
-        !isDemonstration && (session.retryAnsweredCorrectly || session.answerRevealed)
-    }
-
-    /// Plays once the player stays on the question: a correct retry, or Show answer.
-    /// A correct first answer moves on by itself, so the walk is not started for that brief moment.
-    private var showsFlightWork: Bool {
-        !isDemonstration && !session.shouldAutoAdvance && (session.correctFeedback || session.answerRevealed)
-    }
-
-    /// A wrong first answer stays on screen, so the three ride times can be summed before the next try.
-    private var showsTrainSum: Bool {
-        !isDemonstration && session.hasFeedback && !session.shouldAutoAdvance
     }
 
     private var flightWork: DinoFlightArrivalWork {
@@ -164,7 +143,7 @@ struct DinoExpandedQuestionView: View {
         }
         .frame(maxWidth: .infinity)
         .overlayPreferenceValue(SequenceClockAnchors.self) { anchors in
-            if isDemonstration || showsSequencePattern {
+            if isDemonstration || session.showsWorkedExplanation {
                 GeometryReader { geometry in
                     // Side jumps never shift the clocks. The question mark stays without an arc.
                     let count = isDemonstration ? q.relatedTimes.count + 1 : q.relatedTimes.count

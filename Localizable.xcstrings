@@ -3481,13 +3481,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dino Jungle"
+            "value" : "Jungle"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dino Jungle"
+            "value" : "Oerwoud"
           }
         }
       }
@@ -7017,13 +7017,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dino Village"
+            "value" : "Clock Village"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dino Dorp"
+            "value" : "Klokdorp"
           }
         }
       }
@@ -7119,13 +7119,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dino City"
+            "value" : "Clock City"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dino Stad"
+            "value" : "Klokstad"
           }
         }
       }
@@ -7170,13 +7170,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dino-Desert"
+            "value" : "Desert"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dino-Desert"
+            "value" : "Woestijn"
           }
         }
       }
@@ -7323,13 +7323,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dino Castle"
+            "value" : "Time Castle"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dinokasteel"
+            "value" : "Tijdkasteel"
           }
         }
       }

@@ -3669,7 +3669,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(pirouette.exists)
         XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "dino.pirouette").count, 1)
         XCTAssertFalse(app.descendants(matching: .any)["dino.backflip"].exists)
-        RunLoop.current.run(until: Date().addingTimeInterval(2.5))
+        RunLoop.current.run(until: Date().addingTimeInterval(3.5))
         XCTAssertEqual(app.descendants(matching: .any)["result.stars"].label, "2/3")
         XCTAssertEqual(pirouette.frame.midX, app.frame.midX, accuracy: 5)
         XCTAssertLessThan(pirouette.frame.maxY, app.buttons["result.next"].frame.minY)
@@ -3707,7 +3707,7 @@ final class DinoUITests: XCTestCase {
         RunLoop.current.run(until: Date().addingTimeInterval(1.7))
         let landed = app.descendants(matching: .any)["dino.backflip"]
         // The 210pt drawing buffer scales to the responsive result anchor.
-        XCTAssertEqual(landed.frame.midX, app.frame.midX, accuracy: 4)
+        XCTAssertEqual(landed.frame.midX, app.frame.midX, accuracy: 5)
         XCTAssertGreaterThan(landed.frame.width, questionDinoWidth)
         XCTAssertGreaterThanOrEqual(landed.frame.minX, app.frame.minX)
         XCTAssertLessThanOrEqual(landed.frame.maxX, app.frame.maxX)

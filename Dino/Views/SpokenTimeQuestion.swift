@@ -110,8 +110,13 @@ struct SpokenTimeQuestion: View {
         let selected = selectedID == choice.id
         let correctID = prompt.correct.choiceIDs[slot]
         let revealed = !isDemonstration && session.hasFeedback
-        let showCorrect = choice.id == correctID && (isDemonstration || revealed)
-        let showWrong = revealed && selected && choice.id != correctID
+        let missed = revealed && !session.correctFeedback
+        let showCorrect = isDemonstration
+            ? choice.id == correctID && correctID != SpokenTimeChoice.emptyID
+            : session.correctFeedback
+                ? selected
+                : missed && choice.id == correctID && correctID != SpokenTimeChoice.emptyID
+        let showWrong = missed && selected && choice.id != correctID
         let title = buttonTitle(choice)
         return Button {
             session.chooseSpoken(slot: slot, choiceID: choice.id)
