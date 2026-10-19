@@ -24,6 +24,7 @@ struct DinoGameView: View {
                 g.size.height - hudHeight - questionContentHeight + g.safeAreaInsets.bottom - 16))
             let width = min(tablet ? 900 : 520, max(240, g.size.width - (tablet ? 64 : 36)))
             let dockHeight = max(80, companionSize - g.safeAreaInsets.bottom + 12)
+            let questionViewport = max(0, g.size.height - hudHeight - dockHeight)
             // Answer clocks use the intended dock size, so measuring the question
             // cannot create a feedback loop between clock and companion sizes.
             let reservedDockHeight = max(80, desiredCompanionSize - g.safeAreaInsets.bottom + 12)
@@ -43,7 +44,7 @@ struct DinoGameView: View {
                                         practiceQuestionNumber: session.practice == nil ? nil : session.practiceQuestionNumber,
                                         practiceConfiguration: session.practice,
                                         help: showExample, action: pause)
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { hudHeight = $0 }
+                        .readGeometry(for: CGFloat.self) { $0.size.height } action: { hudHeight = $0 }
                     ScrollViewReader { proxy in
                         ScrollView {
                             VStack(spacing: short ? 10 : 18) {
@@ -57,13 +58,14 @@ struct DinoGameView: View {
                                     .id(session.question.id)
                             }.padding(.vertical, short ? 12 : 20).frame(width: width)
                                 .fixedSize(horizontal: false, vertical: true)
-                                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { questionContentHeight = $0 }
+                                .readGeometry(for: CGFloat.self) { $0.size.height } action: { questionContentHeight = $0 }
                                 .frame(maxWidth: .infinity)
+                                .modifier(ShortScrollCentering(height: questionViewport))
                                 .contentShape(Rectangle())
                         }
-                        .defaultScrollAnchor(.center, for: .alignment)
+                        .centersShortContent()
                         .accessibilityIdentifier("game.questions")
-                        .onChange(of: session.hasFeedback) { _, visible in
+                        .onValueChange(of: session.hasFeedback) { visible in
                             // This compact question already keeps all four choices visible.
                             if visible && !session.correctFeedback && session.question.kind != .minutesBetween {
                                 withAnimation(.easeOut(duration: 0.25)) {
@@ -71,10 +73,10 @@ struct DinoGameView: View {
                                 }
                             }
                         }
-                        .onChange(of: session.question.id) { _, _ in
+                        .onValueChange(of: session.question.id) { _ in
                             proxy.scrollTo("question.top", anchor: .top)
                         }
-                        .onChange(of: wide) { _, _ in
+                        .onValueChange(of: wide) { _ in
                             if session.question.kind == .timeZone { proxy.scrollTo("question.top", anchor: .top) }
                         }
                     }
@@ -88,8 +90,8 @@ struct DinoGameView: View {
                                                  worldMinutes: session.practice == nil ? session.question.timeFamily.minutes : nil,
                                                  width: min(380, max(230, g.size.width - 80)), done: session.dismissDemonstration)
                             .padding(16)
-                    }.scrollBounceBehavior(.basedOnSize)
-                        .defaultScrollAnchor(.center, for: .alignment)
+                    }.bouncesOnlyWhenNeeded()
+                        .centersShortContent()
                         .frame(maxWidth: 480, maxHeight: g.size.height - 24)
                         .transition(.scale.combined(with: .opacity))
                 }
@@ -97,7 +99,7 @@ struct DinoGameView: View {
                     Color.black.opacity(0.28).ignoresSafeArea()
                     ScrollView {
                         exitCard(compact: g.size.height < 430).padding(16)
-                    }.scrollBounceBehavior(.basedOnSize)
+                    }.bouncesOnlyWhenNeeded()
                         .frame(maxWidth: 440, maxHeight: min(520, g.size.height - 16))
                         .transition(.scale(scale: 0.94).combined(with: .opacity))
                 }
@@ -120,10 +122,10 @@ struct DinoGameView: View {
                 guard !Task.isCancelled else { return }
                 session.advance()
             }
-            .onChange(of: session.hasFeedback ? (session.correctFeedback ? DinoAnimation.Clip.thumbsUp : .wrongAnswer) : .idle, initial: true) { _, reaction in
+            .onValueChange(of: session.hasFeedback ? (session.correctFeedback ? DinoAnimation.Clip.thumbsUp : .wrongAnswer) : .idle, initial: true) { reaction in
                 onCompanionReaction(reaction)
             }
-            .onChange(of: session.result != nil) { _, hasResult in
+            .onValueChange(of: session.result != nil) { hasResult in
                 if hasResult, let result = session.result { onResult(result) }
             }
             .animation(.easeOut(duration: 0.18), value: confirmExit)
@@ -335,7 +337,7 @@ struct DinoAnalogSettingDemonstration: View {
             } label: {
                 Label(LocalizedStringKey(confirmed ? "dino.ready" : "dino.clock.check"), systemImage: "checkmark")
                     .lineLimit(1).minimumScaleFactor(0.75)
-                    .contentTransition(.opacity)
+                    .opacityTextTransition()
             }.buttonStyle(DinoClockControlButtonStyle())
                 .padding(.top, 12)
                 .accessibilityIdentifier(confirmed ? "demo.ready" : "demo.confirm")

@@ -86,7 +86,7 @@ struct DinoTimeZoneMap: View {
             Text(verbatim: time)
                 .font(.system(size: 23, weight: .heavy, design: .rounded)).monospacedDigit()
                 .foregroundStyle(isOrigin ? color : direction)
-                .contentTransition(.numericText())
+                .numericTextTransition()
                 .accessibilityIdentifier("\(prefix).timeZone.\(isOrigin ? "referenceTime" : "targetTime")")
             Text(verbatim: offset)
                 .font(.system(size: 10, weight: .bold, design: .rounded))
@@ -165,7 +165,7 @@ struct DinoTimeZoneMap: View {
             let unit = code == "nl" ? "u" : "h"
             let text = Text(verbatim: "\(sign)\(abs(run.offset)) \(unit)")
                 .font(.system(size: 10, weight: .heavy, design: .rounded))
-                .foregroundStyle(Color(dinoHex: 0x315F6B))
+                .canvasInk(Color(dinoHex: 0x315F6B))
             let x = (run.start + run.end) / 2
             context.fill(Path(roundedRect: CGRect(x: x - 21, y: y - 9, width: 42, height: 18), cornerRadius: 6),
                          with: .color(.white.opacity(0.88)))
@@ -246,7 +246,7 @@ struct DinoTimeZoneLesson: View {
             Text(verbatim: differenceNumber)
                 .font(.system(size: 15, weight: .heavy, design: .rounded))
                 .monospacedDigit()
-                .contentTransition(.numericText())
+                .numericTextTransition()
         }
         .foregroundStyle(ink)
         .padding(.horizontal, 10)

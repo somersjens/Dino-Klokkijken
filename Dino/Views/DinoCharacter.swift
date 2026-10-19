@@ -5,6 +5,7 @@ struct DinoCharacter: View {
     var state: State = .idle
     var size: CGFloat = 150
     var performsBackflip = false
+    var performsPirouette = false
     var givesThumbsUp = false
     @EnvironmentObject private var player: DinoPlayer
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -16,7 +17,7 @@ struct DinoCharacter: View {
     private var appearance: DinoAppearance { player.profile.dinoAppearance ?? .standard }
 
     private var clip: DinoAnimation.Clip {
-        performsBackflip ? .backflip : givesThumbsUp ? .thumbsUp : state == .sad ? .wrongAnswer : .idle
+        performsBackflip ? .backflip : performsPirouette ? .pirouette : givesThumbsUp ? .thumbsUp : state == .sad ? .wrongAnswer : .idle
     }
 
     private var animationIdentifier: String {
@@ -25,6 +26,7 @@ struct DinoCharacter: View {
         case .thumbsUp: "dino.thumbsUp"
         case .wrongAnswer: "dino.wrongAnswer"
         case .backflip: "dino.backflip"
+        case .pirouette: "dino.pirouette"
         }
     }
 
@@ -32,7 +34,7 @@ struct DinoCharacter: View {
         TimelineView(.animation(minimumInterval: 1.0 / 60, paused: clip == .idle || finished || reduceMotion || scenePhase != .active)) { context in
             let elapsed = finished ? DinoAnimation.duration(clip) : context.date.timeIntervalSince(start)
             let sample = DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reduceMotion)
-            sprite(sample.pose, angle: sample.angle)
+            sprite(sample.pose, angle: sample.angle, yaw: sample.yaw)
                 .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
                 .offset(y: size * sample.height)
                 // Feedback must never inherit the answer cards' opacity/layout animation.
@@ -58,8 +60,8 @@ struct DinoCharacter: View {
         }
     }
 
-    private func sprite(_ pose: DinoAnimation.Pose, angle: Double) -> some View {
-        Group {
+    @ViewBuilder private func sprite(_ pose: DinoAnimation.Pose, angle: Double, yaw: Double) -> some View {
+        let image = Group {
             if let prepared, prepared.appearance == appearance, let image = prepared.images[pose.asset] {
                 Image(uiImage: image).resizable().scaledToFit().accessibilityHidden(true)
             } else {
@@ -69,6 +71,12 @@ struct DinoCharacter: View {
             .offset(x: size * pose.offsetX, y: size * pose.offsetY)
             .rotationEffect(.degrees(angle - pose.paintedAngle),
                             anchor: clip == .backflip ? UnitPoint(x: 0.5, y: 0.52) : .bottom)
+        if clip == .pirouette {
+            image.rotation3DEffect(.degrees(yaw - pose.paintedYaw), axis: (x: 0, y: 1, z: 0),
+                                   anchor: UnitPoint(x: 0.5, y: 0.52), perspective: 0.45)
+        } else {
+            image
+        }
     }
 }
 
@@ -107,12 +115,13 @@ struct DinoCompanionLayer: View {
             if destination != nil || isResult {
         // A fixed drawing size lets position and scale animate without restarting the sprite.
         DinoCharacter(state: clip == .wrongAnswer ? .sad : .idle, size: 210,
-                      performsBackflip: clip == .backflip, givesThumbsUp: clip == .thumbsUp)
+                      performsBackflip: clip == .backflip, performsPirouette: clip == .pirouette,
+                      givesThumbsUp: clip == .thumbsUp)
             .scaleEffect(placement.width / 210)
             .position(x: placement.midX, y: placement.midY)
             .opacity(visible ? 1 : 0)
             .accessibilityHidden(!visible)
-            .onChange(of: destination, initial: true) { _, target in
+            .onValueChange(of: destination, initial: true) { target in
                 guard let target else {
                     // Keep the takeoff position while the new result layout reports its anchor.
                     if !isResult { visible = false; atResult = false }
@@ -127,7 +136,7 @@ struct DinoCompanionLayer: View {
                     return
                 }
                 if arriving {
-                    withAnimation(.easeInOut(duration: clip == .backflip ? 1.22 : 0.42)) { placement = target }
+                    withAnimation(.easeInOut(duration: DinoAnimation.travelDuration(clip))) { placement = target }
                 } else {
                     // Track the dock or result anchor immediately; only the journey between screens animates.
                     var transaction = Transaction()

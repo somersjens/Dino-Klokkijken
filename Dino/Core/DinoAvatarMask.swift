@@ -60,7 +60,7 @@ enum DinoAvatarMask {
 
     static func spriteRegions(for asset: String) -> SpriteRegions? { poses[asset] }
 
-    /// Coordinates trace the six animation illustrations, all 1254 × 1254.
+    /// Coordinates trace each animation illustration, all 1254 × 1254.
     private static let poses: [String: SpriteRegions] = [
         "dino-thumbs-up-08": SpriteRegions(
             bandanaBottom: 0.36,
@@ -107,6 +107,76 @@ enum DinoAvatarMask {
             eyes: eyeContours([(517, 294, 129, 119), (734, 247, 95, 111)]),
             mouth: contours([[.move(592, 453), .curve(700, 490, 618, 479, 660, 490), .curve(799, 481, 741, 493, 776, 489),
                               .curve(756, 554, 794, 515, 777, 543), .curve(690, 565, 734, 571, 708, 575), .curve(592, 453, 641, 550, 612, 501)]])),
+        "dino-pirouette-01": SpriteRegions(
+            bandanaBottom: 0.39,
+            upperSpikes: contours([
+                [.move(548, 182), .curve(576, 67, 532, 112, 543, 57), .curve(704, 131, 618, 61, 674, 103), .curve(548, 182, 643, 145, 594, 162)],
+                [.move(460, 255), .curve(463, 157, 442, 222, 439, 178), .curve(555, 169, 489, 141, 524, 149), .curve(460, 255, 524, 191, 493, 227)]
+            ]),
+            eyes: eyeContours([(564, 357, 130, 135), (800, 320, 99, 134)]),
+            mouth: contours([[.move(620, 538), .curve(797, 584, 663, 578, 742, 593), .curve(901, 548, 839, 578, 880, 564),
+                              .curve(810, 660, 887, 598, 852, 647), .curve(735, 668, 789, 679, 752, 679), .curve(620, 538, 679, 645, 648, 587)]])),
+        "dino-pirouette-02": SpriteRegions(
+            bandanaBottom: 0.36,
+            upperSpikes: contours([
+                [.move(585, 127), .curve(597, 34, 566, 69, 566, 28), .curve(704, 94, 633, 28, 674, 63), .curve(585, 127, 660, 101, 615, 116)],
+                [.move(503, 218), .curve(491, 123, 467, 166, 472, 129), .curve(592, 134, 522, 100, 560, 113), .curve(503, 218, 558, 159, 533, 191)]
+            ]),
+            eyes: eyeContours([(638, 256, 130, 126), (840, 216, 86, 121)]),
+            mouth: contours([[.move(720, 406), .curve(837, 447, 752, 438, 796, 450), .curve(938, 424, 883, 446, 920, 433),
+                              .curve(881, 525, 927, 467, 905, 510), .curve(829, 540, 865, 545, 847, 548), .curve(720, 406, 772, 505, 742, 450)]])),
+        "dino-pirouette-03": SpriteRegions(
+            bandanaBottom: 0.30, tailRight: 0.48, tailBottom: 0.34,
+            upperSpikes: contours([
+                [.move(635, 155), .curve(651, 46, 615, 105, 616, 44), .curve(782, 114, 698, 42, 753, 91), .curve(635, 155, 724, 124, 682, 139)],
+                [.move(547, 240), .curve(548, 131, 508, 177, 511, 135), .curve(651, 155, 574, 108, 620, 121), .curve(547, 240, 615, 179, 581, 210)]
+            ]),
+            eyes: eyeContours([(752, 266, 111, 116), (905, 245, 60, 103)]),
+            mouth: contours([[.move(823, 399), .curve(923, 444, 850, 429, 893, 442), .curve(1001, 431, 952, 448, 983, 439),
+                              .curve(947, 517, 988, 467, 969, 503), .curve(912, 535, 936, 535, 925, 540), .curve(823, 399, 856, 497, 840, 452)]])),
+        "dino-pirouette-04": SpriteRegions(
+            bandanaBottom: 0.40,
+            upperSpikes: contours([
+                [.move(602, 160), .curve(649, 55, 601, 100, 625, 45), .curve(766, 130, 700, 53, 748, 106), .curve(602, 160, 715, 148, 653, 154)],
+                [.move(704, 253), .curve(795, 145, 718, 178, 754, 130), .curve(839, 236, 852, 152, 855, 195), .curve(704, 253, 787, 241, 743, 247)]
+            ]),
+            eyes: eyeContours([]), mouth: contours([])),
+        "dino-pirouette-05": SpriteRegions(
+            bandanaBottom: 0.30, tailRight: 0.47, tailBottom: 0.38,
+            upperSpikes: contours([
+                [.move(622, 145), .curve(640, 20, 604, 83, 610, 15), .curve(776, 98, 685, 11, 744, 64), .curve(622, 145, 717, 112, 672, 129)],
+                [.move(536, 221), .curve(543, 115, 506, 176, 509, 125), .curve(635, 140, 570, 96, 606, 113), .curve(536, 221, 601, 165, 568, 197)]
+            ]),
+            eyes: eyeContours([(705, 253, 111, 124), (878, 233, 72, 109)]),
+            mouth: contours([[.move(774, 408), .curve(888, 455, 805, 440, 850, 455), .curve(959, 442, 917, 456, 944, 448),
+                              .curve(910, 514, 946, 472, 932, 501), .curve(873, 533, 898, 533, 886, 536), .curve(774, 408, 819, 511, 790, 455)]])),
+        "dino-pirouette-06": SpriteRegions(
+            bandanaBottom: 0.30, tailRight: 0.47, tailBottom: 0.38,
+            upperSpikes: contours([
+                [.move(610, 150), .curve(628, 24, 594, 91, 594, 18), .curve(763, 96, 677, 18, 730, 64), .curve(610, 150, 704, 115, 662, 134)],
+                [.move(522, 228), .curve(530, 123, 492, 178, 495, 130), .curve(622, 145, 560, 103, 598, 116), .curve(522, 228, 588, 174, 553, 200)]
+            ]),
+            eyes: eyeContours([(700, 256, 118, 128), (885, 237, 76, 112)]),
+            mouth: contours([[.move(768, 409), .curve(887, 456, 803, 444, 849, 458), .curve(973, 441, 923, 458, 955, 450),
+                              .curve(916, 520, 959, 475, 940, 508), .curve(877, 536, 905, 538, 890, 540), .curve(768, 409, 812, 512, 788, 458)]])),
+        "dino-pirouette-07": SpriteRegions(
+            bandanaBottom: 0.37,
+            upperSpikes: contours([
+                [.move(543, 151), .curve(566, 18, 524, 90, 530, 14), .curve(704, 94, 618, 12, 675, 57), .curve(543, 151, 649, 110, 599, 133)],
+                [.move(456, 233), .curve(466, 117, 433, 178, 428, 128), .curve(551, 139, 489, 96, 526, 110), .curve(456, 233, 519, 169, 488, 202)]
+            ]),
+            eyes: eyeContours([(554, 292, 127, 137), (774, 266, 97, 127)]),
+            mouth: contours([[.move(611, 473), .curve(768, 523, 653, 514, 717, 528), .curve(876, 489, 816, 522, 854, 503),
+                              .curve(796, 601, 862, 542, 834, 585), .curve(733, 617, 777, 621, 751, 627), .curve(611, 473, 670, 592, 638, 527)]])),
+        "dino-pirouette-08": SpriteRegions(
+            bandanaBottom: 0.37,
+            upperSpikes: contours([
+                [.move(531, 158), .curve(551, 22, 510, 91, 516, 17), .curve(688, 96, 595, 16, 654, 58), .curve(531, 158, 637, 115, 581, 138)],
+                [.move(445, 239), .curve(454, 120, 416, 180, 423, 128), .curve(543, 139, 481, 101, 516, 116), .curve(445, 239, 509, 170, 476, 205)]
+            ]),
+            eyes: eyeContours([(537, 298, 131, 139), (762, 268, 99, 133)]),
+            mouth: contours([[.move(596, 480), .curve(758, 529, 640, 520, 704, 533), .curve(869, 493, 807, 526, 847, 506),
+                              .curve(786, 613, 857, 550, 826, 597), .curve(722, 627, 767, 634, 741, 636), .curve(596, 480, 658, 603, 622, 536)]])),
         "dino-wrong-answer-04": SpriteRegions(
             bandanaBottom: 0.385,
             upperSpikes: contours([
@@ -297,6 +367,13 @@ enum DinoSpriteColorRenderer {
     /// Tight print regions in each 1254-point illustration exclude the eyes,
     /// highlights and transparent background, even when the head is tilted.
     private static let bandanaLetteringBounds: [String: CGRect] = [
+        "dino-pirouette-01": CGRect(x: 580, y: 150, width: 252, height: 105),
+        "dino-pirouette-02": CGRect(x: 632, y: 98, width: 266, height: 105),
+        "dino-pirouette-03": CGRect(x: 748, y: 126, width: 180, height: 100),
+        "dino-pirouette-05": CGRect(x: 704, y: 103, width: 223, height: 109),
+        "dino-pirouette-06": CGRect(x: 684, y: 82, width: 244, height: 117),
+        "dino-pirouette-07": CGRect(x: 570, y: 112, width: 235, height: 111),
+        "dino-pirouette-08": CGRect(x: 560, y: 118, width: 246, height: 110),
         "dino-idle": CGRect(x: 550, y: 90, width: 238, height: 106),
         "dino-thumbs-up-08": CGRect(x: 525, y: 85, width: 250, height: 117),
         "dino-wrong-answer-04": CGRect(x: 526, y: 89, width: 252, height: 137),
@@ -382,6 +459,14 @@ enum DinoSpriteColorRenderer {
         Tone(0.23333, 0.37255, 0.50980, 0.67539), Tone(0.55098, 0.79020, 0.88431, 0.71429)
     ]
     private static let palettes: [String: [Tone]] = [
+        "dino-pirouette-01": [Tone(0.23611, 0.48814, 0.57905, 0.91416), Tone(0.10277, 0.19763, 0.37103, 0.53623), Tone(0.22134, 0.38340, 0.52174, 0.63717), Tone(0.56324, 0.77953, 0.88583, 0.65714)],
+        "dino-pirouette-02": [Tone(0.23715, 0.49012, 0.57905, 0.85833), Tone(0.12055, 0.19721, 0.39130, 0.53061), Tone(0.23913, 0.38933, 0.52174, 0.62319), Tone(0.54762, 0.75099, 0.87945, 0.63200)],
+        "dino-pirouette-03": [Tone(0.28854, 0.49409, 0.56944, 0.90717), Tone(0.08103, 0.17787, 0.31423, 0.60440), Tone(0.24901, 0.38976, 0.49605, 0.62832), Tone(0.55731, 0.71937, 0.87451, 0.55556)],
+        "dino-pirouette-04": [Tone(0.33399, 0.48622, 0.54348, 0.85000), Tone(0.11265, 0.18504, 0.32411, 0.64815), Tone(0.23518, 0.38189, 0.48221, 0.65625), Tone(0.54902, 0.66008, 0.80237, 0.45882)],
+        "dino-pirouette-05": [Tone(0.26087, 0.48617, 0.56126, 0.90977), Tone(0.08893, 0.19170, 0.34510, 0.55378), Tone(0.25099, 0.41502, 0.52174, 0.62667), Tone(0.55929, 0.67589, 0.85375, 0.50602)],
+        "dino-pirouette-06": [Tone(0.25494, 0.49012, 0.57510, 0.89474), Tone(0.09881, 0.19565, 0.37154, 0.53061), Tone(0.26285, 0.41304, 0.50395, 0.62304), Tone(0.54743, 0.70553, 0.85630, 0.53020)],
+        "dino-pirouette-07": [Tone(0.26877, 0.50000, 0.57905, 0.91266), Tone(0.10277, 0.19170, 0.45257, 0.52475), Tone(0.24506, 0.39723, 0.50595, 0.64602), Tone(0.56126, 0.78656, 0.88340, 0.73109)],
+        "dino-pirouette-08": [Tone(0.26389, 0.50198, 0.58498, 0.89076), Tone(0.10913, 0.20040, 0.50198, 0.51685), Tone(0.25889, 0.39130, 0.51383, 0.66990), Tone(0.59486, 0.80632, 0.88340, 0.76238)],
         "dino-thumbs-up-08": [Tone(0.24111, 0.48221, 0.54150, 0.96154), Tone(0.08103, 0.15538, 0.30237, 0.65432),
                               Tone(0.22925, 0.37154, 0.49802, 0.69143), Tone(0.57341, 0.80237, 0.88538, 0.74737)],
         "dino-wrong-answer-04": [Tone(0.23518, 0.52569, 0.58367, 0.93886), Tone(0.09881, 0.17857, 0.33399, 0.50617),

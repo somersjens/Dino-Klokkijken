@@ -23,6 +23,22 @@ extension Color {
                   green: Double((dinoHex >> 8) & 255) / 255,
                   blue: Double(dinoHex & 255) / 255)
     }
+
+    /// iOS 18 blends in a perceptual space. Earlier systems blend the same sRGB channels.
+    func mixed(with other: Color, by fraction: Double) -> Color {
+        if #available(iOS 18, *) {
+            return mix(with: other, by: fraction)
+        }
+        let amount = CGFloat(min(1, max(0, fraction)))
+        var r1: CGFloat = 0, g1: CGFloat = 0, b1: CGFloat = 0, a1: CGFloat = 0
+        var r2: CGFloat = 0, g2: CGFloat = 0, b2: CGFloat = 0, a2: CGFloat = 0
+        guard UIColor(self).getRed(&r1, green: &g1, blue: &b1, alpha: &a1),
+              UIColor(other).getRed(&r2, green: &g2, blue: &b2, alpha: &a2) else { return self }
+        return Color(red: Double(r1 + (r2 - r1) * amount),
+                     green: Double(g1 + (g2 - g1) * amount),
+                     blue: Double(b1 + (b2 - b1) * amount),
+                     opacity: Double(a1 + (a2 - a1) * amount))
+    }
 }
 
 enum DinoStyle {
@@ -375,8 +391,8 @@ struct DinoStars: View {
             ForEach(0..<3, id: \.self) { index in
                 if showEmpty || index < count {
                     DinoRewardStar(size: size, earned: index < count, dimmed: index >= count)
-                        .rotationEffect(.degrees(index == 1 ? 0 : index == 0 ? -9 : 9))
-                        .offset(y: index == 1 ? -size * 0.12 : 0)
+                        .rotationEffect(.degrees(index == 1 ? 0 : index == 0 ? -6 : 6))
+                        .offset(y: index == 1 ? -size * 0.10 : 0)
                 }
             }
         }
@@ -410,5 +426,143 @@ struct JungleBackground: View {
         }
         .ignoresSafeArea()
         .accessibilityHidden(true)
+    }
+}
+
+extension Text {
+    /// `Text.foregroundStyle` returns `Text` only on iOS 17, which canvas drawing needs.
+    /// Earlier systems use the same color through `foregroundColor`.
+    func canvasInk(_ color: Color) -> Text {
+        if #available(iOS 17, *) {
+            return self.foregroundStyle(color)
+        }
+        return self.foregroundColor(color)
+    }
+}
+
+extension Animation {
+    /// The same settle used by the journey card. iOS 17 has a duration/bounce spring;
+    /// earlier systems use the response/damping spring with the same timing.
+    static var dinoSettle: Animation {
+        if #available(iOS 17, *) {
+            return .spring(duration: 0.5, bounce: 0.16)
+        }
+        return .spring(response: 0.5, dampingFraction: 0.84)
+    }
+}
+
+extension View {
+    /// Reports layout changes, including movement inside a scroll view.
+    /// iOS 18 uses the system callback; earlier systems use a geometry preference.
+    func readGeometry<T: Equatable>(for type: T.Type, of transform: @escaping (GeometryProxy) -> T, action: @escaping (T) -> Void) -> some View {
+        modifier(GeometryProbe(transform: transform, action: action))
+    }
+
+    /// Observes a value. `initial` matches the iOS 17 `onChange` flag.
+    func onValueChange<T: Equatable>(of value: T, initial: Bool = false, perform action: @escaping (T) -> Void) -> some View {
+        modifier(ValueChangeProbe(value: value, initial: initial, action: action))
+    }
+
+    /// Centers content that is shorter than the scroll view, without moving the initial offset of taller content.
+    @ViewBuilder func centersShortContent() -> some View {
+        if #available(iOS 18, *) {
+            self.defaultScrollAnchor(.center, for: .alignment)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder func bouncesOnlyWhenNeeded() -> some View {
+        if #available(iOS 16.4, *) {
+            self.scrollBounceBehavior(.basedOnSize)
+        } else {
+            self
+        }
+    }
+
+    /// Page-sized sheets on iOS 18. Earlier systems keep the large detent already applied by the caller.
+    @ViewBuilder func pagePresentation() -> some View {
+        if #available(iOS 18, *) {
+            self.presentationSizing(.page)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder func numericTextTransition() -> some View {
+        if #available(iOS 17, *) {
+            self.contentTransition(.numericText())
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder func opacityTextTransition() -> some View {
+        if #available(iOS 17, *) {
+            self.contentTransition(.opacity)
+        } else {
+            self
+        }
+    }
+}
+
+/// Gives short scroll content a centered minimum height before iOS 18's alignment scroll anchor exists.
+struct ShortScrollCentering: ViewModifier {
+    var height: CGFloat
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 18, *) {
+            content
+        } else {
+            content.frame(minHeight: height, alignment: .center)
+        }
+    }
+}
+
+private struct GeometryProbeKey<T: Equatable>: PreferenceKey {
+    static var defaultValue: T? { nil }
+    static func reduce(value: inout T?, nextValue: () -> T?) {
+        if let next = nextValue() { value = next }
+    }
+}
+
+private struct GeometryProbe<T: Equatable>: ViewModifier {
+    let transform: (GeometryProxy) -> T
+    let action: (T) -> Void
+    @State private var last: T?
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 18, *) {
+            content.onGeometryChange(for: T.self, of: transform, action: action)
+        } else {
+            content.background {
+                GeometryReader { proxy in
+                    Color.clear.preference(key: GeometryProbeKey<T>.self, value: transform(proxy))
+                }
+                .onPreferenceChange(GeometryProbeKey<T>.self) { value in
+                    guard let value, value != last else { return }
+                    last = value
+                    action(value)
+                }
+                .transformPreference(GeometryProbeKey<T>.self) { $0 = nil }
+            }
+        }
+    }
+}
+
+private struct ValueChangeProbe<T: Equatable>: ViewModifier {
+    let value: T
+    let initial: Bool
+    let action: (T) -> Void
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if #available(iOS 17, *) {
+            content.onChange(of: value, initial: initial) { _, newValue in action(newValue) }
+        } else {
+            content.background {
+                Color.clear.frame(width: 0, height: 0)
+                    .onAppear { if initial { action(value) } }
+                    .onChange(of: value) { newValue in action(newValue) }
+            }
+        }
     }
 }

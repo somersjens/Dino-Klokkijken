@@ -67,7 +67,7 @@ struct PracticeClockPreview: View {
             for hour in 1...12 {
                 let radians = Double(hour) * .pi / 6
                 context.draw(Text(verbatim: theme.analogNumerals.label(for: hour))
-                    .font(.system(size: size * 0.08, weight: .bold, design: theme.analogNumerals == .roman ? .serif : .rounded)).foregroundStyle(markings),
+                    .font(.system(size: size * 0.08, weight: .bold, design: theme.analogNumerals == .roman ? .serif : .rounded)).canvasInk(markings),
                              at: CGPoint(x: center.x + CGFloat(sin(radians)) * size * 0.34,
                                          y: center.y - CGFloat(cos(radians)) * size * 0.34))
             }
@@ -155,7 +155,7 @@ struct AnalogClock: View {
             }
             .onEnded { _ in draggingMinutes = nil },
             including: onHourChange == nil && onMinuteChange == nil ? .none : .all)
-        .onChange(of: touchingClock) { _, active in
+        .onValueChange(of: touchingClock) { active in
             if !active { draggingMinutes = nil }
         }
         .accessibilityElement(children: .ignore)

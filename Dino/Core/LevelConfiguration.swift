@@ -109,9 +109,17 @@ struct LevelConfiguration: Identifiable, Sendable {
 struct DinoWorld: Identifiable, Equatable, Sendable {
     let id: Int
     let ground: UInt32
-    var titleKey: String { id == 1 ? "dino.jungle" : "dino.world.\(id).name" }
+    /// Stable art/localization IDs: chapter 2 uses the desert (7), chapter 7 Sleep Valley (2).
+    var themeID: Int {
+        switch id {
+        case 2: return 7
+        case 7: return 2
+        default: return id
+        }
+    }
+    var titleKey: String { themeID == 1 ? "dino.jungle" : "dino.world.\(themeID).name" }
     var skillKey: String { id == 1 ? "dino.wholeHours" : "dino.world.\(id).skill" }
-    var bossKey: String { id == 1 ? "dino.bossName" : "dino.world.\(id).boss" }
+    var bossKey: String { themeID == 1 ? "dino.bossName" : "dino.world.\(themeID).boss" }
     var firstLevel: Int { (id - 1) * 10 + 1 }
     var bossLevel: Int { id * 10 }
     var normalLevels: ClosedRange<Int> { firstLevel...(bossLevel - 1) }
@@ -133,10 +141,10 @@ struct DinoWorld: Identifiable, Equatable, Sendable {
 
 enum DinoWorldCatalog {
     static let worlds: [DinoWorld] = [
-        .init(id: 1, ground: 0xDDEEB6), .init(id: 2, ground: 0xDCD6F7),
+        .init(id: 1, ground: 0xDDEEB6), .init(id: 2, ground: 0xF5D397),
         .init(id: 3, ground: 0xFFD1A1), .init(id: 4, ground: 0xC7E8BE),
         .init(id: 5, ground: 0xD8EEF0), .init(id: 6, ground: 0xB8E4F5),
-        .init(id: 7, ground: 0xD4DDC4), .init(id: 8, ground: 0xE8E9DA),
+        .init(id: 7, ground: 0xDCD6F7), .init(id: 8, ground: 0xE8E9DA),
         .init(id: 9, ground: 0xF5D698), .init(id: 10, ground: 0xE8DFCC)
     ]
     static var lastLevel: Int { worlds.last!.bossLevel }

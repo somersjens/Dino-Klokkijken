@@ -9,7 +9,7 @@ enum WorldBossClock {
         case 4: return .init(hour: 5, minute: 20)
         case 5: return .init(hour: 2, minute: 17)
         case 6: return .init(hour: 12, minute: 45)
-        case 7: return .init(hour: 20)
+        case 7: return .init(hour: 7, minute: 30)
         case 8: return .init(hour: 6, minute: 25)
         case 9: return .init(hour: 9, minute: 30)
         default: return .init(hour: 10, minute: 25)
@@ -32,7 +32,7 @@ struct WorldBossPainter {
         case 2: p.dreamsaurus()
         case 5: p.crystalGuardian()
         case 6: p.clockRobot()
-        case 7: p.forestOwl()
+        case 7: p.desertGuardian()
         default: p.dino(worldID: worldID)
         }
     }
@@ -174,7 +174,7 @@ private struct BossBrush {
             for (number, position) in [(12, CGPoint(x: 0, y: -0.53)), (3, CGPoint(x: 0.56, y: 0)),
                                    (6, CGPoint(x: 0, y: 0.55)), (9, CGPoint(x: -0.55, y: 0))] {
                 context.draw(Text(verbatim: String(number)).font(.system(size: radius * 0.24, weight: .heavy, design: .rounded))
-                    .foregroundStyle(Color(dinoHex: hands)), at: CGPoint(x: c.x + position.x * radius, y: c.y + position.y * radius))
+                    .canvasInk(Color(dinoHex: hands)), at: CGPoint(x: c.x + position.x * radius, y: c.y + position.y * radius))
             }
         }
         for (degrees, length, weight) in [(Double(time.hour % 12) * 30 + Double(time.minute) * 0.5, radius * 0.43, max(0.55, radius * 0.095)),
@@ -198,7 +198,7 @@ private struct BossBrush {
         rounded(CGRect(x: center.x - width / 2, y: center.y - height / 2, width: width, height: height), radius: 4, color: 0x244D61)
         let string = String(format: "%02d:%02d", time.hour, time.minute)
         context.draw(Text(verbatim: string).font(.system(size: height * 0.60, weight: .bold, design: .monospaced))
-            .foregroundStyle(Color(dinoHex: 0xFDE4A0)), at: center)
+            .canvasInk(Color(dinoHex: 0xFDE4A0)), at: center)
         line([CGPoint(x: center.x - width / 2 + 5, y: center.y - height / 2 + 2),
               CGPoint(x: center.x - 2, y: center.y - height / 2 + 2)], color: 0xB8E5D7, width: 1, opacity: 0.4)
     }
@@ -669,6 +669,60 @@ private struct BossBrush {
             oval(CGRect(x: x - 3, y: -45, width: 6, height: 6), color: color, sheen: true)
         }
         for y: CGFloat in [-32, -28] { line([CGPoint(x: -13, y: y), CGPoint(x: 15, y: y)], color: 0x376E80, width: 1) }
+    }
+
+    /// Sandstone armour, a sun-faded scarf and a strapped clock replace the forest owl.
+    func desertGuardian() {
+        let skin: UInt32 = 0xC39B62
+        var tail = Path(); tail.move(to: CGPoint(x: -20, y: -64))
+        tail.addCurve(to: CGPoint(x: -76, y: -42), control1: CGPoint(x: -49, y: -38), control2: CGPoint(x: -56, y: -37))
+        tail.addQuadCurve(to: CGPoint(x: -36, y: -23), control: CGPoint(x: -68, y: -21))
+        tail.addLine(to: CGPoint(x: -12, y: -35)); tail.closeSubpath()
+        paint(tail, color: skin, outline: true)
+        oval(CGRect(x: -86, y: -53, width: 24, height: 24), color: 0xBA8755)
+        for x: CGFloat in [-31, 21] {
+            rounded(CGRect(x: x, y: -32, width: 23, height: 33), radius: 9, color: 0xAE864F)
+            toes(at: CGPoint(x: x + 3, y: -3), color: 0xEED7AA)
+        }
+        oval(CGRect(x: -45, y: -96, width: 87, height: 74), color: skin)
+        oval(CGRect(x: -20, y: -75, width: 48, height: 48), color: 0xEDD4A1)
+        // Irregular plates grow from the back, with a warm sunlit ridge.
+        for i in 0..<6 {
+            let x = CGFloat(i) * 13 - 47, y = -79 - CGFloat(sin(Double(i) * .pi / 6)) * 22
+            polygon([CGPoint(x: x, y: y + 14), CGPoint(x: x - 4, y: y - 3), CGPoint(x: x + 5, y: y - 16),
+                     CGPoint(x: x + 16, y: y - 5), CGPoint(x: x + 18, y: y + 12)], color: i.isMultiple(of: 2) ? 0xD5AA74 : 0xB88957)
+            line([CGPoint(x: x + 5, y: y - 14), CGPoint(x: x + 7, y: y + 8)], color: 0xFBE1AE, width: 1.3, opacity: 0.8)
+            line([CGPoint(x: x, y: y + 3), CGPoint(x: x + 13, y: y + 5)], color: 0x966541, width: 0.8, opacity: 0.6)
+        }
+        oval(CGRect(x: -3, y: -133, width: 61, height: 62), color: skin)
+        oval(CGRect(x: 17, y: -105, width: 52, height: 30), color: 0xDDC18A)
+        for i in 0..<3 {
+            polygon([CGPoint(x: 2 + CGFloat(i) * 16, y: -127), CGPoint(x: 8 + CGFloat(i) * 16, y: -142),
+                     CGPoint(x: 17 + CGFloat(i) * 16, y: -126)], color: 0xB68A55)
+        }
+        eye(at: CGPoint(x: 19, y: -111), size: 0.80, iris: 0x6F7150)
+        eye(at: CGPoint(x: 43, y: -109), size: 0.69, iris: 0x6F7150)
+        oval(CGRect(x: 52, y: -98, width: 4, height: 3), color: 0x8C6742)
+        smile(at: CGPoint(x: 43, y: -85), width: 26)
+        // The faded cloth wraps the neck and continues behind the shoulder.
+        polygon([CGPoint(x: -1, y: -88), CGPoint(x: 31, y: -82), CGPoint(x: 40, y: -69),
+                 CGPoint(x: 10, y: -73), CGPoint(x: -8, y: -80)], color: 0xB97C42)
+        polygon([CGPoint(x: -3, y: -81), CGPoint(x: -23, y: -77), CGPoint(x: -29, y: -50),
+                 CGPoint(x: -18, y: -56), CGPoint(x: -10, y: -51), CGPoint(x: 2, y: -76)], color: 0xD9A65F)
+        line([CGPoint(x: -16, y: -70), CGPoint(x: -21, y: -55)], color: 0xF7D394, width: 1.2)
+        // Two leather straps visibly carry the clock at half past seven.
+        line([CGPoint(x: -13, y: -85), CGPoint(x: -10, y: -61), CGPoint(x: 13, y: -52), CGPoint(x: 35, y: -75)], color: 0x80613E, width: 5)
+        line([CGPoint(x: -14, y: -85), CGPoint(x: -11, y: -62), CGPoint(x: 13, y: -53)], color: 0xD0AE76, width: 1.2)
+        clock(at: CGPoint(x: 8, y: -47), radius: 24, time: WorldBossClock.time(in: 7), metal: 0xC59956)
+        oval(CGRect(x: -20, y: -48, width: 14, height: 17), color: skin)
+        oval(CGRect(x: 26, y: -47, width: 14, height: 17), color: skin)
+        for x: CGFloat in [-39, 13] {
+            rounded(CGRect(x: x, y: -26, width: 27, height: 29), radius: 10, color: skin)
+            toes(at: CGPoint(x: x + 4, y: -2), color: 0xF5DFB6)
+        }
+        for (x, y): (CGFloat, CGFloat) in [(-30, -51), (-34, -42), (46, -116), (51, -119)] {
+            oval(CGRect(x: x, y: y, width: 3, height: 2), color: 0xA8804D)
+        }
     }
 
     func forestOwl() {

@@ -42,7 +42,6 @@ struct SpokenTimePrompt: Equatable, Sendable {
 /// Clock speech for one language. Add a value to `SpokenTimeCatalog.all` to support another language.
 struct SpokenTimeLanguage: Sendable {
     let code: String
-    fileprivate let emptyAccessibility: String
     /// Twelve at index 0, then one through eleven.
     fileprivate let hours: [String]
     fileprivate let slots: [SpokenSlotSpec]
@@ -102,13 +101,13 @@ struct SpokenTimeLanguage: Sendable {
                 var kept: [String] = correct == SpokenTimeChoice.emptyID ? [] : [correct]
                 var distractors = vocabulary.filter { $0 != correct }.shuffled(using: &rng)
                 while kept.count < 3, !distractors.isEmpty { kept.append(distractors.removeFirst()) }
-                let shown = [SpokenTimeChoice.emptyID] + vocabulary.filter { kept.contains($0) }
+                let shown = vocabulary.filter { kept.contains($0) }
                 return SpokenTimeSlot(id: slot.id, title: slot.title, choices: shown.map { choice($0, words: slot.words) })
             case .hour(let title):
                 let hourChoices = presentedHours.map { hour in
                     SpokenTimeChoice(id: "h\(hour)", word: self.hours[hour], accessibility: self.hours[hour])
                 }
-                return SpokenTimeSlot(id: "hour", title: title, choices: [emptyChoice] + hourChoices)
+                return SpokenTimeSlot(id: "hour", title: title, choices: hourChoices)
             }
         }
         return SpokenTimePrompt(slots: built, correct: SpokenTimeAnswer(choiceIDs: correctIDs))
@@ -126,12 +125,7 @@ struct SpokenTimeLanguage: Sendable {
         return (language == "nl" ? dutch : english)[value]
     }
 
-    private var emptyChoice: SpokenTimeChoice {
-        SpokenTimeChoice(id: SpokenTimeChoice.emptyID, word: "—", accessibility: emptyAccessibility)
-    }
-
     private func choice(_ id: String, words: [String: String]) -> SpokenTimeChoice {
-        if id == SpokenTimeChoice.emptyID { return emptyChoice }
         let word = words[id]!
         return SpokenTimeChoice(id: id, word: word, accessibility: word)
     }
@@ -163,7 +157,6 @@ private struct SpokenWordSlot: Sendable {
 private extension SpokenTimeLanguage {
     static let dutch = SpokenTimeLanguage(
         code: "nl",
-        emptyAccessibility: "Niets",
         hours: ["twaalf", "een", "twee", "drie", "vier", "vijf", "zes", "zeven", "acht", "negen", "tien", "elf"],
         slots: [
             .words(.init(id: "minutes", title: "Minuten", choiceIDs: ["-", "vijf", "tien", "kwart"],
@@ -194,7 +187,6 @@ private extension SpokenTimeLanguage {
 
     static let english = SpokenTimeLanguage(
         code: "en",
-        emptyAccessibility: "Nothing",
         hours: ["twelve", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven"],
         slots: [
             .words(.init(id: "minutes", title: "Minutes",

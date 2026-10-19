@@ -112,13 +112,13 @@ struct AdventureHeader: View {
             .frame(width: geometry.size.width, height: headerHeight * scale, alignment: .top)
         }
         .frame(height: headerHeight * headerScale(width: availableWidth))
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { availableWidth = $0 }
+        .readGeometry(for: CGFloat.self) { $0.size.width } action: { availableWidth = $0 }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: worldID)
         .sheet(isPresented: $showsPersonalizer) {
             DinoPersonalizer().environmentObject(player).gameEnvironment()
                 .presentationDetents([.large]).presentationDragIndicator(.visible)
         }
-        .onChange(of: showsPersonalizer) { _, shown in personalizerChanged(shown) }
+        .onValueChange(of: showsPersonalizer) { shown in personalizerChanged(shown) }
     }
 
     private var headerHeight: CGFloat {

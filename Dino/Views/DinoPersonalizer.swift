@@ -59,7 +59,7 @@ struct DinoPersonalizer: View {
             .toolbar(.hidden, for: .navigationBar)
         }.foregroundStyle(DinoStyle.ink)
             .onAppear { page = .dino; theme = player.profile.clockTheme }
-            .onChange(of: theme) { _, updated in player.setTheme(updated) }
+            .onValueChange(of: theme) { updated in player.setTheme(updated) }
             .onDisappear { player.completeClockCustomization(theme: theme) }
     }
 }

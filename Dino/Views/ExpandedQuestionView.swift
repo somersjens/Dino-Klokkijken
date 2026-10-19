@@ -526,7 +526,7 @@ private struct DinoTrainJourneyCard: View {
                     }
                 }
                 .clipped()
-                .animation(isDemonstration || reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.16), value: showsTotal)
+                .animation(isDemonstration || reduceMotion ? nil : .dinoSettle, value: showsTotal)
             } else {
                 trainOne
                 connector
@@ -544,12 +544,12 @@ private struct DinoTrainJourneyCard: View {
             .stroke(highContrast ? DinoStyle.ink : DinoStyle.deepGreen.opacity(0.16), lineWidth: highContrast ? 2 : 1.5))
         .shadow(color: DinoStyle.deepGreen.opacity(0.08), radius: 16, y: 6)
         .accessibilityIdentifier("\(prefix).schedule.card")
-        .onChange(of: countsTotal, initial: false) { _, show in
+        .onValueChange(of: countsTotal) { show in
             guard show, !isDemonstration else { return }
             if reduceMotion {
                 showsTotal = true
             } else {
-                withAnimation(.spring(duration: 0.5, bounce: 0.16).delay(0.08)) { showsTotal = true }
+                withAnimation(.dinoSettle.delay(0.08)) { showsTotal = true }
             }
         }
     }
@@ -771,7 +771,7 @@ private struct DinoFlightTicket: View {
                         if showsWork && walking {
                             timeChip(shownArrival.digitalText, color: DinoFlightInk.arrival,
                                      identifier: isDemonstration ? "demo.answer" : "\(prefix).flight.arrival")
-                                .contentTransition(.numericText())
+                                .numericTextTransition()
                         } else {
                             Text(verbatim: "?")
                                 .font(.system(size: timeSize, weight: .heavy, design: .rounded))
@@ -892,7 +892,7 @@ private struct DinoFlightTicket: View {
             Text(verbatim: chipNumber)
                 .font(.system(size: width < 380 ? 13 : 14, weight: .heavy, design: .rounded))
                 .monospacedDigit().lineLimit(1).minimumScaleFactor(0.45)
-                .contentTransition(.numericText())
+                .numericTextTransition()
         }
         .foregroundStyle(ink)
         .padding(.horizontal, 10).padding(.vertical, 7)

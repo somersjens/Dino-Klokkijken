@@ -2,16 +2,18 @@ import Foundation
 
 /// One visible pose at a time: smooth motion without fading different faces together.
 enum DinoAnimation {
-    enum Clip: String { case idle, thumbsUp, wrongAnswer, backflip }
+    enum Clip: String { case idle, thumbsUp, wrongAnswer, backflip, pirouette }
     struct Pose {
         let asset: String
         var paintedAngle = 0.0
+        var paintedYaw = 0.0
         var offsetX = 0.0
         var offsetY = 0.0
     }
     struct Sample {
         let pose: Pose
         var angle = 0.0
+        var yaw = 0.0
         var height = 0.0
         var scaleX = 1.0
         var scaleY = 1.0
@@ -20,12 +22,23 @@ enum DinoAnimation {
     static let correctAnswerDelay = 0.72
     static let spriteAssets = ["dino-idle", "dino-thumbs-up-08", "dino-wrong-answer-04",
                                "dino-backflip-01", "dino-backflip-03", "dino-backflip-07", "dino-backflip-08"]
+        + (1...8).map { String(format: "dino-pirouette-%02d", $0) }
+
+    /// The shared companion reaches the rock before the reward stars appear.
+    static func travelDuration(_ clip: Clip) -> Double {
+        switch clip {
+        case .backflip: 1.22
+        case .pirouette: 1.30
+        default: 0.42
+        }
+    }
     static func duration(_ clip: Clip) -> Double {
         switch clip {
         case .idle: 0
         case .thumbsUp: 0.52
         case .wrongAnswer: 0.5
         case .backflip: 1.62
+        case .pirouette: 1.56
         }
     }
 
@@ -43,6 +56,35 @@ enum DinoAnimation {
             let p = min(t / duration(.wrongAnswer), 1)
             let tilt = reducedMotion || p == 1 ? 0 : 2 * sin(2 * .pi * p) * sin(.pi * p)
             return Sample(pose: Pose(asset: "dino-wrong-answer-04"), angle: tilt)
+        case .pirouette:
+            let finalPose = Pose(asset: "dino-pirouette-08", paintedYaw: 360, offsetX: -0.012, offsetY: -0.029)
+            guard !reducedMotion else {
+                // The turn is already painted into the final image; no 3D transform is needed.
+                return Sample(pose: Pose(asset: finalPose.asset, offsetX: finalPose.offsetX, offsetY: finalPose.offsetY))
+            }
+            let yaw = 360 * smooth((t - 0.22) / 0.94)
+            let pose: Pose
+            if t < 0.16 {
+                pose = Pose(asset: "dino-pirouette-01", offsetX: -0.010, offsetY: -0.017)
+            } else if yaw < 22.5 {
+                pose = Pose(asset: "dino-pirouette-02", offsetX: -0.040, offsetY: -0.012)
+            } else if yaw < 112.5 {
+                pose = Pose(asset: "dino-pirouette-03", paintedYaw: 45, offsetX: -0.041, offsetY: -0.006)
+            } else if yaw < 225 {
+                pose = Pose(asset: "dino-pirouette-04", paintedYaw: 180, offsetX: -0.047, offsetY: -0.006)
+            } else if yaw < 292.5 {
+                pose = Pose(asset: "dino-pirouette-05", paintedYaw: 270, offsetX: -0.014, offsetY: -0.035)
+            } else if yaw < 337.5 {
+                pose = Pose(asset: "dino-pirouette-06", paintedYaw: 315, offsetX: -0.046, offsetY: -0.014)
+            } else if t < travelDuration(.pirouette) {
+                pose = Pose(asset: "dino-pirouette-07", paintedYaw: 360, offsetX: -0.028, offsetY: 0.008)
+            } else {
+                pose = finalPose
+            }
+            let flight = min(max((t - 0.14) / 1.16, 0), 1)
+            let height = -0.28 * pow(sin(.pi * flight), 1.2)
+            let squash = 0.06 * pulse(t, start: 0, end: 0.16) + 0.09 * pulse(t, start: 1.30, end: 1.52)
+            return Sample(pose: pose, yaw: yaw, height: height, scaleX: 1 + squash * 0.35, scaleY: 1 - squash)
         case .backflip:
             let finalPose = Pose(asset: "dino-backflip-08", offsetX: -0.013, offsetY: -0.009)
             guard !reducedMotion else { return Sample(pose: finalPose) }

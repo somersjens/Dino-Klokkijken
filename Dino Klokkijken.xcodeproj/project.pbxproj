@@ -1,1022 +1,796 @@
 // !$*UTF8*$!
 {
-	"classes" = {
+	archiveVersion = 1;
+	classes = {
 	};
-	"objectVersion" = "110";
-	"archiveVersion" = "1";
-	"validationLevel" = "1";
-	"objects" = {
-        "DA192026BD01000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/TimeZoneQuestions.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-        "DB192026BD01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA192026BD01000000000001"; };
-        "DC192026BD01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA192026BD01000000000001"; };
-        "DA192026BD01000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/TimeZoneMap.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-        "DB192026BD01000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA192026BD01000000000002"; };
-        "DA192026BD01000000000003" = { "isa" = "PBXFileReference"; "path" = "Dino/Resources/TimeZoneMap.json"; "lastKnownFileType" = "text.json"; "sourceTree" = "SOURCE_ROOT"; };
-        "DB192026BD01000000000003" = { "isa" = "PBXBuildFile"; "fileRef" = "DA192026BD01000000000003"; };
+	objectVersion = 110;
+	objects = {
 
-        "DA162026BD01000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/StarsOverview.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-        "DB162026BD01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA162026BD01000000000001"; };
-        "DA152026BD03000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/JungleMapLayout.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-        "DB152026BD03000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA152026BD03000000000001"; };
-        "DA132026BD01000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/WorldBossArt.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-        "DB132026BD01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA132026BD01000000000001"; };
-		"DA121026AC02000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/ExpandedQuestions.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"DB121026AC02000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000001"; };
-		"DC121026AC02000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000001"; };
-		"DA1820261018000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/SpokenTime.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"DA1820261018000000000003" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/QuestionDifficulty.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"DB1820261018000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1820261018000000000001"; };
-		"DB1820261018000000000003" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1820261018000000000003"; };
-		"DC1820261018000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1820261018000000000001"; };
-		"DC1820261018000000000003" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1820261018000000000003"; };
-		"DA1820261018000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/SpokenTimeQuestion.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"DB1820261018000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1820261018000000000002"; };
-		"DA121026AC02000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/ExpandedQuestionView.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"DB121026AC02000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC02000000000002"; };
-        "DA212026BD01000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/MinutesBetweenQuestion.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-        "DB212026BD01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA212026BD01000000000001"; };
+/* Begin PBXBuildFile section */
+		DB202026BD01000000000001 /* Dino/Views/DinoDesert.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA202026BD01000000000001 /* Dino/Views/DinoDesert.swift */; };
+		00BF1DDD8A1DDC39990EF9D2 /* Dino/Core/ProgressSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ED274EAFF7B807862126964 /* Dino/Core/ProgressSyncService.swift */; };
+		0E03B85644DFB788EEC72EB8 /* Dino/Views/LevelResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7BF4989C8E56DBDD0035B47 /* Dino/Views/LevelResult.swift */; };
+		113D4C997110CB7A3F76A105 /* Dino/Core/PlayerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56A2803CE327ECBD272C7D1 /* Dino/Core/PlayerProfile.swift */; };
+		17F3D50BFC83FB20302FE95E /* Dino/Core/KeyValueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F902DD15DBC1EC0D309AA1E /* Dino/Core/KeyValueStore.swift */; };
+		1853284F4CC0ACD94CA0AA66 /* Dino/Core/SeededGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E650307BE03500FF04C4 /* Dino/Core/SeededGenerator.swift */; };
+		25664453B43D58747D2F6A9F /* Dino/Core/ProgressManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0EF4D0B58F41DAEDFA25C60 /* Dino/Core/ProgressManager.swift */; };
+		32DE52ED6A9A0D73B817A387 /* Dino/Core/NameValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2373432652E69FC550C1E670 /* Dino/Core/NameValidator.swift */; };
+		3B04AE1E8CC46A033D379434 /* Dino/Views/DinoUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5887DAD74B3F2A6183A38A01 /* Dino/Views/DinoUI.swift */; };
+		3B68E92C41BE1E6926B1CD26 /* Dino/Views/DigitalClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC831804F11124D46221EE6 /* Dino/Views/DigitalClock.swift */; };
+		3D31E4F0E012C4E2405C644C /* Dino/DinoGameModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE17A7B8D0894CC3A54091A5 /* Dino/DinoGameModel.swift */; };
+		4568618D8654E5F5F80F7B5E /* Dino/Core/ClockTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEC125D38CB3D527355CFD3B /* Dino/Core/ClockTheme.swift */; };
+		4620A862B268173EC07E4C75 /* Dino/Views/WorldMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361CBFA8D6D56E667A6AB6CD /* Dino/Views/WorldMap.swift */; };
+		473DC21F001264F04616DF0E /* Dino/Core/SocialProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01881B3B65886D0F9D53F6C8 /* Dino/Core/SocialProgress.swift */; };
+		4A4EE5D04DED4353797FA272 /* Dino/Core/QuestionGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8733E214B415C99CC4B23060 /* Dino/Core/QuestionGenerator.swift */; };
+		4E733E9A52282094CFE05A3F /* Dino/Views/DinoCharacter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 945545C5CAAF92265CBE1BFE /* Dino/Views/DinoCharacter.swift */; };
+		4F961AD95991DE68F9B7E490 /* Dino/Core/ClockTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23C747A1E72C8680BB9E684A /* Dino/Core/ClockTime.swift */; };
+		57120B7BCBEBA390E542C008 /* Dino/Core/SocialProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01881B3B65886D0F9D53F6C8 /* Dino/Core/SocialProgress.swift */; };
+		5F8093FBC7E1188F832026E5 /* Dino/Core/ClockTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEC125D38CB3D527355CFD3B /* Dino/Core/ClockTheme.swift */; };
+		60AD19692B493F923E1619C5 /* Dino/Core/ProgressSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ED274EAFF7B807862126964 /* Dino/Core/ProgressSyncService.swift */; };
+		61C0ADA07C4CE151409379BB /* Dino/Views/AnalogClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = D133564D7720CB902ED7C582 /* Dino/Views/AnalogClock.swift */; };
+		636C2C17505D475DDE107573 /* Dino/Core/ProgressManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0EF4D0B58F41DAEDFA25C60 /* Dino/Core/ProgressManager.swift */; };
+		7140D2190606B1466B055EDB /* Dino/Views/QuestionRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6006716CA601E3DD24C0D9F6 /* Dino/Views/QuestionRenderer.swift */; };
+		81A25E16F194F2BF2C4627A3 /* Dino/Social/FriendsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF502E855D8132CA2685C1B5 /* Dino/Social/FriendsManager.swift */; };
+		8E5A0AA250AB4AB292C0F112 /* Dino/Core/DinoAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E5A0AA250AB4AB292C0F111 /* Dino/Core/DinoAnimation.swift */; };
+		96D5615039527B7E63D0F335 /* Dino/Core/ClockTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23C747A1E72C8680BB9E684A /* Dino/Core/ClockTime.swift */; };
+		9BB407718D9D26EDD1309082 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6D123AE8AB04EEE632CC6C18 /* PrivacyInfo.xcprivacy */; };
+		9C7CA32620369705A6E2ADC4 /* Tests/DinoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61DE2EBAB8070983619B6E0F /* Tests/DinoUITests.swift */; };
+		9D7D43B62142FE4FF7C72420 /* Dino/Core/LevelConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349A7C34F9172244294A0CFE /* Dino/Core/LevelConfiguration.swift */; };
+		A3A7FCEFEAA9FAF58F4BD046 /* Dino/Views/DinoGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AAEBD1E16CB94C4F51E8B01 /* Dino/Views/DinoGameView.swift */; };
+		A7A164A2377507068726D1A9 /* Dino/DinoRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82850239C26FF8580E07FB20 /* Dino/DinoRootView.swift */; };
+		B8196F54F8B174235D7F48CC /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 8D1BC6DD34FD70BFF7727C14 /* InfoPlist.xcstrings */; };
+		C4C9AF12A9918F7F62561C4B /* Dino/Core/NameValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2373432652E69FC550C1E670 /* Dino/Core/NameValidator.swift */; };
+		CF65DC853F33210C13C32356 /* Dino/Core/LevelConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349A7C34F9172244294A0CFE /* Dino/Core/LevelConfiguration.swift */; };
+		CF7F3ACA697DBE04D5B1165A /* Dino/Views/Friends.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA69CB435385B9A4C726D862 /* Dino/Views/Friends.swift */; };
+		DA1A20261011000000000002 /* Dino/Views/JungleLandscape.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1A20261011000000000001 /* Dino/Views/JungleLandscape.swift */; };
+		DA1A20261011000000000004 /* Dino/Views/AdventureHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1A20261011000000000003 /* Dino/Views/AdventureHeader.swift */; };
+		DB121026AB12000000000001 /* Dino/Core/DinoAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AB12000000000001 /* Dino/Core/DinoAppearance.swift */; };
+		DB121026AB12000000000002 /* Dino/Views/DinoAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AB12000000000002 /* Dino/Views/DinoAvatar.swift */; };
+		DB121026AB12000000000003 /* Dino/Views/DinoPersonalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AB12000000000003 /* Dino/Views/DinoPersonalizer.swift */; };
+		DB121026AB13000000000001 /* Dino/Core/DinoAvatarMask.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AB13000000000001 /* Dino/Core/DinoAvatarMask.swift */; };
+		DB121026AC01000000000001 /* Dino/Core/PracticeConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AC01000000000001 /* Dino/Core/PracticeConfiguration.swift */; };
+		DB121026AC01000000000002 /* Dino/Views/Practice.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AC01000000000002 /* Dino/Views/Practice.swift */; };
+		DB121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift */; };
+		DB121026AC02000000000002 /* Dino/Views/ExpandedQuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AC02000000000002 /* Dino/Views/ExpandedQuestionView.swift */; };
+		DB1220261012000000000001 /* Dino/Core/DinoSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1220261012000000000001 /* Dino/Core/DinoSettings.swift */; };
+		DB1220261012000000000002 /* Dino/Core/CloudProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1220261012000000000002 /* Dino/Core/CloudProgress.swift */; };
+		DB1220261012000000000003 /* Dino/AnswerFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1220261012000000000003 /* Dino/AnswerFeedback.swift */; };
+		DB132026BD01000000000001 /* Dino/Views/WorldBossArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA132026BD01000000000001 /* Dino/Views/WorldBossArt.swift */; };
+		DB152026BD03000000000001 /* Dino/Core/JungleMapLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA152026BD03000000000001 /* Dino/Core/JungleMapLayout.swift */; };
+		DB162026BD01000000000001 /* Dino/Views/StarsOverview.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA162026BD01000000000001 /* Dino/Views/StarsOverview.swift */; };
+		DB1820261018000000000001 /* Dino/Core/SpokenTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1820261018000000000001 /* Dino/Core/SpokenTime.swift */; };
+		DB1820261018000000000002 /* Dino/Views/SpokenTimeQuestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1820261018000000000002 /* Dino/Views/SpokenTimeQuestion.swift */; };
+		DB1820261018000000000003 /* Dino/Core/QuestionDifficulty.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1820261018000000000003 /* Dino/Core/QuestionDifficulty.swift */; };
+		DB192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift */; };
+		DB192026BD01000000000002 /* Dino/Views/TimeZoneMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000002 /* Dino/Views/TimeZoneMap.swift */; };
+		DB192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json in Resources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json */; };
+		DB212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift */; };
+		DC121026AB12000000000001 /* Dino/Core/DinoAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AB12000000000001 /* Dino/Core/DinoAppearance.swift */; };
+		DC121026AB13000000000001 /* Dino/Core/DinoAvatarMask.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AB13000000000001 /* Dino/Core/DinoAvatarMask.swift */; };
+		DC121026AC01000000000001 /* Dino/Core/PracticeConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AC01000000000001 /* Dino/Core/PracticeConfiguration.swift */; };
+		DC121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift */; };
+		DC1820261018000000000001 /* Dino/Core/SpokenTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1820261018000000000001 /* Dino/Core/SpokenTime.swift */; };
+		DC1820261018000000000003 /* Dino/Core/QuestionDifficulty.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1820261018000000000003 /* Dino/Core/QuestionDifficulty.swift */; };
+		DC192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift */; };
+		DCAE59100EB467AA8769FEF8 /* Dino/Views/Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8A5B3DA16BFBAC637CDC6B5 /* Dino/Views/Settings.swift */; };
+		DD8D8D9B86AD1F7BD4729496 /* Dino/Views/OnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B80587E32D18C0831D8ACC9 /* Dino/Views/OnboardingFlow.swift */; };
+		DDD392F183235DB51B76875F /* Dino/Views/ClockCustomizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B1DFC98581D62FAF83297BD /* Dino/Views/ClockCustomizer.swift */; };
+		E044537997C9F23D2302F7FE /* Dino/Core/QuestionGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8733E214B415C99CC4B23060 /* Dino/Core/QuestionGenerator.swift */; };
+		E062E3966BF6466ABA396FCC /* Dino/Core/PlayerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56A2803CE327ECBD272C7D1 /* Dino/Core/PlayerProfile.swift */; };
+		F7411D539E03C079C2D93FD5 /* Dino/Core/KeyValueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F902DD15DBC1EC0D309AA1E /* Dino/Core/KeyValueStore.swift */; };
+		F951E75B307BE03500FF04C4 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F951E65C307BE03500FF04C4 /* Localizable.xcstrings */; };
+		F951E7F1307BE03500FF04C4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F951E642307BE03500FF04C4 /* Assets.xcassets */; };
+		F951E834307BE03500FF04C4 /* DinoTimeAdventureApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E652307BE03500FF04C4 /* DinoTimeAdventureApp.swift */; };
+		F951E835307BE03500FF04C4 /* Dino/Core/SeededGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E650307BE03500FF04C4 /* Dino/Core/SeededGenerator.swift */; };
+		F951E836307BE03500FF04C4 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E65D307BE03500FF04C4 /* Localization.swift */; };
+/* End PBXBuildFile section */
 
-		"DA121026AC01000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/PracticeConfiguration.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"DB121026AC01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC01000000000001"; };
-		"DC121026AC01000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC01000000000001"; };
-		"DA121026AC01000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/Practice.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"DB121026AC01000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AC01000000000002"; };
-		"DA121026AB13000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/DinoAvatarMask.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"DB121026AB13000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AB13000000000001"; };
-		"DC121026AB13000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AB13000000000001"; };
-		"DA121026AB12000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/DinoAppearance.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"DB121026AB12000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AB12000000000001"; };
-		"DC121026AB12000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AB12000000000001"; };
-		"DA121026AB12000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/DinoAvatar.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"DB121026AB12000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AB12000000000002"; };
-		"DA121026AB12000000000003" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/DinoPersonalizer.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"DB121026AB12000000000003" = { "isa" = "PBXBuildFile"; "fileRef" = "DA121026AB12000000000003"; };
-		"DA1220261012000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/DinoSettings.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"DB1220261012000000000001" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1220261012000000000001"; };
-		"DA1220261012000000000002" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/CloudProgress.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"DB1220261012000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1220261012000000000002"; };
-		"DA1220261012000000000003" = { "isa" = "PBXFileReference"; "path" = "Dino/AnswerFeedback.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"DB1220261012000000000003" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1220261012000000000003"; };
-		"DCDF56484DA8108CF908CF1F" = { "isa" = "PBXFileReference"; "path" = "DinoInfo.plist"; "lastKnownFileType" = "text.plist.xml"; "sourceTree" = "SOURCE_ROOT"; };
-        "DA1A20261011000000000001" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/JungleLandscape.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-        "DA1A20261011000000000002" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1A20261011000000000001"; };
-        "DA1A20261011000000000003" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/AdventureHeader.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-        "DA1A20261011000000000004" = { "isa" = "PBXBuildFile"; "fileRef" = "DA1A20261011000000000003"; };
+/* Begin PBXContainerItemProxy section */
+		B25328EFD7740DFB6BC6F116 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F951E628307BE01100FF04C4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F951E62F307BE01200FF04C4;
+			remoteInfo = "Dino Klokkijken";
+		};
+/* End PBXContainerItemProxy section */
 
-		"9BB407718D9D26EDD1309082" = { "isa" = "PBXBuildFile"; "fileRef" = "6D123AE8AB04EEE632CC6C18"; };
-		"6D123AE8AB04EEE632CC6C18" = { "isa" = "PBXFileReference"; "path" = "PrivacyInfo.xcprivacy"; "lastKnownFileType" = "text.xml"; "sourceTree" = "SOURCE_ROOT"; };
-		"B8196F54F8B174235D7F48CC" = { "isa" = "PBXBuildFile"; "fileRef" = "8D1BC6DD34FD70BFF7727C14"; };
-		"8D1BC6DD34FD70BFF7727C14" = { "isa" = "PBXFileReference"; "path" = "InfoPlist.xcstrings"; "lastKnownFileType" = "text.json.xcstrings"; "sourceTree" = "SOURCE_ROOT"; };
-		"837325E4F6046C826649A631" = { "isa" = "PBXFileReference"; "path" = "Dino.entitlements"; "lastKnownFileType" = "text.plist.entitlements"; "sourceTree" = "SOURCE_ROOT"; };
-		"CF7F3ACA697DBE04D5B1165A" = { "isa" = "PBXBuildFile"; "fileRef" = "EA69CB435385B9A4C726D862"; };
-		"EA69CB435385B9A4C726D862" = { "isa" = "PBXFileReference"; "path" = "Dino/Views/Friends.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"81A25E16F194F2BF2C4627A3" = { "isa" = "PBXBuildFile"; "fileRef" = "FF502E855D8132CA2685C1B5"; };
-		"FF502E855D8132CA2685C1B5" = { "isa" = "PBXFileReference"; "path" = "Dino/Social/FriendsManager.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"32DE52ED6A9A0D73B817A387" = { "isa" = "PBXBuildFile"; "fileRef" = "2373432652E69FC550C1E670"; };
-		"C4C9AF12A9918F7F62561C4B" = { "isa" = "PBXBuildFile"; "fileRef" = "2373432652E69FC550C1E670"; };
-		"2373432652E69FC550C1E670" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/NameValidator.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"00BF1DDD8A1DDC39990EF9D2" = { "isa" = "PBXBuildFile"; "fileRef" = "8ED274EAFF7B807862126964"; };
-		"60AD19692B493F923E1619C5" = { "isa" = "PBXBuildFile"; "fileRef" = "8ED274EAFF7B807862126964"; };
-		"8ED274EAFF7B807862126964" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/ProgressSyncService.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"57120B7BCBEBA390E542C008" = { "isa" = "PBXBuildFile"; "fileRef" = "01881B3B65886D0F9D53F6C8"; };
-		"473DC21F001264F04616DF0E" = { "isa" = "PBXBuildFile"; "fileRef" = "01881B3B65886D0F9D53F6C8"; };
-		"01881B3B65886D0F9D53F6C8" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/SocialProgress.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"8E5A0AA250AB4AB292C0F111" = { "isa" = "PBXFileReference"; "path" = "Dino/Core/DinoAnimation.swift"; "lastKnownFileType" = "sourcecode.swift"; "sourceTree" = "SOURCE_ROOT"; };
-		"8E5A0AA250AB4AB292C0F112" = { "isa" = "PBXBuildFile"; "fileRef" = "8E5A0AA250AB4AB292C0F111"; };
-		"5887DAD74B3F2A6183A38A01" = {
-			"path" = "Dino/Views/DinoUI.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"F951E836307BE03500FF04C4" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "F951E65D307BE03500FF04C4";
-		};
-		"6006716CA601E3DD24C0D9F6" = {
-			"path" = "Dino/Views/QuestionRenderer.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"F951E62F307BE01200FF04C4" = {
-			"buildConfigurationList" = "F951E63D307BE01200FF04C4";
-			"productReference" = "F951E630307BE01200FF04C4";
-			"productType" = "com.apple.product-type.application";
-			"productName" = "Dino Time";
-			"isa" = "PBXNativeTarget";
-			"buildPhases" = (
-				"F951E62C307BE01200FF04C4",
-				"F951E62D307BE01200FF04C4",
-				"F951E62E307BE01200FF04C4",
-			);
-			"name" = "Dino Klokkijken";
-			"buildRules" = (
-			);
-		};
-		"B25328EFD7740DFB6BC6F116" = {
-			"isa" = "PBXContainerItemProxy";
-			"containerPortal" = "F951E628307BE01100FF04C4";
-			"remoteGlobalIDString" = "F951E62F307BE01200FF04C4";
-			"remoteInfo" = "Dino Klokkijken";
-			"proxyType" = "1";
-		};
-		"5F8093FBC7E1188F832026E5" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "AEC125D38CB3D527355CFD3B";
-		};
-		"F7411D539E03C079C2D93FD5" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "3F902DD15DBC1EC0D309AA1E";
-		};
-		"F951E834307BE03500FF04C4" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "F951E652307BE03500FF04C4";
-		};
-		"F951E62D307BE01200FF04C4" = {
-			"isa" = "PBXFrameworksBuildPhase";
-			"files" = (
-			);
-		};
-		"636C2C17505D475DDE107573" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "E0EF4D0B58F41DAEDFA25C60";
-		};
-		"F951E63F307BE01200FF04C4" = {
-			"isa" = "XCBuildConfiguration";
-			"buildSettings" = {
-				"INFOPLIST_FILE" = "DinoInfo.plist";
-				"DINO_SAFETY_CONTACT" = "";
-				"DINO_PRIVACY_POLICY_URL" = "";
-				"DINO_APP_STORE_URL" = "";
-				"INFOPLIST_KEY_DinoSafetyContact" = "$(DINO_SAFETY_CONTACT)";
-				"INFOPLIST_KEY_DinoPrivacyPolicyURL" = "$(DINO_PRIVACY_POLICY_URL)";
-				"INFOPLIST_KEY_DinoAppStoreURL" = "$(DINO_APP_STORE_URL)";
-				"CODE_SIGN_ENTITLEMENTS" = "Dino.entitlements";
-				"INFOPLIST_KEY_NSGKFriendListUsageDescription" = "Show the progress and stars of friends who allow Game Center access.";
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = "YES";
-				"MACOSX_DEPLOYMENT_TARGET" = "27.0";
-				"PRODUCT_BUNDLE_IDENTIFIER" = "Hakketjak.Dino-Klokkijken";
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = "YES";
-				"MARKETING_VERSION" = "1.0";
-				"SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY" = "YES";
-				"SDKROOT" = "auto";
-				"TVOS_DEPLOYMENT_TARGET" = "27.0";
-				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				"REGISTER_APP_GROUPS" = "YES";
-				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
-				"CODE_SIGN_STYLE" = "Automatic";
-				"STRING_CATALOG_GENERATE_SYMBOLS" = "YES";
-				"PRODUCT_NAME" = "Dino Time";
-				"ENABLE_USER_SELECTED_FILES" = "readonly";
-				"SWIFT_APPROACHABLE_CONCURRENCY" = "YES";
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = "UIStatusBarStyleDefault";
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = "YES";
-				"SWIFT_DEFAULT_ACTOR_ISOLATION" = "nonisolated";
-				"SWIFT_EMIT_LOC_STRINGS" = "YES";
-				"SWIFT_VERSION" = "5.0";
-				"ENABLE_PREVIEWS" = "YES";
-				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = "UIStatusBarStyleDefault";
-				"LD_RUNPATH_SEARCH_PATHS" = "@executable_path/Frameworks";
-				"TARGETED_DEVICE_FAMILY" = "1,2";
-				"ENABLE_APP_SANDBOX" = "YES";
-				"CURRENT_PROJECT_VERSION" = "1";
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = "YES";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				"GENERATE_INFOPLIST_FILE" = "YES";
-				"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = "AccentColor";
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = "YES";
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = "YES";
-				"INFOPLIST_KEY_CFBundleDisplayName" = "Dino Time";
-				"XROS_DEPLOYMENT_TARGET" = "27.0";
-				"ENABLE_HARDENED_RUNTIME" = "YES";
-				"INFOPLIST_KEY_UISupportedInterfaceOrientations" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone" = "UIInterfaceOrientationPortrait";
-				"DEVELOPMENT_TEAM" = "4283ACUG4Y";
-				"IPHONEOS_DEPLOYMENT_TARGET" = "26.0";
-				"LOCALIZATION_PREFERS_STRING_CATALOG" = "YES";
-			};
-			"name" = "Release";
-		};
-		"F951E835307BE03500FF04C4" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "F951E650307BE03500FF04C4";
-		};
-		"A7A164A2377507068726D1A9" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "82850239C26FF8580E07FB20";
-		};
-		"F951E62E307BE01200FF04C4" = {
-			"isa" = "PBXResourcesBuildPhase";
-			"files" = (
-				"9BB407718D9D26EDD1309082",
-                "DB192026BD01000000000003",
-				"B8196F54F8B174235D7F48CC",
-				"F951E75B307BE03500FF04C4",
-				"F951E7F1307BE03500FF04C4",
+/* Begin PBXFileReference section */
+		DA202026BD01000000000001 /* Dino/Views/DinoDesert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/DinoDesert.swift; sourceTree = SOURCE_ROOT; };
+		01881B3B65886D0F9D53F6C8 /* Dino/Core/SocialProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/SocialProgress.swift; sourceTree = SOURCE_ROOT; };
+		0B80587E32D18C0831D8ACC9 /* Dino/Views/OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/OnboardingFlow.swift; sourceTree = SOURCE_ROOT; };
+		2373432652E69FC550C1E670 /* Dino/Core/NameValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/NameValidator.swift; sourceTree = SOURCE_ROOT; };
+		23C747A1E72C8680BB9E684A /* Dino/Core/ClockTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/ClockTime.swift; sourceTree = SOURCE_ROOT; };
+		272CEF06B9056BD6417F2390 /* Tools/test-dino.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "Tools/test-dino.sh"; sourceTree = SOURCE_ROOT; };
+		349A7C34F9172244294A0CFE /* Dino/Core/LevelConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/LevelConfiguration.swift; sourceTree = SOURCE_ROOT; };
+		361CBFA8D6D56E667A6AB6CD /* Dino/Views/WorldMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/WorldMap.swift; sourceTree = SOURCE_ROOT; };
+		3F902DD15DBC1EC0D309AA1E /* Dino/Core/KeyValueStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/KeyValueStore.swift; sourceTree = SOURCE_ROOT; };
+		4C8BBB08B81CA32863E546A3 /* DinoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = DinoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5887DAD74B3F2A6183A38A01 /* Dino/Views/DinoUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/DinoUI.swift; sourceTree = SOURCE_ROOT; };
+		6006716CA601E3DD24C0D9F6 /* Dino/Views/QuestionRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/QuestionRenderer.swift; sourceTree = SOURCE_ROOT; };
+		61DE2EBAB8070983619B6E0F /* Tests/DinoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/DinoUITests.swift; sourceTree = SOURCE_ROOT; };
+		6B1DFC98581D62FAF83297BD /* Dino/Views/ClockCustomizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/ClockCustomizer.swift; sourceTree = SOURCE_ROOT; };
+		6D123AE8AB04EEE632CC6C18 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = SOURCE_ROOT; };
+		82850239C26FF8580E07FB20 /* Dino/DinoRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/DinoRootView.swift; sourceTree = SOURCE_ROOT; };
+		837325E4F6046C826649A631 /* Dino.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Dino.entitlements; sourceTree = SOURCE_ROOT; };
+		8733E214B415C99CC4B23060 /* Dino/Core/QuestionGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/QuestionGenerator.swift; sourceTree = SOURCE_ROOT; };
+		8AAEBD1E16CB94C4F51E8B01 /* Dino/Views/DinoGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/DinoGameView.swift; sourceTree = SOURCE_ROOT; };
+		8D1BC6DD34FD70BFF7727C14 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = SOURCE_ROOT; };
+		8E5A0AA250AB4AB292C0F111 /* Dino/Core/DinoAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/DinoAnimation.swift; sourceTree = SOURCE_ROOT; };
+		8ED274EAFF7B807862126964 /* Dino/Core/ProgressSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/ProgressSyncService.swift; sourceTree = SOURCE_ROOT; };
+		945545C5CAAF92265CBE1BFE /* Dino/Views/DinoCharacter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/DinoCharacter.swift; sourceTree = SOURCE_ROOT; };
+		9CC831804F11124D46221EE6 /* Dino/Views/DigitalClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/DigitalClock.swift; sourceTree = SOURCE_ROOT; };
+		A1319120659071CDFDC06C3F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
+		A56A2803CE327ECBD272C7D1 /* Dino/Core/PlayerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/PlayerProfile.swift; sourceTree = SOURCE_ROOT; };
+		AE17A7B8D0894CC3A54091A5 /* Dino/DinoGameModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/DinoGameModel.swift; sourceTree = SOURCE_ROOT; };
+		AEC125D38CB3D527355CFD3B /* Dino/Core/ClockTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/ClockTheme.swift; sourceTree = SOURCE_ROOT; };
+		B7BF4989C8E56DBDD0035B47 /* Dino/Views/LevelResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/LevelResult.swift; sourceTree = SOURCE_ROOT; };
+		B8A5B3DA16BFBAC637CDC6B5 /* Dino/Views/Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/Settings.swift; sourceTree = SOURCE_ROOT; };
+		BC133C676EDB22A21DC494C7 /* Documentation/Acceptance.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Documentation/Acceptance.md; sourceTree = SOURCE_ROOT; };
+		D133564D7720CB902ED7C582 /* Dino/Views/AnalogClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/AnalogClock.swift; sourceTree = SOURCE_ROOT; };
+		DA121026AB12000000000001 /* Dino/Core/DinoAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/DinoAppearance.swift; sourceTree = SOURCE_ROOT; };
+		DA121026AB12000000000002 /* Dino/Views/DinoAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/DinoAvatar.swift; sourceTree = SOURCE_ROOT; };
+		DA121026AB12000000000003 /* Dino/Views/DinoPersonalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/DinoPersonalizer.swift; sourceTree = SOURCE_ROOT; };
+		DA121026AB13000000000001 /* Dino/Core/DinoAvatarMask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/DinoAvatarMask.swift; sourceTree = SOURCE_ROOT; };
+		DA121026AC01000000000001 /* Dino/Core/PracticeConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/PracticeConfiguration.swift; sourceTree = SOURCE_ROOT; };
+		DA121026AC01000000000002 /* Dino/Views/Practice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/Practice.swift; sourceTree = SOURCE_ROOT; };
+		DA121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/ExpandedQuestions.swift; sourceTree = SOURCE_ROOT; };
+		DA121026AC02000000000002 /* Dino/Views/ExpandedQuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/ExpandedQuestionView.swift; sourceTree = SOURCE_ROOT; };
+		DA1220261012000000000001 /* Dino/Core/DinoSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/DinoSettings.swift; sourceTree = SOURCE_ROOT; };
+		DA1220261012000000000002 /* Dino/Core/CloudProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/CloudProgress.swift; sourceTree = SOURCE_ROOT; };
+		DA1220261012000000000003 /* Dino/AnswerFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/AnswerFeedback.swift; sourceTree = SOURCE_ROOT; };
+		DA132026BD01000000000001 /* Dino/Views/WorldBossArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/WorldBossArt.swift; sourceTree = SOURCE_ROOT; };
+		DA152026BD03000000000001 /* Dino/Core/JungleMapLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/JungleMapLayout.swift; sourceTree = SOURCE_ROOT; };
+		DA162026BD01000000000001 /* Dino/Views/StarsOverview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/StarsOverview.swift; sourceTree = SOURCE_ROOT; };
+		DA1820261018000000000001 /* Dino/Core/SpokenTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/SpokenTime.swift; sourceTree = SOURCE_ROOT; };
+		DA1820261018000000000002 /* Dino/Views/SpokenTimeQuestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/SpokenTimeQuestion.swift; sourceTree = SOURCE_ROOT; };
+		DA1820261018000000000003 /* Dino/Core/QuestionDifficulty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/QuestionDifficulty.swift; sourceTree = SOURCE_ROOT; };
+		DA192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/TimeZoneQuestions.swift; sourceTree = SOURCE_ROOT; };
+		DA192026BD01000000000002 /* Dino/Views/TimeZoneMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/TimeZoneMap.swift; sourceTree = SOURCE_ROOT; };
+		DA192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Dino/Resources/TimeZoneMap.json; sourceTree = SOURCE_ROOT; };
+		DA1A20261011000000000001 /* Dino/Views/JungleLandscape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/JungleLandscape.swift; sourceTree = SOURCE_ROOT; };
+		DA1A20261011000000000003 /* Dino/Views/AdventureHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/AdventureHeader.swift; sourceTree = SOURCE_ROOT; };
+		DA212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/MinutesBetweenQuestion.swift; sourceTree = SOURCE_ROOT; };
+		DCDF56484DA8108CF908CF1F /* DinoInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = DinoInfo.plist; sourceTree = SOURCE_ROOT; };
+		E0EF4D0B58F41DAEDFA25C60 /* Dino/Core/ProgressManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/ProgressManager.swift; sourceTree = SOURCE_ROOT; };
+		EA69CB435385B9A4C726D862 /* Dino/Views/Friends.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/Friends.swift; sourceTree = SOURCE_ROOT; };
+		F1E94AED7E30BC73E971834C /* Tests/DinoCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests/DinoCoreTests.swift; sourceTree = SOURCE_ROOT; };
+		F951E630307BE01200FF04C4 /* Dino Time.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Dino Time.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F951E642307BE03500FF04C4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F951E650307BE03500FF04C4 /* Dino/Core/SeededGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/SeededGenerator.swift; sourceTree = SOURCE_ROOT; };
+		F951E652307BE03500FF04C4 /* DinoTimeAdventureApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoTimeAdventureApp.swift; sourceTree = "<group>"; };
+		F951E65C307BE03500FF04C4 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		F951E65D307BE03500FF04C4 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		FF502E855D8132CA2685C1B5 /* Dino/Social/FriendsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Social/FriendsManager.swift; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9E1B4E89413DF3CDD6D71CCC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
 			);
 		};
-		"09BE8DD855369313A16B68D5" = {
-			"isa" = "PBXSourcesBuildPhase";
-			"buildActionMask" = "2147483647";
-			"files" = (
-				"DC121026AC02000000000001",
-				"DC1820261018000000000001",
-				"DC1820261018000000000003",
-                "DC192026BD01000000000001",
-				"DC121026AC01000000000001",
-				"DC121026AB13000000000001",
-				"DC121026AB12000000000001",
-				"32DE52ED6A9A0D73B817A387",
-				"00BF1DDD8A1DDC39990EF9D2",
-				"57120B7BCBEBA390E542C008",
-				"9C7CA32620369705A6E2ADC4",
-				"5F8093FBC7E1188F832026E5",
-				"4F961AD95991DE68F9B7E490",
-				"17F3D50BFC83FB20302FE95E",
-				"CF65DC853F33210C13C32356",
-				"113D4C997110CB7A3F76A105",
-				"636C2C17505D475DDE107573",
-				"E044537997C9F23D2302F7FE",
-				"1853284F4CC0ACD94CA0AA66",
-			);
-			"runOnlyForDeploymentPostprocessing" = "0";
-		};
-		"13C4A5FF766A139D7B2C3D55" = {
-			"isa" = "PBXResourcesBuildPhase";
-			"buildActionMask" = "2147483647";
-			"files" = (
-			);
-			"runOnlyForDeploymentPostprocessing" = "0";
-		};
-		"F951E63D307BE01200FF04C4" = {
-			"isa" = "XCConfigurationList";
-			"buildConfigurations" = (
-				"F951E63E307BE01200FF04C4",
-				"F951E63F307BE01200FF04C4",
-			);
-			"defaultConfigurationName" = "Release";
-		};
-		"CF65DC853F33210C13C32356" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "349A7C34F9172244294A0CFE";
-		};
-		"F951E62C307BE01200FF04C4" = {
-			"isa" = "PBXSourcesBuildPhase";
-			"files" = (
-                "DB152026BD03000000000001",
-				"DB121026AC02000000000001",
-				"DB1820261018000000000001",
-				"DB1820261018000000000003",
-				"DB1820261018000000000002",
-                "DB192026BD01000000000001",
-                "DB192026BD01000000000002",
-				"DB121026AC01000000000001",
-				"DB121026AC02000000000002",
-                "DB212026BD01000000000001",
-				"DB121026AC01000000000002",
-				"DB162026BD01000000000001",
-				"DB121026AB13000000000001",
-				"DB121026AB12000000000003",
-				"DB121026AB12000000000002",
-				"DB121026AB12000000000001",
-				"DB1220261012000000000001",
-				"DB1220261012000000000002",
-				"DB1220261012000000000003",
-				"CF7F3ACA697DBE04D5B1165A",
-				"81A25E16F194F2BF2C4627A3",
-				"C4C9AF12A9918F7F62561C4B",
-				"60AD19692B493F923E1619C5",
-				"473DC21F001264F04616DF0E",
-				"8E5A0AA250AB4AB292C0F112",
-                "DA1A20261011000000000002",
-                "DB132026BD01000000000001",
-                "DA1A20261011000000000004",
-				"F951E835307BE03500FF04C4",
-				"F951E834307BE03500FF04C4",
-				"F951E836307BE03500FF04C4",
-				"4568618D8654E5F5F80F7B5E",
-				"96D5615039527B7E63D0F335",
-				"F7411D539E03C079C2D93FD5",
-				"9D7D43B62142FE4FF7C72420",
-				"E062E3966BF6466ABA396FCC",
-				"25664453B43D58747D2F6A9F",
-				"4A4EE5D04DED4353797FA272",
-				"3D31E4F0E012C4E2405C644C",
-				"A7A164A2377507068726D1A9",
-				"61C0ADA07C4CE151409379BB",
-				"DDD392F183235DB51B76875F",
-				"3B68E92C41BE1E6926B1CD26",
-				"A3A7FCEFEAA9FAF58F4BD046",
-				"3B04AE1E8CC46A033D379434",
-				"0E03B85644DFB788EEC72EB8",
-				"DD8D8D9B86AD1F7BD4729496",
-				"7140D2190606B1466B055EDB",
-				"DCAE59100EB467AA8769FEF8",
-				"4620A862B268173EC07E4C75",
-				"4E733E9A52282094CFE05A3F",
+		F951E62D307BE01200FF04C4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
 			);
 		};
-		"F951E75B307BE03500FF04C4" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "F951E65C307BE03500FF04C4";
-		};
-		"F951E63E307BE01200FF04C4" = {
-			"isa" = "XCBuildConfiguration";
-			"buildSettings" = {
-				"INFOPLIST_FILE" = "DinoInfo.plist";
-				"DINO_SAFETY_CONTACT" = "";
-				"DINO_PRIVACY_POLICY_URL" = "";
-				"DINO_APP_STORE_URL" = "";
-				"INFOPLIST_KEY_DinoSafetyContact" = "$(DINO_SAFETY_CONTACT)";
-				"INFOPLIST_KEY_DinoPrivacyPolicyURL" = "$(DINO_PRIVACY_POLICY_URL)";
-				"INFOPLIST_KEY_DinoAppStoreURL" = "$(DINO_APP_STORE_URL)";
-				"CODE_SIGN_ENTITLEMENTS" = "Dino.entitlements";
-				"INFOPLIST_KEY_NSGKFriendListUsageDescription" = "Show the progress and stars of friends who allow Game Center access.";
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = "YES";
-				"MACOSX_DEPLOYMENT_TARGET" = "27.0";
-				"PRODUCT_BUNDLE_IDENTIFIER" = "Hakketjak.Dino-Klokkijken";
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = "YES";
-				"MARKETING_VERSION" = "1.0";
-				"SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY" = "YES";
-				"SDKROOT" = "auto";
-				"TVOS_DEPLOYMENT_TARGET" = "27.0";
-				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				"REGISTER_APP_GROUPS" = "YES";
-				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
-				"CODE_SIGN_STYLE" = "Automatic";
-				"STRING_CATALOG_GENERATE_SYMBOLS" = "YES";
-				"PRODUCT_NAME" = "Dino Time";
-				"ENABLE_USER_SELECTED_FILES" = "readonly";
-				"SWIFT_APPROACHABLE_CONCURRENCY" = "YES";
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = "UIStatusBarStyleDefault";
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = "YES";
-				"SWIFT_DEFAULT_ACTOR_ISOLATION" = "nonisolated";
-				"SWIFT_EMIT_LOC_STRINGS" = "YES";
-				"SWIFT_VERSION" = "5.0";
-				"ENABLE_PREVIEWS" = "YES";
-				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
-				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = "UIStatusBarStyleDefault";
-				"LD_RUNPATH_SEARCH_PATHS" = "@executable_path/Frameworks";
-				"TARGETED_DEVICE_FAMILY" = "1,2";
-				"ENABLE_APP_SANDBOX" = "YES";
-				"CURRENT_PROJECT_VERSION" = "1";
-				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = "YES";
-				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				"GENERATE_INFOPLIST_FILE" = "YES";
-				"ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME" = "AccentColor";
-				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = "YES";
-				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = "YES";
-				"INFOPLIST_KEY_CFBundleDisplayName" = "Dino Time";
-				"XROS_DEPLOYMENT_TARGET" = "27.0";
-				"ENABLE_HARDENED_RUNTIME" = "YES";
-				"INFOPLIST_KEY_UISupportedInterfaceOrientations" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				"INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone" = "UIInterfaceOrientationPortrait";
-				"DEVELOPMENT_TEAM" = "4283ACUG4Y";
-				"IPHONEOS_DEPLOYMENT_TARGET" = "26.0";
-				"LOCALIZATION_PREFERS_STRING_CATALOG" = "YES";
-			};
-			"name" = "Debug";
-		};
-		"F951E7F1307BE03500FF04C4" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "F951E642307BE03500FF04C4";
-		};
-		"DDD392F183235DB51B76875F" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "6B1DFC98581D62FAF83297BD";
-		};
-		"F951E63B307BE01200FF04C4" = {
-			"isa" = "XCBuildConfiguration";
-			"buildSettings" = {
-				"DEVELOPMENT_TEAM" = "4283ACUG4Y";
-				"CLANG_WARN_RANGE_LOOP_ANALYSIS" = "YES";
-				"ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS" = "YES";
-				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
-				"CLANG_WARN_INFINITE_RECURSION" = "YES";
-				"ONLY_ACTIVE_ARCH" = "YES";
-				"GCC_WARN_UNUSED_VARIABLE" = "YES";
-				"CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING" = "YES";
-				"CLANG_WARN_UNGUARDED_AVAILABILITY" = "YES_AGGRESSIVE";
-				"COPY_PHASE_STRIP" = "NO";
-				"CLANG_WARN_BOOL_CONVERSION" = "YES";
-				"CLANG_WARN_ENUM_CONVERSION" = "YES";
-				"CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS" = "YES";
-				"CLANG_WARN_COMMA" = "YES";
-				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG $(inherited)";
-				"CLANG_WARN_INT_CONVERSION" = "YES";
-				"ENABLE_STRICT_OBJC_MSGSEND" = "YES";
-				"CLANG_WARN_DOCUMENTATION_COMMENTS" = "YES";
-				"CLANG_WARN_SUSPICIOUS_MOVE" = "YES";
-				"CLANG_WARN_EMPTY_BODY" = "YES";
-				"MTL_ENABLE_DEBUG_INFO" = "INCLUDE_SOURCE";
-				"MTL_FAST_MATH" = "YES";
-				"CLANG_ENABLE_OBJC_ARC" = "YES";
-				"GCC_WARN_UNINITIALIZED_AUTOS" = "YES_AGGRESSIVE";
-				"GCC_C_LANGUAGE_STANDARD" = "gnu17";
-				"CLANG_ENABLE_MODULES" = "YES";
-				"ALWAYS_SEARCH_USER_PATHS" = "NO";
-				"ENABLE_TESTABILITY" = "YES";
-				"CLANG_WARN_DIRECT_OBJC_ISA_USAGE" = "YES_ERROR";
-				"CLANG_WARN_CONSTANT_CONVERSION" = "YES";
-				"GCC_NO_COMMON_BLOCKS" = "YES";
-				"CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF" = "YES";
-				"CLANG_WARN_OBJC_ROOT_CLASS" = "YES_ERROR";
-				"LOCALIZATION_PREFERS_STRING_CATALOGS" = "YES";
-				"CLANG_CXX_LANGUAGE_STANDARD" = "gnu++20";
-				"GCC_WARN_64_TO_32_BIT_CONVERSION" = "YES";
-				"DEBUG_INFORMATION_FORMAT" = "dwarf";
-				"CLANG_WARN__DUPLICATE_METHOD_MATCH" = "YES";
-				"GCC_DYNAMIC_NO_PIC" = "NO";
-				"GCC_WARN_UNDECLARED_SELECTOR" = "YES";
-				"CLANG_ANALYZER_NONNULL" = "YES";
-				"CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION" = "YES_AGGRESSIVE";
-				"CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER" = "YES";
-				"CLANG_ENABLE_OBJC_WEAK" = "YES";
-				"CLANG_WARN_STRICT_PROTOTYPES" = "YES";
-				"GCC_OPTIMIZATION_LEVEL" = "0";
-				"ENABLE_USER_SCRIPT_SANDBOXING" = "YES";
-				"GCC_WARN_ABOUT_RETURN_TYPE" = "YES_ERROR";
-				"GCC_WARN_UNUSED_FUNCTION" = "YES";
-				"CLANG_WARN_UNREACHABLE_CODE" = "YES";
-				"CLANG_WARN_NON_LITERAL_NULL_CONVERSION" = "YES";
-				"GCC_PREPROCESSOR_DEFINITIONS" = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				"CLANG_WARN_OBJC_LITERAL_CONVERSION" = "YES";
-				"LOCALIZATION_PREFERS_STRING_CATALOG" = "YES";
-			};
-			"name" = "Debug";
-		};
-		"4568618D8654E5F5F80F7B5E" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "AEC125D38CB3D527355CFD3B";
-		};
-		"3D31E4F0E012C4E2405C644C" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "AE17A7B8D0894CC3A54091A5";
-		};
-		"E062E3966BF6466ABA396FCC" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "A56A2803CE327ECBD272C7D1";
-		};
-		"113D4C997110CB7A3F76A105" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "A56A2803CE327ECBD272C7D1";
-		};
-		"F951E63C307BE01200FF04C4" = {
-			"isa" = "XCBuildConfiguration";
-			"buildSettings" = {
-				"DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
-				"CLANG_WARN_DOCUMENTATION_COMMENTS" = "YES";
-				"CLANG_WARN_DIRECT_OBJC_ISA_USAGE" = "YES_ERROR";
-				"CLANG_ENABLE_OBJC_ARC" = "YES";
-				"CLANG_WARN_UNGUARDED_AVAILABILITY" = "YES_AGGRESSIVE";
-				"CLANG_WARN__DUPLICATE_METHOD_MATCH" = "YES";
-				"CLANG_WARN_SUSPICIOUS_MOVE" = "YES";
-				"CLANG_ENABLE_OBJC_WEAK" = "YES";
-				"CLANG_WARN_INFINITE_RECURSION" = "YES";
-				"ENABLE_NS_ASSERTIONS" = "NO";
-				"GCC_WARN_UNDECLARED_SELECTOR" = "YES";
-				"SWIFT_COMPILATION_MODE" = "wholemodule";
-				"CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION" = "YES_AGGRESSIVE";
-				"CLANG_CXX_LANGUAGE_STANDARD" = "gnu++20";
-				"LOCALIZATION_PREFERS_STRING_CATALOGS" = "YES";
-				"CLANG_WARN_BOOL_CONVERSION" = "YES";
-				"CLANG_WARN_UNREACHABLE_CODE" = "YES";
-				"ENABLE_STRICT_OBJC_MSGSEND" = "YES";
-				"CLANG_ANALYZER_NONNULL" = "YES";
-				"CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING" = "YES";
-				"CLANG_WARN_STRICT_PROTOTYPES" = "YES";
-				"CLANG_WARN_ENUM_CONVERSION" = "YES";
-				"CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER" = "YES";
-				"GCC_WARN_64_TO_32_BIT_CONVERSION" = "YES";
-				"ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS" = "YES";
-				"CLANG_WARN_EMPTY_BODY" = "YES";
-				"GCC_WARN_ABOUT_RETURN_TYPE" = "YES_ERROR";
-				"GCC_WARN_UNINITIALIZED_AUTOS" = "YES_AGGRESSIVE";
-				"CLANG_WARN_COMMA" = "YES";
-				"GCC_C_LANGUAGE_STANDARD" = "gnu17";
-				"GCC_WARN_UNUSED_VARIABLE" = "YES";
-				"CLANG_WARN_RANGE_LOOP_ANALYSIS" = "YES";
-				"CLANG_ENABLE_MODULES" = "YES";
-				"CLANG_WARN_INT_CONVERSION" = "YES";
-				"ALWAYS_SEARCH_USER_PATHS" = "NO";
-				"CLANG_WARN_OBJC_ROOT_CLASS" = "YES_ERROR";
-				"CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS" = "YES";
-				"COPY_PHASE_STRIP" = "NO";
-				"CLANG_WARN_CONSTANT_CONVERSION" = "YES";
-				"ENABLE_USER_SCRIPT_SANDBOXING" = "YES";
-				"GCC_NO_COMMON_BLOCKS" = "YES";
-				"MTL_ENABLE_DEBUG_INFO" = "NO";
-				"CLANG_WARN_NON_LITERAL_NULL_CONVERSION" = "YES";
-				"MTL_FAST_MATH" = "YES";
-				"GCC_WARN_UNUSED_FUNCTION" = "YES";
-				"CLANG_WARN_OBJC_LITERAL_CONVERSION" = "YES";
-				"DEVELOPMENT_TEAM" = "4283ACUG4Y";
-				"CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF" = "YES";
-				"LOCALIZATION_PREFERS_STRING_CATALOG" = "YES";
-			};
-			"name" = "Release";
-		};
-		"F951E65C307BE03500FF04C4" = {
-			"path" = "Localizable.xcstrings";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "text.json.xcstrings";
-			"sourceTree" = "<group>";
-		};
-		"4A4EE5D04DED4353797FA272" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "8733E214B415C99CC4B23060";
-		};
-		"82850239C26FF8580E07FB20" = {
-			"path" = "Dino/DinoRootView.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"1853284F4CC0ACD94CA0AA66" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "F951E650307BE03500FF04C4";
-		};
-		"F951E65D307BE03500FF04C4" = {
-			"path" = "Localization.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "<group>";
-		};
-		"361CBFA8D6D56E667A6AB6CD" = {
-			"path" = "Dino/Views/WorldMap.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"23C747A1E72C8680BB9E684A" = {
-			"path" = "Dino/Core/ClockTime.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"AE17A7B8D0894CC3A54091A5" = {
-			"path" = "Dino/DinoGameModel.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"9CC831804F11124D46221EE6" = {
-			"path" = "Dino/Views/DigitalClock.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"A3A7FCEFEAA9FAF58F4BD046" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "8AAEBD1E16CB94C4F51E8B01";
-		};
-		"61C0ADA07C4CE151409379BB" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "D133564D7720CB902ED7C582";
-		};
-		"8AF73ABD670919989A80E330" = {
-			"isa" = "PBXTargetDependency";
-			"target" = "F951E62F307BE01200FF04C4";
-			"targetProxy" = "B25328EFD7740DFB6BC6F116";
-		};
-		"AEC125D38CB3D527355CFD3B" = {
-			"path" = "Dino/Core/ClockTheme.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"0B80587E32D18C0831D8ACC9" = {
-			"path" = "Dino/Views/OnboardingFlow.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"9D7D43B62142FE4FF7C72420" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "349A7C34F9172244294A0CFE";
-		};
-		"349A7C34F9172244294A0CFE" = {
-			"path" = "Dino/Core/LevelConfiguration.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"E0EF4D0B58F41DAEDFA25C60" = {
-			"path" = "Dino/Core/ProgressManager.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"E044537997C9F23D2302F7FE" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "8733E214B415C99CC4B23060";
-		};
-		"4620A862B268173EC07E4C75" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "361CBFA8D6D56E667A6AB6CD";
-		};
-		"3B68E92C41BE1E6926B1CD26" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "9CC831804F11124D46221EE6";
-		};
-		"61DE2EBAB8070983619B6E0F" = {
-			"path" = "Tests/DinoUITests.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"F975AA4B31E499530B94DAF1" = {
-			"isa" = "XCConfigurationList";
-			"defaultConfigurationIsVisible" = "0";
-			"defaultConfigurationName" = "Release";
-			"buildConfigurations" = (
-				"AAC9DA23F4CAC87DBD02B3D3",
-				"4700AB0C6CF4D9E62ECB32FB",
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		254F130E4296744D7AC5C4A2 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+				BC133C676EDB22A21DC494C7 /* Documentation/Acceptance.md */,
 			);
+			name = Documentation;
+			sourceTree = "<group>";
 		};
-		"7140D2190606B1466B055EDB" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "6006716CA601E3DD24C0D9F6";
-		};
-		"C0596AAE94B8DC6526A6DE24" = {
-			"buildConfigurationList" = "F975AA4B31E499530B94DAF1";
-			"productReference" = "4C8BBB08B81CA32863E546A3";
-			"productType" = "com.apple.product-type.bundle.ui-testing";
-			"productName" = "DinoUITests";
-			"isa" = "PBXNativeTarget";
-			"buildPhases" = (
-				"09BE8DD855369313A16B68D5",
-				"9E1B4E89413DF3CDD6D71CCC",
-				"13C4A5FF766A139D7B2C3D55",
+		5584788E532954DF01EFED87 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				DA152026BD03000000000001 /* Dino/Core/JungleMapLayout.swift */,
+				DA121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift */,
+				DA1820261018000000000001 /* Dino/Core/SpokenTime.swift */,
+				DA1820261018000000000003 /* Dino/Core/QuestionDifficulty.swift */,
+				DA192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift */,
+				DA121026AC01000000000001 /* Dino/Core/PracticeConfiguration.swift */,
+				DA121026AB13000000000001 /* Dino/Core/DinoAvatarMask.swift */,
+				DA121026AB12000000000001 /* Dino/Core/DinoAppearance.swift */,
+				DA1220261012000000000001 /* Dino/Core/DinoSettings.swift */,
+				DA1220261012000000000002 /* Dino/Core/CloudProgress.swift */,
+				2373432652E69FC550C1E670 /* Dino/Core/NameValidator.swift */,
+				8ED274EAFF7B807862126964 /* Dino/Core/ProgressSyncService.swift */,
+				01881B3B65886D0F9D53F6C8 /* Dino/Core/SocialProgress.swift */,
+				8E5A0AA250AB4AB292C0F111 /* Dino/Core/DinoAnimation.swift */,
+				23C747A1E72C8680BB9E684A /* Dino/Core/ClockTime.swift */,
+				349A7C34F9172244294A0CFE /* Dino/Core/LevelConfiguration.swift */,
+				3F902DD15DBC1EC0D309AA1E /* Dino/Core/KeyValueStore.swift */,
+				8733E214B415C99CC4B23060 /* Dino/Core/QuestionGenerator.swift */,
+				A56A2803CE327ECBD272C7D1 /* Dino/Core/PlayerProfile.swift */,
+				AEC125D38CB3D527355CFD3B /* Dino/Core/ClockTheme.swift */,
+				E0EF4D0B58F41DAEDFA25C60 /* Dino/Core/ProgressManager.swift */,
+				F951E650307BE03500FF04C4 /* Dino/Core/SeededGenerator.swift */,
 			);
-			"dependencies" = (
-				"8AF73ABD670919989A80E330",
+			name = Core;
+			sourceTree = "<group>";
+		};
+		6CD6E60EA93CAA55BC295DA7 /* Tools */ = {
+			isa = PBXGroup;
+			children = (
+				272CEF06B9056BD6417F2390 /* Tools/test-dino.sh */,
 			);
-			"name" = "DinoUITests";
-			"buildRules" = (
+			name = Tools;
+			sourceTree = "<group>";
+		};
+		81C5D0349885771256BBA84E /* Dino */ = {
+			isa = PBXGroup;
+			children = (
+				DA1220261012000000000003 /* Dino/AnswerFeedback.swift */,
+				FF502E855D8132CA2685C1B5 /* Dino/Social/FriendsManager.swift */,
+				5584788E532954DF01EFED87 /* Core */,
+				D7CB03CE4A9DCBDC3D1EF9C2 /* Views */,
+				AE17A7B8D0894CC3A54091A5 /* Dino/DinoGameModel.swift */,
+				82850239C26FF8580E07FB20 /* Dino/DinoRootView.swift */,
 			);
+			name = Dino;
+			sourceTree = "<group>";
 		};
-		"F951E642307BE03500FF04C4" = {
-			"path" = "Assets.xcassets";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "folder.assetcatalog";
-			"sourceTree" = "<group>";
-		};
-		"DD8D8D9B86AD1F7BD4729496" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "0B80587E32D18C0831D8ACC9";
-		};
-		"B7BF4989C8E56DBDD0035B47" = {
-			"path" = "Dino/Views/LevelResult.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"96D5615039527B7E63D0F335" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "23C747A1E72C8680BB9E684A";
-		};
-		"6B1DFC98581D62FAF83297BD" = {
-			"path" = "Dino/Views/ClockCustomizer.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"9C7CA32620369705A6E2ADC4" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "61DE2EBAB8070983619B6E0F";
-		};
-		"B8A5B3DA16BFBAC637CDC6B5" = {
-			"path" = "Dino/Views/Settings.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"0E03B85644DFB788EEC72EB8" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "B7BF4989C8E56DBDD0035B47";
-		};
-		"AAC9DA23F4CAC87DBD02B3D3" = {
-			"isa" = "XCBuildConfiguration";
-			"buildSettings" = {
-				"GENERATE_INFOPLIST_FILE" = "YES";
-				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
-				"IPHONEOS_DEPLOYMENT_TARGET" = "26.0";
-				"PRODUCT_BUNDLE_IDENTIFIER" = "Hakketjak.Dino-Klokkijken.UITests";
-				"CODE_SIGN_STYLE" = "Automatic";
-				"SDKROOT" = "iphoneos";
-				"SWIFT_VERSION" = "5.0";
-				"TARGETED_DEVICE_FAMILY" = "1,2";
-				"PRODUCT_NAME" = "$(TARGET_NAME)";
-				"TEST_TARGET_NAME" = "Dino Klokkijken";
-				"LOCALIZATION_PREFERS_STRING_CATALOG" = "YES";
-			};
-			"name" = "Debug";
-		};
-		"4F961AD95991DE68F9B7E490" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "23C747A1E72C8680BB9E684A";
-		};
-		"F951E652307BE03500FF04C4" = {
-			"path" = "DinoTimeAdventureApp.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "<group>";
-		};
-		"F951E630307BE01200FF04C4" = {
-			"path" = "Dino Time.app";
-			"isa" = "PBXFileReference";
-			"includeInIndex" = "0";
-			"explicitFileType" = "wrapper.application";
-			"sourceTree" = "BUILT_PRODUCTS_DIR";
-		};
-		"17F3D50BFC83FB20302FE95E" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "3F902DD15DBC1EC0D309AA1E";
-		};
-		"F951E62B307BE01100FF04C4" = {
-			"isa" = "XCConfigurationList";
-			"buildConfigurations" = (
-				"F951E63B307BE01200FF04C4",
-				"F951E63C307BE01200FF04C4",
+		C70D8D9AE8EF868E9779C09D /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				61DE2EBAB8070983619B6E0F /* Tests/DinoUITests.swift */,
+				F1E94AED7E30BC73E971834C /* Tests/DinoCoreTests.swift */,
 			);
-			"defaultConfigurationName" = "Release";
+			name = Tests;
+			sourceTree = "<group>";
 		};
-		"D133564D7720CB902ED7C582" = {
-			"path" = "Dino/Views/AnalogClock.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"F951E650307BE03500FF04C4" = {
-			"path" = "Dino/Core/SeededGenerator.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"8733E214B415C99CC4B23060" = {
-			"path" = "Dino/Core/QuestionGenerator.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"3F902DD15DBC1EC0D309AA1E" = {
-			"path" = "Dino/Core/KeyValueStore.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"3B04AE1E8CC46A033D379434" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "5887DAD74B3F2A6183A38A01";
-		};
-		"DCAE59100EB467AA8769FEF8" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "B8A5B3DA16BFBAC637CDC6B5";
-		};
-		"25664453B43D58747D2F6A9F" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "E0EF4D0B58F41DAEDFA25C60";
-		};
-		"8AAEBD1E16CB94C4F51E8B01" = {
-			"path" = "Dino/Views/DinoGameView.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"9E1B4E89413DF3CDD6D71CCC" = {
-			"isa" = "PBXFrameworksBuildPhase";
-			"buildActionMask" = "2147483647";
-			"files" = (
+		CD781DC16DF3DA48100B6D18 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4C8BBB08B81CA32863E546A3 /* DinoUITests.xctest */,
+				F951E630307BE01200FF04C4 /* Dino Time.app */,
 			);
-			"runOnlyForDeploymentPostprocessing" = "0";
+			name = Products;
+			sourceTree = "<group>";
 		};
-		"A56A2803CE327ECBD272C7D1" = {
-			"path" = "Dino/Core/PlayerProfile.swift";
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"4C8BBB08B81CA32863E546A3" = {
-			"path" = "DinoUITests.xctest";
-			"isa" = "PBXFileReference";
-			"explicitFileType" = "wrapper.cfbundle";
-			"sourceTree" = "BUILT_PRODUCTS_DIR";
-		};
-		"F951E628307BE01100FF04C4" = {
-			"buildConfigurationList" = "F951E62B307BE01100FF04C4";
-			"targets" = (
-				"C0596AAE94B8DC6526A6DE24",
-				"F951E62F307BE01200FF04C4",
+		D7CB03CE4A9DCBDC3D1EF9C2 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				DA121026AC02000000000002 /* Dino/Views/ExpandedQuestionView.swift */,
+				DA1820261018000000000002 /* Dino/Views/SpokenTimeQuestion.swift */,
+				DA212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift */,
+				DA192026BD01000000000002 /* Dino/Views/TimeZoneMap.swift */,
+				DA121026AC01000000000002 /* Dino/Views/Practice.swift */,
+				DA162026BD01000000000001 /* Dino/Views/StarsOverview.swift */,
+				DA121026AB12000000000003 /* Dino/Views/DinoPersonalizer.swift */,
+				DA121026AB12000000000002 /* Dino/Views/DinoAvatar.swift */,
+				DA1A20261011000000000001 /* Dino/Views/JungleLandscape.swift */,
+				DA132026BD01000000000001 /* Dino/Views/WorldBossArt.swift */,
+				DA202026BD01000000000001 /* Dino/Views/DinoDesert.swift */,
+				DA1A20261011000000000003 /* Dino/Views/AdventureHeader.swift */,
+				EA69CB435385B9A4C726D862 /* Dino/Views/Friends.swift */,
+				0B80587E32D18C0831D8ACC9 /* Dino/Views/OnboardingFlow.swift */,
+				361CBFA8D6D56E667A6AB6CD /* Dino/Views/WorldMap.swift */,
+				5887DAD74B3F2A6183A38A01 /* Dino/Views/DinoUI.swift */,
+				6006716CA601E3DD24C0D9F6 /* Dino/Views/QuestionRenderer.swift */,
+				6B1DFC98581D62FAF83297BD /* Dino/Views/ClockCustomizer.swift */,
+				8AAEBD1E16CB94C4F51E8B01 /* Dino/Views/DinoGameView.swift */,
+				945545C5CAAF92265CBE1BFE /* Dino/Views/DinoCharacter.swift */,
+				9CC831804F11124D46221EE6 /* Dino/Views/DigitalClock.swift */,
+				B7BF4989C8E56DBDD0035B47 /* Dino/Views/LevelResult.swift */,
+				B8A5B3DA16BFBAC637CDC6B5 /* Dino/Views/Settings.swift */,
+				D133564D7720CB902ED7C582 /* Dino/Views/AnalogClock.swift */,
 			);
-			"minimizedProjectReferenceProxies" = "1";
-			"developmentRegion" = "en";
-			"knownRegions" = (
-				"en",
-				"nl",
+			name = Views;
+			sourceTree = "<group>";
+		};
+		F951E627307BE01100FF04C4 = {
+			isa = PBXGroup;
+			children = (
+				DCDF56484DA8108CF908CF1F /* DinoInfo.plist */,
+				DA192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json */,
+				6D123AE8AB04EEE632CC6C18 /* PrivacyInfo.xcprivacy */,
+				8D1BC6DD34FD70BFF7727C14 /* InfoPlist.xcstrings */,
+				837325E4F6046C826649A631 /* Dino.entitlements */,
+				F951E65C307BE03500FF04C4 /* Localizable.xcstrings */,
+				F951E652307BE03500FF04C4 /* DinoTimeAdventureApp.swift */,
+				A1319120659071CDFDC06C3F /* README.md */,
+				F951E65D307BE03500FF04C4 /* Localization.swift */,
+				F951E642307BE03500FF04C4 /* Assets.xcassets */,
+				81C5D0349885771256BBA84E /* Dino */,
+				C70D8D9AE8EF868E9779C09D /* Tests */,
+				254F130E4296744D7AC5C4A2 /* Documentation */,
+				6CD6E60EA93CAA55BC295DA7 /* Tools */,
+				CD781DC16DF3DA48100B6D18 /* Products */,
 			);
-			"isa" = "PBXProject";
-			"productRefGroup" = "CD781DC16DF3DA48100B6D18";
-			"projectDirPath" = "";
-			"attributes" = {
-				"LastSwiftUpdateCheck" = "2700";
-				"BuildIndependentTargetsInParallel" = "1";
-				"LastUpgradeCheck" = "2700";
-				"TargetAttributes" = {
-					"F951E62F307BE01200FF04C4" = {
-						"CreatedOnToolsVersion" = "27.0";
-						"SystemCapabilities" = { "com.apple.iCloud" = { "enabled" = "1"; }; "com.apple.GameCenter" = { "enabled" = "1"; }; };
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C0596AAE94B8DC6526A6DE24 /* DinoUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F975AA4B31E499530B94DAF1 /* Build configuration list for PBXNativeTarget "DinoUITests" */;
+			buildPhases = (
+				09BE8DD855369313A16B68D5 /* Sources */,
+				9E1B4E89413DF3CDD6D71CCC /* Frameworks */,
+				13C4A5FF766A139D7B2C3D55 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8AF73ABD670919989A80E330 /* PBXTargetDependency */,
+			);
+			name = DinoUITests;
+			productName = DinoUITests;
+			productReference = 4C8BBB08B81CA32863E546A3 /* DinoUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		F951E62F307BE01200FF04C4 /* Dino Klokkijken */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F951E63D307BE01200FF04C4 /* Build configuration list for PBXNativeTarget "Dino Klokkijken" */;
+			buildPhases = (
+				F951E62C307BE01200FF04C4 /* Sources */,
+				F951E62D307BE01200FF04C4 /* Frameworks */,
+				F951E62E307BE01200FF04C4 /* Resources */,
+			);
+			buildRules = (
+			);
+			name = "Dino Klokkijken";
+			productName = "Dino Time";
+			productReference = F951E630307BE01200FF04C4 /* Dino Time.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F951E628307BE01100FF04C4 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					F951E62F307BE01200FF04C4 = {
+						CreatedOnToolsVersion = 27.0;
+						SystemCapabilities = {
+							com.apple.GameCenter = {
+								enabled = 1;
+							};
+							com.apple.iCloud = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
-			"hasScannedForEncodings" = "0";
-			"preferredProjectObjectVersion" = "77";
-			"mainGroup" = "F951E627307BE01100FF04C4";
-			"projectRoot" = "";
+			buildConfigurationList = F951E62B307BE01100FF04C4 /* Build configuration list for PBXProject "Dino Klokkijken" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				nl,
+			);
+			mainGroup = F951E627307BE01100FF04C4;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = CD781DC16DF3DA48100B6D18 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C0596AAE94B8DC6526A6DE24 /* DinoUITests */,
+				F951E62F307BE01200FF04C4 /* Dino Klokkijken */,
+			);
 		};
-		"4700AB0C6CF4D9E62ECB32FB" = {
-			"isa" = "XCBuildConfiguration";
-			"buildSettings" = {
-				"GENERATE_INFOPLIST_FILE" = "YES";
-				"SUPPORTED_PLATFORMS" = "iphoneos iphonesimulator";
-				"IPHONEOS_DEPLOYMENT_TARGET" = "26.0";
-				"PRODUCT_BUNDLE_IDENTIFIER" = "Hakketjak.Dino-Klokkijken.UITests";
-				"CODE_SIGN_STYLE" = "Automatic";
-				"SDKROOT" = "iphoneos";
-				"SWIFT_VERSION" = "5.0";
-				"TARGETED_DEVICE_FAMILY" = "1,2";
-				"PRODUCT_NAME" = "$(TARGET_NAME)";
-				"TEST_TARGET_NAME" = "Dino Klokkijken";
-				"LOCALIZATION_PREFERS_STRING_CATALOG" = "YES";
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		13C4A5FF766A139D7B2C3D55 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		F951E62E307BE01200FF04C4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				9BB407718D9D26EDD1309082 /* PrivacyInfo.xcprivacy in Resources */,
+				DB192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json in Resources */,
+				B8196F54F8B174235D7F48CC /* InfoPlist.xcstrings in Resources */,
+				F951E75B307BE03500FF04C4 /* Localizable.xcstrings in Resources */,
+				F951E7F1307BE03500FF04C4 /* Assets.xcassets in Resources */,
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		09BE8DD855369313A16B68D5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				DC121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift in Sources */,
+				DC1820261018000000000001 /* Dino/Core/SpokenTime.swift in Sources */,
+				DC1820261018000000000003 /* Dino/Core/QuestionDifficulty.swift in Sources */,
+				DC192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift in Sources */,
+				DC121026AC01000000000001 /* Dino/Core/PracticeConfiguration.swift in Sources */,
+				DC121026AB13000000000001 /* Dino/Core/DinoAvatarMask.swift in Sources */,
+				DC121026AB12000000000001 /* Dino/Core/DinoAppearance.swift in Sources */,
+				32DE52ED6A9A0D73B817A387 /* Dino/Core/NameValidator.swift in Sources */,
+				00BF1DDD8A1DDC39990EF9D2 /* Dino/Core/ProgressSyncService.swift in Sources */,
+				57120B7BCBEBA390E542C008 /* Dino/Core/SocialProgress.swift in Sources */,
+				9C7CA32620369705A6E2ADC4 /* Tests/DinoUITests.swift in Sources */,
+				5F8093FBC7E1188F832026E5 /* Dino/Core/ClockTheme.swift in Sources */,
+				4F961AD95991DE68F9B7E490 /* Dino/Core/ClockTime.swift in Sources */,
+				17F3D50BFC83FB20302FE95E /* Dino/Core/KeyValueStore.swift in Sources */,
+				CF65DC853F33210C13C32356 /* Dino/Core/LevelConfiguration.swift in Sources */,
+				113D4C997110CB7A3F76A105 /* Dino/Core/PlayerProfile.swift in Sources */,
+				636C2C17505D475DDE107573 /* Dino/Core/ProgressManager.swift in Sources */,
+				E044537997C9F23D2302F7FE /* Dino/Core/QuestionGenerator.swift in Sources */,
+				1853284F4CC0ACD94CA0AA66 /* Dino/Core/SeededGenerator.swift in Sources */,
+			);
+		};
+		F951E62C307BE01200FF04C4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				DB152026BD03000000000001 /* Dino/Core/JungleMapLayout.swift in Sources */,
+				DB121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift in Sources */,
+				DB1820261018000000000001 /* Dino/Core/SpokenTime.swift in Sources */,
+				DB1820261018000000000003 /* Dino/Core/QuestionDifficulty.swift in Sources */,
+				DB1820261018000000000002 /* Dino/Views/SpokenTimeQuestion.swift in Sources */,
+				DB192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift in Sources */,
+				DB192026BD01000000000002 /* Dino/Views/TimeZoneMap.swift in Sources */,
+				DB121026AC01000000000001 /* Dino/Core/PracticeConfiguration.swift in Sources */,
+				DB121026AC02000000000002 /* Dino/Views/ExpandedQuestionView.swift in Sources */,
+				DB212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift in Sources */,
+				DB121026AC01000000000002 /* Dino/Views/Practice.swift in Sources */,
+				DB162026BD01000000000001 /* Dino/Views/StarsOverview.swift in Sources */,
+				DB121026AB13000000000001 /* Dino/Core/DinoAvatarMask.swift in Sources */,
+				DB121026AB12000000000003 /* Dino/Views/DinoPersonalizer.swift in Sources */,
+				DB121026AB12000000000002 /* Dino/Views/DinoAvatar.swift in Sources */,
+				DB121026AB12000000000001 /* Dino/Core/DinoAppearance.swift in Sources */,
+				DB1220261012000000000001 /* Dino/Core/DinoSettings.swift in Sources */,
+				DB1220261012000000000002 /* Dino/Core/CloudProgress.swift in Sources */,
+				DB1220261012000000000003 /* Dino/AnswerFeedback.swift in Sources */,
+				CF7F3ACA697DBE04D5B1165A /* Dino/Views/Friends.swift in Sources */,
+				81A25E16F194F2BF2C4627A3 /* Dino/Social/FriendsManager.swift in Sources */,
+				C4C9AF12A9918F7F62561C4B /* Dino/Core/NameValidator.swift in Sources */,
+				60AD19692B493F923E1619C5 /* Dino/Core/ProgressSyncService.swift in Sources */,
+				473DC21F001264F04616DF0E /* Dino/Core/SocialProgress.swift in Sources */,
+				8E5A0AA250AB4AB292C0F112 /* Dino/Core/DinoAnimation.swift in Sources */,
+				DA1A20261011000000000002 /* Dino/Views/JungleLandscape.swift in Sources */,
+				DB132026BD01000000000001 /* Dino/Views/WorldBossArt.swift in Sources */,
+				DB202026BD01000000000001 /* Dino/Views/DinoDesert.swift in Sources */,
+				DA1A20261011000000000004 /* Dino/Views/AdventureHeader.swift in Sources */,
+				F951E835307BE03500FF04C4 /* Dino/Core/SeededGenerator.swift in Sources */,
+				F951E834307BE03500FF04C4 /* DinoTimeAdventureApp.swift in Sources */,
+				F951E836307BE03500FF04C4 /* Localization.swift in Sources */,
+				4568618D8654E5F5F80F7B5E /* Dino/Core/ClockTheme.swift in Sources */,
+				96D5615039527B7E63D0F335 /* Dino/Core/ClockTime.swift in Sources */,
+				F7411D539E03C079C2D93FD5 /* Dino/Core/KeyValueStore.swift in Sources */,
+				9D7D43B62142FE4FF7C72420 /* Dino/Core/LevelConfiguration.swift in Sources */,
+				E062E3966BF6466ABA396FCC /* Dino/Core/PlayerProfile.swift in Sources */,
+				25664453B43D58747D2F6A9F /* Dino/Core/ProgressManager.swift in Sources */,
+				4A4EE5D04DED4353797FA272 /* Dino/Core/QuestionGenerator.swift in Sources */,
+				3D31E4F0E012C4E2405C644C /* Dino/DinoGameModel.swift in Sources */,
+				A7A164A2377507068726D1A9 /* Dino/DinoRootView.swift in Sources */,
+				61C0ADA07C4CE151409379BB /* Dino/Views/AnalogClock.swift in Sources */,
+				DDD392F183235DB51B76875F /* Dino/Views/ClockCustomizer.swift in Sources */,
+				3B68E92C41BE1E6926B1CD26 /* Dino/Views/DigitalClock.swift in Sources */,
+				A3A7FCEFEAA9FAF58F4BD046 /* Dino/Views/DinoGameView.swift in Sources */,
+				3B04AE1E8CC46A033D379434 /* Dino/Views/DinoUI.swift in Sources */,
+				0E03B85644DFB788EEC72EB8 /* Dino/Views/LevelResult.swift in Sources */,
+				DD8D8D9B86AD1F7BD4729496 /* Dino/Views/OnboardingFlow.swift in Sources */,
+				7140D2190606B1466B055EDB /* Dino/Views/QuestionRenderer.swift in Sources */,
+				DCAE59100EB467AA8769FEF8 /* Dino/Views/Settings.swift in Sources */,
+				4620A862B268173EC07E4C75 /* Dino/Views/WorldMap.swift in Sources */,
+				4E733E9A52282094CFE05A3F /* Dino/Views/DinoCharacter.swift in Sources */,
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8AF73ABD670919989A80E330 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F951E62F307BE01200FF04C4 /* Dino Klokkijken */;
+			targetProxy = B25328EFD7740DFB6BC6F116 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		4700AB0C6CF4D9E62ECB32FB /* Release configuration for PBXNativeTarget "DinoUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LOCALIZATION_PREFERS_STRING_CATALOG = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "Hakketjak.Dino-Klokkijken.UITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Dino Klokkijken";
 			};
-			"name" = "Release";
+			name = Release;
 		};
-		"945545C5CAAF92265CBE1BFE" = {
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"path" = "Dino/Views/DinoCharacter.swift";
-			"sourceTree" = "SOURCE_ROOT";
+		AAC9DA23F4CAC87DBD02B3D3 /* Debug configuration for PBXNativeTarget "DinoUITests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LOCALIZATION_PREFERS_STRING_CATALOG = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "Hakketjak.Dino-Klokkijken.UITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Dino Klokkijken";
+			};
+			name = Debug;
 		};
-		"4E733E9A52282094CFE05A3F" = {
-			"isa" = "PBXBuildFile";
-			"fileRef" = "945545C5CAAF92265CBE1BFE";
+		F951E63B307BE01200FF04C4 /* Debug configuration for PBXProject "Dino Klokkijken" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 4283ACUG4Y;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOG = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
 		};
-		"F1E94AED7E30BC73E971834C" = {
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "sourcecode.swift";
-			"path" = "Tests/DinoCoreTests.swift";
-			"sourceTree" = "SOURCE_ROOT";
+		F951E63C307BE01200FF04C4 /* Release configuration for PBXProject "Dino Klokkijken" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 4283ACUG4Y;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOG = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
 		};
-		"A1319120659071CDFDC06C3F" = {
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "net.daringfireball.markdown";
-			"path" = "README.md";
-			"sourceTree" = "SOURCE_ROOT";
+		F951E63E307BE01200FF04C4 /* Debug configuration for PBXNativeTarget "Dino Klokkijken" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Dino.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4283ACUG4Y;
+				DINO_APP_STORE_URL = "";
+				DINO_PRIVACY_POLICY_URL = "";
+				DINO_SAFETY_CONTACT = "";
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DinoInfo.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Dino Time";
+				INFOPLIST_KEY_DinoAppStoreURL = "$(DINO_APP_STORE_URL)";
+				INFOPLIST_KEY_DinoPrivacyPolicyURL = "$(DINO_PRIVACY_POLICY_URL)";
+				INFOPLIST_KEY_DinoSafetyContact = "$(DINO_SAFETY_CONTACT)";
+				INFOPLIST_KEY_NSGKFriendListUsageDescription = "Show the progress and stars of friends who allow Game Center access.";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LOCALIZATION_PREFERS_STRING_CATALOG = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Hakketjak.Dino-Klokkijken";
+				PRODUCT_NAME = "Dino Time";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TVOS_DEPLOYMENT_TARGET = 27.0;
+				XROS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Debug;
 		};
-		"BC133C676EDB22A21DC494C7" = {
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "net.daringfireball.markdown";
-			"path" = "Documentation/Acceptance.md";
-			"sourceTree" = "SOURCE_ROOT";
+		F951E63F307BE01200FF04C4 /* Release configuration for PBXNativeTarget "Dino Klokkijken" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Dino.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4283ACUG4Y;
+				DINO_APP_STORE_URL = "";
+				DINO_PRIVACY_POLICY_URL = "";
+				DINO_SAFETY_CONTACT = "";
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DinoInfo.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Dino Time";
+				INFOPLIST_KEY_DinoAppStoreURL = "$(DINO_APP_STORE_URL)";
+				INFOPLIST_KEY_DinoPrivacyPolicyURL = "$(DINO_PRIVACY_POLICY_URL)";
+				INFOPLIST_KEY_DinoSafetyContact = "$(DINO_SAFETY_CONTACT)";
+				INFOPLIST_KEY_NSGKFriendListUsageDescription = "Show the progress and stars of friends who allow Game Center access.";
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LOCALIZATION_PREFERS_STRING_CATALOG = YES;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Hakketjak.Dino-Klokkijken";
+				PRODUCT_NAME = "Dino Time";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TVOS_DEPLOYMENT_TARGET = 27.0;
+				XROS_DEPLOYMENT_TARGET = 27.0;
+			};
+			name = Release;
 		};
-		"272CEF06B9056BD6417F2390" = {
-			"isa" = "PBXFileReference";
-			"lastKnownFileType" = "text.script.sh";
-			"path" = "Tools/test-dino.sh";
-			"sourceTree" = "SOURCE_ROOT";
-		};
-		"5584788E532954DF01EFED87" = {
-			"isa" = "PBXGroup";
-			"name" = "Core";
-			"children" = (
-                "DA152026BD03000000000001",
-				"DA121026AC02000000000001",
-				"DA1820261018000000000001",
-				"DA1820261018000000000003",
-                "DA192026BD01000000000001",
-				"DA121026AC01000000000001",
-				"DA121026AB13000000000001",
-				"DA121026AB12000000000001",
-				"DA1220261012000000000001",
-				"DA1220261012000000000002",
-				"2373432652E69FC550C1E670",
-				"8ED274EAFF7B807862126964",
-				"01881B3B65886D0F9D53F6C8",
-				"8E5A0AA250AB4AB292C0F111",
-				"23C747A1E72C8680BB9E684A",
-				"349A7C34F9172244294A0CFE",
-				"3F902DD15DBC1EC0D309AA1E",
-				"8733E214B415C99CC4B23060",
-				"A56A2803CE327ECBD272C7D1",
-				"AEC125D38CB3D527355CFD3B",
-				"E0EF4D0B58F41DAEDFA25C60",
-				"F951E650307BE03500FF04C4",
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F951E62B307BE01100FF04C4 /* Build configuration list for PBXProject "Dino Klokkijken" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F951E63B307BE01200FF04C4 /* Debug configuration for PBXProject "Dino Klokkijken" */,
+				F951E63C307BE01200FF04C4 /* Release configuration for PBXProject "Dino Klokkijken" */,
 			);
-			"sourceTree" = "<group>";
+			defaultConfigurationName = Release;
 		};
-		"D7CB03CE4A9DCBDC3D1EF9C2" = {
-			"isa" = "PBXGroup";
-			"name" = "Views";
-			"children" = (
-				"DA121026AC02000000000002",
-				"DA1820261018000000000002",
-                "DA212026BD01000000000001",
-                "DA192026BD01000000000002",
-				"DA121026AC01000000000002",
-				"DA162026BD01000000000001",
-				"DA121026AB12000000000003",
-				"DA121026AB12000000000002",
-                "DA1A20261011000000000001",
-                "DA132026BD01000000000001",
-                "DA1A20261011000000000003",
-				"EA69CB435385B9A4C726D862",
-				"0B80587E32D18C0831D8ACC9",
-				"361CBFA8D6D56E667A6AB6CD",
-				"5887DAD74B3F2A6183A38A01",
-				"6006716CA601E3DD24C0D9F6",
-				"6B1DFC98581D62FAF83297BD",
-				"8AAEBD1E16CB94C4F51E8B01",
-				"945545C5CAAF92265CBE1BFE",
-				"9CC831804F11124D46221EE6",
-				"B7BF4989C8E56DBDD0035B47",
-				"B8A5B3DA16BFBAC637CDC6B5",
-				"D133564D7720CB902ED7C582",
+		F951E63D307BE01200FF04C4 /* Build configuration list for PBXNativeTarget "Dino Klokkijken" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F951E63E307BE01200FF04C4 /* Debug configuration for PBXNativeTarget "Dino Klokkijken" */,
+				F951E63F307BE01200FF04C4 /* Release configuration for PBXNativeTarget "Dino Klokkijken" */,
 			);
-			"sourceTree" = "<group>";
+			defaultConfigurationName = Release;
 		};
-		"81C5D0349885771256BBA84E" = {
-			"isa" = "PBXGroup";
-			"name" = "Dino";
-			"children" = (
-				"DA1220261012000000000003",
-				"FF502E855D8132CA2685C1B5",
-				"5584788E532954DF01EFED87",
-				"D7CB03CE4A9DCBDC3D1EF9C2",
-				"AE17A7B8D0894CC3A54091A5",
-				"82850239C26FF8580E07FB20",
+		F975AA4B31E499530B94DAF1 /* Build configuration list for PBXNativeTarget "DinoUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AAC9DA23F4CAC87DBD02B3D3 /* Debug configuration for PBXNativeTarget "DinoUITests" */,
+				4700AB0C6CF4D9E62ECB32FB /* Release configuration for PBXNativeTarget "DinoUITests" */,
 			);
-			"sourceTree" = "<group>";
+			defaultConfigurationName = Release;
 		};
-		"C70D8D9AE8EF868E9779C09D" = {
-			"isa" = "PBXGroup";
-			"name" = "Tests";
-			"children" = (
-				"61DE2EBAB8070983619B6E0F",
-				"F1E94AED7E30BC73E971834C",
-			);
-			"sourceTree" = "<group>";
-		};
-		"254F130E4296744D7AC5C4A2" = {
-			"isa" = "PBXGroup";
-			"name" = "Documentation";
-			"children" = (
-				"BC133C676EDB22A21DC494C7",
-			);
-			"sourceTree" = "<group>";
-		};
-		"6CD6E60EA93CAA55BC295DA7" = {
-			"isa" = "PBXGroup";
-			"name" = "Tools";
-			"children" = (
-				"272CEF06B9056BD6417F2390",
-			);
-			"sourceTree" = "<group>";
-		};
-		"CD781DC16DF3DA48100B6D18" = {
-			"isa" = "PBXGroup";
-			"name" = "Products";
-			"children" = (
-				"4C8BBB08B81CA32863E546A3",
-				"F951E630307BE01200FF04C4",
-			);
-			"sourceTree" = "<group>";
-		};
-		"F951E627307BE01100FF04C4" = {
-			"isa" = "PBXGroup";
-			"children" = (
-				"DCDF56484DA8108CF908CF1F",
-                "DA192026BD01000000000003",
-				"6D123AE8AB04EEE632CC6C18",
-				"8D1BC6DD34FD70BFF7727C14",
-				"837325E4F6046C826649A631",
-				"F951E65C307BE03500FF04C4",
-				"F951E652307BE03500FF04C4",
-				"A1319120659071CDFDC06C3F",
-				"F951E65D307BE03500FF04C4",
-				"F951E642307BE03500FF04C4",
-				"81C5D0349885771256BBA84E",
-				"C70D8D9AE8EF868E9779C09D",
-				"254F130E4296744D7AC5C4A2",
-				"6CD6E60EA93CAA55BC295DA7",
-				"CD781DC16DF3DA48100B6D18",
-			);
-			"sourceTree" = "<group>";
-		};
+/* End XCConfigurationList section */
 	};
-	"rootObject" = "F951E628307BE01100FF04C4";
+	rootObject = F951E628307BE01100FF04C4 /* Project object */;
+	validationLevel = 1;
 }

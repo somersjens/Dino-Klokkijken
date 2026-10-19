@@ -5555,13 +5555,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choose the right word in each row."
+            "value" : "Tap the right tiles below"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kies steeds het juiste antwoord."
+            "value" : "Klik op de juiste stenen hieronder"
           }
         }
       }
@@ -7153,13 +7153,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Twilight the Forest Owl"
+            "value" : "Sandtail the Desert Guardian"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tweelicht de Bosuil"
+            "value" : "Zandstaart de Woestijnwachter"
           }
         }
       }
@@ -7170,13 +7170,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Day and Night Forest"
+            "value" : "Dino-Desert"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dag-en-nachtbos"
+            "value" : "Dino-Desert"
           }
         }
       }

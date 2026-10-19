@@ -354,7 +354,12 @@ final class FriendsManager: NSObject, ObservableObject {
         // Trigger the official dashboard without a floating overlay over the game.
         if let friendID {
             guard let friend = gamePlayers[friendID] else { return }
-            access.trigger(player: friend) { [weak self] in self?.refresh() }
+            if #available(iOS 18, *) {
+                access.trigger(player: friend) { [weak self] in self?.refresh() }
+            } else {
+                // iOS 16 and 17 can open the friends list; a specific profile arrives in iOS 18.
+                access.trigger(state: .localPlayerFriendsList) { [weak self] in self?.refresh() }
+            }
         } else { access.trigger(state: .localPlayerProfile) { [weak self] in self?.refresh() } }
     }
     func friend(_ id: String) -> DinoFriend? { friends.first { $0.id == id } }

@@ -276,8 +276,12 @@ struct DinoCoreTests {
             let language = SpokenTimeCatalog.language(code: code)
             for minute in 0..<60 {
                 let prompt = language.prompt(for: ClockTime(hour: 11, minute: minute), using: &rng)
-                expect(!prompt.phrase.isEmpty && zip(prompt.slots, prompt.correct.choiceIDs).allSatisfy { slot, id in slot.choices.contains { $0.id == id } },
-                       "all sixty spoken minute positions have selectable correct words")
+                let wordsPresent = zip(prompt.slots, prompt.correct.choiceIDs).allSatisfy { slot, id in
+                    id == SpokenTimeChoice.emptyID
+                        ? !slot.choices.contains { $0.id == SpokenTimeChoice.emptyID }
+                        : slot.choices.contains { $0.id == id }
+                }
+                expect(!prompt.phrase.isEmpty && wordsPresent, "all sixty spoken minute positions have selectable correct words")
             }
         }
 
@@ -390,7 +394,7 @@ struct DinoCoreTests {
             expect(scene.sceneryTiles.contains( where: { $0.includesBoss }),
                    "the jungle boss shares the scenery tiles instead of sitting behind every tree")
             let trailWidth = min(width, 600) - 36
-            for (index, fraction) in ([CGFloat(0.5)] + JungleMapLayout.chapterPositions).enumerated() {
+            for (index, fraction) in JungleMapLayout.levelPositions.enumerated() {
                 let y = JungleMapLayout.firstNodeY + CGFloat(index) * JungleMapLayout.levelSpacing
                 let expected = (width - trailWidth) / 2 + trailWidth * fraction
                 expect(abs(layout.centerX(at: y) - expected) < 0.01, "jungle placement follows each real level centre")
@@ -413,10 +417,10 @@ struct DinoCoreTests {
             }
             let waterfall = layout.position(of: layout.waterfall)
             expect(waterfall.x < layout.centerX(at: 595) && (590...640).contains(waterfall.y),
-                   "the waterfall stands on the left bank near level three")
+                   "the waterfall stands on the left bank near level four")
             expect(layout.waterfall.heightScale == 0.78 && layout.waterfall.mirrored &&
                    layout.waterfall.preferred.x < width / 2 - min(width, 720) * 0.4,
-                   "level three waterfall is shorter, at the bank and fed from the left")
+                   "the jungle waterfall is shorter, at the bank and fed from the left")
             for placement in scene.placements where !placement.item.kind.animated && placement.bounds.intersects(CGRect(x: 0, y: -512, width: width, height: 2560)) {
                 expect(scene.sceneryTiles.contains { $0.placements.contains { $0.id == placement.id } },
                        "every static object is retained in the shared depth tiles")
@@ -1271,20 +1275,21 @@ struct DinoCoreTests {
         expect(quarterTo.phrase(for: SpokenTimeAnswer(choiceIDs: Array(repeating: "-", count: 5))) == "", "dashes add no words")
         for prompt in [quarterTo, halfFour] {
             let hour = prompt.slots.first { $0.id == "hour" }!
-            let hourWords = hour.choices.filter { $0.id != SpokenTimeChoice.emptyID }
-            expect(hour.choices.first?.id == SpokenTimeChoice.emptyID && hourWords.count == 3 && Set(hourWords.map(\.id)).count == 3,
-                   "the hour row offers nothing and three different hours")
+            expect(hour.choices.count == 3 && Set(hour.choices.map(\.id)).count == 3
+                   && !hour.choices.contains { $0.id == SpokenTimeChoice.emptyID },
+                   "the hour row offers three hours and no empty stone")
             for (slot, correct) in zip(prompt.slots, prompt.correct.choiceIDs) {
-                let words = slot.choices.filter { $0.id != SpokenTimeChoice.emptyID }
-                expect(slot.choices.contains { $0.id == SpokenTimeChoice.emptyID }, "every row can stay empty")
-                expect((1...3).contains(words.count), "every row shows at most three words besides nothing")
-                expect(slot.choices.contains { $0.id == correct }, "every correct word is one of the choices")
+                expect(!slot.choices.contains { $0.id == SpokenTimeChoice.emptyID }, "empty rows have no stone")
+                expect((1...3).contains(slot.choices.count), "every row shows at most three words")
+                if correct != SpokenTimeChoice.emptyID {
+                    expect(slot.choices.contains { $0.id == correct }, "every correct word is one of the choices")
+                }
             }
         }
-        expect(quarterTo.slots[0].choices.map(\.id) == ["-", "vijf", "tien", "kwart"], "Dutch minutes stay the three real words")
-        expect(halfFour.slots[0].choices.count == 4 && halfFour.slots[0].choices.contains { $0.id == "twenty" },
+        expect(quarterTo.slots[0].choices.map(\.id) == ["vijf", "tien", "kwart"], "Dutch minutes stay the three real words")
+        expect(halfFour.slots[0].choices.count == 3 && halfFour.slots[0].choices.contains { $0.id == "twenty" },
                "English minutes keep the right word and two alternatives")
-        expect(quarterTo.slots.first { $0.id == "half" }!.choices.map(\.id) == ["-", "half"], "half can be left empty")
+        expect(quarterTo.slots.first { $0.id == "half" }!.choices.map(\.id) == ["half"], "half is only a stone when the row uses it")
         let almost = SpokenTimeAnswer(choiceIDs: ["kwart", "voor", "half", "h9", "-"])
         let question = spokenQuestion(prompt: quarterTo, time: ClockTime(hour: 8, minute: 45))
         expect(AnswerValidator.isCorrect(.spoken(quarterTo.correct), for: question), "the matching choices are correct")
@@ -1294,8 +1299,12 @@ struct DinoCoreTests {
         let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
         let config = DinoPracticeConfiguration(time: .quarter, order: .specific(.sayTime))
         let session = DinoSession(level: config.level, player: player, practice: config, example: question)
-        for (index, id) in quarterTo.correct.choiceIDs.enumerated() { session.chooseSpoken(slot: index, choiceID: id) }
-        session.chooseSpoken(slot: 0, choiceID: quarterTo.correct.choiceIDs[0])
+        for (index, id) in quarterTo.correct.choiceIDs.enumerated() where id != SpokenTimeChoice.emptyID {
+            session.chooseSpoken(slot: index, choiceID: id)
+        }
+        session.chooseSpoken(slot: 0, choiceID: "kwart")
+        expect(session.spokenChoices[0] == nil, "tapping the chosen stone clears that row")
+        session.chooseSpoken(slot: 0, choiceID: "kwart")
         session.submit(.spoken(SpokenTimeAnswer(choiceIDs: quarterTo.correct.choiceIDs)))
         expect(session.correctFeedback && session.shouldAutoAdvance, "a complete spoken answer is checked immediately")
         session.chooseSpoken(slot: 0, choiceID: "-")
@@ -1324,9 +1333,8 @@ struct DinoCoreTests {
                     expect(!AnswerValidator.isCorrect(wrongAnswer(for: generated), for: generated), "one changed word is rejected")
                     expect((prompt.slots.first { $0.id == "half" } != nil) == (code == "nl"), "only Dutch shows the half row")
                     expect(prompt.slots.allSatisfy { slot in
-                        let words = slot.choices.filter { $0.id != SpokenTimeChoice.emptyID }
-                        return slot.choices.contains { $0.id == SpokenTimeChoice.emptyID } && (1...3).contains(words.count)
-                    }, "each spoken row offers nothing and at most three words")
+                        !slot.choices.contains { $0.id == SpokenTimeChoice.emptyID } && (1...3).contains(slot.choices.count)
+                    }, "each spoken row shows at most three words and no empty stone")
                     previous = generated.target
                 }
             }
@@ -1492,12 +1500,43 @@ struct DinoCoreTests {
             previous = sample
         }
         expect(previous.angle == -360 && abs(previous.height) < 0.00001, "lands upright at starting height")
-        for (clip, asset) in [(DinoAnimation.Clip.backflip, "dino-backflip-08"), (.thumbsUp, "dino-thumbs-up-08"), (.wrongAnswer, "dino-wrong-answer-04")] {
+        var previousTurn = DinoAnimation.sample(.pirouette, elapsed: 0)
+        var turnAssets = Set([previousTurn.pose.asset])
+        for step in 1...222 {
+            let sample = DinoAnimation.sample(.pirouette, elapsed: Double(step) / 120)
+            expect(sample.yaw >= previousTurn.yaw && sample.yaw <= 360 && sample.angle == 0,
+                   "pirouette makes one upright turn around the vertical axis")
+            expect(abs(sample.yaw - previousTurn.yaw) < 5 && abs(sample.height - previousTurn.height) < 0.02,
+                   "pirouette follows a continuous turn and jump arc")
+            expect(abs(sample.yaw - sample.pose.paintedYaw) <= 67.5 && sample.height <= 0.00001,
+                   "each supplied view turns toward the next without flipping its sprite over")
+            turnAssets.insert(sample.pose.asset)
+            previousTurn = sample
+        }
+        expect(turnAssets == Set((1...8).map { String(format: "dino-pirouette-%02d", $0) }),
+               "all eight pirouette assets participate in the jump")
+        expect(previousTurn.yaw == 360 && abs(previousTurn.height) < 0.00001 && previousTurn.pose.asset == "dino-pirouette-08",
+               "pirouette lands in its stable final pose")
+        let landing = DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.travelDuration(.pirouette))
+        expect(abs(landing.height) < 0.00001 && landing.pose.asset == "dino-pirouette-08",
+               "the shared character reaches the stone when its feet land")
+        let normal = DinoLevelCatalog.level(1)!
+        for (correct, clip) in [(2, DinoAnimation.Clip.idle), (3, .idle), (4, .pirouette), (5, .backflip)] {
+            let result = DinoLevelResult(level: normal, correct: correct, stars: StarCalculator.stars(correct: correct), victory: .none)
+            expect(result.animationClip == clip, "only two stars select the pirouette; a perfect score retains the backflip")
+        }
+        let boss = DinoLevelCatalog.level(10)!
+        for correct in [4, 5, 10] {
+            let result = DinoLevelResult(level: boss, correct: correct, stars: 0, victory: .none)
+            expect(result.animationClip == (correct == boss.questionCount ? .backflip : .idle),
+                   "boss victories do not borrow the two-star animation")
+        }
+        for (clip, asset) in [(DinoAnimation.Clip.backflip, "dino-backflip-08"), (.pirouette, "dino-pirouette-08"), (.thumbsUp, "dino-thumbs-up-08"), (.wrongAnswer, "dino-wrong-answer-04")] {
             for step in 0...180 {
                 let t = Double(step) / 120
                 let reduced = DinoAnimation.sample(clip, elapsed: t, reducedMotion: true)
-                expect(reduced.height == 0 && reduced.angle == 0 && reduced.scaleX == 1 && reduced.scaleY == 1 && reduced.pose.asset == asset, "reduced motion remains completely static")
-                guard clip != .backflip else { continue }
+                expect(reduced.height == 0 && reduced.angle == 0 && reduced.yaw == 0 && reduced.scaleX == 1 && reduced.scaleY == 1 && reduced.pose.asset == asset, "reduced motion remains completely static")
+                guard clip != .backflip && clip != .pirouette else { continue }
                 let reaction = DinoAnimation.sample(clip, elapsed: t)
                 expect(reaction.pose.asset == asset && reaction.height == 0, "one reaction image without pose flicker or jumping")
                 expect(abs(reaction.angle) <= 2 && (1...1.04).contains(reaction.scaleX), "subtle bounded reaction")
@@ -1986,7 +2025,7 @@ struct DinoCoreTests {
         let memory = InMemoryKeyValueStore()
         let store = DinoProgressStore(defaults: memory)
         let player = DinoPlayer(store: store)
-        expect(player.needsFirstLevelHint && player.profile.nextAdventureLevel == 1, "a fresh installation guides level one")
+        expect(player.needsFirstLevelHint && player.profile.nextAdventureLevel == 1 && player.profile.mapLevel == 1, "a fresh installation guides level one")
         player.completeOnboarding(theme: .standard)
         expect(player.needsFirstLevelHint, "finishing onboarding keeps the first-level pointer")
         expect(DinoPlayer(store: store).needsFirstLevelHint, "relaunch before selecting a level preserves the pointer")
@@ -2008,12 +2047,12 @@ struct DinoCoreTests {
 
         var route = PlayerProfile()
         route.recordCompletedAttempt(levelID: 1, correct: 2)
-        expect(route.nextAdventureLevel == 1, "a failed level remains the next playable step")
+        expect(route.nextAdventureLevel == 1 && route.mapLevel == 1, "a failed level remains the next playable step")
         for level in DinoLevelCatalog.levels {
-            expect(route.nextAdventureLevel == level.id, "guidance targets each of the hundred playable levels")
+            expect(route.nextAdventureLevel == level.id && route.mapLevel == level.id, "guidance targets each of the hundred playable levels")
             route.recordCompletedAttempt(levelID: level.id, correct: level.questionCount)
         }
-        expect(route.adventureComplete && route.nextAdventureLevel == nil, "finishing the adventure never points to level 101")
+        expect(route.adventureComplete && route.nextAdventureLevel == nil && route.mapLevel == 100, "finishing the adventure leaves Dino on level 100")
         var shortcut = PlayerProfile()
         for world in DinoWorldCatalog.worlds {
             shortcut.recordCompletedAttempt(levelID: world.bossLevel, correct: 10)
@@ -2276,7 +2315,14 @@ struct DinoCoreTests {
             ("dino-backflip-01", CGRect(x: 702, y: 205, width: 258, height: 98)),
             ("dino-backflip-03", CGRect(x: 326, y: 131, width: 210, height: 160)),
             ("dino-backflip-07", CGRect(x: 638, y: 233, width: 256, height: 106)),
-            ("dino-backflip-08", CGRect(x: 520, y: 102, width: 237, height: 109))
+            ("dino-backflip-08", CGRect(x: 520, y: 102, width: 237, height: 109)),
+            ("dino-pirouette-01", CGRect(x: 580, y: 150, width: 252, height: 105)),
+            ("dino-pirouette-02", CGRect(x: 632, y: 98, width: 266, height: 105)),
+            ("dino-pirouette-03", CGRect(x: 748, y: 126, width: 180, height: 100)),
+            ("dino-pirouette-05", CGRect(x: 704, y: 103, width: 223, height: 109)),
+            ("dino-pirouette-06", CGRect(x: 684, y: 82, width: 244, height: 117)),
+            ("dino-pirouette-07", CGRect(x: 570, y: 112, width: 235, height: 111)),
+            ("dino-pirouette-08", CGRect(x: 560, y: 118, width: 246, height: 110))
         ]
         expect(DinoAppearance.standard.bandanaLetteringHex == 0xFFFFFF,
                "the original red bandana retains white lettering")

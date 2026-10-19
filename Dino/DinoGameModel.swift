@@ -223,6 +223,12 @@ struct DinoLevelResult {
     let correct: Int
     let stars: Int
     let victory: BossVictory
+
+    var animationClip: DinoAnimation.Clip {
+        if correct == level.questionCount { return .backflip }
+        if !level.isBoss && stars == 2 { return .pirouette }
+        return .idle
+    }
 }
 
 @MainActor
@@ -441,8 +447,7 @@ final class DinoSession: ObservableObject, Identifiable {
     func chooseSpoken(slot: Int, choiceID: String) {
         guard !hasFeedback, let count = question.spokenPrompt?.slots.count, (0..<count).contains(slot) else { return }
         var next = spokenChoices.count == count ? spokenChoices : Array(repeating: nil, count: count)
-        guard next[slot] != choiceID else { return }
-        next[slot] = choiceID
+        next[slot] = next[slot] == choiceID ? nil : choiceID
         spokenChoices = next
     }
 

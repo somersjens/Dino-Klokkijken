@@ -39,18 +39,18 @@ struct DinoRootView: View {
             }
             .sheet(isPresented: $showsSettings) {
                 DinoSettingsView().environmentObject(player).gameEnvironment()
-                    .presentationSizing(.page)
+                    .pagePresentation()
                     .presentationDetents([.large]).presentationDragIndicator(.visible)
             }
             .sheet(isPresented: $showsPractice) {
                 DinoPracticeView().gameEnvironment()
-                    .presentationSizing(.page)
+                    .pagePresentation()
                     .presentationDetents([.large]).presentationDragIndicator(.visible)
             }
             .onReceive(Timer.publish(every: 60, on: .main, in: .common).autoconnect()) { _ in
                 if friends.enabled { friends.refresh(); friends.scheduleSync() }
             }
-            .onChange(of: player.profile.progressResetAt) { _, _ in showMap() }
+            .onValueChange(of: player.profile.progressResetAt) { _ in showMap() }
 #if DEBUG
             .task {
                 let environment = ProcessInfo.processInfo.environment
@@ -70,7 +70,7 @@ struct DinoRootView: View {
 
     private var companionClip: DinoAnimation.Clip {
         if showsCompletion { return .idle }
-        if let result { return result.correct == result.level.questionCount ? .backflip : .idle }
+        if let result { return result.animationClip }
         return gameCompanionClip
     }
 
@@ -83,9 +83,7 @@ struct DinoRootView: View {
             else if let result {
                 DinoResultView(result: result, retry: { start(result.level) }, next: {
                     if result.level.isBoss { completedWorldID = result.level.worldID; showsCompletion = true }
-                    else if let next = DinoLevelCatalog.level(result.level.id + 1) {
-                        if next.isBoss { presentStartCard(next) } else { start(next) }
-                    }
+                    else if let next = DinoLevelCatalog.level(result.level.id + 1) { start(next) }
                 }, map: showMap, sharedCompanion: true)
             } else if let session {
                 DinoGameView(session: session, onExit: showMap, onResult: { value in

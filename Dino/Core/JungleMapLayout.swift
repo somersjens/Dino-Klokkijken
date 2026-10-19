@@ -7,6 +7,14 @@ struct JungleMapLayout {
     static let levelSpacing: CGFloat = 175
     static let firstNodeY: CGFloat = 70
     static let chapterPositions: [CGFloat] = [0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5]
+    /// Level 1 occupies the old entrance. The boss steps left, then the road returns to centre.
+    static let levelPositions: [CGFloat] = [0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28]
+    /// Vertical room under the boss before the next world's banner. Matches WorldRouteTrail.chapterTail.
+    static func bossReturnSpan(for width: CGFloat) -> CGFloat {
+        let inner = min(width, 600) - 36
+        let clearance = max(0, min(200, inner * 0.37) - 82)
+        return 100 + clearance
+    }
     let width: CGFloat
     var artScale: CGFloat { min(1.35, max(0.82, width / 390)) }
 
@@ -93,7 +101,7 @@ struct JungleMapLayout {
             snakes = placed.filter { $0.item.kind == .snake }
             leaves = placed.filter { $0.item.kind == .fallingLeaves }
             let scale = layout.artScale
-            bossPoint = layout.position(preferred: CGPoint(x: layout.width - 60 * scale, y: 1840),
+            bossPoint = layout.position(preferred: CGPoint(x: layout.width - 60 * scale, y: 1665),
                 footprint: [CGRect(x: -88 * scale, y: -170 * scale, width: 176 * scale, height: 200 * scale)])
             let staticItems = placed.filter { !$0.item.kind.animated }
             let bossBounds = CGRect(x: bossPoint.x - 130 * scale, y: bossPoint.y - 270 * scale,
@@ -122,7 +130,7 @@ struct JungleMapLayout {
         return result
     }
 
-    /// Deliberate groves and bank gardens, with a waterfall clearing left of 3.
+    /// Deliberate groves and bank gardens, with a waterfall clearing left of level 4.
     var items: [Item] {
         func item(_ kind: Kind, _ x: CGFloat, _ y: CGFloat, _ size: CGFloat,
                   mirror: Bool = false, foreground: Bool = false) -> Item {
@@ -220,10 +228,11 @@ struct JungleMapLayout {
     }
 
     func centerX(at y: CGFloat) -> CGFloat {
-        let fractions = [CGFloat(0.5)] + Self.chapterPositions
+        let fractions = Self.levelPositions
+        let bossY = Self.firstNodeY + CGFloat(fractions.count - 1) * Self.levelSpacing
+        if y >= bossY { return bossReturnX(at: y, bossY: bossY, from: fractions[fractions.count - 1]) }
         guard y > Self.firstNodeY else { return width / 2 }
-        let index = min(9, Int((y - Self.firstNodeY) / Self.levelSpacing))
-        guard y < Self.firstNodeY + 10 * Self.levelSpacing else { return width / 2 }
+        let index = min(fractions.count - 2, Int((y - Self.firstNodeY) / Self.levelSpacing))
         let startY = Self.firstNodeY + CGFloat(index) * Self.levelSpacing
         var lower: CGFloat = 0, upper: CGFloat = 1
         for _ in 0..<16 {
@@ -237,13 +246,33 @@ struct JungleMapLayout {
         return cubic(startX, startX, endX, endX, (lower + upper) / 2)
     }
 
+    /// The same vertical-tangent bend the jungle trail draws from the boss back to the centre.
+    private func bossReturnX(at y: CGFloat, bossY: CGFloat, from fraction: CGFloat) -> CGFloat {
+        let span = Self.bossReturnSpan(for: width)
+        let trailWidth = min(width, 600) - 36
+        let origin = (width - trailWidth) / 2
+        let startX = origin + trailWidth * fraction
+        let endX = origin + trailWidth * 0.5
+        guard y < bossY + span else { return endX }
+        let handle = min(88, span * 0.42)
+        let endY = bossY + span
+        var lower: CGFloat = 0, upper: CGFloat = 1
+        for _ in 0..<16 {
+            let t = (lower + upper) / 2
+            if cubic(bossY, bossY + handle, endY - handle, endY, t) < y { lower = t }
+            else { upper = t }
+        }
+        return cubic(startX, startX, endX, endX, (lower + upper) / 2)
+    }
+
     /// Horizontal clearance includes the stroked curve, stones and star rows.
     func clearance(at y: CGFloat) -> CGFloat {
         let slope = (centerX(at: y + 0.5) - centerX(at: y - 0.5))
         var result = 24 * sqrt(1 + slope * slope) + 12
-        let index = min(10, max(0, Int(((y - Self.firstNodeY) / Self.levelSpacing).rounded())))
+        let lastIndex = Self.levelPositions.count - 1
+        let index = min(lastIndex, max(0, Int(((y - Self.firstNodeY) / Self.levelSpacing).rounded())))
         let dy = y - (Self.firstNodeY + CGFloat(index) * Self.levelSpacing)
-        let radius: CGFloat = index == 0 ? 48 : index == 10 ? 45 : 36
+        let radius: CGFloat = index == lastIndex ? 45 : 36
         if abs(dy) <= radius { result = max(result, sqrt(radius * radius - dy * dy) + 12) }
         if (36...65).contains(dy) { result = max(result, 48) }
         return result

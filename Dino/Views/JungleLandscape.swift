@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Sort every destination together by its ground contact, never by its kind.
 /// Equal baselines retain their composition order (e.g. a crystal on a ledge).
-private final class WorldSceneryDepth {
+final class WorldSceneryDepth {
     private var items: [(depth: CGFloat, draw: () -> Void)] = []
     var minimumDepth: CGFloat? = nil
     var visibleBounds: CGRect? = nil
@@ -47,12 +47,14 @@ struct WorldRouteTrail: View, Equatable {
         return chapterFirstNodeY + 9 * levelSpacing + tail
     }
     static func jungleRouteHeight(topClearance: CGFloat) -> CGFloat {
-        topClearance + 70 + 10 * levelSpacing + chapterTail(topClearance: topClearance)
+        topClearance + JungleMapLayout.firstNodeY + CGFloat(JungleMapLayout.levelPositions.count - 1) * levelSpacing + chapterTail(topClearance: topClearance)
     }
     static let chapterPositions = JungleMapLayout.chapterPositions
     let points: [CGPoint]
     var entryY: CGFloat? = nil
     let exitY: CGFloat
+    /// When set, the road bends from the last stone to this x before leaving the section.
+    var exitX: CGFloat? = nil
 
     private var path: Path {
         guard let first = points.first, let last = points.last else { return Path() }
@@ -68,7 +70,16 @@ struct WorldRouteTrail: View, Equatable {
                 path.addCurve(to: pair.1, control1: CGPoint(x: pair.0.x, y: pair.0.y + 88),
                               control2: CGPoint(x: pair.1.x, y: pair.1.y - 88))
             }
-            path.addLine(to: CGPoint(x: last.x, y: exitY + 12))
+            if let exitX, abs(exitX - last.x) > 0.5 {
+                let end = CGPoint(x: exitX, y: exitY)
+                let span = max(1, end.y - last.y)
+                let handle = min(88, span * 0.42)
+                path.addCurve(to: end, control1: CGPoint(x: last.x, y: last.y + handle),
+                              control2: CGPoint(x: end.x, y: end.y - handle))
+                path.addLine(to: CGPoint(x: exitX, y: exitY + 12))
+            } else {
+                path.addLine(to: CGPoint(x: last.x, y: exitY + 12))
+            }
         }
     }
 
@@ -103,14 +114,14 @@ struct WorldRouteTrail: View, Equatable {
 
 /// Map art uses the same cubic bends as the playable trail. Coordinates here
 /// are relative to the first row's section, including the entrance above it.
-private struct WorldSceneryLayout {
+struct WorldSceneryLayout {
     let width: CGFloat
     let height: CGFloat
     let routeOffset: CGFloat
     var jungle = false
     var scale: CGFloat { min(1.30, max(0.82, width / 390)) }
     private var routeWidth: CGFloat { min(width, 600) - 36 }
-    private var positions: [CGFloat] { jungle ? [0.5] + WorldRouteTrail.chapterPositions : WorldRouteTrail.chapterPositions }
+    private var positions: [CGFloat] { jungle ? JungleMapLayout.levelPositions : WorldRouteTrail.chapterPositions }
     private var firstY: CGFloat { jungle ? 70 : 80 }
 
     private func cubic(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat, _ d: CGFloat, _ t: CGFloat) -> CGFloat {
@@ -282,7 +293,7 @@ private struct WorldSceneryLayout {
         case 4: palette = (0xAAC28D, 0xE1D9B6, 0x6CBCC2, 0xDDF5E4)
         case 5: palette = (0x647C98, 0x8FA7AF, 0x66BDC8, 0xE4FFF0)
         case 6: palette = (0xADC5AA, 0xF0E3BE, 0x7CC8CB, 0xE4F8E5)
-        case 7: palette = (0x839B95, 0x8FA9A8, 0x649FB8, 0xC9EEE0)
+        case 7: palette = (0xE8B875, 0xCE995D, 0xDEAD6A, 0xFFE8AE)
         case 8: palette = (0x98ABA6, 0x7E9299, 0x8CD1D4, 0xD9FBEE)
         case 9: palette = (0xE8C58B, 0xD6F2DE, 0x39B3CA, 0xF4FFF0)
         default: palette = (0xB5C5A0, 0xD5DFCA, 0x68BDCF, 0xE3FFF0)
@@ -296,7 +307,7 @@ private struct WorldSceneryLayout {
         // The cave meets the village through open terrain; its walls arrive
         // later from the sides instead of exposing a dark horizontal bank cap.
         if worldID == 5 { return }
-        let bank = palette(for: worldID)
+        let bank = palette(for: DinoWorldCatalog.world(worldID)?.themeID ?? worldID)
         let inset = 122 * scale
         for right in [false, true] {
             let edge = width / 2 + (right ? inset : -inset)
@@ -306,10 +317,10 @@ private struct WorldSceneryLayout {
         }
     }
 
-    func drawBanks(in context: GraphicsContext, worldID: Int) {
+    func drawBanks(in context: GraphicsContext, worldID: Int, nextWorldID: Int? = nil) {
         let palette = palette(for: worldID)
-        let nextID = min(10, worldID + 1)
-        let next = self.palette(for: worldID == 4 ? 4 : nextID)
+        let nextID = worldID == 4 ? 4 : min(10, nextWorldID ?? worldID + 1)
+        let next = self.palette(for: nextID)
         var bankStops: [Gradient.Stop] = [
             .init(color: Color(dinoHex: palette.ground).opacity(worldID == 5 ? 0.88 : 0.22), location: 0),
             .init(color: Color(dinoHex: palette.ground).opacity(worldID == 5 ? 0.88 : 0.22), location: max(0, (height - 180) / height)),
@@ -412,7 +423,7 @@ struct WorldTitleBanner: View, Equatable {
     var body: some View {
         GeometryReader { geometry in
             let layout = WorldBannerLayout(width: geometry.size.width)
-            let palette = WorldBannerPalette(worldID: world.id)
+            let palette = WorldBannerPalette(worldID: world.themeID)
             ZStack(alignment: .topLeading) {
                 Canvas { context, size in
                     WorldBannerPainter(context: context, world: world).draw(in: size)
@@ -427,7 +438,7 @@ struct WorldTitleBanner: View, Equatable {
                     .font(.system(size: 33, weight: .heavy, design: .rounded))
                     .foregroundStyle(Color(dinoHex: highContrast ? (world.id == 3 ? 0xFFFFFF : 0x153C48) : palette.ink))
                     .shadow(color: Color(dinoHex: palette.titleShadow).opacity(0.55), radius: 0, y: 1.4)
-                    .lineLimit(world.id == 7 ? 2 : 1).minimumScaleFactor(0.58)
+                    .lineLimit(1).minimumScaleFactor(0.58)
                     .multilineTextAlignment(.center).lineSpacing(-1)
                     .frame(width: layout.titleWidth, height: 82)
                     .position(x: layout.titlePanel.midX, y: layout.titlePanel.midY)
@@ -499,7 +510,10 @@ private struct WorldBannerPalette {
             tabLight = 0xD3EDF0; tabFace = 0x93C6CC; tabInk = 0x2A6679
             subtitleLight = 0xEBFBFA; subtitleFace = 0xC0E2E4; subtitleDark = 0x88B5C1; subtitleInk = 0x2E6278
         case 7:
-            accent = 0x9CB68E; shade = 0x5D7790; subtitleLight = 0xF7E9BC; subtitleFace = 0xECE5D0; subtitleDark = 0xB9BBD5; subtitleInk = 0x4A6172
+            ink = 0x663A21; titleShadow = 0xFFF0BF; accent = 0xDCA04C; shade = 0x895333
+            light = 0xFFF1CB; face = 0xF3D59C; dark = 0xD8AA6B; rim = 0x9A6338
+            tabLight = 0xFFEAC0; tabFace = 0xDFA765; tabInk = 0x633A25
+            subtitleLight = 0xFFF3D4; subtitleFace = 0xF4DBAB; subtitleDark = 0xD9B37C; subtitleInk = 0x754A2A
         case 8:
             accent = 0xD6B46A; shade = 0x747D86; rim = 0xA88B55; tabFace = 0xD4B579
             subtitleLight = 0xFCEDCA; subtitleFace = 0xE6D1A0; subtitleDark = 0xBBA36F; subtitleInk = 0x5B5D56
@@ -517,7 +531,8 @@ private struct WorldBannerPalette {
 private struct WorldBannerPainter {
     let context: GraphicsContext
     let world: DinoWorld
-    private var palette: WorldBannerPalette { .init(worldID: world.id) }
+    private var themeID: Int { world.themeID }
+    private var palette: WorldBannerPalette { .init(worldID: themeID) }
 
     private func material(_ path: Path, light: UInt32, face: UInt32, dark: UInt32) {
         let r = path.boundingRect
@@ -624,7 +639,15 @@ private struct WorldBannerPainter {
     private func connectedRim(layout: WorldBannerLayout) {
         let r = layout.plate
         let rim = outline(plate: r, tab: layout.tab, inset: 6)
-        if [1, 2, 4, 7].contains(world.id) {
+        if themeID == 7 {
+            context.stroke(rim, with: .color(Color(dinoHex: 0x98643D)), lineWidth: 4)
+            context.stroke(rim, with: .color(Color(dinoHex: 0xFFE5B0)), lineWidth: 1.1)
+            for side in 0..<2 {
+                let x = side == 0 ? r.minX + 49 : r.maxX - 49
+                line([CGPoint(x: x - 7, y: r.minY + 6), CGPoint(x: x + 4, y: r.minY + 10),
+                      CGPoint(x: x + 9, y: r.minY + 17)], color: 0xAD7749, width: 0.9, opacity: 0.7)
+            }
+        } else if [1, 2, 4].contains(themeID) {
             context.stroke(rim, with: .color(Color(dinoHex: palette.shade).opacity(0.72)),
                            style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
             context.stroke(rim, with: .color(Color(dinoHex: palette.accent).opacity(0.85)), lineWidth: 1)
@@ -636,19 +659,19 @@ private struct WorldBannerPainter {
                             light: palette.light, face: palette.accent, dark: palette.shade)
                 }
             }
-        } else if world.id == 3 {
+        } else if themeID == 3 {
             context.stroke(rim, with: .color(Color(dinoHex: 0x6A606A)), lineWidth: 5)
             context.stroke(rim, with: .color(Color(dinoHex: 0xEEBA7A)), lineWidth: 1.3)
-        } else if world.id == 5 {
+        } else if themeID == 5 {
             context.stroke(rim, with: .color(Color(dinoHex: 0xBEE4E4)), lineWidth: 4)
             context.stroke(rim, with: .color(Color(dinoHex: 0xE9FFF5)), lineWidth: 1.2)
-        } else if world.id == 6 || world.id == 8 {
+        } else if themeID == 6 || themeID == 8 {
             context.stroke(rim, with: .color(Color(dinoHex: palette.rim)), lineWidth: 4)
             context.stroke(rim, with: .color(Color(dinoHex: palette.tabLight)), lineWidth: 1.3)
             for x in [r.minX + 16, r.maxX - 16] {
                 for y in [r.minY + 17, r.maxY - 17] { rivet(at: CGPoint(x: x, y: y), radius: 2.1) }
             }
-        } else if world.id == 9 {
+        } else if themeID == 9 {
             context.stroke(rim, with: .color(Color(dinoHex: 0x967247)), lineWidth: 4.6)
             context.stroke(rim, with: .color(Color(dinoHex: 0xEACF94)), lineWidth: 2.8)
             context.stroke(rim, with: .color(Color(dinoHex: 0xB58D58)), style: StrokeStyle(lineWidth: 2.6, dash: [1, 3]))
@@ -689,7 +712,7 @@ private struct WorldBannerPainter {
         context.stroke(Path(roundedRect: r.insetBy(dx: 2, dy: 2), cornerRadius: 16),
                        with: .linearGradient(Gradient(colors: [Color(dinoHex: palette.light), Color(dinoHex: palette.rim).opacity(0.5)]),
                                              startPoint: CGPoint(x: r.minX, y: r.minY), endPoint: CGPoint(x: r.maxX, y: r.maxY)), lineWidth: 0.8)
-        if [1, 4, 8, 9].contains(world.id) {
+        if [1, 4, 8, 9].contains(themeID) {
             for i in 0..<4 {
                 var grain = Path()
                 let y = r.minY + 16 + CGFloat(i) * 21
@@ -702,18 +725,18 @@ private struct WorldBannerPainter {
                 context.stroke(Path(ellipseIn: CGRect(x: x - 3, y: r.maxY - 21, width: 6, height: 2)),
                                with: .color(Color(dinoHex: palette.rim).opacity(0.3)), lineWidth: 0.7)
             }
-        } else if [5, 6].contains(world.id) {
+        } else if [5, 6].contains(themeID) {
             for i in 0..<3 {
                 line([CGPoint(x: r.minX + 19, y: r.minY + 14 + CGFloat(i) * 3),
                       CGPoint(x: r.maxX - 25, y: r.minY + 14 + CGFloat(i) * 3)], color: 0xFFFFFF, width: 0.65, opacity: 0.20)
             }
         }
-        if world.id == 9 {
+        if themeID == 9 {
             let rope = Path(roundedRect: r.insetBy(dx: 8, dy: 8), cornerRadius: 21)
             context.stroke(rope, with: .color(Color(dinoHex: 0xB78B4D)), lineWidth: 3.2)
             context.stroke(rope, with: .color(Color(dinoHex: 0xFCE3A6)), style: StrokeStyle(lineWidth: 1.5, dash: [2, 3]))
         }
-        if world.id == 2 {
+        if themeID == 2 {
             context.stroke(Path(roundedRect: r.insetBy(dx: 9, dy: 9), cornerRadius: 20),
                            with: .color(Color(dinoHex: 0xF8F0DA).opacity(0.8)), style: StrokeStyle(lineWidth: 0.9, dash: [2, 4]))
         }
@@ -741,31 +764,31 @@ private struct WorldBannerPainter {
         hem.move(to: CGPoint(x: r.minX + 9, y: r.maxY - 3))
         hem.addQuadCurve(to: CGPoint(x: r.maxX - 9, y: r.maxY - 3), control: CGPoint(x: r.midX, y: r.maxY - 2))
         context.stroke(hem, with: .color(Color(dinoHex: palette.subtitleLight).opacity(0.65)),
-                       style: StrokeStyle(lineWidth: 0.6, dash: world.id == 2 ? [1.5, 3] : []))
-        if world.id == 2 { moon(at: CGPoint(x: r.minX + 15, y: r.midY), radius: 7) }
-        else { clock(at: CGPoint(x: r.minX + 15, y: r.midY), radius: 8, time: WorldBossClock.time(in: world.id)) }
-        if [6, 8, 10].contains(world.id) {
+                       style: StrokeStyle(lineWidth: 0.6, dash: themeID == 2 ? [1.5, 3] : []))
+        if themeID == 2 { moon(at: CGPoint(x: r.minX + 15, y: r.midY), radius: 7) }
+        else { clock(at: CGPoint(x: r.minX + 15, y: r.midY), radius: 8, time: WorldBossClock.time(in: themeID)) }
+        if [6, 8, 10].contains(themeID) {
             for x in [r.minX + 6, r.maxX - 6] { rivet(at: CGPoint(x: x, y: r.minY + 5), radius: 1.1) }
         }
     }
 
     private func endcap(front: Bool, variation: Int) {
-        switch world.id {
-        case 1, 2, 4, 7:
-            let night = world.id == 2 || (world.id == 7 && variation == 1)
-            let light: UInt32 = night ? 0xD2E4DC : world.id == 4 ? 0xD7E596 : 0xD1E978
-            let face: UInt32 = night ? 0x91B2BF : world.id == 4 ? 0x91B460 : 0x83B742
+        switch themeID {
+        case 1, 2, 4:
+            let night = themeID == 2 || (themeID == 7 && variation == 1)
+            let light: UInt32 = night ? 0xD2E4DC : themeID == 4 ? 0xD7E596 : 0xD1E978
+            let face: UInt32 = night ? 0x91B2BF : themeID == 4 ? 0x91B460 : 0x83B742
             let dark: UInt32 = night ? 0x526E98 : 0x386C40
             if !front {
                 organicStem(night: night)
                 foliage(light: light, face: face, dark: dark, count: 12)
-                if world.id == 2 || world.id == 7 {
+                if themeID == 2 || themeID == 7 {
                     let center = CGPoint(x: -19, y: -42)
                     medallion(at: center, radius: 18, night: night)
                     if night { moon(at: center, radius: 13) }
                     else { sun(at: center, radius: 10) }
                 }
-                if world.id == 4 {
+                if themeID == 4 {
                     roof(at: CGPoint(x: -25, y: -22))
                     // The little village sign is nailed to the living wooden post.
                     line([CGPoint(x: -41, y: -23), CGPoint(x: -7, y: -23)], color: 0x856E4C, width: 2)
@@ -773,7 +796,7 @@ private struct WorldBannerPainter {
                     for x: CGFloat in [-40, -7] { rivet(at: CGPoint(x: x, y: -26), radius: 1.5) }
                 }
             } else {
-                if world.id == 1 || world.id == 4 {
+                if themeID == 1 || themeID == 4 {
                     leaf(at: CGPoint(x: 1, y: -39), length: 30, width: 23, angle: -65,
                          light: light, face: face, dark: dark)
                 }
@@ -781,14 +804,14 @@ private struct WorldBannerPainter {
                      light: light, face: face, dark: dark)
                 leaf(at: CGPoint(x: -15, y: 47), length: 24, width: 19, angle: -150,
                      light: light, face: face, dark: dark)
-                if world.id == 1 || world.id == 4 {
+                if themeID == 1 || themeID == 4 {
                     // The stems terminate inside the calyx of each flower.
-                    let flowers: [CGPoint] = world.id == 4
+                    let flowers: [CGPoint] = themeID == 4
                         ? [CGPoint(x: -27, y: 43), CGPoint(x: -17, y: 51), CGPoint(x: -8, y: 44)]
                         : [CGPoint(x: -19, y: 48)]
                     for (index, point) in flowers.enumerated() {
                         line([CGPoint(x: -9, y: 62), point], color: dark, width: 1.8)
-                        blossom(at: point, size: world.id == 4 ? 0.65 : 0.85, pink: index == 1)
+                        blossom(at: point, size: themeID == 4 ? 0.65 : 0.85, pink: index == 1)
                     }
                 }
             }
@@ -859,6 +882,32 @@ private struct WorldBannerPainter {
                 line([CGPoint(x: -22, y: 37), CGPoint(x: -22, y: 48), CGPoint(x: -6, y: 48)], color: 0x4E7C92, width: 2.5)
                 line([CGPoint(x: -23, y: 37), CGPoint(x: -23, y: 47), CGPoint(x: -6, y: 47)], color: 0xBEF0DC, width: 1)
             }
+        case 7:
+            if !front {
+                sideHousing(light: 0xF1C890, face: 0xB17B4E, dark: 0x74492F)
+                for i in 0..<5 {
+                    let r = CGRect(x: -39 + CGFloat(i % 2) * 3, y: -52 + CGFloat(i) * 23, width: 35, height: 24)
+                    material(Path(roundedRect: r, cornerRadius: 5), light: 0xF9CC91, face: 0xCB935D, dark: 0x94613F)
+                    line([CGPoint(x: r.minX + 4, y: r.minY + 3), CGPoint(x: r.maxX - 5, y: r.minY + 2)], color: 0xFFE3AB, opacity: 0.8)
+                }
+                // The torn fabric is tied to the same timber as the stone sign.
+                line([CGPoint(x: -41, y: -22), CGPoint(x: 9, y: -22)], color: 0x784A2B, width: 6)
+                polygon([CGPoint(x: -36, y: -20), CGPoint(x: 5, y: -20), CGPoint(x: 4, y: 45),
+                         CGPoint(x: -5, y: 39), CGPoint(x: -14, y: 48), CGPoint(x: -22, y: 40), CGPoint(x: -35, y: 47)],
+                        light: 0xFFE29A, face: 0xE8B65D, dark: 0xBB7F36)
+                for x: CGFloat in [-33, 2] {
+                    line([CGPoint(x: x, y: -28), CGPoint(x: x - 2, y: -15)], color: 0xF4D6A0, width: 3)
+                }
+                // Three worn toes and a heel read as a fossil footprint.
+                for (x, y): (CGFloat, CGFloat) in [(-25, 4), (-15, -2), (-6, 4)] {
+                    oval(CGRect(x: x - 3, y: y, width: 6, height: 13), light: 0xA76B2F, face: 0x9D632E, dark: 0x88502B)
+                }
+                oval(CGRect(x: -25, y: 15, width: 21, height: 17), light: 0xAF7434, face: 0xA16A31, dark: 0x8C532B)
+            } else {
+                ornamentFoot(light: 0xF7D49B, face: 0xBF8957, dark: 0x875538)
+                line([CGPoint(x: -39, y: 53), CGPoint(x: -12, y: 56), CGPoint(x: 8, y: 52)], color: 0xE9C58B, width: 3)
+                line([CGPoint(x: -24, y: 46), CGPoint(x: -20, y: 52), CGPoint(x: -25, y: 60)], color: 0x8D5837, opacity: 0.7)
+            }
         case 8:
             if !front {
                 sideHousing(light: 0xFFE7AD, face: 0xC6A566, dark: 0x80744F)
@@ -918,9 +967,9 @@ private struct WorldBannerPainter {
     private func sideHousing(light: UInt32, face: UInt32, dark: UInt32) {
         var shape = Path()
         shape.move(to: CGPoint(x: 8, y: -57))
-        switch world.id {
+        switch themeID {
         case 3, 5:
-            shape.addLine(to: CGPoint(x: -15, y: world.id == 5 ? -72 : -67))
+            shape.addLine(to: CGPoint(x: -15, y: themeID == 5 ? -72 : -67))
             shape.addLine(to: CGPoint(x: -34, y: -58))
             shape.addLine(to: CGPoint(x: -42, y: -30))
             shape.addLine(to: CGPoint(x: -39, y: 12))
@@ -1344,8 +1393,8 @@ struct WorldLandscapePalette: Equatable {
 
     static let jungle = Self(ground: 0xDDEEB6, distant: 0xABCFA0, foliage: 0x6FAE52,
                              shade: 0x2E7356, rock: 0x96AB7B)
-    static let nextHorizon = Self(ground: 0xDCD6F7, distant: 0xB2B4D7, foliage: 0x9CCBB8,
-                                  shade: 0x596A99, rock: 0xA9A5BE)
+    static let nextHorizon = Self(ground: 0xD4DDC4, distant: 0xAA99CC, foliage: 0x8CC68C,
+                                  shade: 0x526894, rock: 0xB7C0B0)
 
     func color(_ key: KeyPath<Self, UInt32>, toward next: Self, progress: CGFloat) -> Color {
         let a = self[keyPath: key], b = next[keyPath: key]
@@ -1551,7 +1600,7 @@ private struct JungleSceneryTile: View, Equatable {
             }
         }
         .frame(width: tile.bounds.width, height: tile.bounds.height)
-        .onGeometryChange(for: Bool.self) { geometry in
+        .readGeometry(for: Bool.self) { geometry in
             let frame = geometry.frame(in: .named("adventure.map.viewport"))
             let margin = max(768, viewportHeight)
             return frame.maxY > -margin && frame.minY < viewportHeight + margin
@@ -1612,7 +1661,7 @@ private struct JungleWildlife: View {
             }
         }
         .frame(width: bounds.width * item.size, height: bounds.height * item.size)
-        .onGeometryChange(for: Bool.self) { geometry in
+        .readGeometry(for: Bool.self) { geometry in
             let frame = geometry.frame(in: .named("adventure.map.viewport"))
             return frame.maxY > 0 && frame.minY < viewportHeight
         } action: { visible = $0 }
@@ -1720,7 +1769,7 @@ private struct JungleFlyingBirds: View {
                 }
             }
         }
-        .onGeometryChange(for: Bool.self) { geometry in
+        .readGeometry(for: Bool.self) { geometry in
             let frame = geometry.frame(in: .named("adventure.map.viewport"))
             return frame.maxY > 0 && frame.minY < viewportHeight
         } action: { visible = $0 }
@@ -1863,7 +1912,7 @@ private struct JungleWaterfallFlow: View {
             }
         }
         .frame(width: bounds.width * scale, height: bounds.height * scale)
-        .onGeometryChange(for: Bool.self) { geometry in
+        .readGeometry(for: Bool.self) { geometry in
             let r = geometry.frame(in: .named("adventure.map.viewport"))
             return r.maxY > 0 && r.minY < viewportHeight && r.maxX > 0
         } action: { visible = $0 }
@@ -2773,14 +2822,14 @@ struct WorldThemeColors {
     let shade: UInt32
     init(_ world: DinoWorld) {
         ground = world.ground
-        switch world.id {
+        switch world.themeID {
         case 1: (accent, distant, shade) = (0x8BBE69, 0xACC992, 0x326C55)
         case 2: (accent, distant, shade) = (0x9CCBB8, 0xB2B4D7, 0x596A99)
         case 3: (accent, distant, shade) = (0xF47C65, 0xE4A688, 0x706778)
         case 4: (accent, distant, shade) = (0xD98663, 0xAAD9B8, 0x6C8561)
         case 5: (accent, distant, shade) = (0xA493D7, 0x9CCBD0, 0x427D89)
         case 6: (accent, distant, shade) = (0x54BCC5, 0x94C8DC, 0x537D93)
-        case 7: (accent, distant, shade) = (0x8CC68C, 0xAA99CC, 0x526894)
+        case 7: (accent, distant, shade) = (0xD9A052, 0xD7A084, 0x8C5736)
         case 8: (accent, distant, shade) = (0xD9B46C, 0xB5A6E6, 0x597D88)
         case 9: (accent, distant, shade) = (0x63C7CB, 0xABDDE1, 0xA47757)
         default: (accent, distant, shade) = (0x789BCF, 0xB9CCA8, 0x8D867A)
@@ -3122,7 +3171,7 @@ private struct SleepValleyLifeSurface: View {
                 }
             }
         }
-        .onGeometryChange(for: Bool.self) { geometry in
+        .readGeometry(for: Bool.self) { geometry in
             let rect = geometry.frame(in: .named("adventure.map.viewport"))
             return rect.maxY > 0 && rect.minY < viewportHeight
         } action: { visible = $0 }
@@ -3320,11 +3369,11 @@ private struct SleepValleyPainter {
             .init(color: Color(dinoHex: 0xB4C7C4), location: 0.39),
             .init(color: Color(dinoHex: 0xA8BFBB), location: 0.68),
             .init(color: Color(dinoHex: 0xBBC2D2), location: 0.87),
-            .init(color: Color(dinoHex: 0xFFD1A1), location: 1)
+            .init(color: Color(dinoHex: 0xE8E9DA), location: 1)
         ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
-        scenery.drawBanks(in: c, worldID: 2)
+        scenery.drawBanks(in: c, worldID: 2, nextWorldID: 8)
         let p = SleepValleyPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset,
                                    animatedWillows: animatedWillows)
         SleepValleyPainter(context: c).valleyBackdrop(layout: scenery)
@@ -4619,7 +4668,7 @@ private struct SleepVolcanoInlet: View {
                 }
             }
         }
-        .onGeometryChange(for: Bool.self) { proxy in
+        .readGeometry(for: Bool.self) { proxy in
             let frame = proxy.frame(in: .named("adventure.map.viewport"))
             return frame.maxY > 0 && frame.minY < viewportHeight
         } action: { visible = $0 }
@@ -4751,7 +4800,7 @@ private struct VolcanoLifeSurface: View {
                 }
             }
         }
-        .onGeometryChange(for: Bool.self) { proxy in
+        .readGeometry(for: Bool.self) { proxy in
             let rect = proxy.frame(in: .named("adventure.map.viewport"))
             return rect.maxY > 0 && rect.minY < viewportHeight
         } action: { visible = $0 }
@@ -5442,12 +5491,134 @@ private struct VolcanoWorldPainter {
 
 }
 
+/// One plan owns the water, dry building plots and their small animated details.
+/// Coordinates are relative to the route, so every layer uses the same banks.
+private enum VillagePlan {
+    struct Plot: Identifiable {
+        let id: Int
+        let point: CGPoint
+        let size: CGFloat
+        let right: Bool
+        var bounds: CGRect {
+            CGRect(x: point.x - 86 * size, y: point.y - 194 * size,
+                   width: 172 * size, height: 238 * size)
+        }
+    }
+
+    struct Garden {
+        let point: CGPoint
+        let size: CGFloat
+        let cottage: Bool
+        var bounds: CGRect {
+            CGRect(x: point.x - 55 * size, y: point.y - 150 * size, width: 110 * size, height: 167 * size)
+        }
+    }
+
+    static func canalX(y: CGFloat, right: Bool, layout: WorldSceneryLayout) -> CGFloat {
+        let sign: CGFloat = right ? 1 : -1
+        let edge = (right ? layout.width * 0.94 : layout.width * 0.06)
+            + sin(y * 0.006 + (right ? 0 : 1.8)) * 14 * layout.scale
+        let roadEdge = layout.centerX(at: y) + sign * 174 * layout.scale
+        // A smooth maximum keeps the stream out of the narrow inside bends.
+        let a = sign * edge, b = sign * roadEdge
+        let river = sign * (a + b + sqrt((a - b) * (a - b) + 100)) / 2
+        let entry = min(1, max(0, (y + 75) / 155))
+        let entering = entry * entry * (3 - 2 * entry)
+        let outside = right ? layout.width + 90 * layout.scale : -90 * layout.scale
+        let entered = outside + (river - outside) * entering
+        let exit = min(1, max(0, (y - 1510) / 210))
+        let blend = exit * exit * (3 - 2 * exit)
+        return entered + sign * blend * 100 * layout.scale
+    }
+
+    static func canal(right: Bool, layout: WorldSceneryLayout, from: CGFloat, to: CGFloat) -> Path {
+        Path { p in
+            let count = max(1, Int(ceil((to - from) / 5)))
+            for i in 0...count {
+                let y = from + (to - from) * CGFloat(i) / CGFloat(count)
+                let point = CGPoint(x: canalX(y: y, right: right, layout: layout), y: y)
+                if i == 0 { p.move(to: point) } else { p.addLine(to: point) }
+            }
+        }
+    }
+
+    static func plots(layout: WorldSceneryLayout) -> [Plot] {
+        let targets: [CGFloat] = [180, 510, 860, 1210, 1490]
+        return targets.enumerated().compactMap { index, target in
+            let right = index.isMultiple(of: 2)
+            for factor: CGFloat in [1, 0.94, 0.88, 0.82, 0.76, 0.70, 0.64, 0.58, 0.52] {
+                let size = layout.scale * factor
+                for shift: CGFloat in [0, -20, 20, -40, 40, -60] {
+                    let y = target + shift
+                    var low = 8 + 86 * size, high = layout.width - 8 - 86 * size
+                    // Full roofs and foundations stay on the dry, route-facing bank.
+                    for sample in 0...30 {
+                        let localY = -194 + CGFloat(sample) * 238 / 30
+                        let sampleY = y + localY * size
+                        let half: CGFloat = 86
+                        let road = layout.centerX(at: sampleY)
+                        let river = canalX(y: sampleY, right: right, layout: layout)
+                        if right {
+                            low = max(low, road + 43 + half * size)
+                            high = min(high, river - 26 * layout.scale - half * size)
+                        } else {
+                            low = max(low, river + 26 * layout.scale + half * size)
+                            high = min(high, road - 43 - half * size)
+                        }
+                    }
+                    if low <= high {
+                        let x = right ? high - min(12 * layout.scale, (high - low) / 2)
+                                      : low + min(12 * layout.scale, (high - low) / 2)
+                        return Plot(id: index, point: CGPoint(x: x, y: y), size: size, right: right)
+                    }
+                }
+            }
+            return nil
+        }
+    }
+
+    static func gardens(layout: WorldSceneryLayout, plots: [Plot]) -> [Garden] {
+        var gardens: [Garden] = []
+        for (index, target) in [310.0, 630, 980, 1320].enumerated() {
+            for right in [false, true] {
+                var placed = false
+                for factor: CGFloat in [0.80, 0.70, 0.60] {
+                    for shift: CGFloat in [0, -25, 25, -50, 50] {
+                        let size = layout.scale * factor, y = CGFloat(target) + shift
+                        var low = 8 + 55 * size, high = layout.width - 8 - 55 * size
+                        for sample in 0...20 {
+                            let yy = y - 150 * size + CGFloat(sample) * 167 * size / 20
+                            let road = layout.centerX(at: yy), river = canalX(y: yy, right: right, layout: layout)
+                            if right {
+                                low = max(low, road + 44 + 55 * size)
+                                high = min(high, river - 28 * layout.scale - 55 * size)
+                            } else {
+                                low = max(low, river + 28 * layout.scale + 55 * size)
+                                high = min(high, road - 44 - 55 * size)
+                            }
+                        }
+                        guard low <= high else { continue }
+                        let item = Garden(point: CGPoint(x: (low + high) / 2, y: y), size: size,
+                                          cottage: index.isMultiple(of: 2) == right)
+                        guard !plots.contains(where: { $0.bounds.insetBy(dx: -10, dy: -12).intersects(item.bounds) }),
+                              !gardens.contains(where: { $0.bounds.insetBy(dx: -8, dy: -8).intersects(item.bounds) }) else { continue }
+                        gardens.append(item); placed = true; break
+                    }
+                    if placed { break }
+                }
+            }
+        }
+        return gardens
+    }
+}
+
 /// Sunlit plaster, tiled roofs and planted waterways belong only to Dino Dorp.
 private struct VillageWorldPainter {
     let context: GraphicsContext
     var scenery: WorldSceneryLayout? = nil
     var depth: WorldSceneryDepth? = nil
     var depthOffset: CGFloat = 0
+    var animatedDetails = false
 
     private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: @escaping (VillageWorldPainter) -> Void) {
         let point = scenery?.position(point, radius: radius, rise: rise) ?? point
@@ -5455,8 +5626,8 @@ private struct VillageWorldPainter {
         c.translateBy(x: point.x, y: point.y)
         c.scaleBy(x: mirror ? -size : size, y: size)
         if let depth {
-            depth.add(at: depthOffset + point.y) { draw(.init(context: c)) }
-        } else { draw(.init(context: c)) }
+            depth.add(at: depthOffset + point.y) { draw(.init(context: c, animatedDetails: animatedDetails)) }
+        } else { draw(.init(context: c, animatedDetails: animatedDetails)) }
     }
     private func material(_ path: Path, _ colors: [UInt32]) {
         let r = path.boundingRect
@@ -5500,38 +5671,87 @@ private struct VillageWorldPainter {
         sky(width: w, left: left, right: right, height: routeOffset + 85, scale: scale)
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
-        scenery.drawBanks(in: c, worldID: 4)
-        let p = VillageWorldPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset)
-        let nature = JunglePainter(context: c, scenery: scenery)
+        waterways(layout: scenery, context: c)
+        let p = VillageWorldPainter(context: c, depth: depth, depthOffset: routeOffset, animatedDetails: true)
+        let nature = JunglePainter(context: c)
         for i in 0..<5 {
             nature.hill(x: i % 2 == 0 ? left - 220 : right - 100, y: CGFloat(i) * 370 + 15,
                         width: 360 * scale, height: 280, color: Color(dinoHex: i % 2 == 0 ? 0xA7C98F : 0xEEF0BC).opacity(0.34))
         }
-        // Water and its banks sit behind the village; clocks remain unobstructed.
-        p.cascade(at: CGPoint(x: left - 3, y: 850), size: scale * 0.85)
-        p.cascade(at: CGPoint(x: right + 5, y: 1190), size: scale * 0.85, mirror: true)
-        p.bridge(at: CGPoint(x: left + 12 * scale, y: 900), size: scale * 0.85)
-        p.bridge(at: CGPoint(x: right - 10 * scale, y: 1210), size: scale * 0.8)
-        for i in 0..<28 {
-            let x = i % 2 == 0 ? left + CGFloat(33 + i % 3 * 12) : right - CGFloat(33 + i % 3 * 12)
-            let y = 38 + CGFloat(i) * 60
-            nature.grass(at: CGPoint(x: x, y: y), size: 6 * scale, color: Color(dinoHex: 0x7FA569).opacity(0.7))
-            if i % 3 == 0 { p.flowers(at: CGPoint(x: x + 7, y: y + 12), size: scale * 0.4, pink: i % 2 == 0) }
-        }
-        let positions = WorldRouteTrail.chapterPositions
-        let routeWidth = min(w, 600) - 36
         let shared = ThemePainter(context: c, colors: WorldThemeColors(DinoWorldCatalog.world(4)!))
-        for index in 0..<9 {
-            let onRight = index % 4 == 0 || index % 4 == 3
-            let point = CGPoint(x: onRight ? right - 35 * scale : left + 35 * scale, y: 182 + CGFloat(index) * 175)
-            let x = (w - routeWidth) / 2 + routeWidth * (positions[index] + (positions[index + 1] - positions[index]) * 0.622)
-            shared.approach(from: CGPoint(x: x, y: point.y), to: scenery.position(point), city: false, scale: scale)
-            p.scene(at: point, size: scale * 0.98, variation: index)
-            let gardenX = onRight ? left + 5 * scale : right - 5 * scale
-            p.garden(at: CGPoint(x: gardenX, y: point.y + 82), size: scale, variation: index)
+        let plots = VillagePlan.plots(layout: scenery)
+        for plot in plots {
+            shared.approach(from: CGPoint(x: scenery.centerX(at: plot.point.y + 25), y: plot.point.y + 25),
+                            to: CGPoint(x: plot.point.x, y: plot.point.y + 25), city: false, scale: plot.size)
+            p.neighborhood(at: plot.point, size: plot.size, variation: plot.id)
+        }
+        for garden in VillagePlan.gardens(layout: scenery, plots: plots) {
+            p.at(garden.point, size: garden.size) { gardenPainter in
+                gardenPainter.paving(at: .zero, size: 0.65)
+                if garden.cottage {
+                    gardenPainter.cottage(at: .zero, size: 0.95, leafRoof: false)
+                } else {
+                    gardenPainter.tree(at: CGPoint(x: -5, y: -5), size: 0.94)
+                    gardenPainter.fence(at: CGPoint(x: 0, y: 11), size: 0.68)
+                    gardenPainter.flowers(at: CGPoint(x: -32, y: 12), size: 0.65, pink: true)
+                }
+            }
+        }
+        // Orchard pockets and flower borders connect the neighbourhoods.
+        for i in 0..<24 {
+            let y = 80 + CGFloat(i) * 64
+            let onRight = i.isMultiple(of: 2)
+            let sign: CGFloat = onRight ? 1 : -1
+            let road = scenery.centerX(at: y)
+            let river = VillagePlan.canalX(y: y, right: onRight, layout: scenery)
+            let x = road + sign * 67 * scale
+            guard sign * (river - x) > 36 * scale, x > 15, x < w - 15 else { continue }
+            let point = CGPoint(x: x, y: y)
+            guard !plots.contains(where: { $0.bounds.insetBy(dx: -18, dy: -12).contains(point) }) else { continue }
+            nature.grass(at: point, size: 7 * scale, color: Color(dinoHex: 0x7FA569).opacity(0.7))
+            p.flowers(at: CGPoint(x: x + sign * 9, y: y + 4), size: scale * 0.65, pink: i % 3 == 0)
         }
         // Mossy outcrops follow the final level and continue across the join.
         CrystalCavePainter(context: context).outdoorApproach(width: w, boundaryY: h)
+    }
+
+    private func waterways(layout: WorldSceneryLayout, context: GraphicsContext) {
+        let s = layout.scale
+        let p = VillageWorldPainter(context: context)
+        for right in [false, true] {
+            let river = VillagePlan.canal(right: right, layout: layout, from: -layout.routeOffset - 40, to: layout.height - layout.routeOffset + 40)
+            let sign: CGFloat = right ? -1 : 1
+            let promenade = Path { path in
+                for i in 0..<360 {
+                    let y = -80 + CGFloat(i) * 5
+                    let x = VillagePlan.canalX(y: y, right: right, layout: layout) + sign * 34 * s
+                    if i == 0 { path.move(to: CGPoint(x: x, y: y)) } else { path.addLine(to: CGPoint(x: x, y: y)) }
+                }
+            }
+            context.stroke(promenade, with: .color(Color(dinoHex: 0xB4BA8C)), style: StrokeStyle(lineWidth: 27 * s, lineJoin: .round))
+            context.stroke(promenade, with: .color(Color(dinoHex: 0xDFD1A8)), style: StrokeStyle(lineWidth: 22 * s, lineJoin: .round))
+            context.stroke(promenade, with: .color(Color(dinoHex: 0xF3E3BC).opacity(0.7)), style: StrokeStyle(lineWidth: 1.2, dash: [3, 8]))
+            for (width, color): (CGFloat, UInt32) in [(53, 0x91AD7B), (45, 0xB5A786), (38, 0xF0DCB5), (29, 0x69B9BE), (21, 0x63C4CD)] {
+                context.stroke(river, with: .color(Color(dinoHex: color)), style: StrokeStyle(lineWidth: width * s, lineCap: .round, lineJoin: .round))
+            }
+            // Individually laid coping stones, with moss in the mortar.
+            for i in 0..<110 {
+                let y = CGFloat(i) * 16 - 30
+                let x = VillagePlan.canalX(y: y, right: right, layout: layout)
+                for side: CGFloat in [-1, 1] {
+                    let dx = side * 19 * s
+                    p.line([CGPoint(x: x + dx - side * 3 * s, y: y), CGPoint(x: x + dx + side * 3 * s, y: y + 1)], 0x9B9478, 0.9)
+                    if i % 5 == 0 { p.oval(CGRect(x: x + dx - 3, y: y + 2, width: 6, height: 4), [0xA4BE77, 0x729B69]) }
+                }
+                if i % 4 == 0 {
+                    p.line([CGPoint(x: x - 5 * s, y: y + 6), CGPoint(x: x + 4 * s, y: y + 6)], 0xC8F5E8, 0.8, opacity: 0.6)
+                }
+                if i % 9 == 3 {
+                    p.plants(at: CGPoint(x: x + sign * 53 * s, y: y + 7), size: s * 0.55)
+                    p.flowers(at: CGPoint(x: x + sign * 48 * s, y: y + 10), size: s * 0.47, pink: i % 2 == 0)
+                }
+            }
+        }
     }
 
     private func sky(width: CGFloat, left: CGFloat, right: CGFloat, height: CGFloat, scale: CGFloat) {
@@ -5574,10 +5794,10 @@ private struct VillageWorldPainter {
                                              color: Color(dinoHex: 0xB1D49C).opacity(0.6))
         // A recognisable tower rises above the title, with houses nestled below.
         tower(at: CGPoint(x: right - 90 * scale, y: 202 * scale), size: scale * 0.95)
-        cottage(at: CGPoint(x: left + 47 * scale, y: height - 15), size: scale * 0.77, leafRoof: true)
-        cottage(at: CGPoint(x: right - 18 * scale, y: height + 12), size: scale * 0.65, leafRoof: false)
-        tree(at: CGPoint(x: left - 7, y: height + 19), size: scale * 0.96)
-        tree(at: CGPoint(x: right + 20, y: height + 70), size: scale * 1.12)
+        cottage(at: CGPoint(x: left + 55 * scale, y: height - 145), size: scale * 0.67, leafRoof: true)
+        cottage(at: CGPoint(x: right - 52 * scale, y: height - 145), size: scale * 0.57, leafRoof: false)
+        tree(at: CGPoint(x: left + 8, y: height - 128), size: scale * 0.76)
+        tree(at: CGPoint(x: right - 6, y: height - 128), size: scale * 0.83)
         for i in 0..<3 {
             let x = width * 0.33 + CGFloat(i) * 18, y = 47 + CGFloat(i % 2) * 8
             var bird = Path(); bird.move(to: CGPoint(x: x - 5, y: y + 2))
@@ -5635,17 +5855,27 @@ private struct VillageWorldPainter {
                 let x = CGFloat((i * 19) % 84) - 43, y = -81 - CGFloat((i * 13) % 49)
                 p.leaf(at: CGPoint(x: x, y: y), length: 17, width: 6, angle: Double(i % 5 - 2) * 32)
             }
-            for (x, y): (CGFloat, CGFloat) in [(-27,-96),(22,-103),(5,-79),(-8,-121)] {
-                p.oval(CGRect(x: x - 4, y: y - 4, width: 9, height: 10), [0xFFE8A2, 0xF2BA68, 0xD99352])
-                p.line([.init(x: x, y: y - 4), .init(x: x + 1, y: y - 7)], 0x6D7950, 1)
+            for i in 0..<19 {
+                let angle = Double(i) * 2.4
+                let radius = CGFloat(sqrt(Double(i) / 19))
+                let x = CGFloat(cos(angle)) * radius * 42
+                let y = -105 + CGFloat(sin(angle)) * radius * 30
+                p.fruit(at: CGPoint(x: x, y: y), kind: i % 6 == 0 ? 1 : 0, size: i % 3 == 0 ? 1.2 : 0.95)
             }
             p.plants(at: CGPoint(x: -18, y: 5), size: 0.63)
+            p.barrel(at: CGPoint(x: 24, y: 6), size: 0.63, fruit: true)
         }
     }
 
     private func cottage(at point: CGPoint, size: CGFloat, leafRoof: Bool) {
         at(point, size: size) { p in
             p.oval(CGRect(x: -48, y: -7, width: 100, height: 23), [0x92AB7C, 0xBED29F])
+            // The house stands on a coursed stone plinth above the quay.
+            p.rounded(CGRect(x: -40, y: -9, width: 80, height: 18), 7, [0xCBBF9D, 0x9D9D82])
+            for row in 0..<2 { for col in 0..<6 {
+                let x = -39 + CGFloat(col) * 14 + CGFloat(row % 2) * 6
+                p.rounded(CGRect(x: x, y: -8 + CGFloat(row) * 7, width: 12, height: 6), 2, [0xEDE0BD, 0xB7AD90])
+            } }
             let body = Path { b in
                 b.move(to: CGPoint(x: -37, y: -5))
                 b.addCurve(to: CGPoint(x: -26, y: -97), control1: CGPoint(x: -48, y: -30), control2: CGPoint(x: -39, y: -76))
@@ -5655,10 +5885,26 @@ private struct VillageWorldPainter {
             }
             p.material(body, [0xFFF4D4, 0xEDDAB1, 0xC3B88E])
             p.context.stroke(body, with: .color(Color(dinoHex: 0xAD9E76).opacity(0.45)), lineWidth: 1)
+            p.line([.init(x: -30, y: -29), .init(x: -32, y: -64), .init(x: -24, y: -85)], 0xFFFBE6, 2, opacity: 0.7)
+            p.line([.init(x: -34, y: -89), .init(x: 34, y: -89)], 0x9D7E55, 5, opacity: 0.24)
+            for i in 0..<21 {
+                let x = CGFloat((i * 23) % 61) - 30, y = -82 + CGFloat((i * 17) % 70)
+                p.oval(CGRect(x: x, y: y, width: 1.6, height: 1), [0xE4CEA3, 0xD5BD95])
+            }
             for (x,y): (CGFloat,CGFloat) in [(-32,-39),(29,-65),(-24,-79),(33,-19)] { p.oval(CGRect(x:x-3,y:y-2,width:6,height:5),[0xD5BE93,0xDDBF93]) }
             p.door(at: CGPoint(x: 0, y: -2), size: 1, teal: leafRoof)
             p.window(at: CGPoint(x: -24, y: -55), size: 0.83)
             p.window(at: CGPoint(x: 24, y: -55), size: 0.83)
+            for x: CGFloat in [-24, 24] {
+                for side: CGFloat in [-1, 1] {
+                    p.rounded(CGRect(x: x + side * 12 - 3, y: -67, width: 6, height: 21), 2, leafRoof ? [0x90B69B, 0x497E70] : [0xAEC0A1, 0x638C79])
+                    for row in 0..<4 {
+                        p.line([.init(x: x + side * 12 - 2, y: -63 + CGFloat(row) * 4), .init(x: x + side * 12 + 2, y: -63 + CGFloat(row) * 4)], 0xD4DAB0, 0.65)
+                    }
+                }
+                p.rounded(CGRect(x: x - 12, y: -44, width: 24, height: 7), 2, [0xC28D5E, 0x8B6A4C])
+                p.flowers(at: CGPoint(x: x, y: -39), size: 0.44, pink: x < 0)
+            }
             p.rounded(CGRect(x: 22, y: -123, width: 11, height: 29), 2, [0xF4DEB6, 0xC2AC85])
             p.rounded(CGRect(x: 19, y: -125, width: 17, height: 6), 2, [0xFFF0CE, 0xD1BA90])
             if leafRoof {
@@ -5677,8 +5923,18 @@ private struct VillageWorldPainter {
                     }
                 }
             } else { p.roof(at: CGPoint(x: 0, y: -93), width: 92, height: 38) }
+            // Small inset attic vent and a finished timber eave.
+            p.oval(CGRect(x: -7, y: -89, width: 14, height: 12), [0xC7AA79, 0x8D7954])
+            p.oval(CGRect(x: -4.5, y: -87, width: 9, height: 8), [0xF8E6B5, 0xB6C8AF])
+            p.line([.init(x: 0, y: -87), .init(x: 0, y: -80)], 0x9F8B60, 1.1)
             p.rounded(CGRect(x: -21, y: 0, width: 42, height: 6), 2, [0xF3E3BE, 0xC4B593])
             p.rounded(CGRect(x: -25, y: 5, width: 50, height: 6), 2, [0xE8D8B5, 0xADAA8B])
+            p.lantern(at: CGPoint(x: 20, y: -29), size: 0.43)
+            // Climbing vine follows the plaster instead of floating beside it.
+            p.line([.init(x: -34, y: -4), .init(x: -40, y: -25), .init(x: -35, y: -48), .init(x: -39, y: -75)], 0x648458, 1.6)
+            for i in 0..<6 {
+                p.leaf(at: CGPoint(x: -37, y: -12 - CGFloat(i) * 10), length: 11, width: 4, angle: i % 2 == 0 ? -60 : 55)
+            }
             p.flowers(at: CGPoint(x: -32, y: 5), size: 0.65, pink: true)
             p.plants(at: CGPoint(x: 37, y: 10), size: 0.77)
         }
@@ -5725,6 +5981,38 @@ private struct VillageWorldPainter {
             p.line([.init(x: -7, y: 0), .init(x: 7, y: 0)], 0xE5C18A, 1.7)
             p.line([.init(x: -5, y: -8), .init(x: -1, y: -4)], 0xFFFFFF, 1.5, opacity: 0.65)
             p.rounded(CGRect(x: -13, y: 11, width: 26, height: 4), 1.5, [0xEED5A5, 0xB39D74])
+        }
+    }
+
+    private func lantern(at point: CGPoint, size: CGFloat) {
+        at(point, size: size) { p in
+            p.line([.init(x: -7, y: 8), .init(x: -7, y: -22), .init(x: 0, y: -28), .init(x: 7, y: -22)], 0x75694B, 3)
+            p.glow(.zero, radius: 22, color: 0xFFF0A6, opacity: 0.19)
+            p.rounded(CGRect(x: -7, y: -13, width: 14, height: 22), 3, [0xFFF9C8, 0xF2CE7D, 0xD9A65F])
+            p.polygon([.init(x: -11, y: -13), .init(x: 0, y: -22), .init(x: 11, y: -13)], [0xB79D66, 0x70664C])
+            for x: CGFloat in [-7, 0, 7] { p.line([.init(x: x, y: -12), .init(x: x, y: 8)], 0x8A7950, 1.4) }
+            p.rounded(CGRect(x: -9, y: 8, width: 18, height: 4), 1.5, [0xB29C68, 0x75694B])
+        }
+    }
+
+    private func barrel(at point: CGPoint, size: CGFloat, fruit: Bool = false) {
+        at(point, size: size) { p in
+            p.oval(CGRect(x: -12, y: -2, width: 26, height: 8), [0x9FA47C, 0xC0C998])
+            p.rounded(CGRect(x: -11, y: -26, width: 22, height: 30), 6, [0xD6B47A, 0xAF8756, 0x806746])
+            for x: CGFloat in [-6, 0, 6] { p.line([.init(x: x, y: -24), .init(x: x, y: 1)], 0xF0C993, 0.8, opacity: 0.7) }
+            for y: CGFloat in [-20, -4] { p.rounded(CGRect(x: -11, y: y, width: 22, height: 3), 1, [0x929586, 0x626D63]) }
+            p.oval(CGRect(x: -10, y: -29, width: 20, height: 7), [0xE6C58E, 0x8D7650])
+            if fruit { for i in 0..<6 { p.fruit(at: CGPoint(x: CGFloat(i % 3) * 6 - 7, y: -28 - CGFloat(i / 3) * 5), kind: i % 3, size: 0.7) } }
+        }
+    }
+
+    private func fruit(at point: CGPoint, kind: Int, size: CGFloat = 1) {
+        at(point, size: size) { p in
+            let colors: [UInt32] = kind == 0 ? [0xFFE4A0, 0xF6A748, 0xD17A38] : kind == 1 ? [0xFFCE9F, 0xE98268, 0xBF5C50] : [0xE0ECA0, 0xA4C764, 0x6A9C51]
+            p.oval(CGRect(x: -4, y: -4, width: 8, height: 8), colors)
+            p.line([.init(x: 0, y: -3), .init(x: 1, y: -6)], 0x75674C, 0.8)
+            p.oval(CGRect(x: 0, y: -6, width: 4, height: 2), [0xA7C877, 0x63965E])
+            p.oval(CGRect(x: -2.4, y: -2.5, width: 1.8, height: 2), [0xFFF1CD, colors[0]])
         }
     }
     private func tower(at point: CGPoint, size: CGFloat) {
@@ -5775,24 +6063,45 @@ private struct VillageWorldPainter {
     }
     private func market(at point: CGPoint, size: CGFloat, blue: Bool) {
         at(point, size: size) { p in
+            p.oval(CGRect(x: -44, y: -4, width: 91, height: 22), [0xA5AD83, 0xD4D3A3])
             for x: CGFloat in [-32, 32] { p.rounded(CGRect(x: x - 2, y: -65, width: 4, height: 70), 1, [0xE8C28B, 0x9F7C53]) }
             p.rounded(CGRect(x: -37, y: -19, width: 74, height: 24), 3, [0xEAC594, 0xBC9664, 0x977C52])
             for i in 0..<5 { p.line([.init(x: CGFloat(i) * 14 - 29, y: -16), .init(x: CGFloat(i) * 14 - 29, y: 2)], 0xF5D7A6, 0.8) }
-            for row in 0..<2 { for i in 0..<8 {
-                let x = CGFloat(i) * 8 - 29 + CGFloat(row) * 2, y = -23 - CGFloat(row) * 6
-                let colors: [UInt32] = i < 3 ? [0xFFE88C,0xE8B25A] : i < 6 ? [0xF8BE85,0xD7805F] : [0xB4D97B,0x7DA15B]
-                p.oval(CGRect(x:x,y:y,width:8,height:8),colors)
-            } }
-            for i in 0..<8 {
-                let x = -40 + CGFloat(i) * 10
-                let colors: [UInt32] = i % 2 == 0 ? [0xFFFFE4,0xF4E5BA] : blue ? [0x9ED7DC,0x509DA9] : [0xFFDA8A,0xE2AC58]
-                p.polygon([.init(x:x+4,y:-67),.init(x:x+12,y:-67),.init(x:x+10,y:-43),.init(x:x,y:-43)],colors)
-                p.rounded(CGRect(x:x,y:-44,width:10,height:9),4,colors)
+            p.rounded(CGRect(x: -37, y: -23, width: 74, height: 6), 2, [0xF7D8A5, 0xAE8456])
+            for crate in 0..<3 {
+                let x = CGFloat(crate) * 23 - 34
+                p.rounded(CGRect(x: x, y: -32, width: 22, height: 13), 1.5, [0xA98255, 0x765F43])
+                for row in 0..<2 { for i in 0..<3 {
+                    p.fruit(at: CGPoint(x: x + 5 + CGFloat(i) * 6, y: -27 - CGFloat(row) * 5), kind: crate, size: 0.75)
+                } }
+                p.line([.init(x: x + 1, y: -23), .init(x: x + 21, y: -23)], 0xF1CF94, 2)
             }
-            p.line([.init(x:-35,y:-67),.init(x:35,y:-67)],0xD5B78B,2)
+            p.rounded(CGRect(x: -35, y: -58, width: 70, height: 12), 2, [0x655E45, 0x9A8055])
+            p.line([.init(x: -29, y: -51), .init(x: 29, y: -51)], 0xCEAD78, 1.4)
+            if !p.animatedDetails { p.canopy(at: .zero, size: 1, blue: blue, time: 0) }
             p.oval(CGRect(x:-30,y:2,width:14,height:14),[0xA58A5D,0x7D6C4E])
             p.oval(CGRect(x:17,y:2,width:14,height:14),[0xA58A5D,0x7D6C4E])
             p.flowers(at: CGPoint(x: -41,y:9), size:0.6,pink:true)
+            p.barrel(at: CGPoint(x: 44, y: 10), size: 0.57, fruit: true)
+            // A suspended shop sign carries a fruit emblem, without tiny text.
+            p.line([.init(x: -30, y: -44), .init(x: -30, y: -35)], 0x8A7954, 0.9)
+            p.rounded(CGRect(x: -37, y: -36, width: 15, height: 12), 3, [0xF7D69C, 0xB78E5C])
+            p.fruit(at: CGPoint(x: -30, y: -30), kind: blue ? 0 : 1, size: 0.72)
+        }
+    }
+
+    private func canopy(at point: CGPoint, size: CGFloat, blue: Bool, time: Double) {
+        at(point, size: size) { p in
+            for i in 0..<8 {
+                let x = -40 + CGFloat(i) * 10
+                let wave = CGFloat(sin(time * 1.1 + Double(i) * 0.35)) * 1.2
+                let colors: [UInt32] = i % 2 == 0 ? [0xFFFFEC, 0xF2DFB8, 0xD9C59C] : blue ? [0xA7D9D7, 0x5DA9B0, 0x3F8692] : [0xFFE3A0, 0xE8B45F, 0xCE9348]
+                p.polygon([.init(x: x + 4, y: -70), .init(x: x + 12, y: -70), .init(x: x + 10, y: -44 + wave), .init(x: x, y: -44 + wave)], colors)
+                p.rounded(CGRect(x: x, y: -45 + wave, width: 10, height: 10), 4, colors)
+                p.line([.init(x: x + 2, y: -43 + wave), .init(x: x + 7, y: -43 + wave)], 0xFFF0CD, 0.6, opacity: 0.7)
+            }
+            p.line([.init(x: -35, y: -70), .init(x: 35, y: -70)], 0xA78356, 2.5)
+            p.line([.init(x: -33, y: -71), .init(x: 34, y: -71)], 0xFFE5B1, 1)
         }
     }
     private func fountain(at point: CGPoint, size: CGFloat) {
@@ -5862,22 +6171,111 @@ private struct VillageWorldPainter {
         at(point,size:size) { p in
             p.cottage(at:CGPoint(x:-13,y:-2),size:0.83,leafRoof:false)
             p.rounded(CGRect(x:12,y:-67,width:12,height:67),3,[0xBE9A67,0x7F704F])
-            let center=CGPoint(x:30,y:-25)
+            if !p.animatedDetails { p.wheel(at: CGPoint(x: 30, y: -25), time: 0) }
+            p.plants(at:CGPoint(x:-43,y:12),size:0.73)
+        }
+    }
+    private func wheel(at point: CGPoint, time: Double) {
+        at(point) { p in
+            var c = p.context; c.rotate(by: .radians(time * 0.12))
+            let rotor = VillageWorldPainter(context: c)
             for i in 0..<10 {
                 let a=Double(i) * .pi / 5
-                let end=CGPoint(x:center.x+CGFloat(cos(a))*29,y:center.y+CGFloat(sin(a))*29)
-                p.line([center,end],0xA58152,4)
-                p.at(end) { paddle in
+                let end=CGPoint(x:CGFloat(cos(a))*29,y:CGFloat(sin(a))*29)
+                rotor.line([.zero,end],0xA58152,4)
+                rotor.at(end) { paddle in
                     var c=paddle.context;c.rotate(by:.radians(a))
                     VillageWorldPainter(context:c).rounded(CGRect(x:-3,y:-7,width:9,height:15),1,[0xE1BA7A,0xAA8557,0x7C6B4D])
                 }
             }
-            p.context.stroke(Path(ellipseIn:CGRect(x:4,y:-51,width:52,height:52)),with:.color(Color(dinoHex:0xD6B078)),lineWidth:4)
-            p.context.stroke(Path(ellipseIn:CGRect(x:10,y:-45,width:40,height:40)),with:.color(Color(dinoHex:0x8B754F)),lineWidth:2)
-            p.oval(CGRect(x:23,y:-32,width:14,height:14),[0xE7C48B,0x977B51])
-            p.oval(CGRect(x:27,y:-28,width:6,height:6),[0xB18E5D,0x756A4E])
-            p.plants(at:CGPoint(x:-43,y:12),size:0.73)
+            rotor.context.stroke(Path(ellipseIn:CGRect(x:-26,y:-26,width:52,height:52)),with:.color(Color(dinoHex:0xD6B078)),lineWidth:4)
+            rotor.context.stroke(Path(ellipseIn:CGRect(x:-20,y:-20,width:40,height:40)),with:.color(Color(dinoHex:0x8B754F)),lineWidth:2)
+            p.oval(CGRect(x:-7,y:-7,width:14,height:14),[0xE7C48B,0x977B51])
+            p.oval(CGRect(x:-3,y:-3,width:6,height:6),[0xB18E5D,0x756A4E])
         }
+    }
+
+    private func paving(at point: CGPoint, size: CGFloat) {
+        at(point, size: size) { p in
+            p.oval(CGRect(x: -82, y: -27, width: 164, height: 70), [0xE9DDB7, 0xCFC79F, 0xAEBA8C])
+            for row in 0..<6 { for col in 0..<11 {
+                let x = -78 + CGFloat(col) * 14 + CGFloat(row % 2) * 6
+                let y = -16 + CGFloat(row) * 9
+                guard pow(x / 80, 2) + pow((y - 6) / 32, 2) < 0.97 else { continue }
+                p.rounded(CGRect(x: x, y: y, width: 12, height: 7), 2.5, (row + col) % 4 == 0 ? [0xF5E7C6, 0xC8BA99] : [0xE2D3AE, 0xBFB394])
+                p.line([.init(x: x + 2, y: y + 1), .init(x: x + 9, y: y + 1)], 0xFFF2D2, 0.6, opacity: 0.6)
+            } }
+        }
+    }
+
+    func neighborhood(at point: CGPoint, size: CGFloat, variation: Int) {
+        at(point, size: size) { p in
+            p.paving(at: CGPoint(x: 0, y: 4), size: 1)
+            switch variation {
+            case 0:
+                p.cottage(at: CGPoint(x: 39, y: -51), size: 0.57, leafRoof: false)
+                p.tree(at: CGPoint(x: 47, y: -25), size: 0.68)
+                p.cottage(at: CGPoint(x: -25, y: -23), size: 0.96, leafRoof: false)
+                p.market(at: CGPoint(x: 23, y: 16), size: 0.86, blue: true)
+            case 1:
+                p.tree(at: CGPoint(x: -29, y: -48), size: 0.94)
+                p.cottage(at: CGPoint(x: 36, y: -47), size: 0.68, leafRoof: true)
+                p.market(at: CGPoint(x: -29, y: -1), size: 0.87, blue: false)
+                p.market(at: CGPoint(x: 34, y: 27), size: 0.83, blue: true)
+                p.barrel(at: CGPoint(x: -41, y: 29), size: 0.79, fruit: true)
+            case 2:
+                p.cottage(at: CGPoint(x: 40, y: -51), size: 0.64, leafRoof: false)
+                p.tower(at: CGPoint(x: -31, y: -8), size: 0.88)
+                p.fountain(at: CGPoint(x: 29, y: 19), size: 0.79)
+                p.fence(at: CGPoint(x: -31, y: 26), size: 0.6)
+            case 3:
+                p.tree(at: CGPoint(x: -38, y: -46), size: 0.92)
+                p.cottage(at: CGPoint(x: 22, y: -21), size: 0.98, leafRoof: true)
+                p.market(at: CGPoint(x: -26, y: 21), size: 0.82, blue: false)
+                p.barrel(at: CGPoint(x: 55, y: 24), size: 0.75, fruit: true)
+            default:
+                p.tree(at: CGPoint(x: -41, y: -34), size: 0.83)
+                p.cottage(at: CGPoint(x: 33, y: -53), size: 0.59, leafRoof: false)
+                p.mill(at: CGPoint(x: 0, y: -8), size: 1.04)
+                p.barrel(at: CGPoint(x: -27, y: 24), size: 0.8)
+                p.fence(at: CGPoint(x: 30, y: 32), size: 0.73)
+            }
+            p.lantern(at: CGPoint(x: -65, y: 21), size: 0.77)
+            p.flowers(at: CGPoint(x: -60, y: 30), size: 0.78, pink: true)
+            p.flowers(at: CGPoint(x: 58, y: 34), size: 0.8, pink: false)
+            p.plants(at: CGPoint(x: 69, y: 24), size: 0.65)
+        }
+    }
+
+    func life(variation: Int, time: Double) {
+        switch variation {
+        case 0: canopy(at: CGPoint(x: 23, y: 16), size: 0.86, blue: true, time: time)
+        case 1:
+            canopy(at: CGPoint(x: -29, y: -1), size: 0.87, blue: false, time: time + 1)
+            canopy(at: CGPoint(x: 34, y: 27), size: 0.83, blue: true, time: time + 2)
+        case 2:
+            at(CGPoint(x: 29, y: 19), size: 0.79) { p in
+                for side: CGFloat in [-1, 1] {
+                    let progress = CGFloat((time * 0.55 + (side > 0 ? 0.5 : 0)).truncatingRemainder(dividingBy: 1))
+                    let y = -57 + progress * 47
+                    let x = side * (17 + 14 * sqrt(progress))
+                    p.oval(CGRect(x: x - 1.4, y: y - 2, width: 2.8, height: 5), [0xF5FFF2, 0xBAF1E5])
+                    let r = 3 + progress * 7
+                    p.context.stroke(Path(ellipseIn: CGRect(x: side * 30 - r, y: -10 - r * 0.2, width: r * 2, height: r * 0.4)), with: .color(Color(dinoHex: 0xE7FFF3).opacity(Double(1 - progress) * 0.8)), lineWidth: 0.8)
+                }
+            }
+        case 3: canopy(at: CGPoint(x: -26, y: 21), size: 0.82, blue: false, time: time + 4)
+        default:
+            at(CGPoint(x: 0, y: -8), size: 1.04) { $0.wheel(at: CGPoint(x: 30, y: -25), time: time) }
+        }
+        // A tiny butterfly circles the planters; its wings gently open and close.
+        let x = -52 + CGFloat(sin(time * 0.45 + Double(variation))) * 12
+        let y = -15 + CGFloat(cos(time * 0.7)) * 7
+        let wing = 1.3 + abs(sin(time * 4)) * 2.2
+        for side: CGFloat in [-1, 1] {
+            oval(CGRect(x: x + side * CGFloat(wing) - 2, y: y - 2, width: CGFloat(wing) + 1, height: 4), [0xFFF3B0, 0xE8BE6A])
+        }
+        line([CGPoint(x: x, y: y - 1), CGPoint(x: x, y: y + 2)], 0x806B52, 0.7)
     }
     private func garden(at point:CGPoint,size:CGFloat,variation:Int) {
         at(point,size:size) { p in
@@ -5921,6 +6319,81 @@ private struct VillageWorldPainter {
             p.plants(at:CGPoint(x:51,y:31),size:0.66)
             p.rock(at:CGPoint(x:-62,y:22),size:0.43)
         }
+    }
+}
+
+/// Only bounded, visible effect surfaces tick; the detailed village stays cached.
+private struct VillageWorldLife: View {
+    let routeOffset: CGFloat
+    let viewportHeight: CGFloat
+    var fixedTime: TimeInterval? = nil
+    var frozen = false
+
+    var body: some View {
+        GeometryReader { geometry in
+            let layout = WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset)
+            ZStack(alignment: .topLeading) {
+                ForEach(0..<Int(ceil(geometry.size.height / 220)), id: \.self) { section in
+                    VillageLifeSurface(layout: layout, section: section, viewportHeight: viewportHeight,
+                                       fixedTime: fixedTime, frozen: frozen)
+                }
+                ForEach(VillagePlan.plots(layout: layout)) { plot in
+                    VillageLifeSurface(layout: layout, plot: plot, viewportHeight: viewportHeight,
+                                       fixedTime: fixedTime, frozen: frozen)
+                }
+            }
+        }.clipped().allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+private struct VillageLifeSurface: View {
+    let layout: WorldSceneryLayout
+    var plot: VillagePlan.Plot? = nil
+    var section = 0
+    let viewportHeight: CGFloat
+    let fixedTime: TimeInterval?
+    let frozen: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var visible = false
+
+    private var frame: CGRect {
+        if let plot { return plot.bounds.offsetBy(dx: 0, dy: layout.routeOffset) }
+        return CGRect(x: 0, y: CGFloat(section) * 220, width: layout.width, height: 220)
+    }
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 15,
+                                paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
+            Canvas { context, _ in
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSinceReferenceDate)
+                var c = context
+                if let plot {
+                    c.translateBy(x: plot.point.x - frame.minX, y: plot.point.y + layout.routeOffset - frame.minY)
+                    c.scaleBy(x: plot.size, y: plot.size)
+                    VillageWorldPainter(context: c).life(variation: plot.id, time: time)
+                } else {
+                    c.translateBy(x: 0, y: layout.routeOffset - frame.minY)
+                    for right in [false, true] {
+                        for index in 0..<7 {
+                            let travel = CGFloat((time * 8 + Double(index) * 33).truncatingRemainder(dividingBy: 220))
+                            let y = frame.minY - layout.routeOffset + travel
+                            guard y > -35 else { continue }
+                            let x = VillagePlan.canalX(y: y, right: right, layout: layout)
+                            var glint = Path(); glint.move(to: CGPoint(x: x - 5 * layout.scale, y: y))
+                            glint.addQuadCurve(to: CGPoint(x: x + 4 * layout.scale, y: y + 1), control: CGPoint(x: x, y: y - 2))
+                            c.stroke(glint, with: .color(Color(dinoHex: 0xD8FFF1).opacity(0.5)), style: StrokeStyle(lineWidth: 1.1, lineCap: .round))
+                        }
+                    }
+                }
+            }
+        }
+        .frame(width: frame.width, height: frame.height).clipped()
+        .readGeometry(for: Bool.self) { proxy in
+            let bounds = proxy.frame(in: .named("adventure.map.viewport"))
+            return bounds.maxY > 0 && bounds.minY < viewportHeight
+        } action: { visible = $0 }
+        .position(x: frame.midX, y: frame.midY)
     }
 }
 
@@ -5978,7 +6451,7 @@ private struct CrystalCaveLife: View {
                     }
                 }
             }
-            .onGeometryChange(for: CGRect.self) { proxy in
+            .readGeometry(for: CGRect.self) { proxy in
                 let frame = proxy.frame(in: .named("adventure.map.viewport"))
                 let top = max(0, -frame.minY), bottom = min(proxy.size.height, viewportHeight - frame.minY)
                 return bottom > top ? CGRect(x: 0, y: top, width: proxy.size.width, height: bottom - top) : .zero
@@ -6166,7 +6639,7 @@ private struct CrystalCaveLamp: View {
             }
         }
         .mask(CrystalCaveOcclusion(layout: layout, frame: frame, depth: lamp.depth))
-        .onGeometryChange(for: Bool.self) { proxy in
+        .readGeometry(for: Bool.self) { proxy in
             let frame = proxy.frame(in: .named("adventure.map.viewport"))
             return frame.maxY > 0 && frame.minY < viewportHeight
         } action: { visible = $0 }
@@ -6199,7 +6672,7 @@ private struct CrystalCaveGlint: View {
         }
         .mask(CrystalCaveOcclusion(layout: layout,
                                   frame: CGRect(x: point.x - 14 * s, y: point.y - 14 * s, width: 28 * s, height: 28 * s), depth: depth))
-        .onGeometryChange(for: Bool.self) { proxy in
+        .readGeometry(for: Bool.self) { proxy in
             let frame = proxy.frame(in: .named("adventure.map.viewport"))
             return frame.maxY > 0 && frame.minY < viewportHeight
         } action: { visible = $0 }
@@ -6872,7 +7345,7 @@ private struct CrystalCavePainter {
                 let cool: [UInt32] = even ? [0xBAC5BB,0x9EAEA6] : [0xC3CAC0,0xAAB7AA]
                 let warm: [UInt32] = even ? [0xE4DFC3,0xC5CAB1] : [0xDAD9BD,0xB9C3AA]
                 let warmth = Double(smooth((rows[row] - 0.08) / 0.65))
-                let colors = zip(cool, warm).map { Color(dinoHex: $0.0).mix(with: Color(dinoHex: $0.1), by: warmth) }
+                let colors = zip(cool, warm).map { Color(dinoHex: $0.0).mixed(with: Color(dinoHex: $0.1), by: warmth) }
                 let bounds = stone.boundingRect
                 tiles.context.fill(stone, with: .linearGradient(Gradient(colors: colors),
                     startPoint: CGPoint(x: bounds.minX, y: bounds.minY), endPoint: CGPoint(x: bounds.maxX, y: bounds.maxY)))
@@ -7698,7 +8171,7 @@ private struct CrystalCavePainter {
             p.rounded(CGRect(x: -33, y: -54, width: 66, height: 30), radius: 8, colors: [0x405B7A, 0x29465F])
             p.context.stroke(Path(roundedRect: CGRect(x: -33, y: -54, width: 66, height: 30), cornerRadius: 8), with: .color(Color(dinoHex: 0xB7E4E3)), lineWidth: 1.2)
             p.context.draw(Text(verbatim: late ? "08:43" : "02:17").font(.system(size: 16, weight: .bold, design: .monospaced))
-                .foregroundStyle(Color(dinoHex: 0xFFE8B0)), at: CGPoint(x: 0, y: -39))
+                .canvasInk(Color(dinoHex: 0xFFE8B0)), at: CGPoint(x: 0, y: -39))
             p.line([.init(x: -26, y: -58), .init(x: -5, y: -60), .init(x: 15, y: -58)], color: 0xE4F0E9, width: 0.9, opacity: 0.65)
             p.line([.init(x: -34, y: -11), .init(x: -22, y: -6), .init(x: -17, y: -9)], color: 0x5C799E, width: 0.9)
             p.crystal(at: CGPoint(x: 38, y: 13), height: 26, tint: 0)
@@ -7803,13 +8276,13 @@ private struct CityWorldPainter {
             .init(color: Color(dinoHex: 0xE5EBCF), location: (routeOffset + 110) / h),
             .init(color: Color(dinoHex: 0xDFE5BF), location: 0.38),
             .init(color: Color(dinoHex: 0xD1DFBB), location: 0.70),
-            .init(color: Color(dinoHex: 0xD4DDC4), location: 1)
+            .init(color: Color(dinoHex: 0xCED0E6), location: 1)
         ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
         entrance(width: w, scale: scale)
         CrystalCavePainter(context: context).exitClearing(width: w, boundaryY: 0)
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
-        scenery.drawBanks(in: c, worldID: 6)
+        scenery.drawBanks(in: c, worldID: 6, nextWorldID: 2)
         let p = CityWorldPainter(context: c, depth: depth, depthOffset: routeOffset)
         p.quays(along: scenery)
         CrystalCavePainter(context: context).approach(in: size, routeOffset: routeOffset, leavingCave: true)
@@ -8247,7 +8720,7 @@ private struct CityWorldPainter {
             p.rounded(CGRect(x: -34, y: -14, width: 68, height: 29), radius: 7, colors: [0xF5D994, 0xC5A36B])
             p.rounded(CGRect(x: -29, y: -10, width: 58, height: 21), radius: 4, colors: [0x35616B, 0x244956])
             p.context.draw(Text(verbatim: time).font(.system(size: 14, weight: .bold, design: .monospaced))
-                .foregroundStyle(Color(dinoHex: 0xFFE5A4)), at: CGPoint(x: 0, y: 0))
+                .canvasInk(Color(dinoHex: 0xFFE5A4)), at: CGPoint(x: 0, y: 0))
             for x: CGFloat in [-30, 30] { p.oval(CGRect(x: x - 0.8, y: -1, width: 1.6, height: 1.6), colors: [0xFFF2C2, 0xD9BD83]) }
         }
     }
@@ -8467,12 +8940,12 @@ private struct DayNightForestPainter {
             .init(color: Color(dinoHex: 0xC5B7B0), location: (routeOffset + 820) / h),
             .init(color: Color(dinoHex: 0x9AA9BE), location: (routeOffset + 1080) / h),
             .init(color: Color(dinoHex: 0x7F95B0), location: (routeOffset + 1470) / h),
-            .init(color: Color(dinoHex: 0xE8E9DA), location: 1)
+            .init(color: Color(dinoHex: 0xFFD1A1), location: 1)
         ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
         entrance(width: w, scale: scale)
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
-        scenery.drawBanks(in: c, worldID: 7)
+        scenery.drawBanks(in: c, worldID: 7, nextWorldID: 3)
         let p = DayNightForestPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset)
         p.twilight(width: w, scale: scale)
         for side in 0..<2 {
@@ -8763,7 +9236,7 @@ private struct DayNightForestPainter {
             p.rounded(CGRect(x: -31, y: -31, width: 68, height: 30), radius: 7, colors: [p.tone(0xD9BD83, 0xBAC3B5), p.tone(0xA58F62, 0x859EAE)])
             p.rounded(CGRect(x: -26, y: -26, width: 58, height: 20), radius: 4, colors: [0x3E5B65, 0x2A4359])
             p.context.draw(Text(verbatim: String(format: "%02d:00", hour)).font(.system(size: 15, weight: .bold, design: .monospaced))
-                .foregroundStyle(Color(dinoHex: 0xFFE9AE)), at: CGPoint(x: 3, y: -16))
+                .canvasInk(Color(dinoHex: 0xFFE9AE)), at: CGPoint(x: 3, y: -16))
             p.flowers(at: CGPoint(x: 34, y: 15), size: 0.65)
             p.mushroom(at: CGPoint(x: -38, y: 13), size: 0.42)
         }
@@ -9125,7 +9598,7 @@ private struct TimeMachinePainter {
             p.rounded(CGRect(x: -31, y: -38, width: 62, height: 18), 4, [0x385868, 0x244555])
             p.glow(.init(x: 0, y: -29), radius: 28, color: 0xFFE9AC, opacity: 0.1)
             p.context.draw(Text(verbatim: String(format: "%02d:%02d", time.hour, time.minute))
-                .font(.system(size: 15, weight: .bold, design: .monospaced)).foregroundStyle(Color(dinoHex: 0xFFE6A3)), at: .init(x: 0, y: -29))
+                .font(.system(size: 15, weight: .bold, design: .monospaced)).canvasInk(Color(dinoHex: 0xFFE6A3)), at: .init(x: 0, y: -29))
             for x: CGFloat in [-24, -8, 8, 24] {
                 p.rounded(CGRect(x: x - 4, y: -9, width: 8, height: 5), 2, [0xF6D696, 0x9B8A64])
                 p.rivet(.init(x: x, y: 8), radius: 1.5)
@@ -9609,7 +10082,7 @@ private struct PirateCoastPainter {
             for x: CGFloat in [-25, 25] { p.rounded(CGRect(x: x - 3, y: -17, width: 6, height: 22), 2, [0xC9A16B, 0x927B56]) }
             p.rounded(CGRect(x: -38, y: -49, width: 76, height: 38), 13, [0xFFF0C8, 0xE3CAA1, 0xAB9D85])
             p.rounded(CGRect(x: -32, y: -43, width: 64, height: 26), 8, [0x496674, 0x294D5D])
-            p.context.draw(Text(verbatim: String(format: "%02d:%02d", hour, minute)).font(.system(size: 18, weight: .bold, design: .monospaced)).foregroundStyle(Color(dinoHex: 0xFFE7A8)), at: .init(x: 0, y: -30))
+            p.context.draw(Text(verbatim: String(format: "%02d:%02d", hour, minute)).font(.system(size: 18, weight: .bold, design: .monospaced)).canvasInk(Color(dinoHex: 0xFFE7A8)), at: .init(x: 0, y: -30))
             p.rounded(CGRect(x: -6, y: -55, width: 12, height: 7), 3, [0xFFE4A4, 0xC6A06A])
             p.oval(CGRect(x: -3, y: -59, width: 6, height: 6), [0xFFF1B9, 0xD9B77E])
             for x: CGFloat in [-34, 34] { p.oval(CGRect(x: x - 1, y: -31, width: 2, height: 2), [0xFFF6CF, 0xBDA37A]) }
@@ -9879,7 +10352,7 @@ private struct CastleWorldPainter {
         at(point) { p in
             p.rounded(CGRect(x: -30, y: -13, width: 60, height: 26), 7, [0xEBD5A3, 0xB2A789])
             p.rounded(CGRect(x: -26, y: -9, width: 52, height: 18), 4, [0x416479, 0x274A62])
-            p.context.draw(Text(verbatim: String(format: "%02d:%02d", time.hour, time.minute)).font(.system(size: 13.5, weight: .bold, design: .monospaced)).foregroundStyle(Color(dinoHex: 0xD7F9ED)), at: .zero)
+            p.context.draw(Text(verbatim: String(format: "%02d:%02d", time.hour, time.minute)).font(.system(size: 13.5, weight: .bold, design: .monospaced)).canvasInk(Color(dinoHex: 0xD7F9ED)), at: .zero)
         }
     }
     private func tower(at point: CGPoint, size: CGFloat, time: ClockTime?) {
@@ -10154,7 +10627,7 @@ struct ThemedWorldLandscape: View, Equatable {
     var body: some View {
         Canvas { context, size in
             let depth = WorldSceneryDepth()
-            if world.id == 2 {
+            if world.themeID == 2 {
                 SleepValleyPainter(context: context, animatedWillows: true).landscape(in: size, routeOffset: routeOffset, depth: depth)
                 var routeContext = context
                 routeContext.translateBy(x: 0, y: routeOffset)
@@ -10216,8 +10689,8 @@ struct ThemedWorldLandscape: View, Equatable {
                 depth.draw()
                 return
             }
-            if world.id == 7 {
-                DayNightForestPainter(context: context).landscape(in: size, routeOffset: routeOffset, depth: depth)
+            if world.themeID == 7 {
+                DinoDesertPainter(context: context).landscape(in: size, routeOffset: routeOffset, depth: depth)
                 var routeContext = context
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
@@ -10330,8 +10803,10 @@ struct ThemedWorldLandscape: View, Equatable {
             p.boss(worldID: world.id, at: bossPoint, size: scale * 0.88)
         }.clipped()
             .overlay {
-                if world.id == 2 { SleepValleyLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                if world.themeID == 7 { DinoDesertLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                if world.themeID == 2 { SleepValleyLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
                 if world.id == 3 { VolcanoWorldLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                if world.id == 4 { VillageWorldLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
                 if world.id == 5 { CrystalCaveLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
             }
             .overlay(alignment: .top) {
@@ -10366,12 +10841,13 @@ struct WorldThemePreview: View {
                 Gradient(colors: [.white.opacity(0.25), Color(dinoHex: colors.shade).opacity(0.08)]),
                 startPoint: .zero, endPoint: CGPoint(x: size.width, y: size.height)))
             let p = ThemePainter(context: context, colors: colors)
+            let theme = world.themeID
             let heightUnits: CGFloat = [8, 10].contains(world.id) ? 218 : 195
             let scale = min(size.height / heightUnits, size.width / 290)
-            p.scene(worldID: world.id, at: CGPoint(x: size.width * 0.21, y: size.height * 0.87),
+            p.scene(worldID: theme, at: CGPoint(x: size.width * 0.21, y: size.height * 0.87),
                     size: scale * 1.12, variation: 0)
-            p.bossClearing(worldID: world.id, at: CGPoint(x: size.width * 0.71, y: size.height * 0.92), size: scale)
-            p.boss(worldID: world.id, at: CGPoint(x: size.width * 0.70, y: size.height * 0.94), size: scale)
+            p.bossClearing(worldID: theme, at: CGPoint(x: size.width * 0.71, y: size.height * 0.92), size: scale)
+            p.boss(worldID: theme, at: CGPoint(x: size.width * 0.70, y: size.height * 0.94), size: scale)
         }.allowsHitTesting(false)
     }
 }
@@ -10500,6 +10976,10 @@ private struct ThemePainter {
     }
 
     func scene(worldID: Int, at point: CGPoint, size: CGFloat, variation: Int) {
+        if worldID == 7 {
+            DinoDesertPainter(context: context).scene(at: point, size: size, variation: variation)
+            return
+        }
         at(point, size: size) { p in
             p.gardenPatch(at: CGPoint(x: 0, y: 11), width: 132, color: p.colors.accent)
             switch worldID {
@@ -10616,6 +11096,10 @@ private struct ThemePainter {
     }
 
     func bossClearing(worldID: Int, at point: CGPoint, size: CGFloat) {
+        if worldID == 7 {
+            DinoDesertPainter(context: context).clearing(at: point, size: size)
+            return
+        }
         at(point, size: size) { p in
             p.gardenPatch(at: CGPoint(x: 0, y: 7), width: 135, color: p.colors.accent)
             for i in 0..<5 {
@@ -10909,7 +11393,7 @@ private struct ThemePainter {
             let rect = CGRect(x: point.x - 27, y: point.y + size + 7, width: 54, height: 24)
             rounded(rect, radius: 6, color: colors.shade)
             context.draw(Text(verbatim: time.digitalText).font(.system(size: 12, weight: .bold, design: .monospaced))
-                .foregroundStyle(Color(dinoHex: 0xFFF1B8)), at: CGPoint(x: rect.midX, y: rect.midY))
+                .canvasInk(Color(dinoHex: 0xFFF1B8)), at: CGPoint(x: rect.midX, y: rect.midY))
         }
     }
     func pond(at point: CGPoint, size: CGFloat, lava: Bool) {

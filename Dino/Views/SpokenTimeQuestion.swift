@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct SpokenTimeQuestion: View {
     @Environment(\.dinoHighContrast) private var highContrast
@@ -17,8 +18,9 @@ struct SpokenTimeQuestion: View {
                 clock
                 sentence(prompt)
                 VStack(spacing: 8) {
+                    let fontSize = optionFontSize(for: prompt)
                     ForEach(Array(prompt.slots.enumerated()), id: \.element.id) { index, slot in
-                        slotRow(slot, index: index, prompt: prompt)
+                        slotRow(slot, index: index, prompt: prompt, fontSize: fontSize)
                     }
                 }
                 .padding(.horizontal, 12)
@@ -58,21 +60,34 @@ struct SpokenTimeQuestion: View {
     }
 
     private var clock: some View {
-        let face = min(compact ? 120 : 148, width * (compact ? 0.34 : 0.4))
-        return HStack(spacing: 18) {
-            AnalogClock(time: session.question.target, theme: theme, size: face)
-                .accessibilityIdentifier("\(prefix).targetClock")
-            DigitalClock(time: session.question.target, theme: theme, fontSize: min(40, width * 0.11))
-                .accessibilityIdentifier("\(prefix).spoken.digital")
-        }
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 12)
-        .background(.white, in: RoundedRectangle(cornerRadius: 28))
-        .overlay(RoundedRectangle(cornerRadius: 28).stroke(highContrast ? DinoStyle.ink : .white, lineWidth: highContrast ? 3 : 2))
+        DigitalClock(time: session.question.target, theme: theme, fontSize: min(compact ? 36 : 46, width * 0.13))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .background(.white, in: RoundedRectangle(cornerRadius: 28))
+            .overlay(RoundedRectangle(cornerRadius: 28).stroke(highContrast ? DinoStyle.ink : .white, lineWidth: highContrast ? 3 : 2))
+            .accessibilityIdentifier("\(prefix).targetClock")
     }
 
-    private func slotRow(_ slot: SpokenTimeSlot, index: Int, prompt: SpokenTimePrompt) -> some View {
+    /// One size for every stone, small enough that the longest word still fits the narrowest row.
+    private func optionFontSize(for prompt: SpokenTimePrompt) -> CGFloat {
+        let titles = prompt.slots.flatMap(\.choices).map(buttonTitle)
+        let longest = titles.max { Self.textWidth($0, size: 100) < Self.textWidth($1, size: 100) } ?? ""
+        let columns = max(1, prompt.slots.map(\.choices.count).max() ?? 1)
+        let buttonWidth = (width - 24 - 64 - 8 - CGFloat(columns - 1) * 6) / CGFloat(columns)
+        let available = max(20, buttonWidth - 8 - 18)
+        var size: CGFloat = 16
+        while size > 10, Self.textWidth(longest, size: size) > available { size -= 0.5 }
+        return size
+    }
+
+    private static func textWidth(_ text: String, size: CGFloat) -> CGFloat {
+        let base = UIFont.systemFont(ofSize: size, weight: .bold)
+        let font = base.fontDescriptor.withDesign(.rounded).map { UIFont(descriptor: $0, size: size) } ?? base
+        return (text as NSString).size(withAttributes: [.font: font]).width
+    }
+
+    private func slotRow(_ slot: SpokenTimeSlot, index: Int, prompt: SpokenTimePrompt, fontSize: CGFloat) -> some View {
         HStack(alignment: .center, spacing: 8) {
             Text(verbatim: slot.title)
                 .font(.system(size: 12, weight: .bold, design: .rounded))
@@ -83,19 +98,19 @@ struct SpokenTimeQuestion: View {
                 .accessibilityIdentifier("\(prefix).spoken.slot.\(index)")
             HStack(spacing: 6) {
                 ForEach(Array(slot.choices.enumerated()), id: \.element.id) { choiceIndex, choice in
-                    choiceButton(choice, slot: index, choiceIndex: choiceIndex, prompt: prompt)
+                    choiceButton(choice, slot: index, choiceIndex: choiceIndex, prompt: prompt, fontSize: fontSize)
                         .frame(maxWidth: .infinity)
                 }
             }
         }
     }
 
-    private func choiceButton(_ choice: SpokenTimeChoice, slot: Int, choiceIndex: Int, prompt: SpokenTimePrompt) -> some View {
+    private func choiceButton(_ choice: SpokenTimeChoice, slot: Int, choiceIndex: Int, prompt: SpokenTimePrompt, fontSize: CGFloat) -> some View {
         let selectedID = selection(slot: slot, prompt: prompt)
         let selected = selectedID == choice.id
         let correctID = prompt.correct.choiceIDs[slot]
         let revealed = !isDemonstration && session.hasFeedback
-        let showCorrect = isDemonstration || (revealed && choice.id == correctID)
+        let showCorrect = choice.id == correctID && (isDemonstration || revealed)
         let showWrong = revealed && selected && choice.id != correctID
         let title = buttonTitle(choice)
         return Button {
@@ -104,13 +119,12 @@ struct SpokenTimeQuestion: View {
             HStack(spacing: 4) {
                 Text(verbatim: title)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.65)
                 if showWrong || showCorrect || (selected && !revealed) {
                     Image(systemName: showWrong ? "xmark" : "checkmark")
-                        .font(.system(size: 11, weight: .heavy))
+                        .font(.system(size: fontSize * 0.7, weight: .heavy))
                 }
             }
-            .font(.system(size: 15, weight: .bold, design: .rounded))
+            .font(.system(size: fontSize, weight: .bold, design: .rounded))
             .foregroundStyle(DinoStyle.ink)
             .padding(.horizontal, 4)
             .frame(maxWidth: .infinity, minHeight: 40)
@@ -120,19 +134,21 @@ struct SpokenTimeQuestion: View {
         }
         .buttonStyle(DinoAnswerButtonStyle())
         .allowsHitTesting(!isDemonstration && !session.hasFeedback)
-        .accessibilityLabel(choice.id == SpokenTimeChoice.emptyID ? choice.accessibility : title)
+        .accessibilityLabel(title)
         .accessibilityAddTraits(selected ? .isSelected : [])
         .accessibilityIdentifier("\(prefix).spoken.\(slot).\(choiceIndex)")
     }
 
     private func selection(slot: Int, prompt: SpokenTimePrompt) -> String? {
-        if isDemonstration { return prompt.correct.choiceIDs[slot] }
+        if isDemonstration {
+            let correct = prompt.correct.choiceIDs[slot]
+            return correct == SpokenTimeChoice.emptyID ? nil : correct
+        }
         guard session.spokenChoices.indices.contains(slot) else { return nil }
         return session.spokenChoices[slot]
     }
 
     private func buttonTitle(_ choice: SpokenTimeChoice) -> String {
-        if choice.id == SpokenTimeChoice.emptyID { return choice.word }
         guard let first = choice.word.first else { return choice.word }
         return String(first).uppercased() + choice.word.dropFirst()
     }
@@ -150,23 +166,19 @@ struct SpokenTimeQuestion: View {
     }
 
     private func confirm(_ prompt: SpokenTimePrompt) -> some View {
-        let complete = prompt.slots.indices.allSatisfy { slot in
-            session.spokenChoices.indices.contains(slot) && session.spokenChoices[slot] != nil
-        }
-        return Group {
+        Group {
             if !session.hidesAnswerControls {
                 Button {
-                    let ids = prompt.slots.indices.compactMap { index -> String? in
-                        session.spokenChoices.indices.contains(index) ? session.spokenChoices[index] : nil
+                    let ids = prompt.slots.indices.map { index -> String in
+                        guard session.spokenChoices.indices.contains(index) else { return SpokenTimeChoice.emptyID }
+                        return session.spokenChoices[index] ?? SpokenTimeChoice.emptyID
                     }
-                    guard ids.count == prompt.slots.count else { return }
                     session.submit(.spoken(SpokenTimeAnswer(choiceIDs: ids)))
                 } label: {
                     Image(systemName: "checkmark").font(.title2.bold())
                 }
                 .buttonStyle(DinoButtonStyle())
                 .frame(maxWidth: 260)
-                .disabled(!complete)
                 .allowsHitTesting(!session.hasFeedback)
                 .accessibilityHidden(session.hasFeedback)
                 .accessibilityIdentifier("question.confirm")

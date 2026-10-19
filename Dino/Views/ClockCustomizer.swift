@@ -318,7 +318,7 @@ struct MyClocksView: View {
         .modifier(CustomizationTypography(optionsInset: 80))
         .toolbar(.hidden, for: .navigationBar)
         .onAppear { theme = player.profile.clockTheme }
-        .onChange(of: theme) { _, updated in
+        .onValueChange(of: theme) { updated in
             player.setTheme(updated)
         }
         .onDisappear { player.completeClockCustomization(theme: theme) }

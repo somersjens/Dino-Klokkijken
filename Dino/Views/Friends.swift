@@ -201,6 +201,24 @@ private struct FriendListRow: View {
     }
 }
 
+/// Same empty profile as `ContentUnavailableView` on iOS 17, with a plain layout before that.
+private struct MissingFriendProfile: View {
+    var body: some View {
+        if #available(iOS 17, *) {
+            ContentUnavailableView(L("dino.friends.notAvailable"), systemImage: "person.crop.circle.badge.questionmark", description: Text("dino.friends.profileUnavailable"))
+        } else {
+            VStack(spacing: 12) {
+                Image(systemName: "person.crop.circle.badge.questionmark")
+                    .font(.system(size: 48))
+                    .foregroundStyle(DinoStyle.muted)
+                Text(verbatim: L("dino.friends.notAvailable")).font(.title2.bold()).multilineTextAlignment(.center)
+                Text("dino.friends.profileUnavailable").font(.body).multilineTextAlignment(.center).foregroundStyle(DinoStyle.muted)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+}
+
 struct FriendProfileView: View {
     @EnvironmentObject private var manager: FriendsManager
     @State private var showsParent = false
@@ -246,7 +264,7 @@ struct FriendProfileView: View {
                     Text("dino.friends.reportHelp").font(.footnote)
                 }.padding(20).frame(maxWidth: 560).frame(maxWidth: .infinity)
             } else {
-                ContentUnavailableView(L("dino.friends.notAvailable"), systemImage: "person.crop.circle.badge.questionmark", description: Text("dino.friends.profileUnavailable"))
+                MissingFriendProfile()
                     .padding(20).accessibilityIdentifier("friends.profileUnavailable")
             }
         }.background(JungleBackground(quiet: true)).foregroundStyle(DinoStyle.ink)

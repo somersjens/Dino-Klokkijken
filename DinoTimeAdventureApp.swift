@@ -27,7 +27,7 @@ struct DinoTimeAdventureApp: App {
                 .modifier(DinoContrastEnvironment(enabled: settings.highContrastEnabled))
                 .background(GameCenterPresentationAnchor(manager: friends).frame(width: 0, height: 0))
                 .task { friends.connect(player); cloudSync.connect(player: player, settings: settings) }
-                .onChange(of: scenePhase) { _, phase in
+                .onValueChange(of: scenePhase) { phase in
                     if phase == .active { friends.foreground(); cloudSync.synchronize() }
                     else if phase == .background { friends.background(); cloudSync.synchronize() }
                 }

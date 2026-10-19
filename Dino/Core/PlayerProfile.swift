@@ -76,7 +76,7 @@ struct PlayerProfile: Codable, Equatable, Sendable {
     }
     var adventureComplete: Bool { DinoWorldCatalog.worlds.allSatisfy { worldComplete($0.id) } }
     var totalStars: Int { DinoLevelCatalog.levels.filter { !$0.isBoss }.reduce(0) { $0 + record($1.id).stars } }
-    /// Zero identifies the blank start point, never a playable level.
+    /// Highest finished level. Zero means nothing is finished yet.
     var dinoLevel: Int {
         DinoLevelCatalog.levels.last { $0.isBoss ? worldComplete($0.worldID) : record($0.id).stars >= 1 }?.id ?? 0
     }
@@ -84,6 +84,8 @@ struct PlayerProfile: Codable, Equatable, Sendable {
         guard !adventureComplete, let next = DinoLevelCatalog.level(dinoLevel + 1), isUnlocked(next.id) else { return nil }
         return next.id
     }
+    /// The stone Dino stands on: the next unlocked level, or the last level once the adventure is finished.
+    var mapLevel: Int { nextAdventureLevel ?? max(1, dinoLevel) }
     var unlockedLevels: [Int] { DinoLevelCatalog.levels.map(\.id).filter(isUnlocked) }
     func record(_ id: Int) -> LevelRecord { levels[String(id)] ?? LevelRecord() }
 

@@ -21,7 +21,7 @@ struct WorldMap: View {
     @State private var hintedLevel: Int?
     @State private var celebrationID: UUID?
 
-    private var guidedLevel: Int? { player.needsFirstLevelHint ? 1 : hintedLevel }
+    private var guidedLevel: Int? { player.needsFirstLevelHint ? player.profile.mapLevel : hintedLevel }
 
     var body: some View {
         GeometryReader { geometry in
@@ -43,7 +43,7 @@ struct WorldMap: View {
                                         bossShortcut
                                     }.padding(.horizontal, 18).padding(.bottom, 2)
                                         .frame(maxWidth: 600).frame(maxWidth: .infinity)
-                                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { landscapeRouteOffset = $0 }
+                                        .readGeometry(for: CGFloat.self) { $0.size.height } action: { landscapeRouteOffset = $0 }
                                     mapRoute(topClearance: routeTopClearance)
                                 }.padding(.top, floatingHUDHeight + geometry.safeAreaInsets.top)
                                     .background {
@@ -53,14 +53,14 @@ struct WorldMap: View {
                                                 .equatable()
                                         }
                                     }
-                                    .onGeometryChange(for: Bool.self) {
+                                    .readGeometry(for: Bool.self) {
                                         $0.frame(in: .named("adventure.map.viewport")).minY <= floatingHUDHeight + 24
                                     } action: { updateVisibleWorld(1, aboveHUD: $0) }
                                 ForEach(DinoWorldCatalog.worlds.dropFirst()) { world in
                                     WorldChapter(world: world, topClearance: routeTopClearance,
                                                  viewportHeight: geometry.size.height, hintedLevel: guidedLevel,
                                                  openLevel: selectLevel)
-                                        .onGeometryChange(for: Bool.self) {
+                                        .readGeometry(for: Bool.self) {
                                             $0.frame(in: .named("adventure.map.viewport")).minY <= floatingHUDHeight + 24
                                         } action: { updateVisibleWorld(world.id, aboveHUD: $0) }
                                 }
@@ -72,12 +72,10 @@ struct WorldMap: View {
                             hintedLevel = nil
                             celebrationID = nil
                             let requested = focusRequest > 0
-                            // A fresh install keeps the route at the top. The finger still
-                            // marks level 1, and the start stone opens that level.
-                            let target = requested
-                                ? player.profile.nextAdventureLevel ?? player.profile.dinoLevel
-                                : player.profile.dinoLevel
-                            guard target > 0 else { return }
+                            // Level 1 is the entrance. A fresh visit keeps that entrance at the
+                            // top; the header still centers the next playable stone.
+                            let target = player.profile.mapLevel
+                            guard requested || target > 1 else { return }
                             // Center the next stone in the space beneath the floating HUD.
                             let anchor = UnitPoint(x: 0.5, y: min(0.78, 0.5 + (floatingHUDHeight + geometry.safeAreaInsets.top) / (2 * max(1, geometry.size.height))))
                             withAnimation(requested && !reduceMotion ? .easeInOut(duration: 0.55) : nil) {
@@ -107,7 +105,7 @@ struct WorldMap: View {
                                     compact: verticalSizeClass == .compact, viewportHeight: geometry.size.height,
                                     control: .settings, help: openPractice, focusLevel: { focusRequest += 1 },
                                     openStars: { showsStars = true }, action: openSettings)
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+                        .readGeometry(for: CGFloat.self) { $0.size.height } action: {
                             floatingHUDHeight = $0
                             hudHeightChanged($0)
                         }
@@ -226,29 +224,26 @@ struct WorldMap: View {
 
     private var routeNodes: some View {
         GeometryReader { g in
-            let dinoLevel = player.profile.dinoLevel
+            let standingLevel = player.profile.mapLevel
             let dinoSize = min(200, g.size.width * 0.37)
             let topClearance = max(0, dinoSize - 82)
-            let points = (0...10).map { routePoint($0, width: g.size.width, topClearance: topClearance) }
+            let points = JungleMapLayout.levelPositions.indices.map { routePoint($0, width: g.size.width, topClearance: topClearance) }
             ZStack(alignment: .topLeading) {
-                WorldRouteTrail(points: points, exitY: g.size.height).equatable()
+                WorldRouteTrail(points: points, exitY: g.size.height, exitX: g.size.width / 2).equatable()
                 // Real rows provide accurate scroll anchors; positioned artwork alone does not.
                 VStack(spacing: 0) {
-                    ForEach(0...10, id: \.self) { index in
+                    ForEach(1...10, id: \.self) { id in
+                        let index = id - 1
                         let point = points[index]
+                        let level = DinoLevelCatalog.level(id)!
                         ZStack {
-                            Group {
-                                if index == 0 {
-                                    startPoint
-                                } else if let level = DinoLevelCatalog.level(index) {
-                                    LevelNode(level: level, record: player.profile.record(index),
-                                              unlocked: player.profile.isUnlocked(index),
-                                              current: dinoLevel == index,
-                                              bossComplete: player.profile.worldOneComplete,
-                                              showsGuide: guidedLevel == index) { selectLevel(level) }
-                                }
-                            }.offset(x: point.x - g.size.width / 2)
-                            if dinoLevel == index {
+                            LevelNode(level: level, record: player.profile.record(id),
+                                      unlocked: player.profile.isUnlocked(id),
+                                      current: standingLevel == id,
+                                      bossComplete: player.profile.worldOneComplete,
+                                      showsGuide: guidedLevel == id) { selectLevel(level) }
+                                .offset(x: point.x - g.size.width / 2)
+                            if standingLevel == id {
                                 ZStack(alignment: .bottom) {
                                     Ellipse().fill(Color(dinoHex: 0x38552D).opacity(0.25))
                                         .frame(width: dinoSize * 0.48, height: dinoSize * 0.12)
@@ -256,48 +251,24 @@ struct WorldMap: View {
                                     DinoCharacter(state: .happy, size: dinoSize)
                                 }
                                     .allowsHitTesting(false)
-                                    .accessibilityIdentifier("map.dino.\(index)")
+                                    .accessibilityIdentifier("map.dino.\(id)")
                                     .offset(x: point.x - g.size.width / 2,
                                             y: -dinoSize / 2 + 12)
                             }
-                            if index > 0, !friends.friends(at: index).isEmpty {
-                                FriendMapAvatars(friends: friends.friends(at: index), openFriend: { selectedFriend = FriendSelection(id: $0) }, openMore: openFriends)
+                            if !friends.friends(at: id).isEmpty {
+                                FriendMapAvatars(friends: friends.friends(at: id), openFriend: { selectedFriend = FriendSelection(id: $0) }, openMore: openFriends)
                                     .offset(x: point.x - g.size.width / 2, y: 82)
                             }
-                        }.frame(width: g.size.width, height: 175).id("node-\(index)")
+                        }.frame(width: g.size.width, height: 175).id("node-\(id)")
                     }
                 }.padding(.top, topClearance - 17.5)
             }
         }.environment(\.layoutDirection, .leftToRight)
     }
 
-    private var startPoint: some View {
-        let marker = JungleLevelStone(unlocked: true, occupied: player.profile.dinoLevel == 0, start: true, highContrast: highContrast)
-            .frame(width: 96, height: 96)
-            .shadow(color: DinoStyle.deepGreen.opacity(0.18), radius: 12, y: 8)
-            .overlay(alignment: .bottom) {
-                Text("dino.startPoint").font(.system(size: 13, weight: .heavy, design: .rounded)).fixedSize()
-                    .padding(.horizontal, 18).padding(.vertical, 7)
-                    .background(Color(dinoHex: 0xFFFBE1), in: Capsule())
-                    .overlay(Capsule().stroke(DinoStyle.deepGreen.opacity(0.18), lineWidth: 1.5))
-                    .offset(y: 25)
-            }
-            .accessibilityIdentifier("map.start")
-        // Until the first star, the stone the dino stands on is the way in.
-        return Group {
-            if player.profile.dinoLevel == 0, let first = DinoLevelCatalog.level(1) {
-                Button { selectLevel(first) } label: { marker }
-                    .buttonStyle(.plain)
-                    .contentShape(Rectangle())
-            } else {
-                marker
-            }
-        }
-    }
-
     private func routePoint(_ index: Int, width: CGFloat, topClearance: CGFloat) -> CGPoint {
-        let positions: [CGFloat] = [0.5] + WorldRouteTrail.chapterPositions
-        return CGPoint(x: width * positions[index], y: topClearance + 70 + CGFloat(index) * 175)
+        CGPoint(x: width * JungleMapLayout.levelPositions[index],
+                y: topClearance + JungleMapLayout.firstNodeY + CGFloat(index) * WorldRouteTrail.levelSpacing)
     }
 
 }
@@ -379,7 +350,7 @@ private struct MapScenery<Content: View>: View {
     var body: some View {
         Color.clear
             .overlay { if isNearby { content() } }
-            .onGeometryChange(for: Bool.self) { geometry in
+            .readGeometry(for: Bool.self) { geometry in
                 let frame = geometry.frame(in: .named("adventure.map.viewport"))
                 let margin = max(1200, viewportHeight * 2)
                 return frame.maxY >= -margin && frame.minY <= viewportHeight + margin
@@ -405,9 +376,10 @@ struct LevelNode: View {
     var body: some View {
         Button(action: action) {
                 ZStack {
+                    let theme = DinoWorldCatalog.world(level.worldID)?.themeID ?? level.worldID
                     if level.worldID == 1 {
                         JungleLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
-                    } else if level.worldID == 2 {
+                    } else if theme == 2 {
                         SleepValleyLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
                     } else if level.worldID == 3 {
                         VolcanoLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
@@ -417,9 +389,8 @@ struct LevelNode: View {
                         CrystalLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
                     } else if level.worldID == 6 {
                         CityLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
-                    } else if level.worldID == 7 {
-                        DayNightLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast,
-                                          night: Double(level.id - 61) / 9)
+                    } else if theme == 7 {
+                        DinoDesertLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
                     } else if level.worldID == 8 {
                         TimeMachineLevelStone(unlocked: unlocked, occupied: current, boss: level.isBoss, highContrast: highContrast)
                     } else if level.worldID == 9 {
@@ -444,8 +415,8 @@ struct LevelNode: View {
             .accessibilityIdentifier("map.level.\(level.id)")
             .overlay(alignment: .bottom) {
                 if !level.isBoss {
-                    DinoStars(count: record.stars, size: 22, showEmpty: record.stars > 0)
-                        .frame(height: 20).offset(y: 32).allowsHitTesting(false)
+                    DinoStars(count: record.stars, size: 26, showEmpty: record.stars > 0)
+                        .frame(width: 88, height: 30).offset(y: 29).allowsHitTesting(false)
                 }
             }
             .overlay {
@@ -461,11 +432,10 @@ struct LevelNode: View {
 private struct JungleLevelStone: View {
     var unlocked: Bool
     var occupied: Bool
-    var start = false
     var boss = false
     var highContrast = false
 
-    private var face: Color { Color(dinoHex: boss ? 0x244F52 : !unlocked ? 0xA5B69B : start ? 0xD6E99B : 0x81D349) }
+    private var face: Color { Color(dinoHex: boss ? 0x244F52 : !unlocked ? 0xA5B69B : 0x81D349) }
 
     var body: some View {
         GeometryReader { geometry in
@@ -483,9 +453,6 @@ private struct JungleLevelStone: View {
                     Circle().fill(Color(dinoHex: 0xF6F8D5).opacity(highContrast ? 0.22 : 0.48)).padding(7)
                     Circle().stroke(Color(dinoHex: 0xF6FFD4).opacity(0.85), lineWidth: 2).padding(-5)
                     Circle().stroke(DinoStyle.green.opacity(0.25), lineWidth: 4).padding(-10)
-                }
-                if start {
-                    Circle().stroke(Color(dinoHex: 0x729E45).opacity(0.32), style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [1, 7])).padding(14)
                 }
                 Canvas { context, size in
                     for i in 0..<7 {
@@ -921,7 +888,7 @@ private struct WorldChapter: View {
                 .accessibilityIdentifier("map.world.\(world.id)")
             Color.clear.frame(height: topClearance)
             GeometryReader { geometry in
-                let dinoLevel = player.profile.dinoLevel
+                let standingLevel = player.profile.mapLevel
                 let bossComplete = player.profile.worldComplete(world.id)
                 ZStack(alignment: .top) {
                 VStack(spacing: 0) {
@@ -931,10 +898,10 @@ private struct WorldChapter: View {
                         ZStack {
                             LevelNode(level: level, record: player.profile.record(id),
                                       unlocked: player.profile.isUnlocked(id),
-                                      current: dinoLevel == id,
+                                      current: standingLevel == id,
                                       bossComplete: bossComplete,
                                       showsGuide: hintedLevel == id) { openLevel(level) }
-                            if dinoLevel == id {
+                            if standingLevel == id {
                                 ZStack(alignment: .bottom) {
                                     Ellipse().fill(Color(dinoHex: 0x38552D).opacity(0.25))
                                         .frame(width: dinoSize * 0.48, height: dinoSize * 0.12)
@@ -996,7 +963,7 @@ struct LevelInfoPanel: View {
             }
             .padding(26).frame(maxWidth: 450).frame(maxWidth: .infinity, alignment: .top)
         }
-        .scrollBounceBehavior(.basedOnSize)
+        .bouncesOnlyWhenNeeded()
         .background(JungleBackground(quiet: true)).foregroundStyle(DinoStyle.ink)
     }
 }

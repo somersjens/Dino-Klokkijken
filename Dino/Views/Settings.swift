@@ -43,8 +43,8 @@ struct DinoSettingsView: View {
                         ScrollView {
                             resetCard(compact: geometry.size.height < 700)
                                 .padding(16)
-                        }.scrollBounceBehavior(.basedOnSize)
-                            .defaultScrollAnchor(.center, for: .alignment)
+                        }.bouncesOnlyWhenNeeded()
+                            .centersShortContent()
                             .frame(maxWidth: 460)
                     }
                 }.background(JungleBackground(quiet: true))
@@ -54,7 +54,7 @@ struct DinoSettingsView: View {
             .sheet(isPresented: $showsGameCenter) { DinoFriendsView().gameEnvironment() }
             .sheet(isPresented: $showsLanguages) { LanguagePicker() }
         }.foregroundStyle(DinoStyle.ink)
-            .onChange(of: confirmReset) { _, shown in
+            .onValueChange(of: confirmReset) { shown in
                 if shown {
                     challenge = ResetChallenge.make()
                     resetAnswer = ""
