@@ -6,8 +6,8 @@ Het bovenste bord heeft nu eigen materialen en ornamenten voor alle tien werelde
 
 ## Opbouw en aanpassingen
 
-- `ResultScenery` tekent vier afzonderlijke lagen: lucht, verte, gras en begroeiing. Wolken, heuvels, doorlopende grasbanken, grassprietjes, bloemen, takken, lianen en bladeren zijn getekende vormen. De oude achtergrondillustraties worden hier niet meer geladen.
-- De bladeren delen `DinoFoliageLeaf`, `DinoFoliageFold` en `DinoFoliageVeins` met de levelkaart. Een afzonderlijk palet gebruikt de `themeID` van de wereld; de wereldvolgorde bepaalt de kleuren niet.
+- `ResultScenery` tekent vier landschapslagen: lucht, verte, gras en lage begroeiing. Een aparte `DinoResultHeaderBackdrop` deelt het materiaal en de compositie met het levelbord. De bovenhoeken gebruiken dezelfde bladeren, steen of metaal als de wereldversiering van het bord. De oude achtergrondillustraties worden hier niet meer geladen.
+- De lage begroeiing deelt `DinoFoliageLeaf`, `DinoFoliageFold` en `DinoFoliageVeins` met de levelkaart. De bovenhoeken delen hun vormen en materialen met het bord. De paletten volgen de `themeID` van de wereld; de wereldvolgorde bepaalt de kleuren niet.
 - De lagen kunnen later afzonderlijk bewegen. `windPhase` biedt een aangrijpingspunt voor bladbeweging; er draait nog geen permanente achtergrondanimatie.
 - De score staat met zijn materiaalvlak direct onder het houten bord in de lucht. De vrijgekomen ruimte onder de steen laat Dino en het podium nog iets zakken. Eén layout berekent de voetlijn, het stenen bovenoppervlak en de sterren op de voorzijde samen, zodat ze ook op een kleine iPhone bij elkaar blijven passen.
 - De leveltitel is 10% kleiner en optisch gecentreerd op het hout.

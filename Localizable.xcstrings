@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    ", " : {
+
+    },
     "?" : {
 
     },
@@ -4852,6 +4855,23 @@
         }
       }
     },
+    "dino.practice.question.sayTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Say the time"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeg de tijd"
+          }
+        }
+      }
+    },
     "dino.practice.question.setAnalog" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4899,23 +4919,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zet tijden op volgorde"
-          }
-        }
-      }
-    },
-    "dino.practice.question.sayTime" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Say the time"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeg de tijd"
           }
         }
       }
@@ -5481,6 +5484,23 @@
         }
       }
     },
+    "dino.question.sayTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How do you say this time?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoe zeg je deze tijd?"
+          }
+        }
+      }
+    },
     "dino.question.setAnalog" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5528,40 +5548,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Van vroeg naar laat"
-          }
-        }
-      }
-    },
-    "dino.question.sayTime" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "How do you say this time?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hoe zeg je deze tijd?"
-          }
-        }
-      }
-    },
-    "dino.spoken.hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap the right tiles below"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Klik op de juiste stenen hieronder"
           }
         }
       }
@@ -6463,6 +6449,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Klaar voor een avontuur?"
+          }
+        }
+      }
+    },
+    "dino.spoken.hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the right tiles below"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klik op de juiste stenen hieronder"
           }
         }
       }

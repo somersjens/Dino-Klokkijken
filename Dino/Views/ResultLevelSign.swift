@@ -84,6 +84,24 @@ struct DinoResultLevelSign: View, Animatable {
 private enum ResultSignLayer { case rear, panel, front }
 private enum ResultSignMaterial { case wood, mineral, metal }
 
+/// The far corner layer uses the same materials as the foreground sign.
+/// Its placement is measured against the actual sign frame, including safe areas.
+struct DinoResultHeaderBackdrop: View {
+    let worldID: Int
+    let signFrame: CGRect
+    var windPhase: Double = 0
+
+    var body: some View {
+        let theme = (DinoWorldCatalog.world(worldID) ?? DinoWorldCatalog.worlds[0]).themeID
+        Canvas(rendersAsynchronously: true) { context, size in
+            ResultSignPainter(context: context, palette: ResultSignPalette(themeID: theme), pose: .init())
+                .headerBackdrop(in: size, signFrame: signFrame, windPhase: windPhase)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
 private struct ResultSignPalette {
     let themeID: Int
     var material: ResultSignMaterial = .wood
@@ -154,6 +172,191 @@ private struct ResultSignPainter {
             c.scaleBy(x: side == 0 ? 1 : -1, y: 1)
             c.rotate(by: .degrees(side == 0 ? pose.leftSway : pose.rightSway))
             ResultSignPainter(context: c, palette: palette, pose: pose).ornament(front: layer == .front, side: side)
+        }
+    }
+
+    /// Far corners frame the board and overlap only its outer ornaments. A tall,
+    /// narrow phone and a wide iPad therefore share a composition, not fixed crops.
+    func headerBackdrop(in size: CGSize, signFrame: CGRect, windPhase: Double) {
+        let unit = min(1.10, max(0.85, size.width / 800))
+        var backdrop = palette
+        backdrop.accentLight = mix(palette.accentLight, palette.accent, 0.52)
+        backdrop.accent = mix(palette.accent, palette.accentShade, 0.39)
+        backdrop.light = mix(palette.light, palette.face, 0.52)
+        backdrop.face = mix(palette.face, palette.dark, 0.22)
+        for right in [false, true] {
+            let plantWorld = [1, 2, 4, 7, 9].contains(theme)
+            let leaves = crownLeaves(right: right)
+            let bounds: [CGRect]
+            if plantWorld {
+                bounds = leaves.enumerated().map { index, item in
+                    let (root, length, width, angle) = item
+                    let transform = CGAffineTransform(rotationAngle: angle * .pi / 180)
+                        .concatenating(CGAffineTransform(translationX: root.x, y: root.y))
+                    let shape = theme == 1
+                        ? jungleLeafShape(length: length, width: width, curl: index.isMultiple(of: 2) ? 0.12 : -0.08)
+                        : DinoFoliageLeaf().path(in: CGRect(x: 0, y: 0, width: width, height: length))
+                            .offsetBy(dx: -width / 2, dy: -length)
+                    return shape.applying(transform).boundingRect
+                } + [CGRect(x: -24, y: -35, width: 179, height: 115)]
+            } else {
+                bounds = [CGRect(x: -24, y: -24, width: 76, height: 160),
+                          CGRect(x: 24, y: -24, width: 171, height: 76)]
+            }
+            let mirror = CGAffineTransform(a: right ? -unit : unit, b: 0, c: 0, d: unit,
+                                          tx: right ? size.width : 0, ty: 0)
+            // Background growth may overlap the outer ornaments as a darker layer;
+            // its inner tips stop above the board face. Structural posts stay in
+            // the side gutters while their lintel frames the top of the scene.
+            let clearance = signFrame.insetBy(dx: plantWorld ? 0 : signFrame.width * 0.14, dy: 0)
+            let nearestBottom = bounds.map { $0.applying(mirror) }
+                .filter { $0.maxX > clearance.minX && $0.minX < clearance.maxX }
+                .map(\.maxY).max() ?? 0
+            let ceiling = signFrame.minY + (plantWorld ? signFrame.width * 0.045 : -10)
+            let lift = min(0, ceiling - nearestBottom)
+            var c = context
+            c.translateBy(x: right ? size.width : 0, y: lift)
+            c.scaleBy(x: right ? -unit : unit, y: unit)
+            c.opacity = theme == 2 ? 0.62 : 0.76
+            let painter = ResultSignPainter(context: c, palette: backdrop, pose: pose)
+            if plantWorld { painter.crownGrowth(leaves, right: right, windPhase: windPhase) }
+            else { painter.crownStructure(right: right) }
+        }
+        // A quieter outer contour connects the tree canopy to the rest of the
+        // scene; small leaves are placed on the curve and outside the sign.
+        if [1, 2, 4, 7, 9].contains(theme) {
+            for right in [false, true] {
+                var c = context
+                if right { c.translateBy(x: size.width, y: 0); c.scaleBy(x: -1, y: 1) }
+                c.opacity = 0.44
+                ResultSignPainter(context: c, palette: backdrop, pose: pose)
+                    .crownVine(signFrame: signFrame, unit: unit)
+            }
+        }
+    }
+
+    private func mix(_ a: UInt32, _ b: UInt32, _ amount: Double) -> UInt32 {
+        func channel(_ shift: UInt32) -> UInt32 {
+            UInt32(Double((a >> shift) & 255) * (1 - amount) + Double((b >> shift) & 255) * amount)
+        }
+        return channel(16) << 16 | channel(8) << 8 | channel(0)
+    }
+
+    private func crownRoot(_ t: CGFloat) -> CGPoint {
+        let u = 1 - t
+        return p(u * u * u * -24 + 3 * u * u * t * 18 + 3 * u * t * t * 76 + t * t * t * 155,
+                 u * u * u * 80 + 3 * u * u * t * 43 + 3 * u * t * t * -9 + t * t * t * -35)
+    }
+
+    private func crownLeaves(right: Bool) -> [(CGPoint, CGFloat, CGFloat, CGFloat)] {
+        let lengths: [CGFloat] = right ? [98, 104, 119, 102] : [103, 111, 117, 107]
+        let angles: [CGFloat] = right ? [47, 124, 109, 97] : [52, 118, 113, 104]
+        return [CGFloat(0.13), 0.35, 0.58, 0.80].enumerated().map { index, t in
+            let narrow: CGFloat = theme == 7 || theme == 9 ? 0.28 : theme == 2 ? 0.38 : 0.57
+            return (crownRoot(t), lengths[index], lengths[index] * narrow, angles[index])
+        }
+    }
+
+    private func crownGrowth(_ leaves: [(CGPoint, CGFloat, CGFloat, CGFloat)], right: Bool, windPhase: Double) {
+        var branch = Path()
+        branch.move(to: p(-24, 80))
+        branch.addCurve(to: p(155, -35), control1: p(18, 43), control2: p(76, -9))
+        context.stroke(branch, with: .color(color(palette.shadow).opacity(0.60)),
+                       style: StrokeStyle(lineWidth: 15, lineCap: .round))
+        context.stroke(branch, with: .linearGradient(Gradient(colors: [color(palette.edge), color(palette.dark)]),
+                                                    startPoint: p(0, 70), endPoint: p(140, -30)),
+                       style: StrokeStyle(lineWidth: 9, lineCap: .round))
+        for (index, item) in leaves.enumerated() {
+            let (root, length, width, angle) = item
+            let sway = windPhase == 0 ? 0 : sin(windPhase + Double(index)) * 1.2
+            if theme == 1 {
+                jungleLeaf(at: root, length: length, width: width, angle: Double(angle) + sway,
+                           curl: index.isMultiple(of: 2) ? 0.12 : -0.08, depth: 0.20 + Double(index % 3) * 0.07)
+            } else {
+                leaf(at: root, length: length, width: width, angle: Double(angle) + sway)
+            }
+        }
+        if theme == 9 {
+            rope(from: p(-8, 65), to: p(133, -26), bend: right ? 6 : -8)
+        }
+    }
+
+    private func crownVine(signFrame: CGRect, unit: CGFloat) {
+        let endY = min(signFrame.maxY + 56, signFrame.minY + 210)
+        let start = p(4 * unit, -8), first = p(13 * unit, endY * 0.28)
+        let second = p(-1 * unit, endY * 0.72), end = p(6 * unit, endY)
+        var vine = Path()
+        vine.move(to: start)
+        vine.addCurve(to: end, control1: first, control2: second)
+        context.stroke(vine, with: .color(color(palette.accentShade)), style: StrokeStyle(lineWidth: 2.1 * unit, lineCap: .round))
+        for t: CGFloat in [0.18, 0.87] {
+            let u = 1 - t
+            let root = p(u * u * u * start.x + 3 * u * u * t * first.x + 3 * u * t * t * second.x + t * t * t * end.x,
+                         u * u * u * start.y + 3 * u * u * t * first.y + 3 * u * t * t * second.y + t * t * t * end.y)
+            let length = 21 * unit
+            if root.y + length > signFrame.minY - 12 && root.y - length < signFrame.maxY + 12 { continue }
+            leaf(at: root, length: length, width: length * 0.40, angle: 68)
+        }
+    }
+
+    private func crownStructure(right: Bool) {
+        if theme == 6 || theme == 8 {
+            // Continuous rails and sockets, rather than unconnected floating gears.
+            var rail = Path()
+            rail.move(to: p(-18, 136))
+            rail.addLine(to: p(25, 136))
+            rail.addLine(to: p(25, 27))
+            rail.addQuadCurve(to: p(53, 1), control: p(25, 1))
+            rail.addLine(to: p(195, 1))
+            context.stroke(rail.offsetBy(dx: 2, dy: 3), with: .color(color(palette.shadow)),
+                           style: StrokeStyle(lineWidth: 25, lineCap: .round, lineJoin: .round))
+            context.stroke(rail, with: .linearGradient(Gradient(colors: [color(palette.light), color(palette.face), color(palette.edge)]),
+                                                      startPoint: p(0, 0), endPoint: p(35, 132)),
+                           style: StrokeStyle(lineWidth: 19, lineCap: .round, lineJoin: .round))
+            line([p(19, 122), p(19, 30)], hex: palette.light, width: 2.4, opacity: 0.48)
+            for at in [p(25, 111), p(80, 1), p(162, 1)] { rivet(at: at, radius: 6) }
+            gear(at: p(33, 30), radius: theme == 8 ? 24 : 18)
+        } else {
+            let column = [p(-24, -24), p(53, -24), p(50, 37), p(37, 67), p(42, 104), p(18, 136), p(-24, 136)]
+            let beam = [p(24, -24), p(195, -24), p(180, 16), p(132, 18), p(107, 35), p(59, 52), p(25, 37)]
+            polygon(column.map { p($0.x + 3, $0.y + 4) },
+                    light: palette.edge, face: palette.shadow, dark: palette.shadow, opacity: 0.25)
+            polygon(beam.map { p($0.x + 3, $0.y + 4) },
+                    light: palette.edge, face: palette.shadow, dark: palette.shadow, opacity: 0.25)
+            polygon(column, light: palette.light, face: palette.dark, dark: palette.edge)
+            polygon(beam, light: palette.light, face: palette.face, dark: palette.edge)
+            // Quiet bevels and unequal planes keep the distant stone solid without
+            // matching the foreground sign's sharper contrast and fine edges.
+            polygon([p(37, 38), p(50, 37), p(37, 67), p(42, 104), p(18, 136), p(12, 132), p(31, 102), p(28, 66)],
+                    light: palette.light, face: palette.face, dark: palette.dark, opacity: 0.60)
+            polygon([p(50, 37), p(59, 52), p(107, 35), p(132, 18), p(180, 16), p(186, 8), p(128, 11), p(102, 27)],
+                    light: palette.light, face: palette.face, dark: palette.dark, opacity: 0.58)
+            polygon([p(-24, 37), p(28, 46), p(26, 64), p(-24, 77)],
+                    light: palette.light, face: palette.face, dark: palette.edge, opacity: 0.20)
+            polygon([p(42, -24), p(111, -24), p(102, 27), p(66, 38)],
+                    light: palette.light, face: palette.face, dark: palette.dark, opacity: 0.20)
+            line([p(20, 128), p(36, 102), p(32, 67), p(45, 37)], hex: palette.light, width: 1.5, opacity: 0.30)
+            line([p(61, 47), p(105, 31), p(131, 14), p(177, 12)], hex: palette.light, width: 1.6, opacity: 0.36)
+            if theme == 5 {
+                // The crystal roots are inside the ceiling rock. Their points face
+                // down, balancing the upward clusters on the sign itself.
+                for (at, length, width, tilt) in [(p(25, 3), CGFloat(54), CGFloat(28), 159.0),
+                                                 (p(91, -6), 63, 30, 171), (p(145, -13), 42, 24, 154)] {
+                    crystal(at: at, length: length, width: width, tilt: tilt)
+                }
+                polygon([p(-24, -24), p(166, -24), p(157, -3), p(103, 3), p(60, 20), p(11, 17), p(-24, 35)],
+                        light: palette.dark, face: palette.edge, dark: palette.accentShade)
+            } else if theme == 3 {
+                line([p(11, -8), p(18, 27), p(7, 46), p(20, 72), p(8, 103)], hex: palette.accent, width: 2.2, opacity: 0.55)
+                line([p(56, -5), p(78, 6), p(108, -2), p(126, 10)], hex: palette.accent, width: 1.8, opacity: 0.50)
+            } else {
+                for y: CGFloat in [26, 61, 97] {
+                    line([p(-12, y), p(38, y - 4)], hex: palette.edge, width: 1.6, opacity: 0.50)
+                    line([p(8, y - 4), p(8, y + 21)], hex: palette.edge, width: 1.1, opacity: 0.35)
+                }
+                line([p(64, -5), p(69, 29)], hex: palette.edge, width: 1.4, opacity: 0.40)
+                line([p(119, -6), p(125, 15)], hex: palette.edge, width: 1.4, opacity: 0.40)
+            }
         }
     }
 
@@ -550,20 +753,24 @@ private struct ResultSignPainter {
         }
     }
 
-    /// A fuller, softly rolled leaf for the sign's close-up foreground.
-    /// Other worlds retain their own finer leaf silhouettes.
+    private func jungleLeafShape(length: CGFloat, width: CGFloat, curl: CGFloat) -> Path {
+        let tip = p(width * curl, -length)
+        return Path { path in
+            path.move(to: .zero)
+            path.addCurve(to: tip, control1: p(-width * 0.57, -length * 0.16), control2: p(-width * 0.66, -length * 0.78))
+            path.addCurve(to: .zero, control1: p(width * 0.61, -length * 0.91), control2: p(width * 0.65, -length * 0.23))
+            path.closeSubpath()
+        }
+    }
+
+    /// The close leaves and the far crown share their silhouette and light model.
     private func jungleLeaf(at: CGPoint, length: CGFloat, width: CGFloat, angle: Double,
                             curl: CGFloat, depth: Double) {
         var c = context
         c.translateBy(x: at.x, y: at.y)
         c.rotate(by: .degrees(angle))
         let tip = p(width * curl, -length)
-        let shape = Path { path in
-            path.move(to: .zero)
-            path.addCurve(to: tip, control1: p(-width * 0.57, -length * 0.16), control2: p(-width * 0.66, -length * 0.78))
-            path.addCurve(to: .zero, control1: p(width * 0.61, -length * 0.91), control2: p(width * 0.65, -length * 0.23))
-            path.closeSubpath()
-        }
+        let shape = jungleLeafShape(length: length, width: width, curl: curl)
         func tone(_ a: UInt32, _ b: UInt32, _ amount: Double) -> Color {
             func channel(_ shift: UInt32) -> UInt32 {
                 UInt32(Double((a >> shift) & 255) * (1 - amount) + Double((b >> shift) & 255) * amount)

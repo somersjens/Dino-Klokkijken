@@ -156,6 +156,7 @@ private struct SevenSegmentDigit: View {
 
 struct DigitalClockControl: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Binding var hour: Int
     let theme: ClockTheme
     var minute = 0
@@ -165,6 +166,7 @@ struct DigitalClockControl: View {
     var valueIdentifier = "clock.value"
     var showHandHints = false
     var feedbackCorrect: Bool? = nil
+    var showsControls = true
     private var time: ClockTime { ClockTime(hour: hour, minute: minute) }
 
     var body: some View {
@@ -178,8 +180,10 @@ struct DigitalClockControl: View {
                         if let anchor = anchors[field] {
                             let center = geometry[anchor].midX
                             arrow(field: field, direction: 1)
+                                .scaleEffect(showsControls ? 1 : 0, anchor: .bottom)
                                 .position(x: center, y: 22)
                             arrow(field: field, direction: -1)
+                                .scaleEffect(showsControls ? 1 : 0, anchor: .top)
                                 .position(x: center, y: geometry.size.height - 22)
                             if showHandHints {
                                 ClockHintBadgeArrow(number: field == .minutes ? 2 : 1,
@@ -194,6 +198,9 @@ struct DigitalClockControl: View {
                         }
                     }
                 }
+                .allowsHitTesting(showsControls)
+                .accessibilityHidden(!showsControls)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: showsControls)
             }
             .padding(.top, showHandHints ? 48 : 0)
             .disabled(feedbackCorrect != nil)

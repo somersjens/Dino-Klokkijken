@@ -774,19 +774,20 @@ private struct DinoDesertLifeSurface: View {
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 16,
                                 paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
             Canvas { context, _ in
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSinceReferenceDate)
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 DinoDesertWindPainter(context: context, time: time).draw(frame: frame, scale: layout.scale)
             }
         }
         .readGeometry(for: Bool.self) { geometry in
             let rect = geometry.frame(in: .named("adventure.map.viewport"))
-            return rect.maxY > 0 && rect.minY < viewportHeight
+            return rect.maxY > -256 && rect.minY < viewportHeight + 256
         } action: { visible = $0 }
     }
 }
@@ -954,6 +955,7 @@ struct DinoDesertFlights: View {
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var viewport = CGRect.zero
 
     var body: some View {
@@ -962,7 +964,7 @@ struct DinoDesertFlights: View {
             let reduced = frozen || systemReduceMotion
             TimelineView(.animation(minimumInterval: 1.0 / 20,
                                     paused: fixedTime != nil || reduced || viewport.isEmpty || scenePhase != .active)) { timeline in
-                let time = reduced ? 0 : (fixedTime ?? timeline.date.timeIntervalSinceReferenceDate)
+                let time = reduced ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 ZStack(alignment: .topLeading) {
                     ForEach(DinoDesertFlightRoute.routes) { route in
                         let pose = route.pose(at: time, width: geometry.size.width, scale: scale)
@@ -986,8 +988,7 @@ struct DinoDesertFlights: View {
             }
             .readGeometry(for: CGRect.self) { proxy in
                 let frame = proxy.frame(in: .named("adventure.map.viewport"))
-                let top = max(0, -frame.minY), bottom = min(proxy.size.height, viewportHeight - frame.minY)
-                return bottom > top ? CGRect(x: 0, y: top, width: proxy.size.width, height: bottom - top) : .zero
+                return DinoMapViewport.preparedAnimationBounds(frame: frame, viewportHeight: viewportHeight)
             } action: { viewport = $0 }
         }.clipped().allowsHitTesting(false).accessibilityHidden(true)
     }

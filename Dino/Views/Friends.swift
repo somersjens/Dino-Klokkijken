@@ -311,6 +311,7 @@ struct LevelFriendsView<Play: View>: View {
     @State private var socialSheet: LevelSocialSheet?
     @State private var showsAllFriends = false
     let levelID: Int
+    var theme = LevelStartTheme(worldID: 1)
     @ViewBuilder var play: () -> Play
     private let menuSpacing: CGFloat = 12
     var body: some View {
@@ -331,7 +332,7 @@ struct LevelFriendsView<Play: View>: View {
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(DinoStyle.deepGreen)
+                .foregroundStyle(theme.ink)
                 .accessibilityIdentifier("level.friends.more")
             }
             play()
@@ -412,7 +413,7 @@ struct LevelFriendsView<Play: View>: View {
                     .font(.system(size: 13, weight: .bold, design: .rounded))
                     .lineLimit(1).minimumScaleFactor(0.8).frame(maxWidth: .infinity, alignment: .leading)
                 if let result = friend.progress.levels[levelID] {
-                    Label(String(result.stars), systemImage: "star.fill").foregroundStyle(DinoStyle.deepGreen)
+                    Label(String(result.stars), systemImage: "star.fill").foregroundStyle(theme.ink)
                     Text(verbatim: result.seconds.map(DinoQuestionTiming.text) ?? "—")
                         .monospacedDigit().frame(minWidth: 44, alignment: .trailing)
                 }
@@ -435,18 +436,18 @@ struct LevelFriendsView<Play: View>: View {
                         .lineLimit(2)
                         .accessibilityIdentifier("level.ownName")
                     Spacer(minLength: 0)
-                    Text("dino.friends.you").font(.caption.bold()).foregroundStyle(DinoStyle.deepGreen)
+                    Text("dino.friends.you").font(.caption.bold()).foregroundStyle(theme.ink)
                 }
                 HStack(spacing: 10) {
                     Label(String(result?.stars ?? 0), systemImage: "star.fill")
-                        .foregroundStyle(DinoStyle.deepGreen).monospacedDigit()
+                        .foregroundStyle(theme.ink).monospacedDigit()
                         .accessibilityIdentifier("level.ownScore")
                     Spacer(minLength: 0)
                     Text(verbatim: result?.seconds.map(DinoQuestionTiming.text) ?? "—")
                         .monospacedDigit().accessibilityIdentifier("level.ownTime")
                 }.font(.system(size: 13, weight: .semibold, design: .rounded))
             }
-        }.padding(12).background(DinoStyle.green.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+        }.padding(12).background(theme.accent.opacity(0.16), in: RoundedRectangle(cornerRadius: 14))
     }
 }
 

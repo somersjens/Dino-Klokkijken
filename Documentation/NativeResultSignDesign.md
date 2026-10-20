@@ -52,6 +52,19 @@ De stijl volgt de stabiele `DinoWorld.themeID`. Wereldvolgorde en tekenstijl zij
 | Tijdpiraten | Verweerd hout, touw, schelpen en turquoise accenten |
 | Tijdkasteel | Lichte steen, gouden rand, torentjes en blauwe banieren |
 
+## Bord en achtergrond als gezamenlijke bovenrand
+
+`DinoResultHeaderBackdrop` tekent de achtergrondhoeken met hetzelfde `ResultSignPalette` en dezelfde tekenhelpers als het bord. De oude, vaste junglebladeren en lianen zijn uit de landschapslaag verwijderd, zodat er geen tweede plantenrand meer door de bordversiering heen groeit.
+
+De echte bordpositie wordt vanuit `ResultLayout` doorgegeven, inclusief de veilige schermranden. De begrenzingen van de getekende bladeren bepalen hoe hoog de achtergrondkroon komt. Zo kan een donkerder blad bewust achter een bordhoek lopen, terwijl de bordtekst en het materiaalvlak vrij blijven. De achtergrond gebruikt grotere vormen, zachtere kleuren en minder contrast dan de versiering op het bord. De dunne buitenlianen hebben bladwortels die op hun eigen kromme liggen.
+
+- Jungle, Slaapvallei en Klokdorp hebben een bladkroon met de bladvorm en tinten van hun bord. De jungle deelt nu ook zijn gebogen bladsilhouet tussen voor- en achtergrond.
+- Woestijn en Tijdpiraten hebben slankere palmtakken; bij de piraten volgt een bevestigd touw de bovenste tak.
+- Vulkaanland heeft donkere rotsranden met lavanaden, de Kristalgrot een rotsgewelf met hangende kristallen en het Tijdkasteel een gehouwen stenen kader. Facetten, afgeschuinde binnenranden en contactschaduw geven deze hoeken volume.
+- Klokstad en Tijdmachine hebben doorlopende metalen balken of buizen, met tandwielen en klinknagels op de aansluitingen.
+
+De wereldidentiteit volgt de stabiele `themeID`. De plaatsing past zich aan de beschikbare ruimte aan: op een kleine iPhone blijft het bord het belangrijkste ornament; op iPad kunnen de grotere achtergrondvormen verder in de buitenste ruimte doorlopen. Voor een latere animatie is `windPhase` behouden; er is geen nieuwe permanente animatie toegevoegd.
+
 ## Animaties en aanpassen
 
 `DinoResultSignPose` biedt vier onafhankelijk animeerbare waarden:
@@ -66,6 +79,8 @@ De leveltekst behoudt zijn VoiceOver-label en de wereldnaam is toegevoegd als to
 
 ## Previews
 
+[Bord en achtergrond samen: jungle](Screenshots/ResultHeaderComposition/before-after-jungle.png) · [Kristalgrot](Screenshots/ResultHeaderComposition/before-after-crystal.png) · [Klokstad](Screenshots/ResultHeaderComposition/before-after-city.png) · [Alle bovenranden per wereld](Screenshots/ResultHeaderComposition/header-worlds.png).
+
 [Nieuwe jungle en Kristalgrot voor en na](Screenshots/ResultSignCorners/before-after.png) · [Detail rechter junglehoek](Screenshots/ResultSignCorners/jungle-corner-detail.png) · [Laatste wereldborden](Screenshots/ResultSignCorners/level-sign-worlds.png).
 
 Eerdere verbeterslag:
@@ -75,6 +90,16 @@ Eerdere verbeterslag:
 Eerdere native uitvoering:
 
 [Alle tien wereldborden](Screenshots/NativeResultSign/level-sign-worlds.png) · [Jungle](Screenshots/NativeResultSign/world-01.png) · [Woestijn](Screenshots/NativeResultSign/world-02.png) · [Level 100](Screenshots/NativeResultSign/world-10.png).
+
+## Controle van de gezamenlijke bovenrand op 20 oktober 2026
+
+- De Debug-testbuild slaagt met de wereldafhankelijke achtergrondhoeken en de verfijnde steenranden.
+- Alle tien werelden zijn visueel gecontroleerd op een afzonderlijke iPhone 17-simulator (iOS 26.5). De controle omvat aansluitingen, laagvolgorde, titelruimte, kleur en samenhang tussen achtergrond en bord. Het Tijdkasteel is met `Level 100` vastgelegd.
+- Jungle en Kristalgrot zijn daarnaast bekeken op iPhone SE 3e generatie (iOS 26.1) en iPad Pro 11-inch M5 (iOS 26.5). De kaderpositie volgt de echte bordpositie inclusief de veilige schermranden; score en bediening behouden hun bestaande plaats.
+- De screenshots gebruiken afzonderlijke Debug-opslag. De drie eigen testsimulators zijn na afloop afgesloten en verwijderd. Dit is een visuele controle met een geslaagde testbuild; er is voor deze verfijning geen nieuwe geautomatiseerde UI-test uitgevoerd.
+- `git diff --check` is schoon. Alle nieuwe vormen zijn native paden en verlopen; er zijn geen rasterassets toegevoegd.
+
+[Buildverslag](WorldTestLogs/ResultHeaderComposition/build.log) · [Tien werelden](WorldTestLogs/ResultHeaderComposition/worlds.log) · [Laatste steenafwerking](WorldTestLogs/ResultHeaderComposition/stone-final.log) · [Kleine iPhone](WorldTestLogs/ResultHeaderComposition/compact.log) · [iPad](WorldTestLogs/ResultHeaderComposition/ipad.log).
 
 ## Controle van de verbeterslag op 19 oktober 2026
 

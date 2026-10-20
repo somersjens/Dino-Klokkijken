@@ -18,7 +18,10 @@ struct DinoResultView: View {
         GeometryReader { geometry in
             let layout = ResultLayout(size: geometry.size, needsMessage: !succeeded)
             ZStack {
-                ResultScenery(worldID: result.level.worldID)
+                ResultScenery(worldID: result.level.worldID,
+                              signFrame: CGRect(x: (geometry.size.width - layout.signWidth) / 2 + geometry.safeAreaInsets.leading,
+                                                y: layout.topInset + geometry.safeAreaInsets.top,
+                                                width: layout.signWidth, height: layout.signHeight))
                 VStack(spacing: 0) {
                     DinoResultLevelSign(levelID: result.level.id, worldID: result.level.worldID)
                         .frame(width: layout.signWidth, height: layout.signHeight)
@@ -258,6 +261,7 @@ private struct ResultAdventureButtonStyle: ButtonStyle {
 /// No flattened background image is used by the result scene.
 private struct ResultScenery: View {
     let worldID: Int
+    let signFrame: CGRect
     var windPhase: Double = 0
 
     var body: some View {
@@ -275,6 +279,7 @@ private struct ResultScenery: View {
                     }
                 }
             }
+            DinoResultHeaderBackdrop(worldID: worldID, signFrame: signFrame, windPhase: windPhase)
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
@@ -481,10 +486,8 @@ private struct ResultLandscapePainter {
     }
 
     private func foliage() {
-        canopy(mirrored: false)
-        canopy(mirrored: true)
-        vine(mirrored: false)
-        vine(mirrored: true)
+        // The upper framing shares its materials and clearance with the level sign.
+        // This painter owns only the lower garden, so two canopies cannot collide.
         for side in 0..<2 {
             var c = context
             c.translateBy(x: side == 0 ? 0 : w, y: 0)
@@ -615,56 +618,6 @@ private struct ResultLandscapePainter {
             let drift = windPhase == 0 ? 0 : sin(windPhase + Double(index)) * 1.6
             leaf(at: at, length: l, width: l * (index < 6 ? 0.43 : 0.52),
                  angle: angle + lean + drift, bright: (index + seed).isMultiple(of: 4))
-        }
-    }
-
-    private func canopy(mirrored: Bool) {
-        var c = context
-        c.translateBy(x: mirrored ? w : 0, y: 0)
-        c.scaleBy(x: mirrored ? -1 : 1, y: 1)
-        let painter = ResultLandscapePainter(context: c, size: size, palette: palette, windPhase: windPhase)
-        var branch = Path()
-        branch.move(to: CGPoint(x: -35 * scale, y: 130 * scale))
-        branch.addCurve(to: CGPoint(x: 145 * scale, y: -30 * scale),
-                        control1: CGPoint(x: 35 * scale, y: 43 * scale),
-                        control2: CGPoint(x: 64 * scale, y: 23 * scale))
-        c.stroke(branch, with: .color(color(palette.leafShade)), style: StrokeStyle(lineWidth: 19 * scale, lineCap: .round))
-        c.stroke(branch, with: .linearGradient(Gradient(colors: [color(palette.bark), color(0xBDA56B)]),
-                                               startPoint: .zero, endPoint: CGPoint(x: 100, y: 100)),
-                 style: StrokeStyle(lineWidth: 12 * scale, lineCap: .round))
-        let leaves: [(CGFloat, CGFloat, CGFloat, Double)] = [
-            (-12, 12, 91, 155), (13, -15, 110, 124), (53, -20, 93, 158),
-            (104, -26, 96, 113), (-18, 63, 82, 148), (15, 24, 85, 185),
-            (76, -26, 71, 211), (118, -31, 76, 165), (-13, 102, 63, 133),
-            (32, -4, 62, 153), (5, 54, 63, 119), (67, -12, 59, 121)
-        ]
-        for (index, item) in leaves.enumerated() {
-            let drift = sin(windPhase + Double(index) * 0.8) * (windPhase == 0 ? 0 : 2)
-            painter.leaf(at: CGPoint(x: item.0 * scale, y: item.1 * scale), length: item.2 * scale,
-                         width: item.2 * 0.48 * scale, angle: item.3 + drift, bright: index.isMultiple(of: 2))
-        }
-    }
-
-    private func vine(mirrored: Bool) {
-        var c = context
-        c.translateBy(x: mirrored ? w : 0, y: 0)
-        c.scaleBy(x: mirrored ? -1 : 1, y: 1)
-        let start = CGPoint(x: 14 * scale, y: -10)
-        let first = CGPoint(x: 49 * scale, y: h * 0.12)
-        let second = CGPoint(x: -7 * scale, y: h * 0.23)
-        let end = CGPoint(x: 7 * scale, y: h * 0.34)
-        var line = Path()
-        line.move(to: start)
-        line.addCurve(to: end, control1: first, control2: second)
-        c.stroke(line, with: .color(color(palette.leafShade).opacity(0.7)), style: StrokeStyle(lineWidth: 3 * scale, lineCap: .round))
-        let painter = ResultLandscapePainter(context: c, size: size, palette: palette)
-        for index in 0..<6 {
-            // The leaf root lies on the very same cubic as its supporting vine.
-            let t = CGFloat(0.32) + CGFloat(index) * 0.112, u = 1 - t
-            let root = CGPoint(x: u * u * u * start.x + 3 * u * u * t * first.x + 3 * u * t * t * second.x + t * t * t * end.x,
-                               y: u * u * u * start.y + 3 * u * u * t * first.y + 3 * u * t * t * second.y + t * t * t * end.y)
-            painter.leaf(at: root, length: 26 * scale,
-                         width: 11 * scale, angle: index.isMultiple(of: 2) ? 64 : -72, bright: true)
         }
     }
 

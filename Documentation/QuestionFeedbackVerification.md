@@ -127,3 +127,23 @@ De iPhone-controle voor de aaneengesloten switch en bevestigingsafstand slaagt. 
 - `testDigitalClockHasIndependentHourAndMinuteArrows`: voldoende afstand tussen de onderste pijltjes en bevestigen bij type 8, ook met een ander klokontwerp.
 
 De schermbeelden zijn visueel gecontroleerd: [switch bij vraagtype 9](Screenshots/QuestionFeedback/clock-hand-segmented-switch-iphone.png), [de switch in het voorbeeld](Screenshots/QuestionFeedback/clock-hand-segmented-switch-example-iphone.png) en [afstand bij vraagtype 8](Screenshots/QuestionFeedback/digital-confirm-spacing-iphone.png).
+
+## Rustige antwoordtransities en vaste ruimte — 20 oktober 2026
+
+- Analoge en digitale instelvragen behouden de ingevulde klok als dezelfde view op dezelfde hoogte. Hij maakt in 0,3 seconde ruimte; het goede antwoord verschijnt op zijn uiteindelijke plek, met een korte vertraging zodat de klokken elkaar niet overlappen. De vergelijkingsruimte is vooraf gereserveerd.
+- Bij **Zet de wijzers vooruit** behoudt de beginklok zijn plaats en grootte. De ingevulde klok verkleint binnen een vaste rechterkolom; het goede antwoord verschijnt daaronder. De vraag wordt tijdens feedback niet hoger of lager.
+- Instel- en bevestigingsknoppen trekken in 0,18 seconde in hun eigen ruimte terug. De langzame fade en het verwijderen van bevestigingsknoppen uit de layout zijn vervallen. Antwoordopties blijven volledig leesbaar.
+- **Van vroeg naar laat** reserveert vanaf het begin ruimte voor de hele gekozen reeks en de correctie, inclusief eventuele regelafbreking. De eerste selectie duwt de bevestigingsknop niet omlaag.
+- De zelf samengestelde tijdzin reserveert twee regels. Tijdzones, treinreizen en vluchten reserveren hun extra uitleg vooraf. Het aankomstveld van de trein houdt dezelfde afmetingen bij het vervangen van het vraagteken door de tijd.
+- Automatisch scrollen gebeurt alleen als het antwoordgedeelte buiten het zicht valt. Een volledig zichtbaar antwoord blijft op zijn plek. **Minder beweging** schakelt de nieuwe bewegingen en vertragingen uit. Digitale vraag- en antwoordklokken bieden één volledige tijd voor VoiceOver.
+
+De analoge, digitale en vooruitzet-overgangen zijn in een simulatoropname per 50 milliseconden visueel gecontroleerd. Beelden: [analoge vergelijking](Screenshots/AnswerTransitions/feedback-setAnalog-after.png), [vooruitzetten](Screenshots/AnswerTransitions/feedback-advanceAnalog-after.png) en [eerste sorteerkeuze](Screenshots/AnswerTransitions/feedback-sorting-first-selection.png).
+
+De Debug-build voor iOS Simulator slaagt. Op iPhone 17 en iPad Pro 11-inch (M5), beide met iOS 26.5, slagen alle vier gerichte schermtests: acht geslaagde uitvoeringen in totaal.
+
+- `testClockAnswerFeedbackKeepsItsStageAndTargetInPlace`: vaste titel, onveranderde vraagklok, behoud van de ingediende waarde, één toegankelijke invoer- en antwoordklok en handmatig verdergaan bij analoog instellen, digitaal instellen en vooruitzetten.
+- `testSortingReservesDraftAndCorrectionBeforeTheFirstTap`: dezelfde knoppositie na iedere selectie en dezelfde klokcentra na het tonen van de correctie.
+- `testWorkedAnswersKeepTheOptionsInPlace`: vaste antwoordposities tijdens uitleg en rekenen bij de treinreis, tijdzones en vluchten, ook na afloop van de animatie.
+- `testMultipleChoiceRetriesKeepTheLostPoint`: herkansingen, Toon antwoord, Verder, behoud van de verloren punt en één doorlopende vragenteller.
+
+`Tools/test-dino.sh`: **805.838 controles geslaagd**. De schermbeelden op iPhone en iPad zijn visueel gecontroleerd. `git diff --check` meldt geen fouten.

@@ -74,6 +74,19 @@ actor DinoSpriteLoader {
     private var appearance: DinoAppearance?
     private var job: Task<[String: UIImage], Never>?
 
+    /// The map only needs the standing pose. Keep its first recolor off the
+    /// main thread without decoding twenty unused celebration frames at launch.
+    func idleImage(for colors: DinoAppearance) async -> UIImage? {
+        if let cached = DinoAvatarRenderer.cached(appearance: colors, portrait: false, asset: "dino-idle") {
+            return cached
+        }
+        let preparation = Task.detached(priority: .userInitiated) {
+            DinoAvatarRenderer.render(original: UIImage(named: "dino-idle")?.cgImage,
+                                      appearance: colors, portrait: false)
+        }
+        return await withTaskCancellationHandler { await preparation.value } onCancel: { preparation.cancel() }
+    }
+
     func images(for colors: DinoAppearance) async -> [String: UIImage] {
         guard !Task.isCancelled else { return [:] }
         if appearance != colors || job == nil {

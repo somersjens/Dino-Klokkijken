@@ -55,6 +55,7 @@ struct LevelQuestionOutline: Equatable, Sendable {
     let practiceNumber: Int?
     let titleKey: String
     let timeTitleKey: String
+    let practiceConfiguration: DinoPracticeConfiguration?
 }
 
 extension LevelConfiguration {
@@ -67,7 +68,10 @@ extension LevelConfiguration {
             let practice = DinoPracticeQuestion(rawValue: recipe.kind.rawValue)
             return LevelQuestionOutline(practiceNumber: practice?.number,
                                         titleKey: practice?.titleKey ?? "dino.practice.question.\(recipe.kind.rawValue)",
-                                        timeTitleKey: time(for: recipe).titleKey)
+                                        timeTitleKey: time(for: recipe).titleKey,
+                                        practiceConfiguration: practice.map {
+                                            DinoPracticeConfiguration(time: time(for: recipe), order: .specific($0))
+                                        })
         }
     }
 }

@@ -217,7 +217,7 @@ struct DinoExpandedQuestionView: View {
                 }.buttonStyle(DinoAnswerButtonStyle()).disabled(!session.responseIsEnabled(response))
                     .accessibilityIdentifier("question.option.\(index)")
             }
-        }.id("question.answers")
+        }.id("question.answers").questionAnswerFocus()
     }
 
     private func responseText(_ response: ClockAnswer) -> String {
@@ -269,28 +269,44 @@ struct DinoExpandedQuestionView: View {
                         .accessibilityIdentifier("\(isDemonstration ? "demo" : "question").sort.\(index)")
                 }
             }.id("question.answers")
-            if !session.selectedOrder.isEmpty {
-                Text(verbatim: session.selectedOrder.map(\.digitalText).joined(separator: " → "))
-                    .font(.system(size: 15, weight: .bold, design: .rounded)).monospacedDigit().multilineTextAlignment(.center)
-                    .padding(12).modifier(ClockAnswerOutline(visible: session.hasFeedback, correct: session.correctFeedback))
-                    .accessibilityIdentifier(isDemonstration ? "demo.answer" : "question.sort.selection")
+            VStack(spacing: 12) {
+                sortAnswerSlot(correct: false)
+                if !isDemonstration { sortAnswerSlot(correct: true) }
             }
-            if session.hasFeedback && !session.correctFeedback {
-                Text(verbatim: responseText(q.expectedAnswer)).font(.system(size: 15, weight: .bold, design: .rounded))
-                    .monospacedDigit().padding(12).modifier(ClockAnswerOutline(visible: true, correct: true))
-                    .accessibilityIdentifier("question.sort.correct")
-            }
+            .questionAnswerFocus()
             if !isDemonstration {
                 confirm(.ordering(session.selectedOrder), enabled: session.selectedOrder.count == 4)
             }
         }
     }
 
+    /// Measure a complete sequence before the first tap, including wrapped lines.
+    /// The draft and correction then fill their own slots without moving Confirm.
+    private func sortAnswerSlot(correct: Bool) -> some View {
+        let revealed = correct ? session.hasFeedback && !session.correctFeedback : !session.selectedOrder.isEmpty
+        let text = correct ? responseText(q.expectedAnswer) : session.selectedOrder.map(\.digitalText).joined(separator: " → ")
+        return Text(verbatim: responseText(q.expectedAnswer))
+            .hidden()
+            .overlay {
+                Text(verbatim: text)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .opacity(revealed ? 1 : 0)
+                    .accessibilityHidden(!revealed)
+                    .accessibilityIdentifier(correct ? "question.sort.correct" : isDemonstration ? "demo.answer" : "question.sort.selection")
+            }
+            .font(.system(size: 15, weight: .bold, design: .rounded))
+            .monospacedDigit().multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity)
+            .padding(12)
+            .modifier(ClockAnswerOutline(visible: revealed && (correct || session.hasFeedback), correct: correct || session.correctFeedback))
+    }
+
     private var advanceComparing: Bool { session.hasFeedback && !session.correctFeedback }
 
     private var advanceFace: CGFloat {
         let reserve = DinoAdvanceDifference.columnWidth(minutes: q.durationMinutes) + 18
-        let limit: CGFloat = advanceComparing ? 96 : (compactLayout ? 112 : 148)
+        let limit: CGFloat = compactLayout ? 112 : 148
         return min(limit, max(0, width - reserve) / 2)
     }
 
@@ -299,25 +315,42 @@ struct DinoExpandedQuestionView: View {
         let minuteChange: ((ClockTime) -> Void)? = session.hasFeedback || !session.allowsMinutes ? nil : { session.setInputTime($0) }
         let shown = session.attempt.submittedAnswer ?? session.inputTime
         return VStack(spacing: 12) {
-            HStack(alignment: .center, spacing: 6) {
+            HStack(alignment: .top, spacing: 6) {
                 AnalogClock(time: DinoAnalogAdvanceExample.face(q.relatedTimes[0]), theme: theme, size: advanceFace)
+                    .frame(height: advanceStageHeight)
                     .accessibilityIdentifier("question.startClock")
                 DinoAdvanceDifference(minutes: q.durationMinutes, language: code, prefix: "question")
-                if advanceComparing {
-                    VStack(spacing: 8) {
-                        advanceResult(shown, correct: false, identifier: "question.analogControl")
-                        advanceResult(DinoAnalogAdvanceExample.face(q.target), correct: true, identifier: "question.correctClock")
-                    }
-                } else {
+                    .frame(height: advanceStageHeight)
+                ZStack {
                     AnalogClock(time: shown, theme: theme, size: advanceFace,
                                 onHourChange: hourChange, onMinuteChange: minuteChange, minuteStep: session.minuteStep,
                                 adjustingMinutes: movingMinutes,
                                 onHandSelection: session.hasFeedback ? nil : { movingMinutes = $0 })
                         .padding(4)
                         .modifier(ClockAnswerOutline(visible: session.hasFeedback, correct: session.correctFeedback))
+                        .overlay(alignment: .topTrailing) {
+                            if advanceComparing { AnswerVerdictMark(correct: false).offset(x: 4, y: -4) }
+                        }
+                        .scaleEffect(advanceComparing ? advanceComparisonScale : 1)
+                        .offset(y: advanceComparing ? -advanceResultOffset : 0)
                         .accessibilityIdentifier("question.analogControl")
+                    AnalogClock(time: DinoAnalogAdvanceExample.face(q.target), theme: theme, size: advanceFace)
+                        .padding(4)
+                        .modifier(ClockAnswerOutline(visible: true, correct: true))
+                        .overlay(alignment: .topTrailing) { AnswerVerdictMark(correct: true).offset(x: 4, y: -4) }
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(DinoAnalogAdvanceExample.face(q.target).digitalText)
+                        .scaleEffect(advanceComparisonScale * (advanceComparing || reduceMotion ? 1 : 0.94))
+                        .offset(y: advanceResultOffset)
+                        .opacity(advanceComparing ? 1 : 0)
+                        .accessibilityHidden(!advanceComparing).allowsHitTesting(false)
+                        .accessibilityIdentifier("question.correctClock")
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: advanceComparing)
                 }
+                .frame(width: advanceFace + 8, height: advanceStageHeight)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: advanceComparing)
             }
+            .questionAnswerFocus()
             VStack(spacing: 12) {
                 DinoAnalogClockControls(adjustingMinutes: $movingMinutes, allowsMinutes: session.allowsMinutes,
                                         minuteStep: session.minuteStep, adjust: adjust)
@@ -332,29 +365,20 @@ struct DinoExpandedQuestionView: View {
         }.id("question.answers")
     }
 
-    private func advanceResult(_ time: ClockTime, correct: Bool, identifier: String) -> some View {
-        VStack(spacing: 4) {
-            AnalogClock(time: time, theme: theme, size: advanceFace)
-                .padding(4)
-                .modifier(ClockAnswerOutline(visible: true, correct: correct))
-                .accessibilityIdentifier(identifier)
-            AnswerVerdictMark(correct: correct, size: 22)
-        }
-    }
+    private var advanceComparisonScale: CGFloat { min(1, 88 / (advanceFace + 8)) }
+    private var advanceResultOffset: CGFloat { ((advanceFace + 8) * advanceComparisonScale + 12) / 2 }
+    private var advanceStageHeight: CGFloat { max(advanceFace + 8, (advanceFace + 8) * advanceComparisonScale * 2 + 12) }
 
     private func adjust(_ direction: Int) {
         guard !session.hasFeedback else { return }
         if movingMinutes { session.adjustInputMinutes(by: direction * session.minuteStep) }
         else { session.inputHour = ClockTime.shiftedHour(session.inputHour, by: direction) }
     }
-    @ViewBuilder private func confirm(_ answer: ClockAnswer, enabled: Bool) -> some View {
-        if !session.hidesAnswerControls {
-            Button { session.submit(answer) } label: { Image(systemName: "checkmark").font(.title2.bold()) }
-                .buttonStyle(DinoButtonStyle()).frame(maxWidth: 260).disabled(!enabled)
-                .allowsHitTesting(!session.hasFeedback)
-                .accessibilityHidden(session.hasFeedback)
-                .accessibilityIdentifier("question.confirm")
-        }
+    private func confirm(_ answer: ClockAnswer, enabled: Bool) -> some View {
+        Button { session.submit(answer) } label: { Image(systemName: "checkmark").font(.title2.bold()) }
+            .buttonStyle(DinoButtonStyle()).frame(maxWidth: 260).disabled(!enabled)
+            .accessibilityIdentifier("question.confirm")
+            .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
     }
 }
 
@@ -389,19 +413,20 @@ struct DinoAdvanceDifference: View {
     }
 }
 
-/// Keeps a button group in place when the following question uses that same group.
+/// Retract controls in their own space; never dissolve them over the answer or
+/// collapse their layout while the question is centered in the scroll view.
 struct AnswerControlVisibility: ViewModifier {
     @ObservedObject var session: DinoSession
     var reduceMotion: Bool
 
     func body(content: Content) -> some View {
         content
-            // Keep the buttons' space while they fade, so the clock and the
-            // centered question do not slide after checking.
-            .opacity(session.hidesAnswerControls ? 0 : 1)
+            .mask(alignment: .top) {
+                Rectangle().scaleEffect(x: 1, y: session.hidesAnswerControls ? 0 : 1, anchor: .top)
+            }
             .allowsHitTesting(!session.hasFeedback)
             .accessibilityHidden(session.hasFeedback)
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.5), value: session.hidesAnswerControls)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: session.hidesAnswerControls)
     }
 }
 
@@ -496,22 +521,35 @@ private struct DinoTrainJourneyCard: View {
                 value: schedule.start.digitalText, ink: DinoStyle.deepGreen, fill: arrivalFill, chip: arrivalChip,
                 identifier: "\(prefix).schedule.start")
             connector
-            if countsTotal {
-                durationGroup
+            ZStack(alignment: .top) {
+                // Measure the complete worked sum before the first answer.
                 VStack(spacing: 2) {
-                    if showsTotal {
+                    durationGroup
+                    connector
+                    totalRow
+                }.hidden()
+                if countsTotal {
+                    VStack(spacing: 2) {
+                        durationGroup
+                        VStack(spacing: 2) {
+                            connector
+                            totalRow
+                        }
+                        .mask(alignment: .top) {
+                            Rectangle().scaleEffect(x: 1, y: showsTotal ? 1 : 0, anchor: .top)
+                        }
+                        .accessibilityHidden(!showsTotal)
+                        .animation(isDemonstration || reduceMotion ? nil : .easeOut(duration: 0.24), value: showsTotal)
+                    }
+                } else {
+                    VStack(spacing: 2) {
+                        trainOne
                         connector
-                        totalRow
+                        transfer
+                        connector
+                        trainTwo
                     }
                 }
-                .clipped()
-                .animation(isDemonstration || reduceMotion ? nil : .dinoSettle, value: showsTotal)
-            } else {
-                trainOne
-                connector
-                transfer
-                connector
-                trainTwo
             }
             connector
             arrival
@@ -528,7 +566,7 @@ private struct DinoTrainJourneyCard: View {
             if reduceMotion {
                 showsTotal = true
             } else {
-                withAnimation(.dinoSettle.delay(0.08)) { showsTotal = true }
+                withAnimation(.easeOut(duration: 0.24).delay(0.08)) { showsTotal = true }
             }
         }
     }
@@ -603,7 +641,6 @@ private struct DinoTrainJourneyCard: View {
         .padding(.horizontal, 10).padding(.vertical, 5)
         .background((highContrast ? DinoStyle.ink : totalInk).opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .padding(.top, 4)
-        .transition(.opacity.combined(with: .scale(scale: 0.94, anchor: .top)).combined(with: .offset(y: -6)))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("\(prefix).schedule.total")
     }
@@ -634,7 +671,7 @@ private struct DinoTrainJourneyCard: View {
             .monospacedDigit()
             .lineLimit(1).minimumScaleFactor(0.6)
             .padding(.horizontal, 10).padding(.vertical, 4)
-            .frame(minWidth: showsAnswer ? 0 : 52, minHeight: 26)
+            .frame(width: 70, height: 32)
             .background(arrivalChip, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(DinoStyle.deepGreen.opacity(showsAnswer ? 0 : (highContrast ? 1 : 0.75)),
@@ -776,7 +813,7 @@ private struct DinoFlightTicket: View {
                         factRow(title: "dino.expanded.flightZoneDifference", systemImage: "globe",
                                 value: DinoTimeWords.hourDifference(work.offsetHours, language: language),
                                 color: DinoFlightInk.zone, identifier: "\(prefix).flight.zone")
-                        if totalAmount > 0.01 { totalReveal }
+                        totalReveal
                     }
                 }
 
@@ -816,7 +853,6 @@ private struct DinoFlightTicket: View {
                 .offset(y: (1 - totalRowAmount) * -4)
         }
         .padding(.top, 4)
-        .frame(height: isDemonstration || totalRowAmount >= 1 ? nil : 62 * totalRowAmount, alignment: .top)
         .clipped()
         .accessibilityHidden(totalRowAmount < 0.9 && !isDemonstration)
     }

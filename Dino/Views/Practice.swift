@@ -6,6 +6,8 @@ struct DinoPracticeView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dinoHighContrast) private var highContrast
     @State private var session: DinoSession?
+    @State private var revealedInitialQuestion = false
+    var initialQuestion: DinoPracticeQuestion? = nil
 
     private var configuration: DinoPracticeConfiguration {
         DinoPracticeConfiguration(time: settings.practiceTime, order: settings.practiceOrder)
@@ -18,52 +20,61 @@ struct DinoPracticeView: View {
     }
 
     private func options(spacious: Bool) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                VStack(spacing: 14) {
-                    Text("dino.practice.time").font(.system(size: spacious ? 25 : 20, weight: .bold, design: .rounded)).frame(maxWidth: .infinity)
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
-                        ForEach(DinoPracticeTime.allCases, id: \.self) { time in
-                            timeChoice(time, spacious: spacious)
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    VStack(spacing: 14) {
+                        Text("dino.practice.time").font(.system(size: spacious ? 25 : 20, weight: .bold, design: .rounded)).frame(maxWidth: .infinity)
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+                            ForEach(DinoPracticeTime.allCases, id: \.self) { time in
+                                timeChoice(time, spacious: spacious)
+                            }
                         }
-                    }
-                }.padding(spacious ? 20 : 14).background(.white.opacity(0.75), in: RoundedRectangle(cornerRadius: 28))
-                LazyVStack(spacing: 10) {
-                    Text("dino.practice.questionType").font(.system(size: spacious ? 25 : 20, weight: .bold, design: .rounded))
-                        .frame(maxWidth: .infinity).padding(.bottom, 6)
-                    ForEach(DinoPracticeQuestion.allCases, id: \.self) { type in
-                        choice(title: type.titleKey, symbol: type.recipe.kind.symbol, number: type.number,
-                               order: .specific(type), identifier: "practice.type.\(type.rawValue)",
-                               record: player.practiceRecord(time: configuration.time, question: type).bestStreak, spacious: spacious)
-                    }
-                    Divider().padding(.vertical, 4)
-                    choice(title: "dino.practice.ascending", symbol: "arrow.up.right", order: .ascending,
-                           identifier: "practice.order.ascending",
-                           record: player.practiceRecord(time: configuration.time, order: .ascending).bestStreak, spacious: spacious)
-                    choice(title: "dino.practice.mix", symbol: "shuffle", order: .mix, identifier: "practice.order.mix",
-                           record: player.practiceRecord(time: configuration.time, order: .mix).bestStreak, spacious: spacious)
-                }.padding(16).background(.white.opacity(0.75), in: RoundedRectangle(cornerRadius: 28))
-            }.padding(spacious ? 24 : 16).padding(.top, 12).frame(maxWidth: 800).frame(maxWidth: .infinity)
-        }.accessibilityIdentifier("practice.options")
-            .background(JungleBackground(quiet: true)).foregroundStyle(DinoStyle.ink)
-            .safeAreaInset(edge: .bottom) {
-                VStack(spacing: 12) {
-                    Button {
-                        session = DinoSession(level: configuration.level, player: player, practice: configuration,
-                                              language: LanguageManager.shared.effective.code,
-                                              answerFeedback: { [settings] correct in
-                            DinoAnswerFeedback.shared.play(correct: correct, sound: settings.soundEffectsEnabled, vibration: settings.hapticsEnabled)
-                        })
-                    } label: { Label("dino.practice.start", systemImage: "play.fill") }
-                        .buttonStyle(DinoButtonStyle(compact: true)).accessibilityIdentifier("practice.start")
-                    Button("dino.practice.backToLevels") { dismiss() }
-                        .buttonStyle(DinoSecondaryButtonStyle()).accessibilityIdentifier("practice.close")
-                }.padding(spacious ? 24 : 16).frame(maxWidth: 760).frame(maxWidth: .infinity)
-                    .background(DinoStyle.paper.opacity(0.97))
-            }
-            .fullScreenCover(item: $session) { active in
-                DinoPracticeGame(session: active, exit: { session = nil }).gameEnvironment()
-            }
+                    }.padding(spacious ? 20 : 14).background(.white.opacity(0.75), in: RoundedRectangle(cornerRadius: 28))
+                    LazyVStack(spacing: 10) {
+                        Text("dino.practice.questionType").font(.system(size: spacious ? 25 : 20, weight: .bold, design: .rounded))
+                            .frame(maxWidth: .infinity).padding(.bottom, 6)
+                        ForEach(DinoPracticeQuestion.allCases, id: \.self) { type in
+                            choice(title: type.titleKey, symbol: type.recipe.kind.symbol, number: type.number,
+                                   order: .specific(type), identifier: "practice.type.\(type.rawValue)",
+                                   record: player.practiceRecord(time: configuration.time, question: type).bestStreak, spacious: spacious)
+                                .id("practice.type.\(type.rawValue)")
+                        }
+                        Divider().padding(.vertical, 4)
+                        choice(title: "dino.practice.ascending", symbol: "arrow.up.right", order: .ascending,
+                               identifier: "practice.order.ascending",
+                               record: player.practiceRecord(time: configuration.time, order: .ascending).bestStreak, spacious: spacious)
+                        choice(title: "dino.practice.mix", symbol: "shuffle", order: .mix, identifier: "practice.order.mix",
+                               record: player.practiceRecord(time: configuration.time, order: .mix).bestStreak, spacious: spacious)
+                    }.padding(16).background(.white.opacity(0.75), in: RoundedRectangle(cornerRadius: 28))
+                }.padding(spacious ? 24 : 16).padding(.top, 12).frame(maxWidth: 800).frame(maxWidth: .infinity)
+            }.accessibilityIdentifier("practice.options")
+                .background(JungleBackground(quiet: true)).foregroundStyle(DinoStyle.ink)
+                .safeAreaInset(edge: .bottom) {
+                    VStack(spacing: 12) {
+                        Button {
+                            session = DinoSession(level: configuration.level, player: player, practice: configuration,
+                                                  language: LanguageManager.shared.effective.code,
+                                                  answerFeedback: { [settings] correct in
+                                DinoAnswerFeedback.shared.play(correct: correct, sound: settings.soundEffectsEnabled, vibration: settings.hapticsEnabled)
+                            })
+                        } label: { Label("dino.practice.start", systemImage: "play.fill") }
+                            .buttonStyle(DinoButtonStyle(compact: true)).accessibilityIdentifier("practice.start")
+                        Button("dino.practice.backToLevels") { dismiss() }
+                            .buttonStyle(DinoSecondaryButtonStyle()).accessibilityIdentifier("practice.close")
+                    }.padding(spacious ? 24 : 16).frame(maxWidth: 760).frame(maxWidth: .infinity)
+                        .background(DinoStyle.paper.opacity(0.97))
+                }
+                .fullScreenCover(item: $session) { active in
+                    DinoPracticeGame(session: active, exit: { session = nil }).gameEnvironment()
+                }
+                .task {
+                    guard let initialQuestion, !revealedInitialQuestion else { return }
+                    revealedInitialQuestion = true
+                    await Task.yield()
+                    proxy.scrollTo("practice.type.\(initialQuestion.rawValue)", anchor: .center)
+                }
+        }
     }
 
     private func timeChoice(_ time: DinoPracticeTime, spacious: Bool) -> some View {
@@ -83,6 +94,7 @@ struct DinoPracticeView: View {
                     .stroke(selected ? DinoStyle.deepGreen : highContrast ? DinoStyle.ink : .white, lineWidth: 2))
         }.buttonStyle(.plain)
             .accessibilityIdentifier("practice.time.\(time.rawValue)")
+            .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     private func choice(title: String, symbol: String, number: Int? = nil, order: DinoPracticeOrder,
@@ -117,6 +129,7 @@ struct DinoPracticeView: View {
                             lineWidth: selected || highContrast ? 1.5 : 0))
         }.buttonStyle(.plain)
             .accessibilityIdentifier(identifier)
+            .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
 }
@@ -130,7 +143,8 @@ private struct DinoPracticeGame: View {
                 GeometryReader { geometry in
                     DinoCompanionLayer(destination: anchors[.game].map { geometry[$0] },
                                        clip: session.hasFeedback ? (session.correctFeedback ? .thumbsUp : .wrongAnswer) : .idle,
-                                       isResult: false)
+                                       isResult: false, worldID: session.level.worldID,
+                                       compactPortrait: geometry.size.height < 430)
                 }.allowsHitTesting(false)
             }.preferredColorScheme(.light)
     }

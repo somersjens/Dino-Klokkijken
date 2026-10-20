@@ -29,8 +29,14 @@ enum DinoAnimation {
     static let pirouettePlaybackRate = 1.7
     static func leadIn(_ clip: Clip) -> Double { clip == .pirouette ? 0.24 : 0 }
 
-    /// Show the planted-foot preparation before the companion leaves the bottom dock.
-    static func travelDelay(_ clip: Clip) -> Double { clip == .pirouette ? leadIn(clip) + 0.48 / pirouettePlaybackRate : 0 }
+    /// Show the anticipation in the portrait before Dino leaves the circle.
+    static func travelDelay(_ clip: Clip) -> Double {
+        switch clip {
+        case .pirouette: leadIn(clip) + 0.48 / pirouettePlaybackRate
+        case .backflip: 0.18
+        default: 0
+        }
+    }
 
     /// The shared companion reaches the rock before the reward stars appear.
     static func travelDuration(_ clip: Clip) -> Double {

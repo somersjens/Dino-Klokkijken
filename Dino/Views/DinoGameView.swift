@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DinoGameView: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @EnvironmentObject private var player: DinoPlayer
     @EnvironmentObject private var settings: DinoSettings
     @StateObject var session: DinoSession
@@ -11,29 +12,22 @@ struct DinoGameView: View {
     @State private var confirmExit = false
     @State private var personalizing = false
     @State private var hudHeight: CGFloat = 128
-    @State private var questionContentHeight: CGFloat = 0
+    @State private var answerFrame: CGRect?
 
     var body: some View {
         GeometryReader { g in
             let short = g.size.height < 700
             let tablet = g.size.width >= 600
             let wide = g.size.width >= 900 && g.size.width > g.size.height
-            let desiredCompanionSize = tablet ? min(260, min(g.size.width, g.size.height) * 0.30)
-                                              : min(148, g.size.width * 0.36)
-            let companionSize = min(desiredCompanionSize, max(tablet ? 104 : 88,
-                g.size.height - hudHeight - questionContentHeight + g.safeAreaInsets.bottom - 16))
             let width = min(tablet ? 900 : 520, max(240, g.size.width - (tablet ? 64 : 36)))
-            let dockHeight = max(80, companionSize - g.safeAreaInsets.bottom + 12)
-            let questionViewport = max(0, g.size.height - hudHeight - dockHeight)
-            // Answer clocks use the intended dock size, so measuring the question
-            // cannot create a feedback loop between clock and companion sizes.
-            let reservedDockHeight = max(80, desiredCompanionSize - g.safeAreaInsets.bottom + 12)
+            let footerHeight: CGFloat = 80
+            let questionViewport = max(0, g.size.height - hudHeight - footerHeight)
             let clockSize = min(tablet ? 260 : 210, width * 0.54, max(160, g.size.height * 0.28))
-            let answerClockSize = tablet ? 210 : max(88, (g.size.height - hudHeight - reservedDockHeight - (short ? 198 : 250)) / 2)
+            let answerClockSize = tablet ? 210 : max(88, (g.size.height - hudHeight - footerHeight - (short ? 198 : 250)) / 2)
             ZStack {
                 JungleBackground(quiet: true)
                 VStack(spacing: 0) {
-                    AdventureHeader(personalizerChanged: { personalizing = $0 }, level: session.level.id,
+                    AdventureHeader(personalizerChanged: { personalizing = $0 }, sharedCompanion: true, level: session.level.id,
                                         stars: player.profile.totalStars, worldID: session.level.worldID,
                                         compact: g.size.height < 430, viewportHeight: g.size.height,
                                         questionCounter: session.practice == nil
@@ -58,18 +52,23 @@ struct DinoGameView: View {
                                     .id(session.question.id)
                             }.padding(.vertical, short ? 12 : 20).frame(width: width)
                                 .fixedSize(horizontal: false, vertical: true)
-                                .readGeometry(for: CGFloat.self) { $0.size.height } action: { questionContentHeight = $0 }
                                 .frame(maxWidth: .infinity)
                                 .modifier(ShortScrollCentering(height: questionViewport))
                                 .contentShape(Rectangle())
                         }
                         .centersShortContent()
+                        .coordinateSpace(name: "game.questionViewport")
+                        .onPreferenceChange(QuestionAnswerFrameKey.self) { answerFrame = $0 }
                         .accessibilityIdentifier("game.questions")
                         .onValueChange(of: session.hasFeedback) { visible in
-                            // This compact question already keeps all four choices visible.
-                            if visible && !session.correctFeedback && session.question.kind != .minutesBetween {
-                                withAnimation(.easeOut(duration: 0.25)) {
-                                    proxy.scrollTo("question.answers", anchor: .center)
+                            guard visible, !session.correctFeedback, let frame = answerFrame else { return }
+                            let anchor: UnitPoint?
+                            if frame.minY < 0 { anchor = .top }
+                            else if frame.maxY > questionViewport { anchor = .bottom }
+                            else { anchor = nil }
+                            if let anchor {
+                                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
+                                    proxy.scrollTo("question.answerFocus", anchor: anchor)
                                 }
                             }
                         }
@@ -80,7 +79,7 @@ struct DinoGameView: View {
                             if session.question.kind == .timeZone { proxy.scrollTo("question.top", anchor: .top) }
                         }
                     }
-                    companionDock(height: dockHeight, size: companionSize, width: g.size.width)
+                    answerFooter(height: footerHeight, width: width)
                 }.disabled(confirmExit || session.demonstration != nil).accessibilityHidden(confirmExit || session.demonstration != nil)
                 if let kind = session.demonstration {
                     Color.black.opacity(0.28).ignoresSafeArea()
@@ -103,10 +102,6 @@ struct DinoGameView: View {
                         .frame(maxWidth: 440, maxHeight: min(520, g.size.height - 16))
                         .transition(.scale(scale: 0.94).combined(with: .opacity))
                 }
-            }
-            .overlay(alignment: .bottom) {
-                DinoCompanionAnchor(placement: .game, size: companionSize)
-                    .offset(y: g.safeAreaInsets.bottom - 6)
             }
 
         }.foregroundStyle(DinoStyle.ink)
@@ -131,21 +126,20 @@ struct DinoGameView: View {
             .animation(.easeOut(duration: 0.18), value: confirmExit)
     }
 
-    private func companionDock(height: CGFloat, size: CGFloat, width: CGFloat) -> some View {
-        // Questions scroll above this row; Dino remains centred underneath them.
-        // Feedback uses the clear space to his left without shifting the question.
+    private func answerFooter(height: CGFloat, width: CGFloat) -> some View {
+        // Reserve the same space before and after answering so the question stays still.
+        // This row sits outside the scroll view and above the bottom safe area.
         Color.clear.frame(height: height)
-            .overlay(alignment: .leading) {
+            .overlay {
                 if session.hasFeedback && !session.shouldAutoAdvance {
                     Button {
                         if session.canRetry { session.showAnswer() }
                         else { session.advance() }
                     } label: {
                         Label(LocalizedStringKey(session.canRetry ? "dino.showAnswer" : "dino.next"), systemImage: session.canRetry ? "eye" : "arrow.right")
-                    }.buttonStyle(DinoButtonStyle(compact: true))
+                    }.buttonStyle(DinoButtonStyle())
                         .multilineTextAlignment(.center)
-                        .frame(width: min(280, max(100, (width - size) / 2 - 24)))
-                        .padding(.leading, 12)
+                        .frame(width: min(420, width))
                         .accessibilityIdentifier(session.canRetry ? "question.showAnswer" : "question.next")
                 }
             }

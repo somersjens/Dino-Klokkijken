@@ -3,6 +3,7 @@ import UIKit
 
 struct SpokenTimeQuestion: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject var session: DinoSession
     let theme: ClockTheme
     let width: CGFloat
@@ -56,7 +57,8 @@ struct SpokenTimeQuestion: View {
         .multilineTextAlignment(.center)
         .lineLimit(2)
         .minimumScaleFactor(0.75)
-        .frame(maxWidth: .infinity, minHeight: 28)
+        .frame(maxWidth: .infinity, minHeight: 56, maxHeight: 56)
+        .questionAnswerFocus()
     }
 
     private var clock: some View {
@@ -171,24 +173,19 @@ struct SpokenTimeQuestion: View {
     }
 
     private func confirm(_ prompt: SpokenTimePrompt) -> some View {
-        Group {
-            if !session.hidesAnswerControls {
-                Button {
-                    let ids = prompt.slots.indices.map { index -> String in
-                        guard session.spokenChoices.indices.contains(index) else { return SpokenTimeChoice.emptyID }
-                        return session.spokenChoices[index] ?? SpokenTimeChoice.emptyID
-                    }
-                    session.submit(.spoken(SpokenTimeAnswer(choiceIDs: ids)))
-                } label: {
-                    Image(systemName: "checkmark").font(.title2.bold())
-                }
-                .buttonStyle(DinoButtonStyle())
-                .frame(maxWidth: 260)
-                .allowsHitTesting(!session.hasFeedback)
-                .accessibilityHidden(session.hasFeedback)
-                .accessibilityIdentifier("question.confirm")
+        Button {
+            let ids = prompt.slots.indices.map { index -> String in
+                guard session.spokenChoices.indices.contains(index) else { return SpokenTimeChoice.emptyID }
+                return session.spokenChoices[index] ?? SpokenTimeChoice.emptyID
             }
+            session.submit(.spoken(SpokenTimeAnswer(choiceIDs: ids)))
+        } label: {
+            Image(systemName: "checkmark").font(.title2.bold())
         }
+        .buttonStyle(DinoButtonStyle())
+        .frame(maxWidth: 260)
+        .accessibilityIdentifier("question.confirm")
+        .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
     }
 }
 

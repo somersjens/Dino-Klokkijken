@@ -43,6 +43,7 @@ struct DinoCoreTests {
         testWorlds()
         testLevelQuestionOutline()
         testJungleSceneryClearance()
+        testMapAnimationViewport()
         testAttempt()
         testRepeatedAnswerControls()
         testAnswerRetries()
@@ -373,6 +374,25 @@ struct DinoCoreTests {
         memory.set("mix", forKey: "dino.settings.practiceOrder")
         let settings = DinoSettings(defaults: memory)
         expect(settings.practiceTime == .minutes && settings.practiceOrder == .mix, "old preferences migrate to exact Minutes without changing question order")
+    }
+
+    static func testMapAnimationViewport() {
+        let frame = CGRect(x: 0, y: -600, width: 390, height: 2200)
+        let bounds = DinoMapViewport.animationBounds(frame: frame, viewportHeight: 800)
+        expect(bounds.contains(CGRect(x: 0, y: 600, width: 390, height: 800)), "animation bands include the entire visible map")
+        expect(bounds == DinoMapViewport.animationBounds(frame: frame.offsetBy(dx: 0, dy: -1), viewportHeight: 800),
+               "one scroll pixel does not rebuild moving map scenery")
+        expect(bounds.height < 800 + 512, "animation preparation stays within two small extra bands")
+        for y: CGFloat in [-2200, -3000, 800, 1200] {
+            expect(DinoMapViewport.animationBounds(frame: CGRect(x: 0, y: y, width: 390, height: 2200), viewportHeight: 800).isEmpty,
+                   "fully offscreen animation stops")
+        }
+        let edge = DinoMapViewport.animationBounds(frame: CGRect(x: 0, y: 790, width: 390, height: 2200), viewportHeight: 800)
+        expect(edge.minY == 0 && edge.maxY >= 10, "a partially visible chapter keeps its first animation band")
+        let incoming = DinoMapViewport.preparedAnimationBounds(frame: CGRect(x: 0, y: 900, width: 390, height: 2200), viewportHeight: 800)
+        expect(!incoming.isEmpty, "incoming actors prepare before reaching the screen")
+        let distant = DinoMapViewport.preparedAnimationBounds(frame: CGRect(x: 0, y: 1200, width: 390, height: 2200), viewportHeight: 800)
+        expect(distant.isEmpty, "distant actors do not consume animation frames")
     }
 
     static func testJungleSceneryClearance() {
@@ -1566,10 +1586,10 @@ struct DinoCoreTests {
             let sample = DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.leadIn(.pirouette) + time / DinoAnimation.pirouettePlaybackRate)
             expect(sample.height == 0 && sample.pose.asset == "dino-pirouette-\(pose)"
                    && time / DinoAnimation.pirouettePlaybackRate < DinoAnimation.travelDelay(.pirouette),
-                   "each preparation pose is visible before the journey leaves the bottom dock")
+                   "each preparation pose is visible before the journey leaves the HUD portrait")
         }
-        expect(DinoAnimation.travelDelay(.backflip) == 0 && DinoAnimation.travelDelay(.idle) == 0,
-               "the extra pirouette preparation does not delay the other companion movements")
+        expect(DinoAnimation.travelDelay(.backflip) == 0.18 && DinoAnimation.travelDelay(.idle) == 0,
+               "the backflip prepares in the portrait until takeoff while idle has no travel delay")
         expect(DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.leadIn(.pirouette) + 2.08 / DinoAnimation.pirouettePlaybackRate).pose.asset == "dino-pirouette-13",
                "the arms lift through an intermediate pose before the unchanged celebration")
         expect(DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.leadIn(.pirouette) - 0.01).pose.asset == "dino-pirouette-01",
@@ -1697,6 +1717,9 @@ struct DinoCoreTests {
             for (index, recipe) in level.recipes.enumerated() {
                 expect(level.questionOutline[index].timeTitleKey == level.time(for: recipe).titleKey, "outline times match actual generation")
                 expect(level.questionOutline[index].titleKey == DinoPracticeQuestion(rawValue: recipe.kind.rawValue)!.titleKey, "outline names match practice")
+                expect(level.questionOutline[index].practiceConfiguration == DinoPracticeConfiguration(
+                    time: level.time(for: recipe), order: .specific(DinoPracticeQuestion(rawValue: recipe.kind.rawValue)!)),
+                    "each outline row opens practice with the exact question and time family of its own recipe")
             }
         }
         expect(DinoLevelCatalog.level(31)!.practiceTimeTitleKey == DinoPracticeTime.tenMinutes.titleKey, "village introduces ten-minute steps")

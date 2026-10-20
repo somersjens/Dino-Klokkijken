@@ -1,5 +1,132 @@
 import SwiftUI
 import UIKit
+import Combine
+
+private struct DinoMapPreparingKey: EnvironmentKey { static let defaultValue = false }
+private struct DinoMapInitialWorldKey: EnvironmentKey { static let defaultValue = 1 }
+private struct DinoMapArtworkPreparedKey: EnvironmentKey { static let defaultValue: (Int) -> Void = { _ in } }
+private struct DinoMapAnimationEpochKey: EnvironmentKey { static let defaultValue: Date? = nil }
+extension EnvironmentValues {
+    var dinoMapPreparing: Bool {
+        get { self[DinoMapPreparingKey.self] }
+        set { self[DinoMapPreparingKey.self] = newValue }
+    }
+    var dinoMapInitialWorld: Int {
+        get { self[DinoMapInitialWorldKey.self] }
+        set { self[DinoMapInitialWorldKey.self] = newValue }
+    }
+    var dinoMapArtworkPrepared: (Int) -> Void {
+        get { self[DinoMapArtworkPreparedKey.self] }
+        set { self[DinoMapArtworkPreparedKey.self] = newValue }
+    }
+    var dinoMapAnimationEpoch: Date? {
+        get { self[DinoMapAnimationEpochKey.self] }
+        set { self[DinoMapAnimationEpochKey.self] = newValue }
+    }
+}
+
+/// Keep expensive static drawing out of scrolling. The native animation layers
+/// remain independent; an unchanged bitmap never clears between scroll frames.
+struct PreparedMapArtwork<Content: View>: View {
+    @Environment(\.displayScale) private var displayScale
+    @Environment(\.dinoMapArtworkPrepared) private var prepared
+    let worldID: Int
+    let size: CGSize
+    let routeOffset: CGFloat
+    let ground: UInt32?
+    @ViewBuilder var content: () -> Content
+    @State private var rendered: (key: String, image: UIImage)?
+    @State private var nativeFallback = false
+
+    private var scale: CGFloat { min(2, displayScale) }
+    private var key: String { DinoMapArtworkCache.key(worldID: worldID, size: size, offset: routeOffset, scale: scale) }
+    var body: some View {
+        let cached = rendered?.key == key ? rendered?.image : DinoMapArtworkCache.shared.cached(key)
+        Group {
+            if let image = cached ?? rendered?.image {
+                Image(uiImage: image).resizable().frame(width: size.width, height: size.height)
+            } else if nativeFallback { content() }
+            else if let ground { Color(dinoHex: ground) }
+            else { Color.clear }
+        }
+        .transaction { $0.animation = nil }
+        .task(id: key) {
+            guard size.width > 0, size.height > 0 else { return }
+            let request = key
+            let image = await DinoMapArtworkCache.shared.image(key: request, worldID: worldID,
+                size: size, routeOffset: routeOffset, scale: scale, content: content())
+            guard !Task.isCancelled else { return }
+            if let image { rendered = (request, image); nativeFallback = false }
+            else { nativeFallback = true; await Task.yield() }
+            prepared(worldID)
+        }
+    }
+}
+
+@MainActor
+final class DinoMapArtworkCache: ObservableObject {
+    static let shared = DinoMapArtworkCache()
+    private let images = NSCache<NSString, UIImage>()
+    private let directory: URL
+    @Published private(set) var rasterizationCount = 0
+    private static let revision: String = {
+        let executable = Bundle.main.executableURL
+        let date = executable.flatMap { try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate }
+        return "terrain-v2-\(Int(date?.timeIntervalSince1970 ?? 0))"
+    }()
+    private init() {
+        images.totalCostLimit = 96 * 1024 * 1024
+        directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent(Self.revision)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    }
+    static func key(worldID: Int, size: CGSize, offset: CGFloat, scale: CGFloat) -> String {
+        "\(worldID)-\(Int((size.width * 10).rounded()))-\(Int((size.height * 10).rounded()))-\(Int((offset * 10).rounded()))-\(Int(scale * 10))"
+    }
+    func cached(_ key: String) -> UIImage? { images.object(forKey: key as NSString) }
+
+    func image<Content: View>(key: String, worldID: Int, size: CGSize, routeOffset: CGFloat,
+                             scale: CGFloat, content: Content) async -> UIImage? {
+        if let cached = cached(key) { return cached }
+        let file = directory.appendingPathComponent(key).appendingPathExtension("png")
+        let diskImage = await Task.detached(priority: .userInitiated) {
+            UIImage(contentsOfFile: file.path)?.preparingForDisplay()
+        }.value
+        if let diskImage {
+            retain(diskImage, key: key)
+            return diskImage
+        }
+        await Task.detached(priority: .userInitiated) {
+            DinoMapArtworkPreparation.prepare(worldID: worldID, size: size, routeOffset: routeOffset)
+        }.value
+        guard !Task.isCancelled else { return nil }
+        if let cached = cached(key) { return cached }
+        let renderer = ImageRenderer(content: content.frame(width: size.width, height: size.height))
+        renderer.scale = scale
+        renderer.proposedSize = ProposedViewSize(size)
+        guard let image = renderer.uiImage else { return nil }
+        rasterizationCount += 1
+        retain(image, key: key)
+        Task.detached(priority: .utility) {
+            if let data = image.pngData() { try? data.write(to: file, options: .atomic) }
+        }
+        return image
+    }
+    private func retain(_ image: UIImage, key: String) {
+        let cost = image.cgImage.map { $0.bytesPerRow * $0.height } ?? 0
+        images.setObject(image, forKey: key as NSString, cost: cost)
+    }
+}
+
+#if DEBUG
+struct MapRasterDiagnostics: View {
+    @ObservedObject private var cache = DinoMapArtworkCache.shared
+    var body: some View {
+        Text(String(cache.rasterizationCount)).font(.system(size: 1)).foregroundStyle(.clear)
+            .frame(width: 1, height: 1).clipped()
+            .accessibilityIdentifier("map.rasterizationCount")
+    }
+}
+#endif
 
 private struct DinoHighContrastKey: EnvironmentKey { static let defaultValue = false }
 extension EnvironmentValues {

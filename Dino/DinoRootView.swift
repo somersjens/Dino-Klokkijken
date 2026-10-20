@@ -13,8 +13,10 @@ struct DinoRootView: View {
     @State private var startCard: LevelConfiguration?
     @State private var showsFriends = false
     @State private var showsPractice = false
+    @State private var practiceEntry: DinoPracticeQuestion?
     @State private var mapHUDHeight: CGFloat = 103
     @State private var gameCompanionClip: DinoAnimation.Clip = .idle
+    @State private var hasShownMap = false
 
     var body: some View {
         ZStack {
@@ -22,7 +24,8 @@ struct DinoRootView: View {
                 .transition(.opacity)
                 .disabled(startCard != nil || showsPractice).accessibilityHidden(startCard != nil || showsPractice)
             if let startCard {
-                LevelStartOverlay(level: startCard, hudHeight: mapHUDHeight, start: { start(startCard) }, close: closeStartCard)
+                LevelStartOverlay(level: startCard, hudHeight: mapHUDHeight, start: { start(startCard) },
+                                  close: closeStartCard, openPractice: openPractice)
                     .zIndex(2)
             }
         }
@@ -30,7 +33,9 @@ struct DinoRootView: View {
             GeometryReader { geometry in
                 let anchor = startCard != nil || showsCompletion ? nil : result != nil ? anchors[.result] : anchors[.game]
                 DinoCompanionLayer(destination: anchor.map { geometry[$0] },
-                                   clip: companionClip, isResult: result != nil && startCard == nil && !showsCompletion)
+                                   clip: companionClip, isResult: result != nil && startCard == nil && !showsCompletion,
+                                   worldID: result?.level.worldID ?? session?.level.worldID ?? 1,
+                                   compactPortrait: geometry.size.height < 430)
             }.allowsHitTesting(false)
         }
         .preferredColorScheme(.light)
@@ -43,7 +48,7 @@ struct DinoRootView: View {
                     .presentationDetents([.large]).presentationDragIndicator(.visible)
             }
             .sheet(isPresented: $showsPractice) {
-                DinoPracticeView().gameEnvironment()
+                DinoPracticeView(initialQuestion: practiceEntry).gameEnvironment()
                     .pagePresentation()
                     .presentationDetents([.large]).presentationDragIndicator(.visible)
             }
@@ -92,7 +97,7 @@ struct DinoRootView: View {
                     }
                 }, onCompanionReaction: { gameCompanionClip = $0 }).id(ObjectIdentifier(session))
             } else {
-                WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true }, openPractice: { showsPractice = true }, openCompletion: { completedWorldID = 10; showsCompletion = true }, openFriends: { showsFriends = true }, hudHeightChanged: { mapHUDHeight = $0 })
+                WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true }, openPractice: { practiceEntry = nil; showsPractice = true }, openCompletion: { completedWorldID = 10; showsCompletion = true }, openFriends: { showsFriends = true }, hudHeightChanged: { mapHUDHeight = $0 }, animatesOpening: !hasShownMap, openingFinished: { hasShownMap = true })
             }
         }
     }
@@ -120,6 +125,16 @@ struct DinoRootView: View {
     }
     private func closeStartCard() {
         withAnimation(.easeOut(duration: 0.24)) { startCard = nil }
+    }
+    private func openPractice(_ configuration: DinoPracticeConfiguration) {
+        settings.practiceTime = configuration.time
+        settings.practiceOrder = configuration.order
+        if case .specific(let question) = configuration.order { practiceEntry = question }
+        else { practiceEntry = nil }
+        withAnimation(.easeOut(duration: 0.24)) {
+            startCard = nil
+            showsPractice = true
+        }
     }
     private func showMap() {
         withAnimation(.easeOut(duration: 0.24)) {

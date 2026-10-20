@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct WorldMap: View {
     @Environment(\.dinoHighContrast) private var highContrast
@@ -12,103 +13,140 @@ struct WorldMap: View {
     var openCompletion: () -> Void
     var openFriends: () -> Void
     var hudHeightChanged: (CGFloat) -> Void = { _ in }
+    var animatesOpening = true
+    var openingFinished: () -> Void = {}
     @State private var landscapeRouteOffset: CGFloat = 320
-    @State private var floatingHUDHeight: CGFloat = 128
     @State private var worldsAboveHUD: Set<Int> = [1]
     @State private var selectedFriend: FriendSelection?
     @State private var showsStars = false
     @State private var focusRequest = 0
     @State private var hintedLevel: Int?
     @State private var celebrationID: UUID?
+    @State private var initialArtworkReady = false
+    @State private var initialPositionReady = false
+    @State private var openingImage: UIImage?
+    @State private var preparedWorlds: Set<Int> = []
+    @State private var introRevealed = false
+    @State private var introFinished = false
+    @State private var animationEpoch = Date()
+
+    private var showsMapDino: Bool { introFinished || !animatesOpening }
+    private var openingReady: Bool {
+        let world = (player.profile.mapLevel - 1) / 10 + 1
+        let required = Set(max(1, world - 2)...min(10, world + 2))
+        return initialPositionReady && required.isSubset(of: preparedWorlds)
+    }
 
     private var guidedLevel: Int? { player.needsFirstLevelHint ? player.profile.mapLevel : hintedLevel }
 
     var body: some View {
         GeometryReader { geometry in
             let landscape = geometry.size.width > geometry.size.height
+            let compact = verticalSizeClass == .compact
+            // Use the actual first layout, including iPad scale. Measuring an
+            // initial 128pt placeholder used to shift the whole scroll content.
+            let floatingHUDHeight = (compact ? 82.0 : 128.0) * (compact ? 1 : min(1.9, max(1, geometry.size.width / 390), max(1, geometry.size.height / 480)))
+            let viewportObserver = MapViewportObserver(centersLevel: player.profile.mapLevel > 1,
+                restoresPosition: !initialPositionReady,
+                topClearance: floatingHUDHeight + geometry.safeAreaInsets.top,
+                ready: { initialPositionReady = true })
             let routeTopClearance = max(0, min(200, (min(600, geometry.size.width) - 36) * 0.37) - 82)
             ZStack {
                 Color(dinoHex: DinoWorldCatalog.worlds.last!.ground).ignoresSafeArea()
-                VStack(spacing: 0) {
-                    ScrollViewReader { proxy in
-                        ScrollView {
-                            VStack(spacing: 0) {
+                if initialArtworkReady {
+                    VStack(spacing: 0) {
+                        ScrollViewReader { proxy in
+                            ScrollView {
                                 VStack(spacing: 0) {
-                                    VStack(spacing: 8) {
-                                        mapHeading
-                                            .scaleEffect(landscape ? 0.82 : 1)
-                                            .frame(height: landscape ? 174 : 190, alignment: .top)
-                                            .padding(.top, landscape ? 0 : -16)
-                                        if !friends.authenticated { friendsShortcut }
-                                        bossShortcut
-                                    }.padding(.horizontal, 18).padding(.bottom, 2)
-                                        .frame(maxWidth: 600).frame(maxWidth: .infinity)
-                                        .readGeometry(for: CGFloat.self) { $0.size.height } action: { landscapeRouteOffset = $0 }
-                                    mapRoute(topClearance: routeTopClearance)
-                                }.padding(.top, floatingHUDHeight + geometry.safeAreaInsets.top)
-                                    .background {
-                                        MapScenery(viewportHeight: geometry.size.height) {
-                                            WorldMapLandscape(routeOffset: landscapeRouteOffset + floatingHUDHeight + geometry.safeAreaInsets.top + routeTopClearance,
-                                                              viewportHeight: geometry.size.height)
-                                                .equatable()
+                                    VStack(spacing: 0) {
+                                        VStack(spacing: 8) {
+                                            mapHeading
+                                                .scaleEffect(landscape ? 0.82 : 1)
+                                                .frame(height: landscape ? 174 : 190, alignment: .top)
+                                                .padding(.top, landscape ? 0 : -16)
+                                            friendsShortcut.opacity(friends.authenticated ? 0 : 1)
+                                                .allowsHitTesting(!friends.authenticated).accessibilityHidden(friends.authenticated)
+                                            bossShortcut
+                                        }.padding(.horizontal, 18).padding(.bottom, 2)
+                                            .frame(maxWidth: 600).frame(maxWidth: .infinity)
+                                            .readGeometry(for: CGFloat.self) { $0.size.height } action: { landscapeRouteOffset = $0 }
+                                        mapRoute(topClearance: routeTopClearance, viewportObserver: viewportObserver)
+                                    }.padding(.top, floatingHUDHeight + geometry.safeAreaInsets.top)
+                                        .background {
+                                            MapScenery(worldID: 1, viewportHeight: geometry.size.height) {
+                                                WorldMapLandscape(routeOffset: landscapeRouteOffset + floatingHUDHeight + geometry.safeAreaInsets.top + routeTopClearance,
+                                                                  viewportHeight: geometry.size.height, cachesTerrain: true)
+                                                    .equatable()
+                                            }
                                         }
-                                    }
-                                    .readGeometry(for: Bool.self) {
-                                        $0.frame(in: .named("adventure.map.viewport")).minY <= floatingHUDHeight + 24
-                                    } action: { updateVisibleWorld(1, aboveHUD: $0) }
-                                ForEach(DinoWorldCatalog.worlds.dropFirst()) { world in
-                                    WorldChapter(world: world, topClearance: routeTopClearance,
-                                                 viewportHeight: geometry.size.height, hintedLevel: guidedLevel,
-                                                 openLevel: selectLevel)
                                         .readGeometry(for: Bool.self) {
                                             $0.frame(in: .named("adventure.map.viewport")).minY <= floatingHUDHeight + 24
-                                        } action: { updateVisibleWorld(world.id, aboveHUD: $0) }
+                                        } action: { updateVisibleWorld(1, aboveHUD: $0) }
+                                    ForEach(DinoWorldCatalog.worlds.dropFirst()) { world in
+                                        WorldChapter(world: world, topClearance: routeTopClearance,
+                                                     viewportHeight: geometry.size.height, hintedLevel: guidedLevel,
+                                                     viewportObserver: viewportObserver, showsDino: showsMapDino,
+                                                     openLevel: selectLevel).equatable()
+                                            .readGeometry(for: Bool.self) {
+                                                $0.frame(in: .named("adventure.map.viewport")).minY <= floatingHUDHeight + 24
+                                            } action: { updateVisibleWorld(world.id, aboveHUD: $0) }
+                                    }
+                                    comingSoon(bottomInset: geometry.safeAreaInsets.bottom)
                                 }
-                                comingSoon(bottomInset: geometry.safeAreaInsets.bottom)
+
                             }
-                        }
-                        .accessibilityIdentifier("map.route")
-                        .task(id: focusRequest) {
-                            hintedLevel = nil
-                            celebrationID = nil
-                            let requested = focusRequest > 0
-                            // Level 1 is the entrance. A fresh visit keeps that entrance at the
-                            // top; the header still centers the next playable stone.
-                            let target = player.profile.mapLevel
-                            guard requested || target > 1 else { return }
-                            // Center the next stone in the space beneath the floating HUD.
-                            let anchor = UnitPoint(x: 0.5, y: min(0.78, 0.5 + (floatingHUDHeight + geometry.safeAreaInsets.top) / (2 * max(1, geometry.size.height))))
-                            withAnimation(requested && !reduceMotion ? .easeInOut(duration: 0.55) : nil) {
-                                proxy.scrollTo("node-\(target)", anchor: anchor)
+                            .accessibilityIdentifier("map.route")
+                            .task(id: focusRequest) {
+                                hintedLevel = nil
+                                celebrationID = nil
+                                let requested = focusRequest > 0
+                                // Level 1 is the entrance. A fresh visit keeps that entrance at the
+                                // top; the header still centers the next playable stone.
+                                let target = player.profile.mapLevel
+                                // The native viewport probe restores the initial position
+                                // before revealing the map. This task handles explicit taps only.
+                                guard requested else { return }
+                                // Center the next stone in the space beneath the floating HUD.
+                                let anchor = UnitPoint(x: 0.5, y: min(0.78, 0.5 + (floatingHUDHeight + geometry.safeAreaInsets.top) / (2 * max(1, geometry.size.height))))
+                                withAnimation(requested && !reduceMotion ? .easeInOut(duration: 0.55) : nil) {
+                                    proxy.scrollTo("node-\(target)", anchor: anchor)
+                                }
+                                do {
+                                    try await Task.sleep(for: .milliseconds(reduceMotion ? 100 : 650))
+                                    try Task.checkCancellation()
+                                    if player.profile.adventureComplete {
+                                        celebrationID = UUID()
+                                    } else {
+                                        withAnimation(.easeOut(duration: 0.2)) { hintedLevel = player.profile.nextAdventureLevel }
+                                    }
+                                    try await Task.sleep(for: .seconds(5))
+                                    try Task.checkCancellation()
+                                    withAnimation(.easeOut(duration: 0.25)) {
+                                        hintedLevel = nil
+                                        celebrationID = nil
+                                    }
+                                } catch { /* A new tap or leaving the map cancels the previous cue. */ }
                             }
-                            guard requested else { return }
-                            do {
-                                try await Task.sleep(for: .milliseconds(reduceMotion ? 100 : 650))
-                                try Task.checkCancellation()
-                                if player.profile.adventureComplete {
-                                    celebrationID = UUID()
-                                } else {
-                                    withAnimation(.easeOut(duration: 0.2)) { hintedLevel = player.profile.nextAdventureLevel }
-                                }
-                                try await Task.sleep(for: .seconds(5))
-                                try Task.checkCancellation()
-                                withAnimation(.easeOut(duration: 0.25)) {
-                                    hintedLevel = nil
-                                    celebrationID = nil
-                                }
-                            } catch { /* A new tap or leaving the map cancels the previous cue. */ }
-                        }
-                    }.ignoresSafeArea(edges: [.top, .bottom, .horizontal])
-                }.overlay(alignment: .top) {
-                    AdventureHeader(level: max(1, player.profile.dinoLevel),
-                                    stars: player.profile.totalStars, worldID: worldsAboveHUD.max() ?? 1,
-                                    compact: verticalSizeClass == .compact, viewportHeight: geometry.size.height,
-                                    control: .settings, help: openPractice, focusLevel: { focusRequest += 1 },
-                                    openStars: { showsStars = true }, action: openSettings)
-                        .readGeometry(for: CGFloat.self) { $0.size.height } action: {
-                            floatingHUDHeight = $0
-                            hudHeightChanged($0)
-                        }
+                        }.ignoresSafeArea(edges: [.top, .bottom, .horizontal])
+                    }.overlay(alignment: .top) {
+                        AdventureHeader(level: max(1, player.profile.dinoLevel),
+                                        stars: player.profile.totalStars, worldID: worldsAboveHUD.max() ?? 1,
+                                        compact: verticalSizeClass == .compact, viewportHeight: geometry.size.height,
+                                        viewportWidth: geometry.size.width,
+                                        control: .settings, help: openPractice, focusLevel: { focusRequest += 1 },
+                                        openStars: { showsStars = true }, action: openSettings)
+                            .readGeometry(for: CGFloat.self) { $0.size.height } action: {
+                                hudHeightChanged($0)
+                            }
+                    }
+                    .opacity(initialPositionReady && (introRevealed || !animatesOpening) ? 1 : 0)
+                    .allowsHitTesting(initialPositionReady && showsMapDino)
+                    .disabled(!initialPositionReady || !showsMapDino)
+                    .accessibilityHidden(!initialPositionReady || !showsMapDino)
+                    .environment(\.dinoMapAnimationEpoch, animationEpoch)
+                    .environment(\.dinoMapPreparing, !introFinished && animatesOpening)
+                    .environment(\.dinoMapArtworkPrepared, { preparedWorlds.insert($0) })
+                    .environment(\.dinoMapInitialWorld, (player.profile.mapLevel - 1) / 10 + 1)
                 }
                 if let celebrationID {
                     MapCompletionConfetti().id(celebrationID)
@@ -117,7 +155,37 @@ struct WorldMap: View {
                 }
             }.coordinateSpace(name: "adventure.map.viewport")
         }
+        .overlayPreferenceValue(MapDinoAnchorKey.self) { anchor in
+            if animatesOpening && !introFinished {
+                GeometryReader { geometry in
+                    MapOpeningView(world: DinoWorldCatalog.world((player.profile.mapLevel - 1) / 10 + 1)!,
+                        image: openingImage, destination: anchor.map { geometry[$0] }, ready: openingReady,
+                        reveal: { introRevealed = true }, finished: {
+                            introFinished = true
+                            openingFinished()
+                        })
+                }
+                .zIndex(3)
+            }
+        }
+        .task {
+            openingImage = await DinoSpriteLoader.shared.idleImage(for: player.profile.dinoAppearance ?? .standard)
+            guard !Task.isCancelled else { return }
+            // Commit Dino's arrival into the clock garden before constructing
+            // the map tree; terrain preparation must not hide that first frame.
+            if animatesOpening {
+                do { try await Task.sleep(for: .milliseconds(180)) } catch { return }
+            }
+            initialArtworkReady = true
+        }
         .foregroundStyle(DinoStyle.ink)
+        .overlay(alignment: .bottomTrailing) {
+#if DEBUG
+            if ProcessInfo.processInfo.environment["DINO_TEST_MAP_DIAGNOSTICS"] == "1" {
+                MapRasterDiagnostics()
+            }
+#endif
+        }
         .sheet(item: $selectedFriend) { friend in
             NavigationStack {
                 FriendProfileView(friendID: friend.id)
@@ -186,8 +254,8 @@ struct WorldMap: View {
         }.buttonStyle(.plain).accessibilityIdentifier("map.bossShortcut")
     }
 
-    private func mapRoute(topClearance: CGFloat) -> some View {
-        routeNodes.padding(.horizontal, 18).frame(maxWidth: 600)
+    private func mapRoute(topClearance: CGFloat, viewportObserver: MapViewportObserver) -> some View {
+        routeNodes(viewportObserver: viewportObserver).padding(.horizontal, 18).frame(maxWidth: 600)
             .frame(maxWidth: .infinity)
             .frame(height: WorldRouteTrail.jungleRouteHeight(topClearance: topClearance))
     }
@@ -222,7 +290,7 @@ struct WorldMap: View {
             .background { WorldMapEndingLandscape().equatable() }
     }
 
-    private var routeNodes: some View {
+    private func routeNodes(viewportObserver: MapViewportObserver) -> some View {
         GeometryReader { g in
             let standingLevel = player.profile.mapLevel
             let dinoSize = min(200, g.size.width * 0.37)
@@ -248,9 +316,13 @@ struct WorldMap: View {
                                     Ellipse().fill(Color(dinoHex: 0x38552D).opacity(0.25))
                                         .frame(width: dinoSize * 0.48, height: dinoSize * 0.12)
                                         .blur(radius: 3).offset(y: -4)
-                                    DinoCharacter(state: .happy, size: dinoSize)
+                                    DinoCharacter(state: .happy, size: dinoSize, preparesReactions: false)
+                                        .opacity(showsMapDino ? 1 : 0)
+                                        .anchorPreference(key: MapDinoAnchorKey.self, value: .bounds) { showsMapDino ? nil : $0 }
                                 }
                                     .allowsHitTesting(false)
+                                    .accessibilityElement(children: .ignore)
+                                    .accessibilityLabel(Text(verbatim: "Dino"))
                                     .accessibilityIdentifier("map.dino.\(id)")
                                     .offset(x: point.x - g.size.width / 2,
                                             y: -dinoSize / 2 + 12)
@@ -260,6 +332,7 @@ struct WorldMap: View {
                                     .offset(x: point.x - g.size.width / 2, y: 82)
                             }
                         }.frame(width: g.size.width, height: 175).id("node-\(id)")
+                            .background { if standingLevel == id { viewportObserver } }
                     }
                 }.padding(.top, topClearance - 17.5)
             }
@@ -271,6 +344,223 @@ struct WorldMap: View {
                 y: topClearance + JungleMapLayout.firstNodeY + CGFloat(index) * WorldRouteTrail.levelSpacing)
     }
 
+}
+
+private struct MapDinoAnchorKey: PreferenceKey {
+    static var defaultValue: Anchor<CGRect>? { nil }
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        value = nextValue() ?? value
+    }
+}
+
+/// The clock garden is visible from the first frame. The same Dino then travels
+/// into the actual map anchor while the prepared landscape opens underneath.
+private struct MapOpeningView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let world: DinoWorld
+    let image: UIImage?
+    let destination: CGRect?
+    let ready: Bool
+    var reveal: () -> Void
+    var finished: () -> Void
+    @State private var turns = false
+    @State private var progress: CGFloat = 0
+    @State private var backdropOpacity = 1.0
+    @State private var gardenOpacity = 0.0
+    @State private var appearedAt = Date()
+
+    var body: some View {
+        GeometryReader { geometry in
+            let source = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
+            ZStack {
+                ZStack {
+                    Color(dinoHex: 0xE2E9D4).ignoresSafeArea()
+                    LinearGradient(colors: [Color(dinoHex: world.ground).mixed(with: .white, by: 0.35),
+                                            Color(dinoHex: world.ground), Color(dinoHex: 0xA2C991)],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing).ignoresSafeArea().opacity(gardenOpacity)
+                    ForEach(0..<8, id: \.self) { index in
+                        Image(systemName: "leaf.fill")
+                            .font(.system(size: CGFloat(100 + index % 3 * 30)))
+                            .foregroundStyle(Color(dinoHex: 0x4C865D).opacity(0.12 * gardenOpacity))
+                            .rotationEffect(.degrees(Double(index * 53)))
+                            .position(x: index.isMultiple(of: 2) ? 5 : geometry.size.width - 5,
+                                      y: geometry.size.height * CGFloat(index + 1) / 9)
+                    }
+                    ZStack {
+                        Circle().fill(.white.opacity(0.20)).frame(width: 264, height: 264)
+                        Circle().strokeBorder(.white.opacity(0.65), lineWidth: 2).frame(width: 244, height: 244)
+                        ForEach(0..<12, id: \.self) { tick in
+                            Capsule().fill(DinoStyle.deepGreen.opacity(0.24))
+                                .frame(width: 3, height: tick.isMultiple(of: 3) ? 13 : 7)
+                                .offset(y: -111).rotationEffect(.degrees(Double(tick) * 30))
+                        }
+                        ZStack {
+                            Capsule().fill(.white.opacity(0.7)).frame(width: 4, height: 88).offset(y: -40)
+                        }.frame(width: 244, height: 244)
+                            .rotationEffect(.degrees(turns && !reduceMotion ? 335 : -25))
+                    }.position(source)
+                }.opacity(backdropOpacity)
+                if let image {
+                    Image(uiImage: image).resizable().scaledToFit()
+                        .shadow(color: DinoStyle.deepGreen.opacity(0.16), radius: 8, y: 5)
+                        .modifier(MapOpeningFlight(progress: progress, source: source,
+                                                   destination: destination ?? CGRect(x: source.x - 95, y: source.y - 95, width: 190, height: 190),
+                                                   reducedMotion: reduceMotion))
+                        .transition(.opacity)
+                }
+            }
+            .animation(.easeOut(duration: 0.22), value: image != nil)
+            .onAppear {
+                appearedAt = Date()
+                withAnimation(.easeOut(duration: 0.35)) { gardenOpacity = 1 }
+                withAnimation(.linear(duration: 3.2).repeatForever(autoreverses: false)) { turns = true }
+            }
+            .task(id: ready && image != nil && destination != nil) {
+                guard ready, image != nil, destination != nil else { return }
+                let remaining = max(0, 0.35 - Date().timeIntervalSince(appearedAt))
+                do {
+                    if remaining > 0 { try await Task.sleep(for: .seconds(remaining)) }
+                    try Task.checkCancellation()
+                    withAnimation(.easeInOut(duration: reduceMotion ? 0.2 : 0.55)) {
+                        backdropOpacity = 0
+                        reveal()
+                    }
+                    withAnimation(.timingCurve(0.25, 0.68, 0.25, 1, duration: reduceMotion ? 0.2 : 0.95)) {
+                        progress = 1
+                    }
+                    try await Task.sleep(for: .seconds(reduceMotion ? 0.23 : 1.0))
+                    try Task.checkCancellation()
+                    finished()
+                } catch { }
+            }
+        }.accessibilityIdentifier("map.preparing").allowsHitTesting(false)
+    }
+}
+
+private struct MapOpeningFlight: AnimatableModifier {
+    var progress: CGFloat
+    let source: CGPoint
+    let destination: CGRect
+    let reducedMotion: Bool
+    var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+    func body(content: Content) -> some View {
+        let t = min(1, max(0, progress))
+        let side = 190 + (destination.width - 190) * t
+        let arc = reducedMotion ? 0 : sin(t * .pi) * 76
+        content.frame(width: side, height: side)
+            .rotationEffect(.degrees(reducedMotion ? 0 : Double(sin(t * .pi)) * -7))
+            .position(x: source.x + (destination.midX - source.x) * t,
+                      y: source.y + (destination.midY - source.y) * t - arc)
+    }
+}
+
+/// Attached to the standing row, this reads UIScrollView's final coordinates on
+/// iOS 16 and later. Its display link stops when the first layout has settled.
+private struct MapViewportObserver: UIViewRepresentable {
+    let centersLevel: Bool
+    let restoresPosition: Bool
+    let topClearance: CGFloat
+    var ready: () -> Void
+
+    func makeUIView(context: Context) -> Probe { Probe(configuration: self) }
+    func updateUIView(_ view: Probe, context: Context) { view.configuration = self }
+    static func dismantleUIView(_ view: Probe, coordinator: ()) { view.detach() }
+
+    final class Probe: UIView {
+        var configuration: MapViewportObserver
+        private weak var scrollView: UIScrollView?
+        private var displayLink: CADisplayLink?
+        private var positioned = false
+        private var lastLayout: Layout?
+        private var stableFrames = 0
+
+        private struct Layout: Equatable {
+            let size: CGSize
+            let content: CGSize
+            let target: CGRect
+            let clearance: CGFloat
+        }
+
+        init(configuration: MapViewportObserver) {
+            self.configuration = configuration
+            positioned = !configuration.restoresPosition
+            super.init(frame: .zero)
+            isUserInteractionEnabled = false
+        }
+        required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            guard window != nil else { detach(); return }
+            attach()
+        }
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            if window != nil { attach() }
+        }
+
+        private func attach() {
+            guard scrollView == nil else { return }
+            var ancestor = superview
+            while let view = ancestor {
+                if let scroll = view as? UIScrollView {
+                    scrollView = scroll
+                    if !positioned { startObserving() }
+                    return
+                }
+                ancestor = view.superview
+            }
+        }
+
+        func detach() {
+            scrollView = nil
+            displayLink?.invalidate()
+            displayLink = nil
+        }
+
+        private func startObserving() {
+            guard displayLink == nil else { return }
+            let link = CADisplayLink(target: self, selector: #selector(tick))
+            link.add(to: .main, forMode: .common)
+            displayLink = link
+        }
+
+        @objc private func tick() {
+            guard let scroll = scrollView, window != nil else { detach(); return }
+            if !positioned {
+                guard scroll.bounds.height > 0, bounds.height > 0,
+                      scroll.contentSize.height >= scroll.bounds.height else { return }
+                let target = convert(bounds, to: scroll)
+                let layout = Layout(size: scroll.bounds.size, content: scroll.contentSize,
+                                    target: target, clearance: configuration.topClearance)
+                let minimum = -scroll.adjustedContentInset.top
+                let maximum = max(minimum, scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
+                let desired = configuration.centersLevel
+                    ? min(maximum, max(minimum, target.midY - (scroll.bounds.height + configuration.topClearance) / 2))
+                    : minimum
+                if abs(scroll.contentOffset.y - desired) > 0.5 {
+                    scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: desired), animated: false)
+                    stableFrames = 0
+                } else {
+                    stableFrames = layout == lastLayout ? stableFrames + 1 : 0
+                }
+                lastLayout = layout
+                // Let the initial geometry callbacks and first drawing pass finish
+                // before revealing the map. No fixed launch delay is needed.
+                if stableFrames >= 2 {
+                    positioned = true
+                    configuration.ready()
+                }
+            }
+            if positioned {
+                displayLink?.invalidate()
+                displayLink = nil
+            }
+        }
+    }
 }
 
 /// One small cue follows its stone, so scrolling and rotation keep it aligned.
@@ -340,9 +630,12 @@ private struct MapCompletionConfetti: View {
 }
 
 /// Keep every level's layout and scroll anchor alive, but retain landscape
-/// canvases only near the viewport. The two-screen margin prepares artwork
+/// layers only near the viewport. The three-screen margin prepares artwork
 /// before it enters view, including during fast scrolling and rotation.
 private struct MapScenery<Content: View>: View {
+    @Environment(\.dinoMapPreparing) private var preparing
+    @Environment(\.dinoMapInitialWorld) private var initialWorld
+    let worldID: Int
     let viewportHeight: CGFloat
     @ViewBuilder var content: () -> Content
     @State private var isNearby = false
@@ -351,8 +644,11 @@ private struct MapScenery<Content: View>: View {
         Color.clear
             .overlay { if isNearby { content() } }
             .readGeometry(for: Bool.self) { geometry in
+                // A late saved level must not paint the jungle on the way to
+                // its restored offset. Layout anchors remain available.
+                if preparing { return abs(worldID - initialWorld) <= 2 }
                 let frame = geometry.frame(in: .named("adventure.map.viewport"))
-                let margin = max(1200, viewportHeight * 2)
+                let margin = max(1800, viewportHeight * 3)
                 return frame.maxY >= -margin && frame.minY <= viewportHeight + margin
             } action: { nearby in
                 var transaction = Transaction()
@@ -867,17 +1163,25 @@ private struct CastleLevelStone: View {
 }
 
 /// Each chapter uses the same shape-drawn route and spacing as the jungle.
-private struct WorldChapter: View {
+private struct WorldChapter: View, Equatable {
     @Environment(\.dinoHighContrast) private var highContrast
     @EnvironmentObject private var player: DinoPlayer
     let world: DinoWorld
     let topClearance: CGFloat
     let viewportHeight: CGFloat
     let hintedLevel: Int?
+    let viewportObserver: MapViewportObserver
+    let showsDino: Bool
     var openLevel: (LevelConfiguration) -> Void
     private let titleTopPadding = WorldRouteTrail.bannerTopPadding
     private var routeOffset: CGFloat { WorldRouteTrail.bannerHeight + titleTopPadding + WorldRouteTrail.bannerBottomPadding + topClearance }
     private let positions = WorldRouteTrail.chapterPositions
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.world == rhs.world && lhs.topClearance == rhs.topClearance &&
+        lhs.viewportHeight == rhs.viewportHeight && lhs.hintedLevel == rhs.hintedLevel && lhs.showsDino == rhs.showsDino &&
+        lhs.viewportObserver.restoresPosition == rhs.viewportObserver.restoresPosition
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -906,23 +1210,28 @@ private struct WorldChapter: View {
                                     Ellipse().fill(Color(dinoHex: 0x38552D).opacity(0.25))
                                         .frame(width: dinoSize * 0.48, height: dinoSize * 0.12)
                                         .blur(radius: 3).offset(y: -4)
-                                    DinoCharacter(state: .happy, size: dinoSize)
+                                    DinoCharacter(state: .happy, size: dinoSize, preparesReactions: false)
+                                        .opacity(showsDino ? 1 : 0)
+                                        .anchorPreference(key: MapDinoAnchorKey.self, value: .bounds) { showsDino ? nil : $0 }
                                 }
                                     .offset(y: -dinoSize / 2 + 12).allowsHitTesting(false)
+                                    .accessibilityElement(children: .ignore)
+                                    .accessibilityLabel(Text(verbatim: "Dino"))
                                     .accessibilityIdentifier("map.dino.\(id)")
                             }
                         }.offset(x: geometry.size.width * (positions[index] - 0.5))
                             .frame(width: geometry.size.width, height: 175)
                             .id("node-\(id)")
+                            .background { if standingLevel == id { viewportObserver } }
                     }
                 }.padding(.top, -7.5)
                 }
             }.frame(height: WorldRouteTrail.chapterRouteHeight(topClearance: topClearance, worldID: world.id)).padding(.horizontal, 18)
                 .frame(maxWidth: 600).frame(maxWidth: .infinity)
         }.background {
-            MapScenery(viewportHeight: viewportHeight) {
+            MapScenery(worldID: world.id, viewportHeight: viewportHeight) {
                 ZStack(alignment: .top) {
-                    ThemedWorldLandscape(world: world, routeOffset: routeOffset, viewportHeight: viewportHeight).equatable()
+                    ThemedWorldLandscape(world: world, routeOffset: routeOffset, viewportHeight: viewportHeight, cachesTerrain: true).equatable()
                     if world.id != 5 {
                         GeometryReader { geometry in
                             let points = positions.enumerated().map {
@@ -949,14 +1258,16 @@ struct LevelInfoPanel: View {
     let level: LevelConfiguration
     var start: () -> Void
     var close: (() -> Void)? = nil
+    var openPractice: (DinoPracticeConfiguration) -> Void
+    private var theme: LevelStartTheme { .init(worldID: level.worldID) }
     var body: some View {
         ScrollView {
             VStack(spacing: 12) {
-                LevelBanner(levelID: level.id, highContrast: highContrast)
-                LevelDetailsDisclosure(items: level.questionOutline, highContrast: highContrast)
-                LevelFriendsView(levelID: level.id) {
+                LevelDetailsDisclosure(level: level, theme: theme, highContrast: highContrast, openPractice: openPractice)
+                LevelFriendsView(levelID: level.id, theme: theme) {
                     Button(action: start) { Label("dino.play", systemImage: "play.fill") }
-                        .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("level.play")
+                        .buttonStyle(DinoButtonStyle(color: theme.accent, inkLabel: true))
+                        .accessibilityIdentifier("level.play")
                 }
                 Button("dino.map") { if let close { close() } else { dismiss() } }
                     .buttonStyle(DinoSecondaryButtonStyle())
@@ -965,116 +1276,238 @@ struct LevelInfoPanel: View {
             .padding(26).frame(maxWidth: 450).frame(maxWidth: .infinity, alignment: .top)
         }
         .bouncesOnlyWhenNeeded()
-        .background(JungleBackground(quiet: true)).foregroundStyle(DinoStyle.ink)
+        .background(LevelStartBackground(theme: theme)).foregroundStyle(DinoStyle.ink)
     }
 }
 
-/// A small trail sign for the level number, in the same cream-and-leaf colors as the world banners.
-struct LevelBanner: View {
-    let levelID: Int
-    let highContrast: Bool
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "leaf.fill")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(Color(dinoHex: 0x3E7A45))
-            Text("dino.levelNumber \(levelID)")
-                .font(.system(size: 28, weight: .heavy, design: .rounded))
-                .foregroundStyle(Color(dinoHex: highContrast ? 0x153C48 : 0x235C34))
-                .shadow(color: Color(dinoHex: 0xDAB867).opacity(0.7), radius: 0, y: 1)
-                .accessibilityIdentifier("level.number")
-            Image(systemName: "leaf.fill")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(Color(dinoHex: 0x3E7A45))
-                .scaleEffect(x: -1, y: 1)
+/// All start-card surfaces follow the selected level, including replays in an earlier world.
+struct LevelStartTheme {
+    let world: DinoWorld
+    let ground: Color
+    let accent: Color
+    let shade: Color
+    let ink: Color
+    var paper: Color { ground.mixed(with: .white, by: 0.84) }
+    var symbol: String {
+        switch world.themeID {
+        case 1: return "leaf.fill"
+        case 2: return "moon.stars.fill"
+        case 3: return "flame.fill"
+        case 4: return "house.fill"
+        case 5: return "diamond.fill"
+        case 6: return "building.2.fill"
+        case 7: return "sun.max.fill"
+        case 8: return "gearshape.2.fill"
+        case 9: return "sailboat.fill"
+        default: return "crown.fill"
         }
-        .padding(.horizontal, 22)
-        .frame(maxWidth: .infinity)
-        .frame(height: 64)
-        .background {
-            RoundedRectangle(cornerRadius: 20)
-                .fill(LinearGradient(colors: [Color(dinoHex: 0xFFF8DE), Color(dinoHex: 0xF4E4B4), Color(dinoHex: 0xE8D398)],
-                                     startPoint: .top, endPoint: .bottom))
-                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(dinoHex: 0xC4A15A), lineWidth: highContrast ? 3 : 2.5))
-                .overlay(RoundedRectangle(cornerRadius: 15).stroke(Color(dinoHex: 0xFFF9E8).opacity(0.9), lineWidth: 1.5).padding(5))
-        }
-        .shadow(color: Color(dinoHex: 0x8A6840).opacity(0.16), radius: 0, y: 3)
+    }
+    init(worldID: Int) {
+        world = DinoWorldCatalog.world(worldID) ?? DinoWorldCatalog.worlds[0]
+        let colors = WorldThemeColors(world)
+        ground = Color(dinoHex: colors.ground)
+        accent = Color(dinoHex: colors.accent)
+        shade = Color(dinoHex: colors.shade)
+        ink = Color(dinoHex: colors.shade).mixed(with: Color(dinoHex: 0x102535), by: 0.36)
     }
 }
 
-/// Level exercises stay tucked away until the sign is opened.
+/// The sign itself grows: the outline is revealed through a clipped height, without a floating transition.
 private struct LevelDetailsDisclosure: View {
-    let items: [LevelQuestionOutline]
+    let level: LevelConfiguration
+    let theme: LevelStartTheme
     let highContrast: Bool
+    var openPractice: (DinoPracticeConfiguration) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var open = false
+    @State private var retainsDetails = false
 
     var body: some View {
         VStack(spacing: 0) {
             Button {
-                withAnimation(reduceMotion ? nil : .spring(response: 0.38, dampingFraction: 0.84)) { open.toggle() }
+                if !open { retainsDetails = true }
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.34)) { open.toggle() }
             } label: {
                 HStack(spacing: 12) {
-                    Image(systemName: "list.bullet")
+                    Image(systemName: theme.symbol)
+                        .font(.system(size: 20, weight: .bold))
+                        .frame(width: 30)
+                        .accessibilityHidden(true)
+                    Text("dino.levelNumber \(level.id)")
+                        .font(.system(size: 28, weight: .heavy, design: .rounded))
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                        .frame(maxWidth: .infinity)
+                        .shadow(color: theme.ground, radius: 0, y: 1)
+                        .accessibilityIdentifier("level.number")
+                    Image(systemName: "chevron.right")
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(DinoStyle.deepGreen)
-                        .frame(width: 32, height: 32)
-                        .background(DinoStyle.green.opacity(0.22), in: Circle())
-                    Text("dino.level.details")
-                        .font(.system(size: 16, weight: .heavy, design: .rounded))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(DinoStyle.deepGreen)
-                        .rotationEffect(.degrees(open ? 180 : 0))
+                        .rotationEffect(.degrees(open ? 90 : 0))
+                        .frame(width: 30, height: 30)
+                        .background(theme.shade.opacity(0.08), in: Circle())
+                        .accessibilityHidden(true)
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
+                .foregroundStyle(theme.ink)
+                .padding(.horizontal, 18)
+                .frame(minHeight: 64)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("level.details")
+            .accessibilityLabel(Text("dino.levelNumber \(level.id)") + Text(", ") + Text("dino.level.details"))
             .accessibilityValue(Text(LocalizedStringKey(open ? "dino.level.detailsOpen" : "dino.level.detailsClosed")))
-            if open {
-                LevelQuestionOutlineList(items: items)
-                    .padding(.horizontal, 14)
-                    .padding(.bottom, 14)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+            .accessibilityHint(Text(LocalizedStringKey(theme.world.titleKey)))
+            if retainsDetails {
+                VStack(alignment: .leading, spacing: 12) {
+                    Rectangle().fill(theme.shade.opacity(0.18)).frame(height: 1)
+                    Text("dino.level.details")
+                        .font(.system(size: 14, weight: .heavy, design: .rounded))
+                        .foregroundStyle(theme.ink)
+                    LevelQuestionOutlineList(items: level.questionOutline, theme: theme, openPractice: openPractice)
+                }
+                .padding(.horizontal, 18).padding(.bottom, 18)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(height: open ? nil : 0, alignment: .top)
+                .clipped()
+                .accessibilityHidden(!open)
+                .allowsHitTesting(open)
+                .transition(.identity)
             }
         }
-        .background(.white.opacity(highContrast ? 1 : 0.94), in: RoundedRectangle(cornerRadius: 22))
-        .overlay(RoundedRectangle(cornerRadius: 22).stroke(DinoStyle.deepGreen.opacity(highContrast ? 0.85 : 0.14), lineWidth: highContrast ? 2.5 : 1.5))
-        .shadow(color: DinoStyle.deepGreen.opacity(0.06), radius: 8, y: 3)
+        .background(LinearGradient(colors: [theme.paper, theme.ground.mixed(with: .white, by: 0.42)],
+                                   startPoint: .top, endPoint: .bottom))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20)
+            .strokeBorder(highContrast ? theme.ink : theme.shade.opacity(0.65), lineWidth: highContrast ? 3 : 2.5))
+        .overlay(RoundedRectangle(cornerRadius: 15).strokeBorder(.white.opacity(0.8), lineWidth: 1.5)
+            .padding(5).allowsHitTesting(false))
+        .shadow(color: theme.shade.opacity(0.18), radius: 0, y: 3)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("level.outlineCard")
+        .id(level.id)
+        .task(id: open) {
+            guard !open, retainsDetails else { return }
+            // Keep the full text laid out while the clipped height retracts it.
+            if !reduceMotion {
+                do { try await Task.sleep(nanoseconds: 340_000_000) }
+                catch { return }
+            }
+            guard !Task.isCancelled else { return }
+            retainsDetails = false
+        }
     }
 }
 
 /// Practice number, exercise name, and time family, in the order the level asks them.
 private struct LevelQuestionOutlineList: View {
     let items: [LevelQuestionOutline]
+    let theme: LevelStartTheme
+    var openPractice: (DinoPracticeConfiguration) -> Void
     var body: some View {
         VStack(spacing: 8) {
             ForEach(Array(items.enumerated()), id: \.offset) { index, item in
-                HStack(spacing: 10) {
-                    Text(verbatim: item.practiceNumber.map(String.init) ?? "–")
-                        .font(.system(size: 13, weight: .heavy, design: .rounded))
-                        .frame(width: 28, height: 28)
-                        .background(DinoStyle.green.opacity(0.16), in: Circle())
-                        .accessibilityIdentifier("level.question.\(index).number")
-                    Text(LocalizedStringKey(item.titleKey))
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Text(LocalizedStringKey(item.timeTitleKey))
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                        .foregroundStyle(DinoStyle.deepGreen)
-                        .multilineTextAlignment(.trailing)
-                        .fixedSize(horizontal: true, vertical: false)
+                Button {
+                    if let configuration = item.practiceConfiguration { openPractice(configuration) }
+                } label: {
+                    HStack(spacing: 8) {
+                        Text(verbatim: item.practiceNumber.map(String.init) ?? "–")
+                            .font(.system(size: 13, weight: .heavy, design: .rounded))
+                            .frame(width: 28, height: 28)
+                            .foregroundStyle(theme.ink)
+                            .background(theme.accent.opacity(0.2), in: Circle())
+                            .accessibilityIdentifier("level.question.\(index).number")
+                        Text(LocalizedStringKey(item.titleKey))
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(LocalizedStringKey(item.timeTitleKey))
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundStyle(theme.ink)
+                            .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: 92, alignment: .trailing)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(theme.ink.opacity(0.7))
+                            .accessibilityHidden(true)
+                    }
+                    .padding(.vertical, 4).frame(minHeight: 44)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .disabled(item.practiceConfiguration == nil)
                 .accessibilityElement(children: .combine)
+                .accessibilityHint(Text("dino.practice.title"))
                 .accessibilityIdentifier("level.question.\(index)")
             }
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("level.questions")
+    }
+}
+
+/// Quiet world scenery stays behind the controls rather than repeating the jungle in every chapter.
+private struct LevelStartBackground: View {
+    @Environment(\.dinoHighContrast) private var highContrast
+    let theme: LevelStartTheme
+
+    var body: some View {
+        Group {
+            if theme.world.themeID == 1 {
+                JungleBackground(quiet: true)
+            } else {
+                ZStack(alignment: .bottom) {
+                    LinearGradient(colors: [theme.paper, theme.ground.mixed(with: .white, by: 0.62)],
+                                   startPoint: .top, endPoint: .bottom)
+                    Canvas { context, size in
+                        let w = size.width, h = size.height
+                        for index in 0..<3 {
+                            let y = h - 64 - CGFloat(index) * 41
+                            var ridge = Path()
+                            ridge.move(to: CGPoint(x: 0, y: y))
+                            if [3, 5].contains(theme.world.themeID) {
+                                ridge.addLines([CGPoint(x: w * 0.24, y: y - 60), CGPoint(x: w * 0.43, y: y + 12),
+                                                CGPoint(x: w * 0.72, y: y - 40), CGPoint(x: w, y: y + 14)])
+                            } else {
+                                ridge.addCurve(to: CGPoint(x: w, y: y + 18),
+                                    control1: CGPoint(x: w * 0.36, y: y - 56), control2: CGPoint(x: w * 0.62, y: y + 70))
+                            }
+                            ridge.addLine(to: CGPoint(x: w, y: h)); ridge.addLine(to: CGPoint(x: 0, y: h))
+                            ridge.closeSubpath()
+                            context.fill(ridge, with: .color(theme.accent.opacity(0.07 + Double(2 - index) * 0.025)))
+                        }
+                        if theme.world.themeID == 7 {
+                            // Two small cacti, drawn in the same sandstone tones as the desert map.
+                            for (x, y, scale) in [(w * 0.08, h - 33, 1.0), (w * 0.91, h - 54, 0.72)] {
+                                var cactus = Path()
+                                cactus.move(to: CGPoint(x: x, y: y)); cactus.addLine(to: CGPoint(x: x, y: y - 58 * scale))
+                                cactus.move(to: CGPoint(x: x, y: y - 23 * scale))
+                                cactus.addQuadCurve(to: CGPoint(x: x - 17 * scale, y: y - 34 * scale),
+                                                    control: CGPoint(x: x - 17 * scale, y: y - 20 * scale))
+                                cactus.addLine(to: CGPoint(x: x - 17 * scale, y: y - 43 * scale))
+                                cactus.move(to: CGPoint(x: x, y: y - 34 * scale))
+                                cactus.addQuadCurve(to: CGPoint(x: x + 15 * scale, y: y - 45 * scale),
+                                                    control: CGPoint(x: x + 15 * scale, y: y - 31 * scale))
+                                cactus.addLine(to: CGPoint(x: x + 15 * scale, y: y - 51 * scale))
+                                context.stroke(cactus, with: .color(theme.shade.opacity(0.18)),
+                                               style: StrokeStyle(lineWidth: 9 * scale, lineCap: .round, lineJoin: .round))
+                            }
+                        }
+                    }
+                    .opacity(highContrast ? 0.4 : 1)
+                    if theme.world.themeID != 7 {
+                        HStack {
+                            Image(systemName: theme.symbol).rotationEffect(.degrees(-14))
+                            Spacer()
+                            Image(systemName: theme.symbol).rotationEffect(.degrees(12))
+                        }
+                        .font(.system(size: 44, weight: .light))
+                        .foregroundStyle(theme.shade.opacity(highContrast ? 0.06 : 0.13))
+                        .padding(.horizontal, 20).padding(.bottom, 34)
+                    }
+                }
+            }
+        }
+        .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 
@@ -1084,6 +1517,7 @@ struct LevelStartOverlay: View {
     let hudHeight: CGFloat
     var start: () -> Void
     var close: () -> Void
+    var openPractice: (DinoPracticeConfiguration) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var dragOffset: CGFloat = 0
 
@@ -1094,7 +1528,7 @@ struct LevelStartOverlay: View {
                 Color.black.opacity(0.28).ignoresSafeArea()
                     .onTapGesture(perform: close).transition(.opacity)
                 VStack(spacing: 0) {
-                    Capsule().fill(DinoStyle.ink.opacity(0.15)).frame(width: 36, height: 5)
+                    Capsule().fill(LevelStartTheme(worldID: level.worldID).ink.opacity(0.2)).frame(width: 36, height: 5)
                         .frame(maxWidth: .infinity).frame(height: 28).contentShape(Rectangle())
                         .gesture(DragGesture()
                             .onChanged { dragOffset = max(0, $0.translation.height) }
@@ -1103,11 +1537,11 @@ struct LevelStartOverlay: View {
                                 else { withAnimation(.easeOut(duration: 0.2)) { dragOffset = 0 } }
                             })
                         .accessibilityHidden(true)
-                    LevelInfoPanel(level: level, start: start, close: close)
+                    LevelInfoPanel(level: level, start: start, close: close, openPractice: openPractice)
                 }
                 .frame(width: min(540, geometry.size.width - 24),
                        height: min(level.isBoss ? 640 : 570, geometry.size.height - top - 16))
-                .background(Color(dinoHex: 0xF6FAE9))
+                .background(LevelStartTheme(worldID: level.worldID).paper)
                 .clipShape(RoundedRectangle(cornerRadius: 28))
                 .shadow(color: .black.opacity(0.14), radius: 20, y: 8)
                 .accessibilityIdentifier("level.startCard")

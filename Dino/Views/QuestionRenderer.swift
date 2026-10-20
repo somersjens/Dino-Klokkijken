@@ -45,21 +45,18 @@ struct QuestionRenderer: View {
                                    selections: $session.pairSelections, theme: theme, width: width,
                                    hasFeedback: session.hasFeedback)
                     .id("question.answers")
-                if !session.hidesAnswerControls {
-                    Button { session.submit(.pairs(question.relatedTimes.indices.compactMap { session.pairSelections[$0] })) } label: {
-                        Image(systemName: "checkmark").font(.system(size: 25, weight: .heavy))
-                    }.buttonStyle(DinoButtonStyle()).frame(maxWidth: 260)
-                        .disabled(session.pairSelections.count != question.relatedTimes.count)
-                        .allowsHitTesting(!session.hasFeedback)
-                        .accessibilityHidden(session.hasFeedback)
-                        .accessibilityIdentifier("question.confirm")
-                }
+                    .questionAnswerFocus()
+                Button { session.submit(.pairs(question.relatedTimes.indices.compactMap { session.pairSelections[$0] })) } label: {
+                    Image(systemName: "checkmark").font(.system(size: 25, weight: .heavy))
+                }.buttonStyle(DinoButtonStyle()).frame(maxWidth: 260)
+                    .disabled(session.pairSelections.count != question.relatedTimes.count)
+                    .accessibilityIdentifier("question.confirm")
+                    .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
             default:
                 DinoExpandedQuestionView(session: session, theme: theme, width: width, clockSize: clockSize,
                                          compactLayout: compactLayout || (wideLayout && question.kind == .timeZone))
             }
         }.frame(maxWidth: .infinity)
-            .animation(reduceMotion ? nil : .easeInOut(duration: 0.34), value: session.hasFeedback)
     }
 
     private var analogInput: some View {
@@ -73,32 +70,42 @@ struct QuestionRenderer: View {
                                            onHandSelection: session.hasFeedback ? nil : { adjustingMinutes = $0 })
     }
 
-    @ViewBuilder private var digitalInput: some View {
-        if session.hasFeedback && !session.retainsAnswerControls {
-            HStack(alignment: .top, spacing: 14) {
-                VStack(spacing: 10) {
-                    DigitalClock(time: session.attempt.submittedAnswer ?? session.inputTime, theme: theme, fontSize: comparing ? min(28, width * 0.075) : 38)
-                        .padding(8).modifier(ClockAnswerOutline(visible: true, correct: session.correctFeedback))
-                        .accessibilityIdentifier("question.digitalControl")
-                    if comparing { AnswerVerdictMark(correct: false) }
-                }.frame(maxWidth: .infinity)
-                if comparing {
-                    VStack(spacing: 10) {
-                        DigitalClock(time: question.target, theme: theme, fontSize: min(28, width * 0.075))
-                            .padding(8).modifier(ClockAnswerOutline(visible: true, correct: true))
-                            .accessibilityIdentifier("question.correctClock")
-                        AnswerVerdictMark(correct: true)
-                    }.frame(maxWidth: .infinity)
-                        .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
-                }
-            }
-        } else {
+    private var digitalInput: some View {
+        let font: CGFloat = width < 350 ? 32 : 38
+        let displacement = (width + 14) / 4
+        // Scale the existing display, including its field anchors. Its vertical
+        // control space stays reserved throughout the answer comparison.
+        let scale = min(1, (width - 38) / (2 * font * 4.1))
+        return ZStack {
             DigitalClockControl(hour: $session.inputHour,
-                                theme: theme, minute: session.inputMinute, fontSize: width < 350 ? 32 : 38,
+                                theme: theme, minute: session.inputMinute, fontSize: font,
                                 onMinuteChange: { session.inputMinute = $0 },
                                 minuteStep: session.minuteStep, valueIdentifier: "question.digitalControl",
-                                feedbackCorrect: session.hasFeedback ? session.correctFeedback : nil)
+                                feedbackCorrect: session.hasFeedback ? session.correctFeedback : nil,
+                                showsControls: !session.hidesAnswerControls)
+                .scaleEffect(comparing ? scale : 1)
+                .offset(x: comparing ? -displacement : 0)
+            DigitalClock(time: question.target, theme: theme, fontSize: font)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(question.target.digitalText)
+                .modifier(ClockAnswerOutline(visible: true, correct: true))
+                .scaleEffect(scale * (comparing || reduceMotion ? 1 : 0.94))
+                .offset(x: displacement)
+                .opacity(comparing ? 1 : 0)
+                .allowsHitTesting(false).accessibilityHidden(!comparing)
+                .accessibilityIdentifier("question.correctClock")
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: comparing)
+            HStack(spacing: 14) {
+                AnswerVerdictMark(correct: false).frame(maxWidth: .infinity)
+                AnswerVerdictMark(correct: true).frame(maxWidth: .infinity)
+            }
+            .offset(y: font * 0.9 + 22)
+            .opacity(comparing ? 1 : 0).accessibilityHidden(true)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: comparing)
         }
+        .frame(width: width)
+        .questionAnswerFocus()
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: comparing)
     }
 
     private var targetCard: some View {
@@ -109,6 +116,8 @@ struct QuestionRenderer: View {
             }
             clockStage(height: compactLayout ? 50 : 64) {
                 DigitalClock(time: question.target, theme: theme, fontSize: width < 350 ? 32 : 38)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(question.target.digitalText)
                     .accessibilityIdentifier("question.targetClock")
             }
         }
@@ -135,7 +144,7 @@ struct QuestionRenderer: View {
                     AnalogClock(time: option, theme: theme, size: size).allowsHitTesting(false).padding(8)
                 }
             }
-        }.id("question.answers")
+        }.id("question.answers").questionAnswerFocus()
     }
 
     private var digitalOptions: some View {
@@ -147,22 +156,17 @@ struct QuestionRenderer: View {
                         .padding(.vertical, 14).frame(maxWidth: .infinity)
                 }
             }
-        }.id("question.answers")
+        }.id("question.answers").questionAnswerFocus()
     }
 
     private var confirmButton: some View {
-        Group {
-            if !session.hidesAnswerControls {
-                Button { session.submit(session.inputTime) } label: {
-                    Label("dino.clock.check", systemImage: "checkmark")
-                        .lineLimit(1).minimumScaleFactor(0.75)
-                }
-                .buttonStyle(DinoClockControlButtonStyle())
-                .accessibilityIdentifier("question.confirm")
-                .allowsHitTesting(!session.hasFeedback)
-                .accessibilityHidden(session.hasFeedback)
-            }
+        Button { session.submit(session.inputTime) } label: {
+            Label("dino.clock.check", systemImage: "checkmark")
+                .lineLimit(1).minimumScaleFactor(0.75)
         }
+        .buttonStyle(DinoClockControlButtonStyle())
+        .accessibilityIdentifier("question.confirm")
+        .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
     }
 
     private var clockCheckButton: some View {
@@ -192,8 +196,26 @@ struct QuestionRenderer: View {
                             .padding(2).background(.white, in: Circle()).offset(x: 5, y: -5)
                     }
                 }.shadow(color: DinoStyle.ink.opacity(0.06), radius: 7, y: 4)
-                .opacity(!highContrast && session.showsCorrectResponse && !correct && !wrong ? 0.55 : 1)
         }.buttonStyle(DinoAnswerButtonStyle()).disabled(!session.responseIsEnabled(response)).accessibilityIdentifier("question.option.\(index)")
+    }
+}
+
+struct QuestionAnswerFrameKey: PreferenceKey {
+    static var defaultValue: CGRect? { nil }
+    static func reduce(value: inout CGRect?, nextValue: () -> CGRect?) {
+        value = nextValue() ?? value
+    }
+}
+
+extension View {
+    /// Feedback is scrolled into view only when this region is actually clipped.
+    func questionAnswerFocus() -> some View {
+        background {
+            GeometryReader { geometry in
+                Color.clear.preference(key: QuestionAnswerFrameKey.self,
+                                       value: geometry.frame(in: .named("game.questionViewport")))
+            }
+        }.id("question.answerFocus")
     }
 }
 
@@ -303,32 +325,36 @@ struct AnalogClockAnswerComparison: View {
     private var cellWidth: CGFloat { (width - 14) / 2 }
     private var comparisonScale: CGFloat { min(1, (cellWidth - 12) / (clockSize + 20)) }
     private var scale: CGFloat { comparing ? comparisonScale : 1 }
-    private var faceHeight: CGFloat { (clockSize + 20) * scale }
+    private var stageHeight: CGFloat { max(clockSize + 20, (clockSize + 20) * comparisonScale + 72) }
     private var displacement: CGFloat { (width + 14) / 4 }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            VStack(spacing: 10) {
-                AnalogClock(time: answer, theme: theme, size: clockSize,
-                            onHourChange: onHourChange, onMinuteChange: onMinuteChange, minuteStep: minuteStep,
-                            adjustingMinutes: adjustingMinutes, onHandSelection: onHandSelection)
-                    .accessibilityIdentifier("question.analogControl")
-                    .padding(10).modifier(ClockAnswerOutline(visible: hasFeedback, correct: correct))
-                    .scaleEffect(scale).frame(width: cellWidth, height: faceHeight)
-                AnswerVerdictMark(correct: false).opacity(comparing ? 1 : 0).accessibilityHidden(!comparing)
-            }.frame(width: cellWidth).offset(x: comparing ? -displacement : 0)
-            VStack(spacing: 10) {
-                AnalogClock(time: target, theme: theme, size: clockSize).padding(10)
-                    .modifier(ClockAnswerOutline(visible: true, correct: true))
-                    .scaleEffect(comparisonScale).frame(width: cellWidth, height: (clockSize + 20) * comparisonScale)
-                    .accessibilityIdentifier("question.correctClock")
-                AnswerVerdictMark(correct: true)
-            }.frame(width: cellWidth)
-                .offset(x: displacement + (comparing || reduceMotion ? 0 : 24))
+        ZStack {
+            AnalogClock(time: answer, theme: theme, size: clockSize,
+                        onHourChange: onHourChange, onMinuteChange: onMinuteChange, minuteStep: minuteStep,
+                        adjustingMinutes: adjustingMinutes, onHandSelection: onHandSelection)
+                .accessibilityIdentifier("question.analogControl")
+                .padding(10).modifier(ClockAnswerOutline(visible: hasFeedback, correct: correct))
+                .scaleEffect(scale)
+                .offset(x: comparing ? -displacement : 0)
+            AnalogClock(time: target, theme: theme, size: clockSize).padding(10)
+                .modifier(ClockAnswerOutline(visible: true, correct: true))
+                .scaleEffect(comparisonScale * (comparing || reduceMotion ? 1 : 0.94))
+                .accessibilityIdentifier("question.correctClock")
+                .offset(x: displacement)
                 .opacity(comparing ? 1 : 0).allowsHitTesting(false).accessibilityHidden(!comparing)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: comparing)
+            HStack(spacing: 14) {
+                AnswerVerdictMark(correct: false).frame(maxWidth: .infinity)
+                AnswerVerdictMark(correct: true).frame(maxWidth: .infinity)
+            }
+            .offset(y: (clockSize + 20) * comparisonScale / 2 + 22)
+            .opacity(comparing ? 1 : 0).accessibilityHidden(true)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: comparing)
         }
-        .frame(width: width, height: faceHeight + (comparing ? 38 : 0), alignment: .top)
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.34), value: comparing)
+        .frame(width: width, height: stageHeight)
+        .questionAnswerFocus()
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: comparing)
     }
 }
 
@@ -589,27 +615,18 @@ struct ClockAnswerOutline: ViewModifier {
     }
 }
 
-/// Green check for a right answer, orange circle with a cross for a wrong one.
+/// Light-green circle with a dark-blue check for a right answer, orange circle with a cross for a wrong one.
 struct AnswerVerdictMark: View {
     @Environment(\.dinoHighContrast) private var highContrast
     var correct: Bool
     var size: CGFloat = 26
 
     var body: some View {
-        Group {
-            if correct {
-                Image(systemName: "checkmark")
-                    .font(.system(size: size * 0.82, weight: .heavy))
-                    .foregroundStyle(DinoStyle.deepGreen)
-                    .frame(width: size, height: size)
-            } else {
-                Image(systemName: "xmark")
-                    .font(.system(size: size * 0.46, weight: .black))
-                    .foregroundStyle(highContrast ? Color.white : DinoStyle.ink)
-                    .frame(width: size, height: size)
-                    .background(DinoStyle.wrong(highContrast), in: Circle())
-            }
-        }
-        .accessibilityHidden(true)
+        Image(systemName: correct ? "checkmark" : "xmark")
+            .font(.system(size: size * 0.46, weight: .black))
+            .foregroundStyle(correct || !highContrast ? DinoStyle.ink : Color.white)
+            .frame(width: size, height: size)
+            .background(correct ? DinoStyle.green : DinoStyle.wrong(highContrast), in: Circle())
+            .accessibilityHidden(true)
     }
 }

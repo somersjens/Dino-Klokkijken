@@ -1,6 +1,23 @@
 import Foundation
 import CoreGraphics
 
+enum DinoMapViewport {
+    static func preparedAnimationBounds(frame: CGRect, viewportHeight: CGFloat) -> CGRect {
+        animationBounds(frame: frame.offsetBy(dx: 0, dy: 256), viewportHeight: viewportHeight + 512)
+    }
+    /// Round outwards to small bands: moving boats/workers remain visible,
+    /// while their SwiftUI subtree no longer rebuilds for every scroll pixel.
+    static func animationBounds(frame: CGRect, viewportHeight: CGFloat) -> CGRect {
+        let top = max(0, -frame.minY)
+        let bottom = min(frame.height, viewportHeight - frame.minY)
+        guard bottom > top, frame.width > 0 else { return .zero }
+        let band: CGFloat = 256
+        let start = floor(top / band) * band
+        let end = min(frame.height, ceil(bottom / band) * band)
+        return CGRect(x: 0, y: start, width: frame.width, height: end - start)
+    }
+}
+
 /// Positions the complete silhouettes beside the actual cubic trail. Art can
 /// overlap other scenery, but crowns, roots and pools keep clear of the road.
 struct JungleMapLayout {

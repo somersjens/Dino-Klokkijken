@@ -455,7 +455,7 @@ struct WorldTitleBanner: View, Equatable {
                     .multilineTextAlignment(.center).lineSpacing(-1)
                     .frame(width: layout.titleWidth, height: 82)
                     .position(x: layout.titlePanel.midX, y: layout.titlePanel.midY)
-                    .offset(y: world.themeID == 7 ? -3 : 0)
+                    .offset(y: world.themeID == 7 || world.id == 3 ? -3 : 0)
                 ViewThatFits(in: .horizontal) {
                     skillLine(textWidth: nil).fixedSize(horizontal: true, vertical: false)
                     skillLine(textWidth: 156).fixedSize(horizontal: true, vertical: false)
@@ -1486,10 +1486,18 @@ struct JungleFriendsLeaves: View {
 /// One continuous canvas includes the overscroll sky; small wildlife and water
 /// overlays animate independently of the static scenery.
 struct WorldMapLandscape: View, Equatable {
+    @Environment(\.dinoMapArtworkPrepared) private var artworkPrepared
+    @State private var preparedTiles: Set<Int> = []
     var palette = WorldLandscapePalette.jungle
     var nextPalette = WorldLandscapePalette.nextHorizon
     var routeOffset: CGFloat = 0
     var viewportHeight: CGFloat = 900
+    var cachesTerrain = false
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.palette == rhs.palette && lhs.nextPalette == rhs.nextPalette &&
+        lhs.routeOffset == rhs.routeOffset && lhs.viewportHeight == rhs.viewportHeight && lhs.cachesTerrain == rhs.cachesTerrain
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -1570,7 +1578,11 @@ struct WorldMapLandscape: View, Equatable {
                               y: entranceHeight * 0.65 + waterBounds.midY * scale * 0.87)
                 let scene = JungleMapLayout(width: w).scene()
                 ForEach(scene.sceneryTiles.indices, id: \.self) { index in
-                    JungleSceneryTile(scene: scene, index: index, viewportHeight: viewportHeight)
+                    JungleSceneryTile(scene: scene, index: index, viewportHeight: viewportHeight, cachesTerrain: cachesTerrain,
+                        onPrepared: {
+                            preparedTiles.insert(index)
+                            if preparedTiles.count == scene.sceneryTiles.count { artworkPrepared(1) }
+                        })
                         .equatable()
                         .position(x: w / 2, y: routeOffset + scene.sceneryTiles[index].bounds.midY)
                 }
@@ -1613,34 +1625,45 @@ private struct JungleSceneryTile: View, Equatable {
     let scene: JungleMapLayout.Scene
     let index: Int
     let viewportHeight: CGFloat
+    var cachesTerrain = false
+    var onPrepared: () -> Void = {}
     @State private var prepared = false
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.scene === rhs.scene && lhs.index == rhs.index && lhs.viewportHeight == rhs.viewportHeight
+        lhs.scene === rhs.scene && lhs.index == rhs.index && lhs.viewportHeight == rhs.viewportHeight && lhs.cachesTerrain == rhs.cachesTerrain
+    }
+
+    @ViewBuilder private var drawing: some View {
+        let tile = scene.sceneryTiles[index]
+        Canvas { context, _ in
+            var c = context
+            c.translateBy(x: 0, y: -tile.bounds.minY)
+            let painter = JungleWorldPainter(context: c)
+            let depth = WorldSceneryDepth()
+            for placement in tile.placements {
+                depth.add(at: placement.point.y) { painter.scenery(placement.item, at: placement.point) }
+            }
+            if tile.includesBoss {
+                let scale = min(1.35, max(0.82, tile.bounds.width / 390))
+                let boss = ThemePainter(context: c, colors: WorldThemeColors(DinoWorldCatalog.world(1)!))
+                depth.add(at: scene.bossPoint.y) {
+                    boss.bossClearing(worldID: 1, at: scene.bossPoint, size: scale)
+                    boss.boss(worldID: 1, at: scene.bossPoint, size: scale * 0.88)
+                }
+            }
+            depth.draw()
+        }.clipped()
     }
 
     var body: some View {
         let tile = scene.sceneryTiles[index]
         Color.clear.overlay {
-            if prepared {
-                Canvas { context, _ in
-                    var c = context
-                    c.translateBy(x: 0, y: -tile.bounds.minY)
-                    let painter = JungleWorldPainter(context: c)
-                    let depth = WorldSceneryDepth()
-                    for placement in tile.placements {
-                        depth.add(at: placement.point.y) { painter.scenery(placement.item, at: placement.point) }
-                    }
-                    if tile.includesBoss {
-                        let scale = min(1.35, max(0.82, tile.bounds.width / 390))
-                        let boss = ThemePainter(context: c, colors: WorldThemeColors(DinoWorldCatalog.world(1)!))
-                        depth.add(at: scene.bossPoint.y) {
-                            boss.bossClearing(worldID: 1, at: scene.bossPoint, size: scale)
-                            boss.boss(worldID: 1, at: scene.bossPoint, size: scale * 0.88)
-                        }
-                    }
-                    depth.draw()
-                }.clipped()
+            if prepared || cachesTerrain {
+                if cachesTerrain {
+                    PreparedMapArtwork(worldID: 1, size: tile.bounds.size, routeOffset: tile.bounds.minY,
+                                       ground: nil) { drawing }
+                        .environment(\.dinoMapArtworkPrepared, { _ in onPrepared() })
+                } else { drawing }
             }
         }
         .frame(width: tile.bounds.width, height: tile.bounds.height)
@@ -1688,6 +1711,7 @@ private struct JungleDepthOcclusion: View {
 private struct JungleWildlife: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
     let item: JungleMapLayout.Item
     let viewportHeight: CGFloat
@@ -1699,7 +1723,7 @@ private struct JungleWildlife: View {
                 var c = context
                 c.translateBy(x: -bounds.minX * item.size, y: -bounds.minY * item.size)
                 c.scaleBy(x: item.mirrored ? -item.size : item.size, y: item.size)
-                let time = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate
+                let time = reduceMotion ? 0 : timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
                 if item.kind == .snake { snake(in: c, time: time) }
                 else { leaves(in: c, time: time) }
             }
@@ -1707,7 +1731,7 @@ private struct JungleWildlife: View {
         .frame(width: bounds.width * item.size, height: bounds.height * item.size)
         .readGeometry(for: Bool.self) { geometry in
             let frame = geometry.frame(in: .named("adventure.map.viewport"))
-            return frame.maxY > 0 && frame.minY < viewportHeight
+            return frame.maxY > -256 && frame.minY < viewportHeight + 256
         } action: { visible = $0 }
         .allowsHitTesting(false).accessibilityHidden(true)
     }
@@ -1788,13 +1812,14 @@ private struct JungleWildlife: View {
 private struct JungleFlyingBirds: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
     let viewportHeight: CGFloat
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 24, paused: !visible || reduceMotion || scenePhase != .active)) { timeline in
             Canvas { context, size in
-                let time = reduceMotion ? 0 : timeline.date.timeIntervalSinceReferenceDate
+                let time = reduceMotion ? 0 : timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
                 for i in 0..<9 {
                     let seed = Double(i)
                     let flight = (time * (i < 5 ? 0.018 : 0.013) + seed * 0.113).truncatingRemainder(dividingBy: 1)
@@ -1815,7 +1840,7 @@ private struct JungleFlyingBirds: View {
         }
         .readGeometry(for: Bool.self) { geometry in
             let frame = geometry.frame(in: .named("adventure.map.viewport"))
-            return frame.maxY > 0 && frame.minY < viewportHeight
+            return frame.maxY > -256 && frame.minY < viewportHeight + 256
         } action: { visible = $0 }
         .allowsHitTesting(false).accessibilityHidden(true)
     }
@@ -1935,6 +1960,7 @@ private enum JungleWaterfallGeometry {
 private struct JungleWaterfallFlow: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
     let scale: CGFloat
     var opacity: Double = 1
@@ -1951,14 +1977,14 @@ private struct JungleWaterfallFlow: View {
                     c.translateBy(x: -bounds.minX * scale, y: -bounds.minY * scale)
                     c.scaleBy(x: mirrored ? -scale : scale, y: scale * heightScale)
                     c.opacity = opacity
-                    drawWater(in: c, time: timeline.date.timeIntervalSinceReferenceDate)
+                    drawWater(in: c, time: timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 }
             }
         }
         .frame(width: bounds.width * scale, height: bounds.height * scale)
         .readGeometry(for: Bool.self) { geometry in
             let r = geometry.frame(in: .named("adventure.map.viewport"))
-            return r.maxY > 0 && r.minY < viewportHeight && r.maxX > 0
+            return r.maxY > -256 && r.minY < viewportHeight + 256 && r.maxX > 0
         } action: { visible = $0 }
         .allowsHitTesting(false).accessibilityHidden(true)
     }
@@ -3182,6 +3208,7 @@ private struct SleepValleyLifeSurface: View {
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
 
     var body: some View {
@@ -3197,7 +3224,7 @@ private struct SleepValleyLifeSurface: View {
         TimelineView(.animation(minimumInterval: 1.0 / 20,
                                 paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
             Canvas { context, _ in
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSinceReferenceDate)
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 var c = context; c.translateBy(x: -frame.minX, y: layout.routeOffset - frame.minY)
                 if let tree {
                     c.translateBy(x: tree.point.x, y: tree.point.y)
@@ -3217,7 +3244,7 @@ private struct SleepValleyLifeSurface: View {
         }
         .readGeometry(for: Bool.self) { geometry in
             let rect = geometry.frame(in: .named("adventure.map.viewport"))
-            return rect.maxY > 0 && rect.minY < viewportHeight
+            return rect.maxY > -256 && rect.minY < viewportHeight + 256
         } action: { visible = $0 }
     }
 }
@@ -4159,19 +4186,25 @@ private enum VolcanoWorldLayout {
         let id: Int
         let kind: Kind
         let point: CGPoint
-        let size: CGFloat
+        var size: CGFloat
         var mirrored = false
+        var heightScale: CGFloat = 1
         var outlet: CGPoint { position(kind == .summit ? CGPoint(x: 16, y: 32) : CGPoint(x: 17, y: 34)) }
 
         func position(_ local: CGPoint) -> CGPoint {
-            CGPoint(x: point.x + local.x * size * (mirrored ? -1 : 1), y: point.y + local.y * size)
+            CGPoint(x: point.x + local.x * size * (mirrored ? -1 : 1), y: point.y + local.y * size * heightScale)
+        }
+
+        var silhouette: Path {
+            VolcanoWorldLayout.mountainContour().applying(CGAffineTransform(
+                a: mirrored ? -size : size, b: 0, c: 0, d: size * heightScale, tx: point.x, ty: point.y))
         }
 
         var bounds: CGRect {
             let local: CGRect
             switch kind {
             case .crater: local = CGRect(x: -105, y: -245, width: 235, height: 295)
-            case .summit: local = CGRect(x: -145, y: -395, width: 310, height: 440)
+            case .summit: local = CGRect(x: -172, y: -395, width: 350, height: 462)
             }
             return frame(local)
         }
@@ -4199,15 +4232,17 @@ private enum VolcanoWorldLayout {
                          CGRect(x: -108, y: -66, width: 216, height: 24),
                          CGRect(x: -126, y: -42, width: 252, height: 24),
                          CGRect(x: -144, y: -18, width: 288, height: 24),
-                         CGRect(x: -151, y: 6, width: 302, height: 24),
-                         CGRect(x: -95, y: 30, width: 190, height: 8)]
+                         CGRect(x: -168, y: 6, width: 336, height: 17),
+                         CGRect(x: -150, y: 23, width: 300, height: 20),
+                         CGRect(x: -115, y: 43, width: 230, height: 13)]
             }
             return local.map(frame)
         }
 
         private func frame(_ local: CGRect) -> CGRect {
             CGRect(x: point.x + (mirrored ? -local.maxX : local.minX) * size,
-                   y: point.y + local.minY * size, width: local.width * size, height: local.height * size)
+                   y: point.y + local.minY * size * heightScale,
+                   width: local.width * size, height: local.height * size * heightScale)
         }
     }
 
@@ -4215,6 +4250,7 @@ private enum VolcanoWorldLayout {
         let point: CGPoint
         let size: CGFloat
         let variation: Int
+        var sandBlend: CGFloat = 0
         var bounds: CGRect {
             CGRect(x: point.x - 58 * size, y: point.y - 45 * size,
                    width: 116 * size, height: 73 * size)
@@ -4231,73 +4267,140 @@ private enum VolcanoWorldLayout {
         let points: [CGPoint]
         let variation: Int
         let right: Bool
+        let sandBlend: CGFloat
         var bounds: CGRect { points.reduce(CGRect.null) { $0.union(CGRect(origin: $1, size: .zero)) } }
     }
 
-    /// Portrait phones keep the original entrance. On a wide map the same
-    /// short blend becomes a corner, because the bank is much farther from the edge.
+    /// The entrance is painted on both sides of the chapter join.
+    static let entranceOverlap: CGFloat = 400
+
     static func isBroad(_ width: CGFloat) -> Bool { width >= 520 }
 
-    /// How far the entrance has joined the trail. Nil on phone widths.
-    /// The run-in finishes at the top of the world, so the visible crown
-    /// already shares the trail's swirl instead of kinking inward.
-    static func broadEntrance(layout: WorldSceneryLayout, sectionY: CGFloat) -> CGFloat? {
-        guard isBroad(layout.width) else { return nil }
-        let span = max(520, layout.width * 0.72)
-        let t = min(1, max(0, (sectionY + span - 36) / span))
-        return t * t * (3 - 2 * t)
+    static func joinLayout(width: CGFloat, routeOffset: CGFloat) -> WorldSceneryLayout {
+        let clearance = routeOffset - WorldRouteTrail.bannerHeight - WorldRouteTrail.bannerTopPadding - WorldRouteTrail.bannerBottomPadding
+        return WorldSceneryLayout(width: width,
+            height: routeOffset + WorldRouteTrail.chapterRouteHeight(topClearance: clearance, worldID: 3), routeOffset: routeOffset)
     }
 
+    private final class BankField {
+        let sides: [[CGPoint]]
+        init(_ sides: [[CGPoint]]) { self.sides = sides }
+    }
+    private static let bankFields: NSCache<NSString, BankField> = {
+        let cache = NSCache<NSString, BankField>(); cache.countLimit = 8
+        return cache
+    }()
+
+    /// Offset across the flow, including horizontal mouths. Sampling the
+    /// resulting contour avoids an enormous pointed bank at a shallow inlet.
     static func bankPoint(layout: WorldSceneryLayout, right: Bool, y: CGFloat) -> CGPoint {
-        let end = layout.height - layout.routeOffset - 70
-        let roadside = layout.centerX(at: y) + (right ? 1 : -1) *
-            (74 + sin(y / 53) * 4 + sin(y / 21) * 2) * layout.scale
-        let outside = right ? layout.width + 45 : -45
-        if let fadeIn = broadEntrance(layout: layout, sectionY: y + layout.routeOffset) {
-            let exit = min(1, max(0, (end - y) / 180))
-            let fadeOut = exit * exit * (3 - 2 * exit)
-            return CGPoint(x: outside + (roadside - outside) * min(fadeIn, fadeOut), y: y)
+        let key = "\(layout.width):\(layout.height):\(layout.routeOffset)" as NSString
+        let field: BankField
+        if let cached = bankFields.object(forKey: key) { field = cached }
+        else {
+            let start = -layout.routeOffset - entranceOverlap - 80
+            let end = layout.height - layout.routeOffset + 80
+            let count = Int(ceil((end - start) / 4))
+            let sides = [false, true].map { side -> [CGPoint] in
+                var points: [CGPoint] = []
+                let sign: CGFloat = side ? -1 : 1
+                for index in 0...count {
+                    let y = start + (end - start) * CGFloat(index) / CGFloat(count)
+                    let point = channelPoint(layout: layout, right: side, y: y)
+                    let before = channelPoint(layout: layout, right: side, y: y - 1)
+                    let after = channelPoint(layout: layout, right: side, y: y + 1)
+                    let dx = after.x - before.x, length = hypot(dx, 2)
+                    let margin = (35 + sin(y / 57 + (side ? 1.2 : 0)) * 4 + sin(y / 23) * 2) * layout.scale
+                    let bank = CGPoint(x: point.x + sign * 2 / length * margin,
+                                       y: y - sign * dx / length * margin)
+                    if bank.y > (points.last?.y ?? -.infinity) { points.append(bank) }
+                }
+                return points
+            }
+            field = BankField(sides); bankFields.setObject(field, forKey: key)
         }
-        let start = -layout.routeOffset + 90
-        let fade = min(1, max(0, min((y - start) / 185, (end - y) / 180)))
-        return CGPoint(x: outside + (roadside - outside) * fade * fade * (3 - 2 * fade), y: y)
+        let points = field.sides[right ? 1 : 0]
+        var low = 0, high = points.count - 1
+        while high - low > 1 {
+            let middle = (low + high) / 2
+            if points[middle].y < y { low = middle } else { high = middle }
+        }
+        let a = points[low], b = points[high]
+        let t = min(1, max(0, (y - a.y) / max(0.001, b.y - a.y)))
+        let inlet = a.x + (b.x - a.x) * t
+        let sectionY = y + layout.routeOffset
+        func smooth(_ value: CGFloat) -> CGFloat {
+            let t = min(1, max(0, value)); return t * t * (3 - 2 * t)
+        }
+        // Follow the actual inlet around the sand, then ease into the same
+        // roadside contour used farther down the chapter.
+        let entry = smooth((sectionY - inletEnd(layout: layout, right: right) + 40) / 120)
+        let exit = smooth((layout.height - sectionY - 120) / 200)
+        let blend = min(entry, exit)
+        // A shared centre line keeps the rock edge in phase with each bend.
+        let roadside = layout.centerX(at: y) + (right ? 1 : -1) *
+            (68 + sin(y / 83) * 1.1) * layout.scale
+        return CGPoint(x: inlet + (roadside - inlet) * blend, y: y)
     }
 
-    /// Every block has its own finished silhouette. Fit the entire block on
-    /// the bank instead of cutting facets against the curved shoreline.
+    private final class TerrainField {
+        let slabs: [TerrainSlab]
+        init(_ slabs: [TerrainSlab]) { self.slabs = slabs }
+    }
+    private static let terrainFields: NSCache<NSString, TerrainField> = {
+        let cache = NSCache<NSString, TerrainField>(); cache.countLimit = 8
+        return cache
+    }()
+
+    /// Unequal, rotated outcrops grow out of one bedrock surface. There are no
+    /// courses, repeated tile contours or straight vertical block faces.
     static func terrainSlabs(layout: WorldSceneryLayout) -> [TerrainSlab] {
-        let s = layout.scale
-        // iPad blocks stay a little smaller and begin at the top, so the
-        // entrance streams sit in the same basalt as the bends below.
-        let unit = isBroad(layout.width) ? s * 0.82 : s
-        let start = isBroad(layout.width) ? -layout.routeOffset + 12 : -layout.routeOffset + 150
-        let end = layout.height - layout.routeOffset - 120
-        var result: [TerrainSlab] = []
-        for right in [false, true] {
-            for row in 0..<max(1, Int((end - start) / (72 * unit))) {
-                let y = start + CGFloat(row) * 72 * unit
-                let halfH = (35 + CGFloat(row % 4) * 4) * unit
-                let edges = (0...12).map { index in
-                    bankPoint(layout: layout, right: right,
-                              y: y - halfH + 2 * halfH * CGFloat(index) / 12).x
-                }
-                let inner = right ? max(0, edges.max()! + 6 * s) : min(layout.width, edges.min()! - 6 * s)
-                let available = right ? layout.width - 4 * s - inner : inner - 4 * s
-                guard available > 43 * unit else { continue }
-                let halfW = min((40 + CGFloat(row % 3) * 5) * unit, (available - 6 * s) / 2)
-                let columns = max(1, Int(available / (halfW * 1.8)))
-                for column in 0..<columns {
-                    let x = right ? inner + halfW + CGFloat(column) * (halfW * 1.8)
-                                  : inner - halfW - CGFloat(column) * (halfW * 1.8)
-                    guard x - halfW >= 3 * s, x + halfW <= layout.width - 3 * s else { continue }
-                    let local: [CGPoint] = [.init(x: -0.94, y: 0.18), .init(x: -0.78, y: -0.55),
-                        .init(x: -0.26, y: -0.97), .init(x: 0.35, y: -0.90), .init(x: 1, y: -0.30),
-                        .init(x: 0.87, y: 0.60), .init(x: 0.12, y: 0.95), .init(x: -0.72, y: 0.68)]
-                    result.append(TerrainSlab(points: local.map { CGPoint(x: x + $0.x * halfW, y: y + $0.y * halfH) },
-                                              variation: row * 13 + column * 7, right: right))
-                }
-            }
+        let key = "\(layout.width):\(layout.height):\(layout.routeOffset)" as NSString
+        if let field = terrainFields.object(forKey: key) { return field.slabs }
+        let s = layout.scale, w = layout.width
+        let start = -layout.routeOffset - entranceOverlap + 30
+        let end = layout.height - layout.routeOffset - 110
+        var state: UInt32 = 0xA53C19
+        func random() -> CGFloat {
+            state = state &* 1_664_525 &+ 1_013_904_223
+            return CGFloat(state >> 8) / CGFloat(0x00FF_FFFF)
         }
+        let target = max(28, Int(w * (end - start) / (18_500 * s * s)))
+        var result: [TerrainSlab] = []
+        for attempt in 0..<(target * 45) {
+            let center = CGPoint(x: random() * w, y: start + random() * (end - start))
+            let right = center.x > layout.centerX(at: center.y)
+            let rx = (35 + random() * 81) * s, ry = (24 + random() * 61) * s
+            let rotation = random() * .pi
+            let count = 7 + Int(random() * 4)
+            let points = (0..<count).map { index -> CGPoint in
+                let angle = 2 * CGFloat.pi * (CGFloat(index) + random() * 0.32) / CGFloat(count)
+                let radius = 0.66 + random() * 0.39
+                let x = cos(angle) * rx * radius, y = sin(angle) * ry * radius
+                return CGPoint(x: center.x + x * cos(rotation) - y * sin(rotation),
+                               y: center.y + x * sin(rotation) + y * cos(rotation))
+            }
+            let distance = (center.x - bankPoint(layout: layout, right: right, y: center.y).x) * (right ? 1 : -1)
+            let slab = TerrainSlab(points: points, variation: attempt, right: right,
+                                  sandBlend: max(0, min(0.65, 1 - distance / (80 * s))))
+            let frame = slab.bounds
+            guard frame.minX > 2 * s, frame.maxX < w - 2 * s else { continue }
+            let fits = (0...10).allSatisfy { index in
+                let y = frame.minY + frame.height * CGFloat(index) / 10
+                let edge = bankPoint(layout: layout, right: right, y: y).x
+                return right ? frame.minX > edge + 5 * s : frame.maxX < edge - 5 * s
+            }
+            guard fits, !result.contains(where: {
+                let overlap = $0.bounds.intersection(frame)
+                return !overlap.isNull && overlap.width * overlap.height > min(frame.width * frame.height,
+                    $0.bounds.width * $0.bounds.height) * 0.48
+            }) else { continue }
+            result.append(slab)
+            if result.count == target { break }
+        }
+        // Background to foreground order is irregular, never a masonry row.
+        result.sort { $0.bounds.maxY < $1.bounds.maxY }
+        terrainFields.setObject(TerrainField(result), forKey: key)
         return result
     }
 
@@ -4387,6 +4490,10 @@ private enum VolcanoWorldLayout {
         (isBroad(width) ? 44 : 27) * scale
     }
 
+    static func channelRockWidth(scale: CGFloat, width: CGFloat) -> CGFloat {
+        channelBedWidth(scale: scale, width: width) + 22 * scale
+    }
+
     /// Every slope drains through its visible foot into the nearest side river.
     /// The final control point approaches from the outer bank along the river.
     static func tributaries(layout: WorldSceneryLayout) -> [Tributary] {
@@ -4409,7 +4516,10 @@ private enum VolcanoWorldLayout {
             let approach = min(24 * s, max(4 * s, (entry.y - start.y) * 0.6))
             let c1 = CGPoint(x: start.x, y: start.y + (entry.y - start.y) * 0.65)
             let c2 = CGPoint(x: entry.x - dx / length * approach, y: entry.y - dy / length * approach)
-            var points = (0...48).map { index -> CGPoint in
+            // One centre stream runs from the vent through the foot and into
+            // the channel. Both terrain and cone repaint this exact path.
+            var points = FlowLine(slopeFlow()).points.map { source.position($0) }
+            points += (1...48).map { index -> CGPoint in
                 let t = CGFloat(index) / 48, u = 1 - t
                 return CGPoint(x: u*u*u*start.x + 3*u*u*t*c1.x + 3*u*t*t*c2.x + t*t*t*entry.x,
                                y: u*u*u*start.y + 3*u*u*t*c1.y + 3*u*t*t*c2.y + t*t*t*entry.y)
@@ -4445,6 +4555,25 @@ private enum VolcanoWorldLayout {
             }
         }
     }
+    static func mountainContour() -> Path {
+        Path { m in
+            m.move(to: CGPoint(x: -136, y: 17))
+            m.addQuadCurve(to: CGPoint(x: -133, y: -3), control: CGPoint(x: -151, y: 12))
+            m.addCurve(to: CGPoint(x: -79, y: -87), control1: CGPoint(x: -116, y: -28), control2: CGPoint(x: -97, y: -46))
+            m.addCurve(to: CGPoint(x: -25, y: -220), control1: CGPoint(x: -54, y: -130), control2: CGPoint(x: -44, y: -205))
+            m.addQuadCurve(to: CGPoint(x: 25, y: -220), control: CGPoint(x: 0, y: -233))
+            m.addCurve(to: CGPoint(x: 79, y: -91), control1: CGPoint(x: 43, y: -202), control2: CGPoint(x: 55, y: -136))
+            m.addCurve(to: CGPoint(x: 136, y: -2), control1: CGPoint(x: 99, y: -53), control2: CGPoint(x: 118, y: -27))
+            m.addQuadCurve(to: CGPoint(x: 137, y: 18), control: CGPoint(x: 153, y: 13))
+            m.addCurve(to: CGPoint(x: 82, y: 33), control1: CGPoint(x: 121, y: 27), control2: CGPoint(x: 100, y: 37))
+            m.addQuadCurve(to: CGPoint(x: 40, y: 29), control: CGPoint(x: 61, y: 24))
+            m.addQuadCurve(to: CGPoint(x: 3, y: 37), control: CGPoint(x: 20, y: 42))
+            m.addQuadCurve(to: CGPoint(x: -50, y: 32), control: CGPoint(x: -28, y: 25))
+            m.addCurve(to: CGPoint(x: -136, y: 17), control1: CGPoint(x: -86, y: 46), control2: CGPoint(x: -126, y: 21))
+            m.closeSubpath()
+        }
+    }
+
     private final class RockField {
         let rocks: [LooseRock]
         init(_ rocks: [LooseRock]) { self.rocks = rocks }
@@ -4465,7 +4594,7 @@ private enum VolcanoWorldLayout {
         // Wide maps keep boulders closer to phone size so the cones stay the landmarks.
         let stone = broad ? max(0.74, 0.90 - (layout.width - 520) / 2600) : 1
         var exclusions: [CGRect] = []
-        let rivers = [false, true].map { channel(layout: layout, right: $0, from: -layout.routeOffset,
+        let rivers = [false, true].map { channel(layout: layout, right: $0, from: -layout.routeOffset - entranceOverlap,
                                                to: layout.height - layout.routeOffset) }
         for (index, river) in (rivers + tributaries(layout: layout).map(\.path)).enumerated() {
             var previous: CGPoint? = nil
@@ -4486,6 +4615,12 @@ private enum VolcanoWorldLayout {
         for source in sources(layout: layout) {
             exclusions += source.terrainBands.map { $0.insetBy(dx: -8 * s, dy: -8 * s) }
         }
+        // The overlap also contains the desert guardian. Keep his complete
+        // silhouette clear instead of scattering foreground stones over him.
+        let clearance = layout.routeOffset - WorldRouteTrail.bannerHeight - WorldRouteTrail.bannerTopPadding - WorldRouteTrail.bannerBottomPadding
+        let guardianY = 20 - WorldRouteTrail.chapterTail(topClearance: clearance) - layout.routeOffset
+        exclusions.append(CGRect(x: layout.width - 238 * s, y: guardianY - 240 * s,
+                                 width: 250 * s, height: 270 * s))
         exclusions.append(CGRect(x: layout.width - 174 * s, y: 1490, width: 190 * s, height: 225))
         // A fixed sequence gives a natural distribution which stays put while scrolling.
         var state: UInt32 = 0xB45A17
@@ -4494,8 +4629,8 @@ private enum VolcanoWorldLayout {
             return CGFloat(state >> 8) / CGFloat(0x00FF_FFFF)
         }
         var rocks: [LooseRock] = []
-        let target = max(110, Int(layout.width / (broad ? 4.6 : 5.6)))
-        let top = broad ? -layout.routeOffset + 24 : 112
+        let target = max(62, Int(layout.width / (broad ? 7.6 : 6.2)))
+        let top = -layout.routeOffset - entranceOverlap + 55
         let span = max(1, layout.height - layout.routeOffset - (broad ? 250 : 340) - top)
         for attempt in 0..<(target * 160) {
             let point = CGPoint(x: 8 + random() * (layout.width - 16),
@@ -4505,7 +4640,13 @@ private enum VolcanoWorldLayout {
             if attempt < target * 3 { size = 0.32 + random() * 0.40 }
             else if attempt < target * 8 { size = 0.20 + random() * 0.22 }
             else { size = 0.12 + random() * 0.19 }
-            let rock = LooseRock(point: point, size: s * stone * size, variation: attempt)
+            let right = point.x > layout.centerX(at: point.y)
+            let edge = bankPoint(layout: layout, right: right, y: point.y).x
+            let distance = (point.x - edge) * (right ? 1 : -1)
+            // A little sandy rubble follows the shore; open desert stays clear.
+            guard distance > -22 * s else { continue }
+            let sand = max(0, min(1, (48 * s - distance) / (85 * s)))
+            let rock = LooseRock(point: point, size: s * stone * size, variation: attempt, sandBlend: sand)
             let frame = rock.bounds
             let clearsRoad = (0...8).allSatisfy { index in
                 let y = frame.minY + frame.height * CGFloat(index) / 8
@@ -4536,9 +4677,9 @@ private enum VolcanoWorldLayout {
         let key = "\(layout.width):\(layout.height):\(layout.routeOffset)" as NSString
         if let field = sourceFields.object(forKey: key) { return field.sources }
         let s = layout.scale, w = layout.width
-        let firstY = -layout.routeOffset - 80
+        let firstY = -layout.routeOffset - entranceOverlap - 80
         let step: CGFloat = 12
-        var rows = Array(repeating: [CGRect](), count: Int(ceil((layout.height + 160) / step)) + 1)
+        var rows = Array(repeating: [CGRect](), count: Int(ceil((layout.height + entranceOverlap + 160) / step)) + 1)
         func reserve(_ path: Path, margin: CGFloat) {
             var previous: CGPoint? = nil
             path.forEach { element in
@@ -4559,7 +4700,7 @@ private enum VolcanoWorldLayout {
             }
         }
         for right in [false, true] {
-            reserve(channel(layout: layout, right: right, from: -layout.routeOffset,
+            reserve(channel(layout: layout, right: right, from: inletEnd(layout: layout, right: right) - layout.routeOffset,
                             to: layout.height - layout.routeOffset), margin: 23 * s)
         }
         var road = Path()
@@ -4573,9 +4714,9 @@ private enum VolcanoWorldLayout {
         // On a broad bank the final cone sits higher, leaving room for its
         // tributary to descend before the boss clearing instead of running flat.
         let finalBendY: CGFloat = w >= 600 ? 1380 : 1428
-        // Phones stay on the 1.08 cap. Extra iPad width goes into the cones.
+        // Try larger silhouettes first, using the full dry space on broad maps.
         let boost = coneBoost(w)
-        let phoneFactors: [CGFloat] = [1.08, 1, 0.94, 0.88, 0.82]
+        let phoneFactors: [CGFloat] = [1.30, 1.18, 1.08, 1, 0.94, 0.88, 0.82, 0.76, 0.70, 0.64]
         let factors = boost > 1
             ? [1.08, 1, 0.94, 0.88, 0.80, 0.72].map { $0 * boost } + phoneFactors
             : phoneFactors
@@ -4589,19 +4730,20 @@ private enum VolcanoWorldLayout {
             // The closer river leaves broad outer clearings for full-size cones.
             // Search the bend before allowing a small adjustment in their size.
             search: for factor: CGFloat in factors {
-                for dy: CGFloat in [0, -24, 24, -48, 48, -72, 72, -96, 96] {
+                for dy: CGFloat in [0, -24, 24, -48, 48, -72, 72, -96, 96, -120, 120, -144, 144] {
                     for candidate in 0..<45 {
                         let offset = candidate == 0 ? 0 : CGFloat((candidate + 1) / 2) * 9 * s * (candidate % 2 == 0 ? 1 : -1)
                         let anchor: CGFloat = boost > 1 ? (right ? 0.84 : 0.16) : (right ? 0.86 : 0.14)
                         let x = w * anchor + offset
+                        if w >= 800 && (x < w * 0.08 || x > w * 0.92) { continue }
                         let source = Source(id: id, kind: kind, point: CGPoint(x: x, y: y + dy),
-                                            size: baseSize * s * factor, mirrored: !right)
+                                            size: baseSize * s * factor, mirrored: !right, heightScale: coneHeightScale(w))
                         let bands = source.terrainBands
                         let body = bands.reduce(CGRect.null) { $0.union($1) }
                         let visible = body.intersection(CGRect(x: 0, y: -layout.routeOffset, width: w, height: layout.height))
                         // Broad flanks may continue past the screen edge, while
                         // the crater stays visible in the outside of the bend.
-                        guard !visible.isNull, visible.width >= body.width * 0.60,
+                        guard !visible.isNull, visible.width >= body.width * 0.56,
                               x >= 18 * s, x <= w - 18 * s,
                               !body.intersects(boss),
                               !result.contains(where: { $0.terrainBands.contains(where: { $0.insetBy(dx: -9 * s, dy: -12 * s).intersects(body) }) }) else { continue }
@@ -4617,7 +4759,10 @@ private enum VolcanoWorldLayout {
                     }
                 }
             }
-            if let chosen { result.append(chosen) }
+            if var chosen {
+                if id == 0 { chosen.size *= 0.8 }
+                result.append(chosen)
+            }
         }
         sourceFields.setObject(SourceField(result), forKey: key)
         return result
@@ -4626,29 +4771,64 @@ private enum VolcanoWorldLayout {
     /// Grow cones with spare iPad width. The scenery scale itself stays capped,
     /// so phone maps and the trail keep their present size.
     static func coneBoost(_ width: CGFloat) -> CGFloat {
-        let t = min(1, max(0, (width - 520) / 340))
-        return 1 + t * 0.55
+        let t = min(1, max(0, (width - 520) / 480))
+        return 1 + t * 1.25
+    }
+
+    static func coneHeightScale(_ width: CGFloat) -> CGFloat {
+        let t = min(1, max(0, (width - 440) / 60))
+        return 1.55 - t * 0.55
+    }
+
+    static func inletStart(layout: WorldSceneryLayout, right: Bool) -> CGFloat {
+        if isBroad(layout.width) { return right ? 90 : 190 }
+        return layout.routeOffset + (right ? -80 : 95)
+    }
+
+    static func inletEnd(layout: WorldSceneryLayout, right: Bool) -> CGFloat {
+        layout.routeOffset + (isBroad(layout.width) ? (right ? 85 : 160) : (right ? 115 : 230))
     }
 
     static func channelPoint(layout: WorldSceneryLayout, right: Bool, y: CGFloat) -> CGPoint {
         let sectionY = y + layout.routeOffset
-        let outside: CGFloat = right ? layout.width + 75 : -75
-        let wander = sin(y / 97 + (right ? 1.8 : 0)) * 6 + sin(y / 43) * 3
-        let bank = layout.centerX(at: y) + (right ? 1 : -1) * (102 + wander) * layout.scale
-        if let fadeIn = broadEntrance(layout: layout, sectionY: sectionY) {
-            let exit = min(1, max(0, (layout.height - 110 - sectionY) / 210))
-            let fadeOut = exit * exit * (3 - 2 * exit)
-            return CGPoint(x: outside + (bank - outside) * min(fadeIn, fadeOut), y: y)
+        let outside: CGFloat = right ? layout.width + 90 : -90
+        func roadside(_ y: CGFloat) -> CGFloat {
+            let wander = sin(y / 97 + (right ? 1.8 : 0)) * 6 + sin(y / 43) * 3
+            return layout.centerX(at: y) + (right ? 1 : -1) * (102 + wander) * layout.scale
         }
-        let entry = right ? (sectionY + 250) / 360 : (sectionY - 110) / 110
-        let blend = min(1, max(0, min(entry, (layout.height - 110 - sectionY) / 210)))
-        return CGPoint(x: outside + (bank - outside) * blend * blend * (3 - 2 * blend), y: y)
+        let entryStart = inletStart(layout: layout, right: right)
+        let entryEnd = inletEnd(layout: layout, right: right)
+        if sectionY < entryEnd {
+            guard sectionY > entryStart else { return CGPoint(x: outside, y: y) }
+            let endY = entryEnd - layout.routeOffset
+            let endX = roadside(endY)
+            let slope = (roadside(endY + 1) - roadside(endY - 1)) / 2
+            let handle = min(245, (entryEnd - entryStart) * 0.38)
+            let c1X = right ? layout.width * (isBroad(layout.width) ? 0.64 : 0.38) : layout.width * 0.24
+            let c2X = endX - slope * handle
+            func cubic(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat, _ d: CGFloat, _ t: CGFloat) -> CGFloat {
+                let u = 1 - t
+                return u*u*u*a + 3*u*u*t*b + 3*u*t*t*c + t*t*t*d
+            }
+            // Invert the curve's height so the inlet can start horizontally
+            // at the side, then meet the river with the same downstream tangent.
+            var low: CGFloat = 0, high: CGFloat = 1
+            for _ in 0..<17 {
+                let t = (low + high) / 2
+                if cubic(entryStart, entryStart, entryEnd - handle, entryEnd, t) < sectionY { low = t }
+                else { high = t }
+            }
+            return CGPoint(x: cubic(outside, c1X, c2X, endX, (low + high) / 2), y: y)
+        }
+        let exit = min(1, max(0, (layout.height - 110 - sectionY) / 210))
+        let blend = exit * exit * (3 - 2 * exit)
+        return CGPoint(x: outside + (roadside(y) - outside) * blend, y: y)
     }
 
     /// Channels leave through the sides before either chapter boundary.
     static func channel(layout: WorldSceneryLayout, right: Bool, from start: CGFloat, to end: CGFloat, lane: CGFloat = 0) -> Path {
         Path { path in
-            let count = max(1, Int(ceil((end - start) / 10)))
+            let count = max(1, Int(ceil((end - start) / 5)))
             for i in 0...count {
                 let y = start + (end - start) * CGFloat(i) / CGFloat(count)
                 var point = channelPoint(layout: layout, right: right, y: y)
@@ -4672,69 +4852,47 @@ private enum VolcanoWorldLayout {
     }
 }
 
-/// The right lava inlet crosses the chapter join in one coordinate system.
-/// Repainting the 32pt terrain blend preserves both its colour and moving fronts.
-private struct SleepVolcanoInlet: View {
+/// The same terrain, complete rocks and moving channels are rendered above
+/// and below the join, using world-three coordinates throughout.
+private struct DesertVolcanoTransition: View {
     let routeOffset: CGFloat
     let viewportHeight: CGFloat
-    let sectionStart: CGFloat
     var fixedTime: TimeInterval? = nil
     var frozen = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.scenePhase) private var scenePhase
-    @State private var visible = false
 
     var body: some View {
         GeometryReader { geometry in
-            let clearance = routeOffset - WorldRouteTrail.bannerHeight - WorldRouteTrail.bannerTopPadding - WorldRouteTrail.bannerBottomPadding
-            let height = routeOffset + WorldRouteTrail.chapterRouteHeight(topClearance: clearance, worldID: 3)
-            let layout = WorldSceneryLayout(width: geometry.size.width, height: height, routeOffset: routeOffset)
-            let lanes = VolcanoWorldLayout.channelLanes(width: geometry.size.width)
-            let lines = lanes.map { lane in
-                VolcanoWorldLayout.FlowLine(VolcanoWorldLayout.channel(layout: layout, right: true,
-                    from: -routeOffset - 220, to: height - routeOffset, lane: lane * layout.scale))
-            }
+            let layout = VolcanoWorldLayout.joinLayout(width: geometry.size.width, routeOffset: routeOffset)
+            let frame = CGRect(x: 0, y: -VolcanoWorldLayout.entranceOverlap,
+                               width: geometry.size.width, height: VolcanoWorldLayout.entranceOverlap)
             ZStack {
-                Canvas { context, _ in
-                    var c = context; c.translateBy(x: 0, y: routeOffset - sectionStart)
-                    VolcanoWorldPainter(context: c).boundaryFlow(layout: layout, right: true,
-                        from: -routeOffset - 220, to: height - routeOffset)
+                VolcanoLifeSurface(layout: layout, frame: frame, viewportHeight: viewportHeight,
+                                   fixedTime: fixedTime, frozen: frozen)
+                    .mask(VolcanoDepthOcclusion(layout: layout, frame: frame, depth: -.infinity))
+                ForEach(VolcanoWorldLayout.sources(layout: layout).filter {
+                    $0.bounds.offsetBy(dx: 0, dy: routeOffset).intersects(frame)
+                }) { source in
+                    VolcanoLifeSurface(layout: layout, frame: frame, viewportHeight: viewportHeight,
+                                       source: source, fixedTime: fixedTime, frozen: frozen)
+                        .mask(VolcanoDepthOcclusion(layout: layout, frame: frame, depth: source.point.y + routeOffset))
                 }
-                TimelineView(.animation(minimumInterval: 1.0 / 20,
-                                        paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
-                    Canvas { context, _ in
-                        var c = context; c.translateBy(x: 0, y: routeOffset - sectionStart)
-                        let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSinceReferenceDate)
-                        VolcanoLifePainter(context: c, time: time, seed: 0)
-                            .channels(lines: lines, scale: layout.scale, lanes: lanes,
-                                      mapWidth: geometry.size.width, indexOffset: lanes.count)
-                    }
+            }.mask {
+                // Desert props stand in front of the incoming terrain and effects.
+                Canvas { context, size in
+                    context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.white))
+                    var c = context
+                    c.translateBy(x: 0, y: routeOffset - layout.height - frame.minY)
+                    c.blendMode = .destinationOut
+                    let depth = WorldSceneryDepth()
+                    let desert = DinoDesertPainter(context: c)
+                    desert.appendScenery(layout: layout, depth: depth)
+                    let boss = CGPoint(x: layout.width - 79 * layout.scale, y: 1675)
+                    desert.clearing(at: boss, size: layout.scale)
+                    WorldBossPainter(context: c).draw(worldID: 7, at: boss, size: layout.scale * 0.88)
+                    depth.draw()
                 }
             }
-        }
-        .readGeometry(for: Bool.self) { proxy in
-            let frame = proxy.frame(in: .named("adventure.map.viewport"))
-            return frame.maxY > 0 && frame.minY < viewportHeight
-        } action: { visible = $0 }
-        .clipped().allowsHitTesting(false).accessibilityHidden(true)
-    }
-}
-
-/// Leave the right inlet visible beneath the terrain fade, rather than painting it twice.
-private struct VolcanoInletOpening: View {
-    let routeOffset: CGFloat
-    var body: some View {
-        GeometryReader { geometry in
-            let clearance = routeOffset - WorldRouteTrail.bannerHeight - WorldRouteTrail.bannerTopPadding - WorldRouteTrail.bannerBottomPadding
-            let height = routeOffset + WorldRouteTrail.chapterRouteHeight(topClearance: clearance, worldID: 3)
-            let layout = WorldSceneryLayout(width: geometry.size.width, height: height, routeOffset: routeOffset)
-            Canvas { context, size in
-                context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.white))
-                var c = context; c.translateBy(x: 0, y: routeOffset); c.blendMode = .destinationOut
-                VolcanoWorldPainter(context: c).boundaryFlow(layout: layout, right: true,
-                    from: -routeOffset - 220, to: height - routeOffset)
-            }
-        }
+        }.clipped().allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 
@@ -4812,18 +4970,22 @@ private struct VolcanoLifeSurface: View {
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
 
     var body: some View {
         let lanes = VolcanoWorldLayout.channelLanes(width: layout.width)
-        let channels = source == nil ? [false, true].flatMap { right in
+        let sides: [Bool] = source == nil ? [false, true] : []
+        let channels = sides.flatMap { right in
             lanes.map { lane in
                 VolcanoWorldLayout.FlowLine(VolcanoWorldLayout.channel(layout: layout, right: right,
-                                           from: -layout.routeOffset - (right ? 220 : 0), to: layout.height - layout.routeOffset,
+                                           from: -layout.routeOffset - VolcanoWorldLayout.entranceOverlap, to: layout.height - layout.routeOffset,
                                            lane: lane * layout.scale))
             }
-        } : []
-        let tributaries = source == nil ? VolcanoWorldLayout.tributaries(layout: layout).map { VolcanoWorldLayout.FlowLine($0.path) } : []
+        }
+        let tributaries = VolcanoWorldLayout.tributaries(layout: layout)
+            .filter { source == nil || $0.id == source?.id }
+            .map { VolcanoWorldLayout.FlowLine($0.path) }
         let slopes = source?.kind == .summit ? [-1.5, -0.75, 0, 0.75, 1.5].map {
             VolcanoWorldLayout.FlowLine(VolcanoWorldLayout.slopeFlow(lane: $0))
         } : []
@@ -4832,11 +4994,16 @@ private struct VolcanoLifeSurface: View {
             Canvas { context, _ in
                 var c = context
                 c.translateBy(x: -frame.minX, y: layout.routeOffset - frame.minY)
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSinceReferenceDate)
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 if let source {
+                    let terrain = c
                     c.translateBy(x: source.point.x, y: source.point.y)
-                    c.scaleBy(x: source.mirrored ? -source.size : source.size, y: source.size)
+                    c.scaleBy(x: source.mirrored ? -source.size : source.size, y: source.size * source.heightScale)
                     VolcanoLifePainter(context: c, time: time, seed: source.id).source(source.kind, slopes: slopes)
+                    var slope = terrain
+                    slope.clip(to: source.silhouette)
+                    VolcanoLifePainter(context: slope, time: time, seed: 0)
+                        .tributaries(tributaries, scale: layout.scale, indexOffset: source.id)
                 } else {
                     let painter = VolcanoLifePainter(context: c, time: time, seed: 0)
                     painter.channels(lines: channels, scale: layout.scale, lanes: lanes, mapWidth: layout.width)
@@ -4846,7 +5013,7 @@ private struct VolcanoLifeSurface: View {
         }
         .readGeometry(for: Bool.self) { proxy in
             let rect = proxy.frame(in: .named("adventure.map.viewport"))
-            return rect.maxY > 0 && rect.minY < viewportHeight
+            return rect.maxY > -256 && rect.minY < viewportHeight + 256
         } action: { visible = $0 }
     }
 }
@@ -4931,10 +5098,10 @@ private struct VolcanoLifePainter {
         }
     }
 
-    func tributaries(_ feeders: [VolcanoWorldLayout.FlowLine], scale: CGFloat) {
+    func tributaries(_ feeders: [VolcanoWorldLayout.FlowLine], scale: CGFloat, indexOffset: Int = 0) {
         for (index, feeder) in feeders.enumerated() {
             flowing(feeder, width: 2.2 * scale, speed: 6 * Double(scale), spacing: 113 * scale,
-                    tongue: 24 * scale, offset: Double(index) * 31.7, intensity: 0.96)
+                    tongue: 24 * scale, offset: Double(index + indexOffset) * 31.7, intensity: 0.96)
         }
     }
 
@@ -4950,7 +5117,7 @@ private struct VolcanoLifePainter {
             smoke(at: CGPoint(x: 0, y: -104), rise: 121, spread: 28, opacity: 0.54, count: 11)
             sparks(at: CGPoint(x: 0, y: -101), height: 49, spread: 35, count: 10)
         case .summit:
-            for (index, slope) in slopes.enumerated() {
+            for (index, slope) in slopes.enumerated() where index != 2 {
                 flowing(slope, width: index == 2 ? 2.1 : 0.75, speed: 7,
                         spacing: 101 + CGFloat(index) * 13, tongue: 25,
                         offset: Double(seed) * 17.9 + Double(index) * 29.3,
@@ -5035,20 +5202,25 @@ private struct VolcanoWorldPainter {
     var scenery: WorldSceneryLayout? = nil
     var depth: WorldSceneryDepth? = nil
     var depthOffset: CGFloat = 0
+    var sandBlend: CGFloat = 0
 
-    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: @escaping (VolcanoWorldPainter) -> Void) {
+    private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, boundsScale: CGFloat = 1, draw: @escaping (VolcanoWorldPainter) -> Void) {
         let point = scenery?.position(point, radius: radius, rise: rise) ?? point
         var c = context; c.translateBy(x: point.x, y: point.y)
         c.scaleBy(x: mirror ? -size : size, y: size)
+        let tint = sandBlend
         if let depth {
             depth.add(at: depthOffset + point.y,
-                      bounds: CGRect(x: point.x - 185 * size, y: depthOffset + point.y - 410 * size,
-                                     width: 370 * size, height: 480 * size)) { draw(.init(context: c)) }
-        } else { draw(.init(context: c)) }
+                      bounds: CGRect(x: point.x - 185 * size, y: depthOffset + point.y - 410 * size * boundsScale,
+                                     width: 370 * size, height: 480 * size * boundsScale)) { draw(.init(context: c, sandBlend: tint)) }
+        } else { draw(.init(context: c, sandBlend: tint)) }
+    }
+    private func stoneColor(_ hex: UInt32) -> Color {
+        Color(dinoHex: hex).mixed(with: Color(dinoHex: 0xD8B17A), by: Double(sandBlend) * 0.75)
     }
     private func material(_ path: Path, colors: [UInt32]) {
         let r = path.boundingRect
-        context.fill(path, with: .linearGradient(Gradient(colors: colors.map { Color(dinoHex: $0) }),
+        context.fill(path, with: .linearGradient(Gradient(colors: colors.map { stoneColor($0) }),
                                                 startPoint: CGPoint(x: r.minX, y: r.minY), endPoint: CGPoint(x: r.maxX, y: r.maxY)))
     }
     private func contour(_ points: [CGPoint], radius: CGFloat = 5) -> Path {
@@ -5074,13 +5246,13 @@ private struct VolcanoWorldPainter {
         material(contour(points), colors: colors)
     }
     private func oval(_ r: CGRect, colors: [UInt32]) {
-        context.fill(Path(ellipseIn: r), with: .radialGradient(Gradient(colors: colors.map { Color(dinoHex: $0) }),
+        context.fill(Path(ellipseIn: r), with: .radialGradient(Gradient(colors: colors.map { stoneColor($0) }),
                                                             center: CGPoint(x: r.minX + r.width * 0.32, y: r.minY + r.height * 0.22),
                                                             startRadius: 0, endRadius: max(r.width, r.height) * 0.85))
     }
     private func line(_ points: [CGPoint], color: UInt32, width: CGFloat, opacity: Double = 1) {
         var p = Path(); p.addLines(points)
-        context.stroke(p, with: .color(Color(dinoHex: color).opacity(opacity)), style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
+        context.stroke(p, with: .color(stoneColor(color).opacity(opacity)), style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
     }
     private func glow(_ point: CGPoint, radius: CGFloat, color: UInt32, opacity: Double) {
         context.fill(Path(ellipseIn: CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)),
@@ -5115,7 +5287,17 @@ private struct VolcanoWorldPainter {
         let left: CGFloat = 0, right = w - left
         let scale = min(1.30, max(0.82, w / 390))
         let horizon = (routeOffset + 135) / h
-        context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
+        // Sandy ash reaches into the desert along a low, eroded edge. The
+        // basalt banks and complete stones extend farther on either side.
+        var ground = Path()
+        for index in 0...80 {
+            let x = w * CGFloat(index) / 80
+            let y = -170 + sin(x / w * 9.7 + 0.7) * 12 + sin(x / w * 23.1) * 5
+            if index == 0 { ground.move(to: CGPoint(x: x, y: y)) }
+            else { ground.addLine(to: CGPoint(x: x, y: y)) }
+        }
+        ground.addLine(to: CGPoint(x: w, y: h)); ground.addLine(to: CGPoint(x: 0, y: h)); ground.closeSubpath()
+        let groundStops: [Gradient.Stop] = [
             .init(color: Color(dinoHex: 0xFFD1A1), location: 0),
             .init(color: Color(dinoHex: 0x9E8CA8), location: 0.035),
             .init(color: Color(dinoHex: 0xDDA08D), location: horizon * 0.55),
@@ -5126,8 +5308,14 @@ private struct VolcanoWorldPainter {
             .init(color: Color(dinoHex: 0x78686B), location: 0.94),
             .init(color: Color(dinoHex: 0x9C9985), location: 0.975),
             .init(color: Color(dinoHex: 0xC7E8BE), location: 1)
-        ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
+        ]
+        let extendedStops = [Gradient.Stop(color: Color(dinoHex: 0xFFD1A1).opacity(0), location: 0)] + groundStops.map {
+            Gradient.Stop(color: $0.color, location: (190 + $0.location * h) / (h + 190))
+        }
+        context.fill(ground, with: .linearGradient(Gradient(stops: extendedStops),
+            startPoint: CGPoint(x: 0, y: -190), endPoint: CGPoint(x: 0, y: h)))
         sky(width: w, left: left, right: right, height: routeOffset + 110, scale: scale)
+        desertApron(layout: WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset))
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         let p = VolcanoWorldPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset)
@@ -5143,21 +5331,59 @@ private struct VolcanoWorldPainter {
         p.steam(at: CGPoint(x: w * 0.5, y: 1685), width: w * 1.1, opacity: 0.10)
     }
 
+    /// Sand and wind-worn dune crests remain visible above the later basalt
+    /// banks. The banks themselves define the final edge on each side.
+    private func desertApron(layout: WorldSceneryLayout) {
+        let w = layout.width
+        let start = -VolcanoWorldLayout.entranceOverlap
+        let end = VolcanoWorldLayout.inletEnd(layout: layout, right: false) + 150
+        let area = Path(CGRect(x: 0, y: start, width: w, height: end - start))
+        var c = context
+        c.clipToLayer { mask in
+            mask.fill(area, with: .linearGradient(Gradient(stops: [
+                .init(color: .clear, location: 0),
+                .init(color: .white, location: 100 / (end - start)),
+                .init(color: .white, location: 1 - 160 / (end - start)),
+                .init(color: .clear, location: 1)
+            ]), startPoint: CGPoint(x: 0, y: start), endPoint: CGPoint(x: 0, y: end)))
+        }
+        c.fill(area, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xF7D89E), Color(dinoHex: 0xF5D397), Color(dinoHex: 0xF0C88B)]),
+            startPoint: CGPoint(x: 0, y: start), endPoint: CGPoint(x: 0, y: end)))
+        for row in -3...Int(ceil(end / 148)) {
+            let y = CGFloat(row) * 148 + 148 + CGFloat(sin(Double(row) * 1.71)) * 19
+            let sign: CGFloat = row.isMultiple(of: 2) ? 1 : -1
+            let peak = w * (0.22 + CGFloat((row * 7 % 6 + 6) % 6) * 0.11)
+            var dune = Path(); dune.move(to: CGPoint(x: -50, y: y + 60 * sign))
+            dune.addCurve(to: CGPoint(x: w + 50, y: y + 20 * sign),
+                control1: CGPoint(x: peak, y: y - 95), control2: CGPoint(x: peak + w * 0.3, y: y + 80))
+            let crest = dune
+            dune.addLine(to: CGPoint(x: w + 50, y: y + 210)); dune.addLine(to: CGPoint(x: -50, y: y + 210)); dune.closeSubpath()
+            c.fill(dune, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xFFE7B1).opacity(0.55), .clear]),
+                startPoint: CGPoint(x: 0, y: y - 50), endPoint: CGPoint(x: 0, y: y + 210)))
+            c.stroke(crest, with: .color(Color(dinoHex: 0xFFF2CC).opacity(0.40)), lineWidth: 1.2)
+        }
+    }
+
     /// Pale sandy ash keeps the existing light trail and level rims legible,
     /// while the surrounding ground belongs to the basalt landscape.
     private func ashShoulders(layout: WorldSceneryLayout) {
-        let start = -layout.routeOffset - 12, end = layout.height - layout.routeOffset + 12
+        let start = -layout.routeOffset - VolcanoWorldLayout.entranceOverlap, end = layout.height - layout.routeOffset + 12
         let count = max(1, Int(ceil((end - start) / 8)))
         var left: [CGPoint] = [], right: [CGPoint] = []
         for index in 0...count {
             let y = start + (end - start) * CGFloat(index) / CGFloat(count)
-            let half = (50 + sin(y / 61) * 3 + sin(y / 27) * 1.2) * layout.scale
+            let half = (49 + sin(y / 83) * 1.1) * layout.scale
             let center = layout.centerX(at: y)
             left.append(CGPoint(x: center - half, y: y)); right.append(CGPoint(x: center + half, y: y))
         }
         var shoulder = Path(); shoulder.addLines(left + right.reversed()); shoulder.closeSubpath()
         let h = layout.height
-        context.fill(shoulder, with: .linearGradient(Gradient(stops: [
+        var ash = context
+        ash.clipToLayer { mask in
+            mask.fill(shoulder, with: .linearGradient(Gradient(colors: [.clear, .white]),
+                startPoint: CGPoint(x: 0, y: start), endPoint: CGPoint(x: 0, y: -layout.routeOffset + 90)))
+        }
+        ash.fill(shoulder, with: .linearGradient(Gradient(stops: [
             .init(color: Color(dinoHex: 0xE3CFAE), location: 0),
             .init(color: Color(dinoHex: 0xD2B995), location: 0.45),
             .init(color: Color(dinoHex: 0xCCB394), location: 0.94),
@@ -5176,36 +5402,32 @@ private struct VolcanoWorldPainter {
 
     func appendScenery(layout: WorldSceneryLayout) {
         let placed = VolcanoWorldPainter(context: context, depth: depth, depthOffset: depthOffset)
+        let feeders = VolcanoWorldLayout.tributaries(layout: layout)
         for rock in VolcanoWorldLayout.looseRocks(layout: layout) {
-            placed.rubble(at: rock.point, size: rock.size, variation: rock.variation)
+            VolcanoWorldPainter(context: context, depth: depth, depthOffset: depthOffset, sandBlend: rock.sandBlend)
+                .rubble(at: rock.point, size: rock.size, variation: rock.variation)
         }
         for source in VolcanoWorldLayout.sources(layout: layout) {
             // Coordinates have already passed through the shared clearance solver.
             if source.kind == .crater {
                 placed.crater(at: source.point, size: source.size, mirror: source.mirrored)
             } else {
-                placed.volcano(at: source.point, size: source.size, mirror: source.mirrored)
+                placed.volcano(at: source.point, size: source.size, mirror: source.mirrored, variation: source.id,
+                               heightScale: source.heightScale, flowLayout: layout, feeder: feeders.first { $0.id == source.id }?.path)
             }
-        }
-    }
-
-    func boundaryFlow(layout: WorldSceneryLayout, right: Bool, from start: CGFloat, to end: CGFloat) {
-        let temperature = (-layout.routeOffset)...(layout.height - layout.routeOffset)
-        let bed = VolcanoWorldLayout.channel(layout: layout, right: right, from: start, to: end)
-        context.stroke(bed, with: .color(Color(dinoHex: 0x3E384D).opacity(0.28)),
-                       style: StrokeStyle(lineWidth: VolcanoWorldLayout.channelBedWidth(scale: layout.scale, width: layout.width), lineCap: .round, lineJoin: .round))
-        for lane in VolcanoWorldLayout.channelLanes(width: layout.width) {
-            let path = VolcanoWorldLayout.channel(layout: layout, right: right, from: start, to: end, lane: lane * layout.scale)
-            var c = context; c.opacity = lane == 0 ? 1 : abs(lane) < 6 ? 0.78 : 0.55
-            VolcanoWorldPainter(context: c).lava(path,
-                width: VolcanoWorldLayout.channelWidth(lane: lane, scale: layout.scale, width: layout.width), moving: true, temperature: temperature)
         }
     }
 
     private func riverbeds(layout: WorldSceneryLayout) {
         for right in [false, true] {
-            let start = VolcanoWorldLayout.isBroad(layout.width) ? -layout.routeOffset - 8 : -layout.routeOffset + 90
+            let start = -layout.routeOffset - VolcanoWorldLayout.entranceOverlap
             let end = layout.height - layout.routeOffset - 70
+            // A continuous basalt lip also covers the inside of the tightest
+            // bend, where an offset bank contour can fold over itself.
+            let lip = VolcanoWorldLayout.channel(layout: layout, right: right, from: start, to: end)
+            context.stroke(lip, with: .color(Color(dinoHex: 0x756674)),
+                style: StrokeStyle(lineWidth: VolcanoWorldLayout.channelRockWidth(scale: layout.scale, width: layout.width),
+                                   lineCap: .round, lineJoin: .round))
             let count = max(1, Int((end - start) / 12))
             var bank = Path()
             for i in 0...count {
@@ -5213,15 +5435,17 @@ private struct VolcanoWorldPainter {
                 let point = VolcanoWorldLayout.bankPoint(layout: layout, right: right, y: y)
                 if i == 0 { bank.move(to: point) } else { bank.addLine(to: point) }
             }
+            context.stroke(bank, with: .color(Color(dinoHex: 0xB89978).opacity(0.24)),
+                style: StrokeStyle(lineWidth: 34 * layout.scale, lineCap: .round, lineJoin: .round))
             bank.addLine(to: CGPoint(x: right ? layout.width + 250 : -250, y: end))
             bank.addLine(to: CGPoint(x: right ? layout.width + 250 : -250, y: start)); bank.closeSubpath()
-            material(bank, colors: [0x82717B, 0x4E495F, 0x5F5365, 0x8E7A74])
+            material(bank, colors: [0x9B8582, 0x635565, 0x514A5A, 0x7C6967])
         }
         for slab in VolcanoWorldLayout.terrainSlabs(layout: layout) { terrainBlock(slab) }
         let temperature = (-layout.routeOffset)...(layout.height - layout.routeOffset)
         for right in [false, true] {
             let bed = VolcanoWorldLayout.channel(layout: layout, right: right,
-                                                from: -layout.routeOffset, to: layout.height - layout.routeOffset)
+                                                from: -layout.routeOffset - VolcanoWorldLayout.entranceOverlap, to: layout.height - layout.routeOffset)
             context.stroke(bed, with: .color(Color(dinoHex: 0x3E384D).opacity(0.28)),
                            style: StrokeStyle(lineWidth: VolcanoWorldLayout.channelBedWidth(scale: layout.scale, width: layout.width), lineCap: .round, lineJoin: .round))
         }
@@ -5234,7 +5458,7 @@ private struct VolcanoWorldPainter {
         for right in [false, true] {
             for lane in VolcanoWorldLayout.channelLanes(width: layout.width) {
                 let fissure = VolcanoWorldLayout.channel(layout: layout, right: right,
-                    from: -layout.routeOffset, to: layout.height - layout.routeOffset, lane: lane * layout.scale)
+                    from: -layout.routeOffset - VolcanoWorldLayout.entranceOverlap, to: layout.height - layout.routeOffset, lane: lane * layout.scale)
                 var layer = context
                 layer.opacity = lane == 0 ? 1 : abs(lane) < 6 ? 0.78 : 0.55
                 VolcanoWorldPainter(context: layer).lava(fissure,
@@ -5245,18 +5469,23 @@ private struct VolcanoWorldPainter {
 
     private func terrainBlock(_ slab: VolcanoWorldLayout.TerrainSlab) {
         let frame = slab.bounds
-        ground(at: CGPoint(x: frame.midX, y: frame.maxY - 7), width: frame.width * 0.98,
-               height: frame.height * 0.28, color: 0x302B3D, opacity: 0.27)
-        let block = contour(slab.points, radius: 5)
-        material(block, colors: slab.variation % 3 == 0 ? [0xA18B88, 0x6A6073, 0x474455] : [0x8B7B83, 0x5D576C, 0x403F53])
-        var clipped = context; clipped.clip(to: block)
-        let face = VolcanoWorldPainter(context: clipped)
-        face.polygon([.init(x: frame.minX, y: frame.midY), .init(x: frame.midX, y: frame.midY + frame.height * 0.12),
-                      .init(x: frame.maxX, y: frame.midY - frame.height * 0.12),
-                      .init(x: frame.maxX + 3, y: frame.maxY + 3), .init(x: frame.minX - 3, y: frame.maxY + 3)],
-                     colors: [0x62566A, 0x383B50])
-        context.stroke(block, with: .color(Color(dinoHex: 0xC3AAA0).opacity(0.12)),
-                       style: StrokeStyle(lineWidth: 0.7, lineJoin: .round))
+        let block = contour(slab.points, radius: 8)
+        let p = VolcanoWorldPainter(context: context, sandBlend: slab.sandBlend)
+        p.material(block, colors: slab.variation % 3 == 0
+            ? [0x8E797C, 0x736373, 0x5D5365] : [0x81717A, 0x695C6D, 0x554E60])
+        var c = context; c.clip(to: block)
+        let face = VolcanoWorldPainter(context: c, sandBlend: slab.sandBlend)
+        // Low broken ridges share the ground, without an extruded front face.
+        let ridge = slab.points[slab.variation % slab.points.count]
+        face.polygon([ridge, CGPoint(x: frame.midX + frame.width * 0.12, y: frame.midY - frame.height * 0.05),
+                      slab.points[(slab.variation + 3) % slab.points.count]],
+                     colors: [0xA28A87, 0x766675, 0x66596B])
+        for index in 0..<2 {
+            let vertex = slab.points[(slab.variation + index * 3 + 1) % slab.points.count]
+            face.line([vertex, CGPoint(x: frame.midX + CGFloat(index) * 8, y: frame.midY + frame.height * 0.12),
+                       CGPoint(x: frame.midX - frame.width * 0.17, y: frame.midY + frame.height * 0.29)],
+                      color: 0x403C50, width: 0.9, opacity: 0.35)
+        }
     }
 
     private func rubble(at point: CGPoint, size: CGFloat, variation: Int) {
@@ -5283,13 +5512,13 @@ private struct VolcanoWorldPainter {
             let block = p.contour([.init(x: -42, y: 7), .init(x: -35, y: -23),
                 .init(x: -13, y: -42), .init(x: 19, y: -37), .init(x: 41, y: -12),
                 .init(x: 39, y: 17), .init(x: 7, y: 23), .init(x: -27, y: 19)], radius: 3)
-            p.material(block, colors: [0xA68E91, 0x6A647B, 0x414B64])
+            p.material(block, colors: [0xA68E91, 0x70616E, 0x484355])
             var clipped = p.context; clipped.clip(to: block)
-            let face = VolcanoWorldPainter(context: clipped)
+            let face = VolcanoWorldPainter(context: clipped, sandBlend: sandBlend)
             face.polygon([.init(x: -38, y: -21), .init(x: -13, y: -42), .init(x: 19, y: -37),
                           .init(x: 8, y: -12), .init(x: -19, y: -7)], colors: [0xC2A49D, 0x8E8393])
             face.polygon([.init(x: 19, y: -37), .init(x: 44, y: -12), .init(x: 39, y: 23),
-                          .init(x: 1, y: 25), .init(x: 8, y: -12)], colors: [0x777085, 0x394760])
+                          .init(x: 1, y: 25), .init(x: 8, y: -12)], colors: [0x776979, 0x454154])
         }
     }
 
@@ -5302,7 +5531,7 @@ private struct VolcanoWorldPainter {
                                   .init(x: 62, y: -38), .init(x: 86, y: 15), .init(x: 19, y: 27)], radius: 7)
             p.material(cone, colors: [0xAF8D89, 0x776A7C, 0x45485F])
             var clipped = p.context; clipped.clip(to: cone)
-            let face = VolcanoWorldPainter(context: clipped)
+            let face = VolcanoWorldPainter(context: clipped, sandBlend: sandBlend)
             face.polygon([.init(x: -26, y: -103), .init(x: -10, y: -53), .init(x: -33, y: 24), .init(x: -92, y: 20)],
                          colors: [0xC59D8C, 0x8F7881, 0x615D72])
             face.polygon([.init(x: 18, y: -105), .init(x: 30, y: -55), .init(x: 89, y: 25), .init(x: 13, y: 28)],
@@ -5378,26 +5607,28 @@ private struct VolcanoWorldPainter {
         }
     }
 
-    private func volcano(at point: CGPoint, size: CGFloat, mirror: Bool = false) {
-        at(point, size: size, mirror: mirror) { base in
+    private func volcano(at point: CGPoint, size: CGFloat, mirror: Bool = false, variation: Int = 0,
+                         heightScale: CGFloat = 1, flowLayout: WorldSceneryLayout? = nil, feeder: Path? = nil) {
+        at(point, size: size, mirror: mirror, boundsScale: heightScale) { base in
             // The mountain is solid down to its foot; haze must never reveal
             // the river through the lower slope or weaken its occlusion mask.
-            let p = base
-            p.ground(at: CGPoint(x: 0, y: 24), width: 320, height: 57, color: 0x3E3B51, opacity: 0.31)
-            p.glow(CGPoint(x: 0, y: -205), radius: 75, color: 0xFFCD83, opacity: 0.35)
-            let mountain = Path { m in
-                m.move(to: CGPoint(x: -136, y: 17))
-                m.addQuadCurve(to: CGPoint(x: -133, y: -3), control: CGPoint(x: -151, y: 12))
-                m.addCurve(to: CGPoint(x: -79, y: -87), control1: CGPoint(x: -116, y: -28), control2: CGPoint(x: -97, y: -46))
-                m.addCurve(to: CGPoint(x: -25, y: -220), control1: CGPoint(x: -54, y: -130), control2: CGPoint(x: -44, y: -205))
-                m.addQuadCurve(to: CGPoint(x: 25, y: -220), control: CGPoint(x: 0, y: -233))
-                m.addCurve(to: CGPoint(x: 79, y: -91), control1: CGPoint(x: 43, y: -202), control2: CGPoint(x: 55, y: -136))
-                m.addCurve(to: CGPoint(x: 136, y: -2), control1: CGPoint(x: 99, y: -53), control2: CGPoint(x: 118, y: -27))
-                m.addQuadCurve(to: CGPoint(x: 137, y: 18), control: CGPoint(x: 153, y: 13))
-                m.addCurve(to: CGPoint(x: -136, y: 17), control1: CGPoint(x: 63, y: 39), control2: CGPoint(x: -65, y: 38))
-                m.closeSubpath()
+            var mountainContext = base.context
+            mountainContext.scaleBy(x: 1, y: heightScale)
+            let p = VolcanoWorldPainter(context: mountainContext)
+            var shadow = p.context
+            if let layout = flowLayout, let feeder {
+                let transform = CGAffineTransform(a: mirror ? -size : size, b: 0, c: 0,
+                    d: size * heightScale, tx: point.x, ty: point.y)
+                let flowScale: CGFloat = VolcanoWorldLayout.isBroad(layout.width) ? 1.22 : 1
+                let wet = feeder.strokedPath(StrokeStyle(lineWidth: 7 * layout.scale * flowScale, lineCap: .round, lineJoin: .round))
+                    .applying(transform.inverted())
+                var dry = Path(CGRect(x: -180, y: -10, width: 360, height: 80)); dry.addPath(wet)
+                shadow.clip(to: dry, style: FillStyle(eoFill: true))
             }
-            p.material(mountain, colors: [0xB39394, 0x777A8C, 0x565E77])
+            VolcanoWorldPainter(context: shadow).ground(at: CGPoint(x: 0, y: 24), width: 320, height: 57, color: 0x3E3B51, opacity: 0.31)
+            p.glow(CGPoint(x: 0, y: -205), radius: 75, color: 0xFFCD83, opacity: 0.35)
+            let mountain = VolcanoWorldLayout.mountainContour()
+            p.material(mountain, colors: [0xB1948B, 0x81757C, 0x585365])
             var facets = p.context; facets.clip(to: mountain)
             let slopes = VolcanoWorldPainter(context: facets)
             let litSlope = Path { s in
@@ -5406,26 +5637,52 @@ private struct VolcanoWorldPainter {
                 s.addCurve(to: CGPoint(x: -77, y: 26), control1: CGPoint(x: -26, y: -79), control2: CGPoint(x: -69, y: -39))
                 s.addLine(to: CGPoint(x: -153, y: 26)); s.closeSubpath()
             }
-            slopes.material(litSlope, colors: [0xD2AC9A, 0xA18F91, 0x7B7D8D])
+            slopes.material(litSlope, colors: [0xD2AC9A, 0xA18F91, 0x746774])
             let shadedSlope = Path { s in
                 s.move(to: CGPoint(x: 25, y: -231))
                 s.addCurve(to: CGPoint(x: 77, y: 29), control1: CGPoint(x: 18, y: -146), control2: CGPoint(x: 36, y: -43))
                 s.addLine(to: CGPoint(x: 159, y: 29)); s.closeSubpath()
             }
-            slopes.material(shadedSlope, colors: [0xB29596, 0x7A778C, 0x4E5972])
+            slopes.material(shadedSlope, colors: [0xB29596, 0x7A6E7A, 0x554D63])
             for i in 0..<5 {
                 let y = -151 + CGFloat(i) * 33
                 p.line([.init(x: -48 - CGFloat(i) * 8, y: y), .init(x: -30 - CGFloat(i) * 7, y: y + 8),
                         .init(x: -20 - CGFloat(i) * 4, y: y + 5)], color: 0xE0B6A0, width: 1, opacity: 0.42)
                 p.line([.init(x: 30 + CGFloat(i) * 8, y: y + 5), .init(x: 52 + CGFloat(i) * 9, y: y + 13)], color: 0x3D4A62, width: 1.2, opacity: 0.45)
             }
-            for lane: CGFloat in [-1.5, -0.75, 0, 0.75, 1.5] {
-                slopes.lava(VolcanoWorldLayout.slopeFlow(lane: lane),
-                            width: lane == 0 ? 2.6 : abs(lane) < 1 ? 1.1 : 0.75, moving: true)
+            let temperature = flowLayout.map { layout in
+                (-layout.routeOffset - point.y) / (size * heightScale)...(layout.height - layout.routeOffset - point.y) / (size * heightScale)
             }
+            for lane: CGFloat in [-1.5, -0.75, 0, 0.75, 1.5] where lane != 0 || feeder == nil {
+                slopes.lava(VolcanoWorldLayout.slopeFlow(lane: lane),
+                            width: lane == 0 ? 2.6 : abs(lane) < 1 ? 1.1 : 0.75, moving: true, temperature: temperature)
+            }
+            if let layout = flowLayout, let feeder {
+                // Only this volcano's outflow belongs on its face. The large
+                // incoming channel stays behind the complete solid cone.
+                var outflow = self.context
+                outflow.clip(to: mountain.applying(CGAffineTransform(a: mirror ? -size : size,
+                    b: 0, c: 0, d: size * heightScale, tx: point.x, ty: point.y)))
+                let flowScale: CGFloat = VolcanoWorldLayout.isBroad(layout.width) ? 1.22 : 1
+                VolcanoWorldPainter(context: outflow).lava(feeder, width: 3.1 * layout.scale * flowScale, moving: true,
+                    temperature: (-layout.routeOffset)...(layout.height - layout.routeOffset))
+            }
+
             p.oval(CGRect(x: -28, y: -230, width: 57, height: 20), colors: [0xA19594, 0x555B70, 0x424D65])
             p.oval(CGRect(x: -20, y: -225, width: 41, height: 12), colors: [0xFFF0B4, 0xFFBD6D, 0xF58153])
             p.glow(CGPoint(x: 0, y: -224), radius: 34, color: 0xFFD38A, opacity: 0.53)
+
+            // Talus overlaps the lower flanks and hides the smooth cone edge.
+            // Leave the central outlet open so the surface flow stays connected.
+            for (index, rock): (Int, (CGFloat, CGFloat, CGFloat)) in [
+                (-129, 10, 0.54), (-94, 26, 0.72), (-54, 32, 0.48),
+                (69, 31, 0.63), (112, 20, 0.73), (141, 10, 0.36)
+            ].enumerated() {
+                let jitter = CGFloat((variation * 7 + index * 3) % 9) - 4
+                let point = CGPoint(x: rock.0 + jitter, y: (rock.1 + CGFloat((variation + index) % 3) * 2) * heightScale)
+                if (index + variation).isMultiple(of: 2) { base.basalt(at: point, size: rock.2) }
+                else { base.rock(at: point, size: rock.2) }
+            }
 
         }
     }
@@ -5469,11 +5726,11 @@ private struct VolcanoWorldPainter {
                 s.addCurve(to: CGPoint(x: -35, y: 7), control1: CGPoint(x: 15, y: 22), control2: CGPoint(x: -22, y: 21))
                 s.closeSubpath()
             }
-            p.material(stone, colors: [0xC4ACA2, 0x99929D, 0x65718A])
+            p.material(stone, colors: [0xC4ACA2, 0x91868C, 0x625B70])
             var clipped = p.context; clipped.clip(to: stone)
-            let face = VolcanoWorldPainter(context: clipped)
+            let face = VolcanoWorldPainter(context: clipped, sandBlend: sandBlend)
             face.polygon([.init(x: -33, y: -17), .init(x: -15, y: -39), .init(x: 16, y: -40), .init(x: 2, y: -13)], colors: [0xDCC2AD, 0xABA2A7])
-            face.polygon([.init(x: 17, y: -38), .init(x: 41, y: -12), .init(x: 32, y: 21), .init(x: -2, y: 21), .init(x: 2, y: -13)], colors: [0x9B93A2, 0x5D6A83])
+            face.polygon([.init(x: 17, y: -38), .init(x: 41, y: -12), .init(x: 32, y: 21), .init(x: -2, y: 21), .init(x: 2, y: -13)], colors: [0x9B8C98, 0x62586D])
             p.line([.init(x: -23, y: -10), .init(x: -14, y: -7), .init(x: -9, y: -11)], color: 0x63708A, width: 0.8, opacity: 0.6)
             p.line([.init(x: 11, y: -4), .init(x: 19, y: -1), .init(x: 27, y: -3)], color: 0xDDB89D, width: 0.8, opacity: 0.65)
         }
@@ -5537,6 +5794,21 @@ private struct VolcanoWorldPainter {
 
 /// Two continuous river routes drive the boats, lift bridges and their keepers together.
 private enum VillageRiverTrafficLayout {
+    private final class RouteField {
+        let routes: [Route]
+        init(layout: WorldSceneryLayout) { routes = [false, true].map { Route(layout: layout, right: $0) } }
+    }
+    private static let routeFields: NSCache<NSString, RouteField> = {
+        let cache = NSCache<NSString, RouteField>(); cache.countLimit = 8; return cache
+    }()
+    static func routes(layout: WorldSceneryLayout) -> [Route] {
+        let key = "\(layout.width)-\(layout.height)-\(layout.routeOffset)" as NSString
+        if let field = routeFields.object(forKey: key) { return field.routes }
+        let field = RouteField(layout: layout)
+        routeFields.setObject(field, forKey: key)
+        return field.routes
+    }
+
     struct Route {
         let right: Bool
         let points: [CGPoint]
@@ -5546,7 +5818,7 @@ private enum VillageRiverTrafficLayout {
 
         init(layout: WorldSceneryLayout, right: Bool) {
             self.right = right
-            let start = -layout.routeOffset - 35, end = layout.height - layout.routeOffset + 35
+            let start = -layout.routeOffset - 180, end = layout.height - layout.routeOffset + 180
             let count = Int(ceil((end - start) / 3))
             var points: [CGPoint] = [], distances: [CGFloat] = []
             var distance: CGFloat = 0
@@ -5571,9 +5843,10 @@ private enum VillageRiverTrafficLayout {
         }
 
         func travel(at time: Double) -> CGFloat {
-            let offset = length * (right ? 0.10 : 0.48)
-            return (CGFloat(time.truncatingRemainder(dividingBy: Double(length / speed))) * speed + offset)
-                .truncatingRemainder(dividingBy: length)
+            let cycle = Double(length / speed) + 4
+            let delay = right ? 0.0 : 4.0
+            let phase = time.truncatingRemainder(dividingBy: cycle)
+            return min(length, max(0, CGFloat(phase - delay) * speed))
         }
 
         func pose(at distance: CGFloat) -> (point: CGPoint, heading: Double) {
@@ -5693,7 +5966,22 @@ private enum VillagePlan {
         let rightMargin: CGFloat
     }
 
+    private final class PlotField {
+        let plots: [Plot]
+        init(_ plots: [Plot]) { self.plots = plots }
+    }
+    private static let plotFields: NSCache<NSString, PlotField> = {
+        let cache = NSCache<NSString, PlotField>(); cache.countLimit = 8; return cache
+    }()
     static func plots(layout: WorldSceneryLayout) -> [Plot] {
+        let key = "\(layout.width)-\(layout.height)-\(layout.routeOffset)" as NSString
+        if let field = plotFields.object(forKey: key) { return field.plots }
+        let result = makePlots(layout: layout)
+        plotFields.setObject(PlotField(result), forKey: key)
+        return result
+    }
+
+    private static func makePlots(layout: WorldSceneryLayout) -> [Plot] {
         let scale = layout.scale
         let startY = -layout.routeOffset - 80
         let rows: [Row] = (0...Int(ceil(layout.height / 4)) + 40).map { index in
@@ -6706,16 +6994,17 @@ private struct VillageRiverTraffic: View {
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var viewport = CGRect.zero
 
     var body: some View {
         GeometryReader { geometry in
             let layout = WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset)
-            let routes = [false, true].map { VillageRiverTrafficLayout.Route(layout: layout, right: $0) }
+            let routes = VillageRiverTrafficLayout.routes(layout: layout)
             let bridges = VillageRiverTrafficLayout.bridges(layout: layout)
             TimelineView(.animation(minimumInterval: 1.0 / 20,
                                     paused: fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSinceReferenceDate)
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 ZStack(alignment: .topLeading) {
                     ForEach(0..<2, id: \.self) { index in
                         let route = routes[index]
@@ -6751,8 +7040,7 @@ private struct VillageRiverTraffic: View {
         }
         .readGeometry(for: CGRect.self) { proxy in
             let bounds = proxy.frame(in: .named("adventure.map.viewport"))
-            let top = max(0, -bounds.minY), bottom = min(proxy.size.height, viewportHeight - bounds.minY)
-            return bottom > top ? CGRect(x: 0, y: top, width: proxy.size.width, height: bottom - top) : .zero
+            return DinoMapViewport.preparedAnimationBounds(frame: bounds, viewportHeight: viewportHeight)
         } action: { viewport = $0 }
         .clipped().allowsHitTesting(false).accessibilityHidden(true)
     }
@@ -6767,6 +7055,7 @@ private struct VillageLifeSurface: View {
     let frozen: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
 
     private var frame: CGRect {
@@ -6778,7 +7067,7 @@ private struct VillageLifeSurface: View {
         TimelineView(.animation(minimumInterval: 1.0 / 15,
                                 paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
             Canvas { context, _ in
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSinceReferenceDate)
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 var c = context
                 if let plot {
                     c.translateBy(x: plot.point.x - frame.minX, y: plot.point.y + layout.routeOffset - frame.minY)
@@ -6803,7 +7092,7 @@ private struct VillageLifeSurface: View {
         .frame(width: frame.width, height: frame.height).clipped()
         .readGeometry(for: Bool.self) { proxy in
             let bounds = proxy.frame(in: .named("adventure.map.viewport"))
-            return bounds.maxY > 0 && bounds.minY < viewportHeight
+            return bounds.maxY > -256 && bounds.minY < viewportHeight + 256
         } action: { visible = $0 }
         .position(x: frame.midX, y: frame.midY)
     }
@@ -6818,6 +7107,7 @@ private struct CrystalCaveLife: View {
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var viewport = CGRect.zero
 
     private var reduceMotion: Bool { frozen || systemReduceMotion }
@@ -6840,7 +7130,7 @@ private struct CrystalCaveLife: View {
                 }
                 TimelineView(.animation(minimumInterval: 1.0 / 20,
                                         paused: fixedTime != nil || viewport.isEmpty || reduceMotion || scenePhase != .active)) { timeline in
-                    let time = reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSinceReferenceDate)
+                    let time = reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                     ForEach(CrystalMinerPatrol.routes.sorted { $0.pose(at: time).y < $1.pose(at: time).y }) { route in
                         let pose = route.pose(at: time)
                         let point = CrystalCaveLifeLayout.worker(pose: pose, right: route.right, layout: layout)
@@ -6865,8 +7155,7 @@ private struct CrystalCaveLife: View {
             }
             .readGeometry(for: CGRect.self) { proxy in
                 let frame = proxy.frame(in: .named("adventure.map.viewport"))
-                let top = max(0, -frame.minY), bottom = min(proxy.size.height, viewportHeight - frame.minY)
-                return bottom > top ? CGRect(x: 0, y: top, width: proxy.size.width, height: bottom - top) : .zero
+                return DinoMapViewport.preparedAnimationBounds(frame: frame, viewportHeight: viewportHeight)
             } action: { viewport = $0 }
         }
         .clipped().allowsHitTesting(false).accessibilityHidden(true)
@@ -7037,6 +7326,7 @@ private struct CrystalCaveLamp: View {
     var fixedTime: TimeInterval?
     let reduceMotion: Bool
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
     var body: some View {
         let s = layout.scale
@@ -7044,7 +7334,7 @@ private struct CrystalCaveLamp: View {
         TimelineView(.animation(minimumInterval: 1.0 / 20,
                                 paused: fixedTime != nil || !visible || reduceMotion || scenePhase != .active)) { timeline in
             Canvas { context, _ in
-                let time = fixedTime ?? timeline.date.timeIntervalSinceReferenceDate
+                let time = fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
                 let angle = reduceMotion ? 0 : sin(time * 1.25 + Double(lamp.id) * 1.7) * 0.055
                 var c = context; c.translateBy(x: 65 * s, y: 45 * s); c.rotate(by: .radians(angle))
                 CrystalCavePainter(context: c).swingingLamp(size: lamp.parentSize, lampSize: lamp.lampSize, drop: lamp.drop)
@@ -7053,7 +7343,7 @@ private struct CrystalCaveLamp: View {
         .mask(CrystalCaveOcclusion(layout: layout, frame: frame, depth: lamp.depth))
         .readGeometry(for: Bool.self) { proxy in
             let frame = proxy.frame(in: .named("adventure.map.viewport"))
-            return frame.maxY > 0 && frame.minY < viewportHeight
+            return frame.maxY > -256 && frame.minY < viewportHeight + 256
         } action: { visible = $0 }
     }
 }
@@ -7067,13 +7357,14 @@ private struct CrystalCaveGlint: View {
     var fixedTime: TimeInterval?
     let reduceMotion: Bool
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
     var body: some View {
         let s = layout.scale
         TimelineView(.animation(minimumInterval: 1.0 / 15,
                                 paused: fixedTime != nil || !visible || reduceMotion || scenePhase != .active)) { timeline in
             Canvas { context, size in
-                let time = fixedTime ?? timeline.date.timeIntervalSinceReferenceDate
+                let time = fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
                 let phase = (time + Double(index) * 1.73).truncatingRemainder(dividingBy: 6.8)
                 let pulse = reduceMotion ? 0.2 : pow(max(0, sin(min(1, phase / 0.95) * .pi)), 3)
                 if pulse > 0.01 {
@@ -7086,7 +7377,7 @@ private struct CrystalCaveGlint: View {
                                   frame: CGRect(x: point.x - 14 * s, y: point.y - 14 * s, width: 28 * s, height: 28 * s), depth: depth))
         .readGeometry(for: Bool.self) { proxy in
             let frame = proxy.frame(in: .named("adventure.map.viewport"))
-            return frame.maxY > 0 && frame.minY < viewportHeight
+            return frame.maxY > -256 && frame.minY < viewportHeight + 256
         } action: { visible = $0 }
     }
 }
@@ -11889,8 +12180,22 @@ struct ThemedWorldLandscape: View, Equatable {
     let world: DinoWorld
     var routeOffset: CGFloat = 180
     var viewportHeight: CGFloat = 900
+    var cachesTerrain = false
 
-    var body: some View {
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.world == rhs.world && lhs.routeOffset == rhs.routeOffset && lhs.viewportHeight == rhs.viewportHeight && lhs.cachesTerrain == rhs.cachesTerrain
+    }
+
+    @ViewBuilder private var terrain: some View {
+        if cachesTerrain {
+            GeometryReader { geometry in
+                PreparedMapArtwork(worldID: world.id, size: geometry.size, routeOffset: routeOffset,
+                                   ground: world.ground) { drawing }
+            }
+        } else { drawing }
+    }
+
+    private var drawing: some View {
         Canvas { context, size in
             let depth = WorldSceneryDepth()
             if world.themeID == 2 {
@@ -11957,6 +12262,15 @@ struct ThemedWorldLandscape: View, Equatable {
             }
             if world.themeID == 7 {
                 DinoDesertPainter(context: context).landscape(in: size, routeOffset: routeOffset, depth: depth)
+                let join = VolcanoWorldLayout.joinLayout(width: size.width, routeOffset: routeOffset)
+                let frame = CGRect(x: 0, y: -VolcanoWorldLayout.entranceOverlap,
+                                   width: size.width, height: VolcanoWorldLayout.entranceOverlap)
+                var inlet = context; inlet.translateBy(x: 0, y: size.height)
+                inlet.clip(to: Path(frame))
+                let inletDepth = WorldSceneryDepth(visibleBounds: frame)
+                VolcanoWorldPainter(context: inlet).landscape(in: CGSize(width: join.width, height: join.height),
+                                                              routeOffset: routeOffset, depth: inletDepth)
+                inletDepth.draw()
                 var routeContext = context
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
@@ -12067,7 +12381,11 @@ struct ThemedWorldLandscape: View, Equatable {
                                                endPoint: CGPoint(x: 0, y: size.height)))
             p.bossClearing(worldID: world.id, at: bossPoint, size: scale)
             p.boss(worldID: world.id, at: bossPoint, size: scale * 0.88)
-        }.clipped()
+        }
+    }
+
+    var body: some View {
+        terrain.clipped()
             .overlay {
                 if world.themeID == 7 { DinoDesertLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
                 if world.themeID == 2 { SleepValleyLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
@@ -12076,20 +12394,17 @@ struct ThemedWorldLandscape: View, Equatable {
                 if world.id == 5 { CrystalCaveLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
             }
             .overlay(alignment: .top) {
-                if world.id == 3 {
-                    WorldTerrainTransition(worldID: 3, entering: true).equatable()
-                        .mask(VolcanoInletOpening(routeOffset: routeOffset))
-                } else if world.id != 5 && world.id != 6 {
+                if world.id != 3 && world.id != 5 && world.id != 6 {
                     WorldTerrainTransition(worldID: world.id, entering: true).equatable()
                 }
             }
             .overlay(alignment: .bottom) {
-                if world.id != 4 && world.id != 5 { WorldTerrainTransition(worldID: min(10, world.id + 1)).equatable() }
+                if world.id != 2 && world.id != 4 && world.id != 5 { WorldTerrainTransition(worldID: min(10, world.id + 1)).equatable() }
             }
             .overlay(alignment: .bottom) {
                 if world.id == 2 {
-                    SleepVolcanoInlet(routeOffset: routeOffset, viewportHeight: viewportHeight, sectionStart: -220)
-                        .frame(height: 220)
+                    DesertVolcanoTransition(routeOffset: routeOffset, viewportHeight: viewportHeight)
+                        .frame(height: VolcanoWorldLayout.entranceOverlap)
                 }
             }
             .allowsHitTesting(false).accessibilityHidden(true)
@@ -12959,5 +13274,28 @@ private struct ThemePainter {
 
     func boss(worldID: Int, at point: CGPoint, size: CGFloat) {
         WorldBossPainter(context: context).draw(worldID: worldID, at: point, size: size)
+    }
+}
+
+/// Pure geometry preparation can run while the opening composition is already visible.
+enum DinoMapArtworkPreparation {
+    static func prepare(worldID: Int, size: CGSize, routeOffset: CGFloat) {
+        let layout = WorldSceneryLayout(width: size.width, height: size.height, routeOffset: routeOffset)
+        switch worldID {
+        case 1: _ = JungleMapLayout(width: size.width).scene()
+        case 2:
+            let join = VolcanoWorldLayout.joinLayout(width: size.width, routeOffset: routeOffset)
+            _ = VolcanoWorldLayout.sources(layout: join)
+            _ = VolcanoWorldLayout.tributaries(layout: join)
+            _ = VolcanoWorldLayout.terrainSlabs(layout: join)
+        case 3:
+            _ = VolcanoWorldLayout.sources(layout: layout)
+            _ = VolcanoWorldLayout.tributaries(layout: layout)
+            _ = VolcanoWorldLayout.terrainSlabs(layout: layout)
+        case 4:
+            _ = VillagePlan.plots(layout: layout)
+            _ = VillageRiverTrafficLayout.routes(layout: layout)
+        default: break
+        }
     }
 }

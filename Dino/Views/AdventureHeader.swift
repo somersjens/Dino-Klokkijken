@@ -11,6 +11,7 @@ struct AdventureHeader: View {
     @State private var showsPersonalizer = false
     @State private var availableWidth: CGFloat = 390
     var personalizerChanged: (Bool) -> Void = { _ in }
+    var sharedCompanion = false
     enum Control {
         case settings, pause
         var icon: String { self == .settings ? "gearshape.fill" : "pause.fill" }
@@ -23,6 +24,7 @@ struct AdventureHeader: View {
     var worldID = 1
     var compact = false
     var viewportHeight: CGFloat = 900
+    var viewportWidth: CGFloat? = nil
     var control: Control = .pause
     var questionCounter: String?
     var practiceStreak: Int?
@@ -111,7 +113,7 @@ struct AdventureHeader: View {
             .scaleEffect(scale, anchor: .top)
             .frame(width: geometry.size.width, height: headerHeight * scale, alignment: .top)
         }
-        .frame(height: headerHeight * headerScale(width: availableWidth))
+        .frame(height: headerHeight * headerScale(width: viewportWidth ?? availableWidth))
         .readGeometry(for: CGFloat.self) { $0.size.width } action: { availableWidth = $0 }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: worldID)
         .sheet(isPresented: $showsPersonalizer) {
@@ -138,18 +140,22 @@ struct AdventureHeader: View {
                 HUDPortraitLeaves(diameter: size, palette: palette)
                     .frame(width: metrics.portraitFootprint, height: metrics.portraitFootprint)
                     .mask(HUDLeafClearance(plateHeight: metrics.plate).fill(style: FillStyle(eoFill: true)))
-                Circle().fill(LinearGradient(colors: [palette.portraitLight, palette.accent],
-                                            startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .overlay(Circle().strokeBorder(palette.outline, lineWidth: 2))
-                    .frame(width: size, height: size)
-                DinoBustImage(appearance: player.profile.dinoAppearance ?? .standard, diameter: size)
-                    .clipShape(Circle())
-                Circle().strokeBorder(palette.rim, lineWidth: 4)
-                    .frame(width: size, height: size)
-                DinoBustImage(appearance: player.profile.dinoAppearance ?? .standard, diameter: size)
-                    .frame(width: metrics.portraitFootprint, height: metrics.portraitFootprint)
-                    .mask(DinoBustOverflowMask(diameter: size))
-                    .shadow(color: DinoStyle.ink.opacity(0.14), radius: 0.7, y: 0.7)
+                if sharedCompanion {
+                    DinoCompanionAnchor(placement: .game, size: size)
+                } else {
+                    Circle().fill(LinearGradient(colors: [palette.portraitLight, palette.accent],
+                                                startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .overlay(Circle().strokeBorder(palette.outline, lineWidth: 2))
+                        .frame(width: size, height: size)
+                    DinoBustImage(appearance: player.profile.dinoAppearance ?? .standard, diameter: size)
+                        .clipShape(Circle())
+                    Circle().strokeBorder(palette.rim, lineWidth: 4)
+                        .frame(width: size, height: size)
+                    DinoBustImage(appearance: player.profile.dinoAppearance ?? .standard, diameter: size)
+                        .frame(width: metrics.portraitFootprint, height: metrics.portraitFootprint)
+                        .mask(DinoBustOverflowMask(diameter: size))
+                        .shadow(color: DinoStyle.ink.opacity(0.14), radius: 0.7, y: 0.7)
+                }
             }
             .frame(width: metrics.portraitFootprint, height: metrics.portraitFootprint)
             .frame(width: metrics.portraitSlot, height: metrics.portraitFootprint, alignment: .leading)
@@ -480,7 +486,7 @@ private struct HUDMetrics {
 }
 
 /// Derives the HUD ornament, text and icons from the same world colors.
-private struct HUDPalette {
+struct HUDPalette {
     let ink: Color
     let contrastInk: Color
     let iconLight: Color
