@@ -1,0 +1,24 @@
+{
+  "reduce_motion_pixels_identical": true,
+  "moving_scene_frames_distinct": true,
+  "mechanisms": {
+    "0": {
+      "distinct_frames": 6,
+      "frames": 6
+    },
+    "1": {
+      "distinct_frames": 6,
+      "frames": 6
+    },
+    "2": {
+      "distinct_frames": 6,
+      "frames": 6
+    },
+    "8": {
+      "distinct_frames": 6,
+      "frames": 6
+    }
+  },
+  "iphone_live_portal_region_changed_pixels": 27401,
+  "ipad_live_portal_region_changed_pixels": 4499
+}

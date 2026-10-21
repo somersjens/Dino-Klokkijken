@@ -1,0 +1,271 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/dino-time-machine-final-build/Build/Products/TimeMachine-8.xctestrun -destination "platform=iOS Simulator,id=CD5048F9-F217-4BE9-8A78-37A684D8710B" -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testTimeMachineWorkshopRouteRemainsPlayable" "-only-testing:DinoUITests/DinoUITests/testWorldBossSceneryRemainsPlayable"
+
+2026-10-21 08:51:22.575737+0200 DinoUITests-Runner[94137:42488516] [Default] Running tests...
+2026-10-21 08:51:22.592209+0200 DinoUITests-Runner[94137:42488516] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-21 08:51:23.112.
+Test Suite 'DinoUITests.xctest' started at 2026-10-21 08:51:23.112.
+Test Suite 'DinoUITests' started at 2026-10-21 08:51:23.112.
+Test Case '-[DinoUITests.DinoUITests testTimeMachineWorkshopRouteRemainsPlayable]' started.
+    t =     0.00s Start Test at 2026-10-21 08:51:23.113
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.05s         Wait for com.apple.DocumentManager.DockFolderViewService to idle
+    t =     0.06s         Wait for com.apple.springboard to idle
+    t =     0.06s     Open Hakketjak.Dino-Klokkijken
+    t =     0.06s         Launch Hakketjak.Dino-Klokkijken
+2026-10-21 08:51:23.228 xcodebuild[94121:42487970] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-21 08:51:23.228 xcodebuild[94121:42487970] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[94137]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x108470310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x108008398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.73s             Setting up automation session
+    t =     1.67s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.10s Terminate Hakketjak.Dino-Klokkijken:94151
+    t =     4.11s Open Hakketjak.Dino-Klokkijken
+    t =     4.11s     Launch Hakketjak.Dino-Klokkijken
+2026-10-21 08:51:27.224 xcodebuild[94121:42487970] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-21 08:51:27.224 xcodebuild[94121:42487970] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     4.32s         Setting up automation session
+    t =     4.91s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     6.15s Waiting 8.0s for "header.settings" Button to exist
+    t =     7.23s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =     7.23s         Checking existence of `"header.settings" Button`
+    t =     9.02s Checking existence of `"map.preparing" Any`
+    t =     9.21s Find the "header.settings" Button
+    t =     9.42s Find the "map.level.71" Button
+    t =     9.67s Checking existence of `"map.level.71" Button`
+    t =     9.88s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    10.02s Checking existence of `"map.level.71" Button`
+    t =    10.26s Find the "map.level.71" Button
+    t =    10.52s Find the "map.level.71" Button
+    t =    10.78s Find the "header.settings" Button
+    t =    11.03s Find the "map.level.71" Button
+    t =    11.28s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    11.49s Find the "map.level.71" Button
+    t =    11.86s Added attachment named 'time-machine-entrance'
+    t =    13.21s Added attachment named 'time-machine-entrance-motion'
+    t =    13.24s Tap "map.level.71" Button[0.50, 0.50]
+    t =    13.24s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    13.24s     Find the "map.level.71" Button
+    t =    13.52s     Check for interrupting elements affecting "map.level.71" Button
+    t =    13.69s         Wait for com.apple.springboard to idle
+    t =    13.73s     Synthesize event
+    t =    13.74s         Find the "map.level.71" Button
+    t =    14.03s         Find the "map.level.71" Button
+    t =    14.30s         Find the "map.level.71" Button
+    t =    14.85s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    14.86s Waiting 5.0s for "level.play" Button to exist
+    t =    15.93s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =    15.93s         Checking existence of `"level.play" Button`
+    t =    16.00s Checking existence of `"level.play" Any`
+    t =    16.04s Checking existence of `"onboarding.next" Button`
+    t =    16.10s Checking existence of `"onboarding.customClock" Button`
+    t =    16.17s Checking existence of `"personalize.done" Button`
+    t =    16.25s Checking existence of `"theme.done" Button`
+    t =    16.32s Find the "level.play" Any
+    t =    16.46s Tap "level.play" Button
+    t =    16.46s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    16.52s     Find the "level.play" Button
+    t =    16.62s     Check for interrupting elements affecting "level.play" Button
+    t =    16.69s         Wait for com.apple.springboard to idle
+    t =    16.80s     Synthesize event
+    t =    17.14s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    17.17s Waiting 5.0s for "question.analogControl" Any to exist
+    t =    18.25s     Checking `Expect predicate `existsNoRetry == 1` for object "question.analogControl" Any`
+    t =    18.25s         Checking existence of `"question.analogControl" Any`
+    t =    18.28s Find the "question.confirm" Button
+    t =    18.40s Added attachment named 'time-machine-level-71'
+    t =    18.40s Terminate Hakketjak.Dino-Klokkijken:94215
+    t =    19.43s Open Hakketjak.Dino-Klokkijken
+    t =    19.44s     Launch Hakketjak.Dino-Klokkijken
+2026-10-21 08:51:42.550 xcodebuild[94121:42487970] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-21 08:51:42.550 xcodebuild[94121:42487970] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    19.65s         Setting up automation session
+    t =    20.24s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.49s Waiting 8.0s for "header.settings" Button to exist
+    t =    22.56s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    22.56s         Checking existence of `"header.settings" Button`
+    t =    23.89s Checking existence of `"map.preparing" Any`
+    t =    24.07s Find the "header.settings" Button
+    t =    24.32s Find the "map.level.74" Button
+    t =    24.62s Checking existence of `"map.level.74" Button`
+    t =    24.83s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    24.98s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.72] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.47] with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    24.98s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    24.99s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    25.19s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    25.35s         Wait for com.apple.springboard to idle
+    t =    25.36s     Synthesize event
+    t =    25.41s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    25.57s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    25.73s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    25.90s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    26.05s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    27.10s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    27.10s Find the "header.settings" Button
+    t =    27.30s Find the "map.level.74" Button
+    t =    27.49s Checking existence of `"map.level.74" Button`
+    t =    27.66s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    27.79s Checking existence of `"map.level.74" Button`
+    t =    27.97s Find the "map.level.74" Button
+    t =    28.17s Find the "map.level.74" Button
+    t =    28.36s Find the "header.settings" Button
+    t =    28.57s Find the "map.level.74" Button
+    t =    28.76s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    28.90s Find the "map.level.74" Button
+    t =    29.24s Added attachment named 'time-machine-route-74'
+    t =    29.24s Find the "header.settings" Button
+    t =    29.43s Find the "map.level.77" Button
+    t =    29.64s Checking existence of `"map.level.77" Button`
+    t =    29.82s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    29.94s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.72] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.47] with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    29.94s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    29.94s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.07s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    30.21s         Wait for com.apple.springboard to idle
+    t =    30.22s     Synthesize event
+    t =    30.22s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.36s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.50s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.61s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.75s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    31.78s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    33.36s Find the "header.settings" Button
+    t =    33.57s Find the "map.level.77" Button
+    t =    33.79s Checking existence of `"map.level.77" Button`
+    t =    33.96s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    34.08s Checking existence of `"map.level.77" Button`
+    t =    34.27s Find the "map.level.77" Button
+    t =    34.46s Find the "map.level.77" Button
+    t =    34.66s Find the "header.settings" Button
+    t =    34.84s Find the "map.level.77" Button
+    t =    35.04s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    35.17s Find the "map.level.77" Button
+    t =    35.51s Added attachment named 'time-machine-route-77'
+    t =    35.52s Find the "header.settings" Button
+    t =    35.69s Find the "map.level.80" Button
+    t =    35.93s Checking existence of `"map.level.80" Button`
+    t =    36.12s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    36.24s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.72] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.47] with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    36.24s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    36.26s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    36.41s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    36.53s         Wait for com.apple.springboard to idle
+    t =    36.54s     Synthesize event
+    t =    36.57s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    36.70s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    36.83s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    37.03s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    37.17s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    38.20s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    38.20s Find the "header.settings" Button
+    t =    38.40s Find the "map.level.80" Button
+    t =    38.60s Checking existence of `"map.level.80" Button`
+    t =    38.77s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    38.90s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.72] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.47] with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    38.90s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    38.90s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.07s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    39.21s         Wait for com.apple.springboard to idle
+    t =    39.22s     Synthesize event
+    t =    39.22s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.34s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.47s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.59s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.72s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    40.75s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    40.75s Find the "header.settings" Button
+    t =    40.94s Find the "map.level.80" Button
+    t =    41.13s Checking existence of `"map.level.80" Button`
+    t =    41.30s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    41.44s Checking existence of `"map.level.80" Button`
+    t =    41.63s Find the "map.level.80" Button
+    t =    41.84s Find the "map.level.80" Button
+    t =    42.02s Find the "header.settings" Button
+    t =    42.20s Find the "map.level.80" Button
+    t =    42.39s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    42.51s Find the "map.level.80" Button
+    t =    42.86s Added attachment named 'time-machine-route-80'
+    t =    42.86s Find the "map.level.80" Button
+    t =    43.05s Tap "map.level.80" Button[0.50, 0.50]
+    t =    43.05s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    43.06s     Find the "map.level.80" Button
+    t =    43.24s     Check for interrupting elements affecting "map.level.80" Button
+    t =    43.36s         Wait for com.apple.springboard to idle
+    t =    43.39s     Synthesize event
+    t =    43.39s         Find the "map.level.80" Button
+    t =    43.57s         Find the "map.level.80" Button
+    t =    43.79s         Find the "map.level.80" Button
+    t =    44.28s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    44.29s Waiting 5.0s for "level.play" Button to exist
+    t =    45.33s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =    45.33s         Checking existence of `"level.play" Button`
+    t =    45.36s Tear Down
+Test Case '-[DinoUITests.DinoUITests testTimeMachineWorkshopRouteRemainsPlayable]' passed (45.803 seconds).
+Test Case '-[DinoUITests.DinoUITests testWorldBossSceneryRemainsPlayable]' started.
+    t =     0.00s Start Test at 2026-10-21 08:52:08.917
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.02s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     0.03s         Wait for com.apple.springboard to idle
+    t =     0.04s     Open Hakketjak.Dino-Klokkijken
+    t =     0.04s         Launch Hakketjak.Dino-Klokkijken
+    t =     0.04s             Terminate Hakketjak.Dino-Klokkijken:94358
+2026-10-21 08:52:10.028 xcodebuild[94121:42487970] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-21 08:52:10.028 xcodebuild[94121:42487970] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.32s             Setting up automation session
+    t =     1.95s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.28s Terminate Hakketjak.Dino-Klokkijken:94594
+    t =     4.29s Open Hakketjak.Dino-Klokkijken
+    t =     4.29s     Launch Hakketjak.Dino-Klokkijken
+2026-10-21 08:52:13.209 xcodebuild[94121:42487970] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-21 08:52:13.209 xcodebuild[94121:42487970] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     4.50s         Setting up automation session
+    t =     5.05s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     6.26s Waiting 8.0s for "header.settings" Button to exist
+    t =     7.33s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =     7.33s         Checking existence of `"header.settings" Button`
+    t =     7.70s Find the "header.settings" Button
+    t =     7.97s Find the "map.level.80" Button
+    t =     8.23s Checking existence of `"map.level.80" Button`
+    t =     8.49s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =     8.72s Checking existence of `"map.level.80" Button`
+    t =     8.97s Find the "map.level.80" Button
+    t =     9.25s Find the "map.level.80" Button
+    t =     9.53s Find the "header.settings" Button
+    t =     9.86s Find the "map.level.80" Button
+    t =    10.11s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    10.31s Find the "map.level.80" Button
+    t =    10.57s Find the "map.level.80" Button
+    t =    10.97s Added attachment named 'scenery-depth-world-8'
+    t =    10.97s Tap "map.level.80" Button[0.50, 0.50]
+    t =    10.97s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    10.97s     Find the "map.level.80" Button
+    t =    11.22s     Check for interrupting elements affecting "map.level.80" Button
+    t =    11.44s         Wait for com.apple.springboard to idle
+    t =    11.45s     Synthesize event
+    t =    11.45s         Find the "map.level.80" Button
+    t =    11.72s         Find the "map.level.80" Button
+    t =    11.99s         Find the "map.level.80" Button
+    t =    12.59s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    12.61s Waiting 5.0s for "level.play" Button to exist
+    t =    13.63s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =    13.63s         Checking existence of `"level.play" Button`
+    t =    13.66s Tear Down
+Test Case '-[DinoUITests.DinoUITests testWorldBossSceneryRemainsPlayable]' passed (13.923 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-21 08:52:22.840.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 59.726 (59.728) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-21 08:52:22.840.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 59.726 (59.728) seconds
+Test Suite 'Selected tests' passed at 2026-10-21 08:52:22.840.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 59.726 (59.729) seconds
+2026-10-21 08:52:23.135 xcodebuild[94121:42487970] [MT] IDETestOperationsObserverDebug: 61.148 elapsed -- Testing started completed.
+2026-10-21 08:52:23.135 xcodebuild[94121:42487970] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-21 08:52:23.135 xcodebuild[94121:42487970] [MT] IDETestOperationsObserverDebug: 61.148 sec, +61.148 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/jenssomers/Library/Developer/Xcode/DerivedData/Dino_Klokkijken-dxmooomioohbsofjhswhmmwltzaf/Logs/Test/Test-Dino Klokkijken-2026.10.21_08-51-21-+0200.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
