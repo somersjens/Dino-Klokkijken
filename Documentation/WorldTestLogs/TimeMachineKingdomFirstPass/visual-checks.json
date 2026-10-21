@@ -1,0 +1,23 @@
+{
+  "widths": [
+    320,
+    375,
+    393,
+    430,
+    600,
+    744,
+    834,
+    1024,
+    1194
+  ],
+  "promenade_samples_clear": 30620,
+  "main_machine_samples": 9477,
+  "motion_hashes": [
+    "543fdec853ab1e640349882c2c0ee385eb0384e4c2a02f414ba8fdc802a91c11",
+    "d4f343c3058397f3cff613303bda7e2ef4e98d054f5f8bea2b75aaa3f002f526",
+    "47aa1055605156dc82748e136cfb5670df6b2408c71f91163d6c54bca328a39f",
+    "ea981c148342769abe08092104ead238ffade8806491f7558da1a538a27878a1"
+  ],
+  "note": "Sampled geometry and fixed-time native renders; app interactions are checked separately.",
+  "reduced_motion_png_identical": true
+}

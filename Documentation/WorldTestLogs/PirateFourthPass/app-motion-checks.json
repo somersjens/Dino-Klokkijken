@@ -1,0 +1,29 @@
+{
+  "sea_right": {
+    "pixels_changed_over_18_rgb": 846,
+    "bounds": [
+      1080,
+      950,
+      1206,
+      1940
+    ]
+  },
+  "sea_left": {
+    "pixels_changed_over_18_rgb": 3483,
+    "bounds": [
+      0,
+      1250,
+      130,
+      1510
+    ]
+  },
+  "boat": {
+    "pixels_changed_over_18_rgb": 10704,
+    "bounds": [
+      0,
+      1000,
+      300,
+      1460
+    ]
+  }
+}

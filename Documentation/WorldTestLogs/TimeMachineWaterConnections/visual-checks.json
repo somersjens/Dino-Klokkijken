@@ -1,0 +1,26 @@
+{
+  "widths": [
+    320,
+    375,
+    393,
+    430,
+    600,
+    744,
+    834,
+    1024,
+    1194
+  ],
+  "water_landings_verified": 81,
+  "lantern_silhouette_samples_clear": 11496,
+  "water_only_motion": {
+    "393": {
+      "visible_pixels": 5939,
+      "changed_pixels_after_035s": 5943
+    },
+    "834": {
+      "visible_pixels": 8096,
+      "changed_pixels_after_035s": 8816
+    }
+  },
+  "reduce_motion_png_identical": true
+}
