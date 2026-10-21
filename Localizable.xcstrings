@@ -1285,6 +1285,23 @@
         }
       }
     },
+    "dino.digital.differentNotation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note: the time format is different from this device"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Let op: tijdweergave is anders dan op dit apparaat"
+          }
+        }
+      }
+    },
     "dino.digital.sameColors" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3491,6 +3508,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hoi, %@!"
+          }
+        }
+      }
+    },
+    "dino.hourNotation.twelve" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "12-hour"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "12 uur"
+          }
+        }
+      }
+    },
+    "dino.hourNotation.twentyFour" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "24-hour"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "24 uur"
           }
         }
       }
@@ -5847,13 +5898,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Progress, colors, clocks, language and settings on this device will be erased, along with saved iCloud progress."
+            "value" : "Progress, colors, clocks, language and settings on this device will be erased. Saved iCloud progress is erased too."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voortgang, kleuren, klokken, taal en instellingen op dit apparaat worden gewist, samen met de opgeslagen iCloud-voortgang."
+            "value" : "Voortgang, kleuren, klokken, taal en instellingen op dit apparaat worden gewist. Ook de opgeslagen iCloud-voortgang wordt gewist."
           }
         }
       }

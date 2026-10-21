@@ -12,6 +12,7 @@ enum DinoTimeDirection {
 /// geometry. The task's two offsets always come from Foundation's IANA zones.
 struct DinoTimeZoneMap: View {
     @ObservedObject private var language = LanguageManager.shared
+    @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
     @Environment(\.dinoHighContrast) private var highContrast
     let journey: DinoTimeZoneJourney
     let referenceTime: ClockTime
@@ -19,6 +20,7 @@ struct DinoTimeZoneMap: View {
     let showsAnswer: Bool
     var isDemonstration = false
     var compactLayout = false
+    var theme = ClockTheme.standard
 
     private let originColor = Color(dinoHex: 0x25674C)
     private var destinationColor: Color {
@@ -28,6 +30,7 @@ struct DinoTimeZoneMap: View {
     private var prefix: String { isDemonstration ? "demo" : "question" }
 
     var body: some View {
+        let _ = deviceHourFormat.notation
         GeometryReader { geometry in
                 let size = geometry.size
                 let viewport = DinoTimeZoneViewport(journey: journey, size: size)
@@ -46,10 +49,10 @@ struct DinoTimeZoneMap: View {
                         drawLeader(context: &context, from: destination, to: destinationLabel, labelWidth: labelWidth, color: destinationColor)
                     }.accessibilityHidden(true)
 
-                    cityLabel(journey.origin, time: referenceTime.digitalText, isOrigin: true, width: labelWidth)
+                    cityLabel(journey.origin, time: theme.digitalReading(referenceTime, languageCode: code), isOrigin: true, width: labelWidth)
                         .position(originLabel)
                         .accessibilityIdentifier("\(prefix).timeZone.origin")
-                    cityLabel(journey.destination, time: showsAnswer ? answer.digitalText : "?", isOrigin: false, width: labelWidth)
+                    cityLabel(journey.destination, time: showsAnswer ? theme.digitalReading(answer, languageCode: code) : "?", isOrigin: false, width: labelWidth)
                         .position(destinationLabel)
                         .accessibilityIdentifier("\(prefix).timeZone.destination")
                     marker(color: originColor, target: false).position(origin)
@@ -85,6 +88,7 @@ struct DinoTimeZoneMap: View {
                 .foregroundStyle(isOrigin ? color : direction)
             Text(verbatim: time)
                 .font(.system(size: 23, weight: .heavy, design: .rounded)).monospacedDigit()
+                .lineLimit(1).minimumScaleFactor(0.55)
                 .foregroundStyle(isOrigin ? color : direction)
                 .numericTextTransition()
                 .accessibilityIdentifier("\(prefix).timeZone.\(isOrigin ? "referenceTime" : "targetTime")")
@@ -203,7 +207,7 @@ struct DinoTimeZoneLesson: View {
         VStack(spacing: 10) {
             DinoTimeZoneMap(journey: journey, referenceTime: referenceTime,
                             answer: answer, showsAnswer: mapShowsAnswer,
-                            isDemonstration: isDemonstration, compactLayout: compactLayout)
+                            isDemonstration: isDemonstration, compactLayout: compactLayout, theme: theme)
             walk
                 .scaleEffect(playsWalk || reduceMotion ? 1 : 0.96)
                 .opacity(playsWalk ? 1 : 0)

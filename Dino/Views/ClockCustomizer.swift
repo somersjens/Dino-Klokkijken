@@ -14,6 +14,7 @@ enum ClockCustomizerPage {
 
 struct ClockCustomizer: View {
     @ObservedObject private var language = LanguageManager.shared
+    @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.customizationMetrics) private var metrics
     @Binding var theme: ClockTheme
@@ -80,6 +81,9 @@ struct ClockCustomizer: View {
                     .accessibilityIdentifier("theme.digital.preview")
                     .modifier(PersonalizationPreviewNavigation(onNavigate: onNavigate))
                 if theme.digitalColorsMatch { ClockColorWarning(analog: false) }
+                if theme.hourNotationDiffersFromDevice(device: deviceHourFormat.notation) {
+                    ClockNotationWarning()
+                }
             }
         }.padding(.horizontal, 16).frame(maxWidth: metrics.contentWidth)
     }
@@ -104,6 +108,7 @@ struct ClockCustomizer: View {
     private var digitalOptions: some View {
         VStack(spacing: CustomizationLayout.restoreSpacing) {
             VStack(spacing: CustomizationLayout.sectionSpacing * metrics.enlargement) {
+                hourNotationChoices
                 colorChoices(title: "dino.digitColor", color: $theme.digitalInkHex, values: digitalInkSwatches)
                 colorChoices(title: "dino.display", color: displayColor, values: displaySwatches)
                 CustomizationSection(title: "dino.numerals", identifier: "theme.numerals.label",
@@ -123,12 +128,36 @@ struct ClockCustomizer: View {
         }
     }
 
+    private var selectedHourNotation: DigitalHourNotation {
+        theme.resolvedHourNotation(device: deviceHourFormat.notation)
+    }
+
+    private var hourNotationChoices: some View {
+        HStack(spacing: 8) {
+            ForEach(DigitalHourNotation.allCases, id: \.self) { notation in
+                Button { theme.hourNotation = notation } label: {
+                    Text(verbatim: L(key: "dino.hourNotation." + notation.rawValue))
+                        .modifier(CustomizationText()).padding(.horizontal, 8)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(selectedHourNotation == notation ? DinoStyle.green.opacity(0.18) : .clear,
+                                    in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12)
+                            .stroke(selectedHourNotation == notation ? DinoStyle.deepGreen : DinoStyle.ink.opacity(0.15),
+                                    lineWidth: selectedHourNotation == notation ? 2 : 1))
+                        .contentShape(Rectangle())
+                }.buttonStyle(.plain)
+                    .accessibilityIdentifier("theme.hourNotation." + notation.rawValue)
+            }
+        }.accessibilityIdentifier("theme.hourNotation")
+    }
+
     private func fontChoice(_ style: DigitalNumerals) -> some View {
         Button { theme.numerals = style } label: {
             GeometryReader { geometry in
                 TimelineView(.dinoMinute) { context in
+                    let units: CGFloat = selectedHourNotation == .twelve ? 4.7 : 3
                     DigitalClock(time: ClockTime(date: context.date), theme: fontPreview(style),
-                                 fontSize: max(1, min(40, (geometry.size.width - 24) / 3)), showsDisplay: false)
+                                 fontSize: max(1, min(40, (geometry.size.width - 24) / units)), showsDisplay: false)
                         .fixedSize().frame(maxWidth: .infinity, maxHeight: .infinity)
                 }.accessibilityHidden(true)
             }.frame(height: 72).frame(maxWidth: .infinity)
@@ -142,6 +171,7 @@ struct ClockCustomizer: View {
         var preview = ClockTheme.standard
         preview.numerals = style
         preview.digitalInkHex = ClockInk.navy.hex
+        preview.hourNotation = selectedHourNotation
         return preview
     }
 
@@ -268,6 +298,15 @@ struct ClockCustomizer: View {
                 theme.display = display; theme.customDisplayHex = nil
             } else { theme.customDisplayHex = hex }
         })
+    }
+}
+
+struct ClockNotationWarning: View {
+    var body: some View {
+        Text("dino.digital.differentNotation")
+            .modifier(CustomizationText(multiline: true))
+            .foregroundStyle(DinoStyle.warning).frame(maxWidth: .infinity)
+            .accessibilityIdentifier("theme.digital.differentNotation")
     }
 }
 

@@ -284,7 +284,8 @@ struct CustomizationTypography: ViewModifier {
             scale = min(scale, max(1, available) / max(1, longest))
         }
         fit(["dino.shape.circle", "dino.shape.square", "dino.shape.octagon"], in: (card - 16) / 3 - 12)
-        fit(["dino.analogNumerals.normal", "dino.analogNumerals.roman"], in: (card - 8) / 2 - 16)
+        fit(["dino.analogNumerals.normal", "dino.analogNumerals.roman",
+             "dino.hourNotation.twelve", "dino.hourNotation.twentyFour"], in: (card - 8) / 2 - 16)
         fit(["dino.appearance.bandana", "dino.appearance.spikes", "dino.appearance.body", "dino.appearance.belly",
              "dino.hourHand", "dino.minuteHand", "dino.face", "dino.rim", "dino.digitColor", "dino.display", "dino.numerals"], in: card)
         fit(["dino.appearance.reset", "dino.clock.restoreStyle"], in: card - 28)

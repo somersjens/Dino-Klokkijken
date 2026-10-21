@@ -3,6 +3,8 @@ import SwiftUI
 struct QuestionRenderer: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ObservedObject private var language = LanguageManager.shared
+    @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
     @ObservedObject var session: DinoSession
     @State private var adjustingMinutes = false
     let theme: ClockTheme
@@ -63,7 +65,9 @@ struct QuestionRenderer: View {
         let displacement = (width + 14) / 4
         // Scale the existing display, including its field anchors. Its vertical
         // control space stays reserved throughout the answer comparison.
-        let scale = min(1, (width - 38) / (2 * font * 4.1))
+        let _ = deviceHourFormat.notation
+        let units: CGFloat = theme.resolvedHourNotation(device: deviceHourFormat.notation) == .twelve ? 4.8 : 4.1
+        let scale = min(1, (width - 38) / (2 * font * units))
         return ZStack {
             DigitalClockControl(hour: $session.inputHour,
                                 theme: theme, minute: session.inputMinute, fontSize: font,
@@ -75,7 +79,7 @@ struct QuestionRenderer: View {
                 .offset(x: comparing ? -displacement : 0)
             DigitalClock(time: question.target, theme: theme, fontSize: font)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(question.target.digitalText)
+                .accessibilityLabel(theme.digitalReading(question.target, languageCode: language.effective.code))
                 .modifier(ClockAnswerOutline(visible: true, correct: true))
                 .scaleEffect(scale * (comparing || reduceMotion ? 1 : 0.94))
                 .offset(x: displacement)
@@ -105,7 +109,7 @@ struct QuestionRenderer: View {
             clockStage(height: compactLayout ? 50 : 64) {
                 DigitalClock(time: question.target, theme: theme, fontSize: width < 350 ? 32 : 38)
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(question.target.digitalText)
+                    .accessibilityLabel(theme.digitalReading(question.target, languageCode: language.effective.code))
                     .accessibilityIdentifier("question.targetClock")
             }
         }

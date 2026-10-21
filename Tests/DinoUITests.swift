@@ -11,7 +11,7 @@ final class DinoUITests: XCTestCase {
         app = XCUIApplication()
         app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.\(UUID().uuidString)"
         app.launchEnvironment["DINO_TEST_SEED"] = String(seed)
-        app.launchArguments = ["-settings.languageOverride", "nl"]
+        app.launchArguments = ["-settings.languageOverride", "nl", "-AppleICUForce24HourTime", "YES"]
         app.launch()
     }
 
@@ -71,7 +71,7 @@ final class DinoUITests: XCTestCase {
     private func launchUsingDeviceLanguage(_ code: String, locale: String) {
         app.terminate()
         app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.\(UUID().uuidString)"
-        app.launchArguments = ["-AppleLanguages", "(\(code))", "-AppleLocale", locale]
+        app.launchArguments = ["-AppleLanguages", "(\(code))", "-AppleLocale", locale, "-AppleICUForce24HourTime", "YES"]
         app.launch()
     }
 
@@ -463,6 +463,36 @@ final class DinoUITests: XCTestCase {
         }
     }
 
+    func testCityMetroRouteRemainsPlayable() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "5"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 8))
+        waitForMapOpeningToFinish()
+        let first = revealMapNode(51)
+        XCTAssertTrue(first.isEnabled)
+        saveScreenshot("city-metro-entrance")
+        first.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5))
+        tap("level.play")
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 5))
+        saveScreenshot("city-metro-level-51")
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 8))
+        waitForMapOpeningToFinish()
+        for id in [54, 57, 60] {
+            let node = revealMapNode(id)
+            XCTAssertGreaterThanOrEqual(node.frame.width, 44)
+            saveScreenshot("city-metro-route-\(id)")
+            if id == 60 {
+                XCTAssertTrue(node.isEnabled)
+                node.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5))
+            }
+        }
+    }
+
     func testTimeMachineWorkshopRouteRemainsPlayable() {
         app.terminate()
         app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "7"
@@ -536,13 +566,10 @@ final class DinoUITests: XCTestCase {
             let above = banner.frame.minY - boss.frame.maxY
             let below = first.frame.minY - banner.frame.maxY
             XCTAssertGreaterThan(above, 40, "Boss leaves room above world \(world)")
-            if world == 6 {
-                XCTAssertGreaterThan(above, below + 100,
-                                     "The full-size cave exit leaves extra room after level 50")
-            } else {
-                XCTAssertEqual(above, below, accuracy: 4,
-                               "World \(world) uses the same clear space on both sides of its banner")
-            }
+            // Accessibility reports the title's glyph bounds, whose centre can
+            // sit a few points below the centre of the fixed banner face.
+            XCTAssertEqual(above, below, accuracy: 8,
+                           "World \(world) uses the same clear space on both sides of its banner")
             saveScreenshot("world-banner-spacing-\(world)")
         }
     }
@@ -3299,6 +3326,18 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("welcome-analog-matching-colors")
         tap("onboarding.next")
         assertPreviewShowsCurrentTime(false)
+        let notation = app.descendants(matching: .any)["theme.hourNotation"]
+        let digits = app.staticTexts["theme.dino.digitColor.label"]
+        XCTAssertLessThan(notation.frame.maxY, digits.frame.minY)
+        tap("theme.hourNotation.twelve")
+        let formatWarning = app.staticTexts["theme.digital.differentNotation"]
+        XCTAssertTrue(formatWarning.waitForExistence(timeout: 2))
+        XCTAssertEqual(formatWarning.label, "Let op: tijdweergave is anders dan op dit apparaat")
+        XCTAssertTrue(app.buttons["onboarding.customClock"].isEnabled)
+        let preview = app.descendants(matching: .any)["theme.digital.preview"]
+        XCTAssertTrue(preview.label.contains("AM") || preview.label.contains("PM"))
+        tap("theme.hourNotation.twentyFour")
+        XCTAssertFalse(formatWarning.exists)
         tap("theme.dino.display.white") // Same as the digits.
         tap("theme.numerals.classic")
         assertClockWarningBelowPreview(false)

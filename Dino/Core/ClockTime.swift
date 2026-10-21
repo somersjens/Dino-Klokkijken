@@ -18,6 +18,25 @@ struct ClockTime: Codable, Equatable, Hashable, Sendable {
     var hourAngle: Double { Double(hour % 12) * 30 + Double(minute) * 0.5 }
     var minuteAngle: Double { Double(minute) * 6 }
     var digitalText: String { String(format: "%02d:%02d", hour, minute) }
+
+    func digitalReading(notation: DigitalHourNotation, languageCode: String) -> DigitalClockReading {
+        let minuteText = String(format: "%02d", minute)
+        guard notation == .twelve else {
+            return DigitalClockReading(hour: String(format: "%02d", hour), minute: minuteText, period: nil)
+        }
+        var calendar = Calendar(identifier: .gregorian)
+        let locale = Locale(identifier: languageCode)
+        calendar.locale = locale
+        let date = calendar.date(from: DateComponents(calendar: calendar, hour: hour, minute: minute)) ?? Date()
+        func part(_ format: String) -> String {
+            let formatter = DateFormatter()
+            formatter.locale = locale
+            formatter.calendar = calendar
+            formatter.dateFormat = format
+            return formatter.string(from: date)
+        }
+        return DigitalClockReading(hour: part("hh"), minute: part("mm"), period: part("a"))
+    }
     var minutesOfDay: Int { hour * 60 + minute }
     func adding(minutes: Int) -> ClockTime {
         let total = ((minutesOfDay + minutes) % 1440 + 1440) % 1440
@@ -58,6 +77,16 @@ struct ClockTime: Codable, Equatable, Hashable, Sendable {
         if delta < -30 { delta += 60 }
         else if delta > 30 { delta -= 60 }
         return shiftingMinutes(by: delta)
+    }
+}
+
+struct DigitalClockReading: Equatable, Sendable {
+    var hour: String
+    var minute: String
+    var period: String?
+    var text: String {
+        guard let period else { return "\(hour):\(minute)" }
+        return "\(hour):\(minute) \(period)"
     }
 }
 

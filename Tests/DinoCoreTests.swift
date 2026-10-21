@@ -606,6 +606,12 @@ struct DinoCoreTests {
         expect(ClockTime(hour: 3, minute: 45).hourAngle == 112.5, "03:45 short hand")
         expect(ClockTime(hour: 12).hourAngle == 0, "12:00 short hand")
         expect(ClockTime(hour: 8, minute: 30).digitalText == "08:30", "HH:mm leading zero")
+        expect(ClockTime(hour: 0, minute: 5).digitalReading(notation: .twelve, languageCode: "en") ==
+               DigitalClockReading(hour: "12", minute: "05", period: "AM"), "midnight reads as 12 AM")
+        expect(ClockTime(hour: 12).digitalReading(notation: .twelve, languageCode: "nl").text == "12:00 PM", "noon reads as 12 PM")
+        expect(ClockTime(hour: 15, minute: 30).digitalReading(notation: .twelve, languageCode: "en").text == "03:30 PM", "afternoon hours keep two digits and PM")
+        expect(ClockTime(hour: 23, minute: 59).digitalReading(notation: .twelve, languageCode: "nl").text == "11:59 PM", "late evening stays within twelve hours")
+        expect(ClockTime(hour: 9, minute: 7).digitalReading(notation: .twentyFour, languageCode: "nl").text == "09:07", "24-hour notation keeps the leading zero")
         for hour in 0...23 {
             for minute in 0...59 {
                 let time = ClockTime(hour: hour, minute: minute)
@@ -2179,6 +2185,20 @@ struct DinoCoreTests {
         expect(migrated.hands == .rounded && migrated.numerals == .digital && migrated.analogNumerals == .normal, "retired hands migrate to rounded and keep the numeral style")
         expect(migrated.analogShape == .circle && migrated.digitalShape == .roundedRectangle && migrated.digitalInkHex == 0x193B53,
                "legacy light displays keep dark digits and default shapes")
+        expect(migrated.hourNotation == nil && migrated.resolvedHourNotation() == DigitalHourNotation.device && !migrated.hourNotationDiffersFromDevice(),
+               "older clocks follow the device until a notation is chosen")
+        let savedNotation = try! JSONDecoder().decode(ClockTheme.self, from: Data(#"{"hourNotation":"twelve","numerals":"classic"}"#.utf8))
+        let storedNotation = try! JSONDecoder().decode(ClockTheme.self, from: try! JSONEncoder().encode(savedNotation))
+        expect(savedNotation.hourNotation == .twelve && savedNotation.numerals == .classic && storedNotation.hourNotation == .twelve,
+               "a chosen hour notation survives restart")
+        var notation = ClockTheme.standard
+        let other: DigitalHourNotation = DigitalHourNotation.device == .twelve ? .twentyFour : .twelve
+        notation.hourNotation = other
+        expect(notation.hourNotationDiffersFromDevice() && notation.resolvedHourNotation() == other, "a different notation is kept and flagged")
+        notation.hourNotation = DigitalHourNotation.device
+        expect(!notation.hourNotationDiffersFromDevice(), "matching the device stays quiet")
+        notation.resetDigital()
+        expect(notation.hourNotation == nil && !notation.hourNotationDiffersFromDevice(), "restoring the digital clock follows the device again")
         let oldShape = try! JSONDecoder().decode(ClockTheme.self, from: Data(#"{"analogShape":"pentagon","customFaceHex":526612}"#.utf8))
         expect(oldShape.analogShape == .octagon && oldShape.customFaceHex == 526612, "saved pentagons migrate to octagons and retain custom colors")
         let oldDark = try! JSONDecoder().decode(ClockTheme.self, from: Data(#"{"display":"charcoal"}"#.utf8))

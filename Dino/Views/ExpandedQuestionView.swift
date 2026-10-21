@@ -13,6 +13,7 @@ struct DinoExpandedQuestionView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject var session: DinoSession
     @ObservedObject private var language = LanguageManager.shared
+    @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
     let theme: ClockTheme
     let width: CGFloat
     let clockSize: CGFloat
@@ -22,8 +23,14 @@ struct DinoExpandedQuestionView: View {
     private var q: ClockQuestion { session.question }
     private var code: String { language.effective.code }
     private var duration: String { DinoTimeWords.duration(q.durationMinutes, language: code) }
+    /// Reading a 24-hour clock stays in 24-hour digits. Every other digital time follows the player.
+    private func shownDigital(_ time: ClockTime) -> String {
+        let _ = deviceHourFormat.notation
+        return theme.digitalReading(time, languageCode: code, notation: q.kind == .read24Hour ? .twentyFour : nil)
+    }
 
     var body: some View {
+        let _ = deviceHourFormat.notation
         VStack(spacing: q.kind == .timeZone && compactLayout ? 12 : 18) {
             if q.kind != .advanceAnalog {
                 VStack(spacing: 12) { context }
@@ -65,7 +72,7 @@ struct DinoExpandedQuestionView: View {
     @ViewBuilder private var context: some View {
         switch q.kind {
         case .readDigital, .read24Hour, .dayPart:
-            DigitalClock(time: q.target, theme: theme, fontSize: 38)
+            DigitalClock(time: q.target, theme: theme, fontSize: 38, notation: q.kind == .read24Hour ? .twentyFour : nil)
                 .accessibilityIdentifier(isDemonstration ? "demo.targetClock" : "question.targetClock")
         case .spokenTime:
             EmptyView()
@@ -98,19 +105,19 @@ struct DinoExpandedQuestionView: View {
         case .addTime, .subtractTime:
             DigitalClock(time: q.relatedTimes[0], theme: theme, fontSize: timeChangeClockFont)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text(verbatim: q.relatedTimes[0].digitalText))
+                .accessibilityLabel(Text(verbatim: shownDigital(q.relatedTimes[0])))
                 .accessibilityIdentifier(isDemonstration ? "demo.targetClock" : "question.targetClock")
             timeChange
         case .flightArrival:
             DinoFlightTicket(work: flightWork, showsWork: isDemonstration || session.showsWorkedExplanation,
                              minuteStep: session.minuteStep, language: code, width: min(600, width),
-                             isDemonstration: isDemonstration)
+                             isDemonstration: isDemonstration, theme: theme)
         case .daySchedule:
             if let schedule = q.daySchedule {
                 DinoTrainJourneyCard(schedule: schedule,
                                      showsAnswer: isDemonstration || session.showsCorrectResponse,
                                      countsTotal: isDemonstration || session.missedFirstAnswer,
-                                     isDemonstration: isDemonstration, language: code)
+                                     isDemonstration: isDemonstration, language: code, theme: theme)
             }
         default:
             // SwiftUI can update an outgoing view after the shared session has advanced.
@@ -199,7 +206,7 @@ struct DinoExpandedQuestionView: View {
                               ![.readDigital, .read24Hour].contains(q.kind) {
                         DigitalClock(time: time, theme: theme, fontSize: timeChangeClockFont)
                             .accessibilityElement(children: .ignore)
-                            .accessibilityLabel(Text(verbatim: time.digitalText))
+                            .accessibilityLabel(Text(verbatim: shownDigital(time)))
                     } else {
                         Text(verbatim: responseText(q.expectedAnswer))
                             .font(.system(size: 24, weight: .bold, design: .rounded))
@@ -271,13 +278,13 @@ struct DinoExpandedQuestionView: View {
         switch response {
         case .time(let time):
             if [.readDigital, .read24Hour].contains(q.kind) { return DinoTimeWords.time(time, language: code, dayPart: q.kind == .read24Hour) }
-            return time.digitalText
+            return shownDigital(time)
         case .duration(let minutes):
             return q.kind == .minutesBetween ? DinoTimeWords.minutes(minutes, language: code)
                 : DinoTimeWords.duration(minutes, language: code)
         case .truth(let value): return L(key: value ? "dino.expanded.true" : "dino.expanded.false")
         case .dayPart(let part): return L(key: part.titleKey)
-        case .ordering(let times), .pairs(let times): return times.map(\.digitalText).joined(separator: " → ")
+        case .ordering(let times), .pairs(let times): return times.map(shownDigital).joined(separator: " → ")
         case .spoken(let spoken): return q.spokenPrompt?.phrase(for: spoken) ?? ""
         }
     }
@@ -310,7 +317,7 @@ struct DinoExpandedQuestionView: View {
                                             .accessibilityHidden(true)
                                     }
                                 }
-                            Text(verbatim: time.digitalText).font(.system(size: 17, weight: .bold, design: .rounded)).monospacedDigit()
+                            Text(verbatim: shownDigital(time)).font(.system(size: 17, weight: .bold, design: .rounded)).monospacedDigit()
                         }.padding(12).frame(maxWidth: .infinity).background(.white, in: RoundedRectangle(cornerRadius: 22))
                             .overlay(RoundedRectangle(cornerRadius: 22).stroke(position == nil ? .clear : wrongPosition ? DinoStyle.deepOrange : DinoStyle.deepGreen, lineWidth: 3))
                     }.buttonStyle(DinoAnswerButtonStyle()).disabled(session.hasFeedback || isDemonstration)
@@ -338,7 +345,7 @@ struct DinoExpandedQuestionView: View {
     /// The draft and correction then fill their own slots without moving Confirm.
     private func sortAnswerSlot(correct: Bool) -> some View {
         let revealed = correct ? session.hasFeedback && !session.correctFeedback : !session.selectedOrder.isEmpty
-        let text = correct ? responseText(q.expectedAnswer) : session.selectedOrder.map(\.digitalText).joined(separator: " → ")
+        let text = correct ? responseText(q.expectedAnswer) : session.selectedOrder.map(shownDigital).joined(separator: " → ")
         return Text(verbatim: responseText(q.expectedAnswer))
             .hidden()
             .overlay {
@@ -535,6 +542,7 @@ private struct DinoTrainJourneyCard: View {
     let countsTotal: Bool
     let isDemonstration: Bool
     let language: String
+    let theme: ClockTheme
     /// Examples are born with the total already open, so refreshing one does not replay the reveal.
     @State private var showsTotal: Bool
     private var prefix: String { isDemonstration ? "demo" : "question" }
@@ -546,12 +554,13 @@ private struct DinoTrainJourneyCard: View {
     private let transferFill = Color(dinoHex: 0xE7F1FB)
     private let transferChip = Color(dinoHex: 0xD3E6F8)
 
-    init(schedule: DinoDaySchedule, showsAnswer: Bool, countsTotal: Bool, isDemonstration: Bool, language: String) {
+    init(schedule: DinoDaySchedule, showsAnswer: Bool, countsTotal: Bool, isDemonstration: Bool, language: String, theme: ClockTheme) {
         self.schedule = schedule
         self.showsAnswer = showsAnswer
         self.countsTotal = countsTotal
         self.isDemonstration = isDemonstration
         self.language = language
+        self.theme = theme
         _showsTotal = State(initialValue: isDemonstration && countsTotal)
     }
     private let arrivalFill = Color(dinoHex: 0xE7F7DC)
@@ -561,7 +570,7 @@ private struct DinoTrainJourneyCard: View {
     var body: some View {
         VStack(spacing: 2) {
             leg(symbol: "building.columns.fill", title: "dino.train.departure",
-                value: schedule.start.digitalText, ink: DinoStyle.deepGreen, fill: arrivalFill, chip: arrivalChip,
+                value: theme.digitalReading(schedule.start, languageCode: language), ink: DinoStyle.deepGreen, fill: arrivalFill, chip: arrivalChip,
                 identifier: "\(prefix).schedule.start")
             connector
             ZStack(alignment: .top) {
@@ -708,13 +717,14 @@ private struct DinoTrainJourneyCard: View {
     }
 
     private var arrivalValue: some View {
-        let text = showsAnswer ? schedule.end.digitalText : "?"
+        let text = showsAnswer ? theme.digitalReading(schedule.end, languageCode: language) : "?"
         return Text(verbatim: text)
             .font(.system(size: showsAnswer ? 14 : 18, weight: .heavy, design: .rounded))
             .monospacedDigit()
             .lineLimit(1).minimumScaleFactor(0.6)
             .padding(.horizontal, 10).padding(.vertical, 4)
-            .frame(width: 70, height: 32)
+            .fixedSize(horizontal: true, vertical: false)
+            .frame(minWidth: 70, minHeight: 32, maxHeight: 32)
             .background(arrivalChip, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(DinoStyle.deepGreen.opacity(showsAnswer ? 0 : (highContrast ? 1 : 0.75)),
@@ -769,6 +779,7 @@ private struct DinoFlightTicket: View {
     let language: String
     let width: CGFloat
     let isDemonstration: Bool
+    let theme: ClockTheme
     @State private var appliedMinutes = 0
     @State private var walking = false
     /// 0...1 for the practice reveal. Examples show the finished total and ignore this.
@@ -812,7 +823,7 @@ private struct DinoFlightTicket: View {
                 HStack(alignment: .center, spacing: 6) {
                     VStack(spacing: 4) {
                         fieldLabel("dino.expanded.departure", color: DinoFlightInk.departure)
-                        timeChip(work.departure.digitalText, color: DinoFlightInk.departure,
+                        timeChip(theme.digitalReading(work.departure, languageCode: language), color: DinoFlightInk.departure,
                                  identifier: "\(prefix).targetClock")
                     }.frame(minWidth: 0, maxWidth: .infinity)
 
@@ -827,7 +838,7 @@ private struct DinoFlightTicket: View {
                     VStack(spacing: 4) {
                         fieldLabel("dino.expanded.arrival", color: showsWork && walking ? DinoFlightInk.arrival : secondaryInk)
                         if showsWork && walking {
-                            timeChip(shownArrival.digitalText, color: DinoFlightInk.arrival,
+                            timeChip(theme.digitalReading(shownArrival, languageCode: language), color: DinoFlightInk.arrival,
                                      identifier: isDemonstration ? "demo.answer" : "\(prefix).flight.arrival")
                                 .numericTextTransition()
                         } else {
@@ -1291,6 +1302,7 @@ private extension DinoDayPart {
 
 struct DinoExpandedDemonstration: View {
     @EnvironmentObject private var player: DinoPlayer
+    @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
     let kind: ClockQuestionKind
     let time: DinoPracticeTime
     var worldMinutes: [Int]? = nil
@@ -1321,7 +1333,7 @@ struct DinoExpandedDemonstration: View {
                     let code = LanguageManager.shared.effective.code
                     let parts = [schedule.firstMinutes, schedule.breakMinutes, schedule.secondMinutes]
                         .map { DinoTimeWords.duration($0, language: code) }
-                    Text(verbatim: "\(schedule.start.digitalText) + \(parts.joined(separator: " + ")) = \(schedule.end.digitalText)")
+                    Text(verbatim: "\(clockText(schedule.start, kind: kind)) + \(parts.joined(separator: " + ")) = \(clockText(schedule.end, kind: kind))")
                         .font(.system(size: 14, weight: .semibold, design: .rounded))
                         .fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.center)
                         .accessibilityIdentifier("demo.schedule.calculation")
@@ -1353,6 +1365,12 @@ struct DinoExpandedDemonstration: View {
         sample = next
     }
 
+    private func clockText(_ time: ClockTime, kind: ClockQuestionKind) -> String {
+        let _ = deviceHourFormat.notation
+        return theme.digitalReading(time, languageCode: LanguageManager.shared.effective.code,
+                                    notation: kind == .read24Hour ? .twentyFour : nil)
+    }
+
     private func answer(_ q: ClockQuestion) -> String {
         let code = LanguageManager.shared.effective.code
         let duration = DinoTimeWords.duration(q.durationMinutes, language: code)
@@ -1360,23 +1378,24 @@ struct DinoExpandedDemonstration: View {
         switch q.expectedAnswer {
         case .time(let time):
             switch q.kind {
-            case .readDigital, .read24Hour, .spokenTime: answer = "\(time.digitalText) = \(DinoTimeWords.time(time, language: code, dayPart: q.kind == .read24Hour))"
-            case .addTime, .advanceAnalog: answer = "\(q.relatedTimes[0].digitalText) + \(duration) = \(time.digitalText)"
+            case .readDigital, .read24Hour, .spokenTime: answer = "\(clockText(time, kind: q.kind)) = \(DinoTimeWords.time(time, language: code, dayPart: q.kind == .read24Hour))"
+            case .addTime, .advanceAnalog: answer = "\(clockText(q.relatedTimes[0], kind: q.kind)) + \(duration) = \(clockText(time, kind: q.kind))"
             case .flightArrival:
                 let work = DinoFlightArrivalWork(departure: q.relatedTimes[0], durationMinutes: q.durationMinutes,
                                                  offsetHours: q.offsetHours, arrival: time)
-                answer = q.offsetHours == 0 ? work.arrivalLine(language: code)
-                    : "\(work.differenceLine(language: code))\n\(work.arrivalLine(language: code))"
-            case .subtractTime: answer = "\(q.relatedTimes[0].digitalText) − \(duration) = \(time.digitalText)"
-            case .timeSequence: answer = "\(q.relatedTimes.last!.digitalText) + \(duration) = \(time.digitalText)"
-            case .timeZone: answer = "\(q.relatedTimes[0].digitalText) \(q.offsetHours >= 0 ? "+" : "−") \(abs(q.offsetHours)) h = \(time.digitalText)"
-            default: answer = time.digitalText
+                let shift = q.offsetHours == 0 ? work.durationText(code) : work.combinedText(code)
+                let sum = "\(clockText(work.departure, kind: q.kind)) + \(shift) = \(clockText(work.arrival, kind: q.kind))"
+                answer = q.offsetHours == 0 ? sum : "\(work.differenceLine(language: code))\n\(sum)"
+            case .subtractTime: answer = "\(clockText(q.relatedTimes[0], kind: q.kind)) − \(duration) = \(clockText(time, kind: q.kind))"
+            case .timeSequence: answer = "\(clockText(q.relatedTimes.last!, kind: q.kind)) + \(duration) = \(clockText(time, kind: q.kind))"
+            case .timeZone: answer = "\(clockText(q.relatedTimes[0], kind: q.kind)) \(q.offsetHours >= 0 ? "+" : "−") \(abs(q.offsetHours)) h = \(clockText(time, kind: q.kind))"
+            default: answer = clockText(time, kind: q.kind)
             }
         case .truth(let correct): answer = "\(DinoTimeWords.time(q.target, language: code)) → \(L(key: correct ? "dino.expanded.true" : "dino.expanded.false"))"
-        case .duration(let minutes): answer = "\(q.relatedTimes[0].digitalText) → \(q.relatedTimes[1].digitalText) = \(DinoTimeWords.duration(minutes, language: code))"
-        case .dayPart(let part): answer = "\(q.target.digitalText) → \(L(key: part.titleKey))"
-        case .ordering(let times): answer = times.map(\.digitalText).joined(separator: " → ")
-        case .pairs(let times): answer = times.map { "\(DinoTimeWords.time($0, language: code, dayPart: true)) = \($0.digitalText)" }.joined(separator: "\n")
+        case .duration(let minutes): answer = "\(clockText(q.relatedTimes[0], kind: q.kind)) → \(clockText(q.relatedTimes[1], kind: q.kind)) = \(DinoTimeWords.duration(minutes, language: code))"
+        case .dayPart(let part): answer = "\(clockText(q.target, kind: q.kind)) → \(L(key: part.titleKey))"
+        case .ordering(let times): answer = times.map { clockText($0, kind: q.kind) }.joined(separator: " → ")
+        case .pairs(let times): answer = times.map { "\(DinoTimeWords.time($0, language: code, dayPart: true)) = \(clockText($0, kind: q.kind))" }.joined(separator: "\n")
         case .spoken(let spoken): answer = q.spokenPrompt?.phrase(for: spoken) ?? ""
         }
         return answer

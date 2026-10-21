@@ -151,6 +151,7 @@ struct DinoSettingsView: View {
             Text("dino.resetMessage").font(.system(size: 15, weight: .medium, design: .rounded))
                 .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             Text(verbatim: challenge.prompt)
                 .font(.system(size: compact ? 26 : 32, weight: .heavy, design: .rounded))
                 .monospacedDigit()

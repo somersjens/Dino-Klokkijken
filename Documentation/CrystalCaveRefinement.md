@@ -174,3 +174,16 @@ Overlappende rotsen, losse voetstenen, mos en varens verbinden de onderste zijka
 De native aansluiting is visueel gecontroleerd op 320, 393, 834 en 1194 punten breed. De simulatorbuild en de gerichte kaartafstandstest slagen op iPhone 17 en iPad Pro 11-inch. De volledige hoofdstuktest stopt op beide apparaten bij het zoeken naar `level.play`: de huidige startkaart toont de knop Spelen met het geërfde ID `level.startCard`. Die afzonderlijke toegankelijkheidskwestie is in deze landschapswijziging niet aangepast.
 
 [Aansluiting op 320 punten](Screenshots/CaveGroundBlend/native-exit-320.png) · [Aansluiting op 1194 punten](Screenshots/CaveGroundBlend/native-exit-1194.png).
+
+
+## Open overgang naar Dino Stad — 21 oktober 2026
+
+De eindpoort na level 50 is verwijderd, inclusief de rotskap, pijlers, lantaarns en bestrate aanloop. Wereld 5 gebruikt weer de normale hoofdstukafstand. De banner van Dino Stad staat daardoor circa 154 tot 219 punten dichter bij de bosssteen, afhankelijk van de schermbreedte.
+
+De bestaande grotwanden buigen in het laatste deel naar de zijkanten. Volledige rotsvormen en kristalgroepen worden daarbij kleiner en verdwijnen buiten beeld. De mineralen gebruiken dezelfde geometrie als hun lichtaccenten en houden de grotbaas vrij. De koele grotgrond gaat geleidelijk over in de stadsgrond; zonlicht en het stadsdecor komen over de eerste 72 punten op, zodat de hoofdstukgrens geen rechte kleurnaad geeft.
+
+De grotcompositie is native nagekeken op 320, 393, 834 en 1194 punten breed. De iOS-testbuild slaagt. De bestaande afstandstest vereist nu ook bij wereld 6 een gelijke afstand boven en onder de banner; de meting houdt rekening met de enkele punten verschil tussen de toegankelijkheidsgrenzen van de tekst en het midden van de titelplaat.
+
+De gerichte afstandstest voor wereld 6 slaagt afzonderlijk op iPhone 17 en iPad Pro 11-inch: **twee geslaagde schermtests, nul fouten**. De eerdere gecombineerde runs voor werelden 5 en 6 zijn gestopt doordat het testproces met een kill-signaal werd beëindigd; de afzonderlijke runs zijn volledig afgerond. De appbeelden op beide apparaten zijn visueel nagekeken. `git diff --check` is schoon.
+
+[iPhone](Screenshots/OpenCaveExit/exit-iphone.png) · [iPad](Screenshots/OpenCaveExit/exit-ipad.png) · [Grotcompositie op 320 punten](Screenshots/OpenCaveExit/native-exit-320.png) · [Grotcompositie op 1194 punten](Screenshots/OpenCaveExit/native-exit-1194.png). De native compositie gebruikt eenvoudige levelcirkels en de bestaande stadsillustratie als context; de simulatorbeelden tonen de huidige interface.

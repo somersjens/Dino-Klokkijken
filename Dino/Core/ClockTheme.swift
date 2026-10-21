@@ -83,6 +83,22 @@ enum DigitalNumerals: String, Codable, CaseIterable, Sendable {
     case rounded, digital, modern, classic
 }
 
+enum DigitalHourNotation: String, Codable, CaseIterable, Sendable {
+    case twelve, twentyFour
+
+    /// The 24-hour switch in Settings, or the region default when that switch was never changed.
+    static var device: DigitalHourNotation {
+        // UI tests pin this so screens that still expect 24-hour labels stay stable.
+        let defaults = UserDefaults.standard
+        if ProcessInfo.processInfo.environment["DINO_TEST_SUITE"] != nil,
+           defaults.object(forKey: "AppleICUForce24HourTime") != nil {
+            return defaults.bool(forKey: "AppleICUForce24HourTime") ? .twentyFour : .twelve
+        }
+        let format = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: .current) ?? ""
+        return format.contains("a") ? .twelve : .twentyFour
+    }
+}
+
 enum AnalogNumerals: String, Codable, CaseIterable, Sendable {
     case normal, roman
 
@@ -121,6 +137,8 @@ struct ClockTheme: Codable, Equatable, Sendable {
     var customRimHex: UInt32?
     var customDisplayHex: UInt32?
     var digitalInkHex: UInt32 = 0xFFFFFF
+    /// Nil follows the device. A saved choice stays put when the device later changes.
+    var hourNotation: DigitalHourNotation? = nil
 
     var faceHex: UInt32 { customFaceHex ?? face.hex }
     var hourHex: UInt32 { customHourHex ?? hourInk.hex }
@@ -130,6 +148,15 @@ struct ClockTheme: Codable, Equatable, Sendable {
     var markingHex: UInt32 { ClockColorContrast.markingHex(on: faceHex) }
     var analogColorsMatch: Bool { hourHex == faceHex || minuteHex == faceHex }
     var digitalColorsMatch: Bool { digitalInkHex == displayHex }
+
+    func resolvedHourNotation(device: DigitalHourNotation = .device) -> DigitalHourNotation {
+        hourNotation ?? device
+    }
+
+    func hourNotationDiffersFromDevice(device: DigitalHourNotation = .device) -> Bool {
+        guard let hourNotation else { return false }
+        return hourNotation != device
+    }
 
     /// Keep the stored options for compatibility and later re-enabling of controls.
     /// While those controls are hidden, all player clocks use these fixed styles.
@@ -157,7 +184,7 @@ struct ClockTheme: Codable, Equatable, Sendable {
 
     mutating func resetDigital() {
         restoreDigitalColors()
-        numerals = .rounded; digitalShape = .roundedRectangle
+        numerals = .rounded; digitalShape = .roundedRectangle; hourNotation = nil
     }
 
     func replacingUnreadableClocks() -> ClockTheme {
@@ -171,7 +198,7 @@ struct ClockTheme: Codable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case face, hourInk, minuteInk, rimInk, hands, analogNumerals, display, numerals
-        case analogShape, digitalShape, customFaceHex, customHourHex, customMinuteHex, customRimHex, customDisplayHex, digitalInkHex
+        case analogShape, digitalShape, customFaceHex, customHourHex, customMinuteHex, customRimHex, customDisplayHex, digitalInkHex, hourNotation
     }
 
     init(from decoder: Decoder) throws {
@@ -192,6 +219,7 @@ struct ClockTheme: Codable, Equatable, Sendable {
         customRimHex = try container.decodeIfPresent(UInt32.self, forKey: .customRimHex)
         customDisplayHex = try container.decodeIfPresent(UInt32.self, forKey: .customDisplayHex)
         digitalInkHex = try container.decodeIfPresent(UInt32.self, forKey: .digitalInkHex) ?? (display.isDark ? 0xFFFFFF : 0x193B53)
+        hourNotation = try container.decodeIfPresent(DigitalHourNotation.self, forKey: .hourNotation)
     }
 
     static let standard = ClockTheme()

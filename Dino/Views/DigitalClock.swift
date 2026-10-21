@@ -1,4 +1,30 @@
+import Combine
 import SwiftUI
+import UIKit
+
+/// Publishes the device hour cycle so every digital clock refreshes when Settings changes it.
+final class DeviceHourFormat: ObservableObject {
+    static let shared = DeviceHourFormat()
+    @Published private(set) var notation = DigitalHourNotation.device
+    private var updates: AnyCancellable?
+
+    private init() {
+        updates = NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)
+            .merge(with: NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification))
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                let next = DigitalHourNotation.device
+                if self?.notation != next { self?.notation = next }
+            }
+    }
+}
+
+extension ClockTheme {
+    func digitalReading(_ time: ClockTime, languageCode: String, notation override: DigitalHourNotation? = nil) -> String {
+        let notation = override ?? resolvedHourNotation(device: DeviceHourFormat.shared.notation)
+        return time.digitalReading(notation: notation, languageCode: languageCode).text
+    }
+}
 
 private enum DigitalClockField: CaseIterable, Hashable {
     case hours, minutes
@@ -34,27 +60,44 @@ struct DigitalClockOutline: InsettableShape {
 
 struct DigitalClock: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    @ObservedObject private var language = LanguageManager.shared
+    @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
     let time: ClockTime
     let theme: ClockTheme
     var fontSize: CGFloat = 42
     var showsDisplay = true
     var showHandHints = false
     var exposesControlFields = false
+    /// Lessons that teach the 24-hour clock keep those digits even when the player prefers 12-hour time.
+    var notation: DigitalHourNotation? = nil
+    private var reading: DigitalClockReading {
+        time.digitalReading(notation: notation ?? theme.resolvedHourNotation(device: deviceHourFormat.notation),
+                            languageCode: language.effective.code)
+    }
     var body: some View {
-        HStack(spacing: theme.numerals == .digital ? fontSize * 0.1 : 0) {
-            pair(String(time.digitalText.prefix(2)), number: 1, ink: theme.hourHex)
-            if theme.numerals == .digital {
-                SevenSegmentDigit(character: ":").frame(width: fontSize * 0.15, height: fontSize * 0.86)
-            } else {
-                Text(verbatim: ":")
+        HStack(alignment: .center, spacing: fontSize * 0.12) {
+            HStack(spacing: theme.numerals == .digital ? fontSize * 0.1 : 0) {
+                pair(reading.hour, number: 1, ink: theme.hourHex)
+                if theme.numerals == .digital {
+                    SevenSegmentDigit(character: ":").frame(width: fontSize * 0.15, height: fontSize * 0.86)
+                } else {
+                    Text(verbatim: ":")
+                }
+                pair(reading.minute, number: 2, ink: theme.minuteHex)
             }
-            pair(String(time.digitalText.suffix(2)), number: 2, ink: theme.minuteHex)
+            if let period = reading.period {
+                Text(verbatim: period)
+                    .font(.system(size: fontSize * 0.34, weight: .heavy, design: theme.numerals.fontDesign))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .accessibilityHidden(true)
+            }
         }
         .font(.system(size: fontSize, weight: .heavy, design: theme.numerals.fontDesign))
         .monospacedDigit()
         .padding(.vertical, theme.numerals == .digital ? fontSize * 0.08 : 0)
         .foregroundStyle(Color(dinoHex: theme.digitalInkHex))
-        .padding(.horizontal, showsDisplay ? fontSize * (theme.digitalShape == .oval ? 0.62 : 0.38) : 0)
+        .padding(.horizontal, showsDisplay ? fontSize * horizontalPadding : 0)
         .padding(.vertical, showsDisplay ? fontSize * 0.22 : 0)
         .background {
             if showsDisplay {
@@ -69,6 +112,14 @@ struct DigitalClock: View {
         }
         .padding(.top, showHandHints ? 48 : 0)
         .environment(\.layoutDirection, .leftToRight)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(reading.text)
+    }
+
+    private var horizontalPadding: CGFloat {
+        let oval = theme.digitalShape == .oval
+        if reading.period == nil { return oval ? 0.62 : 0.38 }
+        return oval ? 0.46 : 0.28
     }
 
     private func pair(_ text: String, number: Int, ink: UInt32) -> some View {
@@ -157,6 +208,8 @@ private struct SevenSegmentDigit: View {
 struct DigitalClockControl: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ObservedObject private var language = LanguageManager.shared
+    @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
     @Binding var hour: Int
     let theme: ClockTheme
     var minute = 0
@@ -167,10 +220,15 @@ struct DigitalClockControl: View {
     var showHandHints = false
     var feedbackCorrect: Bool? = nil
     var showsControls = true
+    var notation: DigitalHourNotation? = nil
     private var time: ClockTime { ClockTime(hour: hour, minute: minute) }
+    private var reading: DigitalClockReading {
+        time.digitalReading(notation: notation ?? theme.resolvedHourNotation(device: deviceHourFormat.notation),
+                            languageCode: language.effective.code)
+    }
 
     var body: some View {
-        DigitalClock(time: time, theme: theme, fontSize: fontSize, exposesControlFields: true)
+        DigitalClock(time: time, theme: theme, fontSize: fontSize, exposesControlFields: true, notation: notation)
             .accessibilityHidden(true)
             .modifier(ClockAnswerOutline(visible: feedbackCorrect != nil, correct: feedbackCorrect == true))
             .padding(.vertical, 48)
@@ -205,7 +263,7 @@ struct DigitalClockControl: View {
             .padding(.top, showHandHints ? 48 : 0)
             .disabled(feedbackCorrect != nil)
             .accessibilityElement(children: .contain)
-            .accessibilityLabel(time.digitalText)
+            .accessibilityLabel(reading.text)
             .accessibilityIdentifier(valueIdentifier)
             .environment(\.layoutDirection, .leftToRight)
     }
@@ -215,7 +273,7 @@ struct DigitalClockControl: View {
         let labelKey = minutes
             ? (direction > 0 ? "dino.minuteMore" : "dino.minuteLess")
             : (direction > 0 ? "dino.hourMore" : "dino.hourLess")
-        let value = String(minutes ? time.digitalText.suffix(2) : time.digitalText.prefix(2))
+        let value = minutes ? reading.minute : reading.hour
         return Button { adjust(direction, minutes: minutes) } label: {
             Image(systemName: direction > 0 ? "chevron.up" : "chevron.down")
                 .font(.system(size: 18, weight: .bold))

@@ -42,9 +42,7 @@ struct WorldRouteTrail: View, Equatable {
         return above - bannerTopPadding - bannerFaceCenterY
     }
     static func chapterRouteHeight(topClearance: CGFloat, worldID: Int) -> CGFloat {
-        let tail = worldID == 5 ? CrystalCaveThresholdLayout.exitChapterTail(topClearance: topClearance)
-                               : chapterTail(topClearance: topClearance)
-        return chapterFirstNodeY + 9 * levelSpacing + tail
+        chapterFirstNodeY + 9 * levelSpacing + chapterTail(topClearance: topClearance)
     }
     static func jungleRouteHeight(topClearance: CGFloat) -> CGFloat {
         topClearance + JungleMapLayout.firstNodeY + CGFloat(JungleMapLayout.levelPositions.count - 1) * levelSpacing + chapterTail(topClearance: topClearance)
@@ -4305,12 +4303,12 @@ private enum VolcanoWorldLayout {
         let field: BankField
         if let cached = bankFields.object(forKey: key) { field = cached }
         else {
-            let end = layout.height - layout.routeOffset + 80
             let sides = [false, true].map { side -> [CGPoint] in
-                // Start on the real horizontal mouth. Including the invisible
-                // vertical placeholder before it creates a chord and a kink
-                // when the offset contour turns back toward the inlet.
+                // Sample between the real horizontal mouths. The invisible
+                // vertical placeholders beyond them would introduce a chord
+                // and a kink where the offset contour turns toward the side.
                 let start = inletStart(layout: layout, right: side) - layout.routeOffset + 0.01
+                let end = outletEnd(layout: layout, right: side) - layout.routeOffset - 0.01
                 let count = Int(ceil((end - start) / 2))
                 var points: [CGPoint] = []
                 let sign: CGFloat = side ? -1 : 1
@@ -4345,7 +4343,7 @@ private enum VolcanoWorldLayout {
         // Follow the actual inlet around the sand, then ease into the same
         // roadside contour used farther down the chapter.
         let entry = smooth((sectionY - inletEnd(layout: layout, right: right) + 40) / 120)
-        let exit = smooth((layout.height - sectionY - 120) / 200)
+        let exit = 1 - smooth((sectionY - outletStart(layout: layout, right: right) + 40) / 120)
         let blend = min(entry, exit)
         // A shared centre line keeps the rock edge in phase with each bend.
         let roadside = layout.centerX(at: y) + (right ? 1 : -1) *
@@ -4799,12 +4797,27 @@ private enum VolcanoWorldLayout {
         layout.routeOffset + (isBroad(layout.width) ? (right ? 85 : 160) : (right ? 115 : 230))
     }
 
+    /// Stagger the mouths as at the entrance. Both the rock banks and the
+    /// animated lava follow these same curves all the way out of view.
+    static func outletStart(layout: WorldSceneryLayout, right: Bool) -> CGFloat {
+        let lastBend = WorldRouteTrail.chapterFirstNodeY + 8 * WorldRouteTrail.levelSpacing
+        return layout.routeOffset + lastBend + (right ? 75 : 0)
+    }
+
+    static func outletEnd(layout: WorldSceneryLayout, right: Bool) -> CGFloat {
+        layout.height - (right ? 70 : 150)
+    }
+
     static func channelPoint(layout: WorldSceneryLayout, right: Bool, y: CGFloat) -> CGPoint {
         let sectionY = y + layout.routeOffset
         let outside: CGFloat = right ? layout.width + 90 : -90
         func roadside(_ y: CGFloat) -> CGFloat {
             let wander = sin(y / 97 + (right ? 1.8 : 0)) * 6 + sin(y / 43) * 3
             return layout.centerX(at: y) + (right ? 1 : -1) * (102 + wander) * layout.scale
+        }
+        func cubic(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat, _ d: CGFloat, _ t: CGFloat) -> CGFloat {
+            let u = 1 - t
+            return u*u*u*a + 3*u*u*t*b + 3*u*t*t*c + t*t*t*d
         }
         let entryStart = inletStart(layout: layout, right: right)
         let entryEnd = inletEnd(layout: layout, right: right)
@@ -4816,10 +4829,6 @@ private enum VolcanoWorldLayout {
             let handle = min(245, (entryEnd - entryStart) * 0.38)
             let c1X = right ? layout.width * (isBroad(layout.width) ? 0.64 : 0.38) : layout.width * 0.24
             let c2X = endX - slope * handle
-            func cubic(_ a: CGFloat, _ b: CGFloat, _ c: CGFloat, _ d: CGFloat, _ t: CGFloat) -> CGFloat {
-                let u = 1 - t
-                return u*u*u*a + 3*u*u*t*b + 3*u*t*t*c + t*t*t*d
-            }
             // Invert the curve's height so the inlet can start horizontally
             // at the side, then meet the river with the same downstream tangent.
             var low: CGFloat = 0, high: CGFloat = 1
@@ -4830,9 +4839,25 @@ private enum VolcanoWorldLayout {
             }
             return CGPoint(x: cubic(outside, c1X, c2X, endX, (low + high) / 2), y: y)
         }
-        let exit = min(1, max(0, (layout.height - 110 - sectionY) / 210))
-        let blend = exit * exit * (3 - 2 * exit)
-        return CGPoint(x: outside + (roadside(y) - outside) * blend, y: y)
+        let exitStart = outletStart(layout: layout, right: right)
+        let exitEnd = outletEnd(layout: layout, right: right)
+        guard sectionY > exitStart else { return CGPoint(x: roadside(y), y: y) }
+        guard sectionY < exitEnd else { return CGPoint(x: outside, y: y) }
+        let startY = exitStart - layout.routeOffset
+        let startX = roadside(startY)
+        let slope = (roadside(startY + 1) - roadside(startY - 1)) / 2
+        let handle = min(245, (exitEnd - exitStart) * 0.38)
+        let c1X = startX + slope * handle
+        let c2X = outside + (startX - outside) * 0.32
+        // Reverse the entrance construction: a matching river tangent opens
+        // into a horizontal side mouth, without a pinched elbow at the end.
+        var low: CGFloat = 0, high: CGFloat = 1
+        for _ in 0..<17 {
+            let t = (low + high) / 2
+            if cubic(exitStart, exitStart + handle, exitEnd, exitEnd, t) < sectionY { low = t }
+            else { high = t }
+        }
+        return CGPoint(x: cubic(startX, c1X, c2X, outside, (low + high) / 2), y: y)
     }
 
     /// Channels leave through the sides before either chapter boundary.
@@ -5335,10 +5360,35 @@ private struct VolcanoWorldPainter {
                      width: w * 1.04, height: 310, color: i % 2 == 0 ? 0x807079 : 0x9B837B, opacity: 0.13)
             p.glow(CGPoint(x: w * 0.5, y: y + 90), radius: w * 0.35, color: 0xFFC38A, opacity: 0.07)
         }
+        p.villageApron(layout: scenery)
         p.ashShoulders(layout: scenery)
         p.riverbeds(layout: scenery)
         p.appendScenery(layout: scenery)
         p.steam(at: CGPoint(x: w * 0.5, y: 1685), width: w * 1.1, opacity: 0.10)
+    }
+
+    /// Low, uneven terraces echo the entrance dunes. They reveal the meadow
+    /// beneath the outgoing basalt instead of ending in a horizontal fog band.
+    private func villageApron(layout: WorldSceneryLayout) {
+        let w = layout.width, end = layout.height - layout.routeOffset
+        for (row, colors) in [[UInt32(0x9C9684), 0xB0B69A], [0xB0C29E, 0xBED6AD], [0xC1DDB4, 0xC7E8BE]].enumerated() {
+            let start = end - 340 + CGFloat(row) * 88
+            var terrace = Path()
+            for index in 0...80 {
+                let t = CGFloat(index) / 80
+                let y = start + sin(t * 5.4 + CGFloat(row) * 1.7) * 32
+                    + sin(t * 11.3 + CGFloat(row) * 0.8) * 9 + (t - 0.5) * 36
+                let point = CGPoint(x: w * t, y: y)
+                if index == 0 { terrace.move(to: point) } else { terrace.addLine(to: point) }
+            }
+            let crest = terrace
+            terrace.addLine(to: CGPoint(x: w, y: end + 2))
+            terrace.addLine(to: CGPoint(x: 0, y: end + 2)); terrace.closeSubpath()
+            context.fill(terrace, with: .linearGradient(Gradient(colors: colors.map { Color(dinoHex: $0) }),
+                startPoint: CGPoint(x: 0, y: start - 32), endPoint: CGPoint(x: 0, y: end - 20)))
+            context.stroke(crest, with: .color(Color(dinoHex: 0xE4DFB8).opacity(0.18)),
+                style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
+        }
     }
 
     /// Sand and wind-worn dune crests remain visible above the later basalt
@@ -5392,6 +5442,10 @@ private struct VolcanoWorldPainter {
         ash.clipToLayer { mask in
             mask.fill(shoulder, with: .linearGradient(Gradient(colors: [.clear, .white]),
                 startPoint: CGPoint(x: 0, y: start), endPoint: CGPoint(x: 0, y: -layout.routeOffset + 90)))
+        }
+        ash.clipToLayer { mask in
+            mask.fill(shoulder, with: .linearGradient(Gradient(colors: [.white, .clear]),
+                startPoint: CGPoint(x: 0, y: end - 360), endPoint: CGPoint(x: 0, y: end - 50)))
         }
         ash.fill(shoulder, with: .linearGradient(Gradient(stops: [
             .init(color: Color(dinoHex: 0xE3CFAE), location: 0),
@@ -7272,8 +7326,15 @@ private enum CrystalCaveLifeLayout {
         let right = i.isMultiple(of:2), sign: CGFloat = right ? 1 : -1
         let y = layout.routeOffset + 62 + CGFloat(i/2)*64 + (right ? 0 : 39)
         let x = wallX(at:y,right:right,distance:153,layout:layout) + sign*18*layout.scale
-        let size = layout.scale * (0.48 + CGFloat(i%4)*0.12)
-        let point = clearTimber(CGPoint(x:x,y:y),radius:66*size,rise:136*size,drop:28*size,right:right,layout:layout)
+        let taper = 1 - 0.56 * departureProgress(at: y, layout: layout)
+        let size = layout.scale * (0.48 + CGFloat(i%4)*0.12) * taper
+        var point = clearTimber(CGPoint(x:x,y:y),radius:66*size,rise:136*size,drop:28*size,right:right,layout:layout)
+        let boss = CGRect(x: layout.width - 169 * layout.scale,
+                          y: layout.routeOffset + 1675 - 240 * layout.scale,
+                          width: 180 * layout.scale, height: 300 * layout.scale)
+        let mineral = CGRect(x: point.x - 66 * size, y: point.y - 136 * size,
+                             width: 132 * size, height: 164 * size)
+        if right && mineral.intersects(boss) { point.x = max(point.x, boss.maxX + 66 * size) }
         return (point,size,(i*7+i/4)%6)
     }
 
@@ -7308,7 +7369,14 @@ private enum CrystalCaveLifeLayout {
         let wall = bend + sign * (distance * scale + relief)
         // The sides grow below the entrance crown, after the outdoor clearing.
         let entered = smooth((y - 84 * scale) / (220 * scale))
-        return outside + (wall - outside) * entered
+        let enclosed = outside + (wall - outside) * entered
+        let departure = departureProgress(at: y, layout: layout)
+        return enclosed + (outside - enclosed) * departure
+    }
+
+    static func departureProgress(at y: CGFloat, layout: WorldSceneryLayout) -> CGFloat {
+        let t = min(1, max(0, (y - layout.height + 310 * layout.scale) / (300 * layout.scale)))
+        return t * t * t * (t * (6 * t - 15) + 10)
     }
 
     static func glint(index: Int, layout: WorldSceneryLayout) -> (point: CGPoint, depth: CGFloat) {
@@ -7408,16 +7476,6 @@ private struct CrystalCaveThresholdLayout {
     }
     // Fit the stone crowns after the boss caption, including on a 320pt phone.
     var entranceLift: CGFloat { min(100 * scale, WorldRouteTrail.chapterTail(topClearance: topClearance) - 85 + 34 * scale) }
-    // The inner lining is 146pt wide. Leave 16pt around the map Dino's full frame.
-    private static func exitScale(topClearance: CGFloat) -> CGFloat { (82 + topClearance + 16) / 146 }
-    var exitScale: CGFloat { Self.exitScale(topClearance: topClearance) }
-    // Move the boundary down instead of shrinking the doorway to fit above it.
-    // Include the rock hood (-128), its spring offset (-118), and the boss caption.
-    static func exitChapterTail(topClearance: CGFloat) -> CGFloat {
-        max(WorldRouteTrail.chapterTail(topClearance: topClearance), 85 - 12 + (128 + 118) * exitScale(topClearance: topClearance))
-    }
-    var exitSpringY: CGFloat { 12 - 118 * exitScale }
-    var exitHeadroom: CGFloat { max(Self.headroom, (128 + 118) * exitScale) }
     static let headroom: CGFloat = 256
 }
 
@@ -7433,22 +7491,6 @@ struct CrystalCaveEntranceForeground: View, Equatable {
             CrystalCavePainter(context: c).entranceForeground(width: size.width)
         }
         .frame(height: 600).clipped().offset(y: -CrystalCaveThresholdLayout.headroom)
-        .allowsHitTesting(false).accessibilityHidden(true)
-    }
-}
-
-/// The departure gate crosses the trail after level 50, before the city.
-struct CrystalCaveExitForeground: View, Equatable {
-    var body: some View {
-        GeometryReader { geometry in
-            let headroom = CrystalCaveThresholdLayout(width: geometry.size.width).exitHeadroom
-            Canvas { context, size in
-                var c = context
-                c.translateBy(x: 0, y: headroom)
-                CrystalCavePainter(context: c).exitForeground(width: size.width)
-            }
-            .frame(height: headroom + 360).clipped().offset(y: -headroom)
-        }
         .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
@@ -7535,36 +7577,23 @@ private struct CrystalCavePainter {
         context.fill(shape, with: .color(Color(dinoHex: 0xF2FFF7).opacity(0.92)))
     }
 
-    private enum Passage { case arrival, departure }
-
     private func smooth(_ value: CGFloat) -> CGFloat {
         let t = min(1, max(0, value))
         return t * t * t * (t * (6 * t - 15) + 10)
     }
 
-    /// The same cross-section is drawn on both sides of each chapter boundary.
-    private func wallX(at y: CGFloat, right: Bool, distance: CGFloat, layout: WorldSceneryLayout, passage: Passage? = nil) -> CGFloat {
-        let scale = layout.scale, sign: CGFloat = right ? 1 : -1
-        let joint = layout.width / 2 + sign * distance * scale
-        let outside = right ? layout.width + 110 * scale : -110 * scale
-        if let passage {
-            if passage == .departure {
-                let framed = layout.width / 2 + sign * distance * scale * (1 - 0.14 * smooth(y / (170 * scale)))
-                return framed + (outside - framed) * smooth((y - 160 * scale) / (180 * scale))
-            }
-            return outside + (joint - outside) * smooth((y - layout.height + 520) / 520)
-        }
-        return CrystalCaveLifeLayout.wallX(at: y, right: right, distance: distance, layout: layout)
+    private func wallX(at y: CGFloat, right: Bool, distance: CGFloat, layout: WorldSceneryLayout) -> CGFloat {
+        CrystalCaveLifeLayout.wallX(at: y, right: right, distance: distance, layout: layout)
     }
 
-    private func wallPath(right: Bool, distance: CGFloat, layout: WorldSceneryLayout, passage: Passage? = nil) -> Path {
+    private func wallPath(right: Bool, distance: CGFloat, layout: WorldSceneryLayout) -> Path {
         let outside = right ? layout.width + 160 : -160
         return Path { path in
             path.move(to: CGPoint(x: outside, y: -10))
             let count = Int(ceil((layout.height + 32) / 8))
             for i in 0...count {
                 let y = -8 + (layout.height + 32) * CGFloat(i) / CGFloat(count)
-                path.addLine(to: CGPoint(x: wallX(at: y, right: right, distance: distance, layout: layout, passage: passage), y: y))
+                path.addLine(to: CGPoint(x: wallX(at: y, right: right, distance: distance, layout: layout), y: y))
             }
             path.addLine(to: CGPoint(x: outside, y: layout.height + 24))
             path.closeSubpath()
@@ -7647,7 +7676,8 @@ private struct CrystalCavePainter {
         let rows = Int(ceil((layout.height - layout.routeOffset + 90 * s) / step))
         for row in 0..<rows {
             let base = layout.routeOffset + CGFloat(row) * step
-            let height = (92 + CGFloat((row * 7 + (right ? 3 : 0)) % 5) * 7) * s
+            let taper = 1 - 0.60 * CrystalCaveLifeLayout.departureProgress(at: base, layout: layout)
+            let height = (92 + CGFloat((row * 7 + (right ? 3 : 0)) % 5) * 7) * s * taper
             // Sample the full height so a projecting corner stays off the trail.
             let edges = (0...6).map { i in
                 wallX(at: base - height + CGFloat(i) * height / 6,
@@ -7659,7 +7689,7 @@ private struct CrystalCavePainter {
             let columns = max(1, Int(ceil((span + 45 * s) / (64 * s))))
             for column in (0..<columns).reversed() {
                 let seed = row * 13 + column * 7 + (right ? 19 : 0)
-                let width = (88 + CGFloat(seed % 4) * 8) * s
+                let width = (88 + CGFloat(seed % 4) * 8) * s * taper
                 let stagger = column == 0 ? 0 : CGFloat(row % 3 - 1) * 13 * s
                 let x = inner + sign * (CGFloat(column) * 64 * s - 4 * s + stagger)
                 let y = base + CGFloat(seed % 5 - 2) * 4 * s
@@ -7679,471 +7709,42 @@ private struct CrystalCavePainter {
         }
     }
 
-    /// The compact doorway reveals the city underneath its inner arch.
-    /// Outside the pillars the cave retreats toward the edges of the screen.
-    private func exitBoundaryY(x: CGFloat, width: CGFloat, scale: CGFloat) -> CGFloat {
-        let threshold = CrystalCaveThresholdLayout(width: width)
-        let d = abs(x - width / 2), inner = 82 * threshold.exitScale
-        if d <= inner {
-            let t = d / inner
-            return threshold.exitSpringY - 76 * sqrt(max(0, 1 - t * t)) * threshold.exitScale
-        }
-        let foot = threshold.exitSpringY + 105 * threshold.exitScale
-        let shoulder = max(120 * threshold.exitScale, 57 * scale)
-        if d < shoulder {
-            return threshold.exitSpringY + (foot - threshold.exitSpringY) * smooth((d - inner) / (shoulder - inner))
-        }
-        // A shallow, broken footline replaces the descending banks.
-        // Both sides meet the city at essentially the same height.
-        return (8 + sin(x / (39 * scale)) * 1.8 + sin(x / (17 * scale)) * 0.9) * scale
+    /// Daylight warms the clearing as the complete rock silhouettes leave at the sides.
+    /// Its final colour matches the city terrain at the chapter boundary.
+    private func departureGround(layout: WorldSceneryLayout) {
+        let start = layout.height - 300 * layout.scale
+        let end = layout.height
+        context.fill(Path(CGRect(x: 0, y: start, width: layout.width, height: end - start)),
+                     with: .linearGradient(Gradient(stops: [
+                        .init(color: Color(dinoHex: 0x719BA6).opacity(0), location: 0),
+                        .init(color: Color(dinoHex: 0x88A6AA).opacity(0.52), location: 0.32),
+                        .init(color: Color(dinoHex: 0x9CB5B0).opacity(0.9), location: 0.68),
+                        .init(color: Color(dinoHex: 0xACBEB4), location: 1)
+                     ]), startPoint: CGPoint(x: 0, y: start), endPoint: CGPoint(x: 0, y: end)))
     }
 
-    private func exitCaveMask(width: CGFloat, height: CGFloat, scale: CGFloat) -> Path {
-        Path { p in
-            p.move(to: CGPoint(x: 0, y: -160))
-            p.addLine(to: CGPoint(x: width, y: -160))
-            for i in (0...96).reversed() {
-                let x = width * CGFloat(i) / 96
-                let y = min(height, exitBoundaryY(x: x, width: width, scale: scale))
-                p.addLine(to: CGPoint(x: x, y: y))
-            }
-            p.closeSubpath()
-        }
-    }
-
-    /// The gate sits in one cliff face. Its foot stays level across the map;
-    /// the individual stone courses build upward into the existing cavern.
-    func exitForeground(width: CGFloat) {
-        exitArch(width: width)
-    }
-
-    func exitWall(width: CGFloat, boundaryY: CGFloat = 0) {
-        let threshold = CrystalCaveThresholdLayout(width: width)
-        let s = threshold.scale
-        var wallContext = context
-        wallContext.translateBy(x: 0, y: boundaryY)
-        let wall = CrystalCavePainter(context: wallContext)
-        for right in [false, true] {
-            let span = width / 2 - (right ? 130 : 134) * threshold.exitScale
-            let c: GraphicsContext = {
-                var transformed = wall.context
-                if right { transformed.translateBy(x: width, y: 0); transformed.scaleBy(x: -1, y: 1) }
-                return transformed
-            }()
-            let p = CrystalCavePainter(context: c)
-            p.ground(at: CGPoint(x: span * 0.46, y: 14 * s), width: span * 1.35,
-                     height: 42 * s, color: 0x4C6875, opacity: 0.23)
-            // Each successive course reaches farther toward the gate. The exposed
-            // steps are the boulders' own edges, with no shared silhouette mask.
-            let reaches: [CGFloat] = right ? [0.23, 0.36, 0.52, 0.67, 0.79, 0.94, 1.07]
-                                          : [0.19, 0.34, 0.51, 0.65, 0.81, 0.95, 1.08]
-            for row in reaches.indices {
-                let reach = span * reaches[row]
-                let count = max(1, Int(ceil((reach + 24 * s) / (61 * s))))
-                let spacing = (reach + 24 * s) / CGFloat(count)
-                for column in 0..<count {
-                    let seed = row * 11 + column * 7 + (right ? 23 : 0)
-                    let height = (79 + CGFloat(seed % 5) * 7) * s
-                    let base = (-300 + CGFloat(row) * 50 + CGFloat(seed % 3) * 3) * s
-                    let outer = -24 * s + CGFloat(column) * spacing
-                    let edge = column == count - 1 ? reach : outer + spacing + 28 * s
-                    p.wallBoulder(in: CGRect(x: outer, y: base - height,
-                                            width: edge - outer, height: height),
-                                  variation: seed, warm: row >= 5)
-                }
-            }
-            // Two distinct planting compositions grow from joints and shelves.
-            // Each mineral root belongs to a ledge or crack, away from the passage.
-            if right {
-                p.cluster(at: CGPoint(x: span * 0.18, y: -68 * s), size: 0.23 * s, variation: 4)
-                p.cluster(at: CGPoint(x: span * 0.77, y: -150 * s), size: 0.28 * s, variation: 4)
-                p.exitMineralSeam(at: CGPoint(x: span * 0.39, y: -126 * s), size: 0.61 * s, tint: 3, mirror: true)
-                p.exitMineralSeam(at: CGPoint(x: span * 0.43, y: -223 * s), size: 0.47 * s, tint: 4)
-                p.moss(at: CGPoint(x: span * 0.91, y: -138 * s), size: 0.36 * s)
-                p.hangingVine(at: CGPoint(x: span * 0.89, y: -135 * s), length: 39, mirror: true, scale: 0.43 * s)
-                p.moss(at: CGPoint(x: span * 0.62, y: -41 * s), size: 0.61 * s)
-                p.hangingVine(at: CGPoint(x: span * 0.66, y: -91 * s), length: 71, mirror: true, scale: 0.53 * s)
-                p.plants(at: CGPoint(x: span * 0.87, y: 4 * s), size: 0.45 * s)
-                JunglePainter(context: c).fern(at: CGPoint(x: span * 0.13, y: 6 * s), size: 0.37 * s, flipped: true)
-                p.moss(at: CGPoint(x: span * 0.81, y: -55 * s), size: 0.33 * s)
-                JunglePainter(context: c).flowers(at: CGPoint(x: span * 0.81, y: -56 * s), size: 0.27 * s)
-                p.moss(at: CGPoint(x: span * 0.93, y: -81 * s), size: 0.47 * s)
-            } else {
-                p.cluster(at: CGPoint(x: span * 0.36, y: -143 * s), size: 0.34 * s, variation: 3)
-                p.cluster(at: CGPoint(x: span * 0.25, y: -257 * s), size: 0.26 * s, variation: 3)
-                p.exitMineralSeam(at: CGPoint(x: span * 0.09, y: -103 * s), size: 0.64 * s, tint: 4)
-                p.exitMineralSeam(at: CGPoint(x: span * 0.67, y: -176 * s), size: 0.49 * s, tint: 3)
-                p.moss(at: CGPoint(x: span * 0.45, y: -239 * s), size: 0.36 * s)
-                p.hangingVine(at: CGPoint(x: span * 0.47, y: -237 * s), length: 47, mirror: false, scale: 0.45 * s)
-                p.moss(at: CGPoint(x: span * 0.72, y: -83 * s), size: 0.63 * s)
-                p.hangingVine(at: CGPoint(x: span * 0.75, y: -72 * s), length: 78, mirror: false, scale: 0.61 * s)
-                p.moss(at: CGPoint(x: span * 0.20, y: -28 * s), size: 0.50 * s)
-                JunglePainter(context: c).fern(at: CGPoint(x: span * 0.62, y: 7 * s), size: 0.33 * s, flipped: false)
-                JunglePainter(context: c).flowers(at: CGPoint(x: span * 0.76, y: -79 * s), size: 0.34 * s)
-                p.plants(at: CGPoint(x: span * 0.92, y: 5 * s), size: 0.36 * s)
-            }
-            for i in 0..<5 {
-                let x = span * (CGFloat(i) + 0.35) / 5
-                p.rock(at: CGPoint(x: x, y: (8 + CGFloat((i + (right ? 1 : 0)) % 3)) * s),
-                       size: (0.09 + CGFloat((i * 3 + (right ? 1 : 0)) % 4) * 0.025) * s)
-            }
-        }
-        wall.exitShoulders(width: width)
-    }
-
-    /// Rock shoulders bridge the two small gaps above the outer gate stones.
-    /// They stay outside the inner opening and below the boss caption's centre lane.
-    private func exitShoulders(width: CGFloat) {
-        let threshold = CrystalCaveThresholdLayout(width: width)
-        at(CGPoint(x: width / 2, y: threshold.exitSpringY), size: threshold.exitScale) { p in
-            let layers: [[CGPoint]] = [
-                [.init(x:-360,y:-268),.init(x:-282,y:-286),.init(x:-199,y:-240),.init(x:-131,y:-195),
-                 .init(x:-115,y:-142),.init(x:-177,y:-112),.init(x:-280,y:-120),.init(x:-351,y:-164)],
-                [.init(x:349,y:-276),.init(x:264,y:-295),.init(x:188,y:-235),.init(x:117,y:-193),
-                 .init(x:108,y:-137),.init(x:180,y:-116),.init(x:296,y:-127),.init(x:356,y:-181)],
-                [.init(x:-309,y:-168),.init(x:-237,y:-191),.init(x:-167,y:-172),.init(x:-94,y:-116),
-                 .init(x:-112,y:-80),.init(x:-189,y:-64),.init(x:-286,y:-90)],
-                [.init(x:319,y:-173),.init(x:252,y:-209),.init(x:173,y:-177),.init(x:97,y:-120),
-                 .init(x:116,y:-83),.init(x:212,y:-64),.init(x:305,y:-103)]
-            ]
-            for (index, points) in layers.enumerated() {
-                let stone = p.contour(points, radius: index < 2 ? 9 : 7)
-                p.context.fill(stone.offsetBy(dx: 2,dy: 6), with: .color(Color(dinoHex:0x253D5F).opacity(0.65)))
-                p.material(stone, colors: index < 2 ? [0x94A3B5,0x6A809F,0x3D5679] : [0xA6B1BB,0x7D8FA5,0x4D6484])
-                let clipped: GraphicsContext = {
-                    var c = p.context; c.clip(to: stone); return c
-                }()
-                let facet = CrystalCavePainter(context: clipped)
-                let r = stone.boundingRect
-                let fold = CGPoint(x:r.midX + (index % 2 == 0 ? -8 : 12),y:r.minY+r.height*0.44)
-                facet.polygon([points[0],points[1],points[2],points[3],fold], colors:[0xC0C6C6,0x91A2B5,0x6C829F])
-                facet.polygon([fold,points[3],points[4],points[5],points[6]], colors:[0x758BA8,0x4B6488,0x354F73])
-                facet.line([.init(x:r.midX-17,y:r.minY+9),fold,.init(x:fold.x-9,y:fold.y+21)],
-                           color:0x3B5577,width:1.7,opacity:0.75)
-                p.line([points[0],points[1],points[2]],color:0xD3D5CB,width:1.5,opacity:0.42)
-            }
-            // Minerals grow from the shoulder's top ledge; moss roots in its lower seam.
-            p.cluster(at:CGPoint(x:-246,y:-184),size:0.43,variation:3)
-            p.moss(at:CGPoint(x:-180,y:-142),size:0.40)
-            p.hangingVine(at:CGPoint(x:-177,y:-142),length:39,mirror:false,scale:0.64)
-            p.crystal(at:CGPoint(x:198,y:-175),height:42,tint:4)
-            p.crystal(at:CGPoint(x:217,y:-168),height:28,tint:5)
-            p.moss(at:CGPoint(x:238,y:-166),size:0.40)
-            JunglePainter(context:p.context).flowers(at:CGPoint(x:228,y:-166),size:0.30)
-        }
-    }
-
-    /// Small mineral growth is anchored in an exposed crack, with a mossy lower lip.
-    private func exitMineralSeam(at point: CGPoint, size: CGFloat, tint: Int, mirror: Bool = false) {
-        at(point,size:size,mirror:mirror) { p in
-            p.line([.init(x:-17,y:-20),.init(x:-7,y:-9),.init(x:-10,y:1),.init(x:5,y:11),.init(x:23,y:8)],
-                   color:0x2B4568,width:2.3,opacity:0.82)
-            p.line([.init(x:-14,y:-18),.init(x:-5,y:-9),.init(x:-8,y:1)],
-                   color:tint % 3 == 0 ? 0x8FDBE4 : 0xC1A4E4,width:0.8,opacity:0.65)
-            for (x,y,h,angle):(CGFloat,CGFloat,CGFloat,Double) in [(-7,1,28,-18),(3,8,20,16),(13,9,12,30)] {
-                var c = p.context;c.translateBy(x:x,y:y);c.rotate(by:.degrees(angle))
-                CrystalCavePainter(context:c).crystal(at:.zero,height:h,tint:tint)
-            }
-            p.moss(at:CGPoint(x:19,y:11),size:0.24)
-        }
-    }
-
-    /// Overlapping talus binds the lower gate shoulders to the cavern floor.
-    /// These rocks stay outside the passage and sit behind the dressed pillars.
-    private func exitFootings() {
-        for right in [false, true] {
-            at(.zero, mirror: !right) { p in
-                let offset: CGFloat = right ? 5 : -3
-                p.wallBoulder(in: CGRect(x: 145, y: 18 + offset, width: 102, height: 94),
-                              variation: right ? 8 : 6, warm: true)
-                p.wallBoulder(in: CGRect(x: 129, y: 67 - offset, width: 93, height: 63),
-                              variation: right ? 12 : 9, warm: true)
-                p.wallBoulder(in: CGRect(x: 108, y: 100 + offset, width: 76, height: 38),
-                              variation: right ? 14 : 11, warm: true)
-                p.wallBoulder(in: CGRect(x: 196, y: 107 - offset, width: 58, height: 29),
-                              variation: right ? 7 : 13, warm: true)
-                p.rock(at: CGPoint(x: 101, y: 122 + offset), size: 0.34)
-                p.rock(at: CGPoint(x: 177, y: 139 - offset), size: 0.23)
-                p.moss(at: CGPoint(x: 146, y: 127 + offset), size: right ? 0.48 : 0.59)
-                p.moss(at: CGPoint(x: 211, y: 119 - offset), size: 0.32)
-                JunglePainter(context: p.context).fern(at: CGPoint(x: 189, y: 129 - offset),
-                                                     size: right ? 0.33 : 0.27, flipped: right)
-            }
-        }
-    }
-
-    /// Preserve the original arch, pillars and ornaments with uniform scaling.
-    private func exitArch(width: CGFloat) {
-        let threshold = CrystalCaveThresholdLayout(width: width)
-        at(CGPoint(x: width / 2, y: threshold.exitSpringY), size: threshold.exitScale) { p in
-            // A broken mineral hood embeds the dressed arch in the cavern wall.
-            // Its opening matches the masonry, so the road still passes through.
-            let hood = Path { a in
-                a.addLines([.init(x: -193, y: 108), .init(x: -202, y: 55), .init(x: -185, y: -9),
-                            .init(x: -164, y: -58), .init(x: -119, y: -96), .init(x: -65, y: -119),
-                            .init(x: -18, y: -128), .init(x: 26, y: -124), .init(x: 71, y: -113),
-                            .init(x: 129, y: -83), .init(x: 172, y: -40), .init(x: 193, y: 18),
-                            .init(x: 184, y: 107), .init(x: 82, y: 107), .init(x: 82, y: 0)])
-                a.addCurve(to: .init(x: -82, y: 0), control1: .init(x: 82, y: -101.33), control2: .init(x: -82, y: -101.33))
-                a.addLine(to: .init(x: -82, y: 108)); a.closeSubpath()
-            }
-            p.material(hood, colors: [0xA3B1BD, 0x677D99, 0x2A4365])
-            var stoneContext = p.context; stoneContext.clip(to: hood)
-            let stone = CrystalCavePainter(context: stoneContext)
-            // Interlocking blocks tie the arch shoulders into the adjoining cliff.
-            // Their joints rise toward the crown instead of outlining a separate slab.
-            let blocks: [[CGPoint]] = [
-                [.init(x: -191,y: 105),.init(x: -198,y: 63),.init(x: -176,y: 30),.init(x: -112,y: 26),.init(x: -109,y: 104)],
-                [.init(x: -176,y: 30),.init(x: -185,y: -9),.init(x: -159,y: -53),.init(x: -111,y: -19),.init(x: -111,y: 26)],
-                [.init(x: -159,y: -53),.init(x: -163,y: -65),.init(x: -118,y: -99),.init(x: -78,y: -109),.init(x: -108,y: -56),.init(x: -111,y: -19)],
-                [.init(x: -78,y: -109),.init(x: -18,y: -128),.init(x: 24,y: -124),.init(x: 27,y: -103),.init(x: -34,y: -103)],
-                [.init(x: 184,y: 105),.init(x: 194,y: 57),.init(x: 168,y: 32),.init(x: 110,y: 36),.init(x: 110,y: 104)],
-                [.init(x: 168,y: 32),.init(x: 193,y: 18),.init(x: 172,y: -39),.init(x: 132,y: -70),.init(x: 111,y: -12),.init(x: 110,y: 36)],
-                [.init(x: 132,y: -70),.init(x: 129,y: -87),.init(x: 71,y: -116),.init(x: 24,y: -124),.init(x: 27,y: -103),.init(x: 102,y: -64),.init(x: 111,y: -12)]
-            ]
-            for (index, points) in blocks.enumerated() {
-                let boulder = stone.contour(points, radius: 6)
-                stone.material(boulder, colors: index % 2 == 0 ? [0xA3AEB8,0x7B8B9E,0x455D7A] : [0x96A4B2,0x6B819A,0x3D5675])
-                stone.context.stroke(boulder.offsetBy(dx: 0, dy: 1.5), with: .color(Color(dinoHex: 0x304765).opacity(0.62)), lineWidth: 2)
-                if let first = points.first, let last = points.last {
-                    stone.line([.init(x: first.x + 4,y: first.y - 4),.init(x: last.x + 3,y: last.y - 3)],
-                               color: 0xC0C5C0, width: 1.3, opacity: 0.43)
-                }
-            }
-            p.exitFootings()
-            p.ground(at: CGPoint(x: 0, y: 100), width: 280, height: 52, color: 0x31455F, opacity: 0.32)
-            let frame = Path { a in
-                a.move(to: CGPoint(x: -110, y: 98)); a.addLine(to: CGPoint(x: -110, y: 0))
-                a.addCurve(to: CGPoint(x: 110, y: 0), control1: CGPoint(x: -110, y: -139), control2: CGPoint(x: 110, y: -139))
-                a.addLine(to: CGPoint(x: 110, y: 98)); a.addLine(to: CGPoint(x: 82, y: 98))
-                a.addLine(to: CGPoint(x: 82, y: 0))
-                a.addCurve(to: CGPoint(x: -82, y: 0), control1: CGPoint(x: 82, y: -101.33), control2: CGPoint(x: -82, y: -101.33))
-                a.addLine(to: CGPoint(x: -82, y: 98)); a.closeSubpath()
-            }
-            p.context.stroke(frame.offsetBy(dx: 0, dy: 4), with: .color(Color(dinoHex: 0x223959).opacity(0.65)),
-                             style: StrokeStyle(lineWidth: 7, lineJoin: .round))
-            p.material(frame, colors: [0xD9D3BC, 0xA7AEA7, 0x6B7D8C])
-            let reveal = Path { a in
-                a.move(to: .init(x: -81, y: 97)); a.addLine(to: .init(x: -81, y: 0))
-                a.addCurve(to: .init(x: 81, y: 0), control1: .init(x: -81, y: -100), control2: .init(x: 81, y: -100))
-                a.addLine(to: .init(x: 81, y: 97))
-            }
-            p.context.stroke(reveal.offsetBy(dx: 3, dy: 3), with: .color(Color(dinoHex: 0x253C56).opacity(0.65)),
-                             style: StrokeStyle(lineWidth: 6, lineJoin: .round))
-            p.context.stroke(reveal, with: .color(Color(dinoHex: 0xEEE2BC).opacity(0.75)), lineWidth: 1.5)
-            // The inner lining exposes a thick, shadowed tunnel behind the cut stone.
-            let soffit = Path { a in
-                a.move(to: .init(x: -82, y: 97)); a.addLine(to: .init(x: -82, y: 0))
-                a.addCurve(to: .init(x: 82, y: 0), control1: .init(x: -82, y: -101.33), control2: .init(x: 82, y: -101.33))
-                a.addLine(to: .init(x: 82, y: 97)); a.addLine(to: .init(x: 73, y: 97))
-                a.addLine(to: .init(x: 73, y: 3))
-                a.addCurve(to: .init(x: -73, y: 3), control1: .init(x: 73, y: -76), control2: .init(x: -73, y: -76))
-                a.addLine(to: .init(x: -73, y: 97)); a.closeSubpath()
-            }
-            p.material(soffit, colors: [0x213048,0x344056,0x516076])
-            p.moss(at: CGPoint(x: -72, y: -101), size: 0.44)
-            p.moss(at: CGPoint(x: 69, y: -103), size: 0.35)
-
-            // Wedge-shaped voussoirs follow the arch, rather than forming a fence.
-            for i in 0..<9 {
-                let a = Double(i) * .pi / 9, b = Double(i + 1) * .pi / 9
-                let m = (a + b) / 2
-                func point(_ angle: Double, outer: Bool) -> CGPoint {
-                    CGPoint(x: CGFloat(cos(angle)) * (outer ? 109 : 82),
-                            y: -CGFloat(sin(angle)) * (outer ? 104 : 76))
-                }
-                let stone = p.contour([point(a, outer: true), point(m, outer: true), point(b, outer: true),
-                                       point(b, outer: false), point(m, outer: false), point(a, outer: false)], radius: 1.5)
-                p.material(stone, colors: i % 3 == 0 ? [0xE1D7BB, 0xB4B7AA, 0x829194] : [0xD0CFBC, 0x9DA9A5, 0x71828D])
-                p.context.stroke(stone, with: .color(Color(dinoHex: 0x536A7C).opacity(0.85)), lineWidth: 1.3)
-                p.line([point(a + 0.025, outer: true), point(m, outer: true), point(b - 0.025, outer: true)],
-                       color: 0xF5E8C8, width: 1.7, opacity: 0.78)
-                if i % 3 == 1 {
-                    p.line([point(m, outer: true), CGPoint(x: CGFloat(cos(m)) * 98, y: -CGFloat(sin(m)) * 91),
-                            CGPoint(x: CGFloat(cos(m)) * 92 + 4, y: -CGFloat(sin(m)) * 87)],
-                           color: 0x74878F, width: 0.9, opacity: 0.65)
-                }
-            }
-            // A small mineral inlay belongs to the crown stone, below the hood.
-            p.crystal(at: CGPoint(x: 0, y: -90), height: 12, tint: 3)
-            for sign: CGFloat in [-1, 1] {
-                for row in 0..<4 {
-                    let x = sign < 0 ? -110.0 : 82.0
-                    let stone = p.contour([.init(x: x, y: CGFloat(row) * 24 + 1),
-                                           .init(x: x + 28, y: CGFloat(row) * 24 + 2),
-                                           .init(x: x + 27, y: CGFloat(row + 1) * 24),
-                                           .init(x: x + 1, y: CGFloat(row + 1) * 24 - 1)], radius: 2)
-                    p.material(stone, colors: row % 2 == 0 ? [0xD4D0B8, 0xA3ADA4, 0x7A8C90] : [0xC5C8B5, 0x8B9F9D, 0x667F8D])
-                    p.context.stroke(stone, with: .color(Color(dinoHex: 0x657C86)), lineWidth: 1)
-                    p.line([.init(x: x + 3, y: CGFloat(row) * 24 + 3), .init(x: x + 25, y: CGFloat(row) * 24 + 4)],
-                           color: 0xEFE3C4, width: 1, opacity: 0.7)
-                }
-                p.rock(at: CGPoint(x: sign * 109, y: 103), size: 0.53)
-                p.moss(at: CGPoint(x: sign * 100, y: -47), size: 0.72)
-                p.moss(at: CGPoint(x: sign * 119, y: 99), size: 0.61)
-                p.hangingVine(at: CGPoint(x: sign * 116, y: -45), length: 112, mirror: sign > 0, scale: 0.87)
-                // Both lamps hang from brackets fixed into the end pillars.
-                p.timber(from: CGPoint(x: sign * 100, y: -7), to: CGPoint(x: sign * 128, y: -7), width: 5)
-                p.line([.init(x: sign * 118, y: -7), .init(x: sign * 118, y: 17)], color: 0x3B4853, width: 1.8)
-                p.lantern(at: CGPoint(x: sign * 118, y: 55), size: 0.88)
-                p.glow(CGPoint(x: sign * 118, y: 35), radius: 48, color: 0xFFC164, opacity: 0.25)
-                for j in 0..<3 {
-                    let flower = CGPoint(x: sign * CGFloat(104 + j * 8), y: CGFloat(j % 2) * 10 - 46)
-                    for petal in 0..<5 {
-                        let angle = Double(petal) * .pi * 2 / 5
-                        p.oval(CGRect(x: flower.x + CGFloat(cos(angle)) * 3 - 2,
-                                      y: flower.y + CGFloat(sin(angle)) * 3 - 2, width: 4, height: 4),
-                               colors: [0xFFE0DF, 0xE9A3B3])
-                    }
-                    p.oval(CGRect(x: flower.x - 1.5, y: flower.y - 1.5, width: 3, height: 3), colors: [0xFFF1BC, 0xE2BD70])
-                }
-            }
-        }
-    }
-
-    /// Cool cave light gives way to a shaded stone landing and then warm city ground.
-    func exitClearing(width: CGFloat, boundaryY: CGFloat) {
-        let threshold = CrystalCaveThresholdLayout(width: width)
-        let s = threshold.scale
-        var c = context; c.translateBy(x: 0, y: boundaryY)
-        let ambient = CrystalCavePainter(context: c)
-        ambient.ground(at: CGPoint(x: width / 2, y: -38 * s), width: min(width * 1.3, 840),
-                       height: 240 * s, color: 0xEBE8C8, opacity: 0.19)
-        var land = Path()
-        for i in 0...96 {
-            let x = width * CGFloat(i) / 96
-            let point = CGPoint(x: x, y: exitBoundaryY(x: x, width: width, scale: s))
-            if i == 0 { land.move(to: point) } else { land.addLine(to: point) }
-        }
-        land.addLine(to: CGPoint(x: width, y: 240 * s))
-        land.addLine(to: CGPoint(x: 0, y: 240 * s)); land.closeSubpath()
-        c.fill(land, with: .linearGradient(Gradient(stops: [
-            .init(color: Color(dinoHex: 0x879EA2), location: 0),
-            .init(color: Color(dinoHex: 0xA9BBB0), location: 0.28),
-            .init(color: Color(dinoHex: 0xC9D3B7), location: 0.53),
-            .init(color: Color(dinoHex: 0xDCE2BF).opacity(0.7), location: 0.77),
-            .init(color: Color(dinoHex: 0xDCE2BF).opacity(0), location: 1)
-        ]), startPoint: CGPoint(x: 0, y: -60 * s), endPoint: CGPoint(x: 0, y: 240 * s)))
-
-        var paving = c; paving.clip(to: land)
-        let p = CrystalCavePainter(context: paving)
-        let mid = width / 2
-        // Reach into the tunnel with a broken rear edge, below the open arch.
-        let startY = threshold.exitSpringY + 22 * threshold.exitScale
-        let endY = 122 * s
-        let mouth = 124 * threshold.exitScale + 6 * s
-        let outer = min(width * 0.39, 111 * s)
-        func halfWidth(_ t: CGFloat) -> CGFloat { mouth + (outer - mouth) * t }
-        func point(_ u: CGFloat, _ t: CGFloat) -> CGPoint {
-            CGPoint(x: mid + u * halfWidth(t), y: startY + (endY - startY) * t)
-        }
-        let starts: [CGFloat] = [0.050, 0, 0.075, 0.020, 0.090, 0.040, 0.010, 0.065]
-        var perimeter: [CGPoint] = []
-        for column in starts.indices {
-            let u = -1 + CGFloat(column) * 0.25
-            perimeter.append(point(u, starts[column]))
-            perimeter.append(point(u + 0.25, starts[column]))
-        }
-        perimeter += [point(1, 1), point(-1, 1)]
-        let landing = p.contour(perimeter, radius: 2 * s)
-        p.context.fill(landing.offsetBy(dx: 0, dy: 2 * s), with: .color(Color(dinoHex: 0x607C7D).opacity(0.2)))
-        p.material(landing, colors: [0xA4B5AF, 0xCFD1B8, 0xD9D7B9])
-        let tileContext: GraphicsContext = {
-            var clipped = paving; clipped.clip(to: landing); return clipped
-        }()
-        let tiles = CrystalCavePainter(context: tileContext)
-        let rows: [CGFloat] = [0, 0.12, 0.24, 0.37, 0.52, 0.70, 0.85, 1]
-        // The first stones reach different distances into the cave.
-        for row in 0..<(rows.count - 1) {
-            let front = rows[row + 1] - 0.007
-            let stagger: CGFloat = row % 2 == 0 ? 0 : 0.5
-            for column in -1..<8 {
-                let u = -1 + (CGFloat(column) + stagger) * 0.25
-                let back = (row == 0 ? starts[min(7, max(0, column))] : rows[row]) + 0.007
-                let stone = tiles.contour([point(u + 0.009, back), point(u + 0.241, back),
-                                           point(u + 0.241, front), point(u + 0.009, front)], radius: 1.3 * s)
-                let even = (row + column) % 2 == 0
-                let cool: [UInt32] = even ? [0xBAC5BB,0x9EAEA6] : [0xC3CAC0,0xAAB7AA]
-                let warm: [UInt32] = even ? [0xE4DFC3,0xC5CAB1] : [0xDAD9BD,0xB9C3AA]
-                let warmth = Double(smooth((rows[row] - 0.08) / 0.65))
-                let colors = zip(cool, warm).map { Color(dinoHex: $0.0).mixed(with: Color(dinoHex: $0.1), by: warmth) }
-                let bounds = stone.boundingRect
-                tiles.context.fill(stone, with: .linearGradient(Gradient(colors: colors),
-                    startPoint: CGPoint(x: bounds.minX, y: bounds.minY), endPoint: CGPoint(x: bounds.maxX, y: bounds.maxY)))
-                tiles.context.stroke(stone, with: .color(Color(dinoHex: 0x849A91).opacity(0.45)), lineWidth: 0.65 * s)
-                tiles.line([point(u + 0.023, back + 0.008), point(u + 0.228, back + 0.008)],
-                           color: 0xF3EAD0, width: 0.8 * s, opacity: 0.56)
-            }
-        }
-        // Deep tunnel shade fades across the same stones toward the city light.
-        tiles.context.fill(landing, with: .linearGradient(Gradient(colors: [
-            Color(dinoHex: 0x263E59).opacity(0.46), .clear
-        ]), startPoint: CGPoint(x: mid, y: startY), endPoint: CGPoint(x: mid, y: 28 * s)))
-        for side: CGFloat in [-1, 1] {
-            let edge = Path { a in a.move(to: point(side, 0)); a.addLine(to: point(side, 1)) }
-            p.context.stroke(edge, with: .color(Color(dinoHex: 0x8EA39A)),
-                             style: StrokeStyle(lineWidth: 4 * s, lineCap: .round))
-            p.context.stroke(edge.offsetBy(dx: -side * 0.6 * s, dy: -0.5 * s),
-                             with: .color(Color(dinoHex: 0xDCE0C8)), lineWidth: 1.4 * s)
-        }
-    }
-
-    private func passageFloor(layout: WorldSceneryLayout, passage: Passage) -> Path {
-        if passage == .departure { return exitCaveMask(width: layout.width, height: layout.height, scale: layout.scale) }
-        let w = layout.width, h = layout.height
-        let edgeY = passage == .arrival ? h - 520 : layout.routeOffset + 240
-        let middleY = passage == .arrival ? edgeY + 245 : edgeY - 210
-        return Path { p in
-            p.move(to: CGPoint(x: -16, y: edgeY))
-            p.addCurve(to: CGPoint(x: w * 0.5, y: middleY),
-                       control1: CGPoint(x: w * 0.23, y: edgeY), control2: CGPoint(x: w * 0.24, y: middleY))
-            p.addCurve(to: CGPoint(x: w + 16, y: edgeY),
-                       control1: CGPoint(x: w * 0.76, y: middleY), control2: CGPoint(x: w * 0.77, y: edgeY))
-            let outsideY: CGFloat = passage == .arrival ? h + 24 : -24
-            p.addLine(to: CGPoint(x: w + 16, y: outsideY))
-            p.addLine(to: CGPoint(x: -16, y: outsideY)); p.closeSubpath()
-        }
-    }
-
-    /// The cavern stays closed until the small, sunlit departure gate.
-    func approach(in size: CGSize, routeOffset: CGFloat, leavingCave: Bool) {
-        let layout = WorldSceneryLayout(width: size.width, height: size.height, routeOffset: routeOffset)
-        let passage: Passage = leavingCave ? .departure : .arrival
-        fillFloor(passageFloor(layout: layout, passage: passage), width: size.width)
-        var c = context; c.clip(to: passageFloor(layout: layout, passage: passage))
-        let cave = CrystalCavePainter(context: c)
-        cave.enclosure(layout: layout, passage: passage)
-        // Departure minerals belong to complete shelves in exitForeground.
-        // Clipping hanging crystals to the terrain contour cut their tips off.
-        if passage == .arrival {
-            var scene = DepthScene()
-            cave.appendOverhangs(layout: layout, passage: passage, to: &scene)
-            scene.draw()
-        }
-    }
-
-    private func enclosure(layout: WorldSceneryLayout, passage: Passage? = nil) {
+    private func enclosure(layout: WorldSceneryLayout) {
         let w = layout.width, h = layout.height, scale = layout.scale
         for right in [false, true] {
-            let shade = wallPath(right: right, distance: 102, layout: layout, passage: passage)
+            let shade = wallPath(right: right, distance: 102, layout: layout)
             context.fill(shade, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0x597699), Color(dinoHex: 0x334D77)]),
                                                         startPoint: CGPoint(x: w / 2, y: 0), endPoint: CGPoint(x: right ? w : 0, y: 0)))
-            let face = wallPath(right: right, distance: 131, layout: layout, passage: passage)
+            let face = wallPath(right: right, distance: 131, layout: layout)
             context.fill(face, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0x8498B4), Color(dinoHex: 0x4B6892), Color(dinoHex: 0x2C426A)]),
                                                      startPoint: CGPoint(x: right ? w * 0.64 : w * 0.32, y: 0),
                                                      endPoint: CGPoint(x: right ? w + 50 : -50, y: 0)))
-            let outer = wallPath(right: right, distance: 189, layout: layout, passage: passage)
+            let outer = wallPath(right: right, distance: 189, layout: layout)
             context.fill(outer, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0x394D78), Color(dinoHex: 0x202F54)]),
                                                         startPoint: CGPoint(x: w / 2, y: 0), endPoint: CGPoint(x: right ? w : 0, y: 0)))
             // Bedding planes stay inside a single continuous wall mass.
             var rockContext = context; rockContext.clip(to: face)
             let rock = CrystalCavePainter(context: rockContext)
             let sign: CGFloat = right ? 1 : -1
-            let strataStart = passage == .arrival ? h - 425 : passage == .departure ? 112 : layout.routeOffset + 45
-            let strataCount = passage == nil ? 13 : passage == .arrival ? 3 : 4
+            let strataStart = layout.routeOffset + 45
+            let strataCount = 13
             for i in 0..<strataCount {
                 let y = strataStart + CGFloat(i) * 132
-                let edge = wallX(at: y, right: right, distance: 132, layout: layout, passage: passage)
+                let edge = wallX(at: y, right: right, distance: 132, layout: layout)
                 let layer = contour([.init(x: edge - sign * 5, y: y - 35), .init(x: edge + sign * 96, y: y - 66),
                                      .init(x: edge + sign * 122, y: y + 3), .init(x: edge + sign * 52, y: y + 31),
                                      .init(x: edge - sign * 6, y: y + 17)], radius: 15)
@@ -8151,38 +7752,35 @@ private struct CrystalCavePainter {
                 rock.line([.init(x: edge + sign * 8, y: y - 17), .init(x: edge + sign * 29, y: y - 23), .init(x: edge + sign * 62, y: y - 20)], color: 0xD7E4E4, width: 1, opacity: 0.34)
                 rock.line([.init(x: edge + sign * 25, y: y + 9), .init(x: edge + sign * 33, y: y + 22), .init(x: edge + sign * 54, y: y + 26)], color: 0x3E577B, width: 1.1, opacity: 0.64)
             }
-            if passage == nil {
-                wallBoulders(layout: layout, right: right)
-                for i in 0..<10 {
-                    let y = layout.routeOffset + 124 + CGFloat(i) * 139 + (right ? 38 : 0)
-                    guard y < h - 300 else { continue }
-                    let x = wallX(at: y, right: right, distance: 157, layout: layout) + sign * 27 * scale
-                    rock.line([.init(x: x - sign * 14 * scale, y: y - 25 * scale), .init(x: x + sign * 8 * scale, y: y - 12 * scale),
-                               .init(x: x + sign * 2 * scale, y: y + 11 * scale), .init(x: x + sign * 21 * scale, y: y + 20 * scale)],
-                              color: i % 2 == 0 ? 0x69CEE1 : 0xB498DC, width: 2 * scale, opacity: 0.66)
-                    rock.at(CGPoint(x: x, y: y), size: scale) { vein in
-                        for j in 0..<3 {
-                            var shard = vein.context; shard.rotate(by: .degrees(Double(j - 1) * 27 + (right ? -18 : 18)))
-                            CrystalCavePainter(context: shard).crystal(at: CGPoint(x: CGFloat(j - 1) * 9, y: CGFloat(j % 2) * 6),
-                                                                    height: 28 + CGFloat((i + j) % 3) * 16, tint: 3 + (i + j) % 3)
-                        }
+            wallBoulders(layout: layout, right: right)
+            for i in 0..<10 {
+                let y = layout.routeOffset + 124 + CGFloat(i) * 139 + (right ? 38 : 0)
+                guard y < h - 300 else { continue }
+                let x = wallX(at: y, right: right, distance: 157, layout: layout) + sign * 27 * scale
+                rock.line([.init(x: x - sign * 14 * scale, y: y - 25 * scale), .init(x: x + sign * 8 * scale, y: y - 12 * scale),
+                           .init(x: x + sign * 2 * scale, y: y + 11 * scale), .init(x: x + sign * 21 * scale, y: y + 20 * scale)],
+                          color: i % 2 == 0 ? 0x69CEE1 : 0xB498DC, width: 2 * scale, opacity: 0.66)
+                rock.at(CGPoint(x: x, y: y), size: scale) { vein in
+                    for j in 0..<3 {
+                        var shard = vein.context; shard.rotate(by: .degrees(Double(j - 1) * 27 + (right ? -18 : 18)))
+                        CrystalCavePainter(context: shard).crystal(at: CGPoint(x: CGFloat(j - 1) * 9, y: CGFloat(j % 2) * 6),
+                                                                height: 28 + CGFloat((i + j) % 3) * 16, tint: 3 + (i + j) % 3)
                     }
                 }
             }
         }
     }
 
-    private func appendOverhangs(layout: WorldSceneryLayout, passage: Passage? = nil, to scene: inout DepthScene) {
+    private func appendOverhangs(layout: WorldSceneryLayout, to scene: inout DepthScene) {
         let h = layout.height, scale = layout.scale
         for right in [false, true] {
             // Attached ledges and downward growth give the sides a cavern ceiling.
-            let overhangStart = passage == .arrival ? h - 285 : passage == .departure ? 110 : layout.routeOffset + 245
-            let overhangCount = passage == nil ? 5 : 2
+            let overhangStart = layout.routeOffset + 245
+            let overhangCount = 5
             for i in 0..<overhangCount {
                 let y = overhangStart + CGFloat(i) * 286 + (right ? 113 : 0)
-                if passage == nil && y >= h - 295 { continue }
-                if passage != nil && (y < 70 || y > h - 100) { continue }
-                let x = wallX(at: y, right: right, distance: 155, layout: layout, passage: passage)
+                if y >= h - 295 { continue }
+                let x = wallX(at: y, right: right, distance: 155, layout: layout)
                 scene.add(at: y + 48 * scale) {
                     self.at(CGPoint(x: x, y: y), size: scale, mirror: right) { p in
                         let tooth = p.contour([.init(x: -48, y: -20), .init(x: 22, y: -17), .init(x: 18, y: 8),
@@ -8220,13 +7818,12 @@ private struct CrystalCavePainter {
         for (y, color): (CGFloat, UInt32) in [(routeOffset + 260, 0xB8EEE9), (routeOffset + 790, 0xD9C6F0), (routeOffset + 1330, 0xB3E8E5)] {
             light.ground(at: CGPoint(x: layout.centerX(at: y - routeOffset), y: y), width: min(w, 650), height: 380, color: color, opacity: 0.29)
         }
+        departureGround(layout: layout)
         let interiorPainter = CrystalCavePainter(context: interior)
         interiorPainter.enclosure(layout: layout)
         let lift = CrystalCaveThresholdLayout(width: w).entranceLift
         var entrance = context; entrance.translateBy(x: 0, y: -lift)
         CrystalCavePainter(context: entrance).entranceButtresses(width: w, scale: scale)
-        exitClearing(width: w, boundaryY: h)
-        exitWall(width: w, boundaryY: h)
 
         let routeWidth = min(w, 600) - 36
         let points = WorldRouteTrail.chapterPositions.enumerated().map {
@@ -8249,14 +7846,14 @@ private struct CrystalCavePainter {
         appendEntrance(width: w, scale: scale, lift: lift, to: &scene)
         appendEntranceVista(width: w, scale: scale, lift: lift, to: &scene)
         // Each mineral bed has its own complete stone root, clear of the timber.
-        for i in 0..<46 {
+        for i in 0..<56 {
             let mineral = CrystalCaveLifeLayout.mineral(index:i,layout:layout)
             let x = mineral.point.x, y = mineral.point.y, clusterSize = mineral.size
-            guard y < h-265 else { continue }
+            guard y < h - 12 else { continue }
             scene.add(at:y+22*clusterSize,
                       bounds:CGRect(x:x-84*clusterSize,y:y-150*clusterSize,width:168*clusterSize,height:180*clusterSize)) {
                 cluster(at:mineral.point,size:clusterSize,variation:mineral.variation)
-                glow(CGPoint(x:x,y:y-25*scale),radius:40*scale,color:i%3 == 0 ? 0x59E7FF : 0xB890FF,opacity:0.18)
+                glow(CGPoint(x:x,y:y-25*clusterSize),radius:50*clusterSize,color:i%3 == 0 ? 0x59E7FF : 0xB890FF,opacity:0.18)
             }
         }
         var c = context; c.translateBy(x: 0, y: routeOffset)
@@ -8945,6 +8542,137 @@ private struct CrystalCavePainter {
     }
 }
 
+/// One winding metro service, with staggered termini on opposite sides of the city.
+/// Arc-length sampling keeps every carriage on the rails through the bends.
+private struct CityMetroLine {
+    struct Pose { let point: CGPoint; let heading: Double }
+    let points: [CGPoint]
+    let distances: [CGFloat]
+    let path: Path
+    var length: CGFloat { distances.last ?? 0 }
+
+    init(layout: WorldSceneryLayout) {
+        let s = layout.scale
+        func rail(_ y: CGFloat, _ right: Bool) -> CGPoint {
+            CGPoint(x: layout.centerX(at: y) + (right ? 104 : -104) * s, y: y)
+        }
+        var samples: [CGPoint] = []
+        for y in stride(from: CGFloat(180), through: 1635, by: 4) { samples.append(rail(y, false)) }
+        let a = rail(1635, false), b = rail(1635, true)
+        samples.append(a)
+        // The return curve lives below the last level, with a vertical tangent
+        // where it joins both flanks. It never crosses a playable level stone.
+        for i in 0...100 {
+            let t = CGFloat(i) / 100, u = 1 - t
+            samples.append(CGPoint(x: u*u*u*a.x + 3*u*u*t*a.x + 3*u*t*t*b.x + t*t*t*b.x,
+                                   y: u*u*u*a.y + 3*u*u*t*1800 + 3*u*t*t*1800 + t*t*t*b.y))
+        }
+        for y in stride(from: CGFloat(1635), through: 360, by: -4) { samples.append(rail(y, true)) }
+        var lengths: [CGFloat] = [0]
+        for (a, b) in zip(samples, samples.dropFirst()) { lengths.append(lengths.last! + hypot(b.x - a.x, b.y - a.y)) }
+        points = samples; distances = lengths
+        path = Path { p in p.addLines(samples) }
+    }
+
+    func pose(at distance: CGFloat) -> Pose {
+        let d = min(length, max(0, distance))
+        var low = 0, high = distances.count - 1
+        while low + 1 < high {
+            let mid = (low + high) / 2
+            if distances[mid] < d { low = mid } else { high = mid }
+        }
+        let a = points[low], b = points[high]
+        let t = (d - distances[low]) / max(0.001, distances[high] - distances[low])
+        return Pose(point: CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t),
+                    heading: Double(atan2(b.y - a.y, b.x - a.x)))
+    }
+
+    func offsetPath(_ offset: CGFloat) -> Path {
+        Path { p in
+            for i in points.indices {
+                let a = points[max(0, i - 1)], b = points[min(points.count - 1, i + 1)]
+                let d = max(0.001, hypot(b.x - a.x, b.y - a.y))
+                let q = CGPoint(x: points[i].x - (b.y - a.y) * offset / d,
+                                y: points[i].y + (b.x - a.x) * offset / d)
+                if i == 0 { p.move(to: q) } else { p.addLine(to: q) }
+            }
+        }
+    }
+
+    /// A brief dwell and smooth acceleration at each platform; brisk cruising.
+    func travel(at time: TimeInterval, scale: CGFloat) -> (distance: CGFloat, direction: CGFloat, speed: CGFloat) {
+        let trainLength = 45 * scale, start = trainLength, end = length - trainLength
+        let span = end - start, duration = Double(span / (265 * scale))
+        let dwell = 1.15, leg = duration + dwell
+        let phase = (time + 2.8).truncatingRemainder(dividingBy: leg * 2)
+        let forward = phase < leg
+        let local = forward ? phase : phase - leg
+        let t = min(1, max(0, (local - dwell) / duration))
+        // Cosine easing makes stopping visible without a sudden teleport.
+        let progress = CGFloat(t - sin(2 * .pi * t) / (2 * .pi))
+        let speed = CGFloat(1 - cos(2 * .pi * t))
+        return (forward ? start + span * progress : end - span * progress, forward ? 1 : -1, speed)
+    }
+}
+
+private struct CityWorldLife: View {
+    let routeOffset: CGFloat
+    let viewportHeight: CGFloat
+    var fixedTime: TimeInterval? = nil
+    var frozen = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
+    @State private var viewport = CGRect.zero
+
+    var body: some View {
+        GeometryReader { geometry in
+            let layout = WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset)
+            let line = CityMetroLine(layout: layout)
+            TimelineView(.animation(minimumInterval: 1.0 / 30,
+                                    paused: fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                let travel = line.travel(at: time, scale: layout.scale)
+                ZStack(alignment: .topLeading) {
+                    ForEach(0..<3, id: \.self) { carriage in
+                        let distance = travel.distance + CGFloat(carriage - 1) * 30 * layout.scale
+                        let pose = line.pose(at: distance)
+                        let frame = CGRect(x: pose.point.x - 50 * layout.scale, y: pose.point.y + routeOffset - 50 * layout.scale,
+                                           width: 100 * layout.scale, height: 100 * layout.scale)
+                        if fixedTime != nil || frame.intersects(viewport) {
+                            Canvas { context, _ in
+                                var c = context; c.translateBy(x: -frame.minX, y: routeOffset - frame.minY)
+                                CityWorldPainter(context: c).metroCar(at: pose.point,
+                                    heading: pose.heading + (travel.direction < 0 ? .pi : 0), size: layout.scale,
+                                    cab: carriage == (travel.direction > 0 ? 2 : 0), time: time, speed: frozen || reduceMotion ? 0 : travel.speed)
+                            }
+                            .frame(width: frame.width, height: frame.height).clipped()
+                            .position(x: frame.midX, y: frame.midY)
+                        }
+                    }
+                }.frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+            }
+            .overlay(alignment: .topLeading) {
+                // The plaza and city guardian stand in front of the live train.
+                // Keep this static foreground out of the 30fps carriage canvases.
+                let s = layout.scale
+                let frame = CGRect(x: layout.width - 189 * s, y: routeOffset + 1675 - 210 * s,
+                                   width: 220 * s, height: 250 * s)
+                Canvas { context, _ in
+                    var c = context; c.translateBy(x: -frame.minX, y: routeOffset - frame.minY)
+                    CityWorldPainter(context: c).metroForeground(layout: layout)
+                }
+                .frame(width: frame.width, height: frame.height).clipped()
+                .position(x: frame.midX, y: frame.midY)
+            }
+        }
+        .readGeometry(for: CGRect.self) { geometry in
+            DinoMapViewport.preparedAnimationBounds(frame: geometry.frame(in: .named("adventure.map.viewport")), viewportHeight: viewportHeight)
+        } action: { viewport = $0 }
+        .clipped().allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
 /// Cream stone, copper trim and turquoise domes distinguish Dino Stad.
 private struct CityWorldPainter {
     let context: GraphicsContext
@@ -8991,230 +8719,349 @@ private struct CityWorldPainter {
         let scale = min(1.30, max(0.82, w / 390))
         context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
             .init(color: Color(dinoHex: 0xACBEB4), location: 0),
-            .init(color: Color(dinoHex: 0xC5D1B9), location: 0.055),
-            .init(color: Color(dinoHex: 0xE5EBCF), location: (routeOffset + 110) / h),
-            .init(color: Color(dinoHex: 0xDFE5BF), location: 0.38),
-            .init(color: Color(dinoHex: 0xD1DFBB), location: 0.70),
+            .init(color: Color(dinoHex: 0xE2E9D9), location: (routeOffset + 20) / h),
+            .init(color: Color(dinoHex: 0xEEE5CD), location: 0.35),
+            .init(color: Color(dinoHex: 0xDBDFC7), location: 0.76),
             .init(color: Color(dinoHex: 0xCED0E6), location: 1)
         ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
-        entrance(width: w, scale: scale)
-        CrystalCavePainter(context: context).exitClearing(width: w, boundaryY: 0)
+        // Ease sunlight and skyline in after the cave, keeping the join continuous.
+        var arrival = context
+        arrival.clipToLayer { mask in
+            mask.fill(Path(CGRect(origin: .zero, size: size)),
+                      with: .linearGradient(Gradient(colors: [.clear, .white]),
+                                            startPoint: .zero, endPoint: CGPoint(x: 0, y: 72 * scale)))
+        }
+        CityWorldPainter(context: arrival).entrance(width: w, scale: scale)
         var c = context; c.translateBy(x: 0, y: routeOffset)
-        let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
-        scenery.drawBanks(in: c, worldID: 6, nextWorldID: 2)
-        let p = CityWorldPainter(context: c, depth: depth, depthOffset: routeOffset)
-        p.quays(along: scenery)
-        CrystalCavePainter(context: context).approach(in: size, routeOffset: routeOffset, leavingCave: true)
-        CrystalCavePainter(context: context).exitWall(width: w)
+        let layout = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
+        let p = CityWorldPainter(context: c)
+        p.cityDistricts(layout: layout)
+        p.metroViaduct(line: CityMetroLine(layout: layout), scale: scale)
+        // Staggered station forecourts meet the two actual line endpoints.
+        p.metroStation(at: CGPoint(x: layout.centerX(at: 180) - 104 * scale, y: 180), size: scale, right: false)
+        p.metroStation(at: CGPoint(x: layout.centerX(at: 360) + 104 * scale, y: 360), size: scale, right: true)
+        p.streetLife(layout: layout, depth: depth)
+        let boss = CityWorldPainter(context: c, depth: depth, depthOffset: routeOffset)
+        boss.bossPlaza(width: w, scale: scale, layout: layout)
+    }
 
-        let crossings: [(right: Bool, y: CGFloat)] = [(false, 480), (true, 815), (false, 1165), (true, 1505)]
-        p.bankDetails(along: scenery, crossings: crossings)
-        p.pocketGardens(along: scenery)
-        p.canalBoat(along: scenery, right: false, y: 575)
+    /// Solid city flanks are cut to the bends, leaving the playable promenade open.
+    private func cityBank(layout: WorldSceneryLayout, right: Bool, inset: CGFloat = 128) -> Path {
+        let start: CGFloat = 35, end: CGFloat = 1595
+        let sign: CGFloat = right ? 1 : -1
+        return Path { p in
+            for y in stride(from: start, through: end, by: 4) {
+                let point = CGPoint(x: layout.centerX(at: y) + sign * inset * layout.scale, y: y)
+                if y == start { p.move(to: point) } else { p.addLine(to: point) }
+            }
+            let outside = right ? layout.width + 400 : -400
+            p.addLine(to: CGPoint(x: outside, y: end)); p.addLine(to: CGPoint(x: outside, y: start)); p.closeSubpath()
+        }
+    }
 
-        // Foundations stay beyond the outer quay, even on the tight phone bends.
-        let districts: [(right: Bool, y: CGFloat, size: CGFloat, kind: Int)] = [
-            (false, 360, 0.58, 1), (false, 450, 0.73, 0), (true, 790, 0.82, 1),
-            (false, 1140, 0.84, 2), (true, 1480, 0.73, 0)
-        ]
-        for district in districts {
-            let objectScale = scale * district.size
-            let halfWidth: CGFloat = district.kind == 0 ? 76 : district.kind == 1 ? 68 : 61
-            let point = p.outerBankFoundation(along: scenery, right: district.right,
-                                              y: district.y, halfWidth: halfWidth * objectScale)
-            p.district(at: point, size: objectScale, variation: district.kind)
+    private func cityDistricts(layout: WorldSceneryLayout) {
+        let s = layout.scale
+        for right in [false, true] {
+            var c = context; c.clip(to: cityBank(layout: layout, right: right))
+            c.clipToLayer { mask in
+                mask.fill(Path(CGRect(x: 0, y: 35, width: layout.width, height: 1560)),
+                          with: .linearGradient(Gradient(stops: [
+                            .init(color: .clear, location: 0), .init(color: .white, location: 0.065),
+                            .init(color: .white, location: 0.95), .init(color: .clear, location: 1)
+                          ]), startPoint: .init(x: 0, y: 35), endPoint: .init(x: 0, y: 1595)))
+            }
+            let p = CityWorldPainter(context: c)
+            p.material(Path(CGRect(x: 0, y: 35, width: layout.width, height: 1560)), colors: [0xE6DEC7, 0xB8C1B3, 0xC6CDBB])
+            // Continuous limestone paving, rather than isolated oval islands.
+            var joints = Path()
+            for row in 0..<91 {
+                let y = CGFloat(row) * 18 + 35
+                joints.move(to: CGPoint(x: 0, y: y)); joints.addLine(to: CGPoint(x: layout.width, y: y))
+                for col in 0...Int(layout.width / 34) {
+                    let x = CGFloat(col) * 34 + CGFloat(row % 2) * 17
+                    joints.move(to: CGPoint(x: x, y: y)); joints.addLine(to: CGPoint(x: x, y: y + 18))
+                }
+            }
+            c.stroke(joints, with: .color(Color(dinoHex: 0x899F9B).opacity(0.25)), lineWidth: 0.65)
+            // Each bend opens onto a real raised terrace with its own facade.
+            for i in 0..<10 {
+                let y = 180 + CGFloat(i) * 148 + (right ? 55 : 0)
+                let sign: CGFloat = right ? 1 : -1
+                let edge = layout.centerX(at: y) + sign * 133 * s
+                let available = right ? layout.width - edge : edge
+                guard available > -22 * s else { continue }
+                let center = edge + sign * min(72 * s, max(39 * s, available * 0.38))
+                let terraceWidth = max(145 * s, available + 35 * s)
+                p.at(CGPoint(x: center, y: y), size: s) { block in
+                    block.urbanTerrace(width: terraceWidth / s, variation: i, right: right)
+                    if i % 3 == 0 {
+                        block.civicBuilding(at: CGPoint(x: sign * 7, y: -25), size: 0.88, kind: (i / 3 + (right ? 1 : 0)) % 3)
+                    } else {
+                        block.building(at: CGPoint(x: -21, y: -33), size: 0.85 + CGFloat(i % 2) * 0.12, tower: i % 5 == 2, cafe: true)
+                        block.building(at: CGPoint(x: 43, y: -38), size: 0.74, tower: i % 7 == 4, cafe: i % 2 == 0)
+                    }
+                    block.cafeTerrace(at: CGPoint(x: -sign * 19, y: 20), size: 0.8, variation: i)
+                    block.streetTree(at: CGPoint(x: sign * 56, y: 27), size: 0.69)
+                    block.lamp(at: CGPoint(x: -sign * 61, y: 22), size: 0.68, banner: true)
+                }
+                // Tablets receive inhabited outer blocks too.
+                if available > 210 * s {
+                    for extra in 0..<Int((available - 120 * s) / (100 * s)) {
+                        let x = center + sign * (110 + CGFloat(extra) * 105) * s
+                        if (i + extra) % 4 == 0 {
+                            p.civicBuilding(at: CGPoint(x: x, y: y - 24), size: s * 0.86, kind: 1 + extra % 2)
+                        } else {
+                            p.building(at: CGPoint(x: x, y: y - 24), size: s * 0.97, tower: (i + extra) % 7 == 0, cafe: true)
+                        }
+                        p.cafeTerrace(at: CGPoint(x: x, y: y + 28), size: s * 0.85, variation: i + extra)
+                    }
+                }
+            }
+            let rim = Path { path in
+                for y in stride(from: CGFloat(35), through: 1595, by: 4) {
+                    let q = CGPoint(x: layout.centerX(at: y) + (right ? 130 : -130) * s, y: y)
+                    if y == 35 { path.move(to: q) } else { path.addLine(to: q) }
+                }
+            }
+            c.stroke(rim, with: .color(Color(dinoHex: 0xFFF3D7)), style: StrokeStyle(lineWidth: 3 * s))
         }
-        for crossing in crossings {
-            p.canalCrossing(along: scenery, right: crossing.right, y: crossing.y)
+    }
+
+    private func urbanTerrace(width: CGFloat, variation: Int, right: Bool) {
+        rounded(CGRect(x: -width / 2, y: -43, width: width, height: 83), radius: 5, colors: [0xFAEDD0, 0xD4C4A7, 0xA9AF9D])
+        for y: CGFloat in [-17, -4, 9] { line([.init(x: -width / 2 + 2, y: y), .init(x: width / 2 - 2, y: y)], color: 0xF5E7CB, width: 1.2) }
+        // Short flights tie the cafe floor to the public pavement.
+        let stairX: CGFloat = right ? -width / 2 + 21 : width / 2 - 21
+        for i in 0..<6 {
+            let y = 31 + CGFloat(i) * 3.6
+            rounded(CGRect(x: stairX - 17, y: y, width: 34, height: 4.5), radius: 0.8, colors: [0xFFF1D7, 0xB5B49E])
         }
-        p.bossPlaza(width: w, scale: scale, layout: scenery)
+        for x: CGFloat in [-width / 2 + 5, width / 2 - 5] {
+            line([.init(x: x, y: -6), .init(x: x, y: 32)], color: 0x376A7D, width: 2)
+            oval(CGRect(x: x - 3, y: -9, width: 6, height: 4), colors: [0xFDE1A0, 0xB4915C])
+        }
+        line([.init(x: -width / 2 + 6, y: 27), .init(x: width / 2 - 6, y: 27)], color: 0x34677B, width: 2)
+        for x in stride(from: -width / 2 + 10, through: width / 2 - 10, by: 9) {
+            line([.init(x: x, y: 27), .init(x: x, y: 36)], color: 0x4D7D87, width: 1)
+        }
+        for x: CGFloat in [-width / 2 + 14, width / 2 - 14] { planter(at: .init(x: x, y: 30), size: 0.44) }
+    }
+
+    private func streetLife(layout: WorldSceneryLayout, depth: WorldSceneryDepth) {
+        let s = layout.scale
+        // Narrow planted walks between the game route and the viaduct.
+        for right in [false, true] {
+            for i in 0..<15 {
+                let y = 290 + CGFloat(i) * 85 + (right ? 27 : 0)
+                guard y < 1550 else { continue }
+                let point = CGPoint(x: layout.centerX(at: y) + (right ? 68 : -68) * s, y: y)
+                guard point.x > 4, point.x < layout.width - 4 else { continue }
+                var street = context; street.clip(to: cityBank(layout: layout, right: right, inset: 53))
+                let p = CityWorldPainter(context: street, depth: depth, depthOffset: layout.routeOffset)
+                p.at(point, size: s * 0.45) { item in
+                    if i % 3 == 0 { item.lamp(at: .zero, size: 0.78, banner: false) }
+                    else if i % 3 == 1 { item.planter(at: .zero, size: 0.72) }
+                    else { item.flowers(at: .zero, size: 0.8) }
+                }
+            }
+        }
+    }
+
+    func metroForeground(layout: WorldSceneryLayout) {
+        bossPlaza(width: layout.width, scale: layout.scale, layout: layout)
+        WorldBossPainter(context: context).draw(worldID: 6,
+            at: CGPoint(x: layout.width - 79 * layout.scale, y: 1675), size: layout.scale * 0.88)
     }
 
     private func bossPlaza(width: CGFloat, scale: CGFloat, layout: WorldSceneryLayout) {
         let point = CGPoint(x: width - 79 * scale, y: 1687)
-        let approach = Path { p in
-            p.move(to: CGPoint(x: layout.centerX(at: 1710), y: 1710))
-            p.addQuadCurve(to: point, control: CGPoint(x: point.x - 45 * scale, y: 1710))
-        }
-        for (w, color): (CGFloat, UInt32) in [(18, 0xBAC3A5), (13, 0xF2E4C3)] {
-            context.stroke(approach, with: .color(Color(dinoHex: color)), style: StrokeStyle(lineWidth: w * scale, lineCap: .round))
-        }
         paving(at: point, width: 135 * scale)
         planter(at: CGPoint(x: point.x - 49 * scale, y: point.y + 12 * scale), size: scale * 0.43)
         flowers(at: CGPoint(x: point.x + 48 * scale, y: point.y + 11 * scale), size: scale * 0.53)
     }
 
-    private func canalPath(along layout: WorldSceneryLayout, right: Bool, offset: CGFloat) -> Path {
-        Path { path in
-            let start = -layout.routeOffset + 12
-            let end = layout.height - layout.routeOffset - 12
-            let count = Int(ceil((end - start) / 5))
-            for i in 0...count {
-                let y = start + (end - start) * CGFloat(i) / CGFloat(count)
-                let point = layout.cityCanalPoint(at: y, right: right, offset: offset)
-                if i == 0 { path.move(to: point) } else { path.addLine(to: point) }
+    private func metroViaduct(line metro: CityMetroLine, scale s: CGFloat) {
+        // The old water is completely replaced with limestone and steel.
+        for (width, color, dy): (CGFloat, UInt32, CGFloat) in [(44, 0x9EAA9E, 9), (40, 0xCCC3AA, 5), (37, 0xF4E6C9, 0), (27, 0x697F87, 0), (23, 0x91A5A7, 0)] {
+            context.stroke(metro.path.offsetBy(dx: 0, dy: dy * s), with: .color(Color(dinoHex: color)), style: StrokeStyle(lineWidth: width * s, lineCap: .round, lineJoin: .round))
+        }
+        var sleepers = Path()
+        for distance in stride(from: CGFloat(0), through: metro.length, by: 11 * s) {
+            let pose = metro.pose(at: distance)
+            let n = CGPoint(x: -sin(pose.heading) * 10 * s, y: cos(pose.heading) * 10 * s)
+            sleepers.move(to: CGPoint(x: pose.point.x - n.x, y: pose.point.y - n.y))
+            sleepers.addLine(to: CGPoint(x: pose.point.x + n.x, y: pose.point.y + n.y))
+        }
+        context.stroke(sleepers, with: .color(Color(dinoHex: 0x4A636F)), style: StrokeStyle(lineWidth: 2.3 * s))
+        for offset: CGFloat in [-7, 7] {
+            let rail = metro.offsetPath(offset * s)
+            context.stroke(rail, with: .color(Color(dinoHex: 0x345265)), style: StrokeStyle(lineWidth: 3.3 * s))
+            context.stroke(rail, with: .color(Color(dinoHex: 0xE8F3E8)), style: StrokeStyle(lineWidth: 1.25 * s))
+        }
+        for offset: CGFloat in [-17, 17] {
+            context.stroke(metro.offsetPath(offset * s), with: .color(Color(dinoHex: 0x426F7D)), style: StrokeStyle(lineWidth: 1.8 * s))
+        }
+        // Stone piers and golden rail caps reinforce the raised railway.
+        for distance in stride(from: CGFloat(70), through: metro.length - 45, by: 93 * s) {
+            let pose = metro.pose(at: distance)
+            for sign: CGFloat in [-1, 1] {
+                let q = CGPoint(x: pose.point.x - CGFloat(sin(pose.heading)) * sign * 18 * s,
+                                y: pose.point.y + CGFloat(cos(pose.heading)) * sign * 18 * s)
+                rounded(CGRect(x: q.x - 2.5 * s, y: q.y - 4 * s, width: 5 * s, height: 9 * s), radius: s, colors: [0xFFF0CD, 0xB7B49B])
+                oval(CGRect(x: q.x - 3 * s, y: q.y - 5 * s, width: 6 * s, height: 3 * s), colors: [0xFFE7AE, 0xAF9867])
             }
         }
     }
 
-    private func quays(along layout: WorldSceneryLayout) {
-        let s = layout.scale
-        for right in [false, true] { for bank: CGFloat in [-1, 1] {
-            let promenade = canalPath(along: layout, right: right, offset: bank * 36 * s)
-            for (width, color): (CGFloat, UInt32) in [(19, 0xBCC6A4), (13, 0xDFD9BC), (10, 0xF0E4C8)] {
-                context.stroke(promenade, with: .color(Color(dinoHex: color)),
-                               style: StrokeStyle(lineWidth: width * s, lineCap: .round, lineJoin: .round))
+    private func metroStation(at point: CGPoint, size: CGFloat, right: Bool) {
+        at(point, size: size, mirror: right) { p in
+            // Platform lies outside the rails; canopy remains clear of the train.
+            p.rounded(CGRect(x: -52, y: -20, width: 35, height: 108), radius: 6, colors: [0xFCEDD0, 0xD0C4AA, 0x9AABAA])
+            p.line([.init(x: -18, y: -17), .init(x: -18, y: 84)], color: 0xF6D378, width: 2)
+            for y: CGFloat in [-13, 12, 37, 62] {
+                p.rounded(CGRect(x: -48, y: y - 26, width: 4, height: 30), radius: 1, colors: [0xCCDBD4, 0x3A6D80])
             }
-            let coping = canalPath(along: layout, right: right, offset: bank * 24 * s)
-            context.stroke(coping, with: .color(Color(dinoHex: 0x769F9A).opacity(0.6)),
-                           style: StrokeStyle(lineWidth: 2.7 * s, lineCap: .round, lineJoin: .round))
-            context.stroke(coping, with: .color(Color(dinoHex: 0xFFF0CD)),
-                           style: StrokeStyle(lineWidth: 1.3 * s, lineCap: .round, lineJoin: .round))
-            for i in 0..<91 {
-                let y = 105 + CGFloat(i) * 18
-                let a = layout.cityCanalPoint(at: y, right: right, offset: bank * 31 * s)
-                let b = layout.cityCanalPoint(at: y, right: right, offset: bank * 41 * s)
-                line([a, b], color: 0xB9BAA0, width: 0.65 * s, opacity: 0.6)
+            let canopy = Path { c in
+                c.move(to: .init(x: -59, y: -42)); c.addQuadCurve(to: .init(x: -20, y: -42), control: .init(x: -39, y: -69))
+                c.addLine(to: .init(x: -20, y: 49)); c.addQuadCurve(to: .init(x: -59, y: 49), control: .init(x: -39, y: 30)); c.closeSubpath()
             }
-        } }
-    }
-
-    private func outerBankFoundation(along layout: WorldSceneryLayout, right: Bool, y: CGFloat, halfWidth: CGFloat) -> CGPoint {
-        var edge: CGFloat = right ? -1000 : layout.width + 1000
-        // Check the whole ground footprint, rather than its centre alone.
-        for i in 0...14 {
-            let point = layout.cityCanalPoint(at: y - 18 * layout.scale + CGFloat(i) * 4 * layout.scale,
-                                              right: right, offset: 44 * layout.scale)
-            edge = right ? max(edge, point.x) : min(edge, point.x)
-        }
-        return CGPoint(x: edge + (right ? halfWidth : -halfWidth), y: y)
-    }
-
-    private func district(at point: CGPoint, size: CGFloat, variation: Int) {
-        at(point, size: size) { p in
-            p.paving(at: CGPoint(x: 0, y: 9), width: variation == 0 ? 144 : variation == 2 ? 122 : 132)
-            switch variation {
-            case 0:
-                p.station(at: CGPoint(x: 0, y: -2), size: 0.94)
-                p.planter(at: CGPoint(x: -53, y: 19), size: 0.48)
-                p.flowers(at: CGPoint(x: 47, y: 20), size: 0.55)
-            case 1:
-                p.building(at: CGPoint(x: -18, y: -8), size: 0.86, tower: false, cafe: true)
-                p.palm(at: CGPoint(x: 40, y: 1), size: 0.69)
-                p.bench(at: CGPoint(x: 28, y: 20), size: 0.57)
-            default:
-                p.building(at: CGPoint(x: -8, y: -4), size: 0.9, tower: true)
-                p.fountain(at: CGPoint(x: 31, y: 23), size: 0.49)
-                p.flowers(at: CGPoint(x: -31, y: 24), size: 0.7)
+            p.material(canopy, colors: [0xC8E5DF, 0x76ACB9, 0x365C7F])
+            for y in stride(from: CGFloat(-40), through: 46, by: 14) {
+                p.line([.init(x: -58, y: y), .init(x: -39, y: y - 11), .init(x: -21, y: y)], color: 0xE5EBD8, width: 1.2)
             }
+            p.rounded(CGRect(x: -51, y: 52, width: 25, height: 17), radius: 3, colors: [0x1D536D, 0x14394E])
+            var text = p.context
+            if right { text.scaleBy(x: -1, y: 1) }
+            text.draw(Text(verbatim: "M").font(.system(size: 11, weight: .heavy, design: .rounded)).canvasInk(Color(dinoHex: 0xFFE4A0)), at: .init(x: right ? 39 : -39, y: 60))
+            for i in 0..<5 { p.line([.init(x: -52 - CGFloat(i) * 2, y: 77 + CGFloat(i) * 4), .init(x: -22, y: 77 + CGFloat(i) * 4)], color: 0xFAE8C8, width: 3) }
+            p.lamp(at: .init(x: -64, y: 86), size: 0.55, banner: false)
+            p.flowers(at: .init(x: -58, y: 101), size: 0.6)
+            p.line([.init(x: -10, y: -23), .init(x: 10, y: -23)], color: 0x38566B, width: 4)
+            p.line([.init(x: -10, y: -25), .init(x: 10, y: -25)], color: 0xE5BF78, width: 2)
         }
     }
 
-    private func pocketGardens(along layout: WorldSceneryLayout) {
-        let s = layout.scale
-        for (i, y): (Int, CGFloat) in [350.0, 600, 965, 1320].enumerated() {
-            for right in [false, true] {
-                let point = outerBankFoundation(along: layout, right: right, y: y, halfWidth: 48 * s)
-                guard point.x > 44 * s, point.x < layout.width - 44 * s else { continue }
-                garden(at: point, size: s * 0.72, variation: i)
-            }
-        }
-    }
-
-    private func canalBoat(along layout: WorldSceneryLayout, right: Bool, y: CGFloat) {
-        let point = layout.cityCanalPoint(at: y, right: right)
-        let a = layout.cityCanalPoint(at: y - 1, right: right)
-        let b = layout.cityCanalPoint(at: y + 1, right: right)
-        var c = context; c.translateBy(x: point.x, y: point.y)
-        c.rotate(by: .radians(Double(-atan2(b.x - a.x, b.y - a.y))))
+    func metroCar(at point: CGPoint, heading: Double, size: CGFloat, cab: Bool, time: TimeInterval, speed: CGFloat) {
+        var c = context; c.translateBy(x: point.x, y: point.y); c.rotate(by: .radians(heading)); c.scaleBy(x: size, y: size)
         let p = CityWorldPainter(context: c)
-        p.at(.zero, size: layout.scale * 0.72) { boat in
-            for x: CGFloat in [-15, 15] {
-                boat.line([.init(x: x, y: -5), .init(x: x, y: 12)], color: 0xE8F9E7, width: 1, opacity: 0.7)
+        p.rounded(CGRect(x: -16, y: -10, width: 33, height: 23), radius: 6, colors: [0x526574, 0x314558])
+        p.rounded(CGRect(x: -16, y: -13, width: 33, height: 23), radius: 6, colors: [0xF2EBD2, 0xA8C6CD, 0x49749B])
+        p.rounded(CGRect(x: -14, y: -12, width: 28, height: 8), radius: 3, colors: [0xDFE9E1, 0x83A6B7])
+        p.line([.init(x: -14, y: 7), .init(x: 13, y: 7)], color: 0xE6B95E, width: 2.6)
+        for x: CGFloat in [-11, -3, 5] {
+            p.rounded(CGRect(x: x, y: -1, width: 6, height: 6), radius: 1.1, colors: [0xFFEAB1, 0xE7A94D])
+            p.line([.init(x: x + 1, y: 0), .init(x: x + 3, y: 3)], color: 0xFFF6D3, width: 0.6)
+        }
+        p.rounded(CGRect(x: -8, y: -9, width: 13, height: 4), radius: 1, colors: [0x688898, 0x3D607A])
+        if cab {
+            p.rounded(CGRect(x: 10, y: -9, width: 5, height: 13), radius: 2, colors: [0x385369, 0x192E49])
+            for y: CGFloat in [-8, 7] { p.oval(CGRect(x: 13, y: y, width: 3, height: 3), colors: [0xFFFADE, 0xFFC75C]) }
+            p.glow(.init(x: 18, y: 5), radius: 13, color: 0xFFDE87, opacity: 0.2)
+        }
+        // Electric contact arcs and short speed streaks follow the moving car.
+        if speed > 0.25 {
+            for i in 0..<4 {
+                let phase = CGFloat((time * 17 + Double(i) * 0.23).truncatingRemainder(dividingBy: 1))
+                let x = -12 - phase * 18, y: CGFloat = i % 2 == 0 ? 12 : -14
+                p.line([.init(x: x + 9, y: y), .init(x: x + 4, y: y - 3), .init(x: x, y: y + 3), .init(x: x - 5, y: y)], color: i % 2 == 0 ? 0x9EF4FF : 0xFFF3AF, width: 0.9, opacity: Double(1 - phase) * 0.9)
+                p.line([.init(x: -18 - phase * 11, y: y + 4), .init(x: -24 - phase * 11, y: y + 4)], color: 0xD9FAFF, width: 0.8, opacity: Double(1 - phase) * 0.6)
             }
-            let hull = Path { h in
-                h.move(to: .init(x: 0, y: -26))
-                h.addCurve(to: .init(x: 0, y: 24), control1: .init(x: 18, y: -12), control2: .init(x: 14, y: 20))
-                h.addCurve(to: .init(x: 0, y: -26), control1: .init(x: -14, y: 20), control2: .init(x: -18, y: -12))
-            }
-            boat.material(hull, colors: [0xFBE3A3, 0xC39F64, 0xA67F54])
-            boat.oval(CGRect(x: -8, y: -14, width: 16, height: 31), colors: [0x578B91, 0x3B6975])
-            for seat: CGFloat in [-6, 9] {
-                boat.rounded(CGRect(x: -9, y: seat, width: 18, height: 4), radius: 1.5, colors: [0xF6D69B, 0xC29F6A])
-            }
-            boat.line([.init(x: -11, y: -12), .init(x: 10, y: 16)], color: 0xE8BE79, width: 1.8)
         }
     }
 
-    private func canalCrossing(along layout: WorldSceneryLayout, right: Bool, y: CGFloat) {
-        let s = layout.scale
-        var left = CGFloat.greatestFiniteMagnitude, rightEdge = -CGFloat.greatestFiniteMagnitude
-        // Span the river's full screen-space width beneath the deck and feet.
-        // Keep the bridge level, with both landings beyond the water's stone rim.
-        for i in 0...10 {
-            let sampleY = y + (-6 + CGFloat(i) * 4) * s
-            let point = layout.cityCanalPoint(at: sampleY, right: right)
-            let a = layout.cityCanalPoint(at: sampleY - 1, right: right)
-            let b = layout.cityCanalPoint(at: sampleY + 1, right: right)
-            let slope = (b.x - a.x) / 2
-            let rim = 27 * s * sqrt(1 + slope * slope)
-            left = min(left, point.x - rim)
-            rightEdge = max(rightEdge, point.x + rim)
-        }
-        let centerX = (left + rightEdge) / 2
-        let halfSpan = max(54 * s, (rightEdge - left) / 2 + 21 * s)
-        let inner = CGPoint(x: centerX + (right ? -halfSpan : halfSpan), y: y + 3 * s)
-        let start = CGPoint(x: layout.centerX(at: y + 12 * s), y: y + 12 * s)
-        let lane = Path { p in
-            p.move(to: start)
-            p.addCurve(to: inner, control1: CGPoint(x: start.x + (inner.x - start.x) * 0.45, y: start.y),
-                       control2: CGPoint(x: inner.x, y: inner.y))
-        }
-        for (width, color): (CGFloat, UInt32) in [(17, 0xB6BFA1), (13, 0xF2E4BD), (8, 0xF9EDCF)] {
-            context.stroke(lane, with: .color(Color(dinoHex: color)), style: StrokeStyle(lineWidth: width * s, lineCap: .round))
-        }
-        bridge(at: CGPoint(x: centerX, y: y), size: s, span: halfSpan * 2 / s)
-    }
-
-    private func bankDetails(along layout: WorldSceneryLayout, crossings: [(right: Bool, y: CGFloat)]) {
-        let s = layout.scale
-        for right in [false, true] { for bank: CGFloat in [-1, 1] {
-            for i in 0..<15 {
-                let y = 300 + CGFloat(i) * 88 + (right ? 34 : 0) + (bank > 0 ? 23 : 0)
-                if crossings.contains(where: { $0.right == right && abs($0.y - y) < 55 }) { continue }
-                let point = layout.cityCanalPoint(at: y, right: right, offset: bank * 48 * s)
-                guard point.x > -15 * s && point.x < layout.width + 15 * s else { continue }
-                at(point, size: s * 0.47) { p in
-                    // Small planted pockets sit on land beside the continuous paving.
-                    switch (i + (right ? 1 : 0) + (bank > 0 ? 2 : 0)) % 4 {
-                    case 0:
-                        p.paving(at: .zero, width: 32)
-                        p.lamp(at: .zero, size: 0.9, banner: false)
-                        p.flowers(at: CGPoint(x: 15, y: 5), size: 0.4)
-                    case 1:
-                        p.paving(at: .zero, width: 60)
-                        p.bench(at: .zero, size: 0.78)
-                        p.flowers(at: CGPoint(x: -25, y: 7), size: 0.44)
-                    case 2:
-                        p.planter(at: .zero, size: 0.72, palm: false)
-                    default:
-                        p.plants(at: .zero, size: 0.75)
-                        p.flowers(at: CGPoint(x: 13, y: 5), size: 0.6)
+    private func cafeTerrace(at point: CGPoint, size: CGFloat, variation: Int) {
+        at(point, size: size) { p in
+            for i in 0..<2 {
+                let x: CGFloat = i == 0 ? -25 : 25, y: CGFloat = i == 0 ? 0 : 11
+                // Chairs have backs and legs; cups sit on round cafe tables.
+                for side: CGFloat in [-1, 1] {
+                    p.rounded(CGRect(x: x + side * 15 - 5, y: y - 8, width: 10, height: 5), radius: 2, colors: [0xDDB579, 0x8E6C48])
+                    p.line([.init(x: x + side * 15 - 4, y: y - 8), .init(x: x + side * 15 - 4, y: y + 5)], color: 0x6A674F, width: 1.1)
+                    p.line([.init(x: x + side * 15 + 4, y: y - 8), .init(x: x + side * 15 + 4, y: y + 5)], color: 0x6A674F, width: 1.1)
+                }
+                p.line([.init(x: x, y: y - 9), .init(x: x, y: y + 6)], color: 0x466478, width: 2.5)
+                p.oval(CGRect(x: x - 13, y: y - 16, width: 26, height: 10), colors: [0xFFF0C4, 0xC99D65])
+                p.rounded(CGRect(x: x - 7, y: y - 17, width: 4, height: 4), radius: 1, colors: [0xFFFEED, 0xE2D5B5])
+                p.oval(CGRect(x: x + 3, y: y - 14, width: 4, height: 2), colors: [0xF2D686, 0xAF8350])
+                p.line([.init(x: x, y: y - 48), .init(x: x, y: y - 8)], color: 0xA58D61, width: 1.8)
+                let blue = (variation + i) % 3 != 0
+                let canopy = Path { c in
+                    c.move(to: .init(x: x - 29, y: y - 36))
+                    c.addQuadCurve(to: .init(x: x, y: y - 54), control: .init(x: x - 15, y: y - 54))
+                    c.addQuadCurve(to: .init(x: x + 29, y: y - 36), control: .init(x: x + 16, y: y - 53))
+                    c.addQuadCurve(to: .init(x: x - 29, y: y - 36), control: .init(x: x, y: y - 29)); c.closeSubpath()
+                }
+                p.material(canopy, colors: blue ? [0xEFF7E8, 0x9FCBDA, 0x4D83AC] : [0xFFF2B7, 0xF5CE7C, 0xD9A666])
+                var clipped = p.context; clipped.clip(to: canopy)
+                for segment in 0..<6 {
+                    let a = x - 30 + CGFloat(segment) * 10
+                    if segment % 2 == 0 {
+                        var stripe = Path(); stripe.addLines([.init(x: x, y: y - 54), .init(x: a, y: y - 30), .init(x: a + 10, y: y - 30)]); stripe.closeSubpath()
+                        clipped.fill(stripe, with: .color(Color(dinoHex: blue ? 0x326D9D : 0xFFF5CD).opacity(0.7)))
                     }
                 }
+                p.line([.init(x: x - 28, y: y - 36), .init(x: x, y: y - 32), .init(x: x + 28, y: y - 36)], color: 0xFFF2C9, width: 1)
+                p.oval(CGRect(x: x - 2, y: y - 56, width: 4, height: 4), colors: [0xFFF1BD, 0xB59057])
             }
-            // Low mooring posts make both edges legible without hiding the water.
-            for i in 0..<25 {
-                let y = 280 + CGFloat(i) * 55
-                if crossings.contains(where: { $0.right == right && abs($0.y - y) < 43 }) { continue }
-                let point = layout.cityCanalPoint(at: y, right: right, offset: bank * 25 * s)
-                at(point, size: s) { p in
-                    p.oval(CGRect(x: -3, y: -1, width: 6, height: 3), colors: [0x9AAE98, 0xD8D1AF])
-                    p.rounded(CGRect(x: -1.7, y: -8, width: 3.4, height: 8), radius: 1.4, colors: [0xA1C5B2, 0x4C8C92])
-                    p.oval(CGRect(x: -3, y: -9, width: 6, height: 3), colors: [0xF4D698, 0xB69C69])
-                }
+            // A cafe menu and a warm little pool of lamplight finish the square.
+            p.polygon([.init(x: -3, y: -5), .init(x: 11, y: -5), .init(x: 14, y: 17), .init(x: -6, y: 17)], colors: [0xBB935B, 0x7F6A48])
+            p.rounded(CGRect(x: -1, y: -3, width: 10, height: 14), radius: 1, colors: [0x2E5B63, 0x23434E])
+            for y: CGFloat in [0, 4, 8] { p.line([.init(x: 1, y: y), .init(x: 7, y: y)], color: 0xF7E2AD, width: 0.7) }
+            p.flowers(at: .init(x: -47, y: 18), size: 0.55)
+        }
+    }
+
+    /// A town hall, archive and civic theatre share the city's limestone palette.
+    private func civicBuilding(at point: CGPoint, size: CGFloat, kind: Int) {
+        at(point, size: size) { p in
+            let height: CGFloat = kind == 0 ? 124 : kind == 1 ? 100 : 112
+            p.rounded(CGRect(x: -65, y: -height, width: 130, height: height), radius: 5, colors: [0xFFF2D3, 0xE1D3B5, 0xB6BBA9])
+            p.rounded(CGRect(x: -65, y: -height + 27, width: 130, height: 6), radius: 1, colors: [0xFFF4D6, 0xC4AC80])
+            for row in 0..<3 { for x: CGFloat in [-49, -25, 25, 49] {
+                p.window(at: .init(x: x, y: -height + 46 + CGFloat(row) * 27), size: 0.59)
+            } }
+            p.rounded(CGRect(x: -19, y: -52, width: 38, height: 53), radius: 15, colors: [0xD8BE8C, 0xA2A78C])
+            p.rounded(CGRect(x: -13, y: -47, width: 26, height: 46), radius: 11, colors: [0x749CA8, 0x244C66])
+            p.line([.init(x: 0, y: -41), .init(x: 0, y: -3)], color: 0xE1CD9D, width: 1.2)
+            for x: CGFloat in [-56, -35, 35, 56] {
+                p.rounded(CGRect(x: x - 4, y: -69, width: 8, height: 68), radius: 2, colors: [0xFFF7DA, 0xD3C5A8, 0xACAA95])
+                p.rounded(CGRect(x: x - 7, y: -73, width: 14, height: 6), radius: 1, colors: [0xF8E7BD, 0xB9AD8C])
+                p.rounded(CGRect(x: x - 7, y: -3, width: 14, height: 6), radius: 1, colors: [0xF5E6C9, 0xB2AE99])
             }
-        } }
+            p.polygon([.init(x: -72, y: -height + 3), .init(x: 0, y: -height - 30), .init(x: 72, y: -height + 3)], colors: [0xF6E9C8, 0xCFBD97, 0xA6AC9B])
+            p.line([.init(x: -66, y: -height), .init(x: 0, y: -height - 25), .init(x: 66, y: -height)], color: 0xFFF6DC, width: 2.2)
+            if kind == 0 {
+                p.rounded(CGRect(x: -20, y: -height - 65, width: 40, height: 49), radius: 3, colors: [0xFFF2CF, 0xD4C6A6])
+                ThemePainter(context: p.context, colors: WorldThemeColors(DinoWorldCatalog.world(6)!))
+                    .clock(at: .init(x: 0, y: -height - 42), time: .init(hour: 10, minute: 10), size: 14)
+                p.dome(at: .init(x: 0, y: -height - 65), width: 52)
+            } else {
+                // Civic seal: a golden dinosaur footprint under the pediment.
+                p.oval(CGRect(x: -10, y: -height - 14, width: 20, height: 18), colors: [0x4B8596, 0x24556F])
+                p.oval(CGRect(x: -4, y: -height - 5, width: 8, height: 6), colors: [0xFFE7A5, 0xD9B66E])
+                for x: CGFloat in [-5, 0, 5] { p.oval(CGRect(x: x - 1.6, y: -height - 10, width: 3.2, height: 4.6), colors: [0xFFF0BB, 0xD0AF72]) }
+            }
+            for i in 0..<4 { p.rounded(CGRect(x: -40 - CGFloat(i) * 4, y: CGFloat(i) * 4, width: 80 + CGFloat(i) * 8, height: 5), radius: 1, colors: [0xFFF0D0, 0xC1B49A]) }
+            for x: CGFloat in [-69, 69] {
+                p.line([.init(x: x, y: -height - 8), .init(x: x, y: -height + 47)], color: 0x5F7A7E, width: 1.8)
+                p.polygon([.init(x: x + 2, y: -height - 7), .init(x: x + 18, y: -height - 4), .init(x: x + 17, y: -height + 20), .init(x: x + 3, y: -height + 17)], colors: [0x85BAC8, 0x326C91])
+                p.flowers(at: .init(x: x, y: 9), size: 0.6)
+            }
+        }
+    }
+
+    private func streetTree(at point: CGPoint, size: CGFloat) {
+        at(point, size: size) { p in
+            p.rounded(CGRect(x: -17, y: -3, width: 34, height: 12), radius: 4, colors: [0xE7D9BB, 0x9EA892])
+            p.line([.init(x: 0, y: 0), .init(x: 0, y: -64)], color: 0x7C7857, width: 6)
+            for i in 0..<11 {
+                let a = Double(i) * 2.399, r = sqrt(CGFloat(i) / 11) * 23
+                let x = CGFloat(cos(a)) * r, y = -65 + CGFloat(sin(a)) * r * 0.75
+                p.oval(CGRect(x: x - 15, y: y - 19, width: 30, height: 34), colors: [0xB3D66D, 0x5A9D67, 0x34785F])
+                p.oval(CGRect(x: x - 9, y: y - 13, width: 5, height: 4), colors: [0xD5E69A, 0x83BA72])
+            }
+            p.flowers(at: .init(x: 0, y: 1), size: 0.63)
+        }
     }
 
     private func entrance(width: CGFloat, scale: CGFloat) {
@@ -9243,7 +9090,7 @@ private struct CityWorldPainter {
             far.at(CGPoint(x: CGFloat(i) * width / 4, y: (206 + CGFloat(i % 2) * 23) * scale), size: scale) { p in
                 p.cliff(at: .zero, size: 1.6)
                 p.building(at: CGPoint(x: -3, y: -76), size: 0.56 + CGFloat(i % 2) * 0.14, tower: i % 2 == 1)
-                if i == 1 || i == 3 { p.waterfall(at: CGPoint(x: 29, y: -49), size: 0.75) }
+                p.streetTree(at: CGPoint(x: 29, y: -44), size: 0.65)
             }
         }
         far.bridge(at: CGPoint(x: width * 0.47, y: 172 * scale), size: 1.65 * scale)
@@ -9427,7 +9274,7 @@ private struct CityWorldPainter {
     private func window(at point: CGPoint, size: CGFloat) {
         at(point, size: size) { p in
             p.rounded(CGRect(x: -10, y: -18, width: 20, height: 31), radius: 9, colors: [0xE6CA94, 0xBDA372])
-            p.rounded(CGRect(x: -7, y: -15, width: 14, height: 25), radius: 7, colors: [0xC7E9DA, 0x79B9C1, 0x548EA4])
+            p.rounded(CGRect(x: -7, y: -15, width: 14, height: 25), radius: 7, colors: [0xFFF1C5, 0xE3C77F, 0x7CA3AA])
             p.line([.init(x: 0, y: -14), .init(x: 0, y: 10)], color: 0xE8D4AA, width: 1.5)
             p.line([.init(x: -7, y: -2), .init(x: 7, y: -2)], color: 0xE8D4AA, width: 1.5)
             p.line([.init(x: -5, y: -11), .init(x: -2, y: -6)], color: 0xF3FFF3, width: 1.3, opacity: 0.8)
@@ -9463,7 +9310,7 @@ private struct CityWorldPainter {
                 clock.clock(at: CGPoint(x: 0, y: -h + 40), time: .init(hour: 10, minute: 30), size: 22)
                 p.window(at: CGPoint(x: -17, y: -56), size: 0.65)
                 p.window(at: CGPoint(x: 17, y: -56), size: 0.65)
-                p.digital(at: CGPoint(x: 0, y: -84), size: 0.85, time: "10:30")
+                p.window(at: CGPoint(x: 0, y: -84), size: 0.85)
             } else {
                 for x: CGFloat in [-18, 18] { p.window(at: CGPoint(x: x, y: -65), size: 0.8) }
                 p.rounded(CGRect(x: -29, y: -44, width: 58, height: 7), radius: 2, colors: [0xF4DFB5, 0xB4BC9B])
@@ -11810,6 +11657,45 @@ private enum PirateCoastLayout {
         }
     }
 
+    struct Rock {
+        let point: CGPoint
+        let size: CGFloat
+        var bounds: CGRect { CGRect(x: point.x - 36 * size, y: point.y - 52 * size, width: 72 * size, height: 67 * size) }
+    }
+
+    /// The same rock positions guide both the artwork and sand landings.
+    static func landRocks(layout: WorldSceneryLayout) -> [Rock] {
+        let scale = layout.scale
+        var result: [Rock] = []
+        for right in [false, true] {
+            let sign: CGFloat = right ? -1 : 1
+            for i in 0..<12 {
+                let origin = layout.position(CGPoint(x: right ? layout.width : 0, y: 30 + CGFloat(i) * 144))
+                result.append(Rock(point: .init(x: origin.x + sign * (36 + CGFloat(i % 3) * 8) * scale, y: origin.y),
+                                   size: (0.62 + CGFloat(i % 2) * 0.15) * scale))
+            }
+            for i in 0..<11 {
+                let y = 65 + CGFloat(i) * 149 + CGFloat((i * 43) % 57 - 28)
+                let shore = layout.pirateShorePoint(at: y, right: right)
+                let point = CGPoint(x: shore.x + sign * 20 * scale, y: y)
+                let size = scale * (0.48 + CGFloat(i % 3) * 0.09)
+                guard point.x > -12 * scale && point.x < layout.width + 12 * scale,
+                      [-25.0, 0, 25].allSatisfy({
+                          abs(point.x - layout.centerX(at: y + CGFloat($0) * size)) > 43 + 40 * size
+                      }) else { continue }
+                for (x, y, factor): (CGFloat, CGFloat, CGFloat) in [(-16, 5, 0.57), (10, 0, 0.98), (31, 9, 0.39)] {
+                    result.append(Rock(point: .init(x: point.x + x * size, y: point.y + y * size), size: size * factor))
+                }
+            }
+        }
+        for index in 0..<9 {
+            let onRight = index % 4 == 0 || index % 4 == 3
+            let origin = layout.position(CGPoint(x: onRight ? 7 * scale : layout.width - 7 * scale, y: 273 + CGFloat(index) * 175))
+            result.append(Rock(point: .init(x: origin.x + (onRight ? 1 : -1) * 23 * scale, y: origin.y), size: 0.88 * scale))
+        }
+        return result.filter { rockClearsStructures(at: $0.point, size: $0.size, layout: layout) }
+    }
+
     /// A continuous outer contour joins each sandy shelf to the original beach.
     /// Drawing the contour directly also supports devices running iOS 16.
     static func shoreline(layout: WorldSceneryLayout, right: Bool) -> [CGPoint] {
@@ -11965,13 +11851,7 @@ private struct PirateCoastPainter {
         for side in 0..<2 {
             for i in 0..<12 {
                 let y = 30 + CGFloat(i) * 144
-                let origin = scenery.position(CGPoint(x: side == 0 ? 0 : w, y: y))
-                let rockOffset = 36 + CGFloat(i % 3) * 8
-                let rockSize = 0.62 + CGFloat(i % 2) * 0.15
-                let rockPoint = CGPoint(x: origin.x + (side == 0 ? 1 : -1) * rockOffset * scale, y: origin.y)
-                let clearLanding = PirateCoastLayout.rockClearsStructures(at: rockPoint, size: rockSize * scale, layout: scenery)
                 coast.at(CGPoint(x: side == 0 ? 0 : w, y: y), size: scale, mirror: side == 1) { p in
-                    if clearLanding { p.rock(at: CGPoint(x: rockOffset, y: 0), size: rockSize) }
                     p.plants(at: CGPoint(x: 69, y: 25), size: 0.60, flowers: i % 3 == 0)
                     if i % 3 == 1 { p.coral(at: CGPoint(x: 42, y: 36), size: 0.65) }
                     p.shell(at: CGPoint(x: 61 + CGFloat(i % 2) * 5, y: 63), size: 0.42)
@@ -11994,11 +11874,7 @@ private struct PirateCoastPainter {
         }
         for index in 0..<9 {
             let onRight = index % 4 == 0 || index % 4 == 3
-            let origin = scenery.position(CGPoint(x: onRight ? 7 * scale : w - 7 * scale, y: 273 + CGFloat(index) * 175))
-            let rockPoint = CGPoint(x: origin.x + (onRight ? 1 : -1) * 23 * scale, y: origin.y)
-            let clearLanding = PirateCoastLayout.rockClearsStructures(at: rockPoint, size: 0.88 * scale, layout: scenery)
             coast.at(CGPoint(x: onRight ? 7 * scale : w - 7 * scale, y: 273 + CGFloat(index) * 175), size: scale, mirror: !onRight) { p in
-                if clearLanding { p.rock(at: .init(x: 23, y: 0), size: 0.88) }
                 if index % 3 == 0 { p.palm(at: CGPoint(x: 0, y: -4), size: 0.79) }
                 p.plants(at: CGPoint(x: 57, y: 28), size: 0.68, flowers: true)
                 p.starfish(at: CGPoint(x: 39, y: 19), size: 0.64)
@@ -12658,28 +12534,9 @@ private struct PirateCoastPainter {
     }
 
     private func shoreRocks(layout: WorldSceneryLayout, depth: WorldSceneryDepth, depthOffset: CGFloat) {
-        let rocks = PirateCoastPainter(context: context, depth: depth, depthOffset: depthOffset)
-        for right in [false, true] {
-            let sign: CGFloat = right ? 1 : -1
-            for i in 0..<11 {
-                let y = 65 + CGFloat(i) * 149 + CGFloat((i * 43) % 57 - 28)
-                let shore = layout.pirateShorePoint(at: y, right: right)
-                let point = CGPoint(x: shore.x - sign * 20 * layout.scale, y: y)
-                let size = layout.scale * (0.48 + CGFloat(i % 3) * 0.09)
-                guard point.x > -12 * layout.scale && point.x < layout.width + 12 * layout.scale,
-                      [-25.0, 0, 25].allSatisfy({
-                          abs(point.x - layout.centerX(at: y + CGFloat($0) * size)) > 43 + 40 * size
-                      }) else { continue }
-                rocks.at(point, size: size) { p in
-                    for (x, y, factor): (CGFloat, CGFloat, CGFloat) in [(-16, 5, 0.57), (10, 0, 0.98), (31, 9, 0.39)] {
-                        let foot = CGPoint(x: point.x + x * size, y: point.y + y * size)
-                        if PirateCoastLayout.rockClearsStructures(at: foot, size: size * factor, layout: layout) {
-                            p.rock(at: .init(x: x, y: y), size: factor)
-                        }
-                    }
-                }
-
-            }
+        let painter = PirateCoastPainter(context: context, depth: depth, depthOffset: depthOffset)
+        for rock in PirateCoastLayout.landRocks(layout: layout) {
+            painter.rock(at: rock.point, size: rock.size)
         }
     }
 
@@ -12904,42 +12761,186 @@ private struct PirateSeaPainter {
     }
 }
 
-/// Small offshore flocks follow the real coastline and never cross the playable road.
-private enum PirateGullFlocks {
+/// Flocks cross the open lanes between stones and rest on actual scenery surfaces.
+private struct PirateGullFlocks {
+    struct Landing {
+        let point: CGPoint
+        let structure: Bool
+    }
+    struct Flock {
+        let id: Int
+        let laneY: CGFloat
+        let left: [Landing]
+        let right: [Landing]
+        let crossing: Double
+        var count: Int { min(left.count, right.count) }
+        var leftRest: Double { 6.5 + Double(id % 3) * 1.1 }
+        var rightRest: Double { 7.5 + Double(id % 4) * 0.8 }
+        var period: Double { leftRest + rightRest + crossing * 2 }
+    }
     struct Pose: Identifiable {
         let id: Int
         let point: CGPoint
         let size: CGFloat
         let angle: Double
+        let facing: CGFloat
         let phase: Double
+        let flight: CGFloat
         var radius: CGFloat { 38 * size }
     }
+    let scale: CGFloat
+    let flocks: [Flock]
 
-    static func poses(sea: PirateSeaGeometry, time: Double) -> [Pose] {
-        let scale = sea.layout.scale
-        let fractions: [CGFloat] = [0.13, 0.32, 0.51, 0.67, 0.81, 0.94]
-        let counts = [3, 4, 3, 5, 4, 3]
-        let start: CGFloat = -60, span: CGFloat = 1830
+    init(sea: PirateSeaGeometry) {
+        let layout = sea.layout, scale = layout.scale
+        self.scale = scale
+        let routeWidth = min(layout.width, 600) - 36
+        let nodes = WorldRouteTrail.chapterPositions.enumerated().map { index, fraction in
+            (point: CGPoint(x: (layout.width - routeWidth) / 2 + routeWidth * fraction,
+                            y: 80 + CGFloat(index) * 175), radius: CGFloat(index == 9 ? 45 : 36))
+        }
+        func clearsStones(_ point: CGPoint) -> Bool {
+            nodes.allSatisfy { hypot(point.x - $0.point.x, point.y - $0.point.y) > $0.radius + 22 * scale + 12 }
+        }
+        func safeApproach(_ point: CGPoint, lane: CGFloat) -> Bool {
+            guard point.x > 20 * scale && point.x < layout.width - 20 * scale,
+                  abs(point.x - layout.centerX(at: lane)) > max(40, 45 * scale) else { return false }
+            return (0...16).allSatisfy { index in
+                let t = CGFloat(index) / 16
+                return [-8.0, 8].allSatisfy { offset in
+                    let y = (point.y - 5 * scale) * (1 - t) + (lane + CGFloat(offset) * scale) * t
+                    return clearsStones(CGPoint(x: point.x, y: y))
+                }
+            }
+        }
+        var surfaces: [Landing] = []
+        func add(_ point: CGPoint) { surfaces.append(Landing(point: point, structure: true)) }
+        for jetty in PirateCoastLayout.jetties(layout: layout) {
+            for y: CGFloat in [-15, 19] {
+                add(jetty.position(.init(x: -42, y: y - 26)))
+                add(jetty.position(.init(x: 43, y: y - 38)))
+            }
+        }
+        let sites = PirateCoastLayout.sites(layout: layout)
+        for site in sites {
+            func at(_ local: CGPoint) -> CGPoint {
+                CGPoint(x: site.point.x + local.x * site.size, y: site.point.y + local.y * site.size)
+            }
+            switch site.id {
+            case 0, 4:
+                for t: CGFloat in [0.06, 0.25, 0.44, 0.63, 0.82, 0.97] {
+                    add(at(.init(x: -8 + (-42 + 82 * t) * 0.96, y: 1 + (-86 - 10 * t) * 0.96)))
+                }
+            case 3, 7:
+                add(at(.init(x: 9, y: -53))); add(at(.init(x: 22, y: -52)))
+                add(at(.init(x: -27, y: 13 - 31 * 0.91)))
+                add(at(.init(x: -3, y: 17 - 31 * 0.72)))
+            case 6:
+                add(at(.init(x: 39, y: 13 - 31 * 0.79)))
+            case 8:
+                for x: CGFloat in [-19, 0, 19] { add(at(.init(x: -1 + x * 1.22, y: 12 - 77 * 1.22))) }
+            default: break
+            }
+        }
+        let rocks = PirateCoastLayout.landRocks(layout: layout)
+        for rock in rocks where rock.size >= 0.43 * scale {
+            add(.init(x: rock.point.x - rock.size, y: rock.point.y - 47.5 * rock.size))
+        }
+        var prepared: [Flock] = []
+        for gap in 0..<9 {
+            let lane = 167.5 + CGFloat(gap) * 175
+            let center = layout.centerX(at: lane)
+            let count = gap % 2 == 0 ? 5 : 6
+            func landings(right: Bool) -> [Landing] {
+                var selected: [Landing] = []
+                let candidates = surfaces.filter {
+                    Int(round(($0.point.y - 167.5) / 175)) == gap && ($0.point.x > center) == right
+                }.sorted { abs($0.point.y - lane) < abs($1.point.y - lane) }
+                func accept(_ candidate: Landing, spacing: CGFloat) {
+                    guard selected.count < count, safeApproach(candidate.point, lane: lane),
+                          selected.allSatisfy({ hypot($0.point.x - candidate.point.x, $0.point.y - candidate.point.y) > spacing * scale }) else { return }
+                    selected.append(candidate)
+                }
+                for candidate in candidates { accept(candidate, spacing: 12) }
+                if selected.count == count { return selected }
+                // Staggered sand positions keep resting groups loose and out of the road.
+                for row: CGFloat in [-6, 9, -21, 23, -34, 35] {
+                    for column in 0..<18 {
+                        if selected.count == count { return selected }
+                        let y = lane + row * scale
+                        let distance = (58 + CGFloat(column) * 10) * scale
+                        let point = CGPoint(x: layout.centerX(at: y) + (right ? distance : -distance), y: y)
+                        guard !sea.coasts.contains(where: { coast in
+                            [-4.0, 0, 4].contains { dx in
+                                coast.water.contains(CGPoint(x: point.x + CGFloat(dx) * scale, y: point.y))
+                            }
+                        }) else { continue }
+                        let underStructure = sites.contains { site in
+                            CGRect(x: site.point.x - 67 * site.size, y: site.point.y - 120 * site.size,
+                                   width: 132 * site.size, height: 158 * site.size).contains(point)
+                        }
+                        guard !underStructure,
+                              !rocks.contains(where: { $0.bounds.insetBy(dx: -9 * scale, dy: -7 * scale).contains(point) }) else { continue }
+                        accept(Landing(point: point, structure: false), spacing: 11)
+                    }
+                }
+                return selected
+            }
+            let left = landings(right: false), right = landings(right: true)
+            let width = zip(left, right).map { abs($1.point.x - $0.point.x) }.max() ?? 240 * scale
+            prepared.append(Flock(id: gap, laneY: lane, left: left, right: right,
+                                  crossing: max(3.4, Double(width) / 62) + 2.1))
+        }
+        flocks = prepared
+    }
+
+    func poses(time: Double) -> [Pose] {
+        func smooth(_ t: Double) -> CGFloat {
+            let t = CGFloat(min(1, max(0, t))); return t * t * (3 - 2 * t)
+        }
+        func mix(_ a: CGPoint, _ b: CGPoint, _ t: CGFloat) -> CGPoint {
+            CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t)
+        }
         var birds: [Pose] = []
-        for flock in 0..<6 {
-            let right = flock % 2 == 1, coast = sea.coasts[right ? 1 : 0]
-            let sign: CGFloat = right ? 1 : -1
-            let direction: CGFloat = right ? 1 : -1
-            let speed = CGFloat(37 + flock % 3 * 3)
-            let distance = (CGFloat(time) * speed + span * fractions[flock]).truncatingRemainder(dividingBy: span)
-            let leaderY = start + (direction > 0 ? distance : span - distance)
-            for bird in 0..<counts[flock] {
-                let rank = CGFloat((bird + 1) / 2), wing: CGFloat = bird % 2 == 0 ? 1 : -1
-                let size = scale * (0.49 + CGFloat((flock + bird) % 3) * 0.035)
-                let radius = 38 * size
-                let y = leaderY - direction * rank * 18 * scale + CGFloat(sin(time * 0.7 + Double(flock))) * 3 * scale
-                let edges = [-radius, -radius / 2, 0, radius / 2, radius].map { coast.edgeX(at: y + $0) }
-                let edge = right ? edges.max()! : edges.min()!
-                let point = CGPoint(x: edge + sign * (48 + wing * rank * 9) * scale, y: y)
-                let dx = coast.edgeX(at: y + 3 * direction) - coast.edgeX(at: y - 3 * direction)
-                let angle = atan2(Double(6 * direction), Double(dx))
-                birds.append(Pose(id: flock * 10 + bird, point: point, size: size, angle: angle,
-                                  phase: Double(flock) * 0.9 + Double(bird) * 0.38))
+        for flock in flocks {
+            for bird in 0..<flock.count {
+                let size = scale * (0.46 + CGFloat((flock.id + bird) % 3) * 0.025)
+                let phase = Double(flock.id) * 0.91 + Double(bird) * 0.67
+                let clock = time + Double(flock.id) * 4.13 - Double(bird) * 0.37
+                let t = (clock.truncatingRemainder(dividingBy: flock.period) + flock.period).truncatingRemainder(dividingBy: flock.period)
+                let left = flock.left[bird].point, right = flock.right[bird].point
+                var point: CGPoint, flight: CGFloat = 0, facing: CGFloat, bank: Double = 0
+                if t < flock.leftRest {
+                    point = .init(x: left.x, y: left.y - 10 * size)
+                    facing = t < 1.1 ? -1 : 1
+                } else if t >= flock.leftRest + flock.crossing && t < flock.leftRest + flock.crossing + flock.rightRest {
+                    point = .init(x: right.x, y: right.y - 10 * size)
+                    facing = t - flock.leftRest - flock.crossing < 1.1 ? 1 : -1
+                } else {
+                    let outward = t < flock.leftRest + flock.crossing
+                    let elapsed = outward ? t - flock.leftRest : t - flock.leftRest - flock.crossing - flock.rightRest
+                    let from = outward ? left : right, to = outward ? right : left
+                    let start = CGPoint(x: from.x, y: from.y - 10 * size)
+                    let end = CGPoint(x: to.x, y: to.y - 10 * size)
+                    let laneOffset = CGFloat((bird + 1) / 2) * (bird % 2 == 0 ? 1 : -1) * 2.3 * scale
+                    let lane = flock.laneY + laneOffset
+                    let departure = 1.05, arrival = 1.05
+                    if elapsed < departure {
+                        point = mix(start, .init(x: start.x, y: lane), smooth(elapsed / departure))
+                    } else if elapsed > flock.crossing - arrival {
+                        point = mix(.init(x: end.x, y: lane), end,
+                                    smooth((elapsed - flock.crossing + arrival) / arrival))
+                    } else {
+                        let u = CGFloat((elapsed - departure) / (flock.crossing - departure - arrival))
+                        point = .init(x: start.x + (end.x - start.x) * u,
+                                      y: lane + sin(u * .pi) * CGFloat(sin(time * 0.8 + phase)) * 0.7 * scale)
+                        bank = sin(elapsed * 1.1 + phase) * 0.045
+                    }
+                    facing = outward ? 1 : -1
+                    flight = min(smooth(elapsed / 0.55), smooth((flock.crossing - elapsed) / 0.7))
+                }
+                birds.append(Pose(id: flock.id * 10 + bird, point: point, size: size, angle: bank,
+                                  facing: facing, phase: phase, flight: flight))
             }
         }
         return birds
@@ -12959,20 +12960,20 @@ struct PirateCoastFlights: View {
     var body: some View {
         GeometryReader { geometry in
             let layout = WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset)
-            let sea = PirateSeaGeometry(layout: layout)
+            let flocks = PirateGullFlocks(sea: PirateSeaGeometry(layout: layout))
             TimelineView(.animation(minimumInterval: 1.0 / 20,
                                     paused: fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
                 let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 ZStack(alignment: .topLeading) {
-                    ForEach(PirateGullFlocks.poses(sea: sea, time: time)) { pose in
+                    ForEach(flocks.poses(time: time)) { pose in
                         let point = CGPoint(x: pose.point.x, y: pose.point.y + routeOffset)
                         let frame = CGRect(x: point.x - pose.radius, y: point.y - pose.radius,
                                            width: pose.radius * 2, height: pose.radius * 2)
                         if fixedTime != nil || frame.intersects(viewport) {
                             Canvas { context, _ in
                                 var c = context; c.translateBy(x: pose.radius, y: pose.radius)
-                                c.rotate(by: .radians(pose.angle)); c.scaleBy(x: pose.size, y: pose.size)
-                                PirateGullPainter(context: c).gull(time: time, phase: pose.phase)
+                                c.rotate(by: .radians(pose.angle)); c.scaleBy(x: pose.size * pose.facing, y: pose.size)
+                                PirateGullPainter(context: c).gull(time: time, phase: pose.phase, flight: pose.flight)
                             }.frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
                         }
                     }
@@ -12988,9 +12989,9 @@ struct PirateCoastFlights: View {
 private struct PirateGullPainter {
     let context: GraphicsContext
 
-    func gull(time: Double, phase: Double) {
+    func gull(time: Double, phase: Double, flight: CGFloat = 1) {
         let flap = CGFloat(sin(time * 4.7 + phase))
-        let lift = -10 - flap * 13
+        let lift = 2 * (1 - flight) + (-10 - flap * 13) * flight
         let feather: UInt32 = 0xFBFAEE, tip: UInt32 = 0x596D72
         func fill(_ path: Path, _ color: UInt32) { context.fill(path, with: .color(Color(dinoHex: color))) }
         func wing(root: CGPoint, span: CGFloat, lift: CGFloat) -> Path {
@@ -12998,31 +12999,42 @@ private struct PirateGullPainter {
             p.addCurve(to: .init(x: root.x + span, y: lift),
                        control1: .init(x: root.x + span * 0.28, y: lift - 7),
                        control2: .init(x: root.x + span * 0.78, y: lift - 4))
-            p.addQuadCurve(to: .init(x: root.x + span * 0.60, y: lift + 8),
-                           control: .init(x: root.x + span * 0.84, y: lift + 7))
+            p.addQuadCurve(to: .init(x: root.x + span * 0.60, y: lift + 2 + 6 * flight),
+                           control: .init(x: root.x + span * 0.84, y: lift + 2 + 5 * flight))
             p.addQuadCurve(to: .init(x: root.x + 2, y: root.y + 4),
                            control: .init(x: root.x + span * 0.23, y: root.y + 1))
             p.closeSubpath(); return p
         }
         func wingTip(root: CGPoint, span: CGFloat, lift: CGFloat) {
             var p = Path(); p.move(to: .init(x: root.x + span, y: lift))
-            p.addQuadCurve(to: .init(x: root.x + span * 0.72, y: lift + 7),
-                           control: .init(x: root.x + span * 0.89, y: lift + 6))
+            p.addQuadCurve(to: .init(x: root.x + span * 0.72, y: lift + 2 + 5 * flight),
+                           control: .init(x: root.x + span * 0.89, y: lift + 1 + 5 * flight))
             p.addLine(to: .init(x: root.x + span * 0.68, y: lift + 0.8)); p.closeSubpath()
             fill(p, tip)
         }
-        // Same feather color and almost equal span. The near wing is above the breast.
+        // Folded wings lie along the back. Both open together on departure.
+        let farSpan = -13 - 9 * flight, nearSpan = -13 + 35 * flight
         let farRoot = CGPoint(x: -4, y: -1)
-        fill(wing(root: farRoot, span: -22, lift: lift + 1), feather)
-        wingTip(root: farRoot, span: -22, lift: lift + 1)
+        fill(wing(root: farRoot, span: farSpan, lift: lift + 1), feather)
+        wingTip(root: farRoot, span: farSpan, lift: lift + 1)
         var tail = Path(); tail.addLines([.init(x: -8, y: 0), .init(x: -21, y: -1), .init(x: -18, y: 3), .init(x: -22, y: 7), .init(x: -8, y: 5)]); tail.closeSubpath()
         fill(tail, feather)
+        if flight < 0.85 {
+            let extensionAmount = min(1, (0.85 - flight) / 0.5)
+            for x: CGFloat in [-4, 4] {
+                var leg = Path(); leg.move(to: .init(x: x, y: 4))
+                leg.addLine(to: .init(x: x + 1, y: 5 + 5 * extensionAmount))
+                leg.addLine(to: .init(x: x + 5, y: 5 + 5 * extensionAmount))
+                context.stroke(leg, with: .color(Color(dinoHex: 0xCB9B4B)),
+                               style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
+            }
+        }
         context.fill(Path(ellipseIn: CGRect(x: -11, y: -4, width: 25, height: 10)),
                      with: .linearGradient(Gradient(colors: [Color(dinoHex: feather), Color(dinoHex: 0xE7EDE1)]),
                                            startPoint: .init(x: 0, y: -4), endPoint: .init(x: 0, y: 6)))
         let nearRoot = CGPoint(x: -3, y: 1)
-        fill(wing(root: nearRoot, span: 22, lift: lift + 2), feather)
-        wingTip(root: nearRoot, span: 22, lift: lift + 2)
+        fill(wing(root: nearRoot, span: nearSpan, lift: lift + 2), feather)
+        wingTip(root: nearRoot, span: nearSpan, lift: lift + 2)
         fill(Path(ellipseIn: CGRect(x: 10, y: -5, width: 8, height: 9)), feather)
         var beak = Path(); beak.addLines([.init(x: 17, y: -2), .init(x: 23, y: 0), .init(x: 17, y: 1.7)]); beak.closeSubpath()
         fill(beak, 0xD8A34D)
@@ -13046,9 +13058,9 @@ private struct CastleKingdomLayout {
         let top: CGPoint
         let bottom: CGPoint
         let scale: CGFloat
-        var steps: Int { max(7, Int((bottom.y - top.y) / (8 * scale))) }
+        var steps: Int { max(4, Int((bottom.y - top.y) / (8 * scale))) }
         func edge(_ t: CGFloat, side: CGFloat) -> CGPoint {
-            let width = (19 + 6 * t) * scale
+            let width = 22 * scale
             return CGPoint(x: top.x + (bottom.x - top.x) * t + side * width,
                            y: top.y + (bottom.y - top.y) * t)
         }
@@ -13070,10 +13082,10 @@ private struct CastleKingdomLayout {
         let lower: CGPoint
         let scale: CGFloat
         var flights: [Flight] {
-            [Flight(top: CGPoint(x: upper.x, y: upper.y + 13 * scale),
-                    bottom: CGPoint(x: middle.x, y: middle.y - 13 * scale), scale: scale),
-             Flight(top: CGPoint(x: middle.x, y: middle.y + 13 * scale),
-                    bottom: CGPoint(x: lower.x, y: lower.y - 13 * scale), scale: scale)]
+            [Flight(top: CGPoint(x: upper.x, y: upper.y + 18 * scale),
+                    bottom: CGPoint(x: middle.x, y: middle.y - 18 * scale), scale: scale),
+             Flight(top: CGPoint(x: middle.x, y: middle.y + 18 * scale),
+                    bottom: CGPoint(x: lower.x, y: lower.y - 18 * scale), scale: scale)]
         }
     }
     struct Crossing {
@@ -13085,6 +13097,25 @@ private struct CastleKingdomLayout {
         let outer: CGPoint
         let scale: CGFloat
         let riverSlope: CGFloat
+    }
+    struct Fountain {
+        let point: CGPoint
+        let scale: CGFloat
+        let depth: CGFloat
+    }
+    static let cascades: [(y: CGFloat, right: Bool)] = [(510, true), (1110, false)]
+
+    func fountains(for district: District) -> [Fountain] {
+        let sign: CGFloat = district.right ? 1 : -1, s = scale
+        if district.id == 2 {
+            return [Fountain(point: CGPoint(x: district.upper.x + sign * 12 * s, y: district.upper.y - 53 * s),
+                             scale: s * 0.87, depth: district.lower.y + 41 * s)]
+        }
+        if district.id == 1 || district.id == 3 {
+            return [Fountain(point: CGPoint(x: district.middle.x + sign * 94 * s, y: district.middle.y - 17 * s),
+                             scale: s * 0.44, depth: district.lower.y + 41 * s)]
+        }
+        return []
     }
     let scenery: WorldSceneryLayout
     var scale: CGFloat { scenery.scale }
@@ -13128,17 +13159,33 @@ private struct CastleKingdomLayout {
                 bankEdges[y] = outside
                 return outside
             }
-            for _ in 0..<2 {
+            func fitLanding(_ point: CGPoint) -> CGPoint {
+                var shift: CGFloat = 0
+                for i in 0...18 {
+                    let y = point.y - 18 * s + CGFloat(i) * 2 * s
+                    shift = max(shift, 33 * s - sign * (point.x - bankEdge(at: y)))
+                }
+                return CGPoint(x: point.x + sign * shift, y: point.y)
+            }
+            for _ in 0..<5 {
+                top = fitLanding(top); middle = fitLanding(middle); bottom = fitLanding(bottom)
+                // Keep each flight straight enough to read as a staircase.
+                // Move the inner endpoint outwards; never pull a landing into water.
+                let maxRun = ((bottomY - topY) / 2 - 36 * s) * 0.38
+                if sign * (top.x - middle.x) > maxRun { middle.x = top.x - sign * maxRun }
+                if sign * (middle.x - top.x) > maxRun { top.x = middle.x - sign * maxRun }
+                if sign * (bottom.x - middle.x) > maxRun { middle.x = bottom.x - sign * maxRun }
+                if sign * (middle.x - bottom.x) > maxRun { bottom.x = middle.x - sign * maxRun }
                 for pair in [(0, 1), (1, 2)] {
                     let upper = pair.0 == 0 ? top : middle, lower = pair.1 == 1 ? middle : bottom
-                    let a = CGPoint(x: upper.x, y: upper.y + 13 * s)
-                    let b = CGPoint(x: lower.x, y: lower.y - 13 * s)
+                    let a = CGPoint(x: upper.x, y: upper.y + 18 * s)
+                    let b = CGPoint(x: lower.x, y: lower.y - 18 * s)
                     var shift: CGFloat = 0
                     for i in 0...48 {
                         let y = a.y - 7 * s + (b.y - a.y + 14 * s) * CGFloat(i) / 48
                         let t = min(1, max(0, (y - a.y) / (b.y - a.y)))
                         let center = a.x + (b.x - a.x) * t
-                        let reach = (19 + 6 * t + 7) * s
+                        let reach = 29 * s
                         shift = max(shift, reach - sign * (center - bankEdge(at: y)))
                     }
                     if shift > 0 {
@@ -13154,7 +13201,9 @@ private struct CastleKingdomLayout {
     func crossings(for districts: [District]) -> [Crossing] {
         var result = districts.flatMap { court in
             [true, false].map { upper -> Crossing in
-                let outer = upper ? court.upper : court.lower
+                let landing = upper ? court.upper : court.lower
+                // Bridge railings end beside the landing, clear of the stair opening.
+                let outer = CGPoint(x: landing.x - (court.right ? 1 : -1) * 30 * scale, y: landing.y)
                 let water = waterPoint(at: outer.y, right: court.right)
                 let sign: CGFloat = court.right ? 1 : -1
                 return Crossing(district: court.id, upper: upper, right: court.right, water: water,
@@ -13198,20 +13247,147 @@ private struct CastleKingdomLayout {
     }
 }
 
+/// Only the visible water tiles tick. The stonework and its occlusion masks stay cached.
+private struct CastleWaterPlan {
+    struct Feature {
+        let point: CGPoint
+        let scale: CGFloat
+        let depth: CGFloat
+        let cascadeRight: Bool?
+        var bounds: CGRect {
+            if cascadeRight != nil {
+                return CGRect(x: point.x - 100 * scale, y: point.y - 42 * scale, width: 200 * scale, height: 84 * scale)
+            }
+            return CGRect(x: point.x - 58 * scale, y: point.y - 84 * scale, width: 116 * scale, height: 110 * scale)
+        }
+    }
+    let layout: CastleKingdomLayout
+    let districts: [CastleKingdomLayout.District]
+    let crossings: [CastleKingdomLayout.Crossing]
+    let features: [Feature]
+
+    init(scenery: WorldSceneryLayout) {
+        let layout = CastleKingdomLayout(scenery: scenery)
+        let districts = layout.districts
+        self.layout = layout
+        self.districts = districts
+        self.crossings = layout.crossings(for: districts)
+        self.features = CastleKingdomLayout.cascades.map {
+            Feature(point: layout.waterPoint(at: $0.y, right: $0.right), scale: layout.scale,
+                    depth: $0.y + 24 * layout.scale, cascadeRight: $0.right)
+        } + districts.flatMap { layout.fountains(for: $0) }.map {
+            Feature(point: $0.point, scale: $0.scale, depth: $0.depth, cascadeRight: nil)
+        }
+    }
+}
+
+private struct CastleWaterLife: View {
+    let routeOffset: CGFloat
+    let viewportHeight: CGFloat
+    var fixedTime: TimeInterval? = nil
+    var frozen = false
+
+    var body: some View {
+        GeometryReader { geometry in
+            let plan = CastleWaterPlan(scenery: WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset))
+            ZStack(alignment: .topLeading) {
+                ForEach(0..<Int(ceil(geometry.size.height / 320)), id: \.self) { index in
+                    let frame = CGRect(x: 0, y: CGFloat(index) * 320, width: geometry.size.width,
+                                       height: min(320, geometry.size.height - CGFloat(index) * 320))
+                    CastleWaterSurface(plan: plan, frame: frame, viewportHeight: viewportHeight, fixedTime: fixedTime, frozen: frozen)
+                        .mask(CastleWaterOcclusion(plan: plan, frame: frame))
+                        .frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
+                }
+                ForEach(Array(plan.features.enumerated()), id: \.offset) { item in
+                    let feature = item.element
+                    let frame = feature.bounds.offsetBy(dx: 0, dy: routeOffset)
+                    CastleWaterSurface(plan: plan, frame: frame, viewportHeight: viewportHeight, feature: feature, fixedTime: fixedTime, frozen: frozen)
+                        .mask(CastleWaterOcclusion(plan: plan, frame: frame, cutoff: feature.depth))
+                        .frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
+                }
+            }
+        }.clipped().allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+private struct CastleWaterOcclusion: View {
+    let plan: CastleWaterPlan
+    let frame: CGRect
+    var cutoff: CGFloat = -.infinity
+
+    var body: some View {
+        Canvas { context, size in
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.white))
+            let layout = plan.layout
+            var c = context
+            c.translateBy(x: -frame.minX, y: layout.scenery.routeOffset - frame.minY)
+            c.blendMode = .destinationOut
+            let depth = WorldSceneryDepth(minimumDepth: cutoff)
+            CastleWorldPainter(context: c, liveWater: true).appendScenery(layout: layout, districts: plan.districts, crossings: plan.crossings, depth: depth)
+            depth.draw()
+            if 1675 > cutoff {
+                WorldBossPainter(context: c).draw(worldID: 10, at: .init(x: layout.scenery.width - 79 * layout.scale, y: 1675), size: layout.scale * 0.88)
+            }
+        }
+    }
+}
+
+private struct CastleWaterSurface: View {
+    let plan: CastleWaterPlan
+    let frame: CGRect
+    let viewportHeight: CGFloat
+    var feature: CastleWaterPlan.Feature? = nil
+    var fixedTime: TimeInterval? = nil
+    var frozen = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
+    @State private var visible = false
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 20,
+                                paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
+            Canvas { context, _ in
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                var c = context
+                c.translateBy(x: -frame.minX, y: plan.layout.scenery.routeOffset - frame.minY)
+                if let feature {
+                    if let right = feature.cascadeRight {
+                        CastleWorldPainter(context: c, time: time).cascadeCurrent(layout: plan.layout, at: feature.point.y, right: right)
+                    } else {
+                        c.translateBy(x: feature.point.x, y: feature.point.y)
+                        c.scaleBy(x: feature.scale, y: feature.scale)
+                        CastleWorldPainter(context: c, time: time).fountainWater()
+                    }
+                } else {
+                    let painter = CastleWorldPainter(context: c, time: time)
+                    for right in [false, true] { painter.riverCurrent(layout: plan.layout, right: right) }
+                }
+            }
+        }
+        .readGeometry(for: Bool.self) { proxy in
+            let rect = proxy.frame(in: .named("adventure.map.viewport"))
+            return rect.maxY > -128 && rect.minY < viewportHeight + 128
+        } action: { visible = $0 }
+    }
+}
+
 /// The final chapter is a royal garden of blue roofs, pale stone and running water.
 private struct CastleWorldPainter {
     let context: GraphicsContext
     var scenery: WorldSceneryLayout? = nil
     var depth: WorldSceneryDepth? = nil
     var depthOffset: CGFloat = 0
+    var liveWater = false
+    var time: TimeInterval = 0
 
     private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: @escaping (CastleWorldPainter) -> Void) {
         let point = scenery?.position(point, radius: radius, rise: rise) ?? point
         var c = context; c.translateBy(x: point.x, y: point.y)
         c.scaleBy(x: mirror ? -size : size, y: size)
         if let depth {
-            depth.add(at: depthOffset + point.y) { draw(.init(context: c)) }
-        } else { draw(.init(context: c)) }
+            depth.add(at: depthOffset + point.y) { draw(.init(context: c, liveWater: liveWater, time: time)) }
+        } else { draw(.init(context: c, liveWater: liveWater, time: time)) }
     }
     private func material(_ path: Path, _ colors: [UInt32]) {
         let r = path.boundingRect
@@ -13253,35 +13429,13 @@ private struct CastleWorldPainter {
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         let layout = CastleKingdomLayout(scenery: scenery)
-        let landmarks = layout.landmarks
         scenery.drawBanks(in: c, worldID: 10)
-        let ground = CastleWorldPainter(context: c)
+        let ground = CastleWorldPainter(context: c, liveWater: liveWater, time: time)
         let districts = layout.districts
         let crossings = layout.crossings(for: districts)
         ground.royalGround(layout: layout, districts: districts, crossings: crossings)
         entrance(width: w, scale: scale)
-        for (y, right): (CGFloat, Bool) in [(510, true), (1110, false)] {
-            depth.add(at: routeOffset + y + 24 * scale) {
-                ground.cascade(layout: layout, at: y, right: right)
-            }
-        }
-        for item in landmarks {
-            depth.add(at: routeOffset + item.point.y + 28 * item.scale) {
-                ground.clockQuay(item, layout: layout)
-            }
-        }
-        for district in districts {
-            depth.add(at: routeOffset + district.lower.y + 41 * scale) {
-                ground.royalDistrict(district, layout: layout)
-            }
-        }
-        for crossing in crossings {
-            // A bridge shares its deck endpoints with the court's real landings.
-            // Its opening reveals the existing channel rather than a painted pool.
-            depth.add(at: routeOffset + crossing.outer.y + 42 * scale) {
-                ground.royalBridge(crossing)
-            }
-        }
+        ground.appendScenery(layout: layout, districts: districts, crossings: crossings, depth: depth, offset: routeOffset)
         // Broad tablet gardens have their own connected outer gallery. On a
         // phone these spaces continue naturally beyond the edge of the map.
         if w > 650 {
@@ -13302,6 +13456,24 @@ private struct CastleWorldPainter {
                     }
                 }
             }
+        }
+    }
+
+    func appendScenery(layout: CastleKingdomLayout, districts: [CastleKingdomLayout.District],
+                       crossings: [CastleKingdomLayout.Crossing], depth: WorldSceneryDepth, offset: CGFloat = 0) {
+        for cascade in CastleKingdomLayout.cascades {
+            depth.add(at: offset + cascade.y + 24 * layout.scale) {
+                self.cascade(layout: layout, at: cascade.y, right: cascade.right)
+            }
+        }
+        for item in layout.landmarks {
+            depth.add(at: offset + item.point.y + 28 * item.scale) { clockQuay(item, layout: layout) }
+        }
+        for district in districts {
+            depth.add(at: offset + district.lower.y + 41 * layout.scale) { royalDistrict(district, layout: layout) }
+        }
+        for crossing in crossings {
+            depth.add(at: offset + crossing.outer.y + 42 * layout.scale) { royalBridge(crossing) }
         }
     }
 
@@ -13354,40 +13526,28 @@ private struct CastleWorldPainter {
             for (width, color): (CGFloat, UInt32) in [(38, 0xA4AA8C), (33, 0xFFF0CC), (25, 0xB3CFBD), (19, 0x53B5C7)] {
                 context.stroke(water, with: .color(Color(dinoHex: color)), style: StrokeStyle(lineWidth: width * s, lineCap: .round, lineJoin: .round))
             }
-            for i in 0..<47 {
-                let y = 177 + CGFloat(i) * 31
-                let point = layout.waterPoint(at: y, right: right)
-                let r = CGFloat(3 + i % 4) * s
-                var ripple = Path(); ripple.move(to: .init(x: point.x - r, y: y))
-                ripple.addQuadCurve(to: .init(x: point.x + r, y: y + 1.5 * s), control: .init(x: point.x, y: y + 3 * s))
-                context.stroke(ripple, with: .color(Color(dinoHex: 0xDCFFF1).opacity(i % 3 == 0 ? 0.85 : 0.46)), style: StrokeStyle(lineWidth: 0.9 * s, lineCap: .round))
-            }
+            if !liveWater { riverCurrent(layout: layout, right: right) }
             for outer in [false, true] {
                 var walk = Path()
                 for i in 0...150 {
-                    let y = 175 + CGFloat(i) * 9.7
+                    let y = -scenery.routeOffset + (scenery.height + 24) * CGFloat(i) / 150
                     let point = layout.walkPoint(at: y, right: right, outer: outer)
                     if i == 0 { walk.move(to: point) } else { walk.addLine(to: point) }
                 }
                 context.stroke(walk, with: .color(Color(dinoHex: 0xA6AA8B).opacity(0.7)), style: StrokeStyle(lineWidth: (outer ? 19 : 12) * s, lineCap: .round))
                 context.stroke(walk, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xF6E8C9), Color(dinoHex: 0xD5D0AF)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: 1700)), style: StrokeStyle(lineWidth: (outer ? 15 : 8) * s, lineCap: .round))
-                if !outer {
-                    pavedLink(from: CGPoint(x: scenery.centerX(at: 145) + sign * 23, y: 145),
-                              to: layout.walkPoint(at: 175, right: right, outer: false), width: 8 * s)
-                    pavedLink(from: layout.walkPoint(at: 1630, right: right, outer: false),
-                              to: CGPoint(x: scenery.centerX(at: 1655) + sign * 23, y: 1655), width: 8 * s)
-                }
             }
             // Curved hedge walls follow the avenue. Each bridge cuts a full
             // entrance through the hedge rather than stopping at a green bar.
             let openings = crossings.filter { $0.right == right }.map { $0.outer.y }.sorted()
             var intervals: [(CGFloat, CGFloat)] = []
-            var startY: CGFloat = 195
+            var startY = -scenery.routeOffset - 12
             for y in openings {
                 if y - 35 * s > startY { intervals.append((startY, y - 35 * s)) }
                 startY = y + 35 * s
             }
-            if startY < 1635 { intervals.append((startY, 1635)) }
+            let endY = scenery.height - scenery.routeOffset + 12
+            if startY < endY { intervals.append((startY, endY)) }
             for (index, interval) in intervals.enumerated() {
                 let count = max(2, Int((interval.1 - interval.0) / 7))
                 let points = (0...count).map { i -> CGPoint in
@@ -13470,19 +13630,34 @@ private struct CastleWorldPainter {
         context.stroke(top.offsetBy(dx: -width * 0.12, dy: -width * 0.18), with: .color(Color(dinoHex: 0xD6E5A6).opacity(0.33)), style: StrokeStyle(lineWidth: 0.7, lineCap: .round))
     }
 
-    private func landing(at point: CGPoint, width: CGFloat, depth: CGFloat, right: Bool) {
+    private func landing(at point: CGPoint, width: CGFloat, depth: CGFloat, right: Bool, exit: Bool = false, terminal: Bool = false) {
         at(point) { p in
-            p.masonry(CGRect(x: -width / 2, y: -1, width: width, height: 19))
-            p.polygon([.init(x: -width / 2 - 2, y: -depth / 2), .init(x: width / 2 + 2, y: -depth / 2),
-                       .init(x: width / 2 + 3, y: depth / 2), .init(x: -width / 2 - 3, y: depth / 2)], [0xFFF4D8, 0xE0D3B2, 0xC9C2A1])
-            p.line([.init(x: -width / 2, y: depth / 2), .init(x: width / 2, y: depth / 2)], 0xFFFAE2, 2)
-            for x in stride(from: -width / 2 + 10, through: width / 2 - 4, by: 14) {
-                p.line([.init(x: x, y: -depth / 2 + 2), .init(x: x + 3, y: depth / 2 - 2)], 0xB8B298, 0.65, opacity: 0.7)
+            let half = width / 2
+            // Solid platform, with its front face below the floor rather than across the stairs.
+            p.polygon([.init(x: -half, y: depth / 2), .init(x: half, y: depth / 2),
+                       .init(x: half, y: depth / 2 + 10), .init(x: -half, y: depth / 2 + 10)], [0xC8C1A3, 0x9AA58E])
+            p.polygon([.init(x: -half, y: -depth / 2), .init(x: half, y: -depth / 2),
+                       .init(x: half, y: depth / 2), .init(x: -half, y: depth / 2)], [0xFFF3D5, 0xDDD1B1])
+            for x in stride(from: -half + 10, through: half - 4, by: 14) {
+                p.line([.init(x: x, y: -depth / 2 + 2), .init(x: x + 2, y: depth / 2 - 2)], 0xBBB499, 0.65)
             }
-            for side: CGFloat in [-1, 1] {
-                p.masonry(CGRect(x: side * (width / 2 - 3) - 4, y: -23, width: 8, height: 26))
-                p.rounded(CGRect(x: side * (width / 2 - 3) - 6, y: -26, width: 12, height: 5), 1.5, [0xFFF2D1, 0xC2B28A])
-                p.oval(CGRect(x: side * (width / 2 - 3) - 3, y: -33, width: 6, height: 8), [0xFFF0B8, 0xC6A365])
+            if terminal {
+                for x in stride(from: -half + 5, through: half - 4, by: 9) {
+                    p.rounded(CGRect(x: x - 1.7, y: depth / 2 - 21, width: 3.4, height: 20), 1.4, [0xFFF1D1, 0xB9B497])
+                }
+                p.line([.init(x: -half + 3, y: depth / 2 - 23), .init(x: half - 3, y: depth / 2 - 23)], 0xFFF2D0, 3.4)
+            }
+            for y: CGFloat in [-9, 3, 14] {
+                p.line([.init(x: -half + 2, y: y), .init(x: half - 2, y: y)], 0xC7BDA1, 0.7, opacity: 0.75)
+            }
+            // The outer side opens to the garden; a lower landing opens to its bridge.
+            // Rails align with the flight edges and never cross either stair mouth.
+            let railX: CGFloat = (right ? -1 : 1) * 25
+            if !exit {
+                for y: CGFloat in [-16, -8, 0, 8, 16] {
+                    p.rounded(CGRect(x: railX - 2, y: y - 22, width: 4, height: 20), 1.5, [0xFFF1D1, 0xB9B497])
+                }
+                p.line([.init(x: railX, y: -41), .init(x: railX, y: -9)], 0xFFF2D0, 3.4)
             }
         }
     }
@@ -13496,12 +13671,11 @@ private struct CastleWorldPainter {
             let mid = local(district.middle), low = local(district.lower)
             let outside = district.right ? (layout.scenery.width - district.upper.x) / s + 12 : district.upper.x / s + 12
             let a = min(-sign * 33, sign * max(64, outside)), b = max(-sign * 33, sign * max(64, outside))
-            // The upper forecourt sits on a solid retaining wall. Its front
-            // opening meets the short entrance steps and the first main flight.
-            p.at(CGPoint(x: (a + b) / 2, y: 17)) { wall in
+            // The upper forecourt and first flight share a clear, level landing.
+            p.at(CGPoint(x: (a + b) / 2, y: 28)) { wall in
                 wall.retainingWall(width: b - a, height: 28, arches: max(2, Int((b - a) / 32)))
             }
-            p.polygon([.init(x: a, y: -74), .init(x: b, y: -74), .init(x: b + 2, y: -5), .init(x: a - 2, y: -5)], [0xF4E9CA, 0xDCD2AE])
+            p.polygon([.init(x: a, y: -74), .init(x: b, y: -74), .init(x: b + 2, y: 18), .init(x: a - 2, y: 18)], [0xF4E9CA, 0xDCD2AE])
             for y: CGFloat in [-57, -39, -21] { p.line([.init(x: a + 2, y: y), .init(x: b - 2, y: y)], 0xBFB99A, 0.65, opacity: 0.7) }
             for x in stride(from: a + 12, through: b - 8, by: 19) {
                 p.line([.init(x: x, y: -72), .init(x: x + 2, y: -7)], 0xC4BA9A, 0.7, opacity: 0.65)
@@ -13526,40 +13700,37 @@ private struct CastleWorldPainter {
                 p.dinoStatue(at: CGPoint(x: sign * 12, y: -56), size: 0.82, mirror: district.right)
                 p.cypress(at: CGPoint(x: sign * 61, y: -27), size: 0.80)
             } else if district.id == 1 {
-                p.palace(at: CGPoint(x: sign * 33, y: -21), size: 0.77)
+                p.palace(at: CGPoint(x: sign * 33, y: -39), size: 0.77)
             } else if district.id == 2 {
-                p.fountain(at: CGPoint(x: sign * 12, y: -53), size: 0.87)
                 p.gardenGate(at: CGPoint(x: sign * 65, y: -29), size: 0.72, iron: true)
             } else {
                 p.gardenGate(at: CGPoint(x: 0, y: -22), size: 1.04, iron: false)
                 p.tower(at: CGPoint(x: sign * 78, y: -18), size: 0.64, time: nil)
             }
-            // Four small entrance flights visibly join the upper paving to
-            // the longer staircase; there is no planter across the opening.
-            for i in 0..<4 {
-                let y = -7 + CGFloat(i) * 5
-                p.rounded(CGRect(x: -20 - CGFloat(i), y: y, width: 40 + CGFloat(i) * 2, height: 5), 0.8, [0xFFF0CE, 0xADAf95])
-                p.line([.init(x: -20 - CGFloat(i), y: y), .init(x: 20 + CGFloat(i), y: y)], 0xFFFAE0, 1.2)
-            }
+            // A clear forecourt runs straight onto the first tread. The short
+            // decorative steps previously overlapped the bridge and its end posts.
+            p.landing(at: .zero, width: 64, depth: 36, right: district.right, exit: true)
             // A side garden is reached from the intermediate balcony. Both
             // hedge borders stop at this opening and its gate has an open arch.
-            let gardenWidth = district.right ? (layout.scenery.width - district.middle.x) / s - 38 : district.middle.x / s - 38
+            let gardenWidth = district.right ? (layout.scenery.width - district.middle.x) / s - 47 : district.middle.x / s - 47
             if gardenWidth > 21 {
-                let gardenCenter = CGPoint(x: mid.x + sign * (40 + gardenWidth / 2), y: mid.y - 5)
+                let gardenCenter = CGPoint(x: mid.x + sign * (47 + gardenWidth / 2), y: mid.y - 5)
                 p.parterre(at: gardenCenter, width: gardenWidth, height: 71, right: district.right, variation: district.id)
                 p.pavedLink(from: mid, to: CGPoint(x: gardenCenter.x, y: mid.y), width: 12)
             }
             p.stairFlight(from: local(district.flights[0].top), to: local(district.flights[0].bottom), variation: district.id)
-            p.landing(at: mid, width: 75, depth: 32, right: district.right)
+            p.landing(at: mid, width: 64, depth: 36, right: district.right)
             p.stairFlight(from: local(district.flights[1].top), to: local(district.flights[1].bottom), variation: district.id + 1)
-            p.landing(at: low, width: 66, depth: 32, right: district.right)
-            p.gardenGate(at: CGPoint(x: mid.x + sign * 50, y: mid.y + 2), size: 0.58, iron: true)
+            p.landing(at: low, width: 64, depth: 36, right: district.right, exit: true, terminal: true)
+            if gardenWidth > 21 {
+                p.gardenGate(at: CGPoint(x: mid.x + sign * 47, y: mid.y + 2), size: 0.48, iron: true)
+            }
             p.lantern(at: CGPoint(x: mid.x - sign * 32, y: mid.y - 10), size: 0.44)
             p.lantern(at: CGPoint(x: low.x + sign * 30, y: low.y - 9), size: 0.45)
-            p.planter(at: CGPoint(x: sign * 38, y: -5), size: 0.55)
-            p.flowers(at: CGPoint(x: low.x + sign * 32, y: low.y + 13), size: 0.47)
-            if district.id == 1 || district.id == 3 {
-                p.fountain(at: CGPoint(x: mid.x + sign * 69, y: mid.y - 17), size: 0.44)
+            p.planter(at: CGPoint(x: sign * 57, y: -20), size: 0.48)
+            p.flowers(at: CGPoint(x: low.x + sign * 47, y: low.y + 9), size: 0.42)
+            for fountain in layout.fountains(for: district) {
+                p.fountain(at: local(fountain.point), size: fountain.scale / s)
             }
         }
     }
@@ -13569,7 +13740,7 @@ private struct CastleWorldPainter {
         for side: CGFloat in [-1, 1] {
             let a = flight.edge(0, side: side), b = flight.edge(1, side: side)
             polygon([.init(x: a.x + side * 6, y: a.y - 5), .init(x: b.x + side * 7, y: b.y - 4),
-                     .init(x: b.x + side * 7, y: b.y + 17), .init(x: a.x + side * 6, y: a.y + 19)], [0xE6D9B8, 0xAAAe94, 0x909F88])
+                     .init(x: b.x + side * 7, y: b.y + 9), .init(x: a.x + side * 6, y: a.y + 9)], [0xE6D9B8, 0xAAAe94, 0x909F88])
             for i in 0..<5 {
                 let t = CGFloat(i) / 4, e = flight.edge(t, side: side)
                 line([.init(x: e.x + side * 3, y: e.y + 6), .init(x: e.x + side * 7, y: e.y + 7)], 0xFFF0CB, 0.8, opacity: 0.7)
@@ -13727,30 +13898,83 @@ private struct CastleWorldPainter {
     }
 
     private func cascade(layout: CastleKingdomLayout, at y: CGFloat, right: Bool) {
-        let s = layout.scale
-        let top = layout.waterPoint(at: y - 38 * s, right: right)
-        let base = layout.waterPoint(at: y + 20 * s, right: right)
-        let middle = layout.waterPoint(at: y, right: right)
+        let s = layout.scale, middle = layout.waterPoint(at: y, right: right)
         at(middle, size: s) { p in
-            p.retainingWall(width: 64, height: 39, arches: 2)
-            let x0 = (top.x - middle.x) / s, x1 = (base.x - middle.x) / s
-            var curtain = Path(); curtain.move(to: .init(x: x0 - 11, y: -41))
-            curtain.addQuadCurve(to: .init(x: x1 - 16, y: 21), control: .init(x: x0 - 15, y: -6))
-            curtain.addLine(to: .init(x: x1 + 16, y: 21))
-            curtain.addQuadCurve(to: .init(x: x0 + 11, y: -41), control: .init(x: x0 + 12, y: -8)); curtain.closeSubpath()
-            p.material(curtain, [0xDFFFF5, 0x75C6D3, 0x469DBD, 0xBCE9DE])
-            for i in 0..<7 {
-                let offset = CGFloat(i - 3) * 3
-                var thread = Path(); thread.move(to: .init(x: x0 + offset, y: -39))
-                thread.addQuadCurve(to: .init(x: x1 + offset * 1.3, y: 21), control: .init(x: x0 + offset - 3, y: -7))
-                p.context.stroke(thread, with: .color(Color(dinoHex: 0xF3FFF7).opacity(i % 2 == 0 ? 0.85 : 0.48)), style: StrokeStyle(lineWidth: i % 3 == 0 ? 1.6 : 0.7, lineCap: .round))
+            p.retainingWall(width: 58, height: 33, arches: 2)
+            p.ivy(at: CGPoint(x: right ? 28 : -28, y: -30), size: 0.40)
+        }
+        // The curtain and its outflow share the canal's actual contour and width.
+        // There is no separate pool silhouette at the foot of the fall.
+        var water = context
+        water.clip(to: layout.waterway(right: right).strokedPath(StrokeStyle(lineWidth: 19 * s, lineCap: .round, lineJoin: .round)))
+        var curtain = Path()
+        for i in 0...40 {
+            let point = layout.waterPoint(at: y + (-38 + CGFloat(i) * 1.65) * s, right: right)
+            if i == 0 { curtain.move(to: point) } else { curtain.addLine(to: point) }
+        }
+        water.stroke(curtain, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xA3E6DF), Color(dinoHex: 0x439DBD), Color(dinoHex: 0x73CECE), Color(dinoHex: 0x53B5C7)]),
+                                                   startPoint: .init(x: middle.x, y: y - 38 * s), endPoint: .init(x: middle.x, y: y + 28 * s)),
+                     style: StrokeStyle(lineWidth: 19 * s, lineCap: .butt, lineJoin: .round))
+        if !liveWater { cascadeCurrent(layout: layout, at: y, right: right) }
+    }
+
+    func riverCurrent(layout: CastleKingdomLayout, right: Bool) {
+        let s = layout.scale
+        var c = context
+        c.clip(to: layout.waterway(right: right).strokedPath(StrokeStyle(lineWidth: 18 * s, lineCap: .round, lineJoin: .round)))
+        let begin = -layout.scenery.routeOffset, end = layout.scenery.height - layout.scenery.routeOffset
+        for lane in [-1, 1] {
+            var stream = Path()
+            for i in 0...220 {
+                let y = begin + (end - begin) * CGFloat(i) / 220
+                let center = layout.waterPoint(at: y, right: right)
+                let sway = sin(y / 34 + CGFloat(lane) * 2.1) * 1.3 * s
+                let point = CGPoint(x: center.x + CGFloat(lane) * 5.2 * s + sway, y: y)
+                if i == 0 { stream.move(to: point) } else { stream.addLine(to: point) }
             }
-            p.oval(CGRect(x: x1 - 34, y: 12, width: 68, height: 22), [0xE5FFF0, 0x81CCD0, 0x5EB3C1])
-            for i in 0..<8 {
-                p.oval(CGRect(x: x1 - 23 + CGFloat(i) * 6, y: 17 + CGFloat(i % 3) * 2, width: 8, height: 3), [0xFCFFF1, 0xB5E5DC])
+            c.stroke(stream, with: .color(Color(dinoHex: 0xB8F1E5).opacity(0.46)),
+                     style: StrokeStyle(lineWidth: 0.75 * s, lineCap: .round,
+                                        dash: [8 * s, (28 + CGFloat(lane + 1) * 7) * s], dashPhase: -CGFloat(time * 15) * s))
+        }
+        let travel = CGFloat((time * 13).truncatingRemainder(dividingBy: 37))
+        for i in 0..<Int((end - begin) / 37) + 1 {
+            let y = begin + CGFloat(i) * 37 + travel
+            let center = layout.waterPoint(at: y, right: right)
+            let slope = (layout.waterPoint(at: y + 1, right: right).x - layout.waterPoint(at: y - 1, right: right).x) / 2
+            let length = hypot(slope, 1), nx = 1 / length, ny = -slope / length
+            let radius = CGFloat(3 + i % 3) * s
+            var ripple = Path()
+            ripple.move(to: .init(x: center.x - nx * radius, y: y - ny * radius))
+            ripple.addQuadCurve(to: .init(x: center.x + nx * radius, y: y + ny * radius),
+                                control: .init(x: center.x + slope / length * 2 * s, y: y + 2 / length * s))
+            c.stroke(ripple, with: .color(Color(dinoHex: 0xECFFF6).opacity(0.65)), style: StrokeStyle(lineWidth: 0.85 * s, lineCap: .round))
+        }
+    }
+
+    func cascadeCurrent(layout: CastleKingdomLayout, at y: CGFloat, right: Bool) {
+        let s = layout.scale
+        var c = context
+        c.clip(to: layout.waterway(right: right).strokedPath(StrokeStyle(lineWidth: 18 * s, lineCap: .round, lineJoin: .round)))
+        for lane in -2...2 {
+            var thread = Path()
+            for i in 0...32 {
+                let row = y + (-37 + CGFloat(i) * 1.9) * s
+                let center = layout.waterPoint(at: row, right: right)
+                let point = CGPoint(x: center.x + CGFloat(lane) * 3.4 * s, y: row)
+                if i == 0 { thread.move(to: point) } else { thread.addLine(to: point) }
             }
-            p.planter(at: CGPoint(x: -30, y: -40), size: 0.44)
-            p.ivy(at: CGPoint(x: 27, y: -38), size: 0.49)
+            c.stroke(thread, with: .color(Color(dinoHex: 0xF1FFF8).opacity(lane % 2 == 0 ? 0.85 : 0.5)),
+                     style: StrokeStyle(lineWidth: (lane % 2 == 0 ? 1.4 : 0.7) * s, lineCap: .round,
+                                        dash: [13 * s, 8 * s], dashPhase: -CGFloat(time * 52) * s + CGFloat(lane) * 4 * s))
+        }
+        for i in 0..<12 {
+            let phase = (time * 0.85 + Double(i) / 12).truncatingRemainder(dividingBy: 1)
+            let row = y + (14 + CGFloat(phase) * 23) * s
+            let center = layout.waterPoint(at: row, right: right)
+            let x = center.x + CGFloat((i * 7) % 13 - 6) * s
+            let radius = (1.1 + CGFloat(phase) * 1.2) * s
+            c.fill(Path(ellipseIn: CGRect(x: x - radius, y: row, width: radius * 2, height: radius)),
+                   with: .color(Color(dinoHex: 0xF2FFF6).opacity((1 - phase) * 0.85)))
         }
     }
 
@@ -14249,32 +14473,50 @@ private struct CastleWorldPainter {
             p.oval(CGRect(x: -21, y: -62, width: 42, height: 12), [0xFFEACA, 0xB8C2AE])
             p.oval(CGRect(x: -17, y: -62, width: 34, height: 7), [0xDCFFF0, 0x8DCCD4])
             p.oval(CGRect(x: -5, y: -80, width: 10, height: 16), [0xFFF0B5, 0xCBA96C])
-            for side: CGFloat in [-1, 1] {
-                for i in 0..<4 {
-                    let x = side * (19 + CGFloat(i) * 3.8)
-                    var sheet = Path(); sheet.move(to: .init(x: x, y: -30))
-                    sheet.addCurve(to: .init(x: x + side * 5, y: 2), control1: .init(x: x + side * 2, y: -20), control2: .init(x: x + side * 2, y: -6))
-                    p.context.stroke(sheet, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xEDFDF3), Color(dinoHex: 0x6EBECA).opacity(0.75), Color(dinoHex: 0xF7FFF3)]), startPoint: .init(x: x, y: -30), endPoint: .init(x: x, y: 2)), style: StrokeStyle(lineWidth: i % 2 == 0 ? 2.3 : 1, lineCap: .round))
-                    p.oval(CGRect(x: x + side * 5 - 3, y: -1, width: 7, height: 2.5), [0xF6FFF6, 0xA3DFD8])
-                }
-            }
-            for side: CGFloat in [-1, 1] {
-                for i in 0..<3 {
-                    let spout = -79 + CGFloat(i) * 13
-                    var water = Path(); water.move(to: .init(x: 0, y: spout))
-                    water.addQuadCurve(to: .init(x: side * CGFloat(27 + i * 7), y: -6), control: .init(x: side * CGFloat(22 + i * 5), y: spout + (-6 - spout) * 0.42))
-                    p.context.stroke(water, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xF3FFFF), Color(dinoHex: 0x89D4DC)]), startPoint: .init(x: 0, y: -79), endPoint: .zero), style: StrokeStyle(lineWidth: i == 0 ? 1.7 : 1, lineCap: .round))
-                }
-            }
-            for i in 0..<7 {
-                let x = CGFloat(i) * 12 - 37
-                p.line([.init(x: x, y: 1), .init(x: x + 7, y: 2)], 0xF3FFF0, 1, opacity: 0.9)
-            }
-            for (x, y, r): (CGFloat, CGFloat, CGFloat) in [(-28, 3, 9), (29, 0, 10), (4, 6, 13)] {
-                p.context.stroke(Path(ellipseIn: CGRect(x: x - r, y: y - r * 0.16, width: r * 2, height: r * 0.32)), with: .color(Color(dinoHex: 0xF2FFF2).opacity(0.8)), lineWidth: 0.7)
-            }
+            if !p.liveWater { p.fountainWater() }
         }
     }
+    func fountainWater() {
+        // Travel along each jet, spill over the bowl rims and expand into the basin.
+        for side: CGFloat in [-1, 1] {
+            for i in 0..<4 {
+                let x = side * (19 + CGFloat(i) * 3.8)
+                var sheet = Path(); sheet.move(to: .init(x: x, y: -30))
+                sheet.addCurve(to: .init(x: x + side * 5, y: 2), control1: .init(x: x + side * 2, y: -20), control2: .init(x: x + side * 2, y: -6))
+                context.stroke(sheet, with: .color(Color(dinoHex: 0xADE3E4).opacity(0.78)), style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
+                context.stroke(sheet, with: .color(Color(dinoHex: 0xF4FFF8).opacity(0.95)),
+                               style: StrokeStyle(lineWidth: i % 2 == 0 ? 1.3 : 0.75, lineCap: .round,
+                                                  dash: [5, 4], dashPhase: -CGFloat(time * 29) + CGFloat(i) * 2))
+            }
+            for i in 0..<3 {
+                let spout = -79 + CGFloat(i) * 13
+                let pulse = CGFloat(sin(time * 2.3 + Double(i))) * 1.1
+                let a = CGPoint(x: 0, y: spout)
+                let b = CGPoint(x: side * CGFloat(22 + i * 5), y: spout + (-6 - spout) * 0.42 + pulse)
+                let end = CGPoint(x: side * CGFloat(27 + i * 7), y: -6)
+                var jet = Path(); jet.move(to: a); jet.addQuadCurve(to: end, control: b)
+                context.stroke(jet, with: .color(Color(dinoHex: 0x9EDDE2).opacity(0.75)), style: StrokeStyle(lineWidth: i == 0 ? 1.8 : 1.2, lineCap: .round))
+                context.stroke(jet, with: .color(Color(dinoHex: 0xF3FFFF)),
+                               style: StrokeStyle(lineWidth: i == 0 ? 1.1 : 0.7, lineCap: .round,
+                                                  dash: [7, 5], dashPhase: -CGFloat(time * 34) + CGFloat(i) * 3))
+                for drop in 0..<3 {
+                    let t = CGFloat((time * 0.75 + Double(drop) / 3 + Double(i) * 0.17).truncatingRemainder(dividingBy: 1))
+                    let u = 1 - t
+                    let x = u * u * a.x + 2 * u * t * b.x + t * t * end.x
+                    let y = u * u * a.y + 2 * u * t * b.y + t * t * end.y
+                    oval(CGRect(x: x - 0.9, y: y - 1.3, width: 1.8, height: 2.6), [0xFFFFFF, 0xCAFFF0])
+                }
+            }
+        }
+        for i in 0..<6 {
+            let phase = (time * 0.65 + Double(i) / 6).truncatingRemainder(dividingBy: 1)
+            let x = CGFloat(i % 3 - 1) * 28, y = CGFloat(i % 2) * 5
+            let radius = 3 + CGFloat(phase) * 10
+            context.stroke(Path(ellipseIn: CGRect(x: x - radius, y: y - radius * 0.17, width: radius * 2, height: radius * 0.34)),
+                           with: .color(Color(dinoHex: 0xEFFFF5).opacity((1 - phase) * 0.9)), lineWidth: 0.8)
+        }
+    }
+
     private func bridge(at point: CGPoint, size: CGFloat) {
         at(point, size: size) { p in
             p.oval(CGRect(x: -56, y: 6, width: 114, height: 35), [0xB5E5DC, 0x74BDCF])
@@ -14497,7 +14739,7 @@ struct ThemedWorldLandscape: View, Equatable {
                 return
             }
             if world.id == 10 {
-                CastleWorldPainter(context: context).landscape(in: size, routeOffset: routeOffset, depth: depth)
+                CastleWorldPainter(context: context, liveWater: true).landscape(in: size, routeOffset: routeOffset, depth: depth)
                 var routeContext = context
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
@@ -14576,8 +14818,10 @@ struct ThemedWorldLandscape: View, Equatable {
                 if world.themeID == 2 { SleepValleyLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
                 if world.id == 3 { VolcanoWorldLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
                 if world.id == 4 { VillageWorldLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                if world.id == 6 { CityWorldLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
                 if world.id == 8 { TimeMachineLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
                 if world.id == 9 { PirateCoastLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                if world.id == 10 { CastleWaterLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
                 if world.id == 5 { CrystalCaveLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
             }
             .overlay(alignment: .top) {
