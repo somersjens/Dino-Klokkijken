@@ -379,21 +379,28 @@ struct DinoClockControlButtonStyle: ButtonStyle {
     var selected = true
     var expands = false
     var compact = false
+    /// Fixed size keeps +1 and +30 on the same button. Nil follows the label.
+    var width: CGFloat? = nil
+    var height: CGFloat? = nil
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: compact ? 15 : 17, weight: .bold, design: .rounded))
             .foregroundStyle(selected ? Color.white : DinoStyle.ink)
-            .padding(.horizontal, compact ? 12 : 18)
-            .frame(minHeight: compact ? 40 : 48)
+            .lineLimit(1)
+            .padding(.horizontal, width == nil ? (compact ? 12 : 18) : 0)
+            .frame(width: width, height: height)
+            .frame(minHeight: height ?? (compact ? 40 : 48))
             .frame(maxWidth: expands ? .infinity : nil)
-            .background(selected ? DinoStyle.ink : .white, in: RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14)
+            .background(selected ? DinoStyle.ink : .white, in: RoundedRectangle(cornerRadius: cornerRadius))
+            .overlay(RoundedRectangle(cornerRadius: cornerRadius)
                 .strokeBorder(DinoStyle.ink.opacity(highContrast || selected ? 1 : 0.22),
                               lineWidth: highContrast ? 3 : 1.5))
             .opacity(configuration.isPressed ? 0.85 : 1)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
     }
+
+    private var cornerRadius: CGFloat { height == nil ? 14 : 18 }
 }
 
 struct DinoButtonStyle: ButtonStyle {

@@ -463,6 +463,42 @@ final class DinoUITests: XCTestCase {
         }
     }
 
+    func testTimeMachineWorkshopRouteRemainsPlayable() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "7"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 8))
+        waitForMapOpeningToFinish()
+        let first = revealMapNode(71)
+        XCTAssertTrue(first.isEnabled)
+        saveScreenshot("time-machine-entrance")
+        // No scrolling between these captures: differences belong to machinery.
+        Thread.sleep(forTimeInterval: 1.2)
+        saveScreenshot("time-machine-entrance-motion")
+        first.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5))
+        tap("level.play")
+        let clock = app.descendants(matching: .any)["question.analogControl"].firstMatch
+        XCTAssertTrue(clock.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["question.confirm"].isHittable)
+        saveScreenshot("time-machine-level-71")
+
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 8))
+        waitForMapOpeningToFinish()
+        for id in [74, 77, 80] {
+            let node = revealMapNode(id)
+            XCTAssertGreaterThanOrEqual(node.frame.width, 44)
+            saveScreenshot("time-machine-route-\(id)")
+            if id == 80 {
+                XCTAssertTrue(node.isEnabled)
+                node.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+                XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5))
+            }
+        }
+    }
+
     func testWorldBossSceneryRemainsPlayable() {
         let requested = ProcessInfo.processInfo.environment["DINO_TEST_WORLD_IDS"]?
             .split(separator: ",").compactMap { Int($0) }.filter { (1...10).contains($0) } ?? []

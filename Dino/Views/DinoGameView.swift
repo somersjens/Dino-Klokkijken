@@ -148,7 +148,7 @@ struct DinoGameView: View {
                         Label(LocalizedStringKey(check.titleKey), systemImage: "checkmark")
                             .lineLimit(1).minimumScaleFactor(0.7)
                     }
-                    .buttonStyle(DinoClockControlButtonStyle(expands: true))
+                    .buttonStyle(DinoButtonStyle())
                     .disabled(!check.enabled)
                     .frame(width: min(420, width))
                     .accessibilityIdentifier("question.confirm")

@@ -1517,6 +1517,7 @@ private struct WorldChapter: View, Equatable {
                         .padding(.horizontal, 18).frame(maxWidth: 600).frame(maxWidth: .infinity)
                     }
                     if world.id == 2 { DinoDesertFlights(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                    if world.id == 9 { PirateCoastFlights(routeOffset: routeOffset, viewportHeight: viewportHeight) }
                     if world.id == 5 { CrystalCaveEntranceForeground().equatable() }
                     if world.id == 6 { CrystalCaveExitForeground().equatable() }
                 }

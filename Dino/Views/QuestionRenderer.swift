@@ -215,7 +215,7 @@ struct DinoAnalogClockControls: View {
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("\(prefix).hand")
             }
-            HStack(spacing: 8) {
+            HStack(spacing: 12) {
                 turnButton(direction: -1)
                 turnButton(direction: 1)
             }
@@ -252,11 +252,11 @@ struct DinoAnalogClockControls: View {
         return Button { adjust(direction) } label: {
             HStack(spacing: 6) {
                 Image(systemName: direction < 0 ? "arrow.counterclockwise" : "arrow.clockwise")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 20, weight: .bold))
                 Text(verbatim: "\(direction < 0 ? "−" : "+")\(minutes ? minuteStep : 1)")
                     .monospacedDigit()
             }
-        }.buttonStyle(DinoClockControlButtonStyle(expands: true, compact: true))
+        }.buttonStyle(DinoClockControlButtonStyle(width: 118, height: 56))
             .accessibilityIdentifier("\(prefix).analog.\(direction < 0 ? "less" : "more")")
             .scaleEffect(cue && !reduceMotion ? 0.96 : 1)
             .overlay(alignment: .bottomTrailing) { if cue { DinoClockTapCue() } }

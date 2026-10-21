@@ -62,10 +62,6 @@ struct SpokenTimeQuestion: View {
     private var clock: some View {
         DigitalClock(time: session.question.target, theme: theme, fontSize: min(compact ? 36 : 46, width * 0.13))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
-            .background(.white, in: RoundedRectangle(cornerRadius: 28))
-            .overlay(RoundedRectangle(cornerRadius: 28).stroke(highContrast ? DinoStyle.ink : .white, lineWidth: highContrast ? 3 : 2))
             .accessibilityIdentifier("\(prefix).targetClock")
     }
 
