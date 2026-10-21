@@ -1,0 +1,49 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -configuration Debug -destination id=C52CEAA1-9B58-4446-9A39-93DBC1FA3B1F -destination id=CD5048F9-F217-4BE9-8A78-37A684D8710B -parallel-testing-enabled NO -derivedDataPath /private/tmp/dino-volcano-transition-build -resultBundlePath /private/tmp/dino-volcano-banks-ui.xcresult "-only-testing:DinoUITests/DinoUITests/testWorldBannersHaveBalancedClearance" CODE_SIGNING_ALLOWED=NO test-without-building
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Writing result bundle at path:
+	/private/tmp/dino-volcano-banks-ui.xcresult
+
+
+Testing on multiple destinations concurrently. Note that it is not possible to run tests in parallel on individual destinations in this mode. Pass -disable-concurrent-destination-testing instead to allow tests to run in parallel on each destination, but have the destinations run serially.Maximum concurrent test device destinations is unlimited. (Adjust this with -maximum-concurrent-test-device-destinations.) Maximum concurrent test simulator destinations is set to 4. (Adjust this with -maximum-concurrent-test-simulator-destinations.)
+
+2026-10-20 18:47:13.885 xcodebuild[20022:40661794] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-20 18:47:13.885 xcodebuild[20022:40661794] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-20 18:47:14.806 xcodebuild[20022:40661794] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-20 18:47:14.806 xcodebuild[20022:40661794] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-20 18:47:18.969 xcodebuild[20022:40661794] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-20 18:47:18.969 xcodebuild[20022:40661794] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-20 18:47:19.723 xcodebuild[20022:40661794] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-20 18:47:19.724 xcodebuild[20022:40661794] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-20 18:47:42.575 xcodebuild[20022:40661794] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-20 18:47:42.575 xcodebuild[20022:40661794] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-20 18:48:00.847 xcodebuild[20022:40661794] [MT] IDETestOperationsObserverDebug: 55.122 elapsed -- Testing started completed.
+2026-10-20 18:48:00.847 xcodebuild[20022:40661794] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-20 18:48:00.847 xcodebuild[20022:40661794] [MT] IDETestOperationsObserverDebug: 55.122 sec, +55.122 sec -- end
+2026-10-20 18:48:07.501 xcodebuild[20022:40661794] [MT] IDETestOperationsObserverDebug: 61.776 elapsed -- Testing started completed.
+2026-10-20 18:48:07.501 xcodebuild[20022:40661794] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-20 18:48:07.501 xcodebuild[20022:40661794] [MT] IDETestOperationsObserverDebug: 61.776 sec, +61.776 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-volcano-banks-ui.xcresult
+
+Failing tests:
+	DinoUITests.testWorldBannersHaveBalancedClearance()
+
+** TEST EXECUTE FAILED **
+
+Testing started
+Testing started
+Test suite 'Selected tests' started on 'iPad Pro 11-inch (M5) - DinoUITests-Runner (20066)'
+Test suite 'DinoUITests.xctest' started on 'iPad Pro 11-inch (M5) - DinoUITests-Runner (20066)'
+Test suite 'DinoUITests' started on 'iPad Pro 11-inch (M5) - DinoUITests-Runner (20066)'
+Test suite 'Selected tests' started on 'iPhone 17 - DinoUITests-Runner (20067)'
+Test suite 'DinoUITests.xctest' started on 'iPhone 17 - DinoUITests-Runner (20067)'
+Test suite 'DinoUITests' started on 'iPhone 17 - DinoUITests-Runner (20067)'
+Test case 'DinoUITests.testWorldBannersHaveBalancedClearance()' failed on 'iPhone 17 - DinoUITests-Runner (20067)' (0.000 seconds)
+Test case 'DinoUITests.testWorldBannersHaveBalancedClearance()' passed on 'iPad Pro 11-inch (M5) - DinoUITests-Runner (20066)' (46.920 seconds)
+Testing passed on 'iPad Pro 11-inch (M5)'
+Testing failed on 'iPhone 17'

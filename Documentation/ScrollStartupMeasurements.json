@@ -1,0 +1,142 @@
+{
+  "date": "2026-10-20",
+  "device": "iPhone 18 Pro Simulator, iOS 27.0",
+  "configuration": "Debug",
+  "iterations": 3,
+  "gestures_per_iteration": 8,
+  "after_run": "Standalone run after functional tests and video inspection completed",
+  "metrics": {
+    "before": {
+      "Absolute Memory Physical (Dino-Klokkijken), kB": {
+        "average": 176950.248,
+        "values": [
+          176196.584,
+          176933.864,
+          177720.296
+        ]
+      },
+      "Duration (Scroll_DraggingAndDeceleration), s": {
+        "average": 2.545,
+        "values": [
+          2.551033,
+          2.521634,
+          2.56342
+        ]
+      },
+      "CPU Time (Dino-Klokkijken), s": {
+        "average": 10.9,
+        "values": [
+          10.401377,
+          10.679584,
+          11.618831
+        ]
+      },
+      "Clock Monotonic Time, s": {
+        "average": 35.795,
+        "values": [
+          35.184616,
+          34.838191,
+          37.363429
+        ]
+      },
+      "CPU Instructions Retired (Dino-Klokkijken), kI": {
+        "average": 99607879.338,
+        "values": [
+          102578108.751,
+          97750869.489,
+          98494659.775
+        ]
+      },
+      "Memory Physical (Dino-Klokkijken), kB": {
+        "average": 409.6,
+        "values": [
+          -294.912,
+          720.896,
+          802.816
+        ]
+      },
+      "CPU Cycles (Dino-Klokkijken), kC": {
+        "average": 37299309.957,
+        "values": [
+          39415618.965,
+          36192690.93,
+          36289619.975
+        ]
+      },
+      "Memory Peak Physical (Dino-Klokkijken), kB": {
+        "average": 180647.571,
+        "values": [
+          178408.424,
+          180620.264,
+          182914.024
+        ]
+      }
+    },
+    "after": {
+      "Absolute Memory Physical (Dino-Klokkijken), kB": {
+        "average": 129551.096,
+        "values": [
+          127699.704,
+          127634.168,
+          133319.416
+        ]
+      },
+      "Duration (Scroll_DraggingAndDeceleration), s": {
+        "average": 2.581,
+        "values": [
+          2.567555,
+          2.59479,
+          2.580322
+        ]
+      },
+      "CPU Time (Dino-Klokkijken), s": {
+        "average": 6.551,
+        "values": [
+          6.364224,
+          6.530175,
+          6.758229
+        ]
+      },
+      "Clock Monotonic Time, s": {
+        "average": 23.102,
+        "values": [
+          22.965925,
+          23.177954,
+          23.161416
+        ]
+      },
+      "CPU Instructions Retired (Dino-Klokkijken), kI": {
+        "average": 73685731.98,
+        "values": [
+          71452321.491,
+          73704149.294,
+          75900725.154
+        ]
+      },
+      "Memory Physical (Dino-Klokkijken), kB": {
+        "average": 1829.547,
+        "values": [
+          -147.456,
+          -49.152,
+          5685.248
+        ]
+      },
+      "CPU Cycles (Dino-Klokkijken), kC": {
+        "average": 28069179.994,
+        "values": [
+          27360107.8,
+          27944901.748,
+          28902530.433
+        ]
+      },
+      "Memory Peak Physical (Dino-Klokkijken), kB": {
+        "average": 131255.032,
+        "values": [
+          130026.232,
+          129927.928,
+          133810.936
+        ]
+      }
+    }
+  }
+}

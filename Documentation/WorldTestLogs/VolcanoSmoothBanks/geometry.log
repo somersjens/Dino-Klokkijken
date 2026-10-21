@@ -1,0 +1,36 @@
+320pt left bank tangent: before 91.41920922353556°, after 2.109007301158276°
+320pt right bank tangent: before 89.40363184035316°, after 1.5905524273948186°
+320pt: 5 volcanoes, 12155 silhouette samples, 0 road/lava contacts; 683 basalt-border samples, 0 gaps; smooth inlet joins; continuous vent-to-channel feeders; first cone exactly 20% smaller
+Cone effective heights: [0.9523199999999999, 0.8846605128205127, 0.8607507692307691, 0.8505764102564103, 0.7508676923076922]; source positions: [(297.3538461538461, 16.0), (15.261538461538468, 430.0), (304.73846153846154, 780.0), (22.64615384615385, 1130.0), (297.3538461538461, 1452.0)]
+393pt left bank tangent: before 92.49361623406178°, after 2.0366459716708527°
+393pt right bank tangent: before 88.57721312738025°, after 1.6306186128897904°
+393pt: 5 volcanoes, 12155 silhouette samples, 0 road/lava contacts; 699 basalt-border samples, 0 gaps; smooth inlet joins; continuous vent-to-channel feeders; first cone exactly 20% smaller
+Cone effective heights: [1.169568, 1.0171243076923078, 0.9221593846153846, 0.9021667692307692, 0.7872092307692307]; source positions: [(365.1876923076923, 16.0), (18.743076923076927, 430.0), (374.2569230769231, 780.0), (18.743076923076927, 1130.0), (365.1876923076923, 1452.0)]
+402pt left bank tangent: before 93.16600637115393°, after 2.7037444169742506°
+402pt right bank tangent: before 89.17264810269023°, after 1.661781224597113°
+402pt: 5 volcanoes, 12155 silhouette samples, 0 road/lava contacts; 699 basalt-border samples, 0 gaps; smooth inlet joins; continuous vent-to-channel feeders; first cone exactly 20% smaller
+Cone effective heights: [1.196352, 0.969479692307692, 0.9432775384615384, 0.9228270769230769, 0.805236923076923]; source positions: [(373.5507692307692, 16.0), (19.172307692307704, 430.0), (382.82769230769225, 804.0), (19.172307692307704, 1130.0), (382.82769230769225, 1452.0)]
+520pt left bank tangent: before 81.07833094110748°, after 3.343490123245519°
+520pt right bank tangent: before 94.68967073538047°, after 1.872155894948479°
+520pt: 5 volcanoes, 12155 silhouette samples, 0 road/lava contacts; 817 basalt-border samples, 0 gaps; smooth inlet joins; continuous vent-to-channel feeders; first cone exactly 20% smaller
+Cone effective heights: [0.97344, 0.9042799999999999, 0.8798399999999998, 0.8694400000000001, 0.6551999999999999]; source positions: [(482.3, -8.0), (26.000000000000007, 430.0), (494.0, 780.0), (26.000000000000007, 1130.0), (482.3, 1428.0)]
+600pt left bank tangent: before 86.97903414113918°, after 3.044340377832142°
+600pt right bank tangent: before 88.50372687262963°, after 1.494867567657478°
+600pt: 5 volcanoes, 12155 silhouette samples, 0 road/lava contacts; 840 basalt-border samples, 0 gaps; smooth inlet joins; continuous vent-to-channel feeders; first cone exactly 20% smaller
+Cone effective heights: [0.9771839999999999, 1.0229266666666665, 0.9952799999999998, 0.9550666666666667, 0.7675199999999999]; source positions: [(562.5, 64.0), (25.799999999999997, 454.0), (574.2, 780.0), (37.5, 1130.0), (574.2, 1428.0)]
+744pt left bank tangent: before 88.27248138016965°, after 2.2721792935895238°
+744pt right bank tangent: before 89.52100557460591°, after 1.4360724786317527°
+744pt: 5 volcanoes, 12155 silhouette samples, 0 road/lava contacts; 842 basalt-border samples, 0 gaps; smooth inlet joins; continuous vent-to-channel feeders; first cone exactly 20% smaller
+Cone effective heights: [1.280448, 1.4317766666666665, 1.3041600000000002, 1.251466666666667, 1.06704]; source positions: [(706.8599999999999, 64.0), (48.84, 430.0), (706.8599999999999, 780.0), (25.439999999999998, 1130.0), (718.56, 1404.0)]
+834pt left bank tangent: before 90.41349597133629°, after 1.9298576930006417°
+834pt right bank tangent: before 89.91466286826446°, after 1.4334107809066814°
+834pt: 5 volcanoes, 12155 silhouette samples, 0 road/lava contacts; 842 basalt-border samples, 0 gaps; smooth inlet joins; continuous vent-to-channel feeders; first cone exactly 20% smaller
+Cone effective heights: [1.469988, 1.538799166666667, 1.3611, 1.2930450000000002, 1.01088]; source positions: [(747.3599999999999, -8.0), (74.94, 430.0), (759.06, 780.0), (74.94, 1130.0), (759.06, 1404.0)]
+1024pt left bank tangent: before 90.03431865291549°, after 1.5499854076920707°
+1024pt right bank tangent: before 90.42673573724122°, after 1.4334107809066814°
+1024pt: 5 volcanoes, 12155 silhouette samples, 0 road/lava contacts; 843 basalt-border samples, 0 gaps; smooth inlet joins; continuous vent-to-channel feeders; first cone exactly 20% smaller
+Cone effective heights: [1.819584, 2.0346299999999995, 1.9796399999999996, 1.9562400000000002, 1.51632]; source positions: [(942.06, 16.0), (93.64, 406.0), (942.06, 756.0), (81.94, 1106.0), (930.36, 1380.0)]
+1194pt left bank tangent: before 91.0717616035691°, after 1.4182098644943473°
+1194pt right bank tangent: before 90.68514805044487°, after 1.433410780904086°
+1194pt: 5 volcanoes, 12155 silhouette samples, 0 road/lava contacts; 843 basalt-border samples, 0 gaps; smooth inlet joins; continuous vent-to-channel feeders; first cone exactly 20% smaller
+Cone effective heights: [1.819584, 2.33766, 2.27448, 2.2230000000000003, 1.6847999999999999]; source positions: [(1084.86, 88.0), (120.83999999999999, 406.0), (1084.86, 780.0), (109.13999999999999, 1130.0), (1038.06, 1380.0)]
