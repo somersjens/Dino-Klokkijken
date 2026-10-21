@@ -117,7 +117,13 @@ enum DinoExpandedQuestions {
         }
         let target = preferredTarget.flatMap { pool.contains($0) ? $0 : nil }
             ?? DinoQuestionTeaching.target(pool: targets, time: family, difficulty: difficulty, previous: previousTarget, using: &rng)
-        let other = DinoQuestionTeaching.distractors(pool: pool, target: target, difficulty: difficulty, using: &rng)
+        let operation: Int
+        switch kind {
+        case .timeSequence: operation = duration
+        default: operation = shift
+        }
+        let other = DinoQuestionTeaching.distractors(pool: pool, target: target, kind: kind, difficulty: difficulty,
+                                                     minuteStep: step, operation: operation, using: &rng)
         let count = difficulty.optionCount
         var choices = Array(other.prefix(count - 1))
         choices.insert(target, at: Int.random(in: 0..<count, using: &rng))
@@ -159,8 +165,9 @@ enum DinoExpandedQuestions {
                 let forgotten = target.adding(minutes: -q.offsetHours * 60)
                 let reversed = target.adding(minutes: q.offsetHours * 60)
                 let nudged = target.adding(minutes: q.offsetHours > 0 ? 60 : -60)
+                let slipped = [target.adding(minutes: -step), target.adding(minutes: step)]
                 var seen: Set<ClockTime> = [target]
-                var distractors = [forgotten, reversed, nudged].filter { seen.insert($0).inserted }
+                var distractors = ([forgotten, reversed, nudged] + slipped).filter { seen.insert($0).inserted }
                 for candidate in other where distractors.count < count - 1 && seen.insert(candidate).inserted {
                     distractors.append(candidate)
                 }
@@ -174,8 +181,10 @@ enum DinoExpandedQuestions {
             q.daySchedule = schedule
             q.durationMinutes = schedule.totalMinutes
             q.relatedTimes = [schedule.start]
-            // Include common mistakes, such as forgetting the break or stopping after activity one.
-            let candidates = [schedule.firstEnd, target.adding(minutes: -schedule.breakMinutes), schedule.start,
+            // Stopping after the first activity, skipping the transfer, or leaving before the second activity.
+            let candidates = [schedule.firstEnd, target.adding(minutes: -step),
+                              target.adding(minutes: -schedule.breakMinutes), target.adding(minutes: step),
+                              schedule.secondStart, target.adding(minutes: -schedule.firstMinutes), schedule.start,
                               target.adding(minutes: -60), target.adding(minutes: 60)] + other
             var seen: Set<ClockTime> = [target]
             let distractors = candidates.filter { minutes.contains($0.minute) && seen.insert($0).inserted }
@@ -189,14 +198,33 @@ enum DinoExpandedQuestions {
             let elapsed = target.minutesOfDay - start.minutesOfDay
             q.relatedTimes = [start, target]
             q.durationMinutes = elapsed
-            // Nearby minute totals catch conversion and subtraction mistakes.
+            // A missed step, a forgotten hour, or the minutes left after a missed borrow.
             let gap = minuteStep
+            let minuteGap = abs(target.minute - start.minute)
+            let hourGap = abs(target.hour - start.hour) * 60
+            var slips = [minuteGap, hourGap, elapsed % 60]
+            if start.hour != target.hour || elapsed >= 60 {
+                slips += [elapsed + 60, elapsed - 60]
+            }
+            let nearby = (1...6).flatMap { [elapsed + $0 * gap, elapsed - $0 * gap] }
             var seen: Set<Int> = [elapsed]
-            let distractors = [-gap, gap, -2 * gap, 2 * gap, -60, 60, 3 * gap]
-                .map { elapsed + $0 }
-                .filter { $0 > 0 && seen.insert($0).inserted }
+            func accept(_ values: [Int]) -> [Int] {
+                values.filter { $0 > 0 && $0.isMultiple(of: gap) && seen.insert($0).inserted }
+            }
+            let primary = accept([elapsed - gap, elapsed + gap, elapsed - 2 * gap, elapsed + 2 * gap])
+                .sorted { abs($0 - elapsed) == abs($1 - elapsed) ? $0 < $1 : abs($0 - elapsed) < abs($1 - elapsed) }
+            let tricks = accept(slips).sorted { abs($0 - elapsed) == abs($1 - elapsed) ? $0 < $1 : abs($0 - elapsed) < abs($1 - elapsed) }
+            let rest = accept(nearby)
+            let lead = difficulty == .challenge ? tricks : primary
+            let follow = difficulty == .challenge ? primary : tricks
+            var distractors: [Int] = []
+            for index in 0..<max(lead.count, follow.count) {
+                if index < lead.count { distractors.append(lead[index]) }
+                if index < follow.count { distractors.append(follow[index]) }
+            }
+            distractors += rest
             q.options = []
-            q.answerChoices = (Array(distractors.shuffled(using: &rng).prefix(count - 1)) + [elapsed])
+            q.answerChoices = (Array(distractors.prefix(count - 1)) + [elapsed])
                 .shuffled(using: &rng).map(ClockAnswer.duration)
             q.answer = .duration(elapsed)
         case .timeZone:
@@ -408,15 +436,18 @@ enum DinoTimeWords {
             }
         }
         guard dayPart else { return text }
+        return "\(text) \(dayPartSuffix(time, language: language))"
+    }
+
+    static func dayPartSuffix(_ time: ClockTime, language: String) -> String {
+        let nl = language == "nl"
         let part = DinoDayPart(hour: time.hour)
-        let suffix: String
         switch part {
-        case .night: suffix = nl ? "’s nachts" : "at night"
-        case .morning: suffix = nl ? "’s ochtends" : "in the morning"
-        case .afternoon: suffix = nl ? "’s middags" : "in the afternoon"
-        case .evening: suffix = nl ? "’s avonds" : "in the evening"
+        case .night: return nl ? "’s nachts" : "at night"
+        case .morning: return nl ? "’s ochtends" : "in the morning"
+        case .afternoon: return nl ? "’s middags" : "in the afternoon"
+        case .evening: return nl ? "’s avonds" : "in the evening"
         }
-        return "\(text) \(suffix)"
     }
     static func minutes(_ value: Int, language: String) -> String {
         let unit = language == "nl" ? (value == 1 ? "minuut" : "minuten") : (value == 1 ? "minute" : "minutes")

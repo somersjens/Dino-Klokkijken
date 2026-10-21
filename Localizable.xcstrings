@@ -690,6 +690,57 @@
         }
       }
     },
+    "dino.check.answer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check my answer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleer mijn antwoord"
+          }
+        }
+      }
+    },
+    "dino.check.connections" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check my connections"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleer mijn verbindingen"
+          }
+        }
+      }
+    },
+    "dino.check.order" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check my order"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controleer mijn volgorde"
+          }
+        }
+      }
+    },
     "dino.clock.arrowControls" : {
       "extractionState" : "manual",
       "localizations" : {

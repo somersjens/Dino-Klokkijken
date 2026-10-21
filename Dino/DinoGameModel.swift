@@ -218,6 +218,12 @@ final class DinoPlayer: ObservableObject {
     }
 }
 
+struct DinoAnswerCheck: Equatable {
+    let titleKey: String
+    let enabled: Bool
+    let answer: ClockAnswer
+}
+
 struct DinoLevelResult {
     let level: LevelConfiguration
     let correct: Int
@@ -347,6 +353,29 @@ final class DinoSession: ObservableObject, Identifiable {
             return "dino.practice.\(question.kind.rawValue)"
         }
         return question.kind.instructionKey
+    }
+
+    /// The sticky check for questions the player builds, rather than picking from options.
+    var answerCheck: DinoAnswerCheck? {
+        guard !hidesAnswerControls else { return nil }
+        switch question.kind {
+        case .setAnalog, .setDigital, .advanceAnalog:
+            return DinoAnswerCheck(titleKey: "dino.clock.check", enabled: true, answer: .time(inputTime))
+        case .match:
+            let pairs = question.relatedTimes.indices.compactMap { pairSelections[$0] }
+            return DinoAnswerCheck(titleKey: "dino.check.connections", enabled: pairs.count == question.relatedTimes.count, answer: .pairs(pairs))
+        case .sortTimes:
+            return DinoAnswerCheck(titleKey: "dino.check.order", enabled: selectedOrder.count == question.options.count, answer: .ordering(selectedOrder))
+        case .sayTime:
+            guard let prompt = question.spokenPrompt else { return nil }
+            let ids = prompt.slots.indices.map { index -> String in
+                guard spokenChoices.indices.contains(index) else { return SpokenTimeChoice.emptyID }
+                return spokenChoices[index] ?? SpokenTimeChoice.emptyID
+            }
+            return DinoAnswerCheck(titleKey: "dino.check.answer", enabled: true, answer: .spoken(SpokenTimeAnswer(choiceIDs: ids)))
+        default:
+            return nil
+        }
     }
 
     func submit(_ answer: ClockTime) {

@@ -129,9 +129,11 @@ struct DinoGameView: View {
     private func answerFooter(height: CGFloat, width: CGFloat) -> some View {
         // Reserve the same space before and after answering so the question stays still.
         // This row sits outside the scroll view and above the bottom safe area.
-        Color.clear.frame(height: height)
+        let showsNext = session.hasFeedback && !session.shouldAutoAdvance
+        let check = showsNext ? nil : session.answerCheck
+        return Color.clear.frame(height: height)
             .overlay {
-                if session.hasFeedback && !session.shouldAutoAdvance {
+                if showsNext {
                     Button {
                         if session.canRetry { session.showAnswer() }
                         else { session.advance() }
@@ -141,10 +143,19 @@ struct DinoGameView: View {
                         .multilineTextAlignment(.center)
                         .frame(width: min(420, width))
                         .accessibilityIdentifier(session.canRetry ? "question.showAnswer" : "question.next")
+                } else if let check {
+                    Button { session.submit(check.answer) } label: {
+                        Label(LocalizedStringKey(check.titleKey), systemImage: "checkmark")
+                            .lineLimit(1).minimumScaleFactor(0.7)
+                    }
+                    .buttonStyle(DinoClockControlButtonStyle(expands: true))
+                    .disabled(!check.enabled)
+                    .frame(width: min(420, width))
+                    .accessibilityIdentifier("question.confirm")
                 }
             }
             .background {
-                if session.hasFeedback && !session.shouldAutoAdvance {
+                if showsNext || check != nil {
                     Rectangle().fill(.ultraThinMaterial).ignoresSafeArea(edges: .bottom)
                 }
             }

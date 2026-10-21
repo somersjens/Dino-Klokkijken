@@ -8,8 +8,7 @@ struct DinoRootView: View {
     @State private var session: DinoSession?
     @State private var result: DinoLevelResult?
     @State private var showsSettings = false
-    @State private var showsCompletion = false
-    @State private var completedWorldID = 1
+    @State private var worldTransition: DinoWorldTransition?
     @State private var startCard: LevelConfiguration?
     @State private var showsFriends = false
     @State private var showsPractice = false
@@ -31,9 +30,9 @@ struct DinoRootView: View {
         }
         .overlayPreferenceValue(DinoCompanionPreference.self) { anchors in
             GeometryReader { geometry in
-                let anchor = startCard != nil || showsCompletion ? nil : result != nil ? anchors[.result] : anchors[.game]
+                let anchor = startCard != nil ? nil : result != nil ? anchors[.result] : anchors[.game]
                 DinoCompanionLayer(destination: anchor.map { geometry[$0] },
-                                   clip: companionClip, isResult: result != nil && startCard == nil && !showsCompletion,
+                                   clip: companionClip, isResult: result != nil && startCard == nil,
                                    worldID: result?.level.worldID ?? session?.level.worldID ?? 1,
                                    compactPortrait: geometry.size.height < 430)
             }.allowsHitTesting(false)
@@ -74,7 +73,6 @@ struct DinoRootView: View {
     }
 
     private var companionClip: DinoAnimation.Clip {
-        if showsCompletion { return .idle }
         if let result { return result.animationClip }
         return gameCompanionClip
     }
@@ -82,12 +80,9 @@ struct DinoRootView: View {
     @ViewBuilder private var scene: some View {
         Group {
             if !player.profile.onboardingComplete { OnboardingFlow() }
-            else if showsCompletion {
-                WorldCompleteView(worldID: completedWorldID, nextWorld: nextWorld, map: showMap)
-            }
             else if let result {
                 DinoResultView(result: result, retry: { start(result.level) }, next: {
-                    if result.level.isBoss { completedWorldID = result.level.worldID; showsCompletion = true }
+                    if result.level.isBoss { advanceWorld(after: result.level.worldID) }
                     else if let next = DinoLevelCatalog.level(result.level.id + 1) { start(next) }
                 }, map: showMap, sharedCompanion: true)
             } else if let session {
@@ -97,7 +92,7 @@ struct DinoRootView: View {
                     }
                 }, onCompanionReaction: { gameCompanionClip = $0 }).id(ObjectIdentifier(session))
             } else {
-                WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true }, openPractice: { practiceEntry = nil; showsPractice = true }, openCompletion: { completedWorldID = 10; showsCompletion = true }, openFriends: { showsFriends = true }, hudHeightChanged: { mapHUDHeight = $0 }, animatesOpening: !hasShownMap, openingFinished: { hasShownMap = true })
+                WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true }, openPractice: { practiceEntry = nil; showsPractice = true }, openFriends: { showsFriends = true }, hudHeightChanged: { mapHUDHeight = $0 }, animatesOpening: !hasShownMap && worldTransition == nil, openingFinished: { hasShownMap = true }, worldTransition: worldTransition)
             }
         }
     }
@@ -109,14 +104,16 @@ struct DinoRootView: View {
                                            vibration: settings.hapticsEnabled)
         })
         withAnimation(.easeOut(duration: 0.24)) {
-            startCard = nil; result = nil; showsCompletion = false
+            startCard = nil; result = nil; worldTransition = nil
             gameCompanionClip = .idle; session = nextSession
         }
     }
-    private var nextWorld: (() -> Void)? {
-        guard let world = DinoWorldCatalog.world(completedWorldID + 1),
-              let level = DinoLevelCatalog.level(world.firstLevel) else { return nil }
-        return { start(level) }
+    private func advanceWorld(after worldID: Int) {
+        withAnimation(.easeOut(duration: 0.24)) {
+            worldTransition = DinoWorldTransition(after: worldID)
+            hasShownMap = true
+            result = nil; session = nil; startCard = nil
+        }
     }
     private func presentStartCard(_ level: LevelConfiguration) {
         guard player.profile.isUnlocked(level.id) else { return }
@@ -138,7 +135,7 @@ struct DinoRootView: View {
     }
     private func showMap() {
         withAnimation(.easeOut(duration: 0.24)) {
-            session = nil; result = nil; showsCompletion = false; startCard = nil
+            session = nil; result = nil; worldTransition = nil; startCard = nil
         }
     }
 }

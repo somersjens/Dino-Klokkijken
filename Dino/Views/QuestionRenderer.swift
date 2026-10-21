@@ -27,31 +27,19 @@ struct QuestionRenderer: View {
             case .setAnalog:
                 targetCard
                 analogInput.id("question.answers")
-                VStack(spacing: 24) {
-                    DinoAnalogClockControls(adjustingMinutes: $adjustingMinutes, allowsMinutes: session.allowsMinutes,
-                                            minuteStep: session.minuteStep, adjust: adjustAnalog)
-                    clockCheckButton
-                }
-                .frame(maxWidth: min(320, width))
-                .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
+                DinoAnalogClockControls(adjustingMinutes: $adjustingMinutes, allowsMinutes: session.allowsMinutes,
+                                        minuteStep: session.minuteStep, adjust: adjustAnalog)
+                    .frame(maxWidth: min(320, width))
+                    .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
             case .setDigital:
                 analogTarget
-                VStack(spacing: 24) {
-                    digitalInput
-                    confirmButton
-                }.id("question.answers")
+                digitalInput.id("question.answers")
             case .match:
                 ClockMatchingBoard(times: question.relatedTimes, options: question.options,
                                    selections: $session.pairSelections, theme: theme, width: width,
                                    hasFeedback: session.hasFeedback)
                     .id("question.answers")
                     .questionAnswerFocus()
-                Button { session.submit(.pairs(question.relatedTimes.indices.compactMap { session.pairSelections[$0] })) } label: {
-                    Image(systemName: "checkmark").font(.system(size: 25, weight: .heavy))
-                }.buttonStyle(DinoButtonStyle()).frame(maxWidth: 260)
-                    .disabled(session.pairSelections.count != question.relatedTimes.count)
-                    .accessibilityIdentifier("question.confirm")
-                    .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
             default:
                 DinoExpandedQuestionView(session: session, theme: theme, width: width, clockSize: clockSize,
                                          compactLayout: compactLayout || (wideLayout && question.kind == .timeZone))
@@ -159,24 +147,6 @@ struct QuestionRenderer: View {
         }.id("question.answers").questionAnswerFocus()
     }
 
-    private var confirmButton: some View {
-        Button { session.submit(session.inputTime) } label: {
-            Label("dino.clock.check", systemImage: "checkmark")
-                .lineLimit(1).minimumScaleFactor(0.75)
-        }
-        .buttonStyle(DinoClockControlButtonStyle())
-        .accessibilityIdentifier("question.confirm")
-        .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
-    }
-
-    private var clockCheckButton: some View {
-        Button { session.submit(session.inputTime) } label: {
-            Label("dino.clock.check", systemImage: "checkmark")
-                .lineLimit(1).minimumScaleFactor(0.75)
-        }.buttonStyle(DinoClockControlButtonStyle())
-            .accessibilityIdentifier("question.confirm")
-    }
-
     private func adjustAnalog(by direction: Int) {
         if adjustingMinutes { session.adjustInputMinutes(by: direction * session.minuteStep) }
         else { session.inputHour = ClockTime.shiftedHour(session.inputHour, by: direction) }
@@ -280,13 +250,13 @@ struct DinoAnalogClockControls: View {
         let minutes = allowsMinutes && adjustingMinutes
         let cue = demonstratedAction == .adjust(direction)
         return Button { adjust(direction) } label: {
-            HStack(spacing: 10) {
+            HStack(spacing: 6) {
                 Image(systemName: direction < 0 ? "arrow.counterclockwise" : "arrow.clockwise")
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.system(size: 18, weight: .bold))
                 Text(verbatim: "\(direction < 0 ? "−" : "+")\(minutes ? minuteStep : 1)")
                     .monospacedDigit()
             }
-        }.buttonStyle(DinoClockControlButtonStyle(expands: true))
+        }.buttonStyle(DinoClockControlButtonStyle(expands: true, compact: true))
             .accessibilityIdentifier("\(prefix).analog.\(direction < 0 ? "less" : "more")")
             .scaleEffect(cue && !reduceMotion ? 0.96 : 1)
             .overlay(alignment: .bottomTrailing) { if cue { DinoClockTapCue() } }

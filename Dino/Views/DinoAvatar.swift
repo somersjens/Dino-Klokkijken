@@ -108,6 +108,19 @@ actor DinoSpriteLoader {
         }
         return await job!.value
     }
+
+    func worldJumpImages(for colors: DinoAppearance) async -> [String: UIImage] {
+        let preparation = Task.detached(priority: .userInitiated) { () -> [String: UIImage] in
+            var images: [String: UIImage] = [:]
+            for asset in ["dino-idle"] + DinoAnimation.worldJumpAssets {
+                guard !Task.isCancelled else { return [:] }
+                images[asset] = DinoAvatarRenderer.render(original: UIImage(named: asset)?.cgImage,
+                                                         appearance: colors, portrait: false, asset: asset)
+            }
+            return images
+        }
+        return await withTaskCancellationHandler { await preparation.value } onCancel: { preparation.cancel() }
+    }
 }
 
 /// A circular bust. Bandana tails and the top spikes sit in front of the rim, with a little more body than the HUD.

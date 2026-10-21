@@ -51,6 +51,7 @@ struct DinoCoreTests {
         testPractice()
         testPracticeRecords()
         testExpandedQuestions()
+        testPlausibleChoices()
         testSpokenTime()
         testFlightArrivals()
         testMinutesBetweenQuestions()
@@ -266,7 +267,10 @@ struct DinoCoreTests {
                 targets.insert(q.target.minute); options.formUnion(q.options.map(\.minute))
                 if time.teachingMinutes(.challenge).contains(q.target.minute) { focused += 1 }
             }
-            expect(targets == Set(time.minutes) && options == Set(time.minutes), "every multiple can be both an answer and an alternative")
+            let missingTargets = Set(time.minutes).subtracting(targets)
+            let missingOptions = Set(time.minutes).subtracting(options)
+            expect(missingTargets.isEmpty && missingOptions.isEmpty,
+                   "\(time) targets missing \(missingTargets.sorted()) options missing \(missingOptions.sorted())")
             expect(focused > 1000, "the selected teaching step remains the focus while reviewing familiar positions")
         }
         var quarters = DinoPracticeGenerator(configuration: .init(time: .quarter, order: .specific(.chooseAnalog)), seed: 11)
@@ -1545,6 +1549,60 @@ struct DinoCoreTests {
     }
 
     static func testAnimation() {
+        for world in 1...9 {
+            let transition = DinoWorldTransition(after: world)
+            expect(transition?.sourceLevel == world * 10 && transition?.destinationLevel == world * 10 + 1,
+                   "world transitions leave the completed boss and land on the next world's first stone")
+        }
+        expect(DinoWorldTransition(after: 0) == nil && DinoWorldTransition(after: 10) == nil,
+               "world transitions cannot leave the catalog or create a level 101")
+        var previousJump = DinoAnimation.sample(.worldJump, elapsed: 0)
+        var previousProgress = 0.0
+        for step in 1...216 {
+            let elapsed = Double(step) / 120
+            let sample = DinoAnimation.sample(.worldJump, elapsed: elapsed)
+            let progress = DinoAnimation.worldJumpProgress(elapsed: elapsed)
+            expect(sample.angle >= previousJump.angle && sample.angle <= 360 && sample.angle - previousJump.angle < 6,
+                   "the world salto completes one smooth forward rotation")
+            expect(sample.height <= 0.00001 && abs(sample.height - previousJump.height) < 0.02,
+                   "the world salto follows a continuous bounded arc")
+            expect(progress >= previousProgress && progress <= 1 && progress - previousProgress < 0.02,
+                   "the camera and map character move with continuous matching progress")
+            if (0.20..<1.10).contains(elapsed) {
+                expect(sample.pose.asset == "dino-world-jump-03", "one airborne illustration prevents flickering during the world salto")
+            }
+            let reduced = DinoAnimation.sample(.worldJump, elapsed: elapsed, reducedMotion: true)
+            expect(reduced.pose.asset == "dino-idle" && reduced.angle == 0 && reduced.height == 0,
+                   "reduced motion keeps the world transition character still")
+            previousJump = sample; previousProgress = progress
+        }
+        expect(DinoAnimation.worldJumpProgress(elapsed: DinoAnimation.travelDelay(.worldJump)) == 0 &&
+               DinoAnimation.worldJumpProgress(elapsed: DinoAnimation.travelDuration(.worldJump)) == 1,
+               "the camera starts at takeoff and arrives exactly at landing")
+        expect(previousJump.pose.asset == "dino-idle" && previousJump.angle == 360 && previousProgress == 1,
+               "the world salto settles into the normal map pose")
+        func opaqueFootline(_ asset: String) -> Double {
+            let url = URL(fileURLWithPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
+            let image = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
+            let width = image.width, height = image.height
+            var bytes = [UInt8](repeating: 0, count: width * height * 4)
+            bytes.withUnsafeMutableBytes { buffer in
+                let context = CGContext(data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8,
+                                        bytesPerRow: width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                        bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue)!
+                context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+            }
+            let last = (0..<height).reversed().first { y in
+                (0..<width).contains { x in bytes[(y * width + x) * 4 + 3] > 200 }
+            }!
+            return Double(last + 1) / Double(height)
+        }
+        let idleFootline = opaqueFootline("dino-idle")
+        for elapsed in [0.0, 0.1, 1.2, 1.3, 1.5, 1.8] {
+            let pose = DinoAnimation.sample(.worldJump, elapsed: elapsed).pose
+            expect(abs(opaqueFootline(pose.asset) + pose.offsetY - idleFootline) < 1.0 / 1254,
+                   "the actual sprite pixels share idle's foot line through takeoff, landing and recovery")
+        }
         // Sparse image transitions cannot interrupt the complete turn or ground contact.
         var previous = DinoAnimation.sample(.backflip, elapsed: 0)
         for step in 1...222 {
@@ -1620,6 +1678,115 @@ struct DinoCoreTests {
             }
         }
         expect(DinoAnimation.duration(.thumbsUp) < DinoAnimation.correctAnswerDelay && DinoAnimation.correctAnswerDelay < 1, "complete thumbs before quick advance")
+    }
+
+    static func testPlausibleChoices() {
+        func dial(_ a: ClockTime, _ b: ClockTime, twelve: Bool) -> Int {
+            let span = twelve ? 720 : 1440
+            let left = twelve ? (a.hour % 12) * 60 + a.minute : a.minutesOfDay
+            let right = twelve ? (b.hour % 12) * 60 + b.minute : b.minutesOfDay
+            let delta = abs(left - right)
+            return min(delta, span - delta)
+        }
+        func usesTwelveHourFace(_ kind: ClockQuestionKind) -> Bool {
+            ![.read24Hour, .sortTimes, .addTime, .subtractTime, .timeSequence, .flightArrival,
+              .daySchedule, .timeZone, .dayPart, .minutesBetween].contains(kind)
+        }
+        func acceptable(_ wrong: ClockTime, question: ClockQuestion, step: Int) -> Bool {
+            let twelve = usesTwelveHourFace(question.kind)
+            if dial(wrong, question.target, twelve: twelve) <= 180 { return true }
+            if question.kind == .read24Hour {
+                let twin = ClockTime(hour: question.target.hour + 12, minute: question.target.minute)
+                if dial(wrong, twin, twelve: false) <= 60 { return true }
+            }
+            if let schedule = question.daySchedule {
+                let end = schedule.end
+                if [schedule.firstEnd, schedule.secondStart, schedule.start,
+                    end.adding(minutes: -schedule.breakMinutes), end.adding(minutes: -schedule.firstMinutes),
+                    end.adding(minutes: step), end.adding(minutes: -step),
+                    end.adding(minutes: 60), end.adding(minutes: -60)].contains(wrong) { return true }
+            }
+            if question.kind == .timeZone {
+                let zone = [question.relatedTimes[0], question.target.adding(minutes: -2 * question.offsetHours * 60),
+                            question.target.adding(minutes: 60), question.target.adding(minutes: -60)]
+                if zone.contains(wrong) { return true }
+            }
+            if [.addTime, .subtractTime, .timeSequence, .flightArrival].contains(question.kind),
+               let shown = question.relatedTimes.first {
+                let change: Int
+                switch question.kind {
+                case .subtractTime: change = -question.durationMinutes
+                case .flightArrival: change = question.durationMinutes + question.offsetHours * 60
+                default: change = question.durationMinutes
+                }
+                let hourPart = (change / 60) * 60
+                let named = [shown, shown.adding(minutes: -change), shown.adding(minutes: change * 2),
+                             shown.adding(minutes: hourPart), shown.adding(minutes: change - hourPart),
+                             question.target.adding(minutes: change * 2), question.target.adding(minutes: -change * 2),
+                             question.target.adding(minutes: -question.offsetHours * 60),
+                             question.target.adding(minutes: question.offsetHours * 60),
+                             question.target.adding(minutes: question.offsetHours >= 0 ? 60 : -60)]
+                if named.contains(wrong) { return true }
+            }
+            return false
+        }
+
+        for time in DinoPracticeTime.allCases {
+            for type in DinoPracticeQuestion.allCases {
+                for difficulty in DinoQuestionDifficulty.allCases {
+                    var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(type)), seed: 77)
+                    for index in 0..<16 {
+                        let question = generator.next(index: index, difficultyForKind: { _ in difficulty })
+                        let step = time.minuteStep
+                        let twelve = usesTwelveHourFace(question.kind)
+                        if question.kind == .trueFalse, let statement = question.statement, statement != question.target {
+                            expect(acceptable(statement, question: question, step: step),
+                                   "\(type) \(time) \(difficulty) false statement \(statement.digitalText) is not a plausible misreading of \(question.target.digitalText)")
+                        }
+                        if question.kind == .minutesBetween {
+                            let elapsed = question.durationMinutes
+                            let wrong = question.responses.compactMap { answer -> Int? in
+                                if case .duration(let minutes) = answer, minutes != elapsed { return minutes }
+                                return nil
+                            }
+                            let start = question.relatedTimes[0]
+                            let minuteGap = abs(start.minute - question.target.minute)
+                            let hourGap = abs(start.hour - question.target.hour) * 60
+                            expect(wrong.allSatisfy { value in
+                                let delta = abs(value - elapsed)
+                                return delta <= max(120, step * 3) || value == minuteGap || value == hourGap || value == elapsed % 60
+                            }, "\(type) \(time) minute totals stray from \(elapsed): \(wrong)")
+                            if wrong.count >= 3 {
+                                expect(wrong.contains { abs($0 - elapsed) <= step * 2 },
+                                       "\(type) \(time) keeps a near minute total among \(wrong)")
+                            }
+                            continue
+                        }
+                        let wrongTimes = (question.options + (question.kind == .match ? question.companionClocks : []))
+                            .filter { $0 != question.target }
+                        for wrong in wrongTimes where question.kind != .dayPart {
+                            expect(acceptable(wrong, question: question, step: step),
+                                   "\(type) \(time) \(difficulty) alternative \(wrong.digitalText) is not a plausible confusion for \(question.target.digitalText)")
+                        }
+                        let choiceTimes = question.options.filter { $0 != question.target }
+                        if choiceTimes.count >= 3 && (question.kind.usesOptions || question.kind == .sortTimes) {
+                            let close = max(60, step)
+                            expect(choiceTimes.contains { dial($0, question.target, twelve: twelve) <= close },
+                                   "\(type) \(time) \(difficulty) alternatives \(choiceTimes.map(\.digitalText)) include no nearby trap for \(question.target.digitalText)")
+                        }
+                    }
+                }
+            }
+        }
+
+        var rng = SeededGenerator(seed: 5)
+        let firstLevel = DinoQuestionGenerator.generate(level: DinoLevelCatalog.level(1)!, using: &rng)
+        for question in firstLevel where question.kind == .chooseAnalog {
+            let wrong = question.options.filter { $0 != question.target }
+            expect(wrong.count == 1 && wrong[0].minute == 0, "the first level offers one whole-hour alternative")
+            expect(dial(wrong[0], question.target, twelve: true) == 60,
+                   "level 1's alternative is a neighboring hour of \(question.target.digitalText), not \(wrong[0].digitalText)")
+        }
     }
 
     static func testQuestions() {

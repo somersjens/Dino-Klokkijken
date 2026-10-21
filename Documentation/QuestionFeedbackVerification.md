@@ -147,3 +147,14 @@ De Debug-build voor iOS Simulator slaagt. Op iPhone 17 en iPad Pro 11-inch (M5),
 - `testMultipleChoiceRetriesKeepTheLostPoint`: herkansingen, Toon antwoord, Verder, behoud van de verloren punt en één doorlopende vragenteller.
 
 `Tools/test-dino.sh`: **805.838 controles geslaagd**. De schermbeelden op iPhone en iPad zijn visueel gecontroleerd. `git diff --check` meldt geen fouten.
+
+## Tijdomschrijvingen, dagdelen en sorteerfeedback — 20 oktober 2026
+
+- **Type 9:** ieder antwoord heeft de tijdomschrijving bovenaan en het dagdeel op een eigen regel in een kleiner vlak met een dagdeelsymbool. VoiceOver leest de volledige omschrijving als één antwoord voor. Nederlands en Engels gebruiken dezelfde losse dagdeeltekst als de bestaande volledige tijdomschrijving.
+- **Type 10:** na een fout eerste antwoord verschijnt de dagdeellijn uit het voorbeeld zodra de vraag is afgesloten. Dit geldt voor **Toon antwoord**, een correcte herkansing en het uitsluiten van alle foute opties. De lijn blijft verborgen tijdens herkansen; de ruimte is vooraf gereserveerd zodat de antwoordknoppen niet verschuiven.
+- **Type 12:** ieder gekozen volgnummer wordt afzonderlijk met de juiste volgorde vergeleken. Fout geplaatste nummers en hun kaartrand worden oranje; goed geplaatste nummers blijven groen. De ingevoerde volgorde blijft staan naast de correctie. VoiceOver vermeldt per geselecteerde klok het volgnummer en, na controle, of die positie goed is.
+- **Type 14 en 15:** de twee digitale voorbeeldklokken gebruiken dezelfde lettergrootte en afmetingen. Een toevoeging krijgt een lichtgroen vlak; een vermindering krijgt het bestaande rood van de tijdzones. De pijl in het aftrekvoorbeeld volgt die rode kleur. Ook de positieve sprongen bij vooruitzetten en tijdreeksen hebben een lichtgroen vlak. Op het vliegticket volgt het getekende tijdzoneverschil dezelfde plus/min-kleuren; de vliegtijd staat in groen.
+
+Gerichte gedragscontroles: `testDayPartExplanationWaitsUntilAMissedQuestionIsClosed` en `testSortingFeedbackKeepsCorrectPositionsGreen`. `testTimeDescriptionsAndArithmeticExampleSizes` controleert de volledige toegankelijke antwoordtekst en gelijke klokafmetingen en maakt de schermbeelden voor de visuele controle. De bestaande voorbeeldcontroles zijn `testDayPartExampleShowsTheDayLine` en `testDayPartExampleActionsStayInPlace`.
+
+Verificatie afgerond op **21 oktober 2026**: alle vijf genoemde schermtests slagen op iPhone 17 en iPad Pro 11-inch (M5), beide met iOS 26.5. De laatste test is opnieuw uitgevoerd nadat de twee rekenklokken ieder één toegankelijk element met de volledige tijd kregen. De schermbeelden van de gescheiden tijdomschrijving, dagdeellijn, gemengde sorteerfeedback en beide rekenvoorbeelden zijn visueel gecontroleerd. `Tools/test-dino.sh` slaagde op 20 oktober met **818.313 controles**. De gewijzigde vraag-, test- en documentatiebestanden hebben geen whitespacefouten.

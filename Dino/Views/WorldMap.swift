@@ -1,6 +1,17 @@
 import SwiftUI
 import UIKit
 
+private struct MapArtworkReleasedKey: EnvironmentKey {
+    static let defaultValue: (Int) -> Void = { _ in }
+}
+
+private extension EnvironmentValues {
+    var mapArtworkReleased: (Int) -> Void {
+        get { self[MapArtworkReleasedKey.self] }
+        set { self[MapArtworkReleasedKey.self] = newValue }
+    }
+}
+
 struct WorldMap: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -10,16 +21,18 @@ struct WorldMap: View {
     var openLevel: (LevelConfiguration) -> Void
     var openSettings: () -> Void
     var openPractice: () -> Void
-    var openCompletion: () -> Void
     var openFriends: () -> Void
     var hudHeightChanged: (CGFloat) -> Void = { _ in }
     var animatesOpening = true
     var openingFinished: () -> Void = {}
+    var worldTransition: DinoWorldTransition? = nil
     @State private var landscapeRouteOffset: CGFloat = 320
     @State private var worldsAboveHUD: Set<Int> = [1]
     @State private var selectedFriend: FriendSelection?
     @State private var showsStars = false
     @State private var focusRequest = 0
+    @State private var arrivedFocusRequest = 0
+    @State private var readyWorlds: Set<Int> = []
     @State private var hintedLevel: Int?
     @State private var celebrationID: UUID?
     @State private var initialArtworkReady = false
@@ -29,8 +42,24 @@ struct WorldMap: View {
     @State private var introRevealed = false
     @State private var introFinished = false
     @State private var animationEpoch = Date()
+    @State private var worldJumpStartedAt: Date?
+    @State private var worldJumpFinished = false
+    @State private var worldJumpImages: [String: UIImage] = [:]
 
-    private var showsMapDino: Bool { introFinished || !animatesOpening }
+    private var standingLevel: Int {
+        guard let worldTransition else { return player.profile.mapLevel }
+        return worldJumpFinished ? worldTransition.destinationLevel : worldTransition.sourceLevel
+    }
+    private var showsMapDino: Bool {
+        (introFinished || !animatesOpening) && (worldTransition == nil || worldJumpFinished)
+    }
+    private var mapInteractive: Bool { initialPositionReady && (introFinished || !animatesOpening) && (worldTransition == nil || worldJumpFinished) }
+    private var worldJumpReady: Bool {
+        guard let worldTransition else { return false }
+        return initialPositionReady && !worldJumpImages.isEmpty &&
+            readyWorlds.contains((worldTransition.sourceLevel - 1) / 10 + 1) &&
+            readyWorlds.contains((worldTransition.destinationLevel - 1) / 10 + 1)
+    }
     private var openingReady: Bool {
         let world = (player.profile.mapLevel - 1) / 10 + 1
         let required = Set(max(1, world - 2)...min(10, world + 2))
@@ -46,107 +75,106 @@ struct WorldMap: View {
             // Use the actual first layout, including iPad scale. Measuring an
             // initial 128pt placeholder used to shift the whole scroll content.
             let floatingHUDHeight = (compact ? 82.0 : 128.0) * (compact ? 1 : min(1.9, max(1, geometry.size.width / 390), max(1, geometry.size.height / 480)))
-            let viewportObserver = MapViewportObserver(centersLevel: player.profile.mapLevel > 1,
+            let viewportObserver = MapViewportObserver(centersLevel: standingLevel > 1,
                 restoresPosition: !initialPositionReady,
                 topClearance: floatingHUDHeight + geometry.safeAreaInsets.top,
-                ready: { initialPositionReady = true })
+                focusRequest: focusRequest, reduceMotion: reduceMotion,
+                artworkReady: readyWorlds.contains((standingLevel - 1) / 10 + 1),
+                ready: { initialPositionReady = true },
+                focused: { arrivedFocusRequest = $0 })
             let routeTopClearance = max(0, min(200, (min(600, geometry.size.width) - 36) * 0.37) - 82)
             ZStack {
                 Color(dinoHex: DinoWorldCatalog.worlds.last!.ground).ignoresSafeArea()
                 if initialArtworkReady {
                     VStack(spacing: 0) {
-                        ScrollViewReader { proxy in
-                            ScrollView {
+                        ScrollView {
+                            VStack(spacing: 0) {
                                 VStack(spacing: 0) {
-                                    VStack(spacing: 0) {
-                                        VStack(spacing: 8) {
-                                            mapHeading
-                                                .scaleEffect(landscape ? 0.82 : 1)
-                                                .frame(height: landscape ? 174 : 190, alignment: .top)
-                                                .padding(.top, landscape ? 0 : -16)
-                                            friendsShortcut.opacity(friends.authenticated ? 0 : 1)
-                                                .allowsHitTesting(!friends.authenticated).accessibilityHidden(friends.authenticated)
-                                            bossShortcut
-                                        }.padding(.horizontal, 18).padding(.bottom, 2)
-                                            .frame(maxWidth: 600).frame(maxWidth: .infinity)
-                                            .readGeometry(for: CGFloat.self) { $0.size.height } action: { landscapeRouteOffset = $0 }
-                                        mapRoute(topClearance: routeTopClearance, viewportObserver: viewportObserver)
-                                    }.padding(.top, floatingHUDHeight + geometry.safeAreaInsets.top)
-                                        .background {
-                                            MapScenery(worldID: 1, viewportHeight: geometry.size.height) {
-                                                WorldMapLandscape(routeOffset: landscapeRouteOffset + floatingHUDHeight + geometry.safeAreaInsets.top + routeTopClearance,
-                                                                  viewportHeight: geometry.size.height, cachesTerrain: true)
-                                                    .equatable()
-                                            }
+                                    VStack(spacing: 8) {
+                                        mapHeading
+                                            .scaleEffect(landscape ? 0.82 : 1)
+                                            .frame(height: landscape ? 174 : 190, alignment: .top)
+                                            .padding(.top, landscape ? 0 : -16)
+                                        friendsShortcut.opacity(friends.authenticated ? 0 : 1)
+                                            .allowsHitTesting(!friends.authenticated).accessibilityHidden(friends.authenticated)
+                                        bossShortcut
+                                    }.padding(.horizontal, 18).padding(.bottom, 2)
+                                        .frame(maxWidth: 600).frame(maxWidth: .infinity)
+                                        .readGeometry(for: CGFloat.self) { $0.size.height } action: { landscapeRouteOffset = $0 }
+                                    mapRoute(topClearance: routeTopClearance, viewportObserver: viewportObserver)
+                                }.padding(.top, floatingHUDHeight + geometry.safeAreaInsets.top)
+                                    .background {
+                                        MapScenery(worldID: 1, viewportHeight: geometry.size.height) {
+                                            WorldMapLandscape(routeOffset: landscapeRouteOffset + floatingHUDHeight + geometry.safeAreaInsets.top + routeTopClearance,
+                                                              viewportHeight: geometry.size.height, cachesTerrain: true)
+                                                .equatable()
                                         }
+                                    }
+                                    .readGeometry(for: Bool.self) {
+                                        $0.frame(in: .named("adventure.map.viewport")).minY <= floatingHUDHeight + 24
+                                    } action: { updateVisibleWorld(1, aboveHUD: $0) }
+                                ForEach(DinoWorldCatalog.worlds.dropFirst()) { world in
+                                    WorldChapter(world: world, topClearance: routeTopClearance,
+                                                 viewportHeight: geometry.size.height, hintedLevel: guidedLevel,
+                                                 viewportObserver: viewportObserver, showsDino: showsMapDino,
+                                                 standingLevel: standingLevel, worldTransition: worldTransition,
+                                                 worldJumpStartedAt: worldJumpStartedAt, worldJumpFinished: worldJumpFinished,
+                                                 topClearanceForJump: floatingHUDHeight + geometry.safeAreaInsets.top,
+                                                 openLevel: selectLevel).equatable()
                                         .readGeometry(for: Bool.self) {
                                             $0.frame(in: .named("adventure.map.viewport")).minY <= floatingHUDHeight + 24
-                                        } action: { updateVisibleWorld(1, aboveHUD: $0) }
-                                    ForEach(DinoWorldCatalog.worlds.dropFirst()) { world in
-                                        WorldChapter(world: world, topClearance: routeTopClearance,
-                                                     viewportHeight: geometry.size.height, hintedLevel: guidedLevel,
-                                                     viewportObserver: viewportObserver, showsDino: showsMapDino,
-                                                     openLevel: selectLevel).equatable()
-                                            .readGeometry(for: Bool.self) {
-                                                $0.frame(in: .named("adventure.map.viewport")).minY <= floatingHUDHeight + 24
-                                            } action: { updateVisibleWorld(world.id, aboveHUD: $0) }
-                                    }
-                                    comingSoon(bottomInset: geometry.safeAreaInsets.bottom)
+                                        } action: { updateVisibleWorld(world.id, aboveHUD: $0) }
                                 }
+                                comingSoon(bottomInset: geometry.safeAreaInsets.bottom)
+                            }
 
-                            }
-                            .accessibilityIdentifier("map.route")
-                            .task(id: focusRequest) {
-                                hintedLevel = nil
-                                celebrationID = nil
-                                let requested = focusRequest > 0
-                                // Level 1 is the entrance. A fresh visit keeps that entrance at the
-                                // top; the header still centers the next playable stone.
-                                let target = player.profile.mapLevel
-                                // The native viewport probe restores the initial position
-                                // before revealing the map. This task handles explicit taps only.
-                                guard requested else { return }
-                                // Center the next stone in the space beneath the floating HUD.
-                                let anchor = UnitPoint(x: 0.5, y: min(0.78, 0.5 + (floatingHUDHeight + geometry.safeAreaInsets.top) / (2 * max(1, geometry.size.height))))
-                                withAnimation(requested && !reduceMotion ? .easeInOut(duration: 0.55) : nil) {
-                                    proxy.scrollTo("node-\(target)", anchor: anchor)
+                        }
+                        .accessibilityIdentifier("map.route")
+                        .task(id: arrivedFocusRequest) {
+                            guard arrivedFocusRequest > 0, arrivedFocusRequest == focusRequest else { return }
+                            do {
+                                if player.profile.adventureComplete {
+                                    celebrationID = UUID()
+                                } else {
+                                    withAnimation(.easeOut(duration: 0.2)) { hintedLevel = player.profile.nextAdventureLevel }
                                 }
-                                do {
-                                    try await Task.sleep(for: .milliseconds(reduceMotion ? 100 : 650))
-                                    try Task.checkCancellation()
-                                    if player.profile.adventureComplete {
-                                        celebrationID = UUID()
-                                    } else {
-                                        withAnimation(.easeOut(duration: 0.2)) { hintedLevel = player.profile.nextAdventureLevel }
-                                    }
-                                    try await Task.sleep(for: .seconds(5))
-                                    try Task.checkCancellation()
-                                    withAnimation(.easeOut(duration: 0.25)) {
-                                        hintedLevel = nil
-                                        celebrationID = nil
-                                    }
-                                } catch { /* A new tap or leaving the map cancels the previous cue. */ }
-                            }
-                        }.ignoresSafeArea(edges: [.top, .bottom, .horizontal])
+                                try await Task.sleep(for: .seconds(5))
+                                try Task.checkCancellation()
+                                withAnimation(.easeOut(duration: 0.25)) {
+                                    hintedLevel = nil
+                                    celebrationID = nil
+                                }
+                            } catch { /* A new tap or leaving the map cancels the previous cue. */ }
+                        }
+                        .ignoresSafeArea(edges: [.top, .bottom, .horizontal])
                     }.overlay(alignment: .top) {
                         AdventureHeader(level: max(1, player.profile.dinoLevel),
                                         stars: player.profile.totalStars, worldID: worldsAboveHUD.max() ?? 1,
                                         compact: verticalSizeClass == .compact, viewportHeight: geometry.size.height,
                                         viewportWidth: geometry.size.width,
-                                        control: .settings, help: openPractice, focusLevel: { focusRequest += 1 },
+                                        control: .settings, help: openPractice, focusLevel: {
+                                            hintedLevel = nil
+                                            celebrationID = nil
+                                            arrivedFocusRequest = 0
+                                            focusRequest += 1
+                                        },
                                         openStars: { showsStars = true }, action: openSettings)
                             .readGeometry(for: CGFloat.self) { $0.size.height } action: {
                                 hudHeightChanged($0)
                             }
                     }
                     .opacity(initialPositionReady && (introRevealed || !animatesOpening) ? 1 : 0)
-                    .allowsHitTesting(initialPositionReady && showsMapDino)
-                    .disabled(!initialPositionReady || !showsMapDino)
-                    .accessibilityHidden(!initialPositionReady || !showsMapDino)
+                    .allowsHitTesting(mapInteractive)
+                    .disabled(!mapInteractive)
+                    .accessibilityHidden(!mapInteractive)
                     .environment(\.dinoMapAnimationEpoch, animationEpoch)
                     .environment(\.dinoMapPreparing, !introFinished && animatesOpening)
-                    .environment(\.dinoMapArtworkPrepared, { preparedWorlds.insert($0) })
-                    .environment(\.dinoMapInitialWorld, (player.profile.mapLevel - 1) / 10 + 1)
+                    .environment(\.dinoMapArtworkPrepared, {
+                        preparedWorlds.insert($0)
+                        readyWorlds.insert($0)
+                    })
+                    .environment(\.mapArtworkReleased, { readyWorlds.remove($0) })
+                    .environment(\.dinoMapInitialWorld, (standingLevel - 1) / 10 + 1)
                 }
                 if let celebrationID {
                     MapCompletionConfetti().id(celebrationID)
@@ -168,6 +196,30 @@ struct WorldMap: View {
                 .zIndex(3)
             }
         }
+        .overlayPreferenceValue(MapWorldJumpAnchorKey.self) { anchors in
+            if let worldTransition, !worldJumpFinished {
+                GeometryReader { geometry in
+                    if initialPositionReady,
+                       let source = anchors[worldTransition.sourceLevel],
+                       let destination = anchors[worldTransition.destinationLevel] {
+                        MapWorldJumpDino(source: geometry[source], destination: geometry[destination],
+                                         startedAt: worldJumpStartedAt, images: worldJumpImages,
+                                         idleImage: openingImage, reducedMotion: reduceMotion)
+                    }
+                }
+                .allowsHitTesting(false)
+            }
+        }
+        .task(id: worldJumpReady) {
+            guard worldJumpReady, worldJumpStartedAt == nil, !worldJumpFinished else { return }
+            do {
+                // Allow the result-to-map fade to finish before the anticipation.
+                try await Task.sleep(for: .milliseconds(250))
+                worldJumpStartedAt = Date()
+                try await Task.sleep(for: .seconds(reduceMotion ? 0.05 : DinoAnimation.duration(.worldJump)))
+                worldJumpFinished = true
+            } catch { /* Leaving the map cancels the journey. */ }
+        }
         .task {
             openingImage = await DinoSpriteLoader.shared.idleImage(for: player.profile.dinoAppearance ?? .standard)
             guard !Task.isCancelled else { return }
@@ -177,6 +229,9 @@ struct WorldMap: View {
                 do { try await Task.sleep(for: .milliseconds(180)) } catch { return }
             }
             initialArtworkReady = true
+            if worldTransition != nil {
+                worldJumpImages = await DinoSpriteLoader.shared.worldJumpImages(for: player.profile.dinoAppearance ?? .standard)
+            }
         }
         .foregroundStyle(DinoStyle.ink)
         .overlay(alignment: .bottomTrailing) {
@@ -202,6 +257,7 @@ struct WorldMap: View {
 
     private func selectLevel(_ level: LevelConfiguration) {
         focusRequest = 0
+        arrivedFocusRequest = 0
         hintedLevel = nil
         celebrationID = nil
         openLevel(level)
@@ -278,12 +334,6 @@ struct WorldMap: View {
                 }
                 .padding(.horizontal, 30)
                 .frame(maxWidth: 600)
-            if player.profile.adventureComplete {
-                Button(action: openCompletion) {
-                    Label("dino.worldComplete", systemImage: "trophy.fill")
-                }.buttonStyle(DinoButtonStyle(color: DinoStyle.green))
-                    .padding(.horizontal, 30).frame(maxWidth: 600)
-            }
         }.padding(.top, WorldRouteTrail.bannerTopPadding)
             .padding(.bottom, max(40, bottomInset + 24))
             .frame(maxWidth: .infinity)
@@ -292,7 +342,7 @@ struct WorldMap: View {
 
     private func routeNodes(viewportObserver: MapViewportObserver) -> some View {
         GeometryReader { g in
-            let standingLevel = player.profile.mapLevel
+            let standingLevel = self.standingLevel
             let dinoSize = min(200, g.size.width * 0.37)
             let topClearance = max(0, dinoSize - 82)
             let points = JungleMapLayout.levelPositions.indices.map { routePoint($0, width: g.size.width, topClearance: topClearance) }
@@ -311,19 +361,24 @@ struct WorldMap: View {
                                       bossComplete: player.profile.worldOneComplete,
                                       showsGuide: guidedLevel == id) { selectLevel(level) }
                                 .offset(x: point.x - g.size.width / 2)
-                            if standingLevel == id {
+                            if standingLevel == id || worldTransition?.sourceLevel == id || worldTransition?.destinationLevel == id {
                                 ZStack(alignment: .bottom) {
                                     Ellipse().fill(Color(dinoHex: 0x38552D).opacity(0.25))
                                         .frame(width: dinoSize * 0.48, height: dinoSize * 0.12)
                                         .blur(radius: 3).offset(y: -4)
+                                        .opacity(standingLevel == id && (worldTransition == nil || worldJumpFinished) ? 1 : 0)
                                     DinoCharacter(state: .happy, size: dinoSize, preparesReactions: false)
-                                        .opacity(showsMapDino ? 1 : 0)
-                                        .anchorPreference(key: MapDinoAnchorKey.self, value: .bounds) { showsMapDino ? nil : $0 }
+                                        .opacity(showsMapDino && standingLevel == id ? 1 : 0)
+                                        .anchorPreference(key: MapDinoAnchorKey.self, value: .bounds) { showsMapDino || standingLevel != id ? nil : $0 }
+                                        .anchorPreference(key: MapWorldJumpAnchorKey.self, value: .bounds) {
+                                            worldTransition?.sourceLevel == id || worldTransition?.destinationLevel == id ? [id: $0] : [:]
+                                        }
                                 }
                                     .allowsHitTesting(false)
                                     .accessibilityElement(children: .ignore)
                                     .accessibilityLabel(Text(verbatim: "Dino"))
                                     .accessibilityIdentifier("map.dino.\(id)")
+                                    .accessibilityHidden(standingLevel != id || !showsMapDino)
                                     .offset(x: point.x - g.size.width / 2,
                                             y: -dinoSize / 2 + 12)
                             }
@@ -350,6 +405,119 @@ private struct MapDinoAnchorKey: PreferenceKey {
     static var defaultValue: Anchor<CGRect>? { nil }
     static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
         value = nextValue() ?? value
+    }
+}
+
+private struct MapWorldJumpAnchorKey: PreferenceKey {
+    static var defaultValue: [Int: Anchor<CGRect>] { [:] }
+    static func reduce(value: inout [Int: Anchor<CGRect>], nextValue: () -> [Int: Anchor<CGRect>]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, next in next })
+    }
+}
+
+/// Both anchors remain in the scrolling route; the same clock drives the camera and salto.
+private struct MapWorldJumpDino: View {
+    let source: CGRect
+    let destination: CGRect
+    let startedAt: Date?
+    let images: [String: UIImage]
+    let idleImage: UIImage?
+    let reducedMotion: Bool
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: startedAt == nil || reducedMotion)) { context in
+            let elapsed = startedAt.map { max(0, context.date.timeIntervalSince($0)) } ?? 0
+            let progress = reducedMotion && startedAt != nil ? 1 : DinoAnimation.worldJumpProgress(elapsed: elapsed)
+            let sample = startedAt == nil ? DinoAnimation.sample(.idle, elapsed: 0)
+                : DinoAnimation.sample(.worldJump, elapsed: elapsed, reducedMotion: reducedMotion)
+            let size = source.width + (destination.width - source.width) * progress
+            let center = CGPoint(x: source.midX + (destination.midX - source.midX) * progress,
+                                 y: source.midY + (destination.midY - source.midY) * progress)
+            ZStack {
+                Ellipse().fill(Color(dinoHex: 0x38552D).opacity(0.25 * (1 + sample.height)))
+                    .frame(width: size * 0.48 * (1 + sample.height), height: size * 0.12)
+                    .blur(radius: 3)
+                    .position(x: center.x, y: center.y + size / 2 - 10)
+                if let image = images[sample.pose.asset] ?? idleImage {
+                    Image(uiImage: image).resizable().scaledToFit()
+                        .frame(width: size, height: size)
+                        .offset(x: size * sample.pose.offsetX, y: size * sample.pose.offsetY)
+                        .rotationEffect(.degrees(sample.angle - sample.pose.paintedAngle), anchor: UnitPoint(x: 0.5, y: 0.52))
+                        .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
+                        .offset(y: size * sample.height)
+                        .position(center)
+                }
+            }
+            .transaction { $0.animation = nil }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: "Dino"))
+        .accessibilityIdentifier("map.worldJump")
+    }
+}
+
+/// A probe at the destination keeps the map scroll exactly in step with the sprite.
+private struct MapWorldJumpScrollObserver: UIViewRepresentable {
+    let startedAt: Date?
+    let topClearance: CGFloat
+    let reducedMotion: Bool
+
+    func makeUIView(context: Context) -> Probe { Probe() }
+    func updateUIView(_ view: Probe, context: Context) { view.configure(self) }
+    static func dismantleUIView(_ view: Probe, coordinator: ()) { view.stop() }
+
+    final class Probe: UIView {
+        private var configuration: MapWorldJumpScrollObserver?
+        private weak var scrollView: UIScrollView?
+        private var displayLink: CADisplayLink?
+        private var initialOffset: CGFloat?
+        private var completed = false
+
+        init() { super.init(frame: .zero); isUserInteractionEnabled = false }
+        required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+        func configure(_ value: MapWorldJumpScrollObserver) {
+            configuration = value
+            observe()
+        }
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            if window == nil { stop() } else { observe() }
+        }
+        override func layoutSubviews() { super.layoutSubviews(); observe() }
+
+        private func observe() {
+            guard window != nil, !completed, configuration?.startedAt != nil, displayLink == nil else { return }
+            var ancestor = superview
+            while let view = ancestor {
+                if let scroll = view as? UIScrollView {
+                    scrollView = scroll
+                    initialOffset = scroll.contentOffset.y
+                    let link = CADisplayLink(target: self, selector: #selector(tick))
+                    link.add(to: .main, forMode: .common)
+                    displayLink = link
+                    tick()
+                    return
+                }
+                ancestor = view.superview
+            }
+        }
+
+        @objc private func tick() {
+            guard let configuration, let startedAt = configuration.startedAt,
+                  let scroll = scrollView, let initialOffset else { return }
+            let elapsed = max(0, Date().timeIntervalSince(startedAt))
+            let minimum = -scroll.adjustedContentInset.top
+            let maximum = max(minimum, scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
+            let target = convert(bounds, to: scroll).midY - (scroll.bounds.height + configuration.topClearance) / 2
+            let destination = min(maximum, max(minimum, target))
+            let progress = configuration.reducedMotion ? 1 : DinoAnimation.worldJumpProgress(elapsed: elapsed)
+            scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x,
+                                           y: initialOffset + (destination - initialOffset) * progress), animated: false)
+            if progress >= 1 { completed = true; stop() }
+        }
+
+        func stop() { displayLink?.invalidate(); displayLink = nil; scrollView = nil }
     }
 }
 
@@ -457,16 +625,21 @@ private struct MapOpeningFlight: AnimatableModifier {
     }
 }
 
-/// Attached to the standing row, this reads UIScrollView's final coordinates on
-/// iOS 16 and later. Its display link stops when the first layout has settled.
+/// The standing row supplies the same native coordinates for restoration and
+/// explicit navigation. Long trips jump beneath a snapshot of the old viewport;
+/// only the destination scenery is loaded before the snapshot fades away.
 private struct MapViewportObserver: UIViewRepresentable {
     let centersLevel: Bool
     let restoresPosition: Bool
     let topClearance: CGFloat
+    let focusRequest: Int
+    let reduceMotion: Bool
+    let artworkReady: Bool
     var ready: () -> Void
+    var focused: (Int) -> Void
 
     func makeUIView(context: Context) -> Probe { Probe(configuration: self) }
-    func updateUIView(_ view: Probe, context: Context) { view.configuration = self }
+    func updateUIView(_ view: Probe, context: Context) { view.configure(self) }
     static func dismantleUIView(_ view: Probe, coordinator: ()) { view.detach() }
 
     final class Probe: UIView {
@@ -476,6 +649,10 @@ private struct MapViewportObserver: UIViewRepresentable {
         private var positioned = false
         private var lastLayout: Layout?
         private var stableFrames = 0
+        private var activeFocus = 0
+        private var completedFocus = 0
+        private var focusOffset: CGFloat?
+        private var snapshot: UIView?
 
         private struct Layout: Equatable {
             let size: CGSize
@@ -491,6 +668,16 @@ private struct MapViewportObserver: UIViewRepresentable {
             isUserInteractionEnabled = false
         }
         required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+        func configure(_ configuration: MapViewportObserver) {
+            self.configuration = configuration
+            if configuration.focusRequest == 0 {
+                activeFocus = 0
+                completedFocus = 0
+                removeSnapshot()
+            }
+            if !positioned || configuration.focusRequest != completedFocus { startObserving() }
+        }
 
         override func didMoveToWindow() {
             super.didMoveToWindow()
@@ -508,7 +695,7 @@ private struct MapViewportObserver: UIViewRepresentable {
             while let view = ancestor {
                 if let scroll = view as? UIScrollView {
                     scrollView = scroll
-                    if !positioned { startObserving() }
+                    if !positioned || configuration.focusRequest != completedFocus { startObserving() }
                     return
                 }
                 ancestor = view.superview
@@ -516,6 +703,7 @@ private struct MapViewportObserver: UIViewRepresentable {
         }
 
         func detach() {
+            removeSnapshot()
             scrollView = nil
             displayLink?.invalidate()
             displayLink = nil
@@ -528,19 +716,35 @@ private struct MapViewportObserver: UIViewRepresentable {
             displayLink = link
         }
 
+        private func removeSnapshot() {
+            snapshot?.layer.removeAllAnimations()
+            snapshot?.removeFromSuperview()
+            snapshot = nil
+        }
+
+        private func coverViewport(_ scroll: UIScrollView) {
+            guard snapshot == nil, let parent = scroll.superview,
+                  let image = scroll.snapshotView(afterScreenUpdates: false) else { return }
+            image.frame = scroll.frame
+            image.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            image.accessibilityElementsHidden = true
+            image.isUserInteractionEnabled = true
+            parent.insertSubview(image, aboveSubview: scroll)
+            snapshot = image
+        }
+
         @objc private func tick() {
             guard let scroll = scrollView, window != nil else { detach(); return }
+            guard scroll.bounds.height > 0, bounds.height > 0,
+                  scroll.contentSize.height >= scroll.bounds.height else { return }
+            let target = convert(bounds, to: scroll)
+            let layout = Layout(size: scroll.bounds.size, content: scroll.contentSize,
+                                target: target, clearance: configuration.topClearance)
+            let minimum = -scroll.adjustedContentInset.top
+            let maximum = max(minimum, scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
+            let centered = min(maximum, max(minimum, target.midY - (scroll.bounds.height + configuration.topClearance) / 2))
             if !positioned {
-                guard scroll.bounds.height > 0, bounds.height > 0,
-                      scroll.contentSize.height >= scroll.bounds.height else { return }
-                let target = convert(bounds, to: scroll)
-                let layout = Layout(size: scroll.bounds.size, content: scroll.contentSize,
-                                    target: target, clearance: configuration.topClearance)
-                let minimum = -scroll.adjustedContentInset.top
-                let maximum = max(minimum, scroll.contentSize.height - scroll.bounds.height + scroll.adjustedContentInset.bottom)
-                let desired = configuration.centersLevel
-                    ? min(maximum, max(minimum, target.midY - (scroll.bounds.height + configuration.topClearance) / 2))
-                    : minimum
+                let desired = configuration.centersLevel ? centered : minimum
                 if abs(scroll.contentOffset.y - desired) > 0.5 {
                     scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: desired), animated: false)
                     stableFrames = 0
@@ -548,14 +752,57 @@ private struct MapViewportObserver: UIViewRepresentable {
                     stableFrames = layout == lastLayout ? stableFrames + 1 : 0
                 }
                 lastLayout = layout
-                // Let the initial geometry callbacks and first drawing pass finish
-                // before revealing the map. No fixed launch delay is needed.
                 if stableFrames >= 2 {
                     positioned = true
                     configuration.ready()
                 }
+            } else if configuration.focusRequest > 0, configuration.focusRequest != completedFocus {
+                let request = configuration.focusRequest
+                if activeFocus != request {
+                    activeFocus = request
+                    stableFrames = 0
+                    snapshot?.layer.removeAllAnimations()
+                    snapshot?.alpha = 1
+                    // Stop any deceleration or previous scroll before starting a new trip.
+                    scroll.setContentOffset(scroll.contentOffset, animated: false)
+                    let distance = abs(scroll.contentOffset.y - centered)
+                    let shortTrip = distance <= scroll.bounds.height && !configuration.reduceMotion && snapshot == nil
+                    if !shortTrip { coverViewport(scroll) }
+                    focusOffset = centered
+                    scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: centered), animated: shortTrip)
+                } else if abs((focusOffset ?? centered) - centered) > 0.5 {
+                    // Rotation can change the destination while a trip is in progress.
+                    focusOffset = centered
+                    stableFrames = 0
+                    scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: centered), animated: false)
+                }
+                // A drag cancels a nearby animated trip. Long trips are covered
+                // until their artwork is ready, while the HUD remains available.
+                if scroll.isDragging {
+                    completedFocus = request
+                    removeSnapshot()
+                } else {
+                    let atDestination = abs(scroll.contentOffset.y - centered) <= 0.5
+                    stableFrames = atDestination && layout == lastLayout ? stableFrames + 1 : 0
+                    lastLayout = layout
+                    if stableFrames >= 2 && configuration.artworkReady {
+                        completedFocus = request
+                        if let image = snapshot {
+                            UIView.animate(withDuration: configuration.reduceMotion ? 0 : 0.22,
+                                           animations: { image.alpha = 0 }, completion: { [weak self, weak image] finished in
+                                guard finished, let self, self.snapshot === image,
+                                      self.configuration.focusRequest == request else { return }
+                                image?.removeFromSuperview()
+                                self.snapshot = nil
+                                self.configuration.focused(request)
+                            })
+                        } else {
+                            configuration.focused(request)
+                        }
+                    }
+                }
             }
-            if positioned {
+            if positioned && configuration.focusRequest == completedFocus {
                 displayLink?.invalidate()
                 displayLink = nil
             }
@@ -635,6 +882,7 @@ private struct MapCompletionConfetti: View {
 private struct MapScenery<Content: View>: View {
     @Environment(\.dinoMapPreparing) private var preparing
     @Environment(\.dinoMapInitialWorld) private var initialWorld
+    @Environment(\.mapArtworkReleased) private var artworkReleased
     let worldID: Int
     let viewportHeight: CGFloat
     @ViewBuilder var content: () -> Content
@@ -642,7 +890,11 @@ private struct MapScenery<Content: View>: View {
 
     var body: some View {
         Color.clear
-            .overlay { if isNearby { content() } }
+            .overlay {
+                if isNearby {
+                    content().onDisappear { artworkReleased(worldID) }
+                }
+            }
             .readGeometry(for: Bool.self) { geometry in
                 // A late saved level must not paint the jungle on the way to
                 // its restored offset. Layout anchors remain available.
@@ -1172,6 +1424,11 @@ private struct WorldChapter: View, Equatable {
     let hintedLevel: Int?
     let viewportObserver: MapViewportObserver
     let showsDino: Bool
+    let standingLevel: Int
+    let worldTransition: DinoWorldTransition?
+    let worldJumpStartedAt: Date?
+    let worldJumpFinished: Bool
+    let topClearanceForJump: CGFloat
     var openLevel: (LevelConfiguration) -> Void
     private let titleTopPadding = WorldRouteTrail.bannerTopPadding
     private var routeOffset: CGFloat { WorldRouteTrail.bannerHeight + titleTopPadding + WorldRouteTrail.bannerBottomPadding + topClearance }
@@ -1180,7 +1437,14 @@ private struct WorldChapter: View, Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.world == rhs.world && lhs.topClearance == rhs.topClearance &&
         lhs.viewportHeight == rhs.viewportHeight && lhs.hintedLevel == rhs.hintedLevel && lhs.showsDino == rhs.showsDino &&
-        lhs.viewportObserver.restoresPosition == rhs.viewportObserver.restoresPosition
+        lhs.standingLevel == rhs.standingLevel && lhs.worldTransition == rhs.worldTransition &&
+        lhs.worldJumpStartedAt == rhs.worldJumpStartedAt && lhs.worldJumpFinished == rhs.worldJumpFinished &&
+        lhs.topClearanceForJump == rhs.topClearanceForJump &&
+        lhs.viewportObserver.restoresPosition == rhs.viewportObserver.restoresPosition &&
+        lhs.viewportObserver.topClearance == rhs.viewportObserver.topClearance &&
+        lhs.viewportObserver.focusRequest == rhs.viewportObserver.focusRequest &&
+        lhs.viewportObserver.reduceMotion == rhs.viewportObserver.reduceMotion &&
+        lhs.viewportObserver.artworkReady == rhs.viewportObserver.artworkReady
     }
 
     var body: some View {
@@ -1192,7 +1456,7 @@ private struct WorldChapter: View, Equatable {
                 .accessibilityIdentifier("map.world.\(world.id)")
             Color.clear.frame(height: topClearance)
             GeometryReader { geometry in
-                let standingLevel = player.profile.mapLevel
+                let standingLevel = self.standingLevel
                 let bossComplete = player.profile.worldComplete(world.id)
                 ZStack(alignment: .top) {
                 VStack(spacing: 0) {
@@ -1205,24 +1469,35 @@ private struct WorldChapter: View, Equatable {
                                       current: standingLevel == id,
                                       bossComplete: bossComplete,
                                       showsGuide: hintedLevel == id) { openLevel(level) }
-                            if standingLevel == id {
+                            if standingLevel == id || worldTransition?.sourceLevel == id || worldTransition?.destinationLevel == id {
                                 ZStack(alignment: .bottom) {
                                     Ellipse().fill(Color(dinoHex: 0x38552D).opacity(0.25))
                                         .frame(width: dinoSize * 0.48, height: dinoSize * 0.12)
                                         .blur(radius: 3).offset(y: -4)
+                                        .opacity(standingLevel == id && (worldTransition == nil || worldJumpFinished) ? 1 : 0)
                                     DinoCharacter(state: .happy, size: dinoSize, preparesReactions: false)
-                                        .opacity(showsDino ? 1 : 0)
-                                        .anchorPreference(key: MapDinoAnchorKey.self, value: .bounds) { showsDino ? nil : $0 }
+                                        .opacity(showsDino && standingLevel == id ? 1 : 0)
+                                        .anchorPreference(key: MapDinoAnchorKey.self, value: .bounds) { showsDino || standingLevel != id ? nil : $0 }
+                                        .anchorPreference(key: MapWorldJumpAnchorKey.self, value: .bounds) {
+                                            worldTransition?.sourceLevel == id || worldTransition?.destinationLevel == id ? [id: $0] : [:]
+                                        }
                                 }
                                     .offset(y: -dinoSize / 2 + 12).allowsHitTesting(false)
                                     .accessibilityElement(children: .ignore)
                                     .accessibilityLabel(Text(verbatim: "Dino"))
                                     .accessibilityIdentifier("map.dino.\(id)")
+                                    .accessibilityHidden(standingLevel != id || !showsDino)
                             }
                         }.offset(x: geometry.size.width * (positions[index] - 0.5))
                             .frame(width: geometry.size.width, height: 175)
                             .id("node-\(id)")
                             .background { if standingLevel == id { viewportObserver } }
+                            .background {
+                                if let worldTransition, id == worldTransition.destinationLevel, !worldJumpFinished {
+                                    MapWorldJumpScrollObserver(startedAt: worldJumpStartedAt,
+                                                              topClearance: topClearanceForJump, reducedMotion: viewportObserver.reduceMotion)
+                                }
+                            }
                     }
                 }.padding(.top, -7.5)
                 }

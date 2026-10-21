@@ -123,7 +123,7 @@ struct DinoResultView: View {
                 .position(x: layout.podiumCenterX, y: layout.contactY)
             character(size: layout.dinoSize)
                 .position(x: layout.stageWidth / 2, y: layout.dinoCenterY)
-            // Taller corner leaves grow in front of the stone, with the reward above them.
+            // Each world's ground details overlap the podium; rewards stay in front.
             ResultRockPlanting(worldID: result.level.worldID, foreground: true)
                 .frame(width: layout.podiumWidth * (result.level.worldID == 2 ? 1.08 : 1.18),
                        height: layout.podiumHeight * (result.level.worldID == 2 ? 0.45 : 0.82))
@@ -166,11 +166,24 @@ struct DinoResultView: View {
 
     private var actions: some View {
         VStack(spacing: 10) {
-            if nextAvailable {
+            if result.level.isBoss && succeeded {
+                if DinoWorldCatalog.world(result.level.worldID + 1) != nil {
+                    Button(action: next) {
+                        Label("dino.nextWorld", systemImage: "arrow.right")
+                    }
+                    .buttonStyle(ResultAdventureButtonStyle(primary: true))
+                    .accessibilityIdentifier("result.next")
+                } else {
+                    Button(action: map) { Label("dino.map", systemImage: "map.fill") }
+                        .buttonStyle(ResultAdventureButtonStyle(primary: true))
+                        .accessibilityIdentifier("result.map")
+                }
+                retryButton
+            } else if nextAvailable {
                 Button(action: next) {
                     HStack(spacing: 12) {
                         Spacer(minLength: 0)
-                        Text(LocalizedStringKey(result.level.isBoss ? "dino.worldComplete" : "dino.next"))
+                        Text("dino.next")
                         Image(systemName: "arrow.right").fontWeight(.heavy)
                         Spacer(minLength: 0)
                     }
@@ -257,7 +270,7 @@ private struct ResultAdventureButtonStyle: ButtonStyle {
     }
 }
 
-/// Independent native layers can later animate or change palette per world.
+/// Jungle, desert and the other biomes each own their landscape geometry.
 /// No flattened background image is used by the result scene.
 private struct ResultScenery: View {
     let worldID: Int
@@ -267,16 +280,20 @@ private struct ResultScenery: View {
     var body: some View {
         let palette = ResultLandscapePalette(worldID: worldID)
         ZStack {
-            if worldID == 2 {
+            if palette.themeID == 7 {
                 Canvas(rendersAsynchronously: true) { context, size in
                     DinoDesertPainter(context: context).rewardLandscape(in: size)
                 }
-            } else {
+            } else if palette.themeID == 1 {
                 ForEach(ResultLandscapeLayer.allCases, id: \.self) { layer in
                     Canvas(rendersAsynchronously: true) { context, size in
                         ResultLandscapePainter(context: context, size: size, palette: palette,
                                                windPhase: windPhase).draw(layer)
                     }
+                }
+            } else {
+                Canvas(rendersAsynchronously: true) { context, size in
+                    ResultBiomePainter(context: context, size: size, themeID: palette.themeID).landscape()
                 }
             }
             DinoResultHeaderBackdrop(worldID: worldID, signFrame: signFrame, windPhase: windPhase)
@@ -289,14 +306,20 @@ private struct ResultScenery: View {
 
 private enum ResultLandscapeLayer: CaseIterable { case sky, distance, meadow, foliage }
 
-/// Plants share the stone's own coordinates, so the base never floats above its lawn.
+/// Ground details share the podium's coordinates on every screen size.
 private struct ResultRockPlanting: View {
     let worldID: Int
     var foreground = false
     var body: some View {
         Canvas(rendersAsynchronously: true) { context, size in
-            if worldID == 2 {
+            let palette = ResultLandscapePalette(worldID: worldID)
+            if palette.themeID == 7 {
                 DinoDesertPainter(context: context).rewardGroundCover(in: size, foreground: foreground)
+                return
+            }
+            if palette.themeID != 1 {
+                ResultBiomePainter(context: context, size: size, themeID: palette.themeID)
+                    .podiumSurround(foreground: foreground)
                 return
             }
             let painter = ResultLandscapePainter(context: context, size: size,
@@ -865,7 +888,7 @@ private struct ResultRock: View {
             var art = context
             art.scaleBy(x: size.width / 1000, y: size.height / 455)
             ResultStonePainter(context: art, palette: ResultLandscapePalette(worldID: worldID))
-                .draw(hasMoss: worldID != 2)
+                .draw(hasMoss: [1, 2, 4].contains(ResultLandscapePalette(worldID: worldID).themeID))
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
@@ -882,9 +905,20 @@ private struct ResultStonePainter {
     // One mineral palette picks up the clearing's light and reflected ground colour.
     // Individual facets vary in exposure, rather than switching to unrelated greys.
     private var coolLight: Bool { palette.night || palette.themeID == 5 }
-    private var light: UInt32 { ResultLandscapePalette.mix(coolLight ? 0xDDE8E3 : 0xEFE3BC, palette.grassLight, 0.17) }
-    private var face: UInt32 { ResultLandscapePalette.mix(coolLight ? 0xA2B6B8 : 0xC1B792, palette.hillNear, 0.16) }
-    private var shade: UInt32 { ResultLandscapePalette.mix(coolLight ? 0x6E858A : 0x85846B, palette.grassShade, 0.27) }
+    private var mineral: (UInt32, UInt32, UInt32)? {
+        switch palette.themeID {
+        case 3: return (0x928C96, 0x56505F, 0x302E40) // Basalt
+        case 5: return (0xD8FAF7, 0x80B6C5, 0x426C91) // Quartz
+        case 6: return (0xD5ECEA, 0x7EADB8, 0x426174) // City alloy
+        case 8: return (0xE8D2A0, 0xB28B58, 0x665B60) // Brass
+        case 9: return (0xFAE6BC, 0xCBB182, 0x967C59) // Coastal sandstone
+        case 10: return (0xE8E8D8, 0xACB7B3, 0x717F8B) // Castle limestone
+        default: return nil
+        }
+    }
+    private var light: UInt32 { mineral?.0 ?? ResultLandscapePalette.mix(coolLight ? 0xDDE8E3 : 0xEFE3BC, palette.grassLight, 0.17) }
+    private var face: UInt32 { mineral?.1 ?? ResultLandscapePalette.mix(coolLight ? 0xA2B6B8 : 0xC1B792, palette.hillNear, 0.16) }
+    private var shade: UInt32 { mineral?.2 ?? ResultLandscapePalette.mix(coolLight ? 0x6E858A : 0x85846B, palette.grassShade, 0.27) }
     private func noise(_ index: Int, seed: UInt64) -> CGFloat {
         var value = UInt64(index) &+ seed
         value = (value ^ (value >> 16)) &* 0x45D9F3B
@@ -937,6 +971,8 @@ private struct ResultStonePainter {
             stone.material()
             stone.grain()
             stone.topSurface()
+            ResultBiomePainter(context: clipped, size: CGSize(width: 1000, height: 455), themeID: palette.themeID)
+                .podiumDetails()
         }
         if hasMoss { caps() }
     }
@@ -1261,46 +1297,5 @@ private struct ResultConfetti: View {
         }
         path.closeSubpath()
         return path
-    }
-}
-
-struct WorldCompleteView: View {
-    @EnvironmentObject private var player: DinoPlayer
-    var worldID = 1
-    var nextWorld: (() -> Void)? = nil
-    var map: () -> Void
-    var body: some View {
-        ZStack {
-            JungleBackground()
-            ScrollView {
-                VStack(spacing: 26) {
-                    Image(systemName: "sparkles").font(.system(size: 36)).foregroundStyle(DinoStyle.green).padding(.top, 30)
-                    Text("dino.worldComplete").font(.system(size: 36, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
-                    DinoCharacter(state: .celebrating, size: 215)
-                    Image(systemName: "trophy.fill").font(.system(size: 74)).foregroundStyle(DinoStyle.green)
-                    Text(LocalizedStringKey(DinoWorldCatalog.world(worldID)!.titleKey))
-                        .font(.system(size: 22, weight: .heavy, design: .rounded))
-                    if player.profile.perfectVictory(in: worldID) { Text("dino.perfectBoss").font(.system(size: 18, weight: .bold, design: .rounded)) }
-                    VStack(spacing: 16) {
-                        if let next = DinoWorldCatalog.world(worldID + 1) {
-                            WorldThemePreview(world: next)
-                                .frame(height: 150).clipped().clipShape(RoundedRectangle(cornerRadius: 20))
-                                .accessibilityHidden(true)
-                            Text(LocalizedStringKey(next.titleKey)).font(.system(size: 24, weight: .heavy, design: .rounded))
-                            if let nextWorld {
-                                Button("dino.nextWorld", action: nextWorld).buttonStyle(DinoButtonStyle())
-                                    .accessibilityIdentifier("completion.nextWorld")
-                            }
-                        } else {
-                            Image(systemName: "sparkles").font(.system(size: 54)).foregroundStyle(DinoStyle.green)
-                            Text("dino.comingSoon").font(.system(size: 24, weight: .heavy, design: .rounded))
-                            Text("dino.afterHundred").font(.system(size: 14, weight: .semibold, design: .rounded))
-                                .multilineTextAlignment(.center)
-                        }
-                    }.frame(maxWidth: .infinity).dinoCard()
-                    Button("dino.map", action: map).buttonStyle(DinoButtonStyle())
-                }.padding(26).frame(maxWidth: 460).frame(maxWidth: .infinity)
-            }
-        }.foregroundStyle(DinoStyle.ink)
     }
 }

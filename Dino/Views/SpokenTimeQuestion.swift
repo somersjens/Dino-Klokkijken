@@ -3,7 +3,6 @@ import UIKit
 
 struct SpokenTimeQuestion: View {
     @Environment(\.dinoHighContrast) private var highContrast
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject var session: DinoSession
     let theme: ClockTheme
     let width: CGFloat
@@ -29,7 +28,6 @@ struct SpokenTimeQuestion: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(.white, in: RoundedRectangle(cornerRadius: 22))
                 .overlay(RoundedRectangle(cornerRadius: 22).stroke(highContrast ? DinoStyle.ink.opacity(0.7) : DinoStyle.ink.opacity(0.08), lineWidth: highContrast ? 2 : 1.5))
-                if !isDemonstration { confirm(prompt) }
             }
         }
         .id(isDemonstration ? "demo.spoken" : "question.answers")
@@ -172,20 +170,5 @@ struct SpokenTimeQuestion: View {
         return DinoStyle.ink.opacity(highContrast ? 0.8 : 0.16)
     }
 
-    private func confirm(_ prompt: SpokenTimePrompt) -> some View {
-        Button {
-            let ids = prompt.slots.indices.map { index -> String in
-                guard session.spokenChoices.indices.contains(index) else { return SpokenTimeChoice.emptyID }
-                return session.spokenChoices[index] ?? SpokenTimeChoice.emptyID
-            }
-            session.submit(.spoken(SpokenTimeAnswer(choiceIDs: ids)))
-        } label: {
-            Image(systemName: "checkmark").font(.title2.bold())
-        }
-        .buttonStyle(DinoButtonStyle())
-        .frame(maxWidth: 260)
-        .accessibilityIdentifier("question.confirm")
-        .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
-    }
 }
 

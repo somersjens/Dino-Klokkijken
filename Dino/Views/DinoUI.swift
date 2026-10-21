@@ -378,13 +378,14 @@ struct DinoClockControlButtonStyle: ButtonStyle {
     @Environment(\.dinoHighContrast) private var highContrast
     var selected = true
     var expands = false
+    var compact = false
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 17, weight: .bold, design: .rounded))
+            .font(.system(size: compact ? 15 : 17, weight: .bold, design: .rounded))
             .foregroundStyle(selected ? Color.white : DinoStyle.ink)
-            .padding(.horizontal, 18)
-            .frame(minHeight: 48)
+            .padding(.horizontal, compact ? 12 : 18)
+            .frame(minHeight: compact ? 40 : 48)
             .frame(maxWidth: expands ? .infinity : nil)
             .background(selected ? DinoStyle.ink : .white, in: RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14)

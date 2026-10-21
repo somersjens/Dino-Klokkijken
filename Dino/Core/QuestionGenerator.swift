@@ -83,7 +83,8 @@ enum DinoQuestionGenerator {
                 difficulty: difficulty, previous: previousTarget, using: &rng)
         }
         let optionPool = family.minuteStep == 60 ? (1...12).map { ClockTime(hour: $0) } : pool
-        let others = DinoQuestionTeaching.distractors(pool: optionPool, target: target, difficulty: difficulty, using: &rng)
+        let others = DinoQuestionTeaching.distractors(pool: optionPool, target: target, kind: recipe.kind,
+            difficulty: difficulty, minuteStep: family.minuteStep, using: &rng)
         let count = min(recipe.optionCount, difficulty.optionCount)
         var options = recipe.kind.usesOptions ? Array(others.prefix(count - 1)) : []
         if recipe.kind.usesOptions {

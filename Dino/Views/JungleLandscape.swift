@@ -4298,20 +4298,23 @@ private enum VolcanoWorldLayout {
         let field: BankField
         if let cached = bankFields.object(forKey: key) { field = cached }
         else {
-            let start = -layout.routeOffset - entranceOverlap - 80
             let end = layout.height - layout.routeOffset + 80
-            let count = Int(ceil((end - start) / 4))
             let sides = [false, true].map { side -> [CGPoint] in
+                // Start on the real horizontal mouth. Including the invisible
+                // vertical placeholder before it creates a chord and a kink
+                // when the offset contour turns back toward the inlet.
+                let start = inletStart(layout: layout, right: side) - layout.routeOffset + 0.01
+                let count = Int(ceil((end - start) / 2))
                 var points: [CGPoint] = []
                 let sign: CGFloat = side ? -1 : 1
                 for index in 0...count {
                     let y = start + (end - start) * CGFloat(index) / CGFloat(count)
                     let point = channelPoint(layout: layout, right: side, y: y)
-                    let before = channelPoint(layout: layout, right: side, y: y - 1)
+                    let before = channelPoint(layout: layout, right: side, y: max(start, y - 1))
                     let after = channelPoint(layout: layout, right: side, y: y + 1)
-                    let dx = after.x - before.x, length = hypot(dx, 2)
+                    let dx = after.x - before.x, dy = after.y - before.y, length = hypot(dx, dy)
                     let margin = (35 + sin(y / 57 + (side ? 1.2 : 0)) * 4 + sin(y / 23) * 2) * layout.scale
-                    let bank = CGPoint(x: point.x + sign * 2 / length * margin,
+                    let bank = CGPoint(x: point.x + sign * dy / length * margin,
                                        y: y - sign * dx / length * margin)
                     if bank.y > (points.last?.y ?? -.infinity) { points.append(bank) }
                 }
@@ -5428,12 +5431,20 @@ private struct VolcanoWorldPainter {
             context.stroke(lip, with: .color(Color(dinoHex: 0x756674)),
                 style: StrokeStyle(lineWidth: VolcanoWorldLayout.channelRockWidth(scale: layout.scale, width: layout.width),
                                    lineCap: .round, lineJoin: .round))
-            let count = max(1, Int((end - start) / 12))
-            var bank = Path()
-            for i in 0...count {
+            let count = max(1, Int(ceil((end - start) / 4)))
+            let points = (0...count).map { i in
                 let y = start + (end - start) * CGFloat(i) / CGFloat(count)
-                let point = VolcanoWorldLayout.bankPoint(layout: layout, right: right, y: y)
-                if i == 0 { bank.move(to: point) } else { bank.addLine(to: point) }
+                return VolcanoWorldLayout.bankPoint(layout: layout, right: right, y: y)
+            }
+            var bank = Path()
+            bank.move(to: points[0])
+            for i in 0..<count {
+                let a = points[i], b = points[i + 1]
+                let previous = i > 0 ? points[i - 1] : CGPoint(x: 2 * a.x - b.x, y: 2 * a.y - b.y)
+                let next = i + 2 <= count ? points[i + 2] : CGPoint(x: 2 * b.x - a.x, y: 2 * b.y - a.y)
+                bank.addCurve(to: b,
+                    control1: CGPoint(x: a.x + (b.x - previous.x) / 6, y: a.y + (b.y - previous.y) / 6),
+                    control2: CGPoint(x: b.x - (next.x - a.x) / 6, y: b.y - (next.y - a.y) / 6))
             }
             context.stroke(bank, with: .color(Color(dinoHex: 0xB89978).opacity(0.24)),
                 style: StrokeStyle(lineWidth: 34 * layout.scale, lineCap: .round, lineJoin: .round))

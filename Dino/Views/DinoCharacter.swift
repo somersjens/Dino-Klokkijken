@@ -30,6 +30,7 @@ struct DinoCharacter: View {
         case .wrongAnswer: "dino.wrongAnswer"
         case .backflip: "dino.backflip"
         case .pirouette: "dino.pirouette"
+        case .worldJump: "dino.worldJump"
         }
     }
 

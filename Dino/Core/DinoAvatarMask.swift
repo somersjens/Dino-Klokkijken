@@ -63,6 +63,36 @@ enum DinoAvatarMask {
 
     /// Coordinates trace each animation illustration in a 1254 × 1254 reference space.
     private static let poses: [String: SpriteRegions] = [
+        "dino-world-jump-01": SpriteRegions(
+            bandanaBottom: 0.34,
+            upperSpikes: contours([[.move(504, 150), .line(501, 16), .line(569, 16), .line(656, 106), .line(600, 126)],
+                                   [.move(423, 218), .line(413, 116), .line(494, 110), .line(528, 159)]]),
+            eyes: eyeContours([(532, 273, 142, 156), (743, 225, 124, 149)]),
+            mouth: eyeContours([(603, 446, 219, 140)])),
+        "dino-world-jump-02": SpriteRegions(
+            bandanaBottom: 0.36,
+            upperSpikes: contours([[.move(650, 239), .line(659, 135), .line(728, 132), .line(821, 251)],
+                                   [.move(573, 283), .line(564, 192), .line(625, 188), .line(668, 256)]]),
+            eyes: eyeContours([(636, 432, 149, 148), (862, 448, 112, 144)]),
+            mouth: eyeContours([(661, 624, 210, 149)])),
+        "dino-world-jump-03": SpriteRegions(
+            bandanaBottom: 0.34,
+            upperSpikes: contours([[.move(728, 210), .line(753, 80), .line(825, 89), .line(890, 219)],
+                                   [.move(657, 235), .line(664, 110), .line(739, 92), .line(771, 194)]]),
+            eyes: eyeContours([(659, 375, 147, 140), (881, 418, 119, 144)]),
+            mouth: eyeContours([(641, 540, 163, 167)])),
+        "dino-world-jump-06": SpriteRegions(
+            bandanaBottom: 0.35,
+            upperSpikes: contours([[.move(650, 227), .line(665, 90), .line(738, 98), .line(818, 233)],
+                                   [.move(560, 285), .line(548, 151), .line(609, 142), .line(667, 234)]]),
+            eyes: eyeContours([(600, 396, 142, 149), (805, 411, 122, 150)]),
+            mouth: eyeContours([(638, 586, 201, 134)])),
+        "dino-world-jump-07": SpriteRegions(
+            bandanaBottom: 0.40,
+            upperSpikes: contours([[.move(648, 263), .line(648, 147), .line(719, 153), .line(794, 273)],
+                                   [.move(557, 300), .line(548, 207), .line(613, 194), .line(659, 263)]]),
+            eyes: eyeContours([(608, 483, 145, 147), (838, 458, 114, 150)]),
+            mouth: eyeContours([(664, 673, 165, 119)])),
         "dino-pirouette-01": SpriteRegions(
             bandanaBottom: 0.39,
             upperSpikes: contours([
@@ -215,6 +245,7 @@ enum DinoAvatarMask {
 
     private enum Segment {
         case move(Double, Double)
+        case line(Double, Double)
         case curve(Double, Double, Double, Double, Double, Double)
     }
 
@@ -226,6 +257,7 @@ enum DinoAvatarMask {
             for segment in outline {
                 switch segment {
                 case let .move(x, y): path.move(to: point(x, y))
+                case let .line(x, y): path.addLine(to: point(x, y))
                 case let .curve(x, y, x1, y1, x2, y2):
                     path.addCurve(to: point(x, y), control1: point(x1, y1), control2: point(x2, y2))
                 }
@@ -392,6 +424,11 @@ enum DinoSpriteColorRenderer {
     /// Tight print regions in each 1254-point illustration exclude the eyes,
     /// highlights and transparent background, even when the head is tilted.
     private static let bandanaLetteringBounds: [String: CGRect] = [
+        "dino-world-jump-01": CGRect(x: 552, y: 88, width: 243, height: 107),
+        "dino-world-jump-02": CGRect(x: 714, y: 270, width: 238, height: 105),
+        "dino-world-jump-03": CGRect(x: 763, y: 237, width: 238, height: 110),
+        "dino-world-jump-06": CGRect(x: 679, y: 228, width: 240, height: 112),
+        "dino-world-jump-07": CGRect(x: 672, y: 311, width: 267, height: 111),
         "dino-pirouette-01": CGRect(x: 580, y: 150, width: 252, height: 105),
         "dino-pirouette-02": CGRect(x: 696, y: 207, width: 243, height: 90),
         "dino-pirouette-03": CGRect(x: 681, y: 157, width: 220, height: 104),

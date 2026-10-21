@@ -1,12 +1,14 @@
 # Eindlevel met native landschap
 
-Het eindscherm behoudt de compositie van het voorbeeld: een levelbord, een open zonnige plek met heuvels, Dino op een steen en drie gouden beloningssterren. De achtergrond, de steen en het bord zijn opgebouwd met native SwiftUI/Canvas-paden. De eerdere illustraties dienen alleen nog als vormreferentie.
+Het eindscherm behoudt de compositie van het voorbeeld: een levelbord, Dino op een podium en drie gouden beloningssterren. Sinds 20 oktober heeft elke wereld een passend landschap en bijbehorende podiumdetails: onder andere basalt en lava, een kristalgrot, stadsgebouwen, tandwielen, zee en kasteeltorens. De jungle en woestijn behouden hun eigen uitvoering. [Landschappen per wereld en controles](ResultWorldBiomes.md). De achtergrond, de steen en het bord zijn opgebouwd met native SwiftUI/Canvas-paden. De eerdere illustraties dienen alleen nog als vormreferentie.
 
 Het bovenste bord heeft nu eigen materialen en ornamenten voor alle tien werelden, met behoud van zijn vorm en tekstplaatsing. De aparte achterlaag, het paneel en de voorversiering kunnen onafhankelijk worden aangepast en geanimeerd. [Wereldvarianten, animatie-instellingen en controles](NativeResultSignDesign.md).
 
+Een gewonnen eindbaas gebruikt ditzelfde scorescherm met de behaalde score en trofee. De twee volledige knoppen staan onder elkaar: de groene **Naar de volgende wereld** en de witte **Opnieuw spelen**. Er is geen apart wereldvoltooiingsscherm. Bij wereld 10 is de groene knop **Levelkaart**. De overgang naar een nieuwe wereld toont de salto tussen de echte kaartstenen; zie [Dino-animaties](Animation.md).
+
 ## Opbouw en aanpassingen
 
-- `ResultScenery` tekent vier landschapslagen: lucht, verte, gras en lage begroeiing. Een aparte `DinoResultHeaderBackdrop` deelt het materiaal en de compositie met het levelbord. De bovenhoeken gebruiken dezelfde bladeren, steen of metaal als de wereldversiering van het bord. De oude achtergrondillustraties worden hier niet meer geladen.
+- `ResultScenery` gebruikt vier landschapslagen voor de jungle, de eigen woestijntekening voor de woestijn en `ResultBiomePainter` voor de overige acht landschappen. Een aparte `DinoResultHeaderBackdrop` deelt het materiaal en de compositie met het levelbord. De bovenhoeken gebruiken dezelfde bladeren, steen of metaal als de wereldversiering van het bord. De oude achtergrondillustraties worden hier niet meer geladen.
 - De lage begroeiing deelt `DinoFoliageLeaf`, `DinoFoliageFold` en `DinoFoliageVeins` met de levelkaart. De bovenhoeken delen hun vormen en materialen met het bord. De paletten volgen de `themeID` van de wereld; de wereldvolgorde bepaalt de kleuren niet.
 - De lagen kunnen later afzonderlijk bewegen. `windPhase` biedt een aangrijpingspunt voor bladbeweging; er draait nog geen permanente achtergrondanimatie.
 - De score staat met zijn materiaalvlak direct onder het houten bord in de lucht. De vrijgekomen ruimte onder de steen laat Dino en het podium nog iets zakken. Eén layout berekent de voetlijn, het stenen bovenoppervlak en de sterren op de voorzijde samen, zodat ze ook op een kleine iPhone bij elkaar blijven passen.
@@ -31,7 +33,7 @@ Van achter naar voor:
 5. Het voorste mosbed, grotere bladeren, gras en bloemen over de onderste steenrand en zijvlakken.
 6. Beloningssterren of trofee, met de feestdeeltjes ervoor.
 
-Alle steen- en mosvormen staan in `Dino/Views/LevelResult.swift`. De gegenereerde steen wordt nergens meer geladen in de appcode.
+De gedeelde steen- en mosvormen staan in `Dino/Views/LevelResult.swift`. `ResultBiomePainter` in `Dino/Views/ResultWorldScenery.swift` voegt onder andere lavanaden, kristalvlakken, metalen randen, klinknagels en steenvoegen toe. De gegenereerde steen wordt nergens meer geladen in de appcode.
 
 ## Eerdere steenillustratie
 

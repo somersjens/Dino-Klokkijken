@@ -2,7 +2,7 @@ import Foundation
 
 /// One visible pose at a time: smooth motion without fading different faces together.
 enum DinoAnimation {
-    enum Clip: String { case idle, thumbsUp, wrongAnswer, backflip, pirouette }
+    enum Clip: String { case idle, thumbsUp, wrongAnswer, backflip, pirouette, worldJump }
     struct Pose {
         let asset: String
         var paintedAngle = 0.0
@@ -23,6 +23,7 @@ enum DinoAnimation {
     static let spriteAssets = ["dino-idle", "dino-thumbs-up-08", "dino-wrong-answer-04",
                                "dino-backflip-01", "dino-backflip-03", "dino-backflip-07", "dino-backflip-08"]
         + (1...14).map { String(format: "dino-pirouette-%02d", $0) }
+    static let worldJumpAssets = [1, 2, 3, 6, 7].map { String(format: "dino-world-jump-%02d", $0) }
 
     /// Keep the painted pose sequence together while giving the jump a brisk,
     /// natural cadence. The short lead-in matches the result screen's fade.
@@ -33,7 +34,7 @@ enum DinoAnimation {
     static func travelDelay(_ clip: Clip) -> Double {
         switch clip {
         case .pirouette: leadIn(clip) + 0.48 / pirouettePlaybackRate
-        case .backflip: 0.18
+        case .backflip, .worldJump: 0.18
         default: 0
         }
     }
@@ -41,7 +42,7 @@ enum DinoAnimation {
     /// The shared companion reaches the rock before the reward stars appear.
     static func travelDuration(_ clip: Clip) -> Double {
         switch clip {
-        case .backflip: 1.22
+        case .backflip, .worldJump: 1.22
         case .pirouette: leadIn(clip) + 1.88 / pirouettePlaybackRate
         default: 0.42
         }
@@ -51,9 +52,15 @@ enum DinoAnimation {
         case .idle: 0
         case .thumbsUp: 0.52
         case .wrongAnswer: 0.5
-        case .backflip: 1.62
+        case .backflip, .worldJump: 1.62
         case .pirouette: leadIn(clip) + 2.36 / pirouettePlaybackRate
         }
+    }
+
+    /// The map camera and the character share the result salto's takeoff and landing.
+    static func worldJumpProgress(elapsed: Double) -> Double {
+        let delay = travelDelay(.worldJump)
+        return smooth((elapsed - delay) / (travelDuration(.worldJump) - delay))
     }
 
     static func sample(_ clip: Clip, elapsed: Double, reducedMotion: Bool = false) -> Sample {
@@ -120,6 +127,32 @@ enum DinoAnimation {
             let landingSquash = 0.025 * pulse(t, start: landing, end: landing + 0.30)
             let squash = 0.025 * pulse(t, start: 0.12, end: takeoff) + landingSquash
             return Sample(pose: pose, yaw: yaw, height: height, scaleX: 1 + squash * 0.35, scaleY: 1 - squash)
+        case .worldJump:
+            guard !reducedMotion else { return Sample(pose: Pose(asset: "dino-idle")) }
+            let pose: Pose
+            // Match the opaque foot line of each supplied drawing to idle (y = 1211).
+            // The landing and recovery must stay planted while the poses change.
+            if t < 0.08 {
+                pose = Pose(asset: "dino-world-jump-01", offsetY: -2.0 / 1254)
+            } else if t < 0.20 {
+                pose = Pose(asset: "dino-world-jump-02", offsetY: 22.0 / 1254)
+            } else if t < 1.10 {
+                // One tucked drawing carries the complete continuous rotation.
+                pose = Pose(asset: "dino-world-jump-03", offsetY: 0.045)
+            } else if t < 1.22 {
+                pose = Pose(asset: "dino-world-jump-06", offsetY: 70.0 / 1254)
+            } else if t < 1.44 {
+                pose = Pose(asset: "dino-world-jump-07", offsetY: 64.0 / 1254)
+            } else if t < duration(.worldJump) {
+                pose = Pose(asset: "dino-world-jump-01", offsetY: -2.0 / 1254)
+            } else {
+                pose = Pose(asset: "dino-idle")
+            }
+            let flight = min(max((t - 0.18) / 1.04, 0), 1)
+            let angle = 360 * smooth((t - 0.24) / 0.86)
+            let height = -0.34 * pow(sin(.pi * flight), 1.2)
+            let squash = 0.07 * pulse(t, start: 0.02, end: 0.20) + 0.10 * pulse(t, start: 1.22, end: 1.44)
+            return Sample(pose: pose, angle: angle, height: height, scaleX: 1 + squash * 0.4, scaleY: 1 - squash)
         case .backflip:
             let finalPose = Pose(asset: "dino-backflip-08", offsetX: -0.013, offsetY: -0.009)
             guard !reducedMotion else { return Sample(pose: finalPose) }
@@ -149,6 +182,18 @@ enum DinoAnimation {
     private static func pulse(_ t: Double, start: Double, end: Double) -> Double {
         guard t > start, t < end else { return 0 }
         return sin(.pi * (t - start) / (end - start))
+    }
+}
+
+struct DinoWorldTransition: Equatable {
+    let sourceLevel: Int
+    let destinationLevel: Int
+
+    init?(after worldID: Int) {
+        guard let source = DinoWorldCatalog.world(worldID),
+              let destination = DinoWorldCatalog.world(worldID + 1) else { return nil }
+        sourceLevel = source.bossLevel
+        destinationLevel = destination.firstLevel
     }
 }
 
