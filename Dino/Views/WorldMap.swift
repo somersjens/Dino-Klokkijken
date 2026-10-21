@@ -1545,7 +1545,9 @@ struct LevelInfoPanel: View {
                         .buttonStyle(DinoButtonStyle(color: theme.accent, inkLabel: true))
                         .accessibilityIdentifier("level.play")
                 }
-                Button("dino.map") { if let close { close() } else { dismiss() } }
+                Button { if let close { close() } else { dismiss() } } label: {
+                    Label("dino.map", systemImage: "map.fill")
+                }
                     .buttonStyle(DinoSecondaryButtonStyle())
                     .accessibilityIdentifier("level.map")
             }

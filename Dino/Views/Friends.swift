@@ -31,6 +31,7 @@ private enum ParentAction: String, Identifiable {
 struct DinoParentGate: View {
     let sharing: Bool
     var explanationKey: String? = nil
+    var confirmKey: String? = nil
     var proceed: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var answer = ""
@@ -46,7 +47,7 @@ struct DinoParentGate: View {
                     Text(verbatim: "\(first) × \(second) = ?").font(.title.bold())
                     TextField(L("dino.friends.parentAnswer"), text: $answer).keyboardType(.numberPad)
                         .textFieldStyle(.roundedBorder).accessibilityIdentifier("friends.parentAnswer")
-                    Button(LocalizedStringKey(sharing ? "dino.friends.allowSharing" : "dino.next"), action: proceed)
+                    Button(LocalizedStringKey(confirmKey ?? (sharing ? "dino.friends.allowSharing" : "dino.next")), action: proceed)
                         .buttonStyle(DinoButtonStyle()).disabled(Int(answer) != first * second)
                         .accessibilityIdentifier("friends.parentContinue")
                     Button("dino.cancel") { dismiss() }.buttonStyle(DinoSecondaryButtonStyle())
@@ -63,6 +64,8 @@ struct DinoFriendsView: View {
     @State private var parentAction: ParentAction?
     @State private var approvedAction: ParentAction?
     @State private var showsPrivacy = false
+    @State private var accessEpoch = 0
+    @State private var shareEpoch = 0
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
@@ -76,29 +79,31 @@ struct DinoFriendsView: View {
                     ScrollView {
                         VStack(spacing: 20) {
                             statusCard
+                            if manager.enabled { permissionCard }
                             if manager.authenticated {
                                 Button { parentAction = .invite } label: {
                                     Label("dino.friends.invite", systemImage: "person.crop.circle.badge.plus")
                                 }.buttonStyle(DinoButtonStyle()).disabled(!manager.canInvite)
                                     .accessibilityIdentifier("friends.invite")
                                 if !manager.canInvite { Text("dino.friends.inviteRestricted").font(.footnote) }
-                                sharingCard
-                                if manager.state == .ready && manager.friends.isEmpty {
+                                if manager.friendAccess, manager.state == .ready, manager.friends.isEmpty {
                                     VStack(spacing: 14) {
                                         DinoCharacter(size: 100)
                                         Text("dino.friends.empty").font(.headline)
                                         Text("dino.friends.emptyMessage").font(.subheadline).multilineTextAlignment(.center)
                                     }.dinoCard().accessibilityIdentifier("friends.empty")
                                 }
-                                LazyVStack(spacing: 12) {
-                                    ForEach(manager.friends) { friend in
-                                        NavigationLink(value: friend.id) { FriendListRow(friend: friend) }
-                                            .buttonStyle(.plain).accessibilityIdentifier("friends.profile.\(friend.id)")
+                                if manager.friendAccess {
+                                    LazyVStack(spacing: 12) {
+                                        ForEach(manager.friends) { friend in
+                                            NavigationLink(value: friend.id) { FriendListRow(friend: friend) }
+                                                .buttonStyle(.plain).accessibilityIdentifier("friends.profile.\(friend.id)")
+                                        }
                                     }
+                                    Button { manager.refresh(); manager.scheduleSync(force: true) } label: {
+                                        Label("dino.friends.refresh", systemImage: "arrow.clockwise")
+                                    }.buttonStyle(DinoSecondaryButtonStyle()).accessibilityIdentifier("friends.refresh")
                                 }
-                                Button { manager.refresh(); manager.scheduleSync(force: true) } label: {
-                                    Label("dino.friends.refresh", systemImage: "arrow.clockwise")
-                                }.buttonStyle(DinoSecondaryButtonStyle()).accessibilityIdentifier("friends.refresh")
                                 Button { parentAction = .appleProfile } label: {
                                     Label("dino.friends.manage", systemImage: "person.crop.circle")
                                 }.buttonStyle(DinoSecondaryButtonStyle())
@@ -111,7 +116,9 @@ struct DinoFriendsView: View {
                             }
                         }.padding(20).frame(maxWidth: 560).frame(maxWidth: .infinity)
                     }
-                    Button("dino.practice.backToLevels") { dismiss() }
+                    Button { dismiss() } label: {
+                        Label("dino.practice.backToLevels", systemImage: "map.fill")
+                    }
                         .buttonStyle(DinoSecondaryButtonStyle()).accessibilityIdentifier("friends.close")
                         .padding(.horizontal, spacious ? 24 : 20).padding(.top, 12).padding(.bottom, 18)
                         .frame(maxWidth: 760).frame(maxWidth: .infinity)
@@ -121,7 +128,11 @@ struct DinoFriendsView: View {
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: String.self) { FriendProfileView(friendID: $0) }
             .sheet(item: $parentAction, onDismiss: performApprovedAction) { action in
-                DinoParentGate(sharing: action == .share) { approvedAction = action; parentAction = nil }
+                DinoParentGate(sharing: action == .share,
+                               explanationKey: action == .enable ? "dino.friends.connectDisclosure" : nil,
+                               confirmKey: action == .enable ? "dino.friends.turnOn" : nil) {
+                    approvedAction = action; parentAction = nil
+                }
             }
             .sheet(isPresented: $showsPrivacy) { DinoSocialPrivacyView() }
         }.foregroundStyle(DinoStyle.ink)
@@ -133,8 +144,6 @@ struct DinoFriendsView: View {
             if !manager.enabled {
                 Button("dino.friends.connect") { parentAction = .enable }
                     .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("friends.connect")
-            } else if manager.state == .needsPermission {
-                Button("dino.friends.load") { parentAction = .access }.buttonStyle(DinoButtonStyle())
             } else if manager.state == .signedOut {
                 Button("dino.friends.signIn") { manager.authenticate() }.buttonStyle(DinoSecondaryButtonStyle())
             } else if manager.state == .unavailable {
@@ -142,28 +151,45 @@ struct DinoFriendsView: View {
             }
         }.dinoCard()
     }
-    private var sharingCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("dino.friends.sharingTitle").font(.headline)
+    private var permissionCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            consentToggle("dino.friends.load", isOn: manager.friendAccess, epoch: $accessEpoch, identifier: "friends.access") { allowed in
+                if allowed { parentAction = .access }
+                else { manager.setFriendAccess(false) }
+            }
+            consentToggle("dino.friends.share", isOn: manager.sharing || manager.shareWhenConnected,
+                          enabled: !manager.authenticated || manager.canShare || manager.sharing || manager.shareWhenConnected,
+                          epoch: $shareEpoch, identifier: "friends.share") { allowed in
+                if allowed { parentAction = .share }
+                else { manager.stopSharing() }
+            }
             if manager.accountConflict { Text("dino.friends.accountConflict").font(.footnote) }
-            else if !manager.canShare { Text("dino.friends.sharingRestricted").font(.footnote) }
-            else if manager.sharing {
+            else if manager.authenticated && !manager.canShare { Text("dino.friends.sharingRestricted").font(.footnote) }
+            else if manager.sharing || manager.shareWhenConnected {
                 if manager.syncing { ProgressView(L("dino.friends.syncing")) }
                 if let key = manager.syncMessageKey { Text(LocalizedStringKey(key)).font(.footnote) }
-                Button("dino.friends.stopSharing") { manager.stopSharing() }.frame(minHeight: 44)
                 Text("dino.friends.stopSharingMessage").font(.footnote)
             } else {
                 Text("dino.friends.sharingOff").font(.footnote)
-                Button("dino.friends.share") { parentAction = .share }.buttonStyle(DinoSecondaryButtonStyle())
             }
-        }.dinoCard()
+        }.dinoCard().accessibilityIdentifier("friends.permissions")
+    }
+    private func consentToggle(_ title: LocalizedStringKey, isOn: Bool, enabled: Bool = true, epoch: Binding<Int>, identifier: String, change: @escaping (Bool) -> Void) -> some View {
+        Toggle(isOn: Binding(get: { isOn }, set: { allowed in
+            guard allowed != isOn else { return }
+            if allowed { epoch.wrappedValue += 1 }
+            change(allowed)
+        })) {
+            Text(title).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
+        }.tint(DinoStyle.deepGreen).frame(minHeight: 44).disabled(!enabled)
+            .id(epoch.wrappedValue).accessibilityIdentifier(identifier)
     }
     private func performApprovedAction() {
         guard let action = approvedAction else { return }
         approvedAction = nil
         switch action {
         case .enable: manager.enable()
-        case .access: manager.refresh(requestPermission: true)
+        case .access: manager.setFriendAccess(true)
         case .invite: manager.invite()
         case .share: manager.allowSharing()
         case .appleProfile: manager.showAppleProfile()

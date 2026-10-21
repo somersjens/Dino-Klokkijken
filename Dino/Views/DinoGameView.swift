@@ -177,7 +177,7 @@ struct DinoGameView: View {
                 .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted).multilineTextAlignment(.center)
             Button { confirmExit = false } label: { Label("dino.keepPlaying", systemImage: "play.fill") }
                 .buttonStyle(DinoButtonStyle(compact: compact)).accessibilityIdentifier("game.exit.cancel")
-            Button(role: .destructive, action: onExit) { Label("dino.exit", systemImage: "rectangle.portrait.and.arrow.right") }
+            Button(role: .destructive, action: onExit) { Label("dino.exit", systemImage: "map.fill") }
                 .buttonStyle(DinoButtonStyle(color: Color(dinoHex: 0xC74343), compact: true))
                 .accessibilityIdentifier("game.exit.confirm")
         }.padding(4).dinoCard()

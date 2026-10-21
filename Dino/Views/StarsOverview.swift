@@ -35,7 +35,9 @@ struct DinoStarsOverview: View {
                 .background(.white.opacity(0.8), in: RoundedRectangle(cornerRadius: 18))
                 .accessibilityIdentifier("stars.total")
 
-                Button("dino.practice.backToLevels") { dismiss() }
+                Button { dismiss() } label: {
+                    Label("dino.practice.backToLevels", systemImage: "map.fill")
+                }
                     .buttonStyle(DinoSecondaryButtonStyle())
                     .accessibilityIdentifier("stars.close")
             }

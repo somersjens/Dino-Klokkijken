@@ -40,11 +40,17 @@ struct DinoSettingsView: View {
                     }
                     if confirmReset {
                         Color.black.opacity(0.28).ignoresSafeArea()
+                            .contentShape(Rectangle())
+                            .onTapGesture { confirmReset = false }
                         ScrollView {
-                            resetCard(compact: geometry.size.height < 700)
-                                .padding(16)
+                            VStack(spacing: 0) {
+                                resetScrimTap()
+                                resetCard(compact: geometry.size.height < 700)
+                                    .padding(16)
+                                resetScrimTap()
+                            }
+                            .frame(minHeight: geometry.size.height)
                         }.bouncesOnlyWhenNeeded()
-                            .centersShortContent()
                             .frame(maxWidth: 460)
                     }
                 }.background(JungleBackground(quiet: true))
@@ -145,11 +151,6 @@ struct DinoSettingsView: View {
             Text("dino.resetMessage").font(.system(size: 15, weight: .medium, design: .rounded))
                 .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
                 .multilineTextAlignment(.center)
-            Text("dino.settings.icloudResetMessage").font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-                .multilineTextAlignment(.center)
-            Text("dino.resetChallenge").font(.system(size: 15, weight: .bold, design: .rounded))
-                .multilineTextAlignment(.center)
             Text(verbatim: challenge.prompt)
                 .font(.system(size: compact ? 26 : 32, weight: .heavy, design: .rounded))
                 .monospacedDigit()
@@ -172,9 +173,18 @@ struct DinoSettingsView: View {
                 .disabled(!solvedReset)
                 .accessibilityIdentifier("settings.reset.confirm")
             Button("dino.cancel") { confirmReset = false }
-                .buttonStyle(DinoSecondaryButtonStyle())
+                .buttonStyle(DinoButtonStyle(compact: true))
                 .accessibilityIdentifier("settings.reset.cancel")
         }.padding(4).dinoCard()
+    }
+
+    /// The dimmed space above and below the card. The scroll view fills the screen, so those taps never reach the scrim behind it.
+    private func resetScrimTap() -> some View {
+        Color.clear
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .onTapGesture { confirmReset = false }
+            .accessibilityHidden(true)
     }
 
     private func resetApp() {

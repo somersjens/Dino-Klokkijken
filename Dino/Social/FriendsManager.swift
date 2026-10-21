@@ -57,6 +57,10 @@ final class FriendsManager: NSObject, ObservableObject {
     @Published private(set) var friends: [DinoFriend] = []
     @Published private(set) var state: FriendsState = .inactive
     @Published private(set) var sharing = false
+    /// True after the one-time Game Center approval, until the player switches it off.
+    @Published private(set) var friendAccess: Bool
+    /// Sharing chosen before Game Center finishes signing in.
+    @Published private(set) var shareWhenConnected: Bool
     @Published private(set) var syncing = false
     @Published private(set) var syncMessageKey: String?
     @Published private(set) var actionMessageKey: String?
@@ -83,6 +87,8 @@ final class FriendsManager: NSObject, ObservableObject {
     private let syncService = ProgressSyncService()
     private static let enabledKey = "dino.social.enabled.v1"
     private static let ownerKey = "dino.social.saveOwner.v1"
+    private static let friendAccessKey = "dino.social.friendAccess.v1"
+    private static let shareOnConnectKey = "dino.social.shareOnConnect.v1"
     private static func sharingKey(_ id: String) -> String { "dino.social.sharing.v1.\(id)" }
 
     override init() {
@@ -92,6 +98,8 @@ final class FriendsManager: NSObject, ObservableObject {
 #endif
         defaults = store
         enabled = store.integer(forKey: Self.enabledKey) == 1
+        friendAccess = store.object(forKey: Self.friendAccessKey) != nil && store.integer(forKey: Self.friendAccessKey) == 1
+        shareWhenConnected = store.integer(forKey: Self.shareOnConnectKey) == 1
         super.init()
         updatePlayerIdentity()
         NotificationCenter.default.publisher(for: .GKPlayerAuthenticationDidChangeNotificationName)
@@ -120,20 +128,37 @@ final class FriendsManager: NSObject, ObservableObject {
             self?.defaults.removeObject(forKey: Self.ownerKey)
             self?.accountConflict = false
         }
-        if usesUITestFixtures { enabled = true; updatePlayerIdentity(); refresh(); return }
+        if usesUITestFixtures { enabled = true; friendAccess = true; updatePlayerIdentity(); refresh(); return }
         if enabled { authenticate() }
     }
 
-    /// Called only after the user intentionally opens the friends feature.
+    /// One approval turns on Game Center, friends access and result sharing together.
     func enable() {
         enabled = true; defaults.set(1, forKey: Self.enabledKey)
+        friendAccess = true; defaults.set(1, forKey: Self.friendAccessKey)
+        shareWhenConnected = true; defaults.set(1, forKey: Self.shareOnConnectKey)
         authenticate()
     }
     func disable() {
         stopSharing()
         enabled = false; defaults.set(0, forKey: Self.enabledKey)
+        friendAccess = false; defaults.set(0, forKey: Self.friendAccessKey)
         invalidateFriends(); state = .inactive
         authenticationController?.dismiss(animated: true); authenticationController = nil
+    }
+    /// Friends access can be switched off immediately. Switching it on happens only after the parental question.
+    func setFriendAccess(_ allowed: Bool) {
+        friendAccess = allowed
+        defaults.set(allowed ? 1 : 0, forKey: Self.friendAccessKey)
+        guard enabled else { return }
+        if allowed {
+            guard authenticated else { return }
+            invalidateFriends()
+            refresh(requestPermission: true)
+        } else {
+            invalidateFriends()
+            if authenticated { state = .needsPermission }
+        }
     }
     func authenticate() {
         guard enabled else { return }
@@ -170,7 +195,14 @@ final class FriendsManager: NSObject, ObservableObject {
         guard let id else { state = .signedOut; return }
         accountConflict = defaults.string(forKey: Self.ownerKey).map { $0 != id } ?? false
         sharing = canShare && defaults.integer(forKey: Self.sharingKey(id)) == 1
-        refresh(requestPermission: false)
+        if defaults.integer(forKey: Self.shareOnConnectKey) == 1 {
+            defaults.set(0, forKey: Self.shareOnConnectKey)
+            shareWhenConnected = false
+            if canShare { allowSharing() }
+        }
+        if friendAccess { refresh(requestPermission: true) }
+        else if defaults.object(forKey: Self.friendAccessKey) == nil { refresh(requestPermission: false) }
+        else { invalidateFriends(); state = .needsPermission }
         scheduleSync()
     }
 
@@ -200,6 +232,10 @@ final class FriendsManager: NSObject, ObservableObject {
         guard appActive else { return }
         if usesUITestFixtures { loadUITestFixtures(); return }
         guard authenticated else { if enabled { state = .signedOut }; return }
+        let legacyAccess = defaults.object(forKey: Self.friendAccessKey) == nil && !requestPermission
+        guard friendAccess || legacyAccess else {
+            invalidateFriends(); state = .needsPermission; return
+        }
         guard refreshTask == nil else { return }
         // Even an offline refresh cannot leave unverified former friends on screen.
         invalidateFriends()
@@ -216,7 +252,11 @@ final class FriendsManager: NSObject, ObservableObject {
                 case .restricted: self.state = .restricted; return
                 case .notDetermined:
                     guard requestPermission else { self.state = .needsPermission; return }
-                case .authorized: break
+                case .authorized:
+                    if self.defaults.object(forKey: Self.friendAccessKey) == nil {
+                        self.friendAccess = true
+                        self.defaults.set(1, forKey: Self.friendAccessKey)
+                    }
                 @unknown default: self.state = .restricted; return
                 }
                 let players = try await GKLocalPlayer.local.loadFriends()
@@ -295,7 +335,15 @@ final class FriendsManager: NSObject, ObservableObject {
     }
 
     func allowSharing() {
-        guard canShare else { return }
+        guard canShare else {
+            if enabled && !authenticated {
+                shareWhenConnected = true
+                defaults.set(1, forKey: Self.shareOnConnectKey)
+            }
+            return
+        }
+        shareWhenConnected = false
+        defaults.set(0, forKey: Self.shareOnConnectKey)
         let id = GKLocalPlayer.local.gamePlayerID
         defaults.set(id, forKey: Self.ownerKey)
         defaults.set(1, forKey: Self.sharingKey(id))
@@ -303,6 +351,8 @@ final class FriendsManager: NSObject, ObservableObject {
         scheduleSync()
     }
     func stopSharing() {
+        shareWhenConnected = false
+        defaults.set(0, forKey: Self.shareOnConnectKey)
         if let id = authenticatedID { defaults.set(0, forKey: Self.sharingKey(id)) }
         sharing = false; syncing = false; syncMessageKey = nil
         syncTask?.cancel(); syncTask = nil; retryTask?.cancel(); retryTask = nil

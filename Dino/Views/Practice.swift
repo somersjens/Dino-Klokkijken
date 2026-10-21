@@ -60,7 +60,9 @@ struct DinoPracticeView: View {
                             })
                         } label: { Label("dino.practice.start", systemImage: "play.fill") }
                             .buttonStyle(DinoButtonStyle(compact: true)).accessibilityIdentifier("practice.start")
-                        Button("dino.practice.backToLevels") { dismiss() }
+                        Button { dismiss() } label: {
+                            Label("dino.practice.backToLevels", systemImage: "map.fill")
+                        }
                             .buttonStyle(DinoSecondaryButtonStyle()).accessibilityIdentifier("practice.close")
                     }.padding(spacious ? 24 : 16).frame(maxWidth: 760).frame(maxWidth: .infinity)
                         .background(DinoStyle.paper.opacity(0.97))

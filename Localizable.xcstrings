@@ -2254,6 +2254,23 @@
         }
       }
     },
+    "dino.friends.connectDisclosure" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This turns on Game Center, friends access and sharing your results together. Friends access lets Apple show friends who also allow this game. Sharing publishes this device’s best level results, measured playing times, stars and progress to Game Center leaderboards under the Apple display name. Apple leaderboards may show these results to other players, not only friends. You can turn each switch off afterwards without another question. Turning a switch back on asks this question again. Apple’s account restrictions still apply. This parental gate is not legal consent."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dit zet Game Center, vriendentoegang en het delen van je resultaten samen aan. Met vriendentoegang toont Apple vrienden die deze game ook toegang geven. Delen publiceert de beste levelresultaten, gemeten speeltijden, sterren en voortgang van dit apparaat op Game Center-leaderboards onder de Apple-displaynaam. Apple-leaderboards kunnen deze resultaten aan andere spelers tonen, niet alleen aan vrienden. Je kunt elk schuifje daarna uitzetten zonder een nieuwe som. Een schuifje weer aanzetten vraagt deze som opnieuw. De beperkingen van het Apple-account blijven gelden. Dit ouderscherm is geen juridische toestemming."
+          }
+        }
+      }
+    },
     "dino.friends.contactMissing" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2770,13 +2787,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your clocks and progress are stored on this device. Your name comes from your Game Center account. Friends are optional. Apple manages sign-in, friendships, display names and avatars. Friends access is requested only when you choose to use it; only friends Apple permits are shown. Friends’ data is held in memory and cleared when the app goes into the background, access changes, or you turn off friends.\n\nIf you enable iCloud sync, only your level results, measured playing times, stars and game progress are shared through your own iCloud account between your devices. Your dino colors, clocks and settings stay on this device. Turning it off stops new iCloud updates on this device; it does not delete previously saved cloud progress.\n\nSharing is off by default. If an adult enables it, the game sends best level results, measured playing times, stars and progress to Apple Game Center leaderboards. These results may be visible to other Game Center players according to Apple’s settings; the app does not offer private, friends-only storage. Your date of birth, location, email and phone number are never uploaded by this game. No chat, custom messages, ads, analytics or tracking are included.\n\nYou can stop future uploads on this device. Published scores are retained by Apple; stopping sharing or resetting the local game does not delete them. Visibility, reporting, friendships and Apple data requests are managed through Apple Games, Game Center and Apple’s privacy controls. Publishing again can restore your previous best results.\n\nRestricted and underage accounts cannot publish progress through this game. A parental gate does not replace legally required parental consent."
+            "value" : "Your clocks and progress are stored on this device. Your name comes from your Game Center account. Friends are optional. Apple manages sign-in, friendships, display names and avatars. The first time an adult turns on Game Center, friends access and result sharing turn on together. Only friends Apple permits are shown. Either switch can be turned off without another question. Turning a switch back on asks the question again. Friends’ data is held in memory and cleared when the app goes into the background, access changes, or you turn off friends.\n\nIf you enable iCloud sync, only your level results, measured playing times, stars and game progress are shared through your own iCloud account between your devices. Your dino colors, clocks and settings stay on this device. Turning it off stops new iCloud updates on this device; it does not delete previously saved cloud progress.\n\nWhile sharing is on, the game sends best level results, measured playing times, stars and progress to Apple Game Center leaderboards. These results may be visible to other Game Center players according to Apple’s settings; the app does not offer private, friends-only storage. Your date of birth, location, email and phone number are never uploaded by this game. No chat, custom messages, ads, analytics or tracking are included.\n\nYou can stop future uploads on this device. Published scores are retained by Apple; stopping sharing or resetting the local game does not delete them. Visibility, reporting, friendships and Apple data requests are managed through Apple Games, Game Center and Apple’s privacy controls. Publishing again can restore your previous best results.\n\nRestricted and underage accounts cannot publish progress through this game. A parental gate does not replace legally required parental consent."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Je klokken en voortgang staan op dit apparaat. Je naam komt uit je Game Center-account. Vrienden zijn optioneel. Apple beheert het inloggen, vriendschappen, displaynamen en avatars. Vriendentoegang wordt pas gevraagd als je daarvoor kiest; alleen vrienden die Apple toestaat worden getoond. Gegevens van vrienden staan alleen in het geheugen en worden gewist wanneer de app naar de achtergrond gaat, toegang verandert of je vrienden uitschakelt.\n\nAls je iCloud-sync aanzet, worden alleen je levelresultaten, gemeten speeltijden, sterren en spelvoortgang met je eigen iCloud-account gedeeld tussen je apparaten. Je dinokleuren, klokken en instellingen blijven op dit apparaat. Uitzetten stopt nieuwe iCloud-updates op dit apparaat; het verwijdert eerder opgeslagen cloudvoortgang niet.\n\nDelen staat standaard uit. Als een volwassene dit inschakelt, verstuurt de game de beste levelresultaten, gemeten speeltijden, sterren en voortgang naar Apple Game Center-leaderboards. Deze resultaten kunnen volgens Apples instellingen zichtbaar zijn voor andere Game Center-spelers; de app biedt geen besloten opslag voor alleen vrienden. Je geboortedatum, locatie, e-mailadres en telefoonnummer worden nooit door deze game verstuurd. Er is geen chat, eigen berichten, reclame, analyse of tracking.\n\nJe kunt nieuwe uploads op dit apparaat stoppen. Gepubliceerde scores blijven bij Apple; stoppen met delen of de lokale game resetten verwijdert ze niet. Zichtbaarheid, meldingen, vriendschappen en Apple-gegevensverzoeken regel je via Apple Games, Game Center en Apples privacyinstellingen. Opnieuw publiceren kan je eerdere beste resultaten herstellen.\n\nAccounts met beperkingen en minderjarige accounts kunnen via deze game geen voortgang publiceren. Een ouderscherm vervangt geen wettelijk vereiste ouderlijke toestemming."
+            "value" : "Je klokken en voortgang staan op dit apparaat. Je naam komt uit je Game Center-account. Vrienden zijn optioneel. Apple beheert het inloggen, vriendschappen, displaynamen en avatars. De eerste keer dat een volwassene Game Center aanzet, gaan vriendentoegang en het delen van resultaten samen aan. Alleen vrienden die Apple toestaat worden getoond. Elk schuifje kan uit zonder een nieuwe som. Een schuifje weer aanzetten vraagt de som opnieuw. Gegevens van vrienden staan alleen in het geheugen en worden gewist wanneer de app naar de achtergrond gaat, toegang verandert of je vrienden uitschakelt.\n\nAls je iCloud-sync aanzet, worden alleen je levelresultaten, gemeten speeltijden, sterren en spelvoortgang met je eigen iCloud-account gedeeld tussen je apparaten. Je dinokleuren, klokken en instellingen blijven op dit apparaat. Uitzetten stopt nieuwe iCloud-updates op dit apparaat; het verwijdert eerder opgeslagen cloudvoortgang niet.\n\nZolang delen aanstaat, verstuurt de game de beste levelresultaten, gemeten speeltijden, sterren en voortgang naar Apple Game Center-leaderboards. Deze resultaten kunnen volgens Apples instellingen zichtbaar zijn voor andere Game Center-spelers; de app biedt geen besloten opslag voor alleen vrienden. Je geboortedatum, locatie, e-mailadres en telefoonnummer worden nooit door deze game verstuurd. Er is geen chat, eigen berichten, reclame, analyse of tracking.\n\nJe kunt nieuwe uploads op dit apparaat stoppen. Gepubliceerde scores blijven bij Apple; stoppen met delen of de lokale game resetten verwijdert ze niet. Zichtbaarheid, meldingen, vriendschappen en Apple-gegevensverzoeken regel je via Apple Games, Game Center en Apples privacyinstellingen. Opnieuw publiceren kan je eerdere beste resultaten herstellen.\n\nAccounts met beperkingen en minderjarige accounts kunnen via deze game geen voortgang publiceren. Een ouderscherm vervangt geen wettelijk vereiste ouderlijke toestemming."
           }
         }
       }
@@ -3321,6 +3338,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tijd niet beschikbaar"
+          }
+        }
+      }
+    },
+    "dino.friends.turnOn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn everything on"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zet alles aan"
           }
         }
       }
@@ -5807,36 +5841,19 @@
         }
       }
     },
-    "dino.resetChallenge" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Only a calculator can solve this."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dit kan alleen met een rekenmachine."
-          }
-        }
-      }
-    },
     "dino.resetMessage" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Progress, colors, clocks, language and settings on this device will be erased."
+            "value" : "Progress, colors, clocks, language and settings on this device will be erased, along with saved iCloud progress."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voortgang, kleuren, klokken, taal en instellingen op dit apparaat worden gewist."
+            "value" : "Voortgang, kleuren, klokken, taal en instellingen op dit apparaat worden gewist, samen met de opgeslagen iCloud-voortgang."
           }
         }
       }
@@ -6245,23 +6262,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deel je voortgang tussen iPhone en iPad met hetzelfde iCloud-account. Zet iCloud-sync op beide apparaten aan."
-          }
-        }
-      }
-    },
-    "dino.settings.icloudResetMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Saved iCloud progress is erased too."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ook de iCloud-voortgang wordt gewist."
           }
         }
       }
