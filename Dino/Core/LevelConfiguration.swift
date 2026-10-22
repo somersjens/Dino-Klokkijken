@@ -83,7 +83,7 @@ struct LevelConfiguration: Identifiable, Sendable {
     let recipes: [QuestionRecipe]
     var allowedMinutes: [Int] = [0]
     var minuteStep: Int = 60
-    var icon: String { isBoss ? "trophy.fill" : recipes[0].kind.symbol }
+    var icon: String { isBoss ? "crown.fill" : recipes[0].kind.symbol }
 
     func time(for recipe: QuestionRecipe) -> DinoPracticeTime { recipe.time ?? timeFamily }
     func plannedDifficulty(for recipe: QuestionRecipe) -> DinoQuestionDifficulty { recipe.difficulty ?? .introduction }

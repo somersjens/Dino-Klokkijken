@@ -187,3 +187,23 @@ De grotcompositie is native nagekeken op 320, 393, 834 en 1194 punten breed. De 
 De gerichte afstandstest voor wereld 6 slaagt afzonderlijk op iPhone 17 en iPad Pro 11-inch: **twee geslaagde schermtests, nul fouten**. De eerdere gecombineerde runs voor werelden 5 en 6 zijn gestopt doordat het testproces met een kill-signaal werd beëindigd; de afzonderlijke runs zijn volledig afgerond. De appbeelden op beide apparaten zijn visueel nagekeken. `git diff --check` is schoon.
 
 [iPhone](Screenshots/OpenCaveExit/exit-iphone.png) · [iPad](Screenshots/OpenCaveExit/exit-ipad.png) · [Grotcompositie op 320 punten](Screenshots/OpenCaveExit/native-exit-320.png) · [Grotcompositie op 1194 punten](Screenshots/OpenCaveExit/native-exit-1194.png). De native compositie gebruikt eenvoudige levelcirkels en de bestaande stadsillustratie als context; de simulatorbeelden tonen de huidige interface.
+
+## Open overgang vanuit Dino Dorp — 22 oktober 2026
+
+De ingangsboog, de voorgrondlaag over het pad en de bijbehorende pijlers, ingangslampen en mijnplatform met waterval zijn verwijderd. Het zandpad loopt nu open door van het dorp naar de grot. De bestaande mijnwerkplaatsen, lampen en watervallen verder in de grot blijven onderdeel van het landschap.
+
+Een gedeeld grondverloop begint na de dorpsbaas en gaat via saliegroen en blauwgroen geleidelijk over in de donkere grotvloer. Beide hoofdstukken tekenen dezelfde ondoorzichtige kleur bij hun aansluiting. Volledige, verspringende rotsen met mos en varens lopen over de grens door; de beplanting neemt af en kleine kristallen verschijnen. De grotwanden groeien geleidelijk vanaf de zijkanten naar hun bestaande routecontour. De wereldbordafstand en levelposities zijn behouden. De bewegende lampen en hun afdekking bevatten geen verwijzingen naar de verwijderde ingang meer.
+
+De actuele native tekeningen zijn op 320, 393, 834 en 1194 punten breed visueel gecontroleerd. Op vier vrije grondposities per breedte is het grootste kleurverschil over de hoofdstuknaad 1/255 per kleurkanaal. Deze composities gebruiken eenvoudige levelcirkels; de simulatorbeelden tonen de echte interface.
+
+De definitieve iOS-testbuild slaagt. De bestaande `testWorldBannersHaveBalancedClearance` slaagt gericht op wereld 5 op iPhone 17 en iPad Pro 11-inch: **twee geslaagde schermtests, nul fouten**. Beide appbeelden zijn visueel nagekeken. `git diff --check` is schoon.
+
+[iPhone](Screenshots/OpenCaveEntrance/entrance-iphone.png) · [iPad](Screenshots/OpenCaveEntrance/entrance-ipad.png) · [Compositie 320 punten](Screenshots/OpenCaveEntrance/entrance-320.png) · [Compositie 1194 punten](Screenshots/OpenCaveEntrance/entrance-1194.png) · [Build](WorldTestLogs/OpenCaveEntrance/build.log) · [iPhone-test](WorldTestLogs/OpenCaveEntrance/iphone.log) · [iPad-test](WorldTestLogs/OpenCaveEntrance/ipad.log).
+
+## Afgeronde rotsrand langs de mijnbocht — 22 oktober 2026
+
+De losse groepjes stenen langs de schermranden zijn verwijderd. Een aangesloten laag overlappende rotsblokken volgt nu de werkelijke contour van de mijnwand. Hun plaatsing volgt de afstand langs de bocht; elk blok draait met de plaatselijke raaklijn mee. Daardoor blijven de stenen ook op brede schermen verbonden. De bovenste blokken lopen buiten beeld door en de onderste sluiten achter de bestaande wandlagen aan. Kleine mosplekken staan op de rotsen zelf.
+
+De compositie is visueel gecontroleerd op 320, 393, 834 en 1194 punten breed en in de echte interface op iPhone 17 en iPad Pro 11-inch. De iOS-testbuild en `testWorldBannersHaveBalancedClearance` voor wereld 5 slagen op beide apparaten: **twee geslaagde schermtests, nul fouten**. `git diff --check` is schoon.
+
+[iPhone](Screenshots/CurvedCaveShoulders/entrance-iphone.png) · [iPad](Screenshots/CurvedCaveShoulders/entrance-ipad.png) · [Compositie 320 punten](Screenshots/CurvedCaveShoulders/entrance-320.png) · [Compositie 1194 punten](Screenshots/CurvedCaveShoulders/entrance-1194.png) · [Build](WorldTestLogs/CurvedCaveShoulders/build.log) · [iPhone-test](WorldTestLogs/CurvedCaveShoulders/iphone.log) · [iPad-test](WorldTestLogs/CurvedCaveShoulders/ipad.log).

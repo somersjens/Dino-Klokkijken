@@ -19,6 +19,68 @@ final class DinoAnswerFeedback {
     }
 }
 
+/// Reads the question title with the best installed Apple voice for the selected language.
+@MainActor
+final class DinoQuestionSpeech {
+    static let shared = DinoQuestionSpeech()
+    private let synthesizer = AVSpeechSynthesizer()
+    private var nextToken = 0
+    private var active: [String: Int] = [:]
+
+    @discardableResult
+    func claim(owner: String, text: String, languageCode: String) -> Int {
+        nextToken += 1
+        let token = nextToken
+        active[owner] = token
+        let spoken = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !spoken.isEmpty, !UIAccessibility.isVoiceOverRunning else {
+            synthesizer.stopSpeaking(at: .immediate)
+            return token
+        }
+        configureSession()
+        let utterance = AVSpeechUtterance(string: spoken)
+        utterance.voice = Self.voice(for: languageCode)
+        utterance.prefersAssistiveTechnologySettings = false
+        synthesizer.stopSpeaking(at: .immediate)
+        synthesizer.speak(utterance)
+        return token
+    }
+
+    func release(owner: String, token: Int) {
+        guard active[owner] == token else { return }
+        active[owner] = nil
+        stopIfIdle()
+    }
+
+    /// Stops the current title without giving the next question's speech back to an older claim.
+    func interrupt() {
+        synthesizer.stopSpeaking(at: .immediate)
+    }
+
+    private func stopIfIdle() {
+        guard active.isEmpty else { return }
+        synthesizer.stopSpeaking(at: .immediate)
+    }
+
+    private func configureSession() {
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(.ambient, mode: .spokenAudio, options: [.mixWithOthers])
+        try? session.setActive(true)
+    }
+
+    private static func voice(for languageCode: String) -> AVSpeechSynthesisVoice? {
+        let installed = AVSpeechSynthesisVoice.speechVoices().map {
+            DinoSpeechVoice(identifier: $0.identifier, name: $0.name,
+                            language: $0.language, quality: $0.quality.rawValue)
+        }
+        if let best = DinoSpeechVoicePicker.bestVoice(for: languageCode, among: installed),
+           let voice = AVSpeechSynthesisVoice(identifier: best.identifier) {
+            return voice
+        }
+        return AVSpeechSynthesisVoice(language: DinoSpeechVoicePicker.preferredLanguageIdentifier(for: languageCode))
+    }
+}
+
 /// All audio state stays on this serial queue. AVAudioPlayer can synchronously
 /// activate the audio session in prepareToPlay/play and release hardware in stop.
 private final class DinoAnswerAudio: @unchecked Sendable {

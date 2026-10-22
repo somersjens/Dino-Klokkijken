@@ -39,6 +39,7 @@ enum DinoQuestionGenerator {
                                                    attempt: Int = 0,
                                                    language: String = "nl",
                                                    difficulties: [DinoQuestionSkill: DinoQuestionDifficulty] = [:],
+                                                   dayPartSchedule: DinoDayPartSchedule = .standard,
                                                    using rng: inout R) -> [ClockQuestion] {
         precondition(!level.allowedHours.isEmpty && level.allowedHours.allSatisfy { (1...12).contains($0) })
         var usedHours = Set<Int>()
@@ -49,7 +50,7 @@ enum DinoQuestionGenerator {
             let difficulty = difficulties[level.skill(for: recipe)] ?? level.plannedDifficulty(for: recipe)
             let question = generateQuestion(level: level, recipe: recipe, index: index, attempt: attempt,
                 difficulty: difficulty, previousTarget: previous, usedHours: usedHours,
-                optionPosition: positionOffset + index, language: language, using: &rng)
+                optionPosition: positionOffset + index, language: language, dayPartSchedule: dayPartSchedule, using: &rng)
             usedHours.insert(question.target.hour)
             previous = question.target
             return question
@@ -58,13 +59,14 @@ enum DinoQuestionGenerator {
 
     static func generateQuestion<R: RandomNumberGenerator>(level: LevelConfiguration, recipe: QuestionRecipe,
         index: Int, attempt: Int = 0, difficulty: DinoQuestionDifficulty, previousTarget: ClockTime?,
-        usedHours: Set<Int> = [], optionPosition: Int? = nil, language: String = "nl", using rng: inout R) -> ClockQuestion {
+        usedHours: Set<Int> = [], optionPosition: Int? = nil, language: String = "nl",
+        dayPartSchedule: DinoDayPartSchedule = .standard, using rng: inout R) -> ClockQuestion {
         let family = level.time(for: recipe)
         let minutes = recipe.time == nil ? level.allowedMinutes : family.minutes
         if recipe.kind.isExpanded {
             return DinoExpandedQuestions.generate(kind: recipe.kind, minutes: minutes,
                 minuteStep: family.minuteStep, index: index, previousTarget: previousTarget,
-                language: language, difficulty: difficulty, using: &rng)
+                language: language, difficulty: difficulty, dayPartSchedule: dayPartSchedule, using: &rng)
         }
         let activity: DinoActivity? = recipe.kind == .activity ? DinoActivity.allCases[index % 5] : nil
         let pool = level.allowedHours.flatMap { hour in
@@ -119,7 +121,17 @@ enum AnswerValidator {
 }
 
 enum StarCalculator {
-    static func stars(correct: Int) -> Int {
+    /// Ordinary lessons have five questions. A boss has ten, so its stars sit higher:
+    /// 6–7 is one star, 8–9 is two, and only 10 is three.
+    static func stars(correct: Int, questionCount: Int = 5) -> Int {
+        if questionCount > 5 {
+            switch correct {
+            case 6, 7: return 1
+            case 8, 9: return 2
+            case 10...: return 3
+            default: return 0
+            }
+        }
         switch correct {
         case 3: return 1
         case 4: return 2
@@ -133,7 +145,12 @@ enum BossVictory: String, Codable, Sendable {
     case none, normal, perfect
     static func evaluate(correct: Int, normalLevelsComplete: Bool) -> BossVictory {
         if correct == 10 { return .perfect }
-        return normalLevelsComplete && correct >= 5 ? .normal : .none
+        return normalLevelsComplete && starsEarned(correct) ? .normal : .none
+    }
+
+    /// One star clears a boss once the ordinary route is finished. Ten correct is the only perfect clear.
+    static func starsEarned(_ correct: Int) -> Bool {
+        StarCalculator.stars(correct: correct, questionCount: 10) >= 1
     }
 }
 

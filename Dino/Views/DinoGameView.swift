@@ -43,7 +43,8 @@ struct DinoGameView: View {
                         ScrollView {
                             VStack(spacing: short ? 10 : 18) {
                                 if session.level.isBoss { crystals }
-                                DinoQuestionTitle(question: session.question, instructionKey: session.instructionKey)
+                                DinoQuestionTitle(question: session.question, instructionKey: session.instructionKey,
+                                                  announces: session.demonstration == nil && !confirmExit)
                                     .frame(maxWidth: min(680, width))
                                     .frame(maxWidth: .infinity)
                                     .accessibilityIdentifier("question.title")
@@ -74,6 +75,9 @@ struct DinoGameView: View {
                         }
                         .onValueChange(of: session.question.id) { _ in
                             proxy.scrollTo("question.top", anchor: .top)
+                        }
+                        .onValueChange(of: session.hasFeedback) { showing in
+                            if showing { DinoQuestionSpeech.shared.interrupt() }
                         }
                         .onValueChange(of: wide) { _ in
                             if session.question.kind == .timeZone { proxy.scrollTo("question.top", anchor: .top) }
@@ -219,6 +223,12 @@ struct InteractionDemonstration: View {
     @State private var matchingSelections: [Int: ClockTime] = [:]
     private var minutes: [Int] { worldMinutes ?? practiceTime.minutes }
     private var exampleTime: ClockTime { ClockTime(hour: exampleHour, minute: exampleMinute) }
+    /// The example shows one pair, so the title names that time without counting answer clocks.
+    private var examplePrompt: ClockQuestion {
+        ClockQuestion(id: exampleIndex, kind: kind, target: exampleTime, options: [],
+                      activity: kind == .activity ? DinoDemonstrationExamples.activity(index: exampleIndex) : nil,
+                      companionClocks: [])
+    }
     private var matchingQuestion: ClockQuestion {
         let times = (0..<3).map { DinoDemonstrationExamples.time(index: exampleIndex + $0 + 1, minutes: minutes) }
         return ClockQuestion(id: exampleIndex, kind: .match, target: times[0], options: [times[2], times[0], times[1]],
@@ -237,8 +247,16 @@ struct InteractionDemonstration: View {
     private var originalExample: some View {
         VStack(spacing: 14) {
             Label("dino.example", systemImage: "sparkles").font(.system(size: 13, weight: .heavy, design: .rounded)).foregroundStyle(DinoStyle.green)
-            Text(LocalizedStringKey(minuteStep < 60 && kind == .setDigital ? "dino.practice.\(kind.rawValue)" : kind.instructionKey))
-                .font(.system(size: 24, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
+            if kind == .chooseAnalog || kind == .activity {
+                DinoQuestionTitle(question: examplePrompt, fontSize: 24, speechScope: "demo")
+                    .accessibilityIdentifier("demo.title")
+            } else {
+                Text(LocalizedStringKey(minuteStep < 60 && kind == .setDigital ? "dino.practice.\(kind.rawValue)" : kind.instructionKey))
+                    .font(.system(size: 24, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
+                    .speakQuestionTitle(L(key: minuteStep < 60 && kind == .setDigital ? "dino.practice.\(kind.rawValue)" : kind.instructionKey),
+                                        identity: "demo-\(kind.rawValue)-\(exampleIndex)")
+                    .accessibilityIdentifier("demo.title")
+            }
             if kind == .activity {
                 let activity = DinoDemonstrationExamples.activity(index: exampleIndex)
                 Label(LocalizedStringKey(activity.titleKey), systemImage: activity.symbol)
@@ -299,9 +317,10 @@ struct DinoAnalogSettingDemonstration: View {
     @State private var hourAngle = 270.0
     @State private var minuteAngle = 0.0
 
+    private var handStep: Int { DinoPracticeTime.analogHandStep(minuteStep) }
     private var script: DinoAnalogSettingExample {
         DinoAnalogSettingExample(target: DinoDemonstrationExamples.time(index: exampleIndex, minutes: minutes),
-                                 minuteStep: minuteStep, clockwise: exampleIndex.isMultiple(of: 2))
+                                 minuteStep: handStep, clockwise: exampleIndex.isMultiple(of: 2))
     }
 
     var body: some View {
@@ -310,6 +329,7 @@ struct DinoAnalogSettingDemonstration: View {
                 .font(.system(size: 13, weight: .heavy, design: .rounded)).foregroundStyle(DinoStyle.green)
             Text("dino.question.setAnalog")
                 .font(.system(size: 21, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
+                .speakQuestionTitle(L(key: "dino.question.setAnalog"), identity: "demo-setAnalog-\(exampleIndex)")
                 .accessibilityIdentifier("demo.title")
             DigitalClock(time: script.target, theme: theme, fontSize: min(32, width * 0.1))
                 .accessibilityIdentifier("demo.digital")
@@ -319,7 +339,7 @@ struct DinoAnalogSettingDemonstration: View {
                             time = ClockTime(hour: hour, minute: time.minute)
                         },
                         onMinuteChange: minuteStep < 60 ? { next in stopDemonstration(); time = next } : nil,
-                        minuteStep: minuteStep, adjustingMinutes: adjustingMinutes,
+                        minuteStep: handStep, adjustingMinutes: adjustingMinutes,
                         onHandSelection: { stopDemonstration(); adjustingMinutes = $0 },
                         displayedHourAngle: manuallyAdjusting ? nil : hourAngle,
                         displayedMinuteAngle: manuallyAdjusting ? nil : minuteAngle)
@@ -329,7 +349,7 @@ struct DinoAnalogSettingDemonstration: View {
             DinoAnalogClockControls(adjustingMinutes: Binding(get: { adjustingMinutes }, set: {
                 stopDemonstration()
                 adjustingMinutes = $0
-            }), allowsMinutes: minuteStep < 60, minuteStep: minuteStep, prefix: "demo",
+            }), allowsMinutes: minuteStep < 60, minuteStep: handStep, prefix: "demo",
                                     demonstratedAction: demonstratedAction) { direction in
                 stopDemonstration()
                 time = script.applying(.adjust(direction), to: time, adjustingMinutes: adjustingMinutes)
@@ -428,30 +448,26 @@ struct DinoAnalogAdvanceDemonstration: View {
     @State private var hourAngle = 0.0
     @State private var minuteAngle = 0.0
 
-    private var script: DinoAnalogAdvanceExample { DinoAnalogAdvanceExample(question: question, minuteStep: minuteStep) }
-    private var face: CGFloat {
-        let reserve = DinoAdvanceDifference.columnWidth(minutes: question.durationMinutes) + 18
-        return min(118, max(0, width - reserve) / 2)
-    }
+    private var handStep: Int { DinoPracticeTime.analogHandStep(minuteStep) }
+    private var script: DinoAnalogAdvanceExample { DinoAnalogAdvanceExample(question: question, minuteStep: handStep) }
+    private var playFace: CGFloat { min(160, max(120, width - 24)) }
 
     var body: some View {
         VStack(spacing: 12) {
             Label("dino.example", systemImage: "sparkles")
                 .font(.system(size: 13, weight: .heavy, design: .rounded)).foregroundStyle(DinoStyle.green)
-            Text("dino.question.advanceAnalog")
-                .font(.system(size: 21, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
+            DinoQuestionTitle(question: question, speechScope: "demo")
                 .accessibilityIdentifier("demo.title")
-            HStack(alignment: .center, spacing: 6) {
-                AnalogClock(time: script.start, theme: theme, size: face)
-                    .accessibilityIdentifier("demo.startClock")
-                DinoAdvanceDifference(minutes: question.durationMinutes, language: language.effective.code, prefix: "demo")
-                AnalogClock(time: time, theme: theme, size: face,
+            DinoAnalogAdvanceLayout(start: script.start, theme: theme, durationMinutes: question.durationMinutes,
+                                    language: language.effective.code, playSize: playFace,
+                                    prefix: "demo", startIdentifier: "demo.startClock") {
+                AnalogClock(time: time, theme: theme, size: playFace,
                             onHourChange: { hour in
                                 stopDemonstration()
                                 time = ClockTime(hour: hour, minute: time.minute)
                             },
                             onMinuteChange: minuteStep < 60 ? { next in stopDemonstration(); time = next } : nil,
-                            minuteStep: minuteStep, adjustingMinutes: adjustingMinutes,
+                            minuteStep: handStep, adjustingMinutes: adjustingMinutes,
                             onHandSelection: { stopDemonstration(); adjustingMinutes = $0 },
                             displayedHourAngle: manuallyAdjusting ? nil : hourAngle,
                             displayedMinuteAngle: manuallyAdjusting ? nil : minuteAngle)
@@ -462,7 +478,7 @@ struct DinoAnalogAdvanceDemonstration: View {
             DinoAnalogClockControls(adjustingMinutes: Binding(get: { adjustingMinutes }, set: {
                 stopDemonstration()
                 adjustingMinutes = $0
-            }), allowsMinutes: minuteStep < 60, minuteStep: minuteStep, prefix: "demo",
+            }), allowsMinutes: minuteStep < 60, minuteStep: handStep, prefix: "demo",
                                     demonstratedAction: demonstratedAction) { direction in
                 stopDemonstration()
                 time = script.applying(.adjust(direction), to: time, adjustingMinutes: adjustingMinutes)
@@ -491,7 +507,7 @@ struct DinoAnalogAdvanceDemonstration: View {
     private func reset() {
         question = DinoDemonstrationExamples.question(kind: .advanceAnalog, minutes: minutes, minuteStep: minuteStep,
                                                       index: exampleIndex, previousTarget: previousTarget)
-        let example = DinoAnalogAdvanceExample(question: question, minuteStep: minuteStep)
+        let example = DinoAnalogAdvanceExample(question: question, minuteStep: handStep)
         var transaction = Transaction()
         transaction.disablesAnimations = true
         withTransaction(transaction) {
@@ -512,7 +528,7 @@ struct DinoAnalogAdvanceDemonstration: View {
     }
 
     @MainActor private func demonstrate() async {
-        let example = DinoAnalogAdvanceExample(question: question, minuteStep: minuteStep)
+        let example = DinoAnalogAdvanceExample(question: question, minuteStep: handStep)
         do {
             try await Task.sleep(for: .seconds(1.2))
             var movingMinutes = false
@@ -549,25 +565,82 @@ struct DinoQuestionTitle: View {
     let question: ClockQuestion
     var instructionKey: String? = nil
     var fontSize: CGFloat = 21
+    /// False while a demonstration or exit card covers this title, so only the visible title is read.
+    var announces = true
+    var speechScope = "play"
 
     var body: some View {
         title.font(.system(size: fontSize, weight: .heavy, design: .rounded))
             .multilineTextAlignment(.center).frame(maxWidth: .infinity)
+            .speakQuestionTitle(spokenText, identity: "\(speechScope)-\(question.id)", active: announces)
+    }
+
+    private var prompt: DinoQuestionPrompt {
+        DinoQuestionPrompt.make(question: question, language: language.effective.code,
+                                instructionKey: instructionKey ?? question.kind.instructionKey)
+    }
+
+    private var spokenText: String {
+        prompt.spoken { L(key: $0) }
     }
 
     private var title: Text {
-        if question.kind == .timeZone, let journey = question.timeZoneJourney {
-            return Text(verbatim: String(format: L(key: "dino.question.timeZone.format"),
-                                         journey.destination.name(language: language.effective.code)))
+        guard let formatKey = prompt.formatKey else {
+            return Text(LocalizedStringKey(prompt.plainKey))
         }
-        guard [.spokenTime, .trueFalse].contains(question.kind) else {
-            return Text(LocalizedStringKey(instructionKey ?? question.kind.instructionKey))
+        let parts = L(key: formatKey).components(separatedBy: "%@")
+        return parts.indices.reduce(Text(verbatim: "")) { partial, index in
+            var next = partial
+            if !parts[index].isEmpty { next = next + Text(verbatim: parts[index]) }
+            if index < prompt.arguments.count {
+                let argument = prompt.arguments[index]
+                next = next + Text(verbatim: argument.text).foregroundColor(emphasisColor(argument.emphasis))
+            }
+            return next
         }
-        let words = DinoTimeWords.time(question.kind == .trueFalse ? (question.statement ?? question.target) : question.target,
-                                      language: language.effective.code)
-        let parts = L(key: "dino.question.\(question.kind.rawValue).format").components(separatedBy: "%@")
-        let highlighted = Text(verbatim: words).foregroundColor(highContrast ? Color(dinoHex: 0x21556B) : Color(dinoHex: 0x377C95))
-        return Text("\(parts[0])\(highlighted)\(parts.count > 1 ? parts[1] : "")")
+    }
+
+    private func emphasisColor(_ emphasis: DinoQuestionPrompt.Emphasis) -> Color {
+        switch emphasis {
+        case .plain:
+            return DinoStyle.ink
+        case .clock:
+            return highContrast ? Color(dinoHex: 0x21556B) : Color(dinoHex: 0x377C95)
+        case .forward:
+            return DinoStyle.deepGreen
+        case .backward:
+            return DinoTimeDirection.earlier
+        }
+    }
+}
+
+extension View {
+    /// Reads this title aloud while it is the visible question, and stops when another title takes over.
+    func speakQuestionTitle(_ text: String, identity: String, active: Bool = true) -> some View {
+        modifier(SpokenQuestionTitle(text: text, identity: identity, active: active))
+    }
+}
+
+private struct SpokenQuestionTitle: ViewModifier {
+    @EnvironmentObject private var settings: DinoSettings
+    @ObservedObject private var language = LanguageManager.shared
+    var text: String
+    var identity: String
+    var active: Bool
+    private static let owner = "question-title"
+
+    func body(content: Content) -> some View {
+        let enabled = active && settings.speakQuestionTitles
+        return content.task(id: enabled ? "\(identity)|\(language.effective.code)|\(text)" : "off|\(identity)") {
+            guard enabled else { return }
+            let token = DinoQuestionSpeech.shared.claim(owner: Self.owner, text: text,
+                                                       languageCode: language.effective.code)
+            defer { DinoQuestionSpeech.shared.release(owner: Self.owner, token: token) }
+            while !Task.isCancelled {
+                do { try await Task.sleep(for: .seconds(3600)) }
+                catch { break }
+            }
+        }
     }
 }
 

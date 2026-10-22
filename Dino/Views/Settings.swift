@@ -16,6 +16,7 @@ struct DinoSettingsView: View {
     @State private var showsPrivacy = false
     @State private var showsGameCenter = false
     @State private var showsLanguages = false
+    @State private var showsDayParts = false
     @State private var challenge = ResetChallenge.make()
     @State private var resetAnswer = ""
     var body: some View {
@@ -59,6 +60,12 @@ struct DinoSettingsView: View {
             .sheet(isPresented: $showsPrivacy) { DinoSocialPrivacyView() }
             .sheet(isPresented: $showsGameCenter) { DinoFriendsView().gameEnvironment() }
             .sheet(isPresented: $showsLanguages) { LanguagePicker() }
+            .sheet(isPresented: $showsDayParts) {
+                DinoDayPartScheduleEditor(schedule: settings.dayPartSchedule)
+                    .pagePresentation()
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
         }.foregroundStyle(DinoStyle.ink)
             .onValueChange(of: confirmReset) { shown in
                 if shown {
@@ -94,8 +101,16 @@ struct DinoSettingsView: View {
                     .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
             }
             rowDivider
+            navigationRow(title: "dino.settings.dayParts", symbol: "sun.horizon.fill",
+                          identifier: "settings.dayParts") {
+                showsDayParts = true
+            }
+            rowDivider
             preference("dino.settings.soundEffects", symbol: "speaker.wave.2.fill",
                        value: $settings.soundEffectsEnabled, identifier: "settings.soundEffects")
+            rowDivider
+            preference("dino.settings.speakQuestionTitle", symbol: "speaker.wave.2.bubble.fill",
+                       value: $settings.speakQuestionTitles, identifier: "settings.speakQuestionTitle")
             rowDivider
             preference("dino.settings.haptics", symbol: "iphone.radiowaves.left.and.right",
                        value: $settings.hapticsEnabled, identifier: "settings.haptics")
@@ -269,6 +284,207 @@ private struct SettingsToggleStyle: ToggleStyle {
             }.buttonStyle(.plain)
             Toggle(isOn: configuration.$isOn) { EmptyView() }
                 .labelsHidden().toggleStyle(.switch).tint(DinoStyle.deepGreen)
+        }
+    }
+}
+
+/// Parents set the school’s hours for night, morning, afternoon and evening.
+private struct DinoDayPartScheduleEditor: View {
+    @EnvironmentObject private var settings: DinoSettings
+    @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var language = LanguageManager.shared
+    /// Edited locally so a time pick does not redraw the map behind this sheet.
+    @State private var schedule: DinoDayPartSchedule
+
+    init(schedule: DinoDayPartSchedule) {
+        _schedule = State(initialValue: schedule)
+    }
+
+    var body: some View {
+        let _ = language.effective.code
+        GeometryReader { geometry in
+            let spacious = geometry.size.width >= 650
+            let leading: CGFloat = spacious ? 28 : 20
+            let trailing: CGFloat = spacious ? 40 : 32
+            let lineWidth = min(720, geometry.size.width) - leading - trailing
+            let timeWidth = min(160, max(96, lineWidth * 0.28))
+            VStack(spacing: 0) {
+                Text("dino.settings.dayParts")
+                    .font(.system(size: spacious ? 34 : 28, weight: .heavy, design: .rounded))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 28)
+                    .padding(.leading, leading)
+                    .padding(.trailing, trailing)
+                    .accessibilityIdentifier("settings.dayParts.editor")
+                Text("dino.settings.dayParts.help")
+                    .font(.system(size: spacious ? 17 : 15, weight: .medium, design: .rounded))
+                    .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 8)
+                    .padding(.leading, leading)
+                    .padding(.trailing, trailing)
+                    .accessibilityIdentifier("settings.dayParts.help")
+                DinoDayPartLine(time: ClockTime(hour: 0), width: lineWidth, isDemonstration: false,
+                                schedule: schedule, showsSelection: false)
+                    .padding(.top, 16)
+                    .padding(.leading, leading)
+                    .padding(.trailing, trailing)
+                    .frame(maxWidth: 720)
+                    .frame(maxWidth: .infinity)
+                ScrollView {
+                    VStack(spacing: spacious ? 12 : 10) {
+                        columnHeader(timeWidth: timeWidth, spacious: spacious)
+                        ForEach(DinoDayPart.allCases, id: \.self) { part in
+                            partRow(part, timeWidth: timeWidth, spacious: spacious)
+                        }
+                        if schedule != .standard {
+                            Button {
+                                schedule = .standard
+                            } label: {
+                                Label("dino.settings.dayParts.standard", systemImage: "arrow.counterclockwise")
+                            }
+                            .buttonStyle(DinoSecondaryButtonStyle())
+                            .accessibilityIdentifier("settings.dayParts.standard")
+                        }
+                    }
+                    .padding(.leading, leading)
+                    .padding(.trailing, trailing)
+                    .padding(.top, 16)
+                    .padding(.bottom, 24)
+                    .frame(maxWidth: 720)
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .background(JungleBackground(quiet: true))
+            .safeAreaInset(edge: .bottom) {
+                Button(action: close) {
+                    Label("dino.practice.backToLevels", systemImage: "map.fill")
+                }
+                .buttonStyle(DinoSecondaryButtonStyle())
+                .accessibilityIdentifier("settings.dayParts.close")
+                .padding(.leading, leading)
+                .padding(.trailing, trailing)
+                .padding(.top, 12)
+                .padding(.bottom, 18)
+                .frame(maxWidth: 760)
+                .frame(maxWidth: .infinity)
+                .background(DinoStyle.paper.opacity(0.97))
+            }
+        }
+        .toolbar(.hidden, for: .navigationBar)
+        .foregroundStyle(DinoStyle.ink)
+        .onDisappear(perform: commit)
+    }
+
+    private func close() {
+        commit()
+        dismiss()
+    }
+
+    /// Writes once, when the sheet closes. A second call from the swipe sees the same value and skips the map redraw.
+    private func commit() {
+        guard settings.dayPartSchedule != schedule else { return }
+        settings.dayPartSchedule = schedule
+    }
+
+    private func columnHeader(timeWidth: CGFloat, spacious: Bool) -> some View {
+        HStack(spacing: 0) {
+            Text("dino.settings.dayParts.column")
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 16)
+            Text("dino.settings.dayParts.from")
+                .frame(width: timeWidth)
+            Text("dino.settings.dayParts.to")
+                .frame(width: timeWidth)
+        }
+        .font(.system(size: spacious ? 16 : 14, weight: .bold, design: .rounded))
+        .foregroundStyle(DinoStyle.ink)
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
+        .frame(minHeight: 48)
+        .background(Color(dinoHex: 0xE6EDF2), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .accessibilityIdentifier("settings.dayParts.columns")
+    }
+
+    private func partRow(_ part: DinoDayPart, timeWidth: CGFloat, spacious: Bool) -> some View {
+        HStack(spacing: 0) {
+            Text(LocalizedStringKey(part.titleKey))
+                .font(.system(size: spacious ? 16 : 14, weight: .bold, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 16)
+            boundaryMenu(part, ending: false)
+                .frame(width: timeWidth)
+            boundaryMenu(part, ending: true)
+                .frame(width: timeWidth)
+        }
+        .frame(minHeight: spacious ? 76 : 68)
+        .background(part.fill.opacity(highContrast ? 1 : 0.96), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .stroke(highContrast ? DinoStyle.ink : .white.opacity(0.7), lineWidth: highContrast ? 2 : 1))
+    }
+
+    private func boundaryMenu(_ part: DinoDayPart, ending: Bool) -> some View {
+        let edited = ending ? part.next() : part
+        let current = schedule.start(of: edited)
+        let options = schedule.validStarts(for: edited)
+        let shown = ending ? schedule.clockText(endOf: part) : schedule.clockText(startOf: part)
+        let edge = ending ? "to" : "from"
+        return Menu {
+                ForEach(options, id: \.self) { hour in
+                    Button {
+                        var next = schedule
+                        next.setStart(edited, hour)
+                        guard next.isValid else { return }
+                        schedule = next
+                    } label: {
+                        if hour == current {
+                            Label(boundaryText(hour, ending: ending), systemImage: "checkmark")
+                        } else {
+                            Text(verbatim: boundaryText(hour, ending: ending))
+                        }
+                    }
+                    .accessibilityIdentifier("settings.dayParts.\(part.rawValue).\(edge).\(ending && hour == 0 ? 24 : hour)")
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(verbatim: shown)
+                        .font(.system(size: 16, weight: .heavy, design: .rounded))
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 10, weight: .bold))
+                        .accessibilityHidden(true)
+                }
+                .foregroundStyle(DinoStyle.ink)
+                .padding(.horizontal, 10)
+                .frame(minWidth: 92, minHeight: 44)
+                .background(.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(DinoStyle.ink.opacity(highContrast ? 1 : 0.12), lineWidth: highContrast ? 2 : 1.5))
+            }
+            .accessibilityIdentifier("settings.dayParts.\(part.rawValue).\(edge)")
+            .accessibilityValue(shown)
+    }
+
+    private func boundaryText(_ hour: Int, ending: Bool) -> String {
+        if ending && hour == 0 { return "24:00" }
+        return String(format: "%02d:00", hour)
+    }
+}
+
+private extension DinoDayPart {
+    var fill: Color {
+        switch self {
+        case .night: return Color(dinoHex: 0xD9EEFB)
+        case .morning: return Color(dinoHex: 0xFFF3C9)
+        case .afternoon: return Color(dinoHex: 0xE7F6C8)
+        case .evening: return Color(dinoHex: 0xFDE4D6)
         }
     }
 }

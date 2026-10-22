@@ -296,7 +296,7 @@ struct WorldMap: View {
     private var bossShortcut: some View {
         Button { if let boss = DinoLevelCatalog.level(10) { selectLevel(boss) } } label: {
             HStack(spacing: 13) {
-                Image(systemName: "trophy.fill").font(.system(size: 26)).foregroundStyle(DinoStyle.green)
+                Image(systemName: "crown.fill").font(.system(size: 26)).foregroundStyle(DinoStyle.green)
                     .frame(width: 52, height: 52).background(DinoStyle.ink, in: RoundedRectangle(cornerRadius: 16))
                 VStack(alignment: .leading, spacing: 4) {
                     Text("dino.bossName").font(.system(size: 17, weight: .heavy, design: .rounded))
@@ -358,7 +358,6 @@ struct WorldMap: View {
                             LevelNode(level: level, record: player.profile.record(id),
                                       unlocked: player.profile.isUnlocked(id),
                                       current: standingLevel == id,
-                                      bossComplete: player.profile.worldOneComplete,
                                       showsGuide: guidedLevel == id) { selectLevel(level) }
                                 .offset(x: point.x - g.size.width / 2)
                             if standingLevel == id || worldTransition?.sourceLevel == id || worldTransition?.destinationLevel == id {
@@ -917,7 +916,6 @@ struct LevelNode: View {
     let record: LevelRecord
     let unlocked: Bool
     let current: Bool
-    let bossComplete: Bool
     var showsGuide = false
     var action: () -> Void
     private var color: Color { !unlocked ? Color(dinoHex: 0xA9B8A0) : level.isBoss ? DinoStyle.ink : DinoStyle.green }
@@ -952,7 +950,7 @@ struct LevelNode: View {
                         Circle().stroke(level.isBoss ? DinoStyle.green : highContrast ? DinoStyle.ink : .white.opacity(0.6), lineWidth: level.isBoss ? 5 : 3).padding(3)
                     }
                     VStack(spacing: 1) {
-                        if level.isBoss { Image(systemName: bossComplete ? "trophy.fill" : "crown.fill").font(.system(size: 24)).foregroundStyle(DinoStyle.green) }
+                        if level.isBoss { Image(systemName: "crown.fill").font(.system(size: 24)).foregroundStyle(DinoStyle.green) }
                         if unlocked { Text(verbatim: "\(level.id)").font(.system(size: level.isBoss ? 23 : 30, weight: .heavy, design: .rounded)) }
                         else { Image(systemName: "lock.fill").font(.system(size: 23, weight: .bold)) }
                     }.foregroundStyle(level.isBoss ? .white : DinoStyle.ink)
@@ -962,10 +960,8 @@ struct LevelNode: View {
             .buttonStyle(DinoAnswerButtonStyle()).disabled(!unlocked)
             .accessibilityIdentifier("map.level.\(level.id)")
             .overlay(alignment: .bottom) {
-                if !level.isBoss {
-                    DinoStars(count: record.stars, size: 26, showEmpty: record.stars > 0)
-                        .frame(width: 88, height: 30).offset(y: 29).allowsHitTesting(false)
-                }
+                DinoStars(count: record.stars, size: 26, showEmpty: record.stars > 0)
+                    .frame(width: 88, height: 30).offset(y: 29).allowsHitTesting(false)
             }
             .overlay {
                 if showsGuide {
@@ -1457,7 +1453,6 @@ private struct WorldChapter: View, Equatable {
             Color.clear.frame(height: topClearance)
             GeometryReader { geometry in
                 let standingLevel = self.standingLevel
-                let bossComplete = player.profile.worldComplete(world.id)
                 ZStack(alignment: .top) {
                 VStack(spacing: 0) {
                     ForEach(Array(world.levels.enumerated()), id: \.element) { index, id in
@@ -1467,7 +1462,6 @@ private struct WorldChapter: View, Equatable {
                             LevelNode(level: level, record: player.profile.record(id),
                                       unlocked: player.profile.isUnlocked(id),
                                       current: standingLevel == id,
-                                      bossComplete: bossComplete,
                                       showsGuide: hintedLevel == id) { openLevel(level) }
                             if standingLevel == id || worldTransition?.sourceLevel == id || worldTransition?.destinationLevel == id {
                                 ZStack(alignment: .bottom) {
@@ -1518,7 +1512,6 @@ private struct WorldChapter: View, Equatable {
                     }
                     if world.id == 2 { DinoDesertFlights(routeOffset: routeOffset, viewportHeight: viewportHeight) }
                     if world.id == 9 { PirateCoastFlights(routeOffset: routeOffset, viewportHeight: viewportHeight) }
-                    if world.id == 5 { CrystalCaveEntranceForeground().equatable() }
                 }
             }
         }

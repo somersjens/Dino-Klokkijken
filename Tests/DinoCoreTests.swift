@@ -58,6 +58,7 @@ struct DinoCoreTests {
         testDaySchedules()
         testCapitalTimeZones()
         testUnambiguousQuestionTimes()
+        testDayPartSchedule()
         testDemonstrationExamples()
         testAnalogSettingExamples()
         testProgress()
@@ -73,6 +74,8 @@ struct DinoCoreTests {
         testLiveClockChanges()
         testUnchangedInputsDoNotPublish()
         testSettingsAndFeedback()
+        testQuestionSpeechVoices()
+        testQuestionPrompts()
         testCloudSync()
         testFullReset()
         let socialChecks = await DinoSocialTests.run()
@@ -151,8 +154,8 @@ struct DinoCoreTests {
             expect(run.result?.correct == level.questionCount, "new lesson mixes preserve scoring and completion")
         }
         expect(actualSkills.count == 120 && player.profile.adventureComplete, "a real perfect run teaches every combination and completes the adventure")
-        expect(player.profile.totalStars == 270 && finalBossTiers == Array(repeating: .challenge, count: 10),
-               "the final boss really runs ten maximum-difficulty questions while stars keep their existing rules")
+        expect(player.profile.totalStars == 300 && finalBossTiers == Array(repeating: .challenge, count: 10),
+               "the final boss really runs ten maximum-difficulty questions and a perfect boss earns three stars")
 
         let mixed = DinoSession(level: DinoLevelCatalog.level(11)!, player: player)
         expect(mixed.question.kind == .chooseAnalog && mixed.minuteStep == 30, "mixed-time lesson starts on half hours")
@@ -989,6 +992,27 @@ struct DinoCoreTests {
     }
 
     static func testAnalogSettingExamples() {
+        expect(DinoPracticeTime.analogHandStep(30) == 15 && DinoPracticeTime.half.analogHandStep == 15,
+               "half-hour practice turns the analog hand by quarters")
+        expect(DinoPracticeTime.analogHandStep(10) == 5 && DinoPracticeTime.tenMinutes.analogHandStep == 5,
+               "ten-minute practice turns the analog hand five minutes at a time")
+        for family in DinoPracticeTime.allCases where family != .half && family != .tenMinutes {
+            expect(family.analogHandStep == family.minuteStep, "analog hand step matches \(family.rawValue)")
+        }
+        for family in [DinoPracticeTime.half, .tenMinutes] {
+            let question = DinoExpandedQuestions.example(kind: .advanceAnalog, time: family)
+            let script = DinoAnalogAdvanceExample(question: question, minuteStep: family.analogHandStep)
+            expect(question.durationMinutes.isMultiple(of: family.analogHandStep), "finer analog steps still reach the family turn")
+            var clock = script.start
+            var movingMinutes = false
+            for action in script.actions {
+                switch action {
+                case .selectMinutes(let minutes): movingMinutes = minutes
+                case .adjust: clock = script.applying(action, to: clock, adjustingMinutes: movingMinutes)
+                case .confirm: expect(clock == script.target, "quarter and five-minute taps finish the forward clock")
+                }
+            }
+        }
         for step in [1, 5, 10, 15, 30, 60] {
             for hour in 1...12 {
                 for minute in stride(from: 0, to: 60, by: step) {
@@ -1138,6 +1162,60 @@ struct DinoCoreTests {
                                                           index: 0, previousTarget: nil, preferredTarget: time, using: &rng)
             expect(question.target != time, "preferred targets cannot bypass the day-part question filter")
         }
+    }
+
+    static func testDayPartSchedule() {
+        let school = DinoDayPartSchedule(night: 23, morning: 7, afternoon: 12, evening: 18)
+        expect(school.isValid && school.summary == "23–07 · 07–12 · 12–18 · 18–23", "a school timetable keeps clock order")
+        expect(DinoDayPartSchedule(storageKey: school.storageKey) == school, "a timetable stores and reloads")
+        expect(DinoDayPartSchedule(storageKey: "0,0,12,18") == nil && DinoDayPartSchedule(storageKey: "nope") == nil,
+               "overlapping or unreadable timetables are rejected")
+        let standardLine = DinoDayPartSchedule.standard.timeline()
+        expect(standardLine.map(\.part) == DinoDayPart.allCases && standardLine.map(\.start) == [0, 6, 12, 18] && standardLine.map(\.end) == [6, 12, 18, 24],
+               "the built-in line is four equal stretches")
+        let wrapping = DinoDayPartSchedule(night: 22, morning: 6, afternoon: 12, evening: 18)
+        let wrappedLine = wrapping.timeline()
+        expect(wrappedLine.map(\.part) == [.night, .morning, .afternoon, .evening, .night]
+               && wrappedLine.map(\.start) == [0, 6, 12, 18, 22]
+               && wrappedLine.map(\.end) == [6, 12, 18, 22, 24],
+               "night that starts before midnight appears at both ends of the day line")
+        expect(wrapping.endClock(of: .evening) == 22 && wrapping.clockText(endOf: .night) == "06:00", "wrapped night ends in the morning")
+        expect(school.validStarts(for: .morning).contains(7) && !school.validStarts(for: .morning).contains(12),
+               "a part cannot shrink to nothing or take over the next part")
+        for (hour, part) in [(23, DinoDayPart.night), (0, .night), (6, .night), (7, .morning), (11, .morning), (12, .afternoon), (17, .afternoon), (18, .evening), (22, .evening)] {
+            expect(school.part(at: hour) == part, "school timetable owns every listed hour")
+            expect(DinoTimeWords.dayPartSuffix(ClockTime(hour: hour), language: "nl", schedule: school) ==
+                   (part == .night ? "’s nachts" : part == .morning ? "’s ochtends" : part == .afternoon ? "’s middags" : "’s avonds"),
+                   "spoken day parts follow the school timetable")
+        }
+        let example = DinoDemonstrationExamples.question(kind: .dayPart, minutes: [0], minuteStep: 60,
+                                                         index: 3, previousTarget: nil, dayPartSchedule: school)
+        expect(example.target.hour == 6 && example.expectedAnswer == .dayPart(.night),
+               "the worked example uses the school timetable, including 06:00")
+        var rng = SeededGenerator(seed: 20261021)
+        let asked = DinoExpandedQuestions.generate(kind: .dayPart, minutes: [0], minuteStep: 60,
+                                                   index: 0, previousTarget: nil, preferredTarget: ClockTime(hour: 22),
+                                                   dayPartSchedule: school, using: &rng)
+        expect(asked.target == ClockTime(hour: 22) && asked.expectedAnswer == .dayPart(.evening),
+               "a chosen timetable can ask the hours the built-in one skips, and marks them with that timetable")
+        var practice = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.dayPart)),
+                                             seed: 20261021, dayPartSchedule: school)
+        var sawBoundaryHour = false
+        for index in 0..<80 {
+            let question = practice.next(index: index)
+            expect(question.expectedAnswer == .dayPart(school.part(at: question.target.hour)),
+                   "practice marks each day-part question with the school timetable")
+            if question.target.hour == 6 || question.target.hour >= 22 { sawBoundaryHour = true }
+        }
+        expect(sawBoundaryHour, "practice with a school timetable includes the previously skipped hours")
+        let broken = InMemoryKeyValueStore(["dino.settings.dayParts": "0,0,12,18"])
+        expect(DinoSettings(defaults: broken).dayPartSchedule == .standard, "a saved timetable that no longer fits falls back")
+        let memory = InMemoryKeyValueStore()
+        let player = DinoPlayer(store: DinoProgressStore(defaults: memory))
+        let configuration = DinoPracticeConfiguration(time: .whole, order: .specific(.dayPart))
+        let session = DinoSession(level: configuration.level, player: player, practice: configuration, dayPartSchedule: school)
+        expect(session.dayPartSchedule == school && session.question.expectedAnswer == .dayPart(school.part(at: session.question.target.hour)),
+               "a practice session keeps the timetable it started with")
     }
 
     static func testCapitalTimeZones() {
@@ -1664,10 +1742,10 @@ struct DinoCoreTests {
             expect(result.animationClip == clip, "only two stars select the pirouette; a perfect score retains the backflip")
         }
         let boss = DinoLevelCatalog.level(10)!
-        for correct in [4, 5, 10] {
-            let result = DinoLevelResult(level: boss, correct: correct, stars: 0, victory: .none)
-            expect(result.animationClip == (correct == boss.questionCount ? .backflip : .idle),
-                   "boss victories do not borrow the two-star animation")
+        for (correct, stars, clip) in [(4, 0, DinoAnimation.Clip.idle), (6, 1, .idle), (8, 2, .pirouette), (9, 2, .pirouette), (10, 3, .backflip)] {
+            let result = DinoLevelResult(level: boss, correct: correct,
+                                         stars: StarCalculator.stars(correct: correct, questionCount: 10), victory: .none)
+            expect(result.stars == stars && result.animationClip == clip, "boss stars use the same reward animations")
         }
         for (clip, asset) in [(DinoAnimation.Clip.backflip, "dino-backflip-08"), (.pirouette, "dino-pirouette-14"), (.thumbsUp, "dino-thumbs-up-08"), (.wrongAnswer, "dino-wrong-answer-04")] {
             for step in 0...180 {
@@ -1834,17 +1912,19 @@ struct DinoCoreTests {
                 expect(profile.isUnlocked(id), "normal route unlocks sequentially")
                 profile.recordCompletedAttempt(levelID: id, correct: 3)
             }
-            expect(profile.recordCompletedAttempt(levelID: world.bossLevel, correct: 5) == .normal, "normal victory is scoped to this world")
+            expect(profile.recordCompletedAttempt(levelID: world.bossLevel, correct: 5) == .none, "5/10 is not a boss star")
+            expect(profile.recordCompletedAttempt(levelID: world.bossLevel, correct: 6) == .normal, "normal victory is scoped to this world")
+            expect(profile.record(world.bossLevel).stars == 2, "the earlier 9/10 keeps two stars")
             expect(profile.worldComplete(world.id), "each boss completes its own world")
             if world.id < 10 { expect(profile.isUnlocked(world.bossLevel + 1), "next world opens after boss") }
         }
-        expect(profile.adventureComplete && profile.dinoLevel == 100 && profile.totalStars == 90, "complete route reaches 100 and totals all 90 normal levels")
+        expect(profile.adventureComplete && profile.dinoLevel == 100 && profile.totalStars == 110, "complete route reaches 100 and keeps every earned star, including bosses")
         let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
         store.save(profile)
         expect(store.load() == profile, "all 100 level records and world victories survive restart")
         var cloud = PlayerProfile()
         cloud.mergeCloudProgress(DinoCloudProgress(profile))
-        expect(cloud.adventureComplete && cloud.dinoLevel == 100 && cloud.totalStars == 90, "all worlds survive cloud merge")
+        expect(cloud.adventureComplete && cloud.dinoLevel == 100 && cloud.totalStars == 110, "all worlds survive cloud merge")
         cloud.resetProgress()
         expect(cloud.dinoLevel == 0 && !cloud.isUnlocked(11) && cloud.totalStars == 0, "reset clears every world")
         var direct = PlayerProfile()
@@ -1852,7 +1932,7 @@ struct DinoCoreTests {
             expect(direct.recordCompletedAttempt(levelID: world.bossLevel, correct: 10) == .perfect, "perfect shortcuts work in all worlds")
             expect(world.levels.allSatisfy { direct.isUnlocked($0) }, "perfect unlock is scoped to the winning world")
         }
-        expect(direct.adventureComplete && direct.dinoLevel == 100 && direct.totalStars == 0, "boss shortcuts never fabricate stars")
+        expect(direct.adventureComplete && direct.dinoLevel == 100 && direct.totalStars == 30, "each perfect boss earns three stars and nothing else")
         for seed in 0..<20 {
             for level in DinoLevelCatalog.levels.filter({ $0.worldID > 1 }) {
                 var rng = SeededGenerator(seed: UInt64(seed))
@@ -1918,6 +1998,8 @@ struct DinoCoreTests {
         expect(attempt.isComplete && attempt.correctCount == 2, "final result after five")
         expect(attempt.submit(attempt.current.target) == nil, "cannot score after completion")
         for score in 0...5 { expect(StarCalculator.stars(correct: score) == [0,0,0,1,2,3][score], "star thresholds") }
+        let bossStars = (0...10).map { StarCalculator.stars(correct: $0, questionCount: 10) }
+        expect(bossStars == [0,0,0,0,0,0,1,1,2,2,3], "boss stars start at six and only ten earns three")
     }
 
     @MainActor
@@ -2111,19 +2193,19 @@ struct DinoCoreTests {
         expect(p == before, "locked levels cannot grant progress")
         for id in 2...9 { p.recordCompletedAttempt(levelID: id, correct: 3) }
         expect(p.normalLevelsComplete && p.dinoLevel == 9, "normal route complete")
-        expect(p.recordCompletedAttempt(levelID: 10, correct: 4) == .none && !p.worldOneComplete, "4/10 never wins")
-        expect(p.recordCompletedAttempt(levelID: 10, correct: 5) == .normal && p.worldOneComplete, "normal 5/10 victory")
+        expect(p.recordCompletedAttempt(levelID: 10, correct: 5) == .none && !p.worldOneComplete && p.record(10).stars == 0, "5/10 earns no star")
+        expect(p.recordCompletedAttempt(levelID: 10, correct: 6) == .normal && p.worldOneComplete && p.record(10).stars == 1, "6/10 is one star")
         p.recordCompletedAttempt(levelID: 10, correct: 0)
-        expect(p.worldOneComplete && p.dinoLevel == 10 && p.record(10).bestCorrect == 5, "world victory stays saved")
+        expect(p.worldOneComplete && p.dinoLevel == 10 && p.record(10).bestCorrect == 6 && p.record(10).stars == 1, "world victory stays saved")
         expect(p.bossResults.count == 3 && p.record(10).attempts == 3, "boss history")
         var direct = PlayerProfile()
-        expect(direct.recordCompletedAttempt(levelID: 10, correct: 9) == .none && !direct.worldOneComplete && direct.dinoLevel == 0, "9/10 without normal route fails")
+        expect(direct.recordCompletedAttempt(levelID: 10, correct: 9) == .none && !direct.worldOneComplete && direct.dinoLevel == 0 && direct.record(10).stars == 2, "9/10 without the route fails and keeps two stars")
         expect(direct.recordCompletedAttempt(levelID: 10, correct: 10) == .perfect, "direct perfect victory")
         expect(direct.worldOneComplete && direct.perfectBossVictory && direct.dinoLevel == 10 && (1...10).allSatisfy(direct.isUnlocked) && direct.isUnlocked(11), "perfect opens entire world and next world entrance")
-        expect(direct.totalStars == 0, "skipping never invents earned stars")
+        expect(direct.totalStars == 3 && direct.record(10).stars == 3, "only the perfect boss adds its three stars")
         for completed in [false, true] {
             for score in 0...10 {
-                let expected: BossVictory = score == 10 ? .perfect : completed && score >= 5 ? .normal : .none
+                let expected: BossVictory = score == 10 ? .perfect : completed && score >= 6 ? .normal : .none
                 expect(BossVictory.evaluate(correct: score, normalLevelsComplete: completed) == expected, "boss boundary matrix")
             }
         }
@@ -2636,18 +2718,214 @@ struct DinoCoreTests {
         }
     }
 
+    static func testQuestionPrompts() {
+        expect(DinoTimeWords.spokenDuration(60, language: "en") == "1 hour", "one hour is spoken in full")
+        expect(DinoTimeWords.spokenDuration(60, language: "nl") == "1 uur", "one Dutch hour is spoken in full")
+        expect(DinoTimeWords.spokenDuration(1, language: "en") == "1 minute" &&
+               DinoTimeWords.spokenDuration(1, language: "nl") == "1 minuut", "a single minute stays singular")
+        expect(DinoTimeWords.spokenDuration(90, language: "en") == "1 hour and 30 minutes" &&
+               DinoTimeWords.spokenDuration(90, language: "nl") == "1 uur en 30 minuten", "mixed durations stay speakable")
+        expect(DinoTimeWords.spokenDuration(120, language: "en") == "2 hours", "several hours use the plural")
+        expect(DinoTimeWords.promptTime(ClockTime(hour: 15), language: "nl") == "drie uur ’s middags",
+               "a 24-hour clock does not collapse to the morning")
+        expect(DinoTimeWords.promptTime(ClockTime(hour: 3), language: "en") == "three o’clock",
+               "a morning hour stays a short phrase")
+
+        let formats = [
+            "dino.question.chooseClock.format": ("Which of the %@ clocks matches %@?", "Welke van de %@ klokken hoort bij %@?"),
+            "dino.question.chooseClock.short": ("Which clock matches %@?", "Welke klok hoort bij %@?"),
+            "dino.question.spokenClock.format": ("Which of the %@ clocks shows %@?", "Welke van de %@ klokken laat %@ zien?"),
+            "dino.question.spokenTime.format": ("Which clock shows %@?", "Welke klok laat %@ zien?"),
+            "dino.question.trueFalse.format": ("It is now %@.", "Het is nu %@."),
+            "dino.question.advanceAnalog.format": ("Move the hands of the clock %@ %@", "Zet de wijzers van de klok %@ %@"),
+            "dino.question.addTime.format": ("What time is %@ %@ than %@?", "Hoe laat is het %@ %@ dan %@?"),
+            "dino.question.subtractTime.format": ("What time was %@ %@ than %@?", "Hoe laat was het %@ %@ dan %@?"),
+            "dino.question.minutesBetween.format": ("How many minutes are there between %@ and %@?", "Hoeveel minuten zitten er tussen %@ en %@?"),
+            "dino.question.timeSequence.format": ("Looking at the sequence below, what time comes after %@?",
+                                                 "Kijk naar de reeks hieronder. Welke tijd komt er na %@?"),
+            "dino.question.flightArrival.format": ("The plane leaves at %@ and flies for %@. What time does it arrive?",
+                                                   "Het vliegtuig vertrekt om %@ en vliegt %@. Hoe laat komt het aan?"),
+            "dino.question.flightArrival.ahead.format": ("The plane leaves at %@ and flies for %@. The destination is %@ %@. What time does it arrive?",
+                                                         "Het vliegtuig vertrekt om %@ en vliegt %@. De bestemming is %@ %@. Hoe laat komt het aan?"),
+            "dino.question.flightArrival.behind.format": ("The plane leaves at %@ and flies for %@. The destination is %@ %@. What time does it arrive?",
+                                                          "Het vliegtuig vertrekt om %@ en vliegt %@. De bestemming is %@ %@. Hoe laat komt het aan?"),
+            "dino.question.timeZone.ahead.format": ("It is %@ in %@. %@ is %@ %@, what time is it in %@?",
+                                                   "Het is %@ in %@. %@ is %@ %@, hoe laat is het in %@?"),
+            "dino.question.timeZone.behind.format": ("It is %@ in %@. %@ is %@ %@, what time is it in %@?",
+                                                    "Het is %@ in %@. %@ is %@ %@, hoe laat is het in %@?"),
+            "dino.question.timeZone.same.format": ("It is %@ in %@. What time is it in %@?", "Het is %@ in %@. Hoe laat is het in %@?")
+        ]
+        func sentence(_ prompt: DinoQuestionPrompt, _ language: String) -> String {
+            guard let key = prompt.formatKey, let pair = formats[key] else { return prompt.plainKey }
+            return DinoQuestionPrompt.apply(language == "nl" ? pair.1 : pair.0, arguments: prompt.arguments)
+        }
+        func prompt(_ question: ClockQuestion, _ language: String) -> DinoQuestionPrompt {
+            DinoQuestionPrompt.make(question: question, language: language, instructionKey: question.kind.instructionKey)
+        }
+        func question(kind: ClockQuestionKind, target: ClockTime, options: [ClockTime] = [],
+                      related: [ClockTime] = [], duration: Int = 0, offset: Int = 0,
+                      statement: ClockTime? = nil, schedule: DinoDaySchedule? = nil,
+                      journey: DinoTimeZoneJourney? = nil) -> ClockQuestion {
+            var question = ClockQuestion(id: 1, kind: kind, target: target, options: options, activity: nil, companionClocks: [])
+            question.relatedTimes = related
+            question.durationMinutes = duration
+            question.offsetHours = offset
+            question.statement = statement
+            question.daySchedule = schedule
+            question.timeZoneJourney = journey
+            return question
+        }
+
+        let four = (1...4).map { ClockTime(hour: $0) }
+        let matching = question(kind: .chooseAnalog, target: ClockTime(hour: 3), options: four)
+        let englishMatch = prompt(matching, "en")
+        expect(sentence(englishMatch, "en") == "Which of the four clocks matches three o’clock?", "question 1 names the clock time")
+        expect(englishMatch.arguments.map(\.emphasis) == [.plain, .clock], "only the clock time is tinted")
+        expect(sentence(prompt(matching, "nl"), "nl") == "Welke van de vier klokken hoort bij drie uur?", "Dutch question 1 names the time")
+        let two = question(kind: .chooseAnalog, target: ClockTime(hour: 3), options: Array(four.prefix(2)))
+        expect(sentence(prompt(two, "en"), "en") == "Which of the two clocks matches three o’clock?", "two choices are counted honestly")
+        let single = question(kind: .chooseAnalog, target: ClockTime(hour: 3))
+        expect(sentence(prompt(single, "nl"), "nl") == "Welke klok hoort bij drie uur?", "an example without choices does not invent a count")
+
+        let spoken = question(kind: .spokenTime, target: ClockTime(hour: 3), options: four)
+        expect(sentence(prompt(spoken, "en"), "en") == "Which of the four clocks shows three o’clock?", "a spoken time still asks which clock")
+        let claim = question(kind: .trueFalse, target: ClockTime(hour: 4), statement: ClockTime(hour: 3))
+        expect(sentence(prompt(claim, "nl"), "nl") == "Het is nu drie uur.", "a true-or-false title is the claim, not the verdict")
+        expect(prompt(claim, "nl").arguments.map(\.emphasis) == [.clock], "the claimed time can be scanned")
+
+        for kind in [ClockQuestionKind.chooseDigital, .readDigital, .sayTime, .setAnalog, .setDigital, .read24Hour, .dayPart, .match, .sortTimes] {
+            let asked = question(kind: kind, target: ClockTime(hour: 3), options: four, related: four)
+            let title = prompt(asked, "en")
+            expect(title.formatKey == nil && title.arguments.isEmpty, "\(kind.rawValue) does not read out its answer")
+        }
+
+        let forward = question(kind: .advanceAnalog, target: ClockTime(hour: 4), related: [ClockTime(hour: 3)], duration: 60)
+        let forwardTitle = prompt(forward, "en")
+        expect(sentence(forwardTitle, "en") == "Move the hands of the clock 1 hour forward", "moving the hands names the step")
+        expect(sentence(prompt(forward, "nl"), "nl") == "Zet de wijzers van de klok 1 uur vooruit", "Dutch hands move forward in words")
+        expect(forwardTitle.arguments.map(\.emphasis) == [.forward, .forward], "the step and the word forward are both green")
+        expect(!sentence(forwardTitle, "en").contains("four"), "the resulting time stays off the title")
+
+        let added = question(kind: .addTime, target: ClockTime(hour: 16), related: [ClockTime(hour: 15)], duration: 90)
+        let addedTitle = prompt(added, "nl")
+        expect(sentence(addedTitle, "nl") == "Hoe laat is het 1 uur en 30 minuten later dan drie uur ’s middags?",
+               "adding time repeats the start and the step")
+        expect(addedTitle.arguments.map(\.emphasis) == [.forward, .forward, .clock], "later is green with the added amount")
+        expect(!sentence(addedTitle, "nl").contains("vier"), "the later time is not spoken")
+
+        let earlier = question(kind: .subtractTime, target: ClockTime(hour: 2), related: [ClockTime(hour: 4)], duration: 120)
+        let earlierTitle = prompt(earlier, "en")
+        expect(sentence(earlierTitle, "en") == "What time was 2 hours earlier than four o’clock?", "going back names the step")
+        expect(earlierTitle.arguments.map(\.emphasis) == [.backward, .backward, .clock], "earlier is red with the step")
+        expect(!sentence(earlierTitle, "en").contains("two"), "the earlier result is not spoken")
+
+        let between = question(kind: .minutesBetween, target: ClockTime(hour: 4),
+                               related: [ClockTime(hour: 3), ClockTime(hour: 4)], duration: 60)
+        let betweenTitle = prompt(between, "en")
+        expect(sentence(betweenTitle, "en") == "How many minutes are there between three o’clock and four o’clock?",
+               "the gap question names both clocks")
+        expect(betweenTitle.arguments.map(\.emphasis) == [.clock, .clock], "both clocks use the scan color")
+        expect(!sentence(betweenTitle, "en").contains("1 hour"), "the minute answer is not spoken")
+
+        let sequence = question(kind: .timeSequence, target: ClockTime(hour: 5),
+                                related: [ClockTime(hour: 2), ClockTime(hour: 3), ClockTime(hour: 4)], duration: 60)
+        expect(sentence(prompt(sequence, "nl"), "nl") == "Kijk naar de reeks hieronder. Welke tijd komt er na vier uur?",
+               "the sequence names the last clock without the step")
+        expect(prompt(sequence, "en").arguments.map(\.emphasis) == [.clock], "the sequence does not color a difference")
+        expect(!sentence(prompt(sequence, "en"), "en").contains("hour"), "the sequence step stays off the title")
+
+        let schedule = DinoDaySchedule(start: ClockTime(hour: 8), firstActivity: .drawing, firstMinutes: 60,
+                                       breakMinutes: 15, secondActivity: .music, secondMinutes: 30)
+        let train = question(kind: .daySchedule, target: schedule.end, schedule: schedule)
+        let trainTitle = prompt(train, "en")
+        expect(trainTitle.formatKey == nil && trainTitle.arguments.isEmpty, "the train title points at the schedule")
+        expect(trainTitle.plainKey == "dino.question.daySchedule", "the train keeps one short instruction")
+
+        let london = DinoTimeZoneJourney.capitals.first { $0.id == "london" }!
+        let paris = DinoTimeZoneJourney.capitals.first { $0.id == "paris" }!
+        let washington = DinoTimeZoneJourney.capitals.first { $0.id == "washington" }!
+        let toParis = DinoTimeZoneJourney(origin: london, destination: paris)
+        let parisQuestion = question(kind: .timeZone, target: ClockTime(hour: 4), related: [ClockTime(hour: 3)], journey: toParis)
+        expect(toParis.offsetHours > 0, "Paris is ahead of London in this check")
+        let parisShift = DinoTimeWords.spokenDuration(toParis.offsetHours * 60, language: "en")
+        expect(sentence(prompt(parisQuestion, "en"), "en")
+               == "It is three o’clock in London. Paris is \(parisShift) ahead, what time is it in Paris?",
+               "a later city names the difference")
+        expect(prompt(parisQuestion, "en").arguments.map(\.emphasis) == [.clock, .plain, .plain, .forward, .forward, .plain],
+               "ahead is green with the hour difference")
+        let toWashington = DinoTimeZoneJourney(origin: london, destination: washington)
+        let washingtonQuestion = question(kind: .timeZone, target: ClockTime(hour: 10), related: [ClockTime(hour: 15)], journey: toWashington)
+        expect(toWashington.offsetHours < 0, "Washington is behind London in this check")
+        expect(prompt(washingtonQuestion, "nl").arguments.dropLast().last?.emphasis == .backward, "a city behind is red")
+        expect(!sentence(prompt(washingtonQuestion, "en"), "en").contains("ten"), "the destination time is not spoken")
+
+        let flight = question(kind: .flightArrival, target: ClockTime(hour: 6), related: [ClockTime(hour: 3)], duration: 120, offset: 1)
+        expect(sentence(prompt(flight, "en"), "en") == "The plane leaves at three o’clock and flies for 2 hours. The destination is 1 hour ahead. What time does it arrive?",
+               "a flight names the ride and the zone")
+        expect(prompt(flight, "en").arguments.map(\.emphasis) == [.clock, .forward, .forward, .forward],
+               "a later zone colors the word ahead")
+        let returning = question(kind: .flightArrival, target: ClockTime(hour: 2), related: [ClockTime(hour: 3)], duration: 180, offset: -2)
+        expect(prompt(returning, "nl").arguments.map(\.emphasis) == [.clock, .forward, .backward, .backward],
+               "a zone behind colors the word achter")
+        expect(sentence(prompt(returning, "nl"), "nl") == "Het vliegtuig vertrekt om drie uur en vliegt 3 uur. De bestemming is 2 uur achter. Hoe laat komt het aan?",
+               "Dutch flight titles keep the zone direction")
+        let sameZone = question(kind: .flightArrival, target: ClockTime(hour: 5), related: [ClockTime(hour: 3)], duration: 120)
+        expect(sentence(prompt(sameZone, "en"), "en") == "The plane leaves at three o’clock and flies for 2 hours. What time does it arrive?",
+               "a flight without a zone change leaves that part out")
+        expect(!sentence(prompt(flight, "en"), "en").contains("six"), "the arrival time is not spoken")
+    }
+
+    static func testQuestionSpeechVoices() {
+        func voice(_ identifier: String, _ name: String, _ language: String, _ quality: Int) -> DinoSpeechVoice {
+            DinoSpeechVoice(identifier: identifier, name: name, language: language, quality: quality)
+        }
+        let dutch = [
+            voice("com.apple.voice.compact.nl-NL.Xander", "Xander", "nl-NL", 1),
+            voice("com.apple.voice.premium.nl-BE.Ellen", "Ellen", "nl-BE", 3),
+            voice("com.apple.eloquence.nl-NL.Ellen", "Ellen", "nl-NL", 2)
+        ]
+        let chosen = DinoSpeechVoicePicker.bestVoice(for: "nl", among: dutch)
+        expect(chosen?.identifier == "com.apple.eloquence.nl-NL.Ellen", "Netherlands Dutch outranks a premium Belgian voice")
+        let premiumDutch = dutch + [voice("com.apple.voice.premium.nl-NL.Xander", "Xander", "nl-NL", 3)]
+        expect(DinoSpeechVoicePicker.bestVoice(for: "nl", among: premiumDutch)?.identifier == "com.apple.voice.premium.nl-NL.Xander",
+               "the highest Netherlands Dutch quality wins inside that region")
+        let siri = premiumDutch + [voice("com.apple.ttsbundle.siri_female_nl-NL_premium", "Siri", "nl-NL", 3)]
+        expect(DinoSpeechVoicePicker.bestVoice(for: "nl", among: siri)?.name == "Siri",
+               "a premium Siri voice is preferred over another premium voice from the same region")
+        expect(DinoSpeechVoicePicker.bestVoice(for: "nl", among: [voice("com.apple.voice.premium.nl-BE.Ellen", "Ellen", "nl-BE", 3)])?.language == "nl-BE",
+               "Belgian Dutch is used only when no Netherlands voice is installed")
+        let english = [
+            voice("com.apple.voice.compact.en-GB.Daniel", "Daniel", "en-GB", 1),
+            voice("com.apple.voice.premium.en-US.Zoe", "Zoe", "en-US", 3),
+            voice("com.apple.speech.synthesis.voice.whisper", "Whisper", "en-GB", 3)
+        ]
+        expect(DinoSpeechVoicePicker.bestVoice(for: "en", among: english)?.identifier == "com.apple.voice.compact.en-GB.Daniel",
+               "British English outranks American English, and novelty voices stay unused")
+        expect(DinoSpeechVoicePicker.bestVoice(for: "en", among: [voice("com.apple.voice.premium.en-US.Zoe", "Zoe", "en-US", 3),
+                                                                  voice("com.apple.voice.enhanced.en-AU.Karen", "Karen", "en-AU", 2)])?.language == "en-US",
+               "without a British voice the best remaining English voice is used")
+        expect(DinoSpeechVoicePicker.preferredLanguageIdentifier(for: "nl") == "nl-NL", "Dutch speech asks for Netherlands Dutch")
+        expect(DinoSpeechVoicePicker.preferredLanguageIdentifier(for: "en") == "en-GB", "English speech asks for British English")
+        expect(DinoSpeechVoicePicker.bestVoice(for: "nl", among: []) == nil, "no installed voice leaves the system fallback in charge")
+    }
+
     static func testSettingsAndFeedback() {
         let memory = InMemoryKeyValueStore()
         let settings = DinoSettings(defaults: memory)
         expect(settings.soundEffectsEnabled && settings.hapticsEnabled, "answer feedback enabled by default")
+        expect(!settings.speakQuestionTitles, "question titles stay quiet until a parent turns reading on")
         expect(!settings.highContrastEnabled && !settings.icloudSyncEnabled, "contrast and cloud opt-in defaults")
         expect(settings.practiceTime == .whole && settings.practiceOrder == .ascending, "practice opens on whole hours in ascending order")
+        expect(settings.dayPartSchedule == .standard, "day parts open on the built-in timetable")
         settings.soundEffectsEnabled = false; settings.hapticsEnabled = false
+        settings.speakQuestionTitles = true
         settings.highContrastEnabled = true; settings.icloudSyncEnabled = true
         settings.practiceTime = .quarter; settings.practiceOrder = .specific(.setAnalog)
+        settings.dayPartSchedule = DinoDayPartSchedule(night: 23, morning: 7, afternoon: 12, evening: 18)
         let restarted = DinoSettings(defaults: memory)
-        expect(!restarted.soundEffectsEnabled && !restarted.hapticsEnabled && restarted.highContrastEnabled && restarted.icloudSyncEnabled, "all four settings survive restart, including false values")
+        expect(!restarted.soundEffectsEnabled && !restarted.hapticsEnabled && restarted.speakQuestionTitles && restarted.highContrastEnabled && restarted.icloudSyncEnabled, "every preference survives restart, including false values")
         expect(restarted.practiceTime == .quarter && restarted.practiceOrder == .specific(.setAnalog), "the last practice time and exercise stay selected")
+        expect(restarted.dayPartSchedule == DinoDayPartSchedule(night: 23, morning: 7, afternoon: 12, evening: 18), "the school day-part timetable survives restart")
         memory.set("retired", forKey: "dino.settings.practiceTime")
         memory.set("retiredExercise", forKey: "dino.settings.practiceOrder")
         let unknown = DinoSettings(defaults: memory)
@@ -2685,8 +2963,10 @@ struct DinoCoreTests {
         let player = DinoPlayer(store: store)
         let settings = DinoSettings(defaults: memory)
         settings.soundEffectsEnabled = false; settings.hapticsEnabled = false
+        settings.speakQuestionTitles = true
         settings.highContrastEnabled = true; settings.icloudSyncEnabled = true
         settings.practiceTime = .fiveMinutes; settings.practiceOrder = .mix
+        settings.dayPartSchedule = DinoDayPartSchedule(night: 22, morning: 6, afternoon: 12, evening: 17)
         let previousDevice = settings.cloudDeviceID
         let oldData = try! JSONEncoder().encode(DinoCloudProgress(original))
         let cloud = TestCloudStore()
@@ -2707,9 +2987,10 @@ struct DinoCoreTests {
             expect(memory.object(forKey: key) == nil, "all old local app data is erased, including unrecognized preference keys")
         }
         let restarted = DinoSettings(defaults: memory)
-        expect(restarted.soundEffectsEnabled && restarted.hapticsEnabled && !restarted.highContrastEnabled && !restarted.icloudSyncEnabled,
+        expect(restarted.soundEffectsEnabled && restarted.hapticsEnabled && !restarted.speakQuestionTitles && !restarted.highContrastEnabled && !restarted.icloudSyncEnabled,
                "settings return to fresh-install defaults")
         expect(restarted.practiceTime == .whole && restarted.practiceOrder == .ascending, "a full reset also clears the last practice choice")
+        expect(restarted.dayPartSchedule == .standard, "a full reset restores the built-in day-part timetable")
         expect(restarted.cloudDeviceID != previousDevice, "reset generates a new cloud installation identity")
         expect(Set(cloud.values.keys) == [DinoCloudSync.progressKey, "other.feature"], "reset removes all app progress snapshots and leaves unrelated keys alone")
         let marker = try! JSONDecoder().decode(DinoCloudProgress.self, from: cloud.values[DinoCloudSync.progressKey]!)
@@ -2811,7 +3092,7 @@ struct DinoCoreTests {
         expect(restored.perfectBossVictory && restored.worldOneComplete && (1...10).allSatisfy(restored.isUnlocked) && restored.isUnlocked(11), "perfect boss progress restores on a second device")
         var normalBoss = PlayerProfile()
         for id in 1...9 { normalBoss.recordCompletedAttempt(levelID: id, correct: 3) }
-        normalBoss.recordCompletedAttempt(levelID: 10, correct: 5)
+        normalBoss.recordCompletedAttempt(levelID: 10, correct: 6)
         var normalRestored = PlayerProfile(); normalRestored.mergeCloudProgress(DinoCloudProgress(normalBoss))
         expect(normalRestored.worldOneComplete && !normalRestored.perfectBossVictory, "normal boss route survives cloud sync")
         var malformed = DinoCloudProgress(PlayerProfile())

@@ -32,7 +32,7 @@ extension PlayerProfile {
             var record = record(level.id)
             let best = min(level.questionCount, max(0, incoming.bestCorrect))
             record.bestCorrect = max(record.bestCorrect, best)
-            record.stars = level.isBoss ? 0 : max(record.stars, StarCalculator.stars(correct: record.bestCorrect))
+            record.stars = max(record.stars, StarCalculator.stars(correct: record.bestCorrect, questionCount: level.questionCount))
             record.attempts = max(record.attempts, incoming.attempts)
             levels[String(level.id)] = record
             if let timing = incoming.bestTimedResult { mergeTiming(timing, levelID: level.id) }
@@ -46,7 +46,7 @@ extension PlayerProfile {
         }
         let bossCorrect = record(10).bestCorrect
         perfectBossVictory = perfectBossVictory || bossCorrect == 10
-        worldOneComplete = worldOneComplete || perfectBossVictory || (bossCorrect >= 5 && normalLevelsComplete)
+        worldOneComplete = worldOneComplete || perfectBossVictory || (BossVictory.starsEarned(bossCorrect) && normalLevelsComplete)
     }
 }
 

@@ -78,7 +78,6 @@ struct DinoResultView: View {
         starsRevealed = 0
         rewardSettled = false
         confetti = false
-        guard !result.level.isBoss else { return }
         if reduceMotion {
             starsRevealed = result.stars
             rewardSettled = true
@@ -102,7 +101,7 @@ struct DinoResultView: View {
 
     private func stage(layout: ResultLayout) -> some View {
         ZStack(alignment: .bottom) {
-            ResultSunburst(strength: succeeded ? (starsRevealed > 0 ? 1 : 0.78) : 0.3)
+            ResultSunburst(strength: result.stars > 0 ? (starsRevealed > 0 ? 1 : 0.78) : 0.3)
                 .frame(width: layout.podiumWidth * 1.38, height: layout.podiumWidth * 1.38)
                 .position(x: layout.stageWidth / 2, y: layout.dinoCenterY + layout.dinoSize * 0.05)
             Ellipse()
@@ -129,19 +128,10 @@ struct DinoResultView: View {
                        height: layout.podiumHeight * (result.level.worldID == 2 ? 0.45 : 0.82))
                 .position(x: layout.podiumCenterX,
                           y: layout.stageHeight + layout.podiumLift + 3 - layout.podiumHeight * (result.level.worldID == 2 ? 0.09 : 0.34))
-            if !result.level.isBoss {
-                ResultStarReward(count: result.stars, revealed: starsRevealed,
-                                 settled: rewardSettled, size: layout.starSize)
-                    .position(x: layout.podiumCenterX, y: layout.rewardCenterY)
-            } else if succeeded {
-                Image("result-trophy").resizable().scaledToFit()
-                    .frame(width: layout.starSize * 1.65, height: layout.starSize * 1.65)
-                    .shadow(color: Color(dinoHex: 0xFFE56A).opacity(0.65), radius: 14)
-                    .shadow(color: Color(dinoHex: 0x603E12).opacity(0.25), radius: 3, y: 5)
-                    .position(x: layout.podiumCenterX, y: layout.stageHeight - layout.podiumHeight * 0.39 + layout.podiumLift)
-                    .accessibilityHidden(true)
-            }
-            ResultCelebrationMotes(active: succeeded)
+            ResultStarReward(count: result.stars, revealed: starsRevealed,
+                             settled: rewardSettled, size: layout.starSize)
+                .position(x: layout.podiumCenterX, y: layout.rewardCenterY)
+            ResultCelebrationMotes(active: result.stars > 0)
                 .allowsHitTesting(false)
             if confetti {
                 ResultConfetti()

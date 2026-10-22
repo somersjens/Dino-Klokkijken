@@ -48,8 +48,7 @@ struct DinoStarsOverview: View {
     }
 
     private func worldRow(_ world: DinoWorld) -> some View {
-        // Only the nine ordinary levels award stars; bosses never add to this total.
-        let stars = world.normalLevels.reduce(0) { $0 + player.profile.record($1).stars }
+        let stars = world.levels.reduce(0) { $0 + player.profile.record($1).stars }
         let unlocked = player.profile.isWorldUnlocked(world.id)
         let tint = Color(dinoHex: world.ground)
         return HStack(spacing: 10) {

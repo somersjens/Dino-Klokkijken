@@ -2,15 +2,26 @@ import Foundation
 
 enum DinoDayPart: String, CaseIterable, Sendable {
     case night, morning, afternoon, evening
-    init(hour: Int) {
-        switch hour {
-        case 0..<6: self = .night
-        case 6..<12: self = .morning
-        case 12..<18: self = .afternoon
-        default: self = .evening
-        }
+    init(hour: Int, schedule: DinoDayPartSchedule = .standard) {
+        self = schedule.part(at: hour)
     }
     var titleKey: String { "dino.dayPart.\(rawValue)" }
+    func next() -> DinoDayPart {
+        switch self {
+        case .night: return .morning
+        case .morning: return .afternoon
+        case .afternoon: return .evening
+        case .evening: return .night
+        }
+    }
+    func previous() -> DinoDayPart {
+        switch self {
+        case .night: return .evening
+        case .morning: return .night
+        case .afternoon: return .morning
+        case .evening: return .afternoon
+        }
+    }
     var symbol: String {
         switch self {
         case .night: return "moon.stars.fill"
@@ -19,6 +30,134 @@ enum DinoDayPart: String, CaseIterable, Sendable {
         case .evening: return "sunset.fill"
         }
     }
+}
+
+/// The four parts of the day, in clock order, covering every hour exactly once.
+/// A part may cross midnight: night from 22:00 until 06:00 is one part.
+struct DinoDayPartSchedule: Equatable, Sendable {
+    var night: Int
+    var morning: Int
+    var afternoon: Int
+    var evening: Int
+
+    static let standard = DinoDayPartSchedule(night: 0, morning: 6, afternoon: 12, evening: 18)
+
+    struct Segment: Equatable, Sendable {
+        let part: DinoDayPart
+        /// Inclusive start hour on the 00:00–24:00 line.
+        let start: Int
+        /// Exclusive end hour, at most 24.
+        let end: Int
+
+        func contains(_ time: ClockTime) -> Bool {
+            let minute = time.minutesOfDay
+            return minute >= start * 60 && minute < end * 60
+        }
+    }
+
+    func start(of part: DinoDayPart) -> Int {
+        switch part {
+        case .night: return night
+        case .morning: return morning
+        case .afternoon: return afternoon
+        case .evening: return evening
+        }
+    }
+
+    mutating func setStart(_ part: DinoDayPart, _ hour: Int) {
+        switch part {
+        case .night: night = hour
+        case .morning: morning = hour
+        case .afternoon: afternoon = hour
+        case .evening: evening = hour
+        }
+    }
+
+    /// The hour this part ends. Midnight at the end of the clock is 24.
+    func endClock(of part: DinoDayPart) -> Int {
+        let next = start(of: part.next())
+        return next == 0 ? 24 : next
+    }
+
+    func length(of part: DinoDayPart) -> Int {
+        (start(of: part.next()) - start(of: part) + 24) % 24
+    }
+
+    var isValid: Bool {
+        let starts = [night, morning, afternoon, evening]
+        guard starts.allSatisfy({ (0..<24).contains($0) }), Set(starts).count == 4 else { return false }
+        let toMorning = forward(night, morning)
+        let toAfternoon = forward(night, afternoon)
+        let toEvening = forward(night, evening)
+        return toMorning < toAfternoon && toAfternoon < toEvening
+    }
+
+    func part(at hour: Int) -> DinoDayPart {
+        let hour = ((hour % 24) + 24) % 24
+        for part in DinoDayPart.allCases where forward(start(of: part), hour) < length(of: part) {
+            return part
+        }
+        return .night
+    }
+
+    /// Start hours that keep every part at least one hour long, in clock order.
+    func validStarts(for part: DinoDayPart) -> [Int] {
+        let anchor = start(of: part.previous())
+        return (0..<24).filter { hour in
+            var copy = self
+            copy.setStart(part, hour)
+            return copy.isValid
+        }.sorted { forward(anchor, $0) < forward(anchor, $1) }
+    }
+
+    /// Pieces of the 00:00–24:00 line. A part that crosses midnight appears at both ends.
+    func timeline() -> [Segment] {
+        var segments: [Segment] = []
+        var hour = 0
+        while hour < 24 && segments.count < 8 {
+            let part = part(at: hour)
+            let next = start(of: part.next())
+            let end = next == 0 || next <= hour ? 24 : next
+            guard end > hour else { break }
+            segments.append(Segment(part: part, start: hour, end: end))
+            hour = end
+        }
+        return segments
+    }
+
+    var storageKey: String { "\(night),\(morning),\(afternoon),\(evening)" }
+
+    var summary: String {
+        DinoDayPart.allCases.map { part in
+            "\(Self.hourText(start(of: part)))–\(Self.hourText(endClock(of: part)))"
+        }.joined(separator: " · ")
+    }
+
+    func clockText(startOf part: DinoDayPart) -> String {
+        String(format: "%02d:00", start(of: part))
+    }
+
+    func clockText(endOf part: DinoDayPart) -> String {
+        String(format: "%02d:00", endClock(of: part))
+    }
+
+    static func hourText(_ hour: Int) -> String { String(format: "%02d", hour) }
+
+    init(night: Int, morning: Int, afternoon: Int, evening: Int) {
+        self.night = night
+        self.morning = morning
+        self.afternoon = afternoon
+        self.evening = evening
+    }
+
+    init?(storageKey: String) {
+        let parts = storageKey.split(separator: ",").compactMap { Int($0) }
+        guard parts.count == 4 else { return nil }
+        self.init(night: parts[0], morning: parts[1], afternoon: parts[2], evening: parts[3])
+        guard isValid else { return nil }
+    }
+
+    private func forward(_ from: Int, _ to: Int) -> Int { (to - from + 24) % 24 }
 }
 
 enum ClockAnswer: Equatable, Hashable, Sendable {
@@ -59,9 +198,12 @@ struct DinoDaySchedule: Equatable, Sendable {
 enum DinoExpandedQuestions {
     static func generate<R: RandomNumberGenerator>(kind: ClockQuestionKind, time: DinoPracticeTime,
                                                    index: Int, previousTarget: ClockTime?, language: String = "nl",
-                                                   difficulty: DinoQuestionDifficulty = .challenge, using rng: inout R) -> ClockQuestion {
+                                                   difficulty: DinoQuestionDifficulty = .challenge,
+                                                   dayPartSchedule: DinoDayPartSchedule = .standard,
+                                                   using rng: inout R) -> ClockQuestion {
         generate(kind: kind, minutes: time.minutes, minuteStep: time.minuteStep,
-                 index: index, previousTarget: previousTarget, language: language, difficulty: difficulty, using: &rng)
+                 index: index, previousTarget: previousTarget, language: language, difficulty: difficulty,
+                 dayPartSchedule: dayPartSchedule, using: &rng)
     }
 
     static func generate<R: RandomNumberGenerator>(kind: ClockQuestionKind, minutes: [Int], minuteStep: Int,
@@ -69,6 +211,7 @@ enum DinoExpandedQuestions {
                                                    isDemonstration: Bool = false,
                                                    language: String = "nl",
                                                    difficulty: DinoQuestionDifficulty = .challenge,
+                                                   dayPartSchedule: DinoDayPartSchedule = .standard,
                                                    using rng: inout R) -> ClockQuestion {
         let family = DinoPracticeTime.allCases.first { $0.minuteStep == minuteStep } ?? .minutes
         let maxSteps = difficulty.rawValue + 1
@@ -97,7 +240,11 @@ enum DinoExpandedQuestions {
         let pool = hours.flatMap { hour in minutes.map { ClockTime(hour: hour, minute: $0) } }
             .filter { time in
                 if kind == .sayTime { return spoken!.supports(minute: time.minute) }
-                if kind == .dayPart && !isDemonstration { return time.hour != 6 && time.hour < 22 }
+                // The built-in timetable leaves 06:00 and 22:00–23:59 unasked, because schools disagree there.
+                // A timetable chosen in Settings defines those hours, so practice includes them.
+                if kind == .dayPart && !isDemonstration && dayPartSchedule == .standard {
+                    return time.hour != 6 && time.hour < 22
+                }
                 if kind == .sortTimes { return time.minutesOfDay != 0 }
                 if kind == .minutesBetween { return time.minutesOfDay >= 60 + (minutes.min() ?? 0) }
                 if kind == .daySchedule {
@@ -143,7 +290,7 @@ enum DinoExpandedQuestions {
             q.options = []; q.answerChoices = [.truth(true), .truth(false)]; q.answer = .truth(truthful)
         case .dayPart:
             q.options = []; q.answerChoices = DinoDayPart.allCases.map(ClockAnswer.dayPart)
-            q.answer = .dayPart(.init(hour: target.hour))
+            q.answer = .dayPart(.init(hour: target.hour, schedule: dayPartSchedule))
         case .sortTimes:
             q.options = ([target] + Array(other.prefix(3))).shuffled(using: &rng)
             q.answer = .ordering(q.options.sorted { $0.minutesOfDay < $1.minutesOfDay })
@@ -263,10 +410,12 @@ enum DinoExpandedQuestions {
         return base + minuteStep * extraSteps
     }
 
-    static func example(kind: ClockQuestionKind, time: DinoPracticeTime) -> ClockQuestion {
+    static func example(kind: ClockQuestionKind, time: DinoPracticeTime,
+                        dayPartSchedule: DinoDayPartSchedule = .standard) -> ClockQuestion {
         var rng = SeededGenerator(seed: 20261012)
         return generate(kind: kind, minutes: time.minutes, minuteStep: time.minuteStep,
-                        index: 0, previousTarget: nil, isDemonstration: true, difficulty: .introduction, using: &rng)
+                        index: 0, previousTarget: nil, isDemonstration: true, difficulty: .introduction,
+                        dayPartSchedule: dayPartSchedule, using: &rng)
     }
 }
 
@@ -287,7 +436,8 @@ enum DinoDemonstrationExamples {
     }
 
     static func question(kind: ClockQuestionKind, minutes: [Int], minuteStep: Int,
-                         index: Int, previousTarget: ClockTime?, language: String = "nl") -> ClockQuestion {
+                         index: Int, previousTarget: ClockTime?, language: String = "nl",
+                         dayPartSchedule: DinoDayPartSchedule = .standard) -> ClockQuestion {
         let sequential = [.readDigital, .spokenTime, .trueFalse, .dayPart, .read24Hour].contains(kind)
         let hours = [.readDigital, .spokenTime, .trueFalse].contains(kind) ? 12 : 24
         var rng = SeededGenerator(seed: 20261012 &+ UInt64(index))
@@ -296,6 +446,7 @@ enum DinoDemonstrationExamples {
                                               preferredTarget: sequential ? time(index: index, minutes: minutes, hours: hours) : nil,
                                               isDemonstration: true,
                                               language: language, difficulty: .introduction,
+                                              dayPartSchedule: dayPartSchedule,
                                               using: &rng)
     }
 }
@@ -402,7 +553,8 @@ struct DinoMinuteDifference: Equatable, Sendable {
 }
 
 enum DinoTimeWords {
-    static func time(_ time: ClockTime, language: String, dayPart: Bool = false) -> String {
+    static func time(_ time: ClockTime, language: String, dayPart: Bool = false,
+                      schedule: DinoDayPartSchedule = .standard) -> String {
         let nl = language == "nl"
         let numbers = nl ? ["twaalf", "een", "twee", "drie", "vier", "vijf", "zes", "zeven", "acht", "negen", "tien", "elf"]
                          : ["twelve", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven"]
@@ -436,12 +588,12 @@ enum DinoTimeWords {
             }
         }
         guard dayPart else { return text }
-        return "\(text) \(dayPartSuffix(time, language: language))"
+        return "\(text) \(dayPartSuffix(time, language: language, schedule: schedule))"
     }
 
-    static func dayPartSuffix(_ time: ClockTime, language: String) -> String {
+    static func dayPartSuffix(_ time: ClockTime, language: String, schedule: DinoDayPartSchedule = .standard) -> String {
         let nl = language == "nl"
-        let part = DinoDayPart(hour: time.hour)
+        let part = DinoDayPart(hour: time.hour, schedule: schedule)
         switch part {
         case .night: return nl ? "’s nachts" : "at night"
         case .morning: return nl ? "’s ochtends" : "in the morning"
@@ -457,6 +609,29 @@ enum DinoTimeWords {
         let h = minutes / 60, m = minutes % 60
         if h == 0 { return "\(m) min" }
         return m == 0 ? "\(h) \(language == "nl" ? "uur" : "h")" : "\(h) \(language == "nl" ? "uur" : "h") \(m) min"
+    }
+
+    /// A clock time for a spoken title. Afternoon and night stay distinct from the morning hour.
+    static func promptTime(_ time: ClockTime, language: String) -> String {
+        Self.time(time, language: language, dayPart: time.hour == 0 || time.hour > 12)
+    }
+
+    /// Hours and minutes in words, so a title can be read aloud.
+    static func spokenDuration(_ minutes: Int, language: String) -> String {
+        let hours = abs(minutes) / 60
+        let mins = abs(minutes) % 60
+        let dutch = language == "nl"
+        func hoursText(_ value: Int) -> String {
+            if dutch { return "\(value) uur" }
+            return value == 1 ? "1 hour" : "\(value) hours"
+        }
+        func minutesText(_ value: Int) -> String {
+            if dutch { return value == 1 ? "1 minuut" : "\(value) minuten" }
+            return value == 1 ? "1 minute" : "\(value) minutes"
+        }
+        if hours == 0 { return minutesText(mins) }
+        if mins == 0 { return hoursText(hours) }
+        return dutch ? "\(hoursText(hours)) en \(minutesText(mins))" : "\(hoursText(hours)) and \(minutesText(mins))"
     }
 
     static func hourDifference(_ hours: Int, language: String) -> String {

@@ -17,16 +17,6 @@
         }
       }
     },
-    "%@%@%@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@%2$@%3$@"
-          }
-        }
-      }
-    },
     "dino.activity.breakfast" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3359,23 +3349,6 @@
         }
       }
     },
-    "dino.friends.turnOn" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Turn everything on"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zet alles aan"
-          }
-        }
-      }
-    },
     "dino.friends.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3406,6 +3379,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Totaal sterren"
+          }
+        }
+      }
+    },
+    "dino.friends.turnOn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn everything on"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zet alles aan"
           }
         }
       }
@@ -3512,40 +3502,6 @@
         }
       }
     },
-    "dino.hourNotation.twelve" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "12-hour"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "12 uur"
-          }
-        }
-      }
-    },
-    "dino.hourNotation.twentyFour" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "24-hour"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "24 uur"
-          }
-        }
-      }
-    },
     "dino.hourHand" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3593,6 +3549,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Een uur vooruit"
+          }
+        }
+      }
+    },
+    "dino.hourNotation.twelve" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "12-hour"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "12 uur"
+          }
+        }
+      }
+    },
+    "dino.hourNotation.twentyFour" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "24-hour"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "24 uur"
           }
         }
       }
@@ -4249,13 +4239,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Get 5 out of 10 to open the gate."
+            "value" : "Get 6 out of 10 to earn a star."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Met 5 van de 10 open je de poort."
+            "value" : "Met 6 van de 10 verdien je een ster."
           }
         }
       }
@@ -5450,6 +5440,23 @@
         }
       }
     },
+    "dino.question.addTime.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What time is %@ %@ than %@?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoe laat is het %@ %@ dan %@?"
+          }
+        }
+      }
+    },
     "dino.question.advanceAnalog" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5467,6 +5474,23 @@
         }
       }
     },
+    "dino.question.advanceAnalog.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move the hands of the clock %@ %@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zet de wijzers van de klok %@ %@"
+          }
+        }
+      }
+    },
     "dino.question.chooseAnalog" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5480,6 +5504,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Welke klok hoort erbij?"
+          }
+        }
+      }
+    },
+    "dino.question.chooseClock.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which of the %@ clocks matches %@?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welke van de %@ klokken hoort bij %@?"
+          }
+        }
+      }
+    },
+    "dino.question.chooseClock.short" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which clock matches %@?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welke klok hoort bij %@?"
           }
         }
       }
@@ -5524,13 +5582,30 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "What time does the train arrive?"
+            "value" : "Checking the schedule below, what time do you arrive?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hoe laat komt de trein aan?"
+            "value" : "Kijk naar het schema hieronder. Hoe laat kom je aan?"
+          }
+        }
+      }
+    },
+    "dino.question.daySchedule.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The train leaves at %@. Add %@, %@ and %@. What time does it arrive?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De trein vertrekt om %@. Tel %@, %@ en %@ erbij. Hoe laat komt hij aan?"
           }
         }
       }
@@ -5548,6 +5623,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hoe laat komt het vliegtuig aan?"
+          }
+        }
+      }
+    },
+    "dino.question.flightArrival.ahead.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The plane leaves at %@ and flies for %@. The destination is %@ %@. What time does it arrive?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het vliegtuig vertrekt om %@ en vliegt %@. De bestemming is %@ %@. Hoe laat komt het aan?"
+          }
+        }
+      }
+    },
+    "dino.question.flightArrival.behind.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The plane leaves at %@ and flies for %@. The destination is %@ %@. What time does it arrive?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het vliegtuig vertrekt om %@ en vliegt %@. De bestemming is %@ %@. Hoe laat komt het aan?"
+          }
+        }
+      }
+    },
+    "dino.question.flightArrival.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The plane leaves at %@ and flies for %@. What time does it arrive?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het vliegtuig vertrekt om %@ en vliegt %@. Hoe laat komt het aan?"
           }
         }
       }
@@ -5582,6 +5708,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hoeveel minuten zitten ertussen?"
+          }
+        }
+      }
+    },
+    "dino.question.minutesBetween.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How many minutes are there between %@ and %@?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoeveel minuten zitten er tussen %@ en %@?"
           }
         }
       }
@@ -5677,13 +5820,30 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "From earliest to latest"
+            "value" : "Tap the clocks in order from earliest to latest"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Van vroeg naar laat"
+            "value" : "Tik de klokken op volgorde van vroeg naar laat"
+          }
+        }
+      }
+    },
+    "dino.question.spokenClock.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which of the %@ clocks shows %@?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welke van de %@ klokken laat %@ zien?"
           }
         }
       }
@@ -5739,6 +5899,23 @@
         }
       }
     },
+    "dino.question.subtractTime.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What time was %@ %@ than %@?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoe laat was het %@ %@ dan %@?"
+          }
+        }
+      }
+    },
     "dino.question.timeSequence" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5752,6 +5929,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Welke tijd komt hierna?"
+          }
+        }
+      }
+    },
+    "dino.question.timeSequence.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking at the sequence below, what time comes after %@?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kijk naar de reeks hieronder. Welke tijd komt er na %@?"
           }
         }
       }
@@ -5773,6 +5967,40 @@
         }
       }
     },
+    "dino.question.timeZone.ahead.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is %@ in %@. %@ is %@ %@, what time is it in %@?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het is %@ in %@. %@ is %@ %@, hoe laat is het in %@?"
+          }
+        }
+      }
+    },
+    "dino.question.timeZone.behind.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is %@ in %@. %@ is %@ %@, what time is it in %@?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het is %@ in %@. %@ is %@ %@, hoe laat is het in %@?"
+          }
+        }
+      }
+    },
     "dino.question.timeZone.format" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5786,6 +6014,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hoe laat is het in %@?"
+          }
+        }
+      }
+    },
+    "dino.question.timeZone.same.format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is %@ in %@. What time is it in %@?"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het is %@ in %@. Hoe laat is het in %@?"
           }
         }
       }
@@ -6147,6 +6392,108 @@
         }
       }
     },
+    "dino.settings.dayParts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parts of the day"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dagdelen"
+          }
+        }
+      }
+    },
+    "dino.settings.dayParts.column" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Part of the day"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dagdeel"
+          }
+        }
+      }
+    },
+    "dino.settings.dayParts.from" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Van"
+          }
+        }
+      }
+    },
+    "dino.settings.dayParts.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set when each part of the day starts and ends. The end of one part is the start of the next. Questions are marked right or wrong with these times."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stel in van hoe laat tot hoe laat elk dagdeel duurt. Het einde van het ene dagdeel is het begin van het volgende. Vragen rekenen goed of fout met deze tijden."
+          }
+        }
+      }
+    },
+    "dino.settings.dayParts.standard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard times"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standaardtijden"
+          }
+        }
+      }
+    },
+    "dino.settings.dayParts.to" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tot"
+          }
+        }
+      }
+    },
     "dino.settings.gameCenter" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6398,6 +6745,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Geluidseffecten"
+          }
+        }
+      }
+    },
+    "dino.settings.speakQuestionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speak the question title"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Somtitel voorlezen"
           }
         }
       }

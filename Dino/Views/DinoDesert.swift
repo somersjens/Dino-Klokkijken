@@ -616,7 +616,7 @@ struct DinoDesertPainter {
         oval(CGRect(x: 24, y: -6, width: 5, height: 4), [0xE9CE99, 0xA58050])
     }
 
-    /// A quieter composition leaves the middle open for the result's Dino and trophy.
+    /// A quieter composition leaves the middle open for the result's Dino and stars.
     func rewardLandscape(in size: CGSize) {
         let w = size.width, h = size.height, s = min(1.8, max(0.7, w / 390))
         material(Path(CGRect(origin: .zero, size: size)), [0x9ACDE5, 0xF5E2B9, 0xF5D397, 0xE8B977])

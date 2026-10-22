@@ -131,7 +131,7 @@ final class DinoPlayer: ObservableObject {
         update { victory = $0.recordCompletedAttempt(levelID: level.id, correct: attempt.correctCount, questionSeconds: attempt.questionSeconds) }
         progressChanged?()
         return DinoLevelResult(level: level, correct: attempt.correctCount,
-                               stars: level.isBoss ? 0 : StarCalculator.stars(correct: attempt.correctCount),
+                               stars: StarCalculator.stars(correct: attempt.correctCount, questionCount: level.questionCount),
                                victory: victory)
     }
     func resetProgress() {
@@ -232,7 +232,7 @@ struct DinoLevelResult {
 
     var animationClip: DinoAnimation.Clip {
         if correct == level.questionCount { return .backflip }
-        if !level.isBoss && stars == 2 { return .pirouette }
+        if stars == 2 { return .pirouette }
         return .idle
     }
 }
@@ -277,10 +277,11 @@ final class DinoSession: ObservableObject, Identifiable {
     private let exampleMinuteStep: Int?
     private let isExample: Bool
     private let language: String
+    let dayPartSchedule: DinoDayPartSchedule
     private var questionRNG = SeededGenerator(seed: 0)
     private var nextDifficultyLimit: DinoQuestionDifficulty?
 
-    init(level: LevelConfiguration, player: DinoPlayer, practice: DinoPracticeConfiguration? = nil, example: ClockQuestion? = nil, exampleMinuteStep: Int? = nil, language: String = "nl", now: @escaping () -> TimeInterval = DinoQuestionTiming.now, answerFeedback: ((Bool) -> Void)? = nil) {
+    init(level: LevelConfiguration, player: DinoPlayer, practice: DinoPracticeConfiguration? = nil, example: ClockQuestion? = nil, exampleMinuteStep: Int? = nil, language: String = "nl", dayPartSchedule: DinoDayPartSchedule = .standard, now: @escaping () -> TimeInterval = DinoQuestionTiming.now, answerFeedback: ((Bool) -> Void)? = nil) {
         self.now = now
         questionStartedAt = now()
         self.level = level
@@ -288,6 +289,7 @@ final class DinoSession: ObservableObject, Identifiable {
         self.exampleMinuteStep = exampleMinuteStep
         self.isExample = example != nil
         self.language = language
+        self.dayPartSchedule = dayPartSchedule
         self.player = player
         self.answerFeedback = answerFeedback
         var seed = UInt64.random(in: .min ... .max)
@@ -295,7 +297,8 @@ final class DinoSession: ObservableObject, Identifiable {
         if let raw = ProcessInfo.processInfo.environment["DINO_TEST_SEED"], let fixed = UInt64(raw) { seed = fixed }
 #endif
         if let practice {
-            var generator = DinoPracticeGenerator(configuration: practice, seed: seed, language: language)
+            var generator = DinoPracticeGenerator(configuration: practice, seed: seed, language: language,
+                                                   dayPartSchedule: dayPartSchedule)
             attempt = LevelAttempt(levelID: 0, questions: [example ?? generator.next(index: 0) {
                 player.questionDifficulty(kind: $0, time: practice.time)
             }])
@@ -309,7 +312,7 @@ final class DinoSession: ObservableObject, Identifiable {
         }
         var rng = SeededGenerator(seed: seed)
         let questions = DinoQuestionGenerator.generate(level: level, attempt: player.profile.record(level.id).attempts,
-            language: language, difficulties: difficulties, using: &rng)
+            language: language, difficulties: difficulties, dayPartSchedule: dayPartSchedule, using: &rng)
         attempt = LevelAttempt(levelID: level.id, questions: questions)
         questionRNG = rng
         resetInputs()
@@ -465,7 +468,7 @@ final class DinoSession: ObservableObject, Identifiable {
                     attempt: player.profile.record(level.id).attempts, difficulty: difficulty,
                     previousTarget: previous.target, usedHours: usedHours,
                     optionPosition: (previous.options.firstIndex(of: previous.target) ?? 0) + 1,
-                    language: language, using: &questionRNG)
+                    language: language, dayPartSchedule: dayPartSchedule, using: &questionRNG)
                 attempt.replaceCurrent(with: replacement)
             }
             nextDifficultyLimit = nil

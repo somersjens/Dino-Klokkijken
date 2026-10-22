@@ -69,13 +69,13 @@ struct PlayerProfile: Codable, Equatable, Sendable {
     func worldComplete(_ worldID: Int) -> Bool {
         guard let world = DinoWorldCatalog.world(worldID) else { return false }
         return (worldID == 1 && worldOneComplete) || completedWorlds?.contains(worldID) == true ||
-            perfectVictory(in: worldID) || (record(world.bossLevel).bestCorrect >= 5 && normalLevelsComplete(in: worldID))
+            perfectVictory(in: worldID) || (BossVictory.starsEarned(record(world.bossLevel).bestCorrect) && normalLevelsComplete(in: worldID))
     }
     func isWorldUnlocked(_ worldID: Int) -> Bool {
         DinoWorldCatalog.world(worldID) != nil && (worldID == 1 || worldComplete(worldID - 1))
     }
     var adventureComplete: Bool { DinoWorldCatalog.worlds.allSatisfy { worldComplete($0.id) } }
-    var totalStars: Int { DinoLevelCatalog.levels.filter { !$0.isBoss }.reduce(0) { $0 + record($1.id).stars } }
+    var totalStars: Int { DinoLevelCatalog.levels.reduce(0) { $0 + record($1.id).stars } }
     /// Highest finished level. Zero means nothing is finished yet.
     var dinoLevel: Int {
         DinoLevelCatalog.levels.last { $0.isBoss ? worldComplete($0.worldID) : record($0.id).stars >= 1 }?.id ?? 0
@@ -106,14 +106,17 @@ struct PlayerProfile: Codable, Equatable, Sendable {
                 timedAttempts = (timedAttempts ?? []) + [attempt]
                 // This attempt's score, never combine a fast failed replay with a better old score.
                 let victory = level.isBoss ? BossVictory.evaluate(correct: correct, normalLevelsComplete: normalLevelsComplete(in: level.worldID)) : .none
-                let points = level.isBoss ? 1 + correct + (victory != .none ? 16 : 0) + (victory == .perfect ? 32 : 0)
-                    : 1 + StarCalculator.stars(correct: correct) * 8 + correct
+                let stars = StarCalculator.stars(correct: correct, questionCount: level.questionCount)
+                let points = level.isBoss
+                    ? DinoLeaderboards.bossScore(correct: correct, stars: stars, complete: victory != .none, perfect: victory == .perfect)
+                    : 1 + stars * 8 + correct
                 mergeTiming(TimedLevelResult(resultPoints: points, seconds: attempt.seconds), levelID: levelID)
             }
         }
         var previous = record(levelID)
         previous.attempts += 1
         previous.bestCorrect = max(previous.bestCorrect, correct)
+        previous.stars = max(previous.stars, StarCalculator.stars(correct: correct, questionCount: level.questionCount))
         if level.isBoss {
             let victory = BossVictory.evaluate(correct: correct, normalLevelsComplete: normalLevelsComplete(in: level.worldID))
             if level.worldID == 1 {
@@ -127,7 +130,6 @@ struct PlayerProfile: Codable, Equatable, Sendable {
             levels[String(levelID)] = previous
             return victory
         }
-        previous.stars = max(previous.stars, StarCalculator.stars(correct: correct))
         levels[String(levelID)] = previous
         return .none
     }

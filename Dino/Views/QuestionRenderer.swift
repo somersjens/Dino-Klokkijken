@@ -16,6 +16,7 @@ struct QuestionRenderer: View {
     private var comparing: Bool { session.hasFeedback && !session.correctFeedback }
     private var question: ClockQuestion { session.question }
     private var targetSize: CGFloat { min(clockSize, width - 20) }
+    private var analogHandStep: Int { DinoPracticeTime.analogHandStep(session.minuteStep) }
 
     var body: some View {
         VStack(spacing: question.kind == .setAnalog ? 12 : compactLayout ? 14 : 22) {
@@ -30,7 +31,7 @@ struct QuestionRenderer: View {
                 targetCard
                 analogInput.id("question.answers")
                 DinoAnalogClockControls(adjustingMinutes: $adjustingMinutes, allowsMinutes: session.allowsMinutes,
-                                        minuteStep: session.minuteStep, adjust: adjustAnalog)
+                                        minuteStep: analogHandStep, adjust: adjustAnalog)
                     .frame(maxWidth: min(320, width))
                     .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
             case .setDigital:
@@ -56,7 +57,7 @@ struct QuestionRenderer: View {
                                            target: question.target, theme: theme, width: width, clockSize: targetSize,
                                            hasFeedback: session.hasFeedback, correct: session.correctFeedback,
                                            onHourChange: hourChange, onMinuteChange: minuteChange,
-                                           minuteStep: session.minuteStep, adjustingMinutes: adjustingMinutes,
+                                           minuteStep: analogHandStep, adjustingMinutes: adjustingMinutes,
                                            onHandSelection: session.hasFeedback ? nil : { adjustingMinutes = $0 })
     }
 
@@ -152,7 +153,7 @@ struct QuestionRenderer: View {
     }
 
     private func adjustAnalog(by direction: Int) {
-        if adjustingMinutes { session.adjustInputMinutes(by: direction * session.minuteStep) }
+        if adjustingMinutes { session.adjustInputMinutes(by: direction * analogHandStep) }
         else { session.inputHour = ClockTime.shiftedHour(session.inputHour, by: direction) }
     }
 

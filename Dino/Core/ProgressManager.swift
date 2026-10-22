@@ -82,7 +82,7 @@ final class DinoProgressStore {
         for (key, var value) in result.levels {
             let level = DinoLevelCatalog.level(Int(key)!)!
             value.bestCorrect = min(level.questionCount, max(0, value.bestCorrect))
-            value.stars = level.isBoss ? 0 : min(3, max(0, value.stars))
+            value.stars = min(3, max(value.stars, StarCalculator.stars(correct: value.bestCorrect, questionCount: level.questionCount)))
             value.attempts = max(0, value.attempts)
             result.levels[key] = value
         }

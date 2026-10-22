@@ -29,6 +29,17 @@ enum DinoPracticeTime: String, CaseIterable, Sendable {
         case .minutes: return 1
         }
     }
+
+    /// Drag and button step while setting an analog clock. Questions stay on the family.
+    /// Half hours also stop on quarters, and ten-minute practice moves five minutes at a time.
+    var analogHandStep: Int { Self.analogHandStep(minuteStep) }
+    static func analogHandStep(_ minuteStep: Int) -> Int {
+        switch minuteStep {
+        case 30: return 15
+        case 10: return 5
+        default: return minuteStep
+        }
+    }
 }
 
 /// Learning progression shared by the practice list, its numbers and ascending sessions.
@@ -172,10 +183,13 @@ struct DinoPracticeGenerator {
     private var mixedTypes: [DinoPracticeQuestion] = []
     private var previousTarget: ClockTime?
     private let language: String
+    private let dayPartSchedule: DinoDayPartSchedule
 
-    init(configuration: DinoPracticeConfiguration, seed: UInt64 = .random(in: .min ... .max), language: String = "nl") {
+    init(configuration: DinoPracticeConfiguration, seed: UInt64 = .random(in: .min ... .max), language: String = "nl",
+         dayPartSchedule: DinoDayPartSchedule = .standard) {
         self.configuration = configuration
         self.language = language
+        self.dayPartSchedule = dayPartSchedule
         rng = SeededGenerator(seed: seed)
     }
 
@@ -197,7 +211,8 @@ struct DinoPracticeGenerator {
 
     private mutating func make(_ type: DinoPracticeQuestion, index: Int, difficulty: DinoQuestionDifficulty) -> ClockQuestion {
         let question = DinoQuestionGenerator.generateQuestion(level: configuration.level, recipe: type.recipe,
-            index: index, difficulty: difficulty, previousTarget: previousTarget, language: language, using: &rng)
+            index: index, difficulty: difficulty, previousTarget: previousTarget, language: language,
+            dayPartSchedule: dayPartSchedule, using: &rng)
         previousTarget = question.target
         return question
     }

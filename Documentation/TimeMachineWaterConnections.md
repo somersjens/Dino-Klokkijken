@@ -29,3 +29,5 @@ De [geometriecontrole](WorldTestLogs/TimeMachineWaterConnections/native-render.l
 De rivieranimatie is ook afzonderlijk mét de echte voorgrondmaskers gerenderd. Na 0,35 seconde veranderen op 393 punten breed 5.943 waterpixels en op 834 punten breed 8.816 waterpixels. Deze meting bevat geen bewegende portalen of tandwielen. Twee volledige renders met **Minder beweging** zijn identiek ([meetbestand](WorldTestLogs/TimeMachineWaterConnections/visual-checks.json)). De bestaande zichtbaarheidspauze en pauze bij een inactieve app zijn behouden. `git diff --check` is schoon.
 
 Het [diff voor deze ronde](WorldTestLogs/TimeMachineWaterConnections/world-8.diff) is beperkt tot het Tijdmachine-gedeelte van het gedeelde tekenbestand. Onafhankelijke wijzigingen aan de piratenwereld zijn behouden.
+
+Vervolg: [Bronhuizen, afvoerputten, bevestigde versieringen en bewegende uurwerken](TimeMachineKingdomFinish.md).

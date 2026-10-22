@@ -55,6 +55,7 @@ struct DinoPracticeView: View {
                         Button {
                             session = DinoSession(level: configuration.level, player: player, practice: configuration,
                                                   language: LanguageManager.shared.effective.code,
+                                                  dayPartSchedule: settings.dayPartSchedule,
                                                   answerFeedback: { [settings] correct in
                                 DinoAnswerFeedback.shared.play(correct: correct, sound: settings.soundEffectsEnabled, vibration: settings.hapticsEnabled)
                             })

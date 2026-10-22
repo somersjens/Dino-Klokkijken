@@ -485,6 +485,10 @@ final class DinoUITests: XCTestCase {
             let node = revealMapNode(id)
             XCTAssertGreaterThanOrEqual(node.frame.width, 44)
             saveScreenshot("city-metro-route-\(id)")
+            if id == 54 {
+                Thread.sleep(forTimeInterval: 2.5)
+                saveScreenshot("city-metro-route-54-motion")
+            }
             if id == 60 {
                 XCTAssertTrue(node.isEnabled)
                 node.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
@@ -737,7 +741,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertEqual(app.descendants(matching: .any)["header.starCount"].label, "0")
         XCTAssertEqual(app.descendants(matching: .any)["header.levelCount"].label, "1")
         openSettings()
-        for (id, value) in [("soundEffects", "1"), ("haptics", "1"), ("highContrast", "0"), ("icloudSync", "0")] {
+        for (id, value) in [("soundEffects", "1"), ("haptics", "1"), ("speakQuestionTitle", "0"), ("highContrast", "0"), ("icloudSync", "0")] {
             XCTAssertEqual(app.descendants(matching: .any)["settings.\(id)"].switches.firstMatch.value as? String, value)
         }
     }
@@ -921,8 +925,11 @@ final class DinoUITests: XCTestCase {
         let end = app.descendants(matching: .any)["question.minutesBetween.end"]
         XCTAssertEqual(start.label, q.relatedTimes[0].digitalText)
         XCTAssertEqual(end.label, q.relatedTimes[1].digitalText)
+        let earlier = DinoTimeWords.promptTime(q.relatedTimes[0], language: language)
+        let later = DinoTimeWords.promptTime(q.relatedTimes[1], language: language)
         XCTAssertEqual(app.staticTexts["question.title"].label,
-                       language == "nl" ? "Hoeveel minuten zitten ertussen?" : "How many minutes are there in between?")
+                       language == "nl" ? "Hoeveel minuten zitten er tussen \(earlier) en \(later)?"
+                       : "How many minutes are there between \(earlier) and \(later)?")
         XCTAssertTrue(app.descendants(matching: .any)["question.minutesBetween.unknown"].exists)
         XCTAssertFalse(app.staticTexts["Beide tijden zijn op dezelfde dag."].exists)
         XCTAssertFalse(app.staticTexts["Both times are on the same day."].exists)
@@ -1118,6 +1125,11 @@ final class DinoUITests: XCTestCase {
         var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.chooseAnalog)), seed: seed)
         for index in 0..<2 {
             let question = generator.next(index: index)
+            if index == 0 {
+                let words = DinoTimeWords.promptTime(question.target, language: "nl")
+                let count = question.options.count == 4 ? "vier" : "twee"
+                XCTAssertEqual(app.staticTexts["question.title"].label, "Welke van de \(count) klokken hoort bij \(words)?")
+            }
             tap("question.option.\(question.responses.firstIndex(of: question.expectedAnswer)!)")
             let next = app.staticTexts.matching(identifier: "practice.questionNumber")
                 .matching(NSPredicate(format: "label == %@", String(index + 2))).firstMatch
@@ -1484,8 +1496,13 @@ final class DinoUITests: XCTestCase {
             tap("practice.start")
             var generator = DinoPracticeGenerator(configuration: .init(time: family, order: .specific(.timeZone)), seed: seed)
             let question = generator.next(index: 0)
-            let city = question.timeZoneJourney!.destination.name(language: "nl")
-            XCTAssertEqual(app.staticTexts["question.title"].label, "Hoe laat is het in \(city)?")
+            let journey = question.timeZoneJourney!
+            let city = journey.destination.name(language: "nl")
+            let reference = DinoTimeWords.promptTime(question.relatedTimes[0], language: "nl")
+            let amount = DinoTimeWords.spokenDuration(abs(journey.offsetHours) * 60, language: "nl")
+            let direction = journey.offsetHours > 0 ? "vooruit" : "achter"
+            XCTAssertEqual(app.staticTexts["question.title"].label,
+                           "Het is \(reference) in \(journey.origin.name(language: "nl")). \(city) is \(amount) \(direction), hoe laat is het in \(city)?")
             let origin = app.descendants(matching: .any)["question.timeZone.origin"]
             let destination = app.descendants(matching: .any)["question.timeZone.destination"]
             let map = app.descendants(matching: .any)["question.timeZone.map"]
@@ -1546,8 +1563,13 @@ final class DinoUITests: XCTestCase {
         tap("practice.start")
         var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.timeZone)), seed: seed, language: "en")
         let question = generator.next(index: 0)
+        let journey = question.timeZoneJourney!
+        let reference = DinoTimeWords.promptTime(question.relatedTimes[0], language: "en")
+        let amount = DinoTimeWords.spokenDuration(abs(journey.offsetHours) * 60, language: "en")
+        let destination = journey.destination.name(language: "en")
+        let direction = journey.offsetHours > 0 ? "ahead" : "behind"
         XCTAssertEqual(app.staticTexts["question.title"].label,
-                       "What time is it in \(question.timeZoneJourney!.destination.name(language: "en"))?")
+                       "It is \(reference) in \(journey.origin.name(language: "en")). \(destination) is \(amount) \(direction), what time is it in \(destination)?")
         XCTAssertFalse(app.staticTexts["TIME ZONES"].exists)
         XCTAssertTrue(app.descendants(matching: .any)["question.timeZone.origin"].label.contains("London"))
         XCTAssertTrue(app.descendants(matching: .any)["question.timeZone.destination"].label.contains("?"))
@@ -1847,7 +1869,7 @@ final class DinoUITests: XCTestCase {
         tap("demo.ready")
     }
 
-    func testAdvanceAnalogPlacesClocksSideBySideAndDemonstratesTheTurn() {
+    func testAdvanceAnalogPlacesTheStartClockAboveTheClockYouTurn() {
         openPractice()
         tap("practice.time.fiveMinutes")
         selectPractice("practice.type.advanceAnalog")
@@ -1855,16 +1877,19 @@ final class DinoUITests: XCTestCase {
         var generator = DinoPracticeGenerator(configuration: .init(time: .fiveMinutes, order: .specific(.advanceAnalog)), seed: seed)
         let question = generator.next(index: 0)
         let duration = "+\(DinoTimeWords.duration(question.durationMinutes, language: "nl"))"
-        XCTAssertEqual(app.staticTexts["question.title"].label, "Zet de wijzers vooruit")
+        XCTAssertEqual(app.staticTexts["question.title"].label,
+                       "Zet de wijzers van de klok \(DinoTimeWords.spokenDuration(question.durationMinutes, language: "nl")) vooruit")
         XCTAssertFalse(app.staticTexts["Begintijd"].exists)
         let start = app.descendants(matching: .any)["question.startClock"]
         let difference = app.descendants(matching: .any)["question.advance.difference"]
         let control = app.descendants(matching: .any)["question.analogControl"]
         XCTAssertTrue(start.waitForExistence(timeout: 5))
         XCTAssertEqual(difference.label, duration)
-        XCTAssertLessThan(start.frame.maxX, difference.frame.minX)
-        XCTAssertLessThan(difference.frame.maxX, control.frame.minX)
-        XCTAssertEqual(start.frame.midY, control.frame.midY, accuracy: 8)
+        XCTAssertLessThan(start.frame.maxY, difference.frame.minY)
+        XCTAssertLessThan(difference.frame.maxY, control.frame.minY)
+        XCTAssertEqual(start.frame.midX, control.frame.midX, accuracy: 8)
+        XCTAssertEqual(start.frame.width * 2, control.frame.width, accuracy: 1,
+                       "The start clock is half the clock the player turns")
         tap("question.example")
         let example = DinoDemonstrationExamples.question(kind: .advanceAnalog, minutes: DinoPracticeTime.fiveMinutes.minutes,
                                                          minuteStep: 5, index: 0, previousTarget: nil)
@@ -1872,12 +1897,15 @@ final class DinoUITests: XCTestCase {
         let demoClock = app.descendants(matching: .any)["demo.analog"]
         let demoDifference = app.descendants(matching: .any)["demo.advance.difference"]
         XCTAssertTrue(demoClock.waitForExistence(timeout: 5))
-        XCTAssertEqual(app.staticTexts["demo.title"].label, "Zet de wijzers vooruit")
+        XCTAssertEqual(app.staticTexts["demo.title"].label,
+                       "Zet de wijzers van de klok \(DinoTimeWords.spokenDuration(example.durationMinutes, language: "nl")) vooruit")
         XCTAssertEqual(demoDifference.label, "+\(DinoTimeWords.duration(example.durationMinutes, language: "nl"))")
-        XCTAssertLessThan(demoStart.frame.maxX, demoDifference.frame.minX)
-        XCTAssertLessThan(demoDifference.frame.maxX, demoClock.frame.minX)
+        XCTAssertLessThan(demoStart.frame.maxY, demoDifference.frame.minY)
+        XCTAssertLessThan(demoDifference.frame.maxY, demoClock.frame.minY)
+        XCTAssertEqual(demoStart.frame.midX, demoClock.frame.midX, accuracy: 8)
+        XCTAssertEqual(demoStart.frame.width * 2, demoClock.frame.width, accuracy: 1)
         XCTAssertTrue(app.buttons["demo.ready"].waitForExistence(timeout: 25))
-        saveScreenshot("advance-analog-side-by-side")
+        saveScreenshot("advance-analog-start-above")
         tap("demo.nextExample")
         tap("demo.analog.less")
         RunLoop.current.run(until: Date().addingTimeInterval(1.5))
@@ -1940,7 +1968,7 @@ final class DinoUITests: XCTestCase {
             let q = generator.next(index: 0)
             let words = DinoTimeWords.time(q.statement ?? q.target, language: "nl")
             XCTAssertEqual(app.staticTexts["question.title"].label,
-                           type == .spokenTime ? "Welke klok laat \(words) zien?" : "Het is nu \(words).")
+                           type == .spokenTime ? "Welke van de twee klokken laat \(words) zien?" : "Het is nu \(words).")
             XCTAssertFalse(app.staticTexts[words].exists, "The time appears in the title once")
             saveScreenshot("question-title-\(type.rawValue)")
             tap("question.example")
@@ -1948,7 +1976,7 @@ final class DinoUITests: XCTestCase {
                                                             index: 0, previousTarget: nil)
             let exampleWords = DinoTimeWords.time(example.statement ?? example.target, language: "nl")
             XCTAssertEqual(app.staticTexts["demo.title"].label,
-                           type == .spokenTime ? "Welke klok laat \(exampleWords) zien?" : "Het is nu \(exampleWords).")
+                           type == .spokenTime ? "Welke van de twee klokken laat \(exampleWords) zien?" : "Het is nu \(exampleWords).")
             saveScreenshot("question-title-example-\(type.rawValue)")
             tap("demo.ready")
             if type == .trueFalse {
@@ -2333,7 +2361,7 @@ final class DinoUITests: XCTestCase {
 
         selectPractice("practice.type.sortTimes")
         tap("practice.start")
-        XCTAssertEqual(app.staticTexts["question.title"].label, "Van vroeg naar laat")
+        XCTAssertEqual(app.staticTexts["question.title"].label, "Tik de klokken op volgorde van vroeg naar laat")
         XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Alle klokken horen")).firstMatch.exists)
         tap("question.example")
         XCTAssertTrue(app.staticTexts["demo.sort.hint"].waitForExistence(timeout: 5))
@@ -2839,7 +2867,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["\(count)/\(level.questionCount)"].exists)
         XCTAssertEqual(app.descendants(matching: .any)["dino.backflip"].exists, count == level.questionCount)
         XCTAssertEqual(app.descendants(matching: .any)["dino.pirouette"].exists,
-                       !level.isBoss && StarCalculator.stars(correct: count) == 2)
+                       StarCalculator.stars(correct: count, questionCount: level.questionCount) == 2)
     }
 
     func testEntireNormalWorldAndBoss() {
@@ -2854,10 +2882,10 @@ final class DinoUITests: XCTestCase {
         tap("result.map")
         XCTAssertTrue(app.descendants(matching: .any)["map.dino.10"].waitForExistence(timeout: 5))
         begin(10)
-        play(10, correct: 5)
+        play(10, correct: 6)
         XCTAssertEqual(app.buttons["result.next"].label, "Naar de volgende wereld")
         XCTAssertFalse(app.buttons["result.map"].exists)
-        XCTAssertTrue(app.staticTexts["5/10"].exists)
+        XCTAssertTrue(app.staticTexts["6/10"].exists)
         saveScreenshot("normal-world-complete")
         tap("result.next")
         XCTAssertTrue(app.descendants(matching: .any)["map.dino.11"].waitForExistence(timeout: 15))
@@ -3538,11 +3566,13 @@ final class DinoUITests: XCTestCase {
         openSettings()
         let sound = app.descendants(matching: .any)["settings.soundEffects"].switches.firstMatch
         let haptics = app.descendants(matching: .any)["settings.haptics"].switches.firstMatch
+        let spokenTitle = app.descendants(matching: .any)["settings.speakQuestionTitle"].switches.firstMatch
         let contrast = app.descendants(matching: .any)["settings.highContrast"].switches.firstMatch
         let cloud = app.descendants(matching: .any)["settings.icloudSync"].switches.firstMatch
         XCTAssertTrue(sound.waitForExistence(timeout: 5))
         XCTAssertEqual(sound.value as? String, "1")
         XCTAssertEqual(haptics.value as? String, "1")
+        XCTAssertEqual(spokenTitle.value as? String, "0")
         XCTAssertEqual(contrast.value as? String, "0")
         XCTAssertEqual(cloud.value as? String, "0")
         saveScreenshot("settings-preferences")
@@ -3550,6 +3580,7 @@ final class DinoUITests: XCTestCase {
         tap("settings.highContrast"); tap("settings.icloudSync")
         XCTAssertEqual(sound.value as? String, "0")
         XCTAssertEqual(haptics.value as? String, "0")
+        XCTAssertEqual(spokenTitle.value as? String, "0")
         XCTAssertEqual(contrast.value as? String, "1")
         XCTAssertEqual(cloud.value as? String, "1")
         XCTAssertTrue(app.staticTexts["settings.icloudStatus"].exists)
@@ -3559,6 +3590,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(sound.waitForExistence(timeout: 5))
         XCTAssertEqual(sound.value as? String, "0")
         XCTAssertEqual(haptics.value as? String, "0")
+        XCTAssertEqual(spokenTitle.value as? String, "0")
         XCTAssertEqual(contrast.value as? String, "1")
         XCTAssertEqual(cloud.value as? String, "1")
         tap("settings.icloudSync")
@@ -3573,6 +3605,7 @@ final class DinoUITests: XCTestCase {
         expectation(for: englishLabels, evaluatedWith: nil)
         waitForExpectations(timeout: 5)
         XCTAssertEqual(sound.label, "Sound effects")
+        XCTAssertEqual(spokenTitle.label, "Speak the question title")
         XCTAssertEqual(contrast.label, "High contrast")
         saveScreenshot("settings-english")
         app.buttons["Done"].firstMatch.tap()
@@ -4176,7 +4209,7 @@ final class DinoUITests: XCTestCase {
             app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.world-salto.\(UUID().uuidString)"
             app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = String(world * 10 - 1)
             app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = String(world * 10)
-            app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = world == 4 ? "5" : "10"
+            app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = world == 4 ? "6" : "10"
             app.launch()
             let next = app.buttons["result.next"]
             let retry = app.buttons["result.retry"]
@@ -4228,7 +4261,7 @@ final class DinoUITests: XCTestCase {
             app.launch()
             XCTAssertTrue(app.buttons["result.retry"].waitForExistence(timeout: 8))
             RunLoop.current.run(until: Date().addingTimeInterval(3.9))
-            let controls = level.isMultiple(of: 10) && correct >= 5 ? ["result.next", "result.retry"] : ["result.map", "result.retry"]
+            let controls = level.isMultiple(of: 10) && correct >= 6 ? ["result.next", "result.retry"] : ["result.map", "result.retry"]
             for id in controls {
                 let button = app.buttons[id]
                 XCTAssertTrue(button.isHittable)
@@ -4270,11 +4303,11 @@ final class DinoUITests: XCTestCase {
             }
         }
         showResult(level: 10, correct: 4, completed: 9)
-        XCTAssertFalse(app.descendants(matching: .any)["result.stars"].exists)
+        XCTAssertEqual(app.descendants(matching: .any)["result.stars"].label, "0/3")
         XCTAssertFalse(app.buttons["result.next"].exists)
         saveScreenshot("result-redesign-boss-retry")
         showResult(level: 10, correct: 10, completed: 9, language: "en")
-        XCTAssertFalse(app.descendants(matching: .any)["result.stars"].exists)
+        XCTAssertEqual(app.descendants(matching: .any)["result.stars"].label, "3/3")
         XCTAssertTrue(app.buttons["result.next"].isHittable)
         saveScreenshot("result-redesign-boss-perfect-english")
         tap("result.next")

@@ -84,8 +84,9 @@ enum DinoSocialTests {
         var perfect = PlayerProfile()
         perfect.recordCompletedAttempt(levelID: 10, correct: 10)
         let direct = FriendProgress.local(perfect)
-        expect(direct.highestCompletedLevel == 10 && direct.nextLevel == 1 && direct.totalStars == 0, "direct boss does not invent normal stars")
-        expect(direct.levels[10]?.bossComplete == true && direct.levels[10]?.stars == 0, "boss has no stars")
+        expect(direct.highestCompletedLevel == 10 && direct.nextLevel == 1 && direct.totalStars == 3, "a perfect boss adds three stars")
+        expect((1...9).allSatisfy { direct.levels[$0]?.stars == 0 }, "direct boss does not invent normal stars")
+        expect(direct.levels[10]?.bossComplete == true && direct.levels[10]?.stars == 3, "boss stars follow the ten-question scale")
         for id in 1...9 { perfect.recordCompletedAttempt(levelID: id, correct: 5) }
         expect(!FriendProgress.local(perfect).allComplete && FriendProgress.local(perfect).nextLevel == 11, "jungle completion continues into world two")
         for count in [0,1,2,3,4,1000] {
@@ -99,7 +100,8 @@ enum DinoSocialTests {
                 if normalComplete { for id in 1...9 { boss.recordCompletedAttempt(levelID: id, correct: 3) } }
                 boss.recordCompletedAttempt(levelID: 10, correct: score)
                 let result = FriendProgress.local(boss).levels[10]
-                expect(result?.bestCorrect == score && result?.bossComplete == boss.worldOneComplete && result?.perfectBoss == boss.perfectBossVictory, "boss codec boundary matrix")
+                expect(result?.bestCorrect == score && result?.stars == StarCalculator.stars(correct: score, questionCount: 10)
+                       && result?.bossComplete == boss.worldOneComplete && result?.perfectBoss == boss.perfectBossVictory, "boss codec boundary matrix")
             }
         }
     }

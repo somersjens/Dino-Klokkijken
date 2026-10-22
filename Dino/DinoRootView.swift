@@ -64,7 +64,7 @@ struct DinoRootView: View {
                    let rawCorrect = environment["DINO_TEST_RESULT_CORRECT"], let correct = Int(rawCorrect),
                    (0...level.questionCount).contains(correct) {
                     result = DinoLevelResult(level: level, correct: correct,
-                        stars: level.isBoss ? 0 : StarCalculator.stars(correct: correct),
+                        stars: StarCalculator.stars(correct: correct, questionCount: level.questionCount),
                         victory: level.isBoss ? BossVictory.evaluate(correct: correct,
                             normalLevelsComplete: player.profile.normalLevelsComplete(in: level.worldID)) : .none)
                 }
@@ -99,7 +99,8 @@ struct DinoRootView: View {
 
     private func start(_ level: LevelConfiguration) {
         guard player.profile.isUnlocked(level.id) else { return }
-        let nextSession = DinoSession(level: level, player: player, language: LanguageManager.shared.effective.code, answerFeedback: { [settings] correct in
+        let nextSession = DinoSession(level: level, player: player, language: LanguageManager.shared.effective.code,
+                                      dayPartSchedule: settings.dayPartSchedule, answerFeedback: { [settings] correct in
             DinoAnswerFeedback.shared.play(correct: correct, sound: settings.soundEffectsEnabled,
                                            vibration: settings.hapticsEnabled)
         })

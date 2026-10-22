@@ -55,6 +55,7 @@
 		DB121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift */; };
 		DB121026AC02000000000002 /* Dino/Views/ExpandedQuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AC02000000000002 /* Dino/Views/ExpandedQuestionView.swift */; };
 		DB1220261012000000000001 /* Dino/Core/DinoSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1220261012000000000001 /* Dino/Core/DinoSettings.swift */; };
+		DB1220261022000000000001 /* Dino/Core/QuestionSpeech.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1220261022000000000001 /* Dino/Core/QuestionSpeech.swift */; };
 		DB1220261012000000000002 /* Dino/Core/CloudProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1220261012000000000002 /* Dino/Core/CloudProgress.swift */; };
 		DB1220261012000000000003 /* Dino/AnswerFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1220261012000000000003 /* Dino/AnswerFeedback.swift */; };
 		DB132026BD01000000000001 /* Dino/Views/WorldBossArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA132026BD01000000000001 /* Dino/Views/WorldBossArt.swift */; };
@@ -141,6 +142,7 @@
 		DA121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/ExpandedQuestions.swift; sourceTree = SOURCE_ROOT; };
 		DA121026AC02000000000002 /* Dino/Views/ExpandedQuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/ExpandedQuestionView.swift; sourceTree = SOURCE_ROOT; };
 		DA1220261012000000000001 /* Dino/Core/DinoSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/DinoSettings.swift; sourceTree = SOURCE_ROOT; };
+		DA1220261022000000000001 /* Dino/Core/QuestionSpeech.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/QuestionSpeech.swift; sourceTree = SOURCE_ROOT; };
 		DA1220261012000000000002 /* Dino/Core/CloudProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/CloudProgress.swift; sourceTree = SOURCE_ROOT; };
 		DA1220261012000000000003 /* Dino/AnswerFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/AnswerFeedback.swift; sourceTree = SOURCE_ROOT; };
 		DA132026BD01000000000001 /* Dino/Views/WorldBossArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/WorldBossArt.swift; sourceTree = SOURCE_ROOT; };
@@ -202,6 +204,7 @@
 				DA121026AB13000000000001 /* Dino/Core/DinoAvatarMask.swift */,
 				DA121026AB12000000000001 /* Dino/Core/DinoAppearance.swift */,
 				DA1220261012000000000001 /* Dino/Core/DinoSettings.swift */,
+				DA1220261022000000000001 /* Dino/Core/QuestionSpeech.swift */,
 				DA1220261012000000000002 /* Dino/Core/CloudProgress.swift */,
 				2373432652E69FC550C1E670 /* Dino/Core/NameValidator.swift */,
 				8ED274EAFF7B807862126964 /* Dino/Core/ProgressSyncService.swift */,
@@ -454,6 +457,7 @@
 				DB121026AB12000000000002 /* Dino/Views/DinoAvatar.swift in Sources */,
 				DB121026AB12000000000001 /* Dino/Core/DinoAppearance.swift in Sources */,
 				DB1220261012000000000001 /* Dino/Core/DinoSettings.swift in Sources */,
+				DB1220261022000000000001 /* Dino/Core/QuestionSpeech.swift in Sources */,
 				DB1220261012000000000002 /* Dino/Core/CloudProgress.swift in Sources */,
 				DB1220261012000000000003 /* Dino/AnswerFeedback.swift in Sources */,
 				CF7F3ACA697DBE04D5B1165A /* Dino/Views/Friends.swift in Sources */,

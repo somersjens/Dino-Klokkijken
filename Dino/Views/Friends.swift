@@ -274,7 +274,7 @@ struct FriendProfileView: View {
                                         Text(LocalizedStringKey(result.completed ? "dino.friends.completed" : result.attempted ? "dino.friends.incomplete" : "dino.friends.notPlayed"))
                                             .font(.caption)
                                         if result.attempted {
-                                            if !level.isBoss { DinoStars(count: result.stars, size: 18) }
+                                            DinoStars(count: result.stars, size: 18)
                                             Text(verbatim: "\(result.bestCorrect)/\(level.questionCount)").font(.caption).monospacedDigit()
                                             if let seconds = result.seconds {
                                                 Label(DinoQuestionTiming.text(seconds), systemImage: "stopwatch").font(.caption).monospacedDigit()

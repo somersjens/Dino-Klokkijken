@@ -10,7 +10,9 @@ struct SharedLevelResult: Equatable, Sendable {
     let perfectBoss: Bool
     var seconds: Int? = nil
     var resultPoints: Int {
-        levelID.isMultiple(of: 10) ? 1 + bestCorrect + (bossComplete ? 16 : 0) + (perfectBoss ? 32 : 0) : 1 + stars * 8 + bestCorrect
+        levelID.isMultiple(of: 10)
+            ? DinoLeaderboards.bossScore(correct: bestCorrect, stars: stars, complete: bossComplete, perfect: perfectBoss)
+            : 1 + stars * 8 + bestCorrect
     }
     var completed: Bool { levelID.isMultiple(of: 10) ? bossComplete : stars > 0 }
 
@@ -42,9 +44,17 @@ enum DinoLeaderboards {
         guard let level = DinoLevelCatalog.level(levelID) else { return 0 }
         guard record.attempts > 0 || record.stars > 0 || (level.isBoss && profile.worldComplete(level.worldID)) else { return 0 }
         if level.isBoss {
-            return 1 + record.bestCorrect + (profile.worldComplete(level.worldID) ? 16 : 0) + (profile.perfectVictory(in: level.worldID) ? 32 : 0)
+            let stars = StarCalculator.stars(correct: record.bestCorrect, questionCount: level.questionCount)
+            return bossScore(correct: record.bestCorrect, stars: stars,
+                             complete: profile.worldComplete(level.worldID),
+                             perfect: profile.perfectVictory(in: level.worldID))
         }
         return 1 + record.stars * 8 + record.bestCorrect
+    }
+
+    /// Boss scores keep the existing correct/victory bits and add the star count above them.
+    static func bossScore(correct: Int, stars: Int, complete: Bool, perfect: Bool) -> Int {
+        1 + correct + (complete ? 16 : 0) + (perfect ? 32 : 0) + stars * 64
     }
 
     static func decode(levelID: Int, score: Int, context: Int) -> SharedLevelResult? {
@@ -54,11 +64,12 @@ enum DinoLeaderboards {
         }
         let value = score - 1
         if levelID.isMultiple(of: 10) {
-            guard value <= 58 else { return nil }
+            guard value <= 10 + 16 + 32 + 3 * 64 else { return nil }
             let correct = value & 15, complete = value & 16 != 0, perfect = value & 32 != 0
             guard correct <= 10, !perfect || (complete && correct == 10), !complete || correct >= 5,
                   correct != 10 || perfect else { return nil }
-            return SharedLevelResult(levelID: levelID, attempted: true, stars: 0, bestCorrect: correct, bossComplete: complete, perfectBoss: perfect)
+            let stars = StarCalculator.stars(correct: correct, questionCount: 10)
+            return SharedLevelResult(levelID: levelID, attempted: true, stars: stars, bestCorrect: correct, bossComplete: complete, perfectBoss: perfect)
         }
         let stars = value / 8, correct = value % 8
         guard correct <= 5, stars <= 3, stars == StarCalculator.stars(correct: correct) else { return nil }
@@ -104,11 +115,11 @@ struct FriendProgress: Equatable, Sendable {
     var allComplete: Bool { DinoLevelCatalog.levels.allSatisfy { levels[$0.id]?.completed == true } }
     var totalStars: Int? {
         guard (1...9).allSatisfy({ levels[$0] != nil }) else { return nil }
-        return levels.values.filter { !$0.levelID.isMultiple(of: 10) }.reduce(0) { $0 + $1.stars }
+        return levels.values.reduce(0) { $0 + $1.stars }
     }
     var maximumStarsSoFar: Int? {
         guard totalStars != nil else { return nil }
-        return levels.values.filter { !$0.levelID.isMultiple(of: 10) && $0.completed }.count * 3
+        return levels.values.filter { $0.completed || $0.stars > 0 }.count * 3
     }
     var starPercentage: Int? {
         guard let stars = totalStars, let maximum = maximumStarsSoFar, maximum > 0 else { return nil }
