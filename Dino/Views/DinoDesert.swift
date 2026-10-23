@@ -121,10 +121,34 @@ struct DinoDesertPainter {
         }
     }
 
+
+    /// The first desert dune reaches into the jungle clearing. Its windward
+    /// crest, sand grain and leeward face are the same material as the desert.
+    func jungleFloor(in size: CGSize) {
+        let w = size.width, h = size.height
+        var dune = Path(); dune.move(to: .init(x: -20, y: -104))
+        dune.addCurve(to: .init(x: w * 0.48, y: -76),
+                      control1: .init(x: w * 0.13, y: -198), control2: .init(x: w * 0.30, y: -130))
+        dune.addCurve(to: .init(x: w + 20, y: -154),
+                      control1: .init(x: w * 0.69, y: -13), control2: .init(x: w * 0.85, y: -185))
+        let crest = dune
+        dune.addLine(to: .init(x: w + 20, y: h + 2)); dune.addLine(to: .init(x: -20, y: h + 2)); dune.closeSubpath()
+        context.fill(dune, with: .linearGradient(Gradient(stops: [
+            .init(color: Color(dinoHex: 0xFFE8B9), location: 0),
+            .init(color: Color(dinoHex: 0xF6D293), location: 0.36),
+            .init(color: Color(dinoHex: 0xF7D89E), location: 0.72),
+            .init(color: Color(dinoHex: 0xF0C88B), location: 1)
+        ]), startPoint: .zero, endPoint: .init(x: w, y: h)))
+        context.stroke(crest.offsetBy(dx: 0, dy: 3), with: .color(Color(dinoHex: 0xDBB77C).opacity(0.35)), lineWidth: 1.2)
+        context.stroke(crest, with: .color(Color(dinoHex: 0xFFF0C7).opacity(0.6)), lineWidth: 0.8)
+        var sand = context; sand.clip(to: dune)
+        DinoDesertPainter(context: sand).grain(in: Path(CGRect(x: 0, y: -200, width: w, height: 350)), seed: 71, count: Int(w * 1.1))
+    }
+
     func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let layout = WorldSceneryLayout(width: size.width, height: size.height, routeOffset: routeOffset)
         let w = size.width, h = size.height, s = layout.scale
-        material(Path(CGRect(origin: .zero, size: size)), [0xFFE8B9, 0xF6D293, 0xF7D89E, 0xF0C88B])
+        jungleFloor(in: size)
         // Sunlit ground continues directly from the jungle, including behind the sign.
         for layer in 0..<3 {
             let baseY = 68 + CGFloat(layer) * 69
@@ -166,11 +190,7 @@ struct DinoDesertPainter {
         let p = DinoDesertPainter(context: route)
         p.sandDetails(layout: layout)
         p.appendScenery(layout: layout, depth: depth)
-        // The jungle dries into sand at the entry; lower dunes warm into the
-        // next world's rock. Lava itself remains in the shared volcanic inlet.
-        let end = CGRect(x: 0, y: h - 165, width: w, height: 165)
-        context.fill(Path(end), with: .linearGradient(Gradient(colors: [.clear, Color(dinoHex: 0xFFD1A1)]),
-            startPoint: CGPoint(x: 0, y: end.minY), endPoint: CGPoint(x: 0, y: h)))
+
     }
 
     /// Static drawing and the wind's occlusion mask use exactly the same placements.

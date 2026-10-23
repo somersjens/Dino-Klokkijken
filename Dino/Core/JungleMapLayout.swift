@@ -1,6 +1,37 @@
 import Foundation
 import CoreGraphics
 
+/// One rhythm for all nine chapter joins, including the jungle's different entry.
+enum WorldMapChapterSpacing {
+    static let bannerTop: CGFloat = 12
+    static let bannerHeight: CGFloat = 212
+    static let bannerCenter: CGFloat = 99.5
+    static let bannerBottom: CGFloat = 10
+    static let firstNode: CGFloat = 80
+
+    static func routeOffset(clearance: CGFloat) -> CGFloat {
+        bannerTop + bannerHeight + bannerBottom + clearance
+    }
+
+    static func tail(clearance: CGFloat) -> CGFloat {
+        let below = bannerHeight - bannerCenter + bannerBottom + clearance + firstNode
+        return below + 9 - bannerTop - bannerCenter
+    }
+
+    static func routeHeight(clearance: CGFloat) -> CGFloat {
+        firstNode + 9 * JungleMapLayout.levelSpacing + tail(clearance: clearance)
+    }
+
+    static func sceneSize(width: CGFloat) -> CGSize {
+        let clearance = max(0, min(200, (min(600, width) - 36) * 0.37) - 82)
+        return CGSize(width: width, height: routeOffset(clearance: clearance) + routeHeight(clearance: clearance))
+    }
+
+    static func sceneOffset(width: CGFloat) -> CGFloat {
+        routeOffset(clearance: max(0, min(200, (min(600, width) - 36) * 0.37) - 82))
+    }
+}
+
 enum DinoMapViewport {
     static func preparedAnimationBounds(frame: CGRect, viewportHeight: CGFloat) -> CGRect {
         animationBounds(frame: frame.offsetBy(dx: 0, dy: 256), viewportHeight: viewportHeight + 512)

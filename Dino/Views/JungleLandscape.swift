@@ -29,20 +29,16 @@ final class WorldSceneryDepth {
 /// The sign is drawn over the trail, rather than leaving a blank break in it.
 struct WorldRouteTrail: View, Equatable {
     static let levelSpacing = JungleMapLayout.levelSpacing
-    static let bannerTopPadding: CGFloat = 12
-    static let bannerHeight: CGFloat = 212
-    static let bannerFaceCenterY: CGFloat = 99.5
-    static let bannerBottomPadding: CGFloat = 10
-    static let chapterFirstNodeY: CGFloat = 80
+    static let bannerTopPadding = WorldMapChapterSpacing.bannerTop
+    static let bannerHeight = WorldMapChapterSpacing.bannerHeight
+    static let bannerFaceCenterY = WorldMapChapterSpacing.bannerCenter
+    static let bannerBottomPadding = WorldMapChapterSpacing.bannerBottom
+    static let chapterFirstNodeY = WorldMapChapterSpacing.firstNode
     static func chapterTail(topClearance: CGFloat) -> CGFloat {
-        let below = bannerHeight - bannerFaceCenterY + bannerBottomPadding + topClearance + chapterFirstNodeY
-        // Boss stones are 90pt, ordinary stones 72pt. Match the clear space
-        // between their rims and the banner, including room for Dino below it.
-        let above = below + (90 - 72) / 2
-        return above - bannerTopPadding - bannerFaceCenterY
+        WorldMapChapterSpacing.tail(clearance: topClearance)
     }
     static func chapterRouteHeight(topClearance: CGFloat, worldID: Int) -> CGFloat {
-        chapterFirstNodeY + 9 * levelSpacing + chapterTail(topClearance: topClearance)
+        WorldMapChapterSpacing.routeHeight(clearance: topClearance)
     }
     static func jungleRouteHeight(topClearance: CGFloat) -> CGFloat {
         topClearance + JungleMapLayout.firstNodeY + CGFloat(JungleMapLayout.levelPositions.count - 1) * levelSpacing + chapterTail(topClearance: topClearance)
@@ -319,26 +315,10 @@ struct WorldSceneryLayout {
         return palette
     }
 
-    func drawBoundaryGround(in context: GraphicsContext, worldID: Int, size: CGSize) {
-        let world = DinoWorldCatalog.world(worldID)!
-        context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(dinoHex: world.ground)))
-        // The cave meets the village through open terrain; its walls arrive
-        // later from the sides instead of exposing a dark horizontal bank cap.
-        if worldID == 5 { return }
-        let bank = palette(for: DinoWorldCatalog.world(worldID)?.themeID ?? worldID)
-        let inset = 122 * scale
-        for right in [false, true] {
-            let edge = width / 2 + (right ? inset : -inset)
-            let rect = right ? CGRect(x: edge, y: 0, width: max(0, width - edge), height: size.height)
-                             : CGRect(x: 0, y: 0, width: max(0, edge), height: size.height)
-            context.fill(Path(rect), with: .color(Color(dinoHex: bank.ground).opacity(worldID == 5 ? 0.88 : 0.22)))
-        }
-    }
-
     func drawBanks(in context: GraphicsContext, worldID: Int, nextWorldID: Int? = nil) {
         let palette = palette(for: worldID)
         let nextID = worldID == 4 ? 4 : min(10, nextWorldID ?? worldID + 1)
-        let next = self.palette(for: nextID)
+        let next = palette
         var bankStops: [Gradient.Stop] = [
             .init(color: Color(dinoHex: palette.ground).opacity(worldID == 5 ? 0.88 : 0.22), location: 0),
             .init(color: Color(dinoHex: palette.ground).opacity(worldID == 5 ? 0.88 : 0.22), location: max(0, (height - 180) / height)),
@@ -357,7 +337,7 @@ struct WorldSceneryLayout {
             let bank = [4, 6].contains(worldID)
                 ? passageBankPath(right: right, inset: 43, opensAtStart: worldID == 6, opensAtEnd: true,
                                   endMouthY: worldID == 6 ? cityCanalMouthY : nil, cityEntrance: worldID == 6)
-                : bankPath(right: right, inset: 43)
+                : bankPath(right: right, inset: 43, exitsAtSides: worldID == 9)
             let outside: CGFloat = right ? width + 400 : -400
             func outerArea(_ boundary: Path) -> Path {
                 var area = boundary
@@ -395,30 +375,12 @@ struct WorldSceneryLayout {
     }
 }
 
-/// A short terrain-only join removes sun/glow colour steps at chapter edges.
-/// Water has already left through the sides before these 32pt strips begin.
-private struct WorldTerrainTransition: View, Equatable {
-    let worldID: Int
-    var entering = false
-    var body: some View {
-        Canvas { context, size in
-            WorldSceneryLayout(width: size.width, height: size.height, routeOffset: 0)
-                .drawBoundaryGround(in: context, worldID: worldID, size: size)
-        }.mask(LinearGradient(colors: entering ? [.white, .clear] : [.clear, .white], startPoint: .top, endPoint: .bottom))
-            .frame(height: 32).allowsHitTesting(false).accessibilityHidden(true)
-    }
-}
-
 /// The final route disappears beneath a full sign instead of being cut by a
 /// plain footer rectangle. Terrain continues through the safe-area padding.
 struct WorldMapEndingLandscape: View, Equatable {
     var body: some View {
         Canvas { context, size in
-            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(dinoHex: 0xE8DFCC)))
-            var continuation = context
-            continuation.translateBy(x: 0, y: -2000)
-            WorldSceneryLayout(width: size.width, height: size.height, routeOffset: -2000)
-                .drawBanks(in: continuation, worldID: 10)
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(dinoHex: 0xF6DBA3)))
             let painter = JunglePainter(context: context)
             for right in [false, true] {
                 let x = size.width / 2 + (right ? 1 : -1) * min(265, size.width * 0.42)
@@ -1549,7 +1511,6 @@ struct WorldMapLandscape: View, Equatable {
                 let w = size.width
                 let left: CGFloat = 0
                 let right = w - left
-                let height = size.height - routeOffset
                 let scale = min(1.35, max(0.82, w / 390))
                 let skyEnd = min(0.32, max(0.08, (routeOffset + 210) / size.height))
                 // The same gradient, sun glow and canopy paint across y=0. Joining
@@ -1561,7 +1522,7 @@ struct WorldMapLandscape: View, Equatable {
                         .init(color: Color(dinoHex: 0xEDF5BE), location: skyEnd),
                         .init(color: Color(dinoHex: palette.ground), location: 0.45),
                         .init(color: Color(dinoHex: 0xD4E6AD), location: 0.72),
-                        .init(color: Color(dinoHex: nextPalette.ground), location: 1)
+                        .init(color: Color(dinoHex: 0xD4E6AD), location: 1)
                     ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
 
                 let sky = JungleWorldPainter(context: context)
@@ -1577,7 +1538,7 @@ struct WorldMapLandscape: View, Equatable {
                 // a decorative wallpaper behind every level.
                 for index in 0..<7 {
                     let y = CGFloat(index) * 310 - 80
-                    let blend = transition(at: y, height: height)
+                    let blend: CGFloat = 0
                     let left = index.isMultiple(of: 2)
                     let distant = palette.color(\.distant, toward: nextPalette, progress: blend)
                     let foliage = palette.color(\.foliage, toward: nextPalette, progress: blend)
@@ -1587,14 +1548,8 @@ struct WorldMapLandscape: View, Equatable {
                                  height: 230, color: foliage.opacity(0.17))
                 }
 
-                // The boss clearing opens into mist. Low silhouettes and the soft
-                // color blend continue below level ten into the next world preview.
-                for i in 0..<3 {
-                    let y = height - 390 + CGFloat(i) * 105
-                    painter.hill(x: i.isMultiple(of: 2) ? -w * 0.28 : w * 0.5,
-                                 y: y, width: w * 0.82, height: 195,
-                                 color: palette.color(\.distant, toward: nextPalette, progress: CGFloat(i + 1) / 3).opacity(0.44))
-                }
+                var dune = context; dune.translateBy(x: 0, y: size.height)
+                DinoDesertPainter(context: dune).jungleFloor(in: WorldMapChapterSpacing.sceneSize(width: w))
 
             }
             .frame(width: geometry.size.width, height: geometry.size.height + headroom)
@@ -1648,7 +1603,6 @@ struct WorldMapLandscape: View, Equatable {
                 }
             }.clipped()
         }
-        .overlay(alignment: .bottom) { WorldTerrainTransition(worldID: 2).equatable() }
         .allowsHitTesting(false).accessibilityHidden(true)
     }
 
@@ -3467,31 +3421,46 @@ private struct SleepValleyPainter {
                                            center: point, startRadius: 0, endRadius: radius))
     }
 
-    func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
+
+    /// An irregular moss edge grows between the final city paving. All existing
+    /// streams and their banks are painted afterwards, using their complete paths.
+    func cityPark(in size: CGSize) {
         let w = size.width, h = size.height
-        let left: CGFloat = 0, right = w - left
-        let scale = min(1.30, max(0.82, w / 390))
-        let skyEnd = (routeOffset + 185) / h
-        context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
-            .init(color: Color(dinoHex: 0xCED0E6), location: 0),
-            .init(color: Color(dinoHex: 0x697AA4), location: 0.035),
-            .init(color: Color(dinoHex: 0x6D83A5), location: skyEnd * 0.55),
-            .init(color: Color(dinoHex: 0xAFBFCA), location: skyEnd),
+        var lawn = Path()
+        for i in 0...100 {
+            let t = CGFloat(i) / 100, x = w * t
+            let y = -133 + 42 * sin(t * 5.2 + 0.5) + 4 * sin(t * 112) + 2 * sin(t * 193)
+            if i == 0 { lawn.move(to: .init(x: x, y: y)) } else { lawn.addLine(to: .init(x: x, y: y)) }
+        }
+        let turf = lawn
+        lawn.addLine(to: .init(x: w, y: h + 2)); lawn.addLine(to: .init(x: 0, y: h + 2)); lawn.closeSubpath()
+        context.fill(lawn, with: .linearGradient(Gradient(stops: [
+            .init(color: Color(dinoHex: 0xA8BFBB), location: 0),
             .init(color: Color(dinoHex: 0xB4C7C4), location: 0.39),
             .init(color: Color(dinoHex: 0xA8BFBB), location: 0.68),
-            .init(color: Color(dinoHex: 0xBBC2D2), location: 0.87),
-            .init(color: Color(dinoHex: 0xE8E9DA), location: 1)
-        ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
+            .init(color: Color(dinoHex: 0xBBC2D2), location: 1)
+        ]), startPoint: .zero, endPoint: .init(x: 0, y: h)))
+        context.stroke(turf, with: .color(Color(dinoHex: 0x6B9180)), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+        var moss = context; moss.clip(to: lawn)
+        let p = SleepValleyPainter(context: moss)
+        for right in [false, true] {
+            let x: CGFloat = right ? w - 16 : 11
+            p.mossGarden(at: .init(x: x, y: -88), size: 0.46, variation: right ? 1 : 2)
+            p.rock(at: .init(x: x + (right ? -24 : 24), y: -42), size: 0.38)
+        }
+    }
+
+    func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
+        let w = size.width, h = size.height
+        cityPark(in: size)
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
-        scenery.drawBanks(in: c, worldID: 2, nextWorldID: 8)
         let p = SleepValleyPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset,
                                    animatedWillows: animatedWillows)
         SleepValleyPainter(context: c).valleyBackdrop(layout: scenery)
         SleepValleyPainter(context: c).riverbeds(layout: scenery)
         // Distant cliffs cover the stream's upper end, so it emerges naturally
         // below the waterfall rather than painting over the cascade.
-        sky(width: w, left: left, right: right, height: routeOffset + 150, scale: scale)
         for cascade in SleepValleyLayout.cascades(layout: scenery) {
             SleepValleyPainter(context: c).cascadeWater(cascade, layout: scenery)
         }
@@ -5376,10 +5345,9 @@ private struct VolcanoWorldPainter {
             .init(color: Color(dinoHex: 0x7C6B70), location: 0.38),
             .init(color: Color(dinoHex: 0x685C68), location: 0.62),
             .init(color: Color(dinoHex: 0x78686B), location: 0.94),
-            .init(color: Color(dinoHex: 0x9C9985), location: 0.975),
-            .init(color: Color(dinoHex: 0xC7E8BE), location: 1)
+            .init(color: Color(dinoHex: 0x78686B), location: 1)
         ]
-        let extendedStops = [Gradient.Stop(color: Color(dinoHex: 0xFFD1A1).opacity(0), location: 0)] + groundStops.map {
+        let extendedStops = [Gradient.Stop(color: Color(dinoHex: 0xFFD1A1), location: 0)] + groundStops.map {
             Gradient.Stop(color: $0.color, location: (190 + $0.location * h) / (h + 190))
         }
         context.fill(ground, with: .linearGradient(Gradient(stops: extendedStops),
@@ -5402,28 +5370,11 @@ private struct VolcanoWorldPainter {
         p.steam(at: CGPoint(x: w * 0.5, y: 1685), width: w * 1.1, opacity: 0.10)
     }
 
-    /// Low, uneven terraces echo the entrance dunes. They reveal the meadow
-    /// beneath the outgoing basalt instead of ending in a horizontal fog band.
+    /// The village's own lawn lies underneath the complete outgoing basalt banks.
     private func villageApron(layout: WorldSceneryLayout) {
-        let w = layout.width, end = layout.height - layout.routeOffset
-        for (row, colors) in [[UInt32(0x9C9684), 0xB0B69A], [0xB0C29E, 0xBED6AD], [0xC1DDB4, 0xC7E8BE]].enumerated() {
-            let start = end - 340 + CGFloat(row) * 88
-            var terrace = Path()
-            for index in 0...80 {
-                let t = CGFloat(index) / 80
-                let y = start + sin(t * 5.4 + CGFloat(row) * 1.7) * 32
-                    + sin(t * 11.3 + CGFloat(row) * 0.8) * 9 + (t - 0.5) * 36
-                let point = CGPoint(x: w * t, y: y)
-                if index == 0 { terrace.move(to: point) } else { terrace.addLine(to: point) }
-            }
-            let crest = terrace
-            terrace.addLine(to: CGPoint(x: w, y: end + 2))
-            terrace.addLine(to: CGPoint(x: 0, y: end + 2)); terrace.closeSubpath()
-            context.fill(terrace, with: .linearGradient(Gradient(colors: colors.map { Color(dinoHex: $0) }),
-                startPoint: CGPoint(x: 0, y: start - 32), endPoint: CGPoint(x: 0, y: end - 20)))
-            context.stroke(crest, with: .color(Color(dinoHex: 0xE4DFB8).opacity(0.18)),
-                style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-        }
+        var meadow = context
+        meadow.translateBy(x: 0, y: layout.height - layout.routeOffset)
+        VillageWorldPainter(context: meadow).volcanoMeadow(in: WorldMapChapterSpacing.sceneSize(width: layout.width))
     }
 
     /// Sand and wind-worn dune crests remain visible above the later basalt
@@ -5432,17 +5383,19 @@ private struct VolcanoWorldPainter {
         let w = layout.width
         let start = -VolcanoWorldLayout.entranceOverlap
         let end = VolcanoWorldLayout.inletEnd(layout: layout, right: false) + 150
-        let area = Path(CGRect(x: 0, y: start, width: w, height: end - start))
-        var c = context
-        c.clipToLayer { mask in
-            mask.fill(area, with: .linearGradient(Gradient(stops: [
-                .init(color: .clear, location: 0),
-                .init(color: .white, location: 100 / (end - start)),
-                .init(color: .white, location: 1 - 160 / (end - start)),
-                .init(color: .clear, location: 1)
-            ]), startPoint: CGPoint(x: 0, y: start), endPoint: CGPoint(x: 0, y: end)))
+        var sand = Path()
+        for i in 0...80 {
+            let x = w * CGFloat(i) / 80
+            let y = start + 48 + 24 * sin(x / w * 6.8 + 0.4)
+            if i == 0 { sand.move(to: .init(x: x, y: y)) } else { sand.addLine(to: .init(x: x, y: y)) }
         }
-        c.fill(area, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xF7D89E), Color(dinoHex: 0xF5D397), Color(dinoHex: 0xF0C88B)]),
+        for i in (0...80).reversed() {
+            let x = w * CGFloat(i) / 80
+            sand.addLine(to: .init(x: x, y: end - 80 + 44 * sin(x / w * 7.4)))
+        }
+        sand.closeSubpath()
+        var c = context; c.clip(to: sand)
+        c.fill(sand, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xF7D89E), Color(dinoHex: 0xF5D397), Color(dinoHex: 0xF0C88B)]),
             startPoint: CGPoint(x: 0, y: start), endPoint: CGPoint(x: 0, y: end)))
         for row in -3...Int(ceil(end / 148)) {
             let y = CGFloat(row) * 148 + 148 + CGFloat(sin(Double(row) * 1.71)) * 19
@@ -5467,27 +5420,15 @@ private struct VolcanoWorldPainter {
         var left: [CGPoint] = [], right: [CGPoint] = []
         for index in 0...count {
             let y = start + (end - start) * CGFloat(index) / CGFloat(count)
-            let half = (49 + sin(y / 83) * 1.1) * layout.scale
+            let entry = min(1, max(0, (y + layout.routeOffset + 55) / 220))
+            let exit = min(1, max(0, (end - 45 - y) / 240))
+            let taper = min(entry, exit)
+            let half = (49 + sin(y / 83)) * taper * taper * (3 - 2 * taper) * layout.scale
             let center = layout.centerX(at: y)
             left.append(CGPoint(x: center - half, y: y)); right.append(CGPoint(x: center + half, y: y))
         }
         var shoulder = Path(); shoulder.addLines(left + right.reversed()); shoulder.closeSubpath()
-        let h = layout.height
-        var ash = context
-        ash.clipToLayer { mask in
-            mask.fill(shoulder, with: .linearGradient(Gradient(colors: [.clear, .white]),
-                startPoint: CGPoint(x: 0, y: start), endPoint: CGPoint(x: 0, y: -layout.routeOffset + 90)))
-        }
-        ash.clipToLayer { mask in
-            mask.fill(shoulder, with: .linearGradient(Gradient(colors: [.white, .clear]),
-                startPoint: CGPoint(x: 0, y: end - 360), endPoint: CGPoint(x: 0, y: end - 50)))
-        }
-        ash.fill(shoulder, with: .linearGradient(Gradient(stops: [
-            .init(color: Color(dinoHex: 0xE3CFAE), location: 0),
-            .init(color: Color(dinoHex: 0xD2B995), location: 0.45),
-            .init(color: Color(dinoHex: 0xCCB394), location: 0.94),
-            .init(color: Color(dinoHex: 0xC7E8BE), location: 1)
-        ]), startPoint: CGPoint(x: 0, y: -layout.routeOffset), endPoint: CGPoint(x: 0, y: h - layout.routeOffset)))
+        context.fill(shoulder, with: .color(Color(dinoHex: 0xD2B995)))
         for index in 0..<190 {
             let y = 8 + CGFloat(index) * 9.2
             guard y < 1700 else { break }
@@ -6256,21 +6197,44 @@ private struct VillageWorldPainter {
                                            center: point, startRadius: 0, endRadius: radius))
     }
 
+
+    /// Grass grows beneath the existing, outward-turning basalt banks. The
+    /// volcanic rock keeps its complete silhouette above this planted floor.
+    func volcanoMeadow(in size: CGSize) {
+        let w = size.width, h = size.height
+        var meadow = Path(); meadow.move(to: .init(x: -20, y: -263))
+        meadow.addCurve(to: .init(x: w * 0.43, y: -313),
+                         control1: .init(x: w * 0.10, y: -379), control2: .init(x: w * 0.28, y: -347))
+        meadow.addCurve(to: .init(x: w + 20, y: -238),
+                         control1: .init(x: w * 0.68, y: -241), control2: .init(x: w * 0.90, y: -302))
+        meadow.addLine(to: .init(x: w + 20, y: h + 2)); meadow.addLine(to: .init(x: -20, y: h + 2)); meadow.closeSubpath()
+        context.fill(meadow, with: .linearGradient(Gradient(stops: [
+            .init(color: Color(dinoHex: 0xC7E8BE), location: 0),
+            .init(color: Color(dinoHex: 0xD1E4AE), location: 0.32),
+            .init(color: Color(dinoHex: 0xC8DEA8), location: 0.57),
+            .init(color: Color(dinoHex: 0xC3DBAD), location: 1)
+        ]), startPoint: .zero, endPoint: .init(x: 0, y: h)))
+        // The garden's turf has small blades, never an extra coloured ribbon.
+        var turf = context; turf.clip(to: meadow)
+        for i in 0..<26 {
+            let x = CGFloat((i * 127 + 29) % max(1, Int(w)))
+            let y = -245 + CGFloat((i * 53) % 245)
+            let p = VillageWorldPainter(context: turf)
+            p.line([.init(x: x - 3, y: y), .init(x: x - 5, y: y - 6)], 0x8BAF76, 0.8)
+            p.line([.init(x: x, y: y), .init(x: x + 2, y: y - 8)], 0xA5C184, 0.9)
+        }
+    }
+
     func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let w = size.width, h = size.height
         let left: CGFloat = 0, right = w - left
         let scale = min(1.30, max(0.82, w / 390))
-        context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
-            .init(color: Color(dinoHex: 0xC7E8BE), location: 0),
-            .init(color: Color(dinoHex: 0x88D2E8), location: 0.035),
-            .init(color: Color(dinoHex: 0xDDF1D8), location: (routeOffset + 80) / h),
-            .init(color: Color(dinoHex: 0xD1E4AE), location: 0.32),
-            .init(color: Color(dinoHex: 0xC8DEA8), location: 0.57),
-            .init(color: Color(dinoHex: 0xC3DBAD), location: 0.80),
-            .init(color: Color(dinoHex: 0xC3DBAD), location: 1)
-        ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
-        sky(width: w, left: left, right: right, height: routeOffset + 85, scale: scale)
-        CrystalCavePainter(context: context).approachGround(width: w, boundaryY: h)
+        volcanoMeadow(in: size)
+        cottage(at: .init(x: w * 0.16, y: 167 * scale), size: scale * 0.48, leafRoof: true)
+        cottage(at: .init(x: w * 0.86, y: 178 * scale), size: scale * 0.51, leafRoof: false)
+        var entry = context; entry.translateBy(x: 0, y: h)
+        let caveSize = WorldMapChapterSpacing.sceneSize(width: w)
+        CrystalCavePainter(context: entry).villageDoorstep(in: caveSize, routeOffset: WorldMapChapterSpacing.sceneOffset(width: w))
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         waterways(layout: scenery, context: c)
@@ -7386,7 +7350,7 @@ private enum CrystalCaveLifeLayout {
         let relief = (sin(y / 89 + (right ? 0.9 : 0)) * 11 + sin(y / 43) * 4) * scale * edgeAmount
         let wall = bend + sign * (distance * scale + relief)
         // Low outcrops rise into the cave walls along the open approach.
-        let entered = smooth((y + 40 * scale) / (430 * scale))
+        let entered = smooth((y + 300 * scale) / (430 * scale))
         let enclosed = outside + (wall - outside) * entered
         let departure = departureProgress(at: y, layout: layout)
         return enclosed + (outside - enclosed) * departure
@@ -7580,10 +7544,10 @@ private struct CrystalCavePainter {
     private func wallPath(right: Bool, distance: CGFloat, layout: WorldSceneryLayout) -> Path {
         let outside = right ? layout.width + 160 : -160
         return Path { path in
-            path.move(to: CGPoint(x: outside, y: -10))
-            let count = Int(ceil((layout.height + 32) / 8))
+            path.move(to: CGPoint(x: outside, y: -220))
+            let count = Int(ceil((layout.height + 244) / 8))
             for i in 0...count {
-                let y = -8 + (layout.height + 32) * CGFloat(i) / CGFloat(count)
+                let y = -220 + (layout.height + 244) * CGFloat(i) / CGFloat(count)
                 path.addLine(to: CGPoint(x: wallX(at: y, right: right, distance: distance, layout: layout), y: y))
             }
             path.addLine(to: CGPoint(x: outside, y: layout.height + 24))
@@ -7664,7 +7628,7 @@ private struct CrystalCavePainter {
     /// separate columns at the screen edge. The first stones end offscreen.
     private func entranceShoulder(layout: WorldSceneryLayout, right: Bool) {
         let s = layout.scale, sign: CGFloat = right ? 1 : -1
-        let start = -40 * s, end = layout.routeOffset + 135 * s
+        let start = -220 * s, end = layout.routeOffset + 135 * s
         let samples = Int(ceil((end - start) / (7 * s)))
         var previous = CGPoint(x: wallX(at: start, right: right, distance: 127, layout: layout), y: start)
         var distance: CGFloat = 50 * s
@@ -7738,33 +7702,31 @@ private struct CrystalCavePainter {
         }
     }
 
-    /// Daylight warms the clearing as the complete rock silhouettes leave at the sides.
-    /// Its final colour matches the city terrain at the chapter boundary.
+    /// The city's actual street begins under the departing cave wall stones.
     private func departureGround(layout: WorldSceneryLayout) {
-        let start = layout.height - 300 * layout.scale
-        let end = layout.height
-        context.fill(Path(CGRect(x: 0, y: start, width: layout.width, height: end - start)),
-                     with: .linearGradient(Gradient(stops: [
-                        .init(color: Color(dinoHex: 0x719BA6).opacity(0), location: 0),
-                        .init(color: Color(dinoHex: 0x88A6AA).opacity(0.52), location: 0.32),
-                        .init(color: Color(dinoHex: 0x9CB5B0).opacity(0.9), location: 0.68),
-                        .init(color: Color(dinoHex: 0xACBEB4), location: 1)
-                     ]), startPoint: CGPoint(x: 0, y: start), endPoint: CGPoint(x: 0, y: end)))
+        var street = context; street.translateBy(x: 0, y: layout.height)
+        CityWorldPainter(context: street).caveStreet(in: WorldMapChapterSpacing.sceneSize(width: layout.width))
+    }
+
+    private func entranceWall(layout: WorldSceneryLayout, right: Bool) {
+        let w = layout.width
+        let shade = wallPath(right: right, distance: 102, layout: layout)
+        context.fill(shade, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0x597699), Color(dinoHex: 0x334D77)]),
+                                                    startPoint: CGPoint(x: w / 2, y: 0), endPoint: CGPoint(x: right ? w : 0, y: 0)))
+        let face = wallPath(right: right, distance: 131, layout: layout)
+        context.fill(face, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0x8498B4), Color(dinoHex: 0x4B6892), Color(dinoHex: 0x2C426A)]),
+                                                 startPoint: CGPoint(x: right ? w * 0.64 : w * 0.32, y: 0),
+                                                 endPoint: CGPoint(x: right ? w + 50 : -50, y: 0)))
+        let outer = wallPath(right: right, distance: 189, layout: layout)
+        context.fill(outer, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0x394D78), Color(dinoHex: 0x202F54)]),
+                                                    startPoint: CGPoint(x: w / 2, y: 0), endPoint: CGPoint(x: right ? w : 0, y: 0)))
     }
 
     private func enclosure(layout: WorldSceneryLayout) {
-        let w = layout.width, h = layout.height, scale = layout.scale
+        let h = layout.height, scale = layout.scale
         for right in [false, true] {
-            let shade = wallPath(right: right, distance: 102, layout: layout)
-            context.fill(shade, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0x597699), Color(dinoHex: 0x334D77)]),
-                                                        startPoint: CGPoint(x: w / 2, y: 0), endPoint: CGPoint(x: right ? w : 0, y: 0)))
+            entranceWall(layout: layout, right: right)
             let face = wallPath(right: right, distance: 131, layout: layout)
-            context.fill(face, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0x8498B4), Color(dinoHex: 0x4B6892), Color(dinoHex: 0x2C426A)]),
-                                                     startPoint: CGPoint(x: right ? w * 0.64 : w * 0.32, y: 0),
-                                                     endPoint: CGPoint(x: right ? w + 50 : -50, y: 0)))
-            let outer = wallPath(right: right, distance: 189, layout: layout)
-            context.fill(outer, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0x394D78), Color(dinoHex: 0x202F54)]),
-                                                        startPoint: CGPoint(x: w / 2, y: 0), endPoint: CGPoint(x: right ? w : 0, y: 0)))
             // Bedding planes stay inside a single continuous wall mass.
             var rockContext = context; rockContext.clip(to: face)
             let rock = CrystalCavePainter(context: rockContext)
@@ -7828,24 +7790,62 @@ private struct CrystalCavePainter {
         }
     }
 
-    func landscape(in size: CGSize, routeOffset: CGFloat) {
+
+    /// A worn limestone threshold replaces the former transparent colour ramp.
+    /// Its chipped edge belongs to the cave floor, underneath both river exits.
+    func villageFloor(in size: CGSize, routeOffset: CGFloat) {
         let w = size.width, h = size.height
-        let layout = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
-        let floor = Path(CGRect(origin: .zero, size: size))
+        var floor = Path(); floor.move(to: .init(x: -12, y: -108))
+        floor.addCurve(to: .init(x: w * 0.45, y: -64),
+                       control1: .init(x: w * 0.14, y: -134), control2: .init(x: w * 0.30, y: -76))
+        floor.addCurve(to: .init(x: w + 12, y: -137),
+                       control1: .init(x: w * 0.68, y: -38), control2: .init(x: w * 0.86, y: -158))
+        let lip = floor
+        floor.addLine(to: .init(x: w + 12, y: h + 2)); floor.addLine(to: .init(x: -12, y: h + 2)); floor.closeSubpath()
         fillFloor(floor, width: w)
         context.fill(floor, with: .linearGradient(Gradient(stops: [
             .init(color: Color(dinoHex: 0x172B51).opacity(0.93), location: 0),
             .init(color: Color(dinoHex: 0x27466D).opacity(0.72), location: 0.28),
             .init(color: Color(dinoHex: 0x425D83).opacity(0.35), location: 0.66),
             .init(color: .clear, location: 1)
-        ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: routeOffset + 1390)))
+        ]), startPoint: .zero, endPoint: .init(x: 0, y: routeOffset + 1390)))
+        context.stroke(lip.offsetBy(dx: 0, dy: 5), with: .color(Color(dinoHex: 0x334B6B)), lineWidth: 9)
+        context.stroke(lip, with: .color(Color(dinoHex: 0xB5C8C6)), lineWidth: 2)
+        // Native wall fragments break the entrance lip into real stone pieces.
+        for right in [false, true] {
+            for i in 0..<3 {
+                let x = right ? w - 16 - CGFloat(i) * 29 : 13 + CGFloat(i) * 31
+                let y = -105 + CGFloat(i % 2) * 22 + (right ? -20 : 0)
+                wallBoulder(in: CGRect(x: x - 23, y: y - 15, width: 46, height: 30), variation: i + (right ? 3 : 0), warm: true)
+                if i == 1 { moss(at: .init(x: x, y: y + 11), size: 0.29) }
+            }
+        }
+    }
+
+    /// Only the cave's real first wall stones can cross into the village.
+    /// No copy of the cave background is painted over the outgoing waterways.
+    func villageDoorstep(in size: CGSize, routeOffset: CGFloat) {
+        villageFloor(in: size, routeOffset: routeOffset)
+        var c = context; c.clip(to: Path(CGRect(x: 0, y: -200, width: size.width, height: 200)))
+        let p = CrystalCavePainter(context: c)
+        let layout = WorldSceneryLayout(width: size.width, height: size.height, routeOffset: routeOffset)
+        for right in [false, true] {
+            p.entranceWall(layout: layout, right: right)
+            p.entranceShoulder(layout: layout, right: right)
+        }
+    }
+
+    func landscape(in size: CGSize, routeOffset: CGFloat) {
+        let w = size.width, h = size.height
+        let layout = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
+        let floor = Path(CGRect(origin: .zero, size: size))
+        villageFloor(in: size, routeOffset: routeOffset)
         var interior = context; interior.clip(to: floor)
         let light = CrystalCavePainter(context: interior)
         for (y, color): (CGFloat, UInt32) in [(routeOffset + 260, 0xB8EEE9), (routeOffset + 790, 0xD9C6F0), (routeOffset + 1330, 0xB3E8E5)] {
             light.ground(at: CGPoint(x: layout.centerX(at: y - routeOffset), y: y), width: min(w, 650), height: 380, color: color, opacity: 0.29)
         }
         departureGround(layout: layout)
-        approachGround(width: w)
         let interiorPainter = CrystalCavePainter(context: interior)
         interiorPainter.enclosure(layout: layout)
 
@@ -7949,23 +7949,6 @@ private struct CrystalCavePainter {
                                  width: 160 * scale, height: 220 * scale)) {
             CrystalCavePainter(context: c).arch(at: CGPoint(x: w - 80 * scale, y: archY), size: scale * 0.98)
         }
-    }
-
-    /// A single colour ramp spans both chapters, with an opaque sage join.
-    /// It is painted below waterways, rocks and the uninterrupted sandy trail.
-    func approachGround(width: CGFloat, boundaryY: CGFloat = 0) {
-        let scale = min(1.30, max(0.82, width / 390))
-        let start = boundaryY - 110 * scale
-        let end = boundaryY + 500 * scale
-        context.fill(Path(CGRect(x: 0, y: start, width: width, height: end - start)),
-                     with: .linearGradient(Gradient(stops: [
-                        .init(color: Color(dinoHex: 0xC3DBAD).opacity(0), location: 0),
-                        .init(color: Color(dinoHex: 0xB4C8AE), location: 110.0 / 610),
-                        .init(color: Color(dinoHex: 0xA3BBAE), location: 200.0 / 610),
-                        .init(color: Color(dinoHex: 0x87A4AA), location: 330.0 / 610),
-                        .init(color: Color(dinoHex: 0x6D90A1).opacity(0.86), location: 450.0 / 610),
-                        .init(color: Color(dinoHex: 0x567D98).opacity(0), location: 1)
-                     ]), startPoint: CGPoint(x: 0, y: start), endPoint: CGPoint(x: 0, y: end)))
     }
 
     private func moss(at point: CGPoint, size: CGFloat) {
@@ -8382,6 +8365,7 @@ private struct CityMetroLine {
     let distances: [CGFloat]
     let path: Path
     let stationDistances: [CGFloat]
+    private let foundationRows: [Int:[CGRect]]
     var length: CGFloat { distances.last ?? 0 }
 
     init(layout: WorldSceneryLayout) {
@@ -8421,6 +8405,13 @@ private struct CityMetroLine {
         var lengths: [CGFloat] = [0]
         for (a, b) in zip(samples, samples.dropFirst()) { lengths.append(lengths.last! + hypot(b.x - a.x, b.y - a.y)) }
         points = samples; distances = lengths
+        var rows: [Int:[CGRect]] = [:]
+        for (a,b) in zip(samples,samples.dropFirst()) {
+            let bed = CGRect(x:min(a.x,b.x),y:min(a.y,b.y),width:max(0.1,abs(b.x-a.x)),height:max(0.1,abs(b.y-a.y)))
+                .insetBy(dx:-29*s,dy:-29*s)
+            for row in Int(floor(bed.minY/64))...Int(floor(bed.maxY/64)) { rows[row,default:[]].append(bed) }
+        }
+        foundationRows = rows
         stationDistances = [lengths[leftStation], lengths[rightStation]]
         path = Path { p in p.addLines(samples) }
     }
@@ -8467,6 +8458,15 @@ private struct CityMetroLine {
         }
     }
 
+    /// A foundation must clear the complete rail bed, including the near retaining wall.
+    func groundIsClear(_ foundation: CGRect, scale: CGFloat) -> Bool {
+        // A small spatial index keeps fitting a dense city inexpensive during layout.
+        for row in Int(floor(foundation.minY/64))...Int(floor(foundation.maxY/64)) {
+            for bed in foundationRows[row] ?? [] where bed.intersects(foundation) { return false }
+        }
+        return true
+    }
+
     /// Half the previous cruising speed, with brief, smooth stops at both stations.
     /// The reset happens only once the last carriage has left the screen.
     func travel(at time: TimeInterval, scale: CGFloat) -> (distance: CGFloat, direction: CGFloat, speed: CGFloat) {
@@ -8499,6 +8499,90 @@ private struct CityMetroLine {
     }
 }
 
+/// The low railway passes through a short stone bore beneath the level street.
+private struct CityMetroTunnel {
+    let line: CityMetroLine
+    let scale: CGFloat
+    let centerDistance: CGFloat
+    var start: CGFloat { centerDistance-44*scale }
+    var end: CGFloat { centerDistance+44*scale }
+
+    init(line: CityMetroLine, scale: CGFloat) {
+        self.line = line; self.scale = scale
+        let index = line.points.indices.max { line.points[$0].y < line.points[$1].y }!
+        centerDistance = line.distances[index]
+    }
+
+    func point(_ d: CGFloat, lateral: CGFloat, height: CGFloat) -> CGPoint {
+        let p = line.point(at:d,offset:lateral*scale)
+        return CGPoint(x:p.x,y:p.y-height*scale)
+    }
+
+    func strip(_ a: CGFloat, _ b: CGFloat, heightA: CGFloat, heightB: CGFloat) -> Path {
+        Path { path in
+            for d in stride(from:start,through:end,by:2*scale) {
+                let p = point(d,lateral:a,height:heightA)
+                if d == start { path.move(to:p) } else { path.addLine(to:p) }
+            }
+            path.addLine(to:point(end,lateral:a,height:heightA))
+            for d in stride(from:end,through:start,by:-2*scale) { path.addLine(to:point(d,lateral:b,height:heightB)) }
+            path.addLine(to:point(start,lateral:b,height:heightB)); path.closeSubpath()
+        }
+    }
+
+    func arch(at d: CGFloat, radius: CGFloat, crown: CGFloat) -> Path {
+        Path { p in
+            p.move(to:point(d,lateral:-radius,height:0))
+            p.addLine(to:point(d,lateral:-radius,height:32))
+            p.addCurve(to:point(d,lateral:radius,height:32),
+                       control1:point(d,lateral:-radius,height:crown),
+                       control2:point(d,lateral:radius,height:crown))
+            p.addLine(to:point(d,lateral:radius,height:0));p.closeSubpath()
+        }
+    }
+
+    /// The solid earth hides the complete height of a carriage, including its sparks.
+    /// A geometric cut, rather than an opacity animation, makes each car enter the bore.
+    var buriedVolume: Path {
+        var vertices: [CGPoint] = []
+        for d in stride(from:start,through:end,by:3*scale) {
+            for y: CGFloat in [-25,25] { for z: CGFloat in [0,58] { vertices.append(point(d,lateral:y,height:z)) } }
+        }
+        for y: CGFloat in [-25,25] { for z: CGFloat in [0,58] { vertices.append(point(end,lateral:y,height:z)) } }
+        let points = vertices.sorted { $0.x == $1.x ? $0.y < $1.y:$0.x < $1.x }
+        func cross(_ a:CGPoint,_ b:CGPoint,_ c:CGPoint)->CGFloat { (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x) }
+        var lower: [CGPoint] = [], upper: [CGPoint] = []
+        for p in points {
+            while lower.count >= 2 && cross(lower[lower.count-2],lower.last!,p) <= 0 { lower.removeLast() }
+            lower.append(p)
+        }
+        for p in points.reversed() {
+            while upper.count >= 2 && cross(upper[upper.count-2],upper.last!,p) <= 0 { upper.removeLast() }
+            upper.append(p)
+        }
+        return Path { p in p.addLines(Array(lower.dropLast())+Array(upper.dropLast()));p.closeSubpath() }
+    }
+    var bounds: CGRect { buriedVolume.boundingRect.insetBy(dx:-18*scale,dy:-15*scale) }
+}
+
+/// The robot's court uses real land beside the loop, with enough room for both feet.
+private struct CityBossCourt {
+    let point: CGPoint
+    let scale: CGFloat
+    var bossPoint: CGPoint { .init(x:point.x,y:point.y-12) }
+    var groundBounds: CGRect { .init(x:point.x-33*scale,y:point.y-19*scale,width:66*scale,height:37*scale) }
+    init(layout: WorldSceneryLayout, line: CityMetroLine) {
+        let s = layout.scale
+        var chosen = CGPoint(x:layout.width-49*s,y:1687)
+        for shift in stride(from:CGFloat(0),through:184,by:8) {
+            let candidate = CGPoint(x:layout.width-49*s,y:1687-shift)
+            let floor = CGRect(x:candidate.x-33*s,y:candidate.y-19*s,width:66*s,height:37*s)
+            if line.groundIsClear(floor,scale:s) { chosen=candidate;break }
+        }
+        point=chosen;scale=s
+    }
+}
+
 /// Whole silhouettes are fitted beside the route. Buildings are never cut by a bend mask.
 private enum CityUrbanLayout {
     struct Site: Identifiable {
@@ -8507,7 +8591,8 @@ private enum CityUrbanLayout {
         let size: CGFloat
         let right: Bool
         let kind: Int
-        var bounds: CGRect { CGRect(x: point.x - 82 * size, y: point.y - 242 * size, width: 164 * size, height: 294 * size) }
+        var bounds: CGRect { CGRect(x: point.x - 82 * size, y: point.y - 242 * size, width: 164 * size, height: 300 * size) }
+        var groundBounds: CGRect { CGRect(x:point.x-82*size,y:point.y-48*size,width:164*size,height:106*size) }
     }
 
     static func sites(layout: WorldSceneryLayout) -> [Site] {
@@ -8572,12 +8657,23 @@ private enum CityUrbanLayout {
                 }
             }
         }
+        let metro = CityMetroLine(layout:layout)
+        result = result.compactMap { site in
+            let sign: CGFloat = site.right ? 1:-1
+            for step in 0..<50 {
+                let moved = Site(id:site.id,point:.init(x:site.point.x+sign*CGFloat(step)*4*s,y:site.point.y),
+                                 size:site.size,right:site.right,kind:site.kind)
+                if site.id < 100 && (moved.bounds.minX < 5*s || moved.bounds.maxX > layout.width-5*s) { continue }
+                if moved.bounds.maxX < 10*s || moved.bounds.minX > layout.width-10*s { return nil }
+                if metro.groundIsClear(moved.groundBounds,scale:s) { return moved }
+            }
+            return nil
+        }
         return result.sorted { $0.point.y < $1.point.y }
     }
 }
 
-/// An inhabited inner street follows both sides of the playable promenade.
-/// Some whole facades stand in front of the metro to create real occlusion.
+/// Ground footprints stay beside the railway; only the upper silhouettes may overlap it.
 private enum CityInnerLayout {
     struct Site: Identifiable {
         let id: Int
@@ -8588,95 +8684,109 @@ private enum CityInnerLayout {
         let foreground: Bool
         var halfWidth: CGFloat { [38,39,38,39,35,39,25,82][kind] }
         var rise: CGFloat { [132,74,116,91,104,102,32,242][kind] }
-        var contentBounds: CGRect { CGRect(x:point.x-halfWidth*size,y:point.y-rise*size,width:halfWidth*2*size,height:(rise+28)*size) }
-        var bounds: CGRect { contentBounds.insetBy(dx:-10*size,dy:-8*size) }
+        var foundationHalfWidth: CGFloat { [31,34,34,37,31,34,26,82][kind] }
+        var groundBounds: CGRect {
+            CGRect(x: point.x-foundationHalfWidth*size, y: point.y-(kind == 7 ? 45:10)*size,
+                   width: foundationHalfWidth*2*size, height: (kind == 7 ? 103:42)*size)
+        }
+        var contentBounds: CGRect {
+            CGRect(x: point.x-halfWidth*size, y: point.y-rise*size,
+                   width: halfWidth*2*size, height: (rise+(kind == 7 ? 58:32))*size)
+        }
+        var bounds: CGRect { contentBounds.insetBy(dx: -10*size, dy: -8*size) }
+    }
+
+    private static func fit(_ source: Site, layout: WorldSceneryLayout, metro: CityMetroLine,
+                            innerFirst: Bool = true, edgePanorama: Bool = false) -> Site? {
+        let s = layout.scale, sign: CGFloat = source.right ? 1:-1
+        let court = CityBossCourt(layout:layout,line:metro).groundBounds.insetBy(dx:-5*s,dy:-6*s)
+        for inner in innerFirst ? [true,false]:[false] {
+            for factor: CGFloat in [1,0.88,0.76,0.64,0.55,0.45] {
+                let size = source.size*factor
+                var edge = source.right ? -CGFloat.greatestFiniteMagnitude:CGFloat.greatestFiniteMagnitude
+                let height = source.rise+(source.kind == 7 ? 58:32)
+                for n in 0...36 {
+                    let y = source.point.y-source.rise*size+height*size*CGFloat(n)/36
+                    let x = layout.centerX(at:y)+sign*(45*s+source.halfWidth*size)
+                    edge = source.right ? max(edge,x):min(edge,x)
+                }
+                for step in 0..<50 {
+                    let x = edge+sign*CGFloat(step)*4*s
+                    if inner && abs(x-layout.centerX(at:source.point.y)) > 114*s { break }
+                    let site = Site(id:source.id,point:.init(x:x,y:source.point.y),size:size,
+                                    right:source.right,kind:source.kind,foreground:source.foreground)
+                    if !edgePanorama && (site.contentBounds.minX < 5*s || site.contentBounds.maxX > layout.width-5*s) { continue }
+                    if site.contentBounds.minY+layout.routeOffset < 8*s || site.contentBounds.maxY+layout.routeOffset > layout.height-16*s { continue }
+                    if edgePanorama && (site.contentBounds.maxX < 10*s || site.contentBounds.minX > layout.width-10*s) { continue }
+                    if site.groundBounds.intersects(court) { continue }
+                    if metro.groundIsClear(site.groundBounds, scale:s) { return site }
+                }
+            }
+        }
+        return nil
     }
 
     static func sites(layout: WorldSceneryLayout) -> [Site] {
-        let s = layout.scale
+        let s = layout.scale, metro = CityMetroLine(layout:layout)
         var result: [Site] = []
         for right in [false,true] {
-            let sign: CGFloat = right ? 1 : -1
             for i in 0..<28 {
-                let y = 18 + CGFloat(i)*59 + (right ? 28 : 0)
-                var kind = (i + (right ? 2 : 0)) % 6
-                var fitted: CGPoint?, fittedSize: CGFloat = s*0.76
-                for attempt in 0..<9 {
-                    let size = s*(0.8-CGFloat(attempt)*0.035)
-                    let half = [CGFloat(38),39,38,39,35,39][kind]
-                    let rise = [CGFloat(132),74,116,91,104,102][kind]
-                    var x = layout.centerX(at:y) + sign*72*s
-                    for n in 0...26 {
-                        let sampleY = y-rise*size+(rise+28)*size*CGFloat(n)/26
-                        let edge = layout.centerX(at:sampleY)+sign*(43*s+half*size)
-                        x = right ? max(x,edge) : min(x,edge)
-                    }
-                    if abs(x-layout.centerX(at:y)) <= 116*s {
-                        fitted = CGPoint(x:x,y:y); fittedSize = size; break
-                    }
+                let y = 18+CGFloat(i)*59+(right ? 28:0), kind = (i+(right ? 2:0))%6
+                let source = Site(id:i+(right ? 30:0),point:.init(x:0,y:y),size:s*0.8,right:right,
+                                  kind:kind,foreground:[0,2,3,5].contains(kind) && i%3 != 1)
+                if let site = fit(source,layout:layout,metro:metro) { result.append(site) }
+                else {
+                    let planter = Site(id:source.id,point:source.point,size:s*0.45,right:right,kind:6,foreground:false)
+                    if let site = fit(planter,layout:layout,metro:metro) { result.append(site) }
                 }
-                if fitted == nil {
-                    kind = 6; fittedSize = s*0.62
-                    var x = layout.centerX(at:y)+sign*70*s
-                    for n in 0...12 {
-                        let edge = layout.centerX(at:y-32*fittedSize+60*fittedSize*CGFloat(n)/12)+sign*(43*s+25*fittedSize)
-                        x = right ? max(x,edge) : min(x,edge)
-                    }
-                    fitted = CGPoint(x:x,y:y)
-                }
-                let foreground = [0,2,3,5].contains(kind) && i%3 != 1
-                result.append(Site(id:i+(right ? 30:0),point:fitted!,size:fittedSize,right:right,kind:kind,foreground:foreground))
             }
         }
         return result.sorted { $0.point.y < $1.point.y }
     }
 
-    /// Complete civic blocks stand in front of the railway wherever the road bends away.
     static func frontBlocks(layout: WorldSceneryLayout) -> [Site] {
-        let s = layout.scale
+        let s = layout.scale, metro = CityMetroLine(layout:layout)
         var result: [Site] = []
         for right in [false,true] {
-            let sign: CGFloat = right ? 1 : -1
             for i in 0..<11 {
                 let y = 132+CGFloat(i)*145+(right ? 47:0)
-                for fraction: CGFloat in [0.63,0.57,0.51] {
-                    let size = fraction*s, half = 82*size
-                    var x = layout.centerX(at:y)+sign*128*s
-                    for n in 0...50 {
-                        let sampleY = y-242*size+270*size*CGFloat(n)/50
-                        let edge = layout.centerX(at:sampleY)+sign*(50*s+half)
-                        x = right ? max(x,edge):min(x,edge)
-                    }
-                    if x-half > 7*s && x+half < layout.width-7*s {
-                        result.append(Site(id:200+i+(right ? 20:0),point:.init(x:x,y:y),size:size,right:right,kind:7,foreground:true))
-                        break
-                    }
-                }
+                let source = Site(id:200+i+(right ? 20:0),point:.init(x:0,y:y),size:s*0.63,
+                                  right:right,kind:7,foreground:true)
+                if let site = fit(source,layout:layout,metro:metro,innerFirst:false) { result.append(site) }
             }
         }
         return result.sorted { $0.point.y < $1.point.y }
     }
 
-    /// Smaller public squares occupy the outer corners that cannot fit a tall block.
     static func pocketSites(layout: WorldSceneryLayout) -> [Site] {
-        let s = layout.scale
+        let s = layout.scale, metro = CityMetroLine(layout:layout)
         var result: [Site] = []
         for right in [false,true] {
-            let sign: CGFloat = right ? 1 : -1
             for i in 0..<14 {
-                let y = 128+CGFloat(i)*110+(right ? 43:0)
-                let kind = i%3 == 1 ? 4:1
-                let size = s*0.78
-                var x = layout.centerX(at:y)+sign*172*s
-                let half: CGFloat = (kind == 4 ? 35:39)*size
-                let rise: CGFloat = (kind == 4 ? 104:74)*size
-                for n in 0...20 {
-                    let sampleY = y-rise+(rise+28*size)*CGFloat(n)/20
-                    let edge = layout.centerX(at:sampleY)+sign*(65*s+half)
-                    x = right ? max(x,edge):min(x,edge)
-                }
-                if x-half > 5*s && x+half < layout.width-5*s {
-                    result.append(Site(id:100+i+(right ? 30:0),point:.init(x:x,y:y),size:size,right:right,kind:kind,foreground:false))
+                let y = 128+CGFloat(i)*110+(right ? 43:0), kind = i%3 == 1 ? 4:1
+                let source = Site(id:100+i+(right ? 30:0),point:.init(x:0,y:y),size:s*0.78,
+                                  right:right,kind:kind,foreground:false)
+                if let site = fit(source,layout:layout,metro:metro,innerFirst:false) { result.append(site) }
+            }
+        }
+        return result.sorted { $0.point.y < $1.point.y }
+    }
+
+    /// Extra, intact blocks and cafe courts finish the arrival and the station quarter.
+    static func endDistricts(layout: WorldSceneryLayout) -> [Site] {
+        let s = layout.scale, metro = CityMetroLine(layout:layout)
+        var result: [Site] = []
+        for right in [false,true] {
+            for (i,y) in [CGFloat(-68),20,105,195,1425,1510,1590,1660,1730].enumerated() {
+                let source = Site(id:300+i+(right ? 20:0),point:.init(x:0,y:y+(right ? 17:0)),
+                                  size:s*(i%2 == 0 ? 0.82:0.9),right:right,
+                                  kind:i%2 == 0 ? 7:5,foreground:true)
+                if let site = fit(source,layout:layout,metro:metro,innerFirst:false) { result.append(site) }
+                // A separate pavement cafe fills the space beside the larger block.
+                if i%2 == 0 {
+                    let cafe = Site(id:400+i+(right ? 20:0),point:.init(x:0,y:y+47),size:s*0.78,
+                                    right:right,kind:1,foreground:true)
+                    if let site = fit(cafe,layout:layout,metro:metro,innerFirst:false) { result.append(site) }
                 }
             }
         }
@@ -8698,6 +8808,7 @@ private struct CityWorldLife: View {
         GeometryReader { geometry in
             let layout = WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset)
             let line = CityMetroLine(layout: layout)
+            let tunnelCut = CityMetroTunnel(line:line,scale:layout.scale).buriedVolume
             TimelineView(.animation(minimumInterval: 1.0 / 24,
                                     paused: fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
                 let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
@@ -8713,6 +8824,7 @@ private struct CityWorldLife: View {
                         if car.distance > 0, car.distance < line.length, fixedTime != nil || frame.intersects(viewport) {
                             Canvas { context, _ in
                                 var c = context; c.translateBy(x: -frame.minX, y: routeOffset - frame.minY)
+                                c.clip(to:tunnelCut,options:.inverse)
                                 CityWorldPainter(context: c).metroCar(at: car.pose.point, heading: car.pose.heading + (car.index == CityMetroLine.carriageCount - 1 ? .pi : 0),
                                     size: layout.scale, cab: car.index == 0 || car.index == CityMetroLine.carriageCount - 1,
                                     time: time + Double(car.index) * 0.17, speed: frozen || reduceMotion ? 0 : travel.speed,
@@ -8749,20 +8861,22 @@ private struct CityMetroForeground: View {
                     CityWorldPainter(context: c).stationCanopy(line: line, index: index, scale: s)
                 }.frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
             }
-            ForEach((CityInnerLayout.sites(layout: layout).filter(\.foreground) + CityInnerLayout.frontBlocks(layout: layout)).sorted { $0.point.y < $1.point.y }) { site in
+            ForEach((CityInnerLayout.sites(layout: layout).filter(\.foreground) + CityInnerLayout.frontBlocks(layout: layout) + CityInnerLayout.endDistricts(layout: layout)).sorted { $0.point.y < $1.point.y }) { site in
                 let frame = site.bounds.offsetBy(dx: 0, dy: layout.routeOffset)
                 Canvas { context, _ in
                     var c = context; c.translateBy(x: -frame.minX, y: layout.routeOffset - frame.minY)
                     CityWorldPainter(context: c).innerStreetSite(site)
                 }.frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
             }
-            let crossing = line.points.max { $0.y < $1.y }!
+            let tunnel = CityMetroTunnel(line:line,scale:s)
+            let tunnelFrame = tunnel.bounds.offsetBy(dx:0,dy:layout.routeOffset)
             Canvas { context, _ in
-                var c = context; c.translateBy(x: 42 * s, y: 42 * s)
-                CityWorldPainter(context: c).roadOverpass(scale: s)
-            }.frame(width: 84 * s, height: 84 * s)
-                .position(x: crossing.x, y: layout.routeOffset + crossing.y)
-            let frame = CGRect(x: layout.width - 189 * s, y: layout.routeOffset + 1675 - 210 * s, width: 220 * s, height: 250 * s)
+                var c = context; c.translateBy(x:-tunnelFrame.minX,y:layout.routeOffset-tunnelFrame.minY)
+                CityWorldPainter(context:c).metroTunnel(tunnel)
+            }.frame(width:tunnelFrame.width,height:tunnelFrame.height)
+                .position(x:tunnelFrame.midX,y:tunnelFrame.midY)
+            let court = CityBossCourt(layout:layout,line:line)
+            let frame = CGRect(x:layout.width-189*s,y:layout.routeOffset+court.bossPoint.y-185*s,width:220*s,height:230*s)
             Canvas { context, _ in
                 var c = context; c.translateBy(x: -frame.minX, y: layout.routeOffset - frame.minY)
                 CityWorldPainter(context: c).metroForeground(layout: layout)
@@ -8812,28 +8926,55 @@ private struct CityWorldPainter {
                                            center: point, startRadius: 0, endRadius: radius))
     }
 
+
+    /// The first street is made of the city's limestone paving. The cave rocks
+    /// finish above this floor rather than disappearing under a join overlay.
+    func caveStreet(in size: CGSize) {
+        let w = size.width, h = size.height
+        var street = Path(); street.move(to: .init(x: -16, y: -147))
+        street.addCurve(to: .init(x: w * 0.37, y: -92),
+                        control1: .init(x: w * 0.12, y: -164), control2: .init(x: w * 0.25, y: -119))
+        street.addCurve(to: .init(x: w + 16, y: -166),
+                        control1: .init(x: w * 0.60, y: -37), control2: .init(x: w * 0.89, y: -191))
+        let curb = street
+        street.addLine(to: .init(x: w + 16, y: h + 2)); street.addLine(to: .init(x: -16, y: h + 2)); street.closeSubpath()
+        context.fill(street, with: .linearGradient(Gradient(stops: [
+            .init(color: Color(dinoHex: 0xEAE1CA), location: 0),
+            .init(color: Color(dinoHex: 0xEAE1CA), location: 0.50),
+            .init(color: Color(dinoHex: 0xD7DDCC), location: 1)
+        ]), startPoint: .zero, endPoint: .init(x: 0, y: h)))
+        context.stroke(curb.offsetBy(dx: 0, dy: 3), with: .color(Color(dinoHex: 0x9BAEAA)), lineWidth: 6)
+        context.stroke(curb, with: .color(Color(dinoHex: 0xF8EED5)), lineWidth: 2.5)
+        var paving = context; paving.clip(to: street)
+        // Courses continue into the actual streets, leaving the sandy play trail free.
+        for right in [false, true] {
+            let x: CGFloat = right ? w - 44 : 38
+            for row in 0..<5 {
+                let y = -120 + CGFloat(row) * 27
+                var joint = Path(); joint.move(to: .init(x: x - 42, y: y)); joint.addLine(to: .init(x: x + 42, y: y - 3))
+                joint.move(to: .init(x: x + CGFloat(row % 2) * 19, y: y)); joint.addLine(to: .init(x: x + CGFloat(row % 2) * 19 + 2, y: y + 25))
+                paving.stroke(joint, with: .color(Color(dinoHex: 0xBBC3B2)), lineWidth: 0.8)
+            }
+        }
+    }
+
     func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let w = size.width, h = size.height
         let scale = min(1.30, max(0.82, w / 390))
-        context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
-            .init(color: Color(dinoHex: 0xACBEB4), location: 0),
-            .init(color: Color(dinoHex: 0xC6E7EA), location: 0.065),
-            .init(color: Color(dinoHex: 0xF2E7CC), location: (routeOffset + 160) / h),
-            .init(color: Color(dinoHex: 0xEAE1CA), location: 0.50),
-            .init(color: Color(dinoHex: 0xD7DDCC), location: 0.85),
-            .init(color: Color(dinoHex: 0xCED0E6), location: 1)
-        ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
+        caveStreet(in: size)
+        var arrival = context; arrival.translateBy(x: 0, y: h)
+        SleepValleyPainter(context: arrival).cityPark(in: WorldMapChapterSpacing.sceneSize(width: w))
         entrance(width: w, scale: scale)
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let layout = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         let p = CityWorldPainter(context: c)
         p.cityDistricts(layout: layout)
         for site in CityInnerLayout.pocketSites(layout: layout) { p.innerStreetSite(site) }
-        p.cityThresholds(layout: layout)
         p.innerPromenades(layout: layout)
         let metro = CityMetroLine(layout: layout)
         for index in 0..<2 { p.stationPlatform(line: metro, index: index, scale: scale) }
         p.metroViaduct(line: metro, scale: scale)
+        p.tunnelInterior(CityMetroTunnel(line:metro,scale:scale))
         p.streetLife(layout: layout, depth: depth)
         p.bossPlaza(width: w, scale: scale, layout: layout)
     }
@@ -8896,41 +9037,6 @@ private struct CityWorldPainter {
     }
 
     /// A planted arrival court and descending park terraces finish the chapter.
-    private func cityThresholds(layout: WorldSceneryLayout) {
-        let s = layout.scale
-        for right in [false, true] {
-            let sign: CGFloat = right ? 1 : -1
-            let y: CGFloat = right ? 130 : 70
-            var boundary = right ? -CGFloat.greatestFiniteMagnitude : CGFloat.greatestFiniteMagnitude
-            for n in 0...16 {
-                let x = layout.centerX(at: y - 85 * s + CGFloat(n) * 7 * s) + sign * 72 * s
-                boundary = right ? max(boundary, x) : min(boundary, x)
-            }
-            let available = right ? layout.width - boundary : boundary
-            if available > 88 * s {
-                let point = CGPoint(x: right ? layout.width - 47 * s : 47 * s, y: y)
-                at(point, size: s * 0.64) { p in
-                    p.urbanTerrace(width: 126, variation: 0, right: right)
-                    p.streetTree(at: .init(x: -29, y: 6), size: 0.9)
-                    p.lamp(at: .init(x: 37, y: 17), size: 0.9, banner: true)
-                    p.bench(at: .init(x: -1, y: 28), size: 0.72)
-                    p.climbingFlowers(at: .init(x: -35, y: 36), size: 0.8)
-                }
-            }
-            let exitY: CGFloat = 1597
-            let center = layout.centerX(at: exitY) + sign * 153 * s
-            let room = right ? layout.width - center : center
-            if room > 32 * s {
-                at(.init(x: min(layout.width - 39 * s, max(39 * s, center)), y: exitY), size: s * 0.69) { p in
-                    p.urbanTerrace(width: 102, variation: 2, right: right)
-                    p.streetTree(at: .init(x: 0, y: -15), size: 0.85)
-                    p.bench(at: .init(x: 0, y: 23), size: 0.65)
-                    p.climbingFlowers(at: .init(x: 0, y: 34), size: 0.9)
-                }
-            }
-        }
-    }
-
     private func boulevardFacade(at point: CGPoint, size: CGFloat, variation: Int) {
         at(point, size: size) { p in
             let warm = variation % 3 == 0
@@ -9057,7 +9163,7 @@ private struct CityWorldPainter {
 
     func innerStreetSite(_ site: CityInnerLayout.Site) {
         at(site.point,size:site.size) { p in
-            let w = site.halfWidth*2
+            let w = site.foundationHalfWidth*2
             p.rounded(CGRect(x:-w/2,y:-7,width:w,height:21),radius:3,colors:[0xF8E9CB,0xC7BEA3,0xA3B19F])
             for y: CGFloat in [2,9] { p.line([.init(x:-w/2+2,y:y),.init(x:w/2-2,y:y)],color:0xFFF0D2,width:0.7) }
             switch site.kind {
@@ -9162,34 +9268,86 @@ private struct CityWorldPainter {
         }
     }
 
-    func roadOverpass(scale s: CGFloat) {
-        for side: CGFloat in [-1, 1] {
-            let x = side * 25 * s
-            rounded(CGRect(x: x - 3 * s, y: -25 * s, width: 6 * s, height: 52 * s), radius: 2 * s, colors: [0xFFF0CE, 0xC5B895, 0x9EA99E])
-            line([.init(x: x, y: -23 * s), .init(x: x, y: 24 * s)], color: 0x3C6678, width: 2 * s)
-            for y: CGFloat in [-23, 0, 24] {
-                rounded(CGRect(x: x - 4 * s, y: y * s - 3 * s, width: 8 * s, height: 6 * s), radius: 2 * s, colors: [0xFFF1D0, 0xACAE96])
-                oval(CGRect(x: x - 3 * s, y: y * s - 4 * s, width: 6 * s, height: 3 * s), colors: [0xF6D89D, 0xB49662])
+    private func tunnelInterior(_ tunnel: CityMetroTunnel) {
+        material(tunnel.strip(-24,24,heightA:0,heightB:0),colors:[0x273A48,0x122733])
+        for d in [tunnel.start,tunnel.end] {
+            material(tunnel.arch(at:d,radius:21,crown:59),colors:[0x122431,0x284552,0x0C1D29])
+        }
+    }
+
+    func metroTunnel(_ tunnel: CityMetroTunnel) {
+        let s = tunnel.scale
+        // Curved masonry over the bore sits below the playable road surface.
+        material(tunnel.strip(-28,-28,heightA:0,heightB:33),colors:[0xB1B49F,0x71898A])
+        let ribs: [CGFloat] = [-28,-19,0,19,28], heights: [CGFloat] = [33,51,58,51,33]
+        for i in 0..<4 {
+            material(tunnel.strip(ribs[i],ribs[i+1],heightA:heights[i],heightB:heights[i+1]),
+                     colors:i < 2 ? [0xE5DCBC,0xB7B69D]:[0xF8E9C8,0xCDC3A3])
+        }
+        material(tunnel.strip(28,28,heightA:33,heightB:0),colors:[0xD8CBAA,0xA1AD9C,0x7F9591])
+        for d in stride(from:tunnel.start+9*s,through:tunnel.end-3*s,by:13*s) {
+            let rib = Path { p in
+                for (i,y) in ribs.enumerated() {
+                    let q = tunnel.point(d,lateral:y,height:heights[i]+0.3)
+                    if i == 0 { p.move(to:q) } else { p.addLine(to:q) }
+                }
+            }
+            context.stroke(rib,with:.color(Color(dinoHex:0x8E9C8E).opacity(0.55)),lineWidth:0.8*s)
+        }
+        // Openings remain dark behind the train; these separate stone rings frame it.
+        for z: CGFloat in [8,20,31] {
+            var course = Path()
+            for d in stride(from:tunnel.start,through:tunnel.end,by:3*s) {
+                let p = tunnel.point(d,lateral:28,height:z)
+                if d == tunnel.start { course.move(to:p) } else { course.addLine(to:p) }
+            }
+            context.stroke(course,with:.color(Color(dinoHex:0x7F9386)),lineWidth:0.8*s)
+        }
+        for d in [tunnel.start,tunnel.end] {
+            // Recessed darkness is visible in front of the solid vault, rather than
+            // letting the light roof surface fill the opening from behind.
+            material(tunnel.arch(at:d,radius:19,crown:57),colors:[0x101F2A,0x1B3440,0x314B50])
+            let inside: CGFloat = d == tunnel.start ? 6:-6
+            for side: CGFloat in [-7,7] {
+                line([tunnel.point(d-inside,lateral:side,height:0),tunnel.point(d+inside,lateral:side,height:3)],color:0xA4B8B4,width:1.2*s)
+            }
+            var ring = tunnel.arch(at:d,radius:29,crown:68)
+            ring.addPath(tunnel.arch(at:d,radius:19,crown:57))
+            context.fill(ring,with:.linearGradient(Gradient(colors:[Color(dinoHex:0xFFF0D1),Color(dinoHex:0xC7BBA0),Color(dinoHex:0x8A9F98)]),
+                                                   startPoint:tunnel.point(d,lateral:-29,height:60),endPoint:tunnel.point(d,lateral:29,height:0)),
+                         style:FillStyle(eoFill:true))
+            context.stroke(tunnel.arch(at:d,radius:19,crown:57),with:.color(Color(dinoHex:0x4C676A)),lineWidth:1.2*s)
+            for side: CGFloat in [-1,1] {
+                for z: CGFloat in [8,19,30] {
+                    line([tunnel.point(d,lateral:side*20,height:z),tunnel.point(d,lateral:side*28,height:z)],color:0x8A9585,width:0.8*s)
+                }
+                let light = tunnel.point(d,lateral:side*25,height:24)
+                glow(light,radius:8*s,color:0xFFE0A0,opacity:0.18)
+                rounded(CGRect(x:light.x-1.3*s,y:light.y-3.2*s,width:2.6*s,height:6.4*s),radius:s,colors:[0xFFF3C7,0xC7A362])
+            }
+            for i in 1..<8 {
+                let angle = Double(i)*Double.pi/8
+                line([tunnel.point(d,lateral:CGFloat(cos(angle))*20,height:32+CGFloat(sin(angle))*19),
+                      tunnel.point(d,lateral:CGFloat(cos(angle))*29,height:32+CGFloat(sin(angle))*27)],color:0x9AA08C,width:0.8*s)
             }
         }
     }
 
     func metroForeground(layout: WorldSceneryLayout) {
         bossPlaza(width: layout.width, scale: layout.scale, layout: layout)
-        WorldBossPainter(context: context).draw(worldID: 6,
-            at: CGPoint(x: layout.width - 79 * layout.scale, y: 1675), size: layout.scale * 0.88)
+        let court = CityBossCourt(layout:layout,line:CityMetroLine(layout:layout))
+        WorldBossPainter(context: context).draw(worldID:6,at:court.bossPoint,size:layout.scale*0.80)
     }
 
-    private func bossPlaza(width: CGFloat, scale: CGFloat, layout: WorldSceneryLayout) {
-        let point = CGPoint(x: width - 79 * scale, y: 1687)
-        paving(at: point, width: 135 * scale)
-        for i in 0..<4 {
-            rounded(CGRect(x: point.x - 39 * scale - CGFloat(i) * 4 * scale, y: point.y + (12 + CGFloat(i) * 4) * scale,
-                           width: (78 + CGFloat(i) * 8) * scale, height: 5 * scale), radius: scale,
-                    colors: [0xFFF0D0, 0xB6B5A5])
+    private func bossPlaza(width: CGFloat, scale s: CGFloat, layout: WorldSceneryLayout) {
+        let point = CityBossCourt(layout:layout,line:CityMetroLine(layout:layout)).point
+        // A narrow court beside the loop keeps the robot's feet and steps off the rails.
+        rounded(CGRect(x:point.x-33*s,y:point.y-19*s,width:66*s,height:37*s),radius:9*s,colors:[0xFAEBCB,0xC2B99C,0xA1AE9C])
+        for i in 0..<3 {
+            rounded(CGRect(x:point.x-26*s,y:point.y+CGFloat(i)*4*s,width:52*s,height:4.5*s),radius:s,colors:[0xFFF0D1,0xB5B298])
         }
-        planter(at: CGPoint(x: point.x - 49 * scale, y: point.y + 12 * scale), size: scale * 0.43)
-        climbingFlowers(at: CGPoint(x: point.x + 37 * scale, y: point.y + 9 * scale), size: scale * 0.64)
+        planter(at:.init(x:point.x+21*s,y:point.y-1*s),size:s*0.26)
+        flowers(at:.init(x:point.x+20*s,y:point.y-7*s),size:s*0.35)
     }
 
     private func metroViaduct(line metro: CityMetroLine, scale s: CGFloat) {
@@ -9462,17 +9620,6 @@ private struct CityWorldPainter {
     }
 
     private func entrance(width: CGFloat, scale: CGFloat) {
-        let sun = CGPoint(x: width * 0.23, y: 76 * scale)
-        glow(sun, radius: 155 * scale, color: 0xFFF0BE, opacity: 0.72)
-        oval(CGRect(x: sun.x - 22, y: sun.y - 22, width: 44, height: 44), colors: [0xFFFFE2, 0xF8D79A])
-        for i in 0..<4 {
-            let x = width * (0.09 + CGFloat(i) * 0.28), y = (53 + CGFloat(i % 2) * 32) * scale
-            var cloud = Path()
-            for r in [CGRect(x: x - 42 * scale, y: y, width: 84 * scale, height: 15 * scale),
-                      CGRect(x: x - 24 * scale, y: y - 16 * scale, width: 40 * scale, height: 31 * scale),
-                      CGRect(x: x + 5 * scale, y: y - 23 * scale, width: 42 * scale, height: 38 * scale)] { cloud.addEllipse(in: r) }
-            context.fill(cloud, with: .color(Color(dinoHex: 0xF7F8EC)))
-        }
         let far = CityWorldPainter(context: context)
         let count = max(7, Int(width / (48 * scale)))
         for i in 0..<count {
@@ -9925,7 +10072,7 @@ private struct DayNightForestPainter {
         entrance(width: w, scale: scale)
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
-        scenery.drawBanks(in: c, worldID: 7, nextWorldID: 3)
+        scenery.drawBanks(in: c, worldID: 7)
         let p = DayNightForestPainter(context: c, scenery: scenery, depth: depth, depthOffset: routeOffset)
         p.twilight(width: w, scale: scale)
         for side in 0..<2 {
@@ -11127,17 +11274,18 @@ private struct TimeMachinePainter {
         line([.init(x: point.x - radius * 0.4, y: point.y), .init(x: point.x + radius * 0.4, y: point.y)], 0x8A794E, 0.6)
     }
 
+
+    /// The valley's night ground continues beneath the kingdom. Its real
+    /// terraces and foundations, drawn below, define the architectural entrance.
+    private func forestGround(in size: CGSize) {
+        context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(dinoHex: 0xBBC2D2)))
+    }
+
     func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let w = size.width, h = size.height
-        context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
-            .init(color: Color(dinoHex: 0xE8E9DA), location: 0),
-            .init(color: Color(dinoHex: 0xB8C1DD), location: 0.08),
-            .init(color: Color(dinoHex: 0xA5B8D2), location: (routeOffset + 40) / h),
-            .init(color: Color(dinoHex: 0xA39CC8), location: (routeOffset + 480) / h),
-            .init(color: Color(dinoHex: 0x899ABF), location: (routeOffset + 1100) / h),
-            .init(color: Color(dinoHex: 0xB7A8C7), location: (routeOffset + 1620) / h),
-            .init(color: Color(dinoHex: 0xF5D698), location: 1)
-        ]), startPoint: .zero, endPoint: .init(x: 0, y: h)))
+        forestGround(in: size)
+        var arrival = context; arrival.translateBy(x: 0, y: h)
+        PirateCoastPainter(context: arrival).clockworkBeach(in: WorldMapChapterSpacing.sceneSize(width: w))
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         ambientFloor(layout: scenery, context: c)
@@ -12583,17 +12731,38 @@ private struct PirateCoastPainter {
                                            center: point, startRadius: 0, endRadius: radius))
     }
 
+
+    /// A wind-shaped beach begins underneath the last clockwork quay. The sea
+    /// still enters through its original side inlets, with every coping stone intact.
+    func clockworkBeach(in size: CGSize) {
+        let w = size.width, h = size.height
+        var beach = Path(); beach.move(to: .init(x: -16, y: -137))
+        beach.addCurve(to: .init(x: w * 0.58, y: -91),
+                       control1: .init(x: w * 0.20, y: -208), control2: .init(x: w * 0.36, y: -63))
+        beach.addCurve(to: .init(x: w + 16, y: -172),
+                       control1: .init(x: w * 0.77, y: -111), control2: .init(x: w * 0.89, y: -192))
+        let dune = beach
+        beach.addLine(to: .init(x: w + 16, y: h + 2)); beach.addLine(to: .init(x: -16, y: h + 2)); beach.closeSubpath()
+        context.fill(beach, with: .linearGradient(Gradient(stops: [
+            .init(color: Color(dinoHex: 0xF8E2AC), location: 0),
+            .init(color: Color(dinoHex: 0xF9E3AF), location: 0.25),
+            .init(color: Color(dinoHex: 0xF3D597), location: 0.60),
+            .init(color: Color(dinoHex: 0xF6DBA3), location: 1)
+        ]), startPoint: .zero, endPoint: .init(x: 0, y: h)))
+        context.stroke(dune.offsetBy(dx: 0, dy: 2), with: .color(Color(dinoHex: 0xC6AC80)), lineWidth: 3)
+        context.stroke(dune, with: .color(Color(dinoHex: 0xFFF1C9)), lineWidth: 1.4)
+        var sand = context; sand.clip(to: beach)
+        let p = PirateCoastPainter(context: sand)
+        for right in [false, true] {
+            let x: CGFloat = right ? w - 24 : 22
+            p.shell(at: .init(x: x, y: -71), size: 0.43)
+            p.rock(at: .init(x: x + (right ? -21 : 20), y: -28), size: 0.41)
+        }
+    }
+
     func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let w = size.width, h = size.height, scale = min(1.30, max(0.82, size.width / 390))
-        context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
-            .init(color: Color(dinoHex: 0xF5D698), location: 0),
-            .init(color: Color(dinoHex: 0xF8E2AC), location: 0.035),
-            .init(color: Color(dinoHex: 0xF7E3B8), location: (routeOffset - 90) / h),
-            .init(color: Color(dinoHex: 0xF9E3AF), location: (routeOffset + 170) / h),
-            .init(color: Color(dinoHex: 0xF3D597), location: (routeOffset + 850) / h),
-            .init(color: Color(dinoHex: 0xF6DBA3), location: (routeOffset + 1570) / h),
-            .init(color: Color(dinoHex: 0xE8DFCC), location: 1)
-        ]), startPoint: .zero, endPoint: .init(x: 0, y: h)))
+        clockworkBeach(in: size)
         entrance(width: w, scale: scale)
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
@@ -14629,20 +14798,19 @@ private struct CastleWorldPainter {
                                            center: point, startRadius: 0, endRadius: radius))
     }
 
+
+    /// The coast continues under the royal moats. Stone retaining walls,
+    /// planted embankments and towers own their boundaries above this sand.
+    private func harbourGround(in size: CGSize) {
+        context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(dinoHex: 0xF6DBA3)))
+    }
+
     func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let w = size.width, h = size.height, scale = min(1.30, max(0.82, size.width / 390))
-        context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
-            .init(color: Color(dinoHex: 0xE8DFCC), location: 0),
-            .init(color: Color(dinoHex: 0xEEE5CB), location: (routeOffset + 60) / h),
-            .init(color: Color(dinoHex: 0xD3DCC0), location: (routeOffset + 440) / h),
-            .init(color: Color(dinoHex: 0xEAE0BF), location: (routeOffset + 950) / h),
-            .init(color: Color(dinoHex: 0xD5DABB), location: (routeOffset + 1450) / h),
-            .init(color: Color(dinoHex: 0xE8DFCC), location: 1)
-        ]), startPoint: .zero, endPoint: .init(x: 0, y: h)))
+        harbourGround(in: size)
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         let layout = CastleKingdomLayout(scenery: scenery)
-        scenery.drawBanks(in: c, worldID: 10)
         let ground = CastleWorldPainter(context: c, liveWater: liveWater, time: time)
         let districts = layout.districts
         let crossings = layout.crossings(for: districts)
@@ -15927,14 +16095,6 @@ struct ThemedWorldLandscape: View, Equatable {
             }
             if world.id == 6 {
                 CityWorldPainter(context: context).landscape(in: size, routeOffset: routeOffset, depth: depth)
-                var routeContext = context
-                routeContext.translateBy(x: 0, y: routeOffset)
-                let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
-                let scale = min(1.30, max(0.82, size.width / 390))
-                let point = CGPoint(x: size.width - 79 * scale, y: 1675)
-                depth.add(at: routeOffset + point.y) {
-                    boss.boss(worldID: 6, at: point, size: scale * 0.88)
-                }
                 depth.draw()
                 return
             }
@@ -16008,7 +16168,7 @@ struct ThemedWorldLandscape: View, Equatable {
             let left: CGFloat = 0
             let right = w - left
             let scale = min(1.30, max(0.82, w / 390))
-            let nextGround = DinoWorldCatalog.world(world.id + 1)?.ground ?? world.ground
+            let nextGround = world.ground
             let ground = Color(dinoHex: colors.ground)
             var stops = [
                 Gradient.Stop(color: ground, location: 0),
@@ -16053,10 +16213,6 @@ struct ThemedWorldLandscape: View, Equatable {
                              size: scale, variation: index)
             }
             let bossPoint = CGPoint(x: right - 79 * scale, y: 1675)
-            context.fill(Path(CGRect(x: 0, y: size.height - 180, width: w, height: 180)),
-                         with: .linearGradient(Gradient(colors: [Color(dinoHex: nextGround).opacity(0), Color(dinoHex: nextGround)]),
-                                               startPoint: CGPoint(x: 0, y: size.height - 180),
-                                               endPoint: CGPoint(x: 0, y: size.height)))
             p.bossClearing(worldID: world.id, at: bossPoint, size: scale)
             p.boss(worldID: world.id, at: bossPoint, size: scale * 0.88)
         }
@@ -16074,14 +16230,6 @@ struct ThemedWorldLandscape: View, Equatable {
                 if world.id == 9 { PirateCoastLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
                 if world.id == 10 { CastleWaterLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
                 if world.id == 5 { CrystalCaveLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
-            }
-            .overlay(alignment: .top) {
-                if world.id != 3 && world.id != 5 && world.id != 6 {
-                    WorldTerrainTransition(worldID: world.id, entering: true).equatable()
-                }
-            }
-            .overlay(alignment: .bottom) {
-                if world.id != 2 && world.id != 4 && world.id != 5 { WorldTerrainTransition(worldID: min(10, world.id + 1)).equatable() }
             }
             .overlay(alignment: .bottom) {
                 if world.id == 2 {

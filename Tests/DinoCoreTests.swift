@@ -41,6 +41,7 @@ struct DinoCoreTests {
         testCrystalMinerPatrols()
         testQuestions()
         testWorlds()
+        testWorldJoinContinuity()
         testLevelQuestionOutline()
         testJungleSceneryClearance()
         testMapAnimationViewport()
@@ -1897,6 +1898,26 @@ struct DinoCoreTests {
             }
         }
         expect(observedKinds == Set(DinoLevelCatalog.levels.filter { $0.worldID == 1 }.flatMap { $0.recipes.map(\.kind) }), "jungle catalog interactions")
+    }
+
+    static func testWorldJoinContinuity() {
+        for width: CGFloat in [320, 393, 402, 600, 834, 1194] {
+            let clearance = max(0, min(200, (min(600, width) - 36) * 0.37) - 82)
+            let offset = WorldMapChapterSpacing.routeOffset(clearance: clearance)
+            let tail = WorldMapChapterSpacing.tail(clearance: clearance)
+            let titleY = WorldMapChapterSpacing.bannerTop + WorldMapChapterSpacing.bannerCenter
+            let above = tail + titleY - 45
+            let below = offset + WorldMapChapterSpacing.firstNode - titleY - 36
+            expect(abs(above - below) < 0.01, "all world signs balance boss and first-node rim clearance")
+            let expectedGap = tail + offset + WorldMapChapterSpacing.firstNode
+            for world in 1...9 {
+                let first: CGFloat = world == 1 ? JungleMapLayout.firstNodeY : WorldMapChapterSpacing.firstNode
+                let last = first + 9 * JungleMapLayout.levelSpacing
+                let end = world == 1 ? last + tail : WorldMapChapterSpacing.routeHeight(clearance: clearance)
+                expect(abs(end + offset + WorldMapChapterSpacing.firstNode - last - expectedGap) < 0.01,
+                       "every boundary, including the jungle, has the same vertical node spacing")
+            }
+        }
     }
 
     static func testWorlds() {

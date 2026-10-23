@@ -450,9 +450,7 @@ struct DinoAnalogAdvanceLayout<Play: View>: View {
         VStack(spacing: 0) {
             AnalogClock(time: start, theme: theme, size: playSize * 0.5)
                 .accessibilityIdentifier(startIdentifier)
-                .padding(.bottom, 2)
             DinoAdvanceDifference(minutes: durationMinutes, language: language, prefix: prefix)
-                .padding(.bottom, 2)
             play()
         }
         .frame(maxWidth: .infinity)
@@ -468,30 +466,30 @@ struct DinoAdvanceDifference: View {
     var body: some View {
         let combined = minutes / 60 > 0 && minutes % 60 > 0
         let ink = DinoStyle.deepGreen
-        VStack(spacing: 0) {
-            Capsule().fill(ink.opacity(highContrast ? 1 : 0.72)).frame(width: 3, height: 8)
-            HStack(spacing: 6) {
-                Image(systemName: "arrow.down")
-                    .font(.system(size: 14, weight: .black))
-                    .accessibilityHidden(true)
-                Text(verbatim: "+\(DinoTimeWords.duration(minutes, language: language))")
-                    .font(.system(size: combined ? 14 : 16, weight: .heavy, design: .rounded))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+        let duration = "+\(DinoTimeWords.duration(minutes, language: language))"
+        // The arrow stays on the clock center. The duration hangs beside it, so the gap stays short.
+        ZStack {
+            VStack(spacing: -1) {
+                Capsule().fill(ink.opacity(highContrast ? 1 : 0.8)).frame(width: 3, height: 6)
+                Image(systemName: "arrowtriangle.down.fill")
+                    .font(.system(size: 9, weight: .black))
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(DinoStyle.green.opacity(highContrast ? 0.45 : 0.28), in: Capsule())
-            .overlay(Capsule().strokeBorder(ink.opacity(highContrast ? 1 : 0.4), lineWidth: highContrast ? 2 : 1.25))
-            Capsule().fill(ink.opacity(highContrast ? 1 : 0.72)).frame(width: 3, height: 8)
-            Image(systemName: "arrowtriangle.down.fill")
-                .font(.system(size: 9, weight: .black))
-                .offset(y: -3)
-                .accessibilityHidden(true)
+            .accessibilityHidden(true)
+            Text(verbatim: duration)
+                .font(.system(size: combined ? 13 : 15, weight: .heavy, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.65)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 3)
+                .background(DinoStyle.green.opacity(highContrast ? 0.45 : 0.28), in: Capsule())
+                .overlay(Capsule().strokeBorder(ink.opacity(highContrast ? 1 : 0.4), lineWidth: highContrast ? 2 : 1.25))
+                .fixedSize()
+                .alignmentGuide(HorizontalAlignment.center) { $0[.leading] - 16 }
         }
         .foregroundStyle(ink)
+        .frame(maxWidth: .infinity)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: "+\(DinoTimeWords.duration(minutes, language: language))"))
+        .accessibilityLabel(Text(verbatim: duration))
         .accessibilityIdentifier("\(prefix).advance.difference")
     }
 }

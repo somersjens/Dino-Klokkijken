@@ -1427,7 +1427,7 @@ private struct WorldChapter: View, Equatable {
     let topClearanceForJump: CGFloat
     var openLevel: (LevelConfiguration) -> Void
     private let titleTopPadding = WorldRouteTrail.bannerTopPadding
-    private var routeOffset: CGFloat { WorldRouteTrail.bannerHeight + titleTopPadding + WorldRouteTrail.bannerBottomPadding + topClearance }
+    private var routeOffset: CGFloat { WorldMapChapterSpacing.routeOffset(clearance: topClearance) }
     private let positions = WorldRouteTrail.chapterPositions
 
     static func == (lhs: Self, rhs: Self) -> Bool {

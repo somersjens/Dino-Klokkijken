@@ -490,6 +490,9 @@ final class DinoUITests: XCTestCase {
                 saveScreenshot("city-metro-route-54-motion")
             }
             if id == 60 {
+                // Keep the lower city visible while the metro enters its underpass.
+                Thread.sleep(forTimeInterval: 3)
+                saveScreenshot("city-metro-tunnel-motion")
                 XCTAssertTrue(node.isEnabled)
                 node.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                 XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5))
@@ -555,7 +558,8 @@ final class DinoUITests: XCTestCase {
     func testWorldBannersHaveBalancedClearance() {
         let requested = ProcessInfo.processInfo.environment["DINO_TEST_WORLD_IDS"]?
             .split(separator: ",").compactMap { Int($0) }.filter { (2...10).contains($0) } ?? []
-        for world in requested.isEmpty ? [2, 4, 5, 6, 9, 10] : requested {
+        var referenceGap: CGFloat?
+        for world in requested.isEmpty ? Array(2...10) : requested {
             app.terminate()
             app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.banner-spacing.\(UUID().uuidString)"
             app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = String(world - 1)
@@ -574,6 +578,10 @@ final class DinoUITests: XCTestCase {
             // sit a few points below the centre of the fixed banner face.
             XCTAssertEqual(above, below, accuracy: 8,
                            "World \(world) uses the same clear space on both sides of its banner")
+            let gap = first.frame.midY - boss.frame.midY
+            if let referenceGap {
+                XCTAssertEqual(gap, referenceGap, accuracy: 2, "Every world uses the same distance between boss and next level")
+            } else { referenceGap = gap }
             saveScreenshot("world-banner-spacing-\(world)")
         }
     }
