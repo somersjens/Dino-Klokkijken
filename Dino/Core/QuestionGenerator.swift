@@ -195,6 +195,18 @@ struct LevelAttempt: Sendable {
         index += 1
         submittedResponse = nil
     }
+
+    /// Re-marks the current day-part question, and later ones, with a timetable chosen after the first answer.
+    mutating func reviseDayPartAnswer(schedule: DinoDayPartSchedule) -> (wasCorrect: Bool, nowCorrect: Bool)? {
+        guard !isComplete, current.kind == .dayPart, let submitted = submittedResponse, let wasCorrect = answers.last else { return nil }
+        questions[index].answer = .dayPart(schedule.part(at: current.target.hour))
+        for offset in questions.indices where offset > index && questions[offset].kind == .dayPart {
+            questions[offset].answer = .dayPart(schedule.part(at: questions[offset].target.hour))
+        }
+        let nowCorrect = AnswerValidator.isCorrect(submitted, for: questions[index])
+        if nowCorrect != wasCorrect { answers[answers.count - 1] = nowCorrect }
+        return (wasCorrect, nowCorrect)
+    }
 }
 
 /// Continuous time is independent of calendar, time zone and wall-clock changes.

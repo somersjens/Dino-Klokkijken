@@ -6,7 +6,12 @@ private struct DinoMapPreparingKey: EnvironmentKey { static let defaultValue = f
 private struct DinoMapInitialWorldKey: EnvironmentKey { static let defaultValue = 1 }
 private struct DinoMapArtworkPreparedKey: EnvironmentKey { static let defaultValue: (Int) -> Void = { _ in } }
 private struct DinoMapAnimationEpochKey: EnvironmentKey { static let defaultValue: Date? = nil }
+private struct DinoMapDefersAnimationsKey: EnvironmentKey { static let defaultValue = false }
 extension EnvironmentValues {
+    var dinoMapDefersAnimations: Bool {
+        get { self[DinoMapDefersAnimationsKey.self] }
+        set { self[DinoMapDefersAnimationsKey.self] = newValue }
+    }
     var dinoMapPreparing: Bool {
         get { self[DinoMapPreparingKey.self] }
         set { self[DinoMapPreparingKey.self] = newValue }
@@ -25,6 +30,29 @@ extension EnvironmentValues {
     }
 }
 
+/// A paused TimelineView still draws its first frame and every attached mask.
+/// Defer the entire subtree, retaining its layout, until it approaches the screen.
+struct MapAnimationVisibility: ViewModifier {
+    @Environment(\.dinoMapDefersAnimations) private var deferred
+    let viewportHeight: CGFloat
+    var alwaysVisible = false
+    @State private var nearby = false
+
+    func body(content: Content) -> some View {
+        Color.clear.overlay {
+            if nearby || alwaysVisible || !deferred { content }
+        }
+        .readGeometry(for: Bool.self) { geometry in
+            DinoMapViewport.preparesAnimation(frame: geometry.frame(in: .named("adventure.map.viewport")),
+                                              viewportHeight: viewportHeight, retained: nearby)
+        } action: { value in
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { nearby = value }
+        }
+    }
+}
+
 /// Keep expensive static drawing out of scrolling. The native animation layers
 /// remain independent; an unchanged bitmap never clears between scroll frames.
 struct PreparedMapArtwork<Content: View>: View {
@@ -34,6 +62,7 @@ struct PreparedMapArtwork<Content: View>: View {
     let size: CGSize
     let routeOffset: CGFloat
     let ground: UInt32?
+    var tileContent: ((CGRect) -> Content)? = nil
     @ViewBuilder var content: () -> Content
     @State private var rendered: (key: String, image: UIImage)?
     @State private var nativeFallback = false
@@ -54,7 +83,7 @@ struct PreparedMapArtwork<Content: View>: View {
             guard size.width > 0, size.height > 0 else { return }
             let request = key
             let image = await DinoMapArtworkCache.shared.image(key: request, worldID: worldID,
-                size: size, routeOffset: routeOffset, scale: scale, content: content())
+                size: size, routeOffset: routeOffset, scale: scale, content: content(), tileContent: tileContent)
             guard !Task.isCancelled else { return }
             if let image { rendered = (request, image); nativeFallback = false }
             else { nativeFallback = true; await Task.yield() }
@@ -67,8 +96,19 @@ struct PreparedMapArtwork<Content: View>: View {
 final class DinoMapArtworkCache: ObservableObject {
     static let shared = DinoMapArtworkCache()
     private let images = NSCache<NSString, UIImage>()
+    private var pendingBitmaps: [String: Task<UIImage?, Never>] = [:]
     private let directory: URL
     @Published private(set) var rasterizationCount = 0
+#if DEBUG
+    @Published private(set) var gullPreparedFrames = 0
+    @Published private(set) var gullPreparationDetails = ""
+    private(set) var lastRasterDetails = "none"
+    func recordGullPreparation(frames: Int, milliseconds: Double, onMainThread: Bool) {
+        guard ProcessInfo.processInfo.environment["DINO_TEST_MAP_DIAGNOSTICS"] == "1" else { return }
+        gullPreparedFrames = frames
+        gullPreparationDetails = String(format: "%.1f ms %@", milliseconds, onMainThread ? "main" : "background")
+    }
+#endif
     private static let revision: String = {
         let executable = Bundle.main.executableURL
         let date = executable.flatMap { try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate }
@@ -76,7 +116,14 @@ final class DinoMapArtworkCache: ObservableObject {
     }()
     private init() {
         images.totalCostLimit = 96 * 1024 * 1024
-        directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent(Self.revision)
+        var revision = Self.revision
+#if DEBUG
+        if ProcessInfo.processInfo.environment["DINO_TEST_SUITE"] != nil,
+           ProcessInfo.processInfo.environment["DINO_TEST_COLD_MAP_ARTWORK"] == "1" {
+            revision += "-cold-\(UUID().uuidString)"
+        }
+#endif
+        directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent(revision)
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     }
     static func key(worldID: Int, size: CGSize, offset: CGFloat, scale: CGFloat) -> String {
@@ -85,25 +132,52 @@ final class DinoMapArtworkCache: ObservableObject {
     func cached(_ key: String) -> UIImage? { images.object(forKey: key as NSString) }
 
     func image<Content: View>(key: String, worldID: Int, size: CGSize, routeOffset: CGFloat,
-                             scale: CGFloat, content: Content) async -> UIImage? {
-        if let cached = cached(key) { return cached }
+                             scale: CGFloat, content: Content, tileContent: ((CGRect) -> Content)? = nil) async -> UIImage? {
+        // Live layers need their geometry even when the terrain came from disk.
+        // Start it ahead of the viewport, rather than on an actor's first frame.
+        let preparation = Task.detached(priority: .userInitiated) {
+            DinoMapArtworkPreparation.prepare(worldID: worldID, size: size, routeOffset: routeOffset)
+        }
+        if let cached = cached(key) {
+            await preparation.value
+            return cached
+        }
         let file = directory.appendingPathComponent(key).appendingPathExtension("png")
         let diskImage = await Task.detached(priority: .userInitiated) {
             UIImage(contentsOfFile: file.path)?.preparingForDisplay()
         }.value
+        await preparation.value
+        guard !Task.isCancelled else { return nil }
         if let diskImage {
             retain(diskImage, key: key)
             return diskImage
         }
-        await Task.detached(priority: .userInitiated) {
-            DinoMapArtworkPreparation.prepare(worldID: worldID, size: size, routeOffset: routeOffset)
-        }.value
-        guard !Task.isCancelled else { return nil }
         if let cached = cached(key) { return cached }
+        if let pending = pendingBitmaps[key] { return await pending.value }
+#if DEBUG
+        let rasterStarted = ProcessInfo.processInfo.systemUptime
+#endif
         let renderer = ImageRenderer(content: content.frame(width: size.width, height: size.height))
         renderer.scale = scale
         renderer.proposedSize = ProposedViewSize(size)
-        guard let image = renderer.uiImage else { return nil }
+        let image: UIImage?
+        if worldID == 10, let tileContent {
+            let pending = Task { @MainActor in
+                await self.tiledImage(size: size, scale: scale, content: tileContent)
+            }
+            pendingBitmaps[key] = pending
+            image = await pending.value
+            pendingBitmaps[key] = nil
+        } else {
+            image = renderer.uiImage
+        }
+        guard let image else { return nil }
+#if DEBUG
+        if ProcessInfo.processInfo.environment["DINO_TEST_MAP_DIAGNOSTICS"] == "1" {
+            lastRasterDetails = String(format: "world %d %.1f ms", worldID, (ProcessInfo.processInfo.systemUptime - rasterStarted) * 1000)
+            print("MAP_RASTER \(lastRasterDetails)")
+        }
+#endif
         rasterizationCount += 1
         retain(image, key: key)
         Task.detached(priority: .utility) {
@@ -111,6 +185,56 @@ final class DinoMapArtworkCache: ObservableObject {
         }
         return image
     }
+
+    private struct RasterTile: Sendable {
+        let image: CGImage
+        let top: Int
+    }
+
+    /// Keep each native draw small and let the display link run between strips.
+    /// Bleed retains shadows/antialiasing; only non-overlapping cores are joined.
+    private func tiledImage<Content: View>(size: CGSize, scale: CGFloat,
+                                          content: (CGRect) -> Content) async -> UIImage? {
+        let height: CGFloat = 192, bleed: CGFloat = 24
+        var tiles: [RasterTile] = []
+        for index in 0..<Int(ceil(size.height / height)) {
+            guard !Task.isCancelled else { return nil }
+            let coreTop = CGFloat(index) * height
+            let coreHeight = min(height, size.height - coreTop)
+            let top = max(0, coreTop - bleed), bottom = min(size.height, coreTop + coreHeight + bleed)
+            let bounds = CGRect(x: 0, y: top, width: size.width, height: bottom - top)
+            let tile = content(bounds).frame(width: size.width, height: size.height)
+                .offset(y: -top)
+                .frame(width: size.width, height: bounds.height, alignment: .topLeading).clipped()
+            let renderer = ImageRenderer(content: tile)
+            renderer.scale = scale
+            renderer.proposedSize = ProposedViewSize(width: size.width, height: bounds.height)
+            guard let image = renderer.uiImage?.cgImage,
+                  let cropped = image.cropping(to: CGRect(x: 0, y: (coreTop - top) * scale,
+                    width: ceil(size.width * scale), height: ceil(coreHeight * scale))) else { return nil }
+            tiles.append(RasterTile(image: cropped, top: Int((coreTop * scale).rounded())))
+            do { try await Task.sleep(for: .milliseconds(16)) } catch { return nil }
+        }
+        return await Task.detached(priority: .utility) {
+            Self.stitch(tiles: tiles, size: size, scale: scale)
+        }.value
+    }
+
+    nonisolated private static func stitch(tiles: [RasterTile], size: CGSize, scale: CGFloat) -> UIImage? {
+        let width = Int(ceil(size.width * scale)), height = Int(ceil(size.height * scale))
+        guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
+                bytesPerRow: width * 4, space: colorSpace,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue) else { return nil }
+        context.interpolationQuality = .none
+        for tile in tiles {
+            context.draw(tile.image, in: CGRect(x: 0, y: height - tile.top - tile.image.height,
+                width: tile.image.width, height: tile.image.height))
+        }
+        guard let image = context.makeImage() else { return nil }
+        return UIImage(cgImage: image, scale: scale, orientation: .up)
+    }
+
     private func retain(_ image: UIImage, key: String) {
         let cost = image.cgImage.map { $0.bytesPerRow * $0.height } ?? 0
         images.setObject(image, forKey: key as NSString, cost: cost)
@@ -120,10 +244,75 @@ final class DinoMapArtworkCache: ObservableObject {
 #if DEBUG
 struct MapRasterDiagnostics: View {
     @ObservedObject private var cache = DinoMapArtworkCache.shared
+    var active = true
     var body: some View {
-        Text(String(cache.rasterizationCount)).font(.system(size: 1)).foregroundStyle(.clear)
-            .frame(width: 1, height: 1).clipped()
-            .accessibilityIdentifier("map.rasterizationCount")
+        VStack(spacing: 0) {
+            Text(String(cache.rasterizationCount)).font(.system(size: 1)).foregroundStyle(.clear)
+                .frame(width: 1, height: 1).clipped()
+                .accessibilityIdentifier("map.rasterizationCount")
+            MapFrameGapProbe(active: active).frame(width: 1, height: 1).clipped()
+            Text(String(cache.gullPreparedFrames)).font(.system(size: 1)).foregroundStyle(.clear)
+                .frame(width: 1, height: 1).clipped()
+                .accessibilityIdentifier("map.gullPreparedFrames")
+                .accessibilityValue(cache.gullPreparationDetails)
+        }
+    }
+}
+
+/// Measure the first cold traversal too: XCTest's performance warm-up otherwise
+/// hides a one-off main-thread stall before its measured iterations begin.
+private struct MapFrameGapProbe: UIViewRepresentable {
+    let active: Bool
+    func makeUIView(context: Context) -> Probe { Probe() }
+    func updateUIView(_ view: Probe, context: Context) { view.setActive(active) }
+    static func dismantleUIView(_ view: Probe, coordinator: ()) { view.stop() }
+
+    final class Probe: UILabel {
+        private var link: CADisplayLink?
+        private var lastFrame: CFTimeInterval?
+        private var maximumGap: CFTimeInterval = 0
+        private var startedAt: CFTimeInterval = 0
+        private weak var mapScroll: UIScrollView?
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            text = "0"
+            font = .systemFont(ofSize: 1)
+            textColor = .clear
+            isAccessibilityElement = true
+            accessibilityIdentifier = "map.maximumFrameGapMilliseconds"
+        }
+        required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+        func setActive(_ active: Bool) {
+            guard active else { stop(); return }
+            guard link == nil else { return }
+            lastFrame = nil
+            maximumGap = 0
+            startedAt = CACurrentMediaTime()
+            text = "0"
+            let displayLink = CADisplayLink(target: self, selector: #selector(frame(_:)))
+            displayLink.add(to: .main, forMode: .common)
+            link = displayLink
+        }
+        func stop() { link?.invalidate(); link = nil; lastFrame = nil }
+        private func findMapScroll(in view: UIView) -> UIScrollView? {
+            if let scroll = view as? UIScrollView, scroll.contentSize.height > 5000 { return scroll }
+            for child in view.subviews {
+                if let scroll = findMapScroll(in: child) { return scroll }
+            }
+            return nil
+        }
+        @objc private func frame(_ displayLink: CADisplayLink) {
+            let now = CACurrentMediaTime()
+            if let lastFrame, now - lastFrame > maximumGap {
+                maximumGap = now - lastFrame
+                text = String(format: "%.1f", maximumGap * 1000)
+                if mapScroll == nil, let window { mapScroll = findMapScroll(in: window) }
+                accessibilityValue = String(format: "elapsed=%.2f offset=%.1f raster=%@", now - startedAt,
+                    mapScroll?.contentOffset.y ?? -1, DinoMapArtworkCache.shared.lastRasterDetails)
+                if maximumGap > 0.1 { print("MAP_FRAME_GAP \(text ?? "?") ms \(accessibilityValue ?? "")") }
+            }
+            lastFrame = now
+        }
     }
 }
 #endif

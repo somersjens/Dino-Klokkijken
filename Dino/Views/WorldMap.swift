@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import StoreKit
 
 private struct MapArtworkReleasedKey: EnvironmentKey {
     static let defaultValue: (Int) -> Void = { _ in }
@@ -16,6 +17,8 @@ struct WorldMap: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.requestReview) private var requestReview
+    @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var player: DinoPlayer
     @EnvironmentObject private var friends: FriendsManager
     var openLevel: (LevelConfiguration) -> Void
@@ -26,10 +29,13 @@ struct WorldMap: View {
     var animatesOpening = true
     var openingFinished: () -> Void = {}
     var worldTransition: DinoWorldTransition? = nil
+    var requestsReviewAfterArrival = false
+    var allowsReviewRequest = true
     @State private var landscapeRouteOffset: CGFloat = 320
     @State private var worldsAboveHUD: Set<Int> = [1]
     @State private var selectedFriend: FriendSelection?
     @State private var showsStars = false
+    @State private var showsPersonalizer = false
     @State private var focusRequest = 0
     @State private var arrivedFocusRequest = 0
     @State private var readyWorlds: Set<Int> = []
@@ -45,6 +51,11 @@ struct WorldMap: View {
     @State private var worldJumpStartedAt: Date?
     @State private var worldJumpFinished = false
     @State private var worldJumpImages: [String: UIImage] = [:]
+    @State private var reviewRequestHandled = false
+#if DEBUG
+    @State private var reviewRequestCount = 0
+    @State private var reviewRequestDelay: TimeInterval = 0
+#endif
 
     private var standingLevel: Int {
         guard let worldTransition else { return player.profile.mapLevel }
@@ -54,6 +65,10 @@ struct WorldMap: View {
         (introFinished || !animatesOpening) && (worldTransition == nil || worldJumpFinished)
     }
     private var mapInteractive: Bool { initialPositionReady && (introFinished || !animatesOpening) && (worldTransition == nil || worldJumpFinished) }
+    private var readyForReviewRequest: Bool {
+        requestsReviewAfterArrival && mapInteractive && allowsReviewRequest && scenePhase == .active &&
+            selectedFriend == nil && !showsStars && !showsPersonalizer
+    }
     private var worldJumpReady: Bool {
         guard let worldTransition else { return false }
         return initialPositionReady && !worldJumpImages.isEmpty &&
@@ -148,7 +163,8 @@ struct WorldMap: View {
                         }
                         .ignoresSafeArea(edges: [.top, .bottom, .horizontal])
                     }.overlay(alignment: .top) {
-                        AdventureHeader(level: max(1, player.profile.dinoLevel),
+                        AdventureHeader(personalizerChanged: { showsPersonalizer = $0 },
+                                        level: max(1, player.profile.dinoLevel),
                                         stars: player.profile.totalStars, worldID: worldsAboveHUD.max() ?? 1,
                                         compact: verticalSizeClass == .compact, viewportHeight: geometry.size.height,
                                         viewportWidth: geometry.size.width,
@@ -220,10 +236,31 @@ struct WorldMap: View {
                 worldJumpFinished = true
             } catch { /* Leaving the map cancels the journey. */ }
         }
+        .task(id: readyForReviewRequest) {
+            guard readyForReviewRequest, !reviewRequestHandled else { return }
+            // Consume this arrival before waiting so cancellation cannot prompt later.
+            reviewRequestHandled = true
+#if DEBUG
+            let readyAt = ProcessInfo.processInfo.systemUptime
+#endif
+            do {
+                try await Task.sleep(for: .seconds(1))
+                try Task.checkCancellation()
+#if DEBUG
+                // Observe requests in UI tests without opening a system-owned sheet.
+                if ProcessInfo.processInfo.environment["DINO_TEST_SUITE"] != nil {
+                    reviewRequestDelay = ProcessInfo.processInfo.systemUptime - readyAt
+                    reviewRequestCount += 1
+                    return
+                }
+#endif
+                requestReview()
+            } catch { /* Navigating away, opening a menu or backgrounding cancels the request. */ }
+        }
         .task {
             openingImage = await DinoSpriteLoader.shared.idleImage(for: player.profile.dinoAppearance ?? .standard)
             guard !Task.isCancelled else { return }
-            // Commit Dino's arrival into the clock garden before constructing
+            // Commit Dino's emergence behind the title before constructing
             // the map tree; terrain preparation must not hide that first frame.
             if animatesOpening {
                 do { try await Task.sleep(for: .milliseconds(180)) } catch { return }
@@ -234,10 +271,21 @@ struct WorldMap: View {
             }
         }
         .foregroundStyle(DinoStyle.ink)
+        .overlay(alignment: .bottomLeading) {
+#if DEBUG
+            if ProcessInfo.processInfo.environment["DINO_TEST_REVIEW_DIAGNOSTICS"] == "1" {
+                Text(verbatim: "\(reviewRequestCount)")
+                    .font(.caption2)
+                    .accessibilityIdentifier("map.reviewRequests")
+                    .accessibilityValue(String(reviewRequestDelay))
+                    .allowsHitTesting(false)
+            }
+#endif
+        }
         .overlay(alignment: .bottomTrailing) {
 #if DEBUG
             if ProcessInfo.processInfo.environment["DINO_TEST_MAP_DIAGNOSTICS"] == "1" {
-                MapRasterDiagnostics()
+                MapRasterDiagnostics(active: mapInteractive)
             }
 #endif
         }
@@ -517,110 +565,6 @@ private struct MapWorldJumpScrollObserver: UIViewRepresentable {
         }
 
         func stop() { displayLink?.invalidate(); displayLink = nil; scrollView = nil }
-    }
-}
-
-/// The clock garden is visible from the first frame. The same Dino then travels
-/// into the actual map anchor while the prepared landscape opens underneath.
-private struct MapOpeningView: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let world: DinoWorld
-    let image: UIImage?
-    let destination: CGRect?
-    let ready: Bool
-    var reveal: () -> Void
-    var finished: () -> Void
-    @State private var turns = false
-    @State private var progress: CGFloat = 0
-    @State private var backdropOpacity = 1.0
-    @State private var gardenOpacity = 0.0
-    @State private var appearedAt = Date()
-
-    var body: some View {
-        GeometryReader { geometry in
-            let source = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
-            ZStack {
-                ZStack {
-                    Color(dinoHex: 0xE2E9D4).ignoresSafeArea()
-                    LinearGradient(colors: [Color(dinoHex: world.ground).mixed(with: .white, by: 0.35),
-                                            Color(dinoHex: world.ground), Color(dinoHex: 0xA2C991)],
-                                   startPoint: .topLeading, endPoint: .bottomTrailing).ignoresSafeArea().opacity(gardenOpacity)
-                    ForEach(0..<8, id: \.self) { index in
-                        Image(systemName: "leaf.fill")
-                            .font(.system(size: CGFloat(100 + index % 3 * 30)))
-                            .foregroundStyle(Color(dinoHex: 0x4C865D).opacity(0.12 * gardenOpacity))
-                            .rotationEffect(.degrees(Double(index * 53)))
-                            .position(x: index.isMultiple(of: 2) ? 5 : geometry.size.width - 5,
-                                      y: geometry.size.height * CGFloat(index + 1) / 9)
-                    }
-                    ZStack {
-                        Circle().fill(.white.opacity(0.20)).frame(width: 264, height: 264)
-                        Circle().strokeBorder(.white.opacity(0.65), lineWidth: 2).frame(width: 244, height: 244)
-                        ForEach(0..<12, id: \.self) { tick in
-                            Capsule().fill(DinoStyle.deepGreen.opacity(0.24))
-                                .frame(width: 3, height: tick.isMultiple(of: 3) ? 13 : 7)
-                                .offset(y: -111).rotationEffect(.degrees(Double(tick) * 30))
-                        }
-                        ZStack {
-                            Capsule().fill(.white.opacity(0.7)).frame(width: 4, height: 88).offset(y: -40)
-                        }.frame(width: 244, height: 244)
-                            .rotationEffect(.degrees(turns && !reduceMotion ? 335 : -25))
-                    }.position(source)
-                }.opacity(backdropOpacity)
-                if let image {
-                    Image(uiImage: image).resizable().scaledToFit()
-                        .shadow(color: DinoStyle.deepGreen.opacity(0.16), radius: 8, y: 5)
-                        .modifier(MapOpeningFlight(progress: progress, source: source,
-                                                   destination: destination ?? CGRect(x: source.x - 95, y: source.y - 95, width: 190, height: 190),
-                                                   reducedMotion: reduceMotion))
-                        .transition(.opacity)
-                }
-            }
-            .animation(.easeOut(duration: 0.22), value: image != nil)
-            .onAppear {
-                appearedAt = Date()
-                withAnimation(.easeOut(duration: 0.35)) { gardenOpacity = 1 }
-                withAnimation(.linear(duration: 3.2).repeatForever(autoreverses: false)) { turns = true }
-            }
-            .task(id: ready && image != nil && destination != nil) {
-                guard ready, image != nil, destination != nil else { return }
-                let remaining = max(0, 0.35 - Date().timeIntervalSince(appearedAt))
-                do {
-                    if remaining > 0 { try await Task.sleep(for: .seconds(remaining)) }
-                    try Task.checkCancellation()
-                    withAnimation(.easeInOut(duration: reduceMotion ? 0.2 : 0.55)) {
-                        backdropOpacity = 0
-                        reveal()
-                    }
-                    withAnimation(.timingCurve(0.25, 0.68, 0.25, 1, duration: reduceMotion ? 0.2 : 0.95)) {
-                        progress = 1
-                    }
-                    try await Task.sleep(for: .seconds(reduceMotion ? 0.23 : 1.0))
-                    try Task.checkCancellation()
-                    finished()
-                } catch { }
-            }
-        }.accessibilityIdentifier("map.preparing").allowsHitTesting(false)
-    }
-}
-
-private struct MapOpeningFlight: AnimatableModifier {
-    var progress: CGFloat
-    let source: CGPoint
-    let destination: CGRect
-    let reducedMotion: Bool
-    var animatableData: CGFloat {
-        get { progress }
-        set { progress = newValue }
-    }
-    func body(content: Content) -> some View {
-        let t = min(1, max(0, progress))
-        let side = 190 + (destination.width - 190) * t
-        let arc = reducedMotion ? 0 : sin(t * .pi) * 76
-        content.frame(width: side, height: side)
-            .rotationEffect(.degrees(reducedMotion ? 0 : Double(sin(t * .pi)) * -7))
-            .position(x: source.x + (destination.midX - source.x) * t,
-                      y: source.y + (destination.midY - source.y) * t - arc)
     }
 }
 

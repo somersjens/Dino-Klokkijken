@@ -9,6 +9,7 @@ struct DinoRootView: View {
     @State private var result: DinoLevelResult?
     @State private var showsSettings = false
     @State private var worldTransition: DinoWorldTransition?
+    @State private var requestsReviewAfterWorldArrival = false
     @State private var startCard: LevelConfiguration?
     @State private var showsFriends = false
     @State private var showsPractice = false
@@ -84,7 +85,10 @@ struct DinoRootView: View {
                 DinoResultView(result: result, retry: { start(result.level) }, next: {
                     if result.level.isBoss { advanceWorld(after: result.level.worldID) }
                     else if let next = DinoLevelCatalog.level(result.level.id + 1) { start(next) }
-                }, map: showMap, sharedCompanion: true)
+                }, map: {
+                    if result.level.isBoss && result.victory != .none { advanceWorld(after: result.level.worldID) }
+                    else { showMap() }
+                }, sharedCompanion: true)
             } else if let session {
                 DinoGameView(session: session, onExit: showMap, onResult: { value in
                     withAnimation(.easeOut(duration: 0.24)) {
@@ -92,7 +96,13 @@ struct DinoRootView: View {
                     }
                 }, onCompanionReaction: { gameCompanionClip = $0 }).id(ObjectIdentifier(session))
             } else {
-                WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true }, openPractice: { practiceEntry = nil; showsPractice = true }, openFriends: { showsFriends = true }, hudHeightChanged: { mapHUDHeight = $0 }, animatesOpening: !hasShownMap && worldTransition == nil, openingFinished: { hasShownMap = true }, worldTransition: worldTransition)
+                WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true },
+                         openPractice: { practiceEntry = nil; showsPractice = true },
+                         openFriends: { showsFriends = true }, hudHeightChanged: { mapHUDHeight = $0 },
+                         animatesOpening: !hasShownMap && worldTransition == nil,
+                         openingFinished: { hasShownMap = true }, worldTransition: worldTransition,
+                         requestsReviewAfterArrival: requestsReviewAfterWorldArrival,
+                         allowsReviewRequest: startCard == nil && !showsSettings && !showsPractice && !showsFriends)
             }
         }
     }
@@ -106,12 +116,14 @@ struct DinoRootView: View {
         })
         withAnimation(.easeOut(duration: 0.24)) {
             startCard = nil; result = nil; worldTransition = nil
+            requestsReviewAfterWorldArrival = false
             gameCompanionClip = .idle; session = nextSession
         }
     }
     private func advanceWorld(after worldID: Int) {
         withAnimation(.easeOut(duration: 0.24)) {
             worldTransition = DinoWorldTransition(after: worldID)
+            requestsReviewAfterWorldArrival = true
             hasShownMap = true
             result = nil; session = nil; startCard = nil
         }
@@ -137,6 +149,7 @@ struct DinoRootView: View {
     private func showMap() {
         withAnimation(.easeOut(duration: 0.24)) {
             session = nil; result = nil; worldTransition = nil; startCard = nil
+            requestsReviewAfterWorldArrival = false
         }
     }
 }

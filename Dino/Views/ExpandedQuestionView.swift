@@ -249,6 +249,7 @@ struct DinoExpandedQuestionView: View {
                         }
                 }.buttonStyle(DinoAnswerButtonStyle()).disabled(!session.responseIsEnabled(response))
                     .accessibilityIdentifier("question.option.\(index)")
+                    .accessibilityValue(Text(verbatim: correct ? L(key: "dino.expanded.true") : wrong ? L(key: "dino.expanded.false") : ""))
             }
         }.id("question.answers").questionAnswerFocus()
     }
@@ -394,8 +395,11 @@ struct DinoExpandedQuestionView: View {
                             if advanceComparing { AnswerVerdictMark(correct: false).offset(x: 4, y: -4) }
                         }
                         .scaleEffect(advanceComparing ? advanceComparisonScale : 1)
-                        .offset(y: advanceComparing ? -advanceResultOffset : 0)
+                        .offset(x: advanceComparing ? -advanceResultOffset : 0)
                         .accessibilityIdentifier("question.analogControl")
+                    enteredDeviation(from: q.relatedTimes[0], to: shown)
+                        .opacity(advanceComparing ? 1 : 0)
+                        .accessibilityHidden(!advanceComparing)
                     AnalogClock(time: DinoAnalogAdvanceExample.face(q.target), theme: theme, size: playFace)
                         .padding(4)
                         .modifier(ClockAnswerOutline(visible: true, correct: true))
@@ -403,13 +407,13 @@ struct DinoExpandedQuestionView: View {
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel(DinoAnalogAdvanceExample.face(q.target).digitalText)
                         .scaleEffect(advanceComparisonScale * (advanceComparing || reduceMotion ? 1 : 0.94))
-                        .offset(y: advanceResultOffset)
+                        .offset(x: advanceResultOffset)
                         .opacity(advanceComparing ? 1 : 0)
                         .accessibilityHidden(!advanceComparing).allowsHitTesting(false)
                         .accessibilityIdentifier("question.correctClock")
                         .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: advanceComparing)
                 }
-                .frame(width: playFace + 8, height: advanceStageHeight)
+                .frame(width: width, height: advanceStageHeight)
                 .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: advanceComparing)
             }
             .questionAnswerFocus()
@@ -420,13 +424,36 @@ struct DinoExpandedQuestionView: View {
         }.id("question.answers")
     }
 
-    /// Wrong and right faces share the space of the clock being turned, so the row does not grow.
+    /// The player's clock slides left and the correct face appears on the right, with their own change between them.
     private var advanceComparisonScale: CGFloat {
-        let face = playFace + 8
-        return min(1, (face - 12) / (2 * face))
+        let slot = max(0, (width - advanceDeviationLane - 12) / 2)
+        return min(1, slot / (playFace + 8))
     }
-    private var advanceResultOffset: CGFloat { ((playFace + 8) * advanceComparisonScale + 12) / 2 }
+    private var advanceDeviationLane: CGFloat { 104 }
+    private var advanceResultOffset: CGFloat {
+        ((playFace + 8) * advanceComparisonScale + advanceDeviationLane) / 2
+    }
     private var advanceStageHeight: CGFloat { playFace + 8 }
+
+    private func enteredDeviation(from start: ClockTime, to answer: ClockTime) -> some View {
+        let minutes = DinoAnalogAdvanceExample.enteredMinutes(from: start, to: answer)
+        let sign = minutes < 0 ? "−" : "+"
+        let text = "\(sign)\(DinoTimeWords.duration(abs(minutes), language: code))"
+        let ink = DinoStyle.wrong(highContrast)
+        return Text(verbatim: text)
+            .font(.system(size: 14, weight: .heavy, design: .rounded))
+            .lineLimit(2)
+            .minimumScaleFactor(0.6)
+            .multilineTextAlignment(.center)
+            .foregroundStyle(ink)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .frame(maxWidth: advanceDeviationLane - 8)
+            .background(ink.opacity(highContrast ? 0.2 : 0.16), in: Capsule())
+            .overlay(Capsule().strokeBorder(ink.opacity(highContrast ? 1 : 0.45), lineWidth: highContrast ? 2 : 1.25))
+            .accessibilityLabel(Text(verbatim: text))
+            .accessibilityIdentifier("question.advance.entered")
+    }
 
     private func adjust(_ direction: Int) {
         guard !session.hasFeedback else { return }
@@ -502,19 +529,15 @@ struct DinoAdvanceDifference: View {
     }
 }
 
-/// Retract controls in their own space; never dissolve them over the answer or
-/// collapse their layout while the question is centered in the scroll view.
+/// Keep clock-setting buttons in place after an answer. Gray them out instead of removing them.
 struct AnswerControlVisibility: ViewModifier {
     @ObservedObject var session: DinoSession
     var reduceMotion: Bool
 
     func body(content: Content) -> some View {
         content
-            .mask(alignment: .top) {
-                Rectangle().scaleEffect(x: 1, y: session.hidesAnswerControls ? 0 : 1, anchor: .top)
-            }
-            .allowsHitTesting(!session.hasFeedback)
-            .accessibilityHidden(session.hasFeedback)
+            .opacity(session.hidesAnswerControls ? 0.62 : 1)
+            .disabled(session.hasFeedback)
             .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: session.hidesAnswerControls)
     }
 }

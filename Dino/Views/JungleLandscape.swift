@@ -2903,6 +2903,29 @@ struct WorldThemeColors {
 
 /// One set of coordinates for the riverbed, moving water and planted scenery.
 private enum SleepValleyLayout {
+    final class RiverGeometry {
+        let streams: [Path]
+        let banks: [Path]
+        let shoulders: [Path]
+        init(layout: WorldSceneryLayout) {
+            streams = [false, true].map {
+                stream(layout: layout, right: $0, start: -layout.routeOffset, end: layout.height - layout.routeOffset)
+            }
+            banks = [false, true].map { riverbank(layout: layout, right: $0, width: 54) }
+            shoulders = [false, true].map { riverbank(layout: layout, right: $0, width: 76) }
+        }
+    }
+    private static let rivers: NSCache<NSString, RiverGeometry> = {
+        let cache = NSCache<NSString, RiverGeometry>(); cache.countLimit = 8; return cache
+    }()
+    static func riverGeometry(layout: WorldSceneryLayout) -> RiverGeometry {
+        let key = "\(layout.width):\(layout.height):\(layout.routeOffset)" as NSString
+        if let river = rivers.object(forKey: key) { return river }
+        let river = RiverGeometry(layout: layout)
+        rivers.setObject(river, forKey: key)
+        return river
+    }
+
     struct Willow: Identifiable {
         let id: Int
         let point: CGPoint
@@ -3133,6 +3156,7 @@ private struct SleepValleyLife: View {
                     SleepValleyLifeSurface(layout: layout, frame: frame, viewportHeight: viewportHeight,
                                            fixedTime: fixedTime, frozen: frozen)
                         .mask(SleepValleyOcclusion(layout: layout, frame: frame, depth: -.infinity))
+                        .modifier(MapAnimationVisibility(viewportHeight: viewportHeight, alwaysVisible: fixedTime != nil || frozen))
                         .frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
                 }
                 ForEach(SleepValleyLayout.willows(layout: layout)) { tree in
@@ -3140,6 +3164,7 @@ private struct SleepValleyLife: View {
                     SleepValleyLifeSurface(layout: layout, frame: frame, viewportHeight: viewportHeight,
                                            tree: tree, fixedTime: fixedTime, frozen: frozen)
                         .mask(SleepValleyOcclusion(layout: layout, frame: frame, depth: tree.groundY + routeOffset))
+                        .modifier(MapAnimationVisibility(viewportHeight: viewportHeight, alwaysVisible: fixedTime != nil || frozen))
                         .frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
                 }
                 ForEach(SleepValleyLayout.crystalGlints(layout: layout)) { glint in
@@ -3148,6 +3173,7 @@ private struct SleepValleyLife: View {
                     SleepValleyLifeSurface(layout: layout, frame: frame, viewportHeight: viewportHeight,
                                            glint: glint, fixedTime: fixedTime, frozen: frozen)
                         .mask(SleepValleyOcclusion(layout: layout, frame: frame, depth: glint.depth + routeOffset + 0.01))
+                        .modifier(MapAnimationVisibility(viewportHeight: viewportHeight, alwaysVisible: fixedTime != nil || frozen))
                         .frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
                 }
                 ForEach(SleepValleyLayout.cascades(layout: layout)) { cascade in
@@ -3155,6 +3181,7 @@ private struct SleepValleyLife: View {
                     SleepValleyLifeSurface(layout: layout, frame: frame, viewportHeight: viewportHeight,
                                            cascade: cascade, fixedTime: fixedTime, frozen: frozen)
                         .mask(SleepValleyOcclusion(layout: layout, frame: frame, depth: -.infinity))
+                        .modifier(MapAnimationVisibility(viewportHeight: viewportHeight, alwaysVisible: fixedTime != nil || frozen))
                         .frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
                 }
             }
@@ -3208,13 +3235,7 @@ private struct SleepValleyLifeSurface: View {
     var body: some View {
         // Build river geometry outside the timeline; frames only move its highlights.
         let isWater = tree == nil && cascade == nil && glint == nil
-        let paths = isWater ? [false, true].map {
-            SleepValleyLayout.stream(layout: layout, right: $0, start: -layout.routeOffset,
-                                    end: layout.height - layout.routeOffset)
-        } : []
-        let banks = isWater ? [false, true].map {
-            SleepValleyLayout.riverbank(layout: layout, right: $0, width: 54)
-        } : []
+        let river = isWater ? SleepValleyLayout.riverGeometry(layout: layout) : nil
         TimelineView(.animation(minimumInterval: 1.0 / 20,
                                 paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
             Canvas { context, _ in
@@ -3229,8 +3250,8 @@ private struct SleepValleyLifeSurface: View {
                 } else if let cascade {
                     c.translateBy(x: cascade.point.x, y: cascade.point.y); c.scaleBy(x: layout.scale, y: layout.scale)
                     SleepValleyEffects(context: c, time: time).waterfall(cascade, layout: layout)
-                } else {
-                    SleepValleyEffects(context: c, time: time).river(paths: paths, banks: banks, layout: layout)
+                } else if let river {
+                    SleepValleyEffects(context: c, time: time).river(paths: river.streams, banks: river.banks, layout: layout)
                     SleepValleyEffects(context: c, time: time).valleyMist(layout: layout, frame: frame)
                     SleepValleyEffects(context: c, time: time).fireflies(layout: layout, frame: frame)
                 }
@@ -3886,12 +3907,13 @@ private struct SleepValleyPainter {
 
     private func riverbeds(layout: WorldSceneryLayout) {
         let s = layout.scale
-        for right in [false, true] {
-            let shoulder = SleepValleyLayout.riverbank(layout: layout, right: right, width: 76)
+        let geometry = SleepValleyLayout.riverGeometry(layout: layout)
+        for (index, right) in [false, true].enumerated() {
+            let shoulder = geometry.shoulders[index]
             context.fill(shoulder, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0x688D88).opacity(0.42),
                                                                                        Color(dinoHex: 0x9CB7A7).opacity(0.7)]),
                                                        startPoint: CGPoint(x: 0, y: 0), endPoint: CGPoint(x: layout.width, y: 1500)))
-            let water = SleepValleyLayout.riverbank(layout: layout, right: right, width: 54)
+            let water = geometry.banks[index]
             context.fill(water, with: .linearGradient(Gradient(stops: [
                 .init(color: Color(dinoHex: 0x4C7C94), location: 0),
                 .init(color: Color(dinoHex: 0x79ADB5), location: 0.34),
@@ -3899,8 +3921,7 @@ private struct SleepValleyPainter {
                 .init(color: Color(dinoHex: 0x95B8B3), location: 1)
             ]), startPoint: CGPoint(x: 0, y: -layout.routeOffset), endPoint: CGPoint(x: layout.width, y: layout.height)))
             var submerged = context; submerged.clip(to: water)
-            let river = SleepValleyLayout.stream(layout: layout, right: right, start: -layout.routeOffset,
-                                                 end: layout.height - layout.routeOffset)
+            let river = geometry.streams[index]
             submerged.stroke(river.offsetBy(dx: right ? 8 * s : -8 * s, dy: 0),
                              with: .color(Color(dinoHex: 0x2E647C).opacity(0.22)),
                              style: StrokeStyle(lineWidth: 19 * s, lineCap: .round, lineJoin: .round))
@@ -4953,6 +4974,7 @@ private struct VolcanoWorldLife: View {
                     VolcanoLifeSurface(layout: layout, frame: frame, viewportHeight: viewportHeight,
                                        fixedTime: fixedTime, frozen: frozen)
                         .mask(VolcanoDepthOcclusion(layout: layout, frame: frame, depth: -.infinity))
+                        .modifier(MapAnimationVisibility(viewportHeight: viewportHeight, alwaysVisible: fixedTime != nil || frozen))
                         .frame(width: frame.width, height: frame.height)
                         .position(x: frame.midX, y: frame.midY)
                 }
@@ -4961,6 +4983,7 @@ private struct VolcanoWorldLife: View {
                     VolcanoLifeSurface(layout: layout, frame: frame, viewportHeight: viewportHeight,
                                        source: source, fixedTime: fixedTime, frozen: frozen)
                         .mask(VolcanoDepthOcclusion(layout: layout, frame: frame, depth: source.point.y + routeOffset))
+                        .modifier(MapAnimationVisibility(viewportHeight: viewportHeight, alwaysVisible: fixedTime != nil || frozen))
                         .frame(width: frame.width, height: frame.height)
                         .position(x: frame.midX, y: frame.midY)
                 }
@@ -11198,6 +11221,7 @@ private struct TimeMachineLife: View {
                                        height: min(320, geometry.size.height - CGFloat(index) * 320))
                     TimeMachineAtmosphereSurface(layout: layout, frame: frame, viewportHeight: viewportHeight,
                                                  fixedTime: fixedTime, frozen: frozen)
+                        .modifier(MapAnimationVisibility(viewportHeight: viewportHeight, alwaysVisible: fixedTime != nil || frozen))
                         .frame(width: frame.width, height: frame.height)
                         .offset(y: frame.minY)
                 }
@@ -11205,6 +11229,7 @@ private struct TimeMachineLife: View {
                     let frame = assembly.bounds.offsetBy(dx: 0, dy: routeOffset)
                     TimeMachinePartsSurface(layout: layout, assembly: assembly, viewportHeight: viewportHeight,
                                             fixedTime: fixedTime, frozen: frozen)
+                        .modifier(MapAnimationVisibility(viewportHeight: viewportHeight, alwaysVisible: fixedTime != nil || frozen))
                         .frame(width: frame.width, height: frame.height)
                         .offset(x: frame.minX, y: frame.minY)
                 }
@@ -11213,6 +11238,7 @@ private struct TimeMachineLife: View {
                     TimeMachineMechanismSurface(site: site, viewportHeight: viewportHeight,
                                                 fixedTime: fixedTime, frozen: frozen)
                         .mask(TimeMachineMechanismMask(layout: layout, sites: sites, site: site, frame: frame))
+                        .modifier(MapAnimationVisibility(viewportHeight: viewportHeight, alwaysVisible: fixedTime != nil || frozen))
                         .frame(width: frame.width, height: frame.height)
                         .offset(x: frame.minX, y: frame.minY)
                 }
@@ -13765,6 +13791,7 @@ private struct PirateCoastLife: View {
                     PirateCoastLifeSurface(sea: sea, frame: frame, viewportHeight: viewportHeight,
                                            fixedTime: fixedTime, frozen: frozen)
                         .mask(PirateCoastOcclusion(layout: layout, frame: frame, cutoff: -.infinity))
+                        .modifier(MapAnimationVisibility(viewportHeight: viewportHeight, alwaysVisible: fixedTime != nil || frozen))
                         .frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
                 }
                 ForEach(Array(sea.vessels.enumerated()), id: \.offset) { item in
@@ -13774,6 +13801,7 @@ private struct PirateCoastLife: View {
                     PirateCoastLifeSurface(sea: sea, frame: frame, viewportHeight: viewportHeight, vessel: boat,
                                            fixedTime: fixedTime, frozen: frozen)
                         .mask(PirateCoastOcclusion(layout: layout, frame: frame, cutoff: routeOffset + boat.point.y))
+                        .modifier(MapAnimationVisibility(viewportHeight: viewportHeight, alwaysVisible: fixedTime != nil || frozen))
                         .frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
                 }
             }
@@ -13879,13 +13907,12 @@ private struct PirateSeaPainter {
 }
 
 /// Flocks cross the open lanes between stones and rest on actual scenery surfaces.
-@MainActor
-private struct PirateGullFlocks {
-    struct Landing {
+private struct PirateGullFlocks: Sendable {
+    struct Landing: Sendable {
         let point: CGPoint
         let structure: Bool
     }
-    struct Flock {
+    struct Flock: Sendable {
         let id: Int
         let laneY: CGFloat
         let left: [Landing]
@@ -13896,7 +13923,7 @@ private struct PirateGullFlocks {
         var rightRest: Double { 7.5 + Double(id % 4) * 0.8 }
         var fliesThrough: Bool { id % 4 == 1 || id % 4 == 3 }
     }
-    struct Pose: Identifiable {
+    struct Pose: Identifiable, Sendable {
         let id: Int
         var point: CGPoint
         let size: CGFloat
@@ -14088,9 +14115,8 @@ private struct PirateGullFlocks {
     }
 
     /// Every bird has its own timing and a gently bending route within the open gap.
-    func poses(time: Double) -> [Pose] {
+    func poses(time: Double, track: PirateGullMotionTrack) -> [Pose] {
         var poses = rawPoses(time: time)
-        let track = PirateGullMotionTrack.cached(for: self)
         let state = track.sample(time: time)
         for index in poses.indices {
             poses[index].point = state[index].point
@@ -14235,24 +14261,27 @@ private struct PirateGullFlocks {
 
 /// A small cached flight track lets steering keep momentum instead of teleporting
 /// neighbours apart. Four warm-up rounds settle the periodic flock before playback.
-@MainActor
-private final class PirateGullMotionTrack {
-    struct State { var point: CGPoint; var flight: CGFloat; let visible: Bool }
-    private static var tracks: [String: PirateGullMotionTrack] = [:]
-    private static var order: [String] = []
+private final class PirateGullMotionTrack: Sendable {
+    struct State: Sendable { var point: CGPoint; var flight: CGFloat; let visible: Bool }
     private let frames: [[State]]
+    var frameCount: Int { frames.count }
+#if DEBUG
+    let preparationMilliseconds: Double
+#endif
     private static let steps = Int(PirateGullFlocks.period * 16)
     private static let interval: CGFloat = 1 / 16
 
-    static func cached(for plan: PirateGullFlocks) -> PirateGullMotionTrack {
-        if let track = tracks[plan.cacheKey] { return track }
-        let track = PirateGullMotionTrack(plan: plan)
-        tracks[plan.cacheKey] = track; order.append(plan.cacheKey)
-        if order.count > 6 { tracks.removeValue(forKey: order.removeFirst()) }
-        return track
-    }
-
-    private init(plan: PirateGullFlocks) {
+    init(plan: PirateGullFlocks) throws {
+        assert(!Thread.isMainThread, "Gull flight preparation must never run on the scrolling thread")
+#if DEBUG
+        let preparationStarted = ProcessInfo.processInfo.systemUptime
+        defer {
+            if ProcessInfo.processInfo.environment["DINO_TEST_MAP_DIAGNOSTICS"] == "1" {
+                print("MAP_GULL_PREPARATION milliseconds=\((ProcessInfo.processInfo.systemUptime - preparationStarted) * 1000) mainThread=\(Thread.isMainThread)")
+            }
+        }
+#endif
+        try Task.checkCancellation()
         let h = Self.interval, scale = plan.scale
         let targets = (0..<Self.steps).map { plan.rawPoses(time: Double($0) / 16) }
         let count = targets[0].count
@@ -14267,6 +14296,7 @@ private final class PirateGullMotionTrack {
             let start = positions
             recorded.removeAll(keepingCapacity: true)
             for frame in 0..<Self.steps {
+                try Task.checkCancellation()
                 let target = targets[frame], next = targets[(frame + 1) % Self.steps]
                 let before = positions
                 var forces = Array(repeating: CGPoint.zero, count: count)
@@ -14360,6 +14390,9 @@ private final class PirateGullMotionTrack {
         }
         // Samples follow integration by one tick; rotate so phase zero is exact.
         frames = [recorded.last!] + recorded.dropLast()
+#if DEBUG
+        preparationMilliseconds = (ProcessInfo.processInfo.systemUptime - preparationStarted) * 1000
+#endif
     }
 
     func sample(time: Double) -> [State] {
@@ -14377,6 +14410,42 @@ private final class PirateGullMotionTrack {
     }
 }
 
+/// The collision solver runs on this actor's executor, never in a TimelineView.
+/// Serial preparation avoids competing simulations during rotation; cancelled
+/// requests stop between integration steps and completed sizes remain reusable.
+private actor PirateGullFlightCache {
+    static let shared = PirateGullFlightCache()
+    struct Prepared: Sendable {
+        let key: String
+        let flocks: PirateGullFlocks
+        let track: PirateGullMotionTrack
+        let preparedOnMainThread: Bool
+    }
+    private var flights: [String: Prepared] = [:]
+    private var order: [String] = []
+
+    static func key(size: CGSize, routeOffset: CGFloat) -> String {
+        "\(size.width):\(size.height):\(routeOffset)"
+    }
+
+    func flight(size: CGSize, routeOffset: CGFloat) throws -> Prepared {
+        try Task.checkCancellation()
+        let key = Self.key(size: size, routeOffset: routeOffset)
+        if let prepared = flights[key] {
+            order.removeAll { $0 == key }; order.append(key)
+            return prepared
+        }
+        let layout = WorldSceneryLayout(width: size.width, height: size.height, routeOffset: routeOffset)
+        let flocks = PirateGullFlocks(sea: PirateSeaGeometry(layout: layout))
+        let prepared = Prepared(key: key, flocks: flocks, track: try PirateGullMotionTrack(plan: flocks),
+                                preparedOnMainThread: Thread.isMainThread)
+        flights[key] = prepared
+        order.append(key)
+        if order.count > 6 { flights.removeValue(forKey: order.removeFirst()) }
+        return prepared
+    }
+}
+
 struct PirateCoastFlights: View {
     let routeOffset: CGFloat
     let viewportHeight: CGFloat
@@ -14386,28 +14455,42 @@ struct PirateCoastFlights: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var viewport = CGRect.zero
+    @State private var prepared: PirateGullFlightCache.Prepared?
 
     var body: some View {
         GeometryReader { geometry in
-            let layout = WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset)
-            let flocks = PirateGullFlocks(sea: PirateSeaGeometry(layout: layout))
+            let key = PirateGullFlightCache.key(size: geometry.size, routeOffset: routeOffset)
             TimelineView(.animation(minimumInterval: 1.0 / 20,
-                                    paused: fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
+                                    paused: prepared?.key != key || fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
                 let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 ZStack(alignment: .topLeading) {
-                    ForEach(flocks.poses(time: time)) { pose in
-                        let point = CGPoint(x: pose.point.x, y: pose.point.y + routeOffset)
-                        let frame = CGRect(x: point.x - pose.radius, y: point.y - pose.radius,
-                                           width: pose.radius * 2, height: pose.radius * 2)
-                        if pose.visible && (fixedTime != nil || frame.intersects(viewport)) {
-                            Canvas { context, _ in
-                                var c = context; c.translateBy(x: pose.radius, y: pose.radius)
-                                c.rotate(by: .radians(pose.angle)); c.scaleBy(x: pose.size * pose.facing, y: pose.size)
-                                PirateGullPainter(context: c).gull(time: pose.wingTime, phase: pose.phase, flight: pose.flight, beat: pose.wingBeat)
-                            }.frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
+                    if let prepared, prepared.key == key, fixedTime != nil || !viewport.isEmpty {
+                        ForEach(prepared.flocks.poses(time: time, track: prepared.track)) { pose in
+                            let point = CGPoint(x: pose.point.x, y: pose.point.y + routeOffset)
+                            let frame = CGRect(x: point.x - pose.radius, y: point.y - pose.radius,
+                                               width: pose.radius * 2, height: pose.radius * 2)
+                            if pose.visible && (fixedTime != nil || frame.intersects(viewport)) {
+                                Canvas { context, _ in
+                                    var c = context; c.translateBy(x: pose.radius, y: pose.radius)
+                                    c.rotate(by: .radians(pose.angle)); c.scaleBy(x: pose.size * pose.facing, y: pose.size)
+                                    PirateGullPainter(context: c).gull(time: pose.wingTime, phase: pose.phase, flight: pose.flight, beat: pose.wingBeat)
+                                }.frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
+                            }
                         }
                     }
                 }.frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
+            }
+            .task(id: key, priority: .utility) {
+                guard geometry.size.width > 0, geometry.size.height > 0 else { return }
+                do {
+                    let flight = try await PirateGullFlightCache.shared.flight(size: geometry.size, routeOffset: routeOffset)
+                    try Task.checkCancellation()
+                    prepared = flight
+#if DEBUG
+                    DinoMapArtworkCache.shared.recordGullPreparation(frames: flight.track.frameCount,
+                        milliseconds: flight.track.preparationMilliseconds, onMainThread: flight.preparedOnMainThread)
+#endif
+                } catch { /* Leaving the map or resizing cancels obsolete preparation. */ }
             }
             .readGeometry(for: CGRect.self) { proxy in
                 DinoMapViewport.preparedAnimationBounds(frame: proxy.frame(in: .named("adventure.map.viewport")), viewportHeight: viewportHeight)
@@ -14816,7 +14899,17 @@ private struct CastleKingdomLayout {
 }
 
 /// Only the visible water tiles tick. The stonework and its occlusion masks stay cached.
-private struct CastleWaterPlan {
+private final class CastleWaterPlan {
+    private static let plans: NSCache<NSString, CastleWaterPlan> = {
+        let cache = NSCache<NSString, CastleWaterPlan>(); cache.countLimit = 8; return cache
+    }()
+    static func cached(scenery: WorldSceneryLayout) -> CastleWaterPlan {
+        let key = "\(scenery.width):\(scenery.height):\(scenery.routeOffset)" as NSString
+        if let plan = plans.object(forKey: key) { return plan }
+        let plan = CastleWaterPlan(scenery: scenery)
+        plans.setObject(plan, forKey: key)
+        return plan
+    }
     struct Feature {
         let point: CGPoint
         let scale: CGFloat
@@ -14833,19 +14926,32 @@ private struct CastleWaterPlan {
     let districts: [CastleKingdomLayout.District]
     let crossings: [CastleKingdomLayout.Crossing]
     let features: [Feature]
+    let waterways: [Path]
+    let walks: [[Path]]
+    let hedges: [[[CGPoint]]]
 
     init(scenery: WorldSceneryLayout) {
         let layout = CastleKingdomLayout(scenery: scenery)
         let districts = layout.districts
+        let crossings = layout.crossings(for: districts)
         self.layout = layout
         self.districts = districts
-        self.crossings = layout.crossings(for: districts)
+        self.crossings = crossings
         self.features = CastleKingdomLayout.cascades.map {
             Feature(point: layout.waterPoint(at: $0.y, right: $0.right), scale: layout.scale,
                     depth: $0.y + 24 * layout.scale, cascadeRight: $0.right)
         } + districts.flatMap { layout.fountains(for: $0) }.map {
             Feature(point: $0.point, scale: $0.scale, depth: $0.depth, cascadeRight: nil)
         }
+        waterways = [false, true].map { layout.waterway(right: $0) }
+        walks = [false, true].map { right in
+            [false, true].map { outer in
+                Path { $0.addLines(layout.bankContour(right: right,
+                    offset: outer ? CastleKingdomLayout.outerWalkOffset : CastleKingdomLayout.innerWalkOffset,
+                    from: -scenery.routeOffset - 16, to: scenery.height - scenery.routeOffset + 16)) }
+            }
+        }
+        hedges = [false, true].map { layout.avenueHedges(right: $0, crossings: crossings) }
     }
 }
 
@@ -14857,13 +14963,14 @@ private struct CastleWaterLife: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let plan = CastleWaterPlan(scenery: WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset))
+            let plan = CastleWaterPlan.cached(scenery: WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset))
             ZStack(alignment: .topLeading) {
                 ForEach(0..<Int(ceil(geometry.size.height / 320)), id: \.self) { index in
                     let frame = CGRect(x: 0, y: CGFloat(index) * 320, width: geometry.size.width,
                                        height: min(320, geometry.size.height - CGFloat(index) * 320))
                     CastleWaterSurface(plan: plan, frame: frame, viewportHeight: viewportHeight, fixedTime: fixedTime, frozen: frozen)
                         .mask(CastleWaterOcclusion(plan: plan, frame: frame))
+                        .modifier(MapAnimationVisibility(viewportHeight: viewportHeight, alwaysVisible: fixedTime != nil || frozen))
                         .frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
                 }
                 ForEach(Array(plan.features.enumerated()), id: \.offset) { item in
@@ -14871,6 +14978,7 @@ private struct CastleWaterLife: View {
                     let frame = feature.bounds.offsetBy(dx: 0, dy: routeOffset)
                     CastleWaterSurface(plan: plan, frame: frame, viewportHeight: viewportHeight, feature: feature, fixedTime: fixedTime, frozen: frozen)
                         .mask(CastleWaterOcclusion(plan: plan, frame: frame, cutoff: feature.depth))
+                        .modifier(MapAnimationVisibility(viewportHeight: viewportHeight, alwaysVisible: fixedTime != nil || frozen))
                         .frame(width: frame.width, height: frame.height).position(x: frame.midX, y: frame.midY)
                 }
             }
@@ -14948,6 +15056,7 @@ private struct CastleWorldPainter {
     var depthOffset: CGFloat = 0
     var liveWater = false
     var time: TimeInterval = 0
+    var rasterBounds: CGRect? = nil
 
     private func at(_ point: CGPoint, size: CGFloat = 1, mirror: Bool = false, radius: CGFloat = 0, rise: CGFloat = 0, draw: @escaping (CastleWorldPainter) -> Void) {
         let point = scenery?.position(point, radius: radius, rise: rise) ?? point
@@ -14996,11 +15105,13 @@ private struct CastleWorldPainter {
         harbourGround(in: size)
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
-        let layout = CastleKingdomLayout(scenery: scenery)
-        let ground = CastleWorldPainter(context: c, liveWater: liveWater, time: time)
-        let districts = layout.districts
-        let crossings = layout.crossings(for: districts)
-        ground.royalGround(layout: layout, districts: districts, crossings: crossings)
+        let plan = CastleWaterPlan.cached(scenery: scenery)
+        let layout = plan.layout
+        let ground = CastleWorldPainter(context: c, liveWater: liveWater, time: time,
+                                        rasterBounds: rasterBounds?.offsetBy(dx: 0, dy: -routeOffset))
+        let districts = plan.districts
+        let crossings = plan.crossings
+        ground.royalGround(plan: plan)
         entrance(width: w, scale: scale)
         ground.appendScenery(layout: layout, districts: districts, crossings: crossings, depth: depth, offset: routeOffset)
         // Broad tablet gardens have their own connected outer gallery. On a
@@ -15065,9 +15176,10 @@ private struct CastleWorldPainter {
         planter(at: CGPoint(x: 21 * scale, y: 234 * scale), size: scale)
         planter(at: CGPoint(x: width - 17 * scale, y: 246 * scale), size: scale)
     }
-    private func royalGround(layout: CastleKingdomLayout, districts: [CastleKingdomLayout.District], crossings: [CastleKingdomLayout.Crossing]) {
+    private func royalGround(plan: CastleWaterPlan) {
+        let layout = plan.layout, crossings = plan.crossings
         let s = layout.scale, scenery = layout.scenery
-        for right in [false, true] {
+        for (side, right) in [false, true].enumerated() {
             let sign: CGFloat = right ? 1 : -1
             // Broad planted banks connect the courts instead of leaving little
             // isolated circular platforms in an otherwise empty landscape.
@@ -15089,15 +15201,13 @@ private struct CastleWorldPainter {
                 .init(color: Color(dinoHex: 0xC5CBA0).opacity(0.24), location: 0.87),
                 .init(color: .clear, location: 1)
             ]), startPoint: .init(x: 0, y: start), endPoint: .init(x: 0, y: end)))
-            let water = layout.waterway(right: right)
+            let water = plan.waterways[side]
             for (width, color): (CGFloat, UInt32) in [(38, 0xA4AA8C), (33, 0xFFF0CC), (25, 0xB3CFBD), (19, 0x53B5C7)] {
                 context.stroke(water, with: .color(Color(dinoHex: color)), style: StrokeStyle(lineWidth: width * s, lineCap: .round, lineJoin: .round))
             }
             if !liveWater { riverCurrent(layout: layout, right: right) }
-            for outer in [false, true] {
-                var walk = Path()
-                walk.addLines(layout.bankContour(right: right, offset: outer ? CastleKingdomLayout.outerWalkOffset : CastleKingdomLayout.innerWalkOffset,
-                                                  from: -scenery.routeOffset - 16, to: scenery.height - scenery.routeOffset + 16))
+            for (walkIndex, outer) in [false, true].enumerated() {
+                let walk = plan.walks[side][walkIndex]
                 context.stroke(walk, with: .color(Color(dinoHex: 0xA6AA8B).opacity(0.7)), style: StrokeStyle(lineWidth: (outer ? 19 : 12) * s, lineCap: .round))
                 context.stroke(walk, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xF6E8C9), Color(dinoHex: 0xD5D0AF)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: 1700)), style: StrokeStyle(lineWidth: (outer ? 15 : 8) * s, lineCap: .round))
             }
@@ -15108,7 +15218,7 @@ private struct CastleWorldPainter {
             for crossing in crossings where crossing.right == right {
                 bridgeApproach(crossing)
             }
-            for (index, points) in layout.avenueHedges(right: right, crossings: crossings).enumerated() {
+            for (index, points) in plan.hedges[side].enumerated() {
                 hedge(along: points, height: CastleKingdomLayout.avenueHedgeHeight * s,
                       width: CastleKingdomLayout.avenueHedgeWidth * s, roses: index % 2 == 0)
             }
@@ -15168,6 +15278,7 @@ private struct CastleWorldPainter {
     private func hedge(along points: [CGPoint], height: CGFloat, width: CGFloat, roses: Bool = false) {
         guard let start = points.first, let end = points.last, points.count > 1 else { return }
         var stem = Path(); stem.addLines(points)
+        if let rasterBounds, !rasterBounds.intersects(stem.boundingRect.insetBy(dx: -width - 8, dy: -height - width - 8)) { return }
         let style = StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round)
         context.stroke(stem.offsetBy(dx: 1.5, dy: 5), with: .color(Color(dinoHex: 0x667D54).opacity(0.23)), style: StrokeStyle(lineWidth: width + 5, lineCap: .round))
         // Extrude the trimmed hedge all the way down to the soil. Drawing only
@@ -15194,6 +15305,7 @@ private struct CastleWorldPainter {
             let offset = CGFloat((i * 17) % 11 - 5) / 10 * width
             let x = a.x + (b.x - a.x) * t + normal.x * offset
             let y = a.y + (b.y - a.y) * t + normal.y * offset - height
+            if let rasterBounds, !rasterBounds.insetBy(dx: -width, dy: -width).contains(CGPoint(x: x, y: y)) { continue }
             leaves.oval(CGRect(x: x - width * 0.12, y: y - width * 0.15, width: width * 0.29, height: width * 0.38),
                         i % 3 == 0 ? [0xD1DF9A, 0x99BF73, 0x699956] : [0xA4C57D, 0x77A766, 0x4C864F])
             if roses && i % 8 == 2 {
@@ -16222,12 +16334,12 @@ struct ThemedWorldLandscape: View, Equatable {
         if cachesTerrain {
             GeometryReader { geometry in
                 PreparedMapArtwork(worldID: world.id, size: geometry.size, routeOffset: routeOffset,
-                                   ground: world.ground) { drawing }
+                                   ground: world.ground, tileContent: { drawing(bounds: $0) }) { drawing() }
             }
-        } else { drawing }
+        } else { drawing() }
     }
 
-    private var drawing: some View {
+    private func drawing(bounds: CGRect? = nil) -> some View {
         Canvas { context, size in
             let depth = WorldSceneryDepth()
             if world.themeID == 2 {
@@ -16336,7 +16448,7 @@ struct ThemedWorldLandscape: View, Equatable {
                 return
             }
             if world.id == 10 {
-                CastleWorldPainter(context: context, liveWater: true).landscape(in: size, routeOffset: routeOffset, depth: depth)
+                CastleWorldPainter(context: context, liveWater: true, rasterBounds: bounds).landscape(in: size, routeOffset: routeOffset, depth: depth)
                 var routeContext = context
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
@@ -16407,15 +16519,18 @@ struct ThemedWorldLandscape: View, Equatable {
     var body: some View {
         terrain.clipped()
             .overlay {
-                if world.themeID == 7 { DinoDesertLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
-                if world.themeID == 2 { SleepValleyLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
-                if world.id == 3 { VolcanoWorldLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
-                if world.id == 4 { VillageWorldLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
-                if world.id == 6 { CityWorldLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
-                if world.id == 8 { TimeMachineLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
-                if world.id == 9 { PirateCoastLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
-                if world.id == 10 { CastleWaterLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
-                if world.id == 5 { CrystalCaveLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                Group {
+                    if world.themeID == 7 { DinoDesertLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                    if world.themeID == 2 { SleepValleyLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                    if world.id == 3 { VolcanoWorldLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                    if world.id == 4 { VillageWorldLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                    if world.id == 6 { CityWorldLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                    if world.id == 8 { TimeMachineLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                    if world.id == 9 { PirateCoastLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                    if world.id == 10 { CastleWaterLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                    if world.id == 5 { CrystalCaveLife(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                }.modifier(MapAnimationVisibility(viewportHeight: viewportHeight))
+                    .environment(\.dinoMapDefersAnimations, cachesTerrain)
             }
             .overlay(alignment: .bottom) {
                 if world.id == 2 {
@@ -17306,6 +17421,13 @@ enum DinoMapArtworkPreparation {
         case 4:
             _ = VillagePlan.plots(layout: layout)
             _ = VillageRiverTrafficLayout.routes(layout: layout)
+        case 7:
+            _ = SleepValleyLayout.riverGeometry(layout: layout)
+        case 8:
+            _ = TimeMachineLayout.waterField(layout: layout)
+            _ = TimeMachineLayout.assemblies(layout: layout)
+        case 10:
+            _ = CastleWaterPlan.cached(scenery: layout)
         default: break
         }
     }

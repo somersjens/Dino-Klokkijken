@@ -801,7 +801,12 @@ final class DinoUITests: XCTestCase {
             XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "question.correctClock").count, 1)
             XCTAssertFalse(app.buttons["question.confirm"].exists)
             if kind == .advanceAnalog {
-                XCTAssertLessThan(control.frame.maxY, correct.frame.minY)
+                XCTAssertLessThan(control.frame.midX, correct.frame.midX)
+                XCTAssertEqual(control.frame.midY, correct.frame.midY, accuracy: 8)
+                let entered = app.descendants(matching: .any)["question.advance.entered"]
+                XCTAssertTrue(entered.exists)
+                XCTAssertLessThan(control.frame.maxX, entered.frame.midX)
+                XCTAssertLessThan(entered.frame.midX, correct.frame.minX)
             } else {
                 XCTAssertEqual(control.frame.midY, controlFrame.midY, accuracy: 1, "The submitted clock does not rise from below")
                 XCTAssertLessThan(control.frame.midX, correct.frame.midX)
@@ -1047,6 +1052,32 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("jungle-continuous-scroll-return")
     }
 
+    func testOpeningArrivesInLandscapeAndDoesNotReplayAfterClosingLevel() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "3"
+        app.launchArguments = ["-settings.languageOverride", "en"]
+        let tablet = UIDevice.current.userInterfaceIdiom == .pad
+        if tablet { XCUIDevice.shared.orientation = .landscapeLeft }
+        defer { XCUIDevice.shared.orientation = .portrait }
+        app.launch()
+        waitForMapOpeningToFinish()
+        let target = app.buttons["map.level.4"]
+        let dino = app.descendants(matching: .any)["map.dino.4"]
+        XCTAssertTrue(target.waitForExistence(timeout: 8))
+        XCTAssertTrue(target.isHittable)
+        XCTAssertTrue(dino.exists)
+        XCTAssertEqual(dino.frame.midX, target.frame.midX, accuracy: 1)
+        if tablet { XCTAssertGreaterThan(app.frame.width, app.frame.height) }
+        saveScreenshot("opening-english-saved-arrival")
+        tap("map.level.4")
+        XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5))
+        tap("level.map")
+        XCTAssertFalse(app.descendants(matching: .any)["map.preparing"].exists)
+        XCTAssertFalse(app.descendants(matching: .any)["map.opening.title"].exists)
+        XCTAssertTrue(app.buttons["header.settings"].isHittable)
+    }
+
     func testColdLaunchMapKeepsItsFirstVisiblePosition() {
         for completed in [0, 3, 90] {
             app.terminate()
@@ -1112,6 +1143,56 @@ final class DinoUITests: XCTestCase {
         }
         XCTAssertTrue(app.buttons["header.settings"].isHittable)
         saveScreenshot("performance-map-after-fast-scroll")
+    }
+
+    func testSleepValleyToTimeMachineScrollPerformance() {
+        app.terminate()
+        // Start far enough away that world 8 has not been constructed on launch.
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "4"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 15))
+        waitForMapOpeningToFinish()
+        _ = revealMapNode(51)
+        let options = XCTMeasureOptions()
+        options.iterationCount = 3
+        var metrics: [XCTMetric] = [XCTCPUMetric(application: app), XCTMemoryMetric(application: app),
+                                    XCTOSSignpostMetric.scrollingAndDecelerationMetric]
+        if #available(iOS 26, *) { metrics.append(XCTHitchMetric(application: app)) }
+        measure(metrics: metrics, options: options) {
+            for _ in 0..<6 { app.swipeUp(velocity: .fast) }
+            XCTAssertLessThan(app.buttons["map.level.71"].frame.minY, app.frame.maxY,
+                              "The measured gestures must reach the time-machine world")
+            for _ in 0..<6 { app.swipeDown(velocity: .fast) }
+        }
+        XCTAssertTrue(app.buttons["header.settings"].isHittable)
+        saveScreenshot("performance-sleep-valley-time-machine-return")
+    }
+
+    func testColdSleepValleyScrollKeepsMainThreadResponsive() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "5"
+        app.launchEnvironment["DINO_TEST_MAP_DIAGNOSTICS"] = "1"
+        app.launchEnvironment["DINO_TEST_COLD_MAP_ARTWORK"] = "1"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 15))
+        waitForMapOpeningToFinish()
+        let gap = app.staticTexts["map.maximumFrameGapMilliseconds"]
+        XCTAssertTrue(gap.exists)
+        // The first visit matters: the pirate coast starts preparing while
+        // Sleep Valley is still visible, before a performance test's warm-up.
+        for id in [57, 61, 65, 68, 71, 75, 81, 85] {
+            _ = revealMapNode(id)
+            print("MAP_COLD_SCROLL level=\(id) max=\(gap.label) \(gap.value as? String ?? "")")
+        }
+        let milliseconds = Double(gap.label) ?? .infinity
+        print("MAP_COLD_SCROLL maximumFrameGapMilliseconds=\(milliseconds)")
+        let flight = app.staticTexts["map.gullPreparedFrames"]
+        print("MAP_GULL_PREPARATION \(flight.value as? String ?? "missing") frames=\(flight.label)")
+        XCTAssertGreaterThan(Int(flight.label) ?? 0, 0, "The birds must still receive their complete flight simulation")
+        XCTAssertTrue((flight.value as? String ?? "").contains("background"))
+        XCTAssertLessThan(milliseconds, 500, "Preparing an upcoming world must never block the scrolling thread for half a second")
+        XCTAssertTrue(app.buttons["header.settings"].isHittable)
+        saveScreenshot("cold-sleep-valley-scroll-responsive")
     }
 
     func testPracticeHUDRecordsAndPersistentCounter() {
@@ -2481,6 +2562,63 @@ final class DinoUITests: XCTestCase {
             tap("question.next")
             XCTAssertFalse(answer.exists, "A new question hides the worked answer")
         }
+    }
+
+    func testWrongDayPartAnswerCanBeRejudgedFromSettings() throws {
+        openPractice()
+        selectPractice("practice.type.dayPart")
+        tap("practice.start")
+        var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.dayPart)), seed: seed)
+        let question = generator.next(index: 0)
+        let wrongIndex = question.responses.firstIndex { $0 != question.expectedAnswer }!
+        guard case .dayPart(let picked) = question.responses[wrongIndex] else {
+            return XCTFail("Expected a day-part choice")
+        }
+        let optionFrames = (0..<4).map { app.buttons["question.option.\($0)"].frame }
+        XCTAssertFalse(app.buttons["question.dayPart.settings"].exists)
+        tap("question.option.\(wrongIndex)")
+        XCTAssertTrue(app.buttons["question.showAnswer"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["question.dayPart.settings"].exists, "Settings stay hidden while the question can still be retried")
+        tap("question.showAnswer")
+        let settingsButton = app.buttons["question.dayPart.settings"]
+        let next = app.buttons["question.next"]
+        XCTAssertTrue(settingsButton.waitForExistence(timeout: 5))
+        XCTAssertEqual(settingsButton.label, "Instellingen wijzigen")
+        XCTAssertLessThan(settingsButton.frame.maxY, next.frame.minY)
+        XCTAssertEqual(app.buttons["question.option.\(wrongIndex)"].value as? String, "Fout")
+        for option in 0..<4 {
+            XCTAssertEqual(app.buttons["question.option.\(option)"].frame.midY, optionFrames[option].midY, accuracy: 1)
+        }
+        tap("question.dayPart.settings")
+        let close = app.buttons["settings.dayParts.close"]
+        XCTAssertTrue(close.waitForExistence(timeout: 5))
+        XCTAssertEqual(close.label, "Terug naar het spel")
+        let timetable = timetableOwning(hour: question.target.hour, part: picked)
+        let steps = try XCTUnwrap(DinoDayPartSchedule.standard.edits(to: timetable))
+        for step in steps {
+            tap("settings.dayParts.\(step.part.rawValue).from")
+            let choice = app.buttons["settings.dayParts.\(step.part.rawValue).from.\(step.hour)"]
+            XCTAssertTrue(choice.waitForExistence(timeout: 3), "Missing \(step.part.rawValue) start \(step.hour)")
+            choice.tap()
+        }
+        close.tap()
+        XCTAssertTrue(next.waitForExistence(timeout: 5))
+        RunLoop.current.run(until: Date().addingTimeInterval(1.2))
+        XCTAssertTrue(next.exists, "A rescued answer stays until Next")
+        XCTAssertFalse(settingsButton.exists)
+        XCTAssertEqual(app.buttons["question.option.\(wrongIndex)"].value as? String, "Goed")
+        tap("question.next")
+        let streak = app.staticTexts.matching(identifier: "header.streak")
+            .matching(NSPredicate(format: "label MATCHES %@", "[0-9]+")).firstMatch
+        XCTAssertEqual(streak.label, "1")
+    }
+
+    private func timetableOwning(hour: Int, part: DinoDayPart) -> DinoDayPartSchedule {
+        let order = DinoDayPart.allCases
+        let origin = order.firstIndex(of: part)!
+        var starts = [Int](repeating: 0, count: 4)
+        for offset in 0..<4 { starts[(origin + offset) % 4] = (hour + offset) % 24 }
+        return DinoDayPartSchedule(night: starts[0], morning: starts[1], afternoon: starts[2], evening: starts[3])
     }
 
     func testDayPartExampleActionsStayInPlace() {
@@ -4209,6 +4347,72 @@ final class DinoUITests: XCTestCase {
             }
             saveScreenshot("result-biome-world-\(world)")
         }
+    }
+
+    private func launchReviewResult(level: Int, correct: Int, completed: Int = 0) {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.world-review.\(UUID().uuidString)"
+        app.launchEnvironment["DINO_TEST_REVIEW_DIAGNOSTICS"] = "1"
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = completed > 0 ? String(completed) : nil
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = String(level)
+        app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = String(correct)
+        app.launch()
+        XCTAssertTrue(app.buttons["result.retry"].waitForExistence(timeout: 8))
+    }
+
+    func testWorldReviewRequestsAfterArrival() {
+        for world in [1, 4, 9, 10] {
+            // Include both boss victory routes and the last world without a salto.
+            launchReviewResult(level: world * 10, correct: world == 4 ? 6 : 10,
+                               completed: world == 1 ? 0 : world * 10 - 1)
+            tap(world == 10 ? "result.map" : "result.next")
+            let requests = app.staticTexts["map.reviewRequests"]
+            let requested = NSPredicate { _, _ in requests.exists && requests.label == "1" }
+            expectation(for: requested, evaluatedWith: nil)
+            waitForExpectations(timeout: 20)
+            XCTAssertFalse(app.descendants(matching: .any)["map.worldJump"].exists)
+            XCTAssertTrue(app.descendants(matching: .any)["map.dino.\(min(100, world * 10 + 1))"].exists)
+            XCTAssertGreaterThanOrEqual(Double(requests.value as? String ?? "") ?? 0, 1,
+                                        "The full one-second delay starts after the map arrival")
+            // Sheet dismissal and view updates must not request this arrival again.
+            tap("header.settings")
+            tap("settings.done")
+            RunLoop.current.run(until: Date().addingTimeInterval(1.2))
+            XCTAssertEqual(requests.label, "1")
+        }
+    }
+
+    func testWorldReviewDoesNotRequestForOrdinaryResultsOrRetry() {
+        for (level, correct, completed) in [(2, 4, 1), (10, 5, 9), (10, 9, 0)] {
+            launchReviewResult(level: level, correct: correct, completed: completed)
+            tap("result.map")
+            let requests = app.staticTexts["map.reviewRequests"]
+            XCTAssertTrue(requests.waitForExistence(timeout: 15))
+            waitForMapOpeningToFinish()
+            RunLoop.current.run(until: Date().addingTimeInterval(1.2))
+            XCTAssertEqual(requests.label, "0")
+        }
+        launchReviewResult(level: 10, correct: 10)
+        tap("result.retry")
+        XCTAssertTrue(app.buttons["header.pause"].waitForExistence(timeout: 8))
+        // The first question can be left without a confirmation dialog.
+        tap("header.pause")
+        let requests = app.staticTexts["map.reviewRequests"]
+        XCTAssertTrue(requests.waitForExistence(timeout: 15))
+        waitForMapOpeningToFinish()
+        RunLoop.current.run(until: Date().addingTimeInterval(1.2))
+        XCTAssertEqual(requests.label, "0")
+    }
+
+    func testWorldReviewRequestCancelsWhenOpeningSettings() {
+        launchReviewResult(level: 100, correct: 10, completed: 99)
+        tap("result.map")
+        app.buttons["header.settings"].tap()
+        XCTAssertTrue(app.buttons["settings.done"].waitForExistence(timeout: 5))
+        RunLoop.current.run(until: Date().addingTimeInterval(1.2))
+        tap("settings.done")
+        RunLoop.current.run(until: Date().addingTimeInterval(1.2))
+        XCTAssertEqual(app.staticTexts["map.reviewRequests"].label, "0")
     }
 
     func testWorldResultButtonsAndMapSalto() {

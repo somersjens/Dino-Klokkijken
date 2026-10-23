@@ -100,6 +100,30 @@ struct DinoDayPartSchedule: Equatable, Sendable {
         return .night
     }
 
+    /// One boundary at a time, each set straight to its hour in `target`, as the settings menus allow.
+    func edits(to target: DinoDayPartSchedule) -> [(part: DinoDayPart, hour: Int)]? {
+        if self == target { return [] }
+        guard isValid, target.isValid else { return nil }
+        var queue: [(DinoDayPartSchedule, [(DinoDayPart, Int)])] = [(self, [])]
+        var seen: Set<String> = [storageKey]
+        var head = 0
+        while head < queue.count {
+            let (current, path) = queue[head]
+            head += 1
+            for part in DinoDayPart.allCases {
+                let hour = target.start(of: part)
+                guard current.start(of: part) != hour, current.validStarts(for: part).contains(hour) else { continue }
+                var next = current
+                next.setStart(part, hour)
+                guard seen.insert(next.storageKey).inserted else { continue }
+                let steps = path + [(part: part, hour: hour)]
+                if next == target { return steps }
+                queue.append((next, steps))
+            }
+        }
+        return nil
+    }
+
     /// Start hours that keep every part at least one hour long, in clock order.
     func validStarts(for part: DinoDayPart) -> [Int] {
         let anchor = start(of: part.previous())
@@ -533,6 +557,19 @@ struct DinoAnalogAdvanceExample {
 
     static func face(_ time: ClockTime) -> ClockTime {
         ClockTime(hour: time.hour % 12 == 0 ? 12 : time.hour % 12, minute: time.minute)
+    }
+
+    /// Minutes the player moved from the given start to the clock they set, on a 12-hour face.
+    /// The shorter direction is used, so going back reads as a negative deviation.
+    static func enteredMinutes(from start: ClockTime, to answer: ClockTime) -> Int {
+        func minutes(_ time: ClockTime) -> Int {
+            let shown = face(time)
+            return (shown.hour % 12) * 60 + shown.minute
+        }
+        var delta = minutes(answer) - minutes(start)
+        if delta > 6 * 60 { delta -= 12 * 60 }
+        if delta <= -6 * 60 { delta += 12 * 60 }
+        return delta
     }
 }
 

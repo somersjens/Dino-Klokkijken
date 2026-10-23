@@ -75,7 +75,7 @@ struct QuestionRenderer: View {
                                 onMinuteChange: { session.inputMinute = $0 },
                                 minuteStep: session.minuteStep, valueIdentifier: "question.digitalControl",
                                 feedbackCorrect: session.hasFeedback ? session.correctFeedback : nil,
-                                showsControls: !session.hidesAnswerControls)
+                                controlsEnabled: !session.hidesAnswerControls)
                 .scaleEffect(comparing ? scale : 1)
                 .offset(x: comparing ? -displacement : 0)
             DigitalClock(time: question.target, theme: theme, fontSize: font)

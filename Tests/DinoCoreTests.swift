@@ -60,6 +60,7 @@ struct DinoCoreTests {
         testCapitalTimeZones()
         testUnambiguousQuestionTimes()
         testDayPartSchedule()
+        testDayPartRejudge()
         testDemonstrationExamples()
         testAnalogSettingExamples()
         testProgress()
@@ -385,6 +386,26 @@ struct DinoCoreTests {
     }
 
     static func testMapAnimationViewport() {
+        for viewport: CGFloat in [568, 852, 1194, 1366] {
+            for height: CGFloat in [30, 320, 2200] {
+                let incoming = CGRect(x: 0, y: viewport + 200, width: 390, height: height)
+                expect(DinoMapViewport.preparesAnimation(frame: incoming, viewportHeight: viewport),
+                       "animation and its masks are built before entering any viewport size")
+                let distant = incoming.offsetBy(dx: 0, dy: 100)
+                expect(!DinoMapViewport.preparesAnimation(frame: distant, viewportHeight: viewport),
+                       "upcoming machinery does not build distant masks")
+                expect(DinoMapViewport.preparesAnimation(frame: distant, viewportHeight: viewport, retained: true),
+                       "small reverse drags reuse a recently prepared animation")
+                expect(!DinoMapViewport.preparesAnimation(frame: CGRect(x: 0, y: -height - 513, width: 390, height: height),
+                                                        viewportHeight: viewport, retained: true),
+                       "far-away surfaces release their masks")
+                let visible = CGRect(x: 0, y: viewport - 1, width: 390, height: height)
+                expect(DinoMapViewport.preparesAnimation(frame: visible, viewportHeight: viewport),
+                       "visible flowing water is never deferred")
+            }
+        }
+        expect(!DinoMapViewport.preparesAnimation(frame: .zero, viewportHeight: 852),
+               "unmeasured animation layers do not build an initial drawing")
         let frame = CGRect(x: 0, y: -600, width: 390, height: 2200)
         let bounds = DinoMapViewport.animationBounds(frame: frame, viewportHeight: 800)
         expect(bounds.contains(CGRect(x: 0, y: 600, width: 390, height: 800)), "animation bands include the entire visible map")
@@ -993,6 +1014,12 @@ struct DinoCoreTests {
     }
 
     static func testAnalogSettingExamples() {
+        expect(DinoAnalogAdvanceExample.enteredMinutes(from: ClockTime(hour: 2), to: ClockTime(hour: 2, minute: 20)) == 20,
+               "the entered deviation is how far the player moved the clock forward")
+        expect(DinoAnalogAdvanceExample.enteredMinutes(from: ClockTime(hour: 2, minute: 10), to: ClockTime(hour: 2)) == -10,
+               "moving the hands backward is a negative deviation")
+        expect(DinoAnalogAdvanceExample.enteredMinutes(from: ClockTime(hour: 12, minute: 50), to: ClockTime(hour: 1, minute: 5)) == 15,
+               "the entered deviation follows the hands across twelve")
         expect(DinoPracticeTime.analogHandStep(30) == 15 && DinoPracticeTime.half.analogHandStep == 15,
                "half-hour practice turns the analog hand by quarters")
         expect(DinoPracticeTime.analogHandStep(10) == 5 && DinoPracticeTime.tenMinutes.analogHandStep == 5,
@@ -1217,6 +1244,76 @@ struct DinoCoreTests {
         let session = DinoSession(level: configuration.level, player: player, practice: configuration, dayPartSchedule: school)
         expect(session.dayPartSchedule == school && session.question.expectedAnswer == .dayPart(school.part(at: session.question.target.hour)),
                "a practice session keeps the timetable it started with")
+    }
+
+    static func testDayPartRejudge() {
+        for hour in 0..<24 {
+            for part in DinoDayPart.allCases {
+                let timetable = timetableOwning(hour: hour, part: part)
+                expect(timetable.isValid && timetable.part(at: hour) == part, "every hour can belong to every day part")
+                expect(DinoDayPartSchedule.standard.edits(to: timetable) != nil, "the settings menus can reach that timetable")
+            }
+        }
+        let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+        let configuration = DinoPracticeConfiguration(time: .whole, order: .specific(.dayPart))
+        let learned = DinoSession(level: configuration.level, player: player, practice: configuration)
+        for _ in 0..<3 {
+            learned.submit(learned.question.expectedAnswer)
+            learned.advance()
+        }
+        expect(player.questionDifficulty(kind: .dayPart, time: .whole) == .familiar, "three day-part answers move up a step")
+        let missed = learned.question.responses.first { $0 != learned.question.expectedAnswer }!
+        learned.submit(missed)
+        expect(!learned.offersDayPartSettings, "the settings button waits until the question is closed")
+        learned.showAnswer()
+        expect(learned.offersDayPartSettings && learned.attempt.answers.last == false, "a closed miss offers the timetable")
+        expect(player.questionDifficulty(kind: .dayPart, time: .whole) == .introduction, "the miss drops back a step")
+        expect(player.practiceRecord(time: .whole, question: .dayPart) == DinoPracticeRecord(bestStreak: 3, questionsAnswered: 4, currentStreak: 0),
+               "the miss breaks the streak without forgetting the earlier record")
+        guard case .dayPart(let picked) = missed else { expect(false, "a day-part choice"); return }
+        let corrected = timetableOwning(hour: learned.question.target.hour, part: picked)
+        learned.rejudgeDayPart(using: corrected)
+        expect(learned.attempt.answers.last == true && learned.correctFeedback && !learned.shouldAutoAdvance,
+               "the first answer is right under the new timetable and waits for Next")
+        expect(!learned.offersDayPartSettings && !learned.rejectedResponses.contains(missed), "the rescued choice is no longer marked wrong")
+        expect(learned.question.expectedAnswer == .dayPart(picked), "the question now expects the first choice")
+        expect(player.questionDifficulty(kind: .dayPart, time: .whole) == .familiar, "a rescued answer keeps the step earned before it")
+        expect(player.practiceRecord(time: .whole, question: .dayPart) == DinoPracticeRecord(bestStreak: 4, questionsAnswered: 4, currentStreak: 4),
+               "the rescued answer continues the streak it had interrupted")
+        learned.rejudgeDayPart(using: corrected)
+        expect(player.practiceRecord(time: .whole, question: .dayPart).questionsAnswered == 4, "closing the timetable twice does not score the answer again")
+        learned.advance()
+        expect(learned.dayPartSchedule == corrected && learned.question.expectedAnswer == .dayPart(corrected.part(at: learned.question.target.hour)),
+               "the next question uses the timetable chosen during the miss")
+
+        let fresh = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+        let retry = DinoSession(level: configuration.level, player: fresh, practice: configuration)
+        let first = retry.question.responses.first { $0 != retry.question.expectedAnswer }!
+        let second = retry.question.responses.first { $0 != retry.question.expectedAnswer && $0 != first }!
+        retry.submit(first)
+        retry.submit(second)
+        retry.showAnswer()
+        guard case .dayPart(let firstPart) = first else { expect(false, "a day-part choice"); return }
+        let other = DinoDayPart.allCases.first { $0 != firstPart }!
+        let stillWrong = timetableOwning(hour: retry.question.target.hour, part: other)
+        retry.rejudgeDayPart(using: stillWrong)
+        expect(retry.attempt.answers.last == false && retry.offersDayPartSettings && retry.dayPartSchedule == stillWrong,
+               "a timetable that still excludes the first answer leaves the miss in place")
+        expect(retry.question.expectedAnswer == .dayPart(stillWrong.part(at: retry.question.target.hour)), "the revealed answer follows the new timetable")
+        expect(fresh.practiceRecord(time: .whole, question: .dayPart).currentStreak == 0, "a timetable that stays wrong keeps the broken streak")
+        retry.rejudgeDayPart(using: timetableOwning(hour: retry.question.target.hour, part: firstPart))
+        expect(retry.attempt.answers.last == true && !retry.rejectedResponses.contains(first) && retry.rejectedResponses.contains(second),
+               "only the first answer is rescored; a later guess stays rejected")
+        expect(fresh.practiceRecord(time: .whole, question: .dayPart) == DinoPracticeRecord(bestStreak: 1, questionsAnswered: 1, currentStreak: 1),
+               "the first answer, rescued on a second visit, scores once")
+    }
+
+    private static func timetableOwning(hour: Int, part: DinoDayPart) -> DinoDayPartSchedule {
+        let order = DinoDayPart.allCases
+        let origin = order.firstIndex(of: part)!
+        var starts = [Int](repeating: 0, count: 4)
+        for offset in 0..<4 { starts[(origin + offset) % 4] = (hour + offset) % 24 }
+        return DinoDayPartSchedule(night: starts[0], morning: starts[1], afternoon: starts[2], evening: starts[3])
     }
 
     static func testCapitalTimeZones() {

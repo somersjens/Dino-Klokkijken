@@ -183,7 +183,7 @@ struct DinoPracticeGenerator {
     private var mixedTypes: [DinoPracticeQuestion] = []
     private var previousTarget: ClockTime?
     private let language: String
-    private let dayPartSchedule: DinoDayPartSchedule
+    private var dayPartSchedule: DinoDayPartSchedule
 
     init(configuration: DinoPracticeConfiguration, seed: UInt64 = .random(in: .min ... .max), language: String = "nl",
          dayPartSchedule: DinoDayPartSchedule = .standard) {
@@ -215,6 +215,10 @@ struct DinoPracticeGenerator {
             dayPartSchedule: dayPartSchedule, using: &rng)
         previousTarget = question.target
         return question
+    }
+
+    mutating func applyDayPartSchedule(_ schedule: DinoDayPartSchedule) {
+        dayPartSchedule = schedule
     }
 
     /// The kind that `next(index:)` will draw after the question identified by `index`.

@@ -186,11 +186,23 @@ final class DinoPlayer: ObservableObject {
             : DinoQuestionDifficulty(rawValue: min(planned.rawValue, progress.difficulty.rawValue))!
     }
 
+    func learningProgress(for question: ClockQuestion) -> DinoLearningProgress? {
+        learningProgress[DinoLearningProgress.key(kind: question.kind, time: question.timeFamily)]
+    }
+
     func recordLearningAnswer(question: ClockQuestion, correct: Bool) {
         let key = DinoLearningProgress.key(kind: question.kind, time: question.timeFamily)
         var progress = learningProgress[key] ?? DinoLearningProgress()
         progress.record(correct: correct, at: question.difficulty)
         learningProgress[key] = progress
+        store.saveLearningProgress(learningProgress)
+    }
+
+    /// Puts one skill back to the progress saved before a day-part answer was scored.
+    func restoreLearningProgress(_ progress: DinoLearningProgress?, for question: ClockQuestion) {
+        let key = DinoLearningProgress.key(kind: question.kind, time: question.timeFamily)
+        if let progress { learningProgress[key] = progress }
+        else { learningProgress.removeValue(forKey: key) }
         store.saveLearningProgress(learningProgress)
     }
 
@@ -216,12 +228,28 @@ final class DinoPlayer: ObservableObject {
         store.savePracticeRecords(records)
         return records[orderKey]!
     }
+
+    /// Puts practice records back to the values saved before a day-part answer was scored.
+    func restorePracticeRecords(_ saved: [String: DinoPracticeRecord?]) {
+        var records = practiceRecords
+        for (key, record) in saved {
+            if let record { records[key] = record }
+            else { records.removeValue(forKey: key) }
+        }
+        practiceRecords = records
+        store.savePracticeRecords(records)
+    }
 }
 
 struct DinoAnswerCheck: Equatable {
     let titleKey: String
     let enabled: Bool
     let answer: ClockAnswer
+}
+
+private struct DayPartScoreSnapshot {
+    var learning: DinoLearningProgress?
+    var practice: [String: DinoPracticeRecord?]
 }
 
 struct DinoLevelResult {
@@ -277,9 +305,13 @@ final class DinoSession: ObservableObject, Identifiable {
     private let exampleMinuteStep: Int?
     private let isExample: Bool
     private let language: String
-    let dayPartSchedule: DinoDayPartSchedule
+    @Published private(set) var dayPartSchedule: DinoDayPartSchedule
     private var questionRNG = SeededGenerator(seed: 0)
     private var nextDifficultyLimit: DinoQuestionDifficulty?
+    /// Progress from before this question's first, wrong day-part answer.
+    private var dayPartScoreSnapshot: DayPartScoreSnapshot?
+    /// A timetable can turn that answer correct after Next is already on screen, so it waits for a tap.
+    private var manualAdvanceAfterRejudge = false
 
     init(level: LevelConfiguration, player: DinoPlayer, practice: DinoPracticeConfiguration? = nil, example: ClockQuestion? = nil, exampleMinuteStep: Int? = nil, language: String = "nl", dayPartSchedule: DinoDayPartSchedule = .standard, now: @escaping () -> TimeInterval = DinoQuestionTiming.now, answerFeedback: ((Bool) -> Void)? = nil) {
         self.now = now
@@ -333,7 +365,11 @@ final class DinoSession: ObservableObject, Identifiable {
     /// The worked method starts only after that miss, once the question is closed:
     /// the right choice, Show answer, or every wrong choice ruled out.
     var showsWorkedExplanation: Bool { missedFirstAnswer && !canRetry }
-    var shouldAutoAdvance: Bool { hasFeedback && attempt.answers.last == true }
+    var shouldAutoAdvance: Bool { hasFeedback && attempt.answers.last == true && !manualAdvanceAfterRejudge }
+    /// The first day-part answer was wrong and the question is closed, so its timetable can still be changed.
+    var offersDayPartSettings: Bool {
+        question.kind == .dayPart && hasFeedback && !canRetry && attempt.answers.last == false
+    }
     /// A correct answer is about to show another question with the same buttons.
     var retainsAnswerControls: Bool {
         guard shouldAutoAdvance, let next = upcomingKind else { return false }
@@ -402,6 +438,7 @@ final class DinoSession: ObservableObject, Identifiable {
             return
         }
         if let correct = attempt.submit(answer, elapsed: now() - questionStartedAt) {
+            if question.kind == .dayPart && !correct { dayPartScoreSnapshot = captureDayPartSnapshot() }
             if !correct {
                 rejectedResponses.insert(answer)
                 nextDifficultyLimit = question.difficulty.easier
@@ -424,6 +461,34 @@ final class DinoSession: ObservableObject, Identifiable {
     func showAnswer() {
         guard demonstration == nil, canRetry else { return }
         answerRevealed = true
+    }
+
+    /// Scores the first day-part answer again after the timetable changes. Later questions use the new hours too.
+    func rejudgeDayPart(using schedule: DinoDayPartSchedule) {
+        guard question.kind == .dayPart, hasFeedback else { return }
+        if dayPartSchedule != schedule {
+            dayPartSchedule = schedule
+            if var generator = practiceGenerator {
+                generator.applyDayPartSchedule(schedule)
+                practiceGenerator = generator
+            }
+        }
+        guard let revision = attempt.reviseDayPartAnswer(schedule: schedule),
+              !revision.wasCorrect, revision.nowCorrect, let snapshot = dayPartScoreSnapshot else { return }
+        dayPartScoreSnapshot = nil
+        if !isExample {
+            player.restoreLearningProgress(snapshot.learning, for: question)
+            player.recordLearningAnswer(question: question, correct: true)
+            if let practice, let type = practiceQuestionType {
+                player.restorePracticeRecords(snapshot.practice)
+                player.recordPracticeAnswer(configuration: practice, question: type, correct: true)
+            }
+        }
+        if practice != nil { practiceCorrect += 1 }
+        if let submitted = attempt.submittedResponse { rejectedResponses.remove(submitted) }
+        nextDifficultyLimit = nil
+        manualAdvanceAfterRejudge = true
+        answerFeedback?(true)
     }
 
     func setInputTime(_ time: ClockTime) {
@@ -479,6 +544,8 @@ final class DinoSession: ObservableObject, Identifiable {
 
     private func resetInputs() {
         rejectedResponses = []; answerRevealed = false; retryAnsweredCorrectly = false
+        dayPartScoreSnapshot = nil
+        manualAdvanceAfterRejudge = false
         if question.kind == .advanceAnalog, let start = question.relatedTimes.first {
             inputHour = start.hour % 12 == 0 ? 12 : start.hour % 12
             inputMinute = start.minute
@@ -494,6 +561,18 @@ final class DinoSession: ObservableObject, Identifiable {
         var next = spokenChoices.count == count ? spokenChoices : Array(repeating: nil, count: count)
         next[slot] = next[slot] == choiceID ? nil : choiceID
         spokenChoices = next
+    }
+
+    private func captureDayPartSnapshot() -> DayPartScoreSnapshot {
+        var practice: [String: DinoPracticeRecord?] = [:]
+        if let practiceConfiguration = self.practice, let type = practiceQuestionType {
+            let orderKey = DinoPracticeRecord.key(time: practiceConfiguration.time, order: practiceConfiguration.order)
+            let questionKey = DinoPracticeRecord.key(time: practiceConfiguration.time, question: type)
+            for key in Set([orderKey, questionKey]) {
+                practice[key] = player.practiceRecords[key]
+            }
+        }
+        return DayPartScoreSnapshot(learning: player.learningProgress(for: question), practice: practice)
     }
 
     private func refreshPracticeProgress() {

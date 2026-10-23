@@ -6,10 +6,6 @@
 	<dict>
 		<key>UIColorName</key>
 		<string>LaunchBackground</string>
-		<key>UIImageName</key>
-		<string>LaunchClock</string>
-		<key>UIImageRespectsSafeAreaInsets</key>
-		<true/>
 	</dict>
 	<key>DinoAppStoreURL</key>
 	<string>$(DINO_APP_STORE_URL)</string>

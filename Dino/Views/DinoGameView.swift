@@ -11,6 +11,7 @@ struct DinoGameView: View {
     var onCompanionReaction: (DinoAnimation.Clip) -> Void = { _ in }
     @State private var confirmExit = false
     @State private var personalizing = false
+    @State private var showsDayPartSettings = false
     @State private var hudHeight: CGFloat = 128
     @State private var answerFrame: CGRect?
 
@@ -20,7 +21,7 @@ struct DinoGameView: View {
             let tablet = g.size.width >= 600
             let wide = g.size.width >= 900 && g.size.width > g.size.height
             let width = min(tablet ? 900 : 520, max(240, g.size.width - (tablet ? 64 : 36)))
-            let footerHeight: CGFloat = 80
+            let footerHeight: CGFloat = session.question.kind == .dayPart ? 146 : 80
             let questionViewport = max(0, g.size.height - hudHeight - footerHeight)
             let clockSize = min(tablet ? 260 : 210, width * 0.54, max(160, g.size.height * 0.28))
             let answerClockSize = tablet ? 210 : max(88, (g.size.height - hudHeight - footerHeight - (short ? 198 : 250)) / 2)
@@ -128,38 +129,66 @@ struct DinoGameView: View {
                 if hasResult, let result = session.result { onResult(result) }
             }
             .animation(.easeOut(duration: 0.18), value: confirmExit)
+            .sheet(isPresented: $showsDayPartSettings) {
+                DinoDayPartScheduleEditor(schedule: settings.dayPartSchedule, returnsToGame: true) { schedule in
+                    session.rejudgeDayPart(using: schedule)
+                }
+                .pagePresentation()
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+            }
     }
 
     private func answerFooter(height: CGFloat, width: CGFloat) -> some View {
         // Reserve the same space before and after answering so the question stays still.
+        // A day-part question also reserves the settings button, so closing the question does not move the choices.
         // This row sits outside the scroll view and above the bottom safe area.
         let showsNext = session.hasFeedback && !session.shouldAutoAdvance
         let check = showsNext ? nil : session.answerCheck
+        let dayPart = session.question.kind == .dayPart
         return Color.clear.frame(height: height)
-            .overlay {
-                if showsNext {
-                    Button {
-                        if session.canRetry { session.showAnswer() }
-                        else { session.advance() }
-                    } label: {
-                        Label(LocalizedStringKey(session.canRetry ? "dino.showAnswer" : "dino.next"), systemImage: session.canRetry ? "eye" : "arrow.right")
-                    }.buttonStyle(DinoButtonStyle())
+            .overlay(alignment: dayPart ? .bottom : .center) {
+                VStack(spacing: 8) {
+                    if showsNext && session.offersDayPartSettings {
+                        Button { showsDayPartSettings = true } label: {
+                            Label("dino.dayPart.changeSettings", systemImage: "gearshape.fill")
+                        }
+                        .buttonStyle(DinoButtonStyle(color: Color(dinoHex: 0xD0D7DC), inkLabel: true))
+                        .frame(width: min(420, width))
+                        .accessibilityIdentifier("question.dayPart.settings")
+                    }
+                    if showsNext {
+                        Button {
+                            if session.canRetry { session.showAnswer() }
+                            else { session.advance() }
+                        } label: {
+                            Label(LocalizedStringKey(session.canRetry ? "dino.showAnswer" : "dino.next"), systemImage: session.canRetry ? "eye" : "arrow.right")
+                        }
+                        .buttonStyle(DinoButtonStyle())
                         .multilineTextAlignment(.center)
                         .frame(width: min(420, width))
                         .accessibilityIdentifier(session.canRetry ? "question.showAnswer" : "question.next")
-                } else if let check {
-                    Button { session.submit(check.answer) } label: {
-                        Label(LocalizedStringKey(check.titleKey), systemImage: "checkmark")
-                            .lineLimit(1).minimumScaleFactor(0.7)
+                    } else if let check {
+                        Button { session.submit(check.answer) } label: {
+                            Label(LocalizedStringKey(check.titleKey), systemImage: "checkmark")
+                                .lineLimit(1).minimumScaleFactor(0.7)
+                        }
+                        .buttonStyle(DinoButtonStyle())
+                        .disabled(!check.enabled)
+                        .frame(width: min(420, width))
+                        .accessibilityIdentifier("question.confirm")
                     }
-                    .buttonStyle(DinoButtonStyle())
-                    .disabled(!check.enabled)
-                    .frame(width: min(420, width))
-                    .accessibilityIdentifier("question.confirm")
+                }
+                .padding(.bottom, dayPart && (showsNext || check != nil) ? 11 : 0)
+                .frame(maxWidth: dayPart ? .infinity : nil)
+                .background {
+                    if dayPart && (showsNext || check != nil) {
+                        Rectangle().fill(.ultraThinMaterial).ignoresSafeArea(edges: .bottom)
+                    }
                 }
             }
             .background {
-                if showsNext || check != nil {
+                if !dayPart && (showsNext || check != nil) {
                     Rectangle().fill(.ultraThinMaterial).ignoresSafeArea(edges: .bottom)
                 }
             }

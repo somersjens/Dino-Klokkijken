@@ -17,6 +17,22 @@
         }
       }
     },
+    "dino.launch.title.firstLine" : {
+      "comment" : "First of exactly two lines of the game title on the opening wooden sign. Translate the name freely across these two keys; text automatically fits the sign. No lettering is baked into an image.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Dino" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Dino" } }
+      }
+    },
+    "dino.launch.title.secondLine" : {
+      "comment" : "Second of exactly two lines of the localized game title, below dino.launch.title.firstLine. Keep the title on one line here; long translations automatically shrink to fit.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Klokkijken" } }
+      }
+    },
     "dino.activity.breakfast" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1152,6 +1168,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kies zelf een kleur"
+          }
+        }
+      }
+    },
+    "dino.dayPart.changeSettings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change settings"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instellingen wijzigen"
           }
         }
       }
@@ -6388,6 +6421,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Instellingen"
+          }
+        }
+      }
+    },
+    "dino.settings.dayParts.backToGame" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to the game"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terug naar het spel"
           }
         }
       }

@@ -33,6 +33,14 @@ enum WorldMapChapterSpacing {
 }
 
 enum DinoMapViewport {
+    /// Prepare actors before they enter view; keep them a little longer on exit
+    /// so small back-and-forth drags do not recreate their static masks.
+    static func preparesAnimation(frame: CGRect, viewportHeight: CGFloat, retained: Bool = false) -> Bool {
+        let margin: CGFloat = retained ? 512 : 256
+        return frame.width > 0 && frame.height > 0 &&
+            frame.maxY > -margin && frame.minY < viewportHeight + margin
+    }
+
     static func preparedAnimationBounds(frame: CGRect, viewportHeight: CGFloat) -> CGRect {
         animationBounds(frame: frame.offsetBy(dx: 0, dy: 256), viewportHeight: viewportHeight + 512)
     }

@@ -289,15 +289,20 @@ private struct SettingsToggleStyle: ToggleStyle {
 }
 
 /// Parents set the school’s hours for night, morning, afternoon and evening.
-private struct DinoDayPartScheduleEditor: View {
+struct DinoDayPartScheduleEditor: View {
     @EnvironmentObject private var settings: DinoSettings
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var language = LanguageManager.shared
     /// Edited locally so a time pick does not redraw the map behind this sheet.
     @State private var schedule: DinoDayPartSchedule
+    private let returnsToGame: Bool
+    private let onCommit: (DinoDayPartSchedule) -> Void
 
-    init(schedule: DinoDayPartSchedule) {
+    init(schedule: DinoDayPartSchedule, returnsToGame: Bool = false,
+         onCommit: @escaping (DinoDayPartSchedule) -> Void = { _ in }) {
+        self.returnsToGame = returnsToGame
+        self.onCommit = onCommit
         _schedule = State(initialValue: schedule)
     }
 
@@ -361,7 +366,8 @@ private struct DinoDayPartScheduleEditor: View {
             .background(JungleBackground(quiet: true))
             .safeAreaInset(edge: .bottom) {
                 Button(action: close) {
-                    Label("dino.practice.backToLevels", systemImage: "map.fill")
+                    Label(LocalizedStringKey(returnsToGame ? "dino.settings.dayParts.backToGame" : "dino.practice.backToLevels"),
+                          systemImage: returnsToGame ? "play.fill" : "map.fill")
                 }
                 .buttonStyle(DinoSecondaryButtonStyle())
                 .accessibilityIdentifier("settings.dayParts.close")
@@ -388,6 +394,7 @@ private struct DinoDayPartScheduleEditor: View {
     private func commit() {
         guard settings.dayPartSchedule != schedule else { return }
         settings.dayPartSchedule = schedule
+        onCommit(schedule)
     }
 
     private func columnHeader(timeWidth: CGFloat, spacious: Bool) -> some View {

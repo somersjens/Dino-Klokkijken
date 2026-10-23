@@ -219,7 +219,8 @@ struct DigitalClockControl: View {
     var valueIdentifier = "clock.value"
     var showHandHints = false
     var feedbackCorrect: Bool? = nil
-    var showsControls = true
+    /// False keeps the arrows visible and grayed out, so a checked answer does not remove them.
+    var controlsEnabled = true
     var notation: DigitalHourNotation? = nil
     private var time: ClockTime { ClockTime(hour: hour, minute: minute) }
     private var reading: DigitalClockReading {
@@ -238,10 +239,10 @@ struct DigitalClockControl: View {
                         if let anchor = anchors[field] {
                             let center = geometry[anchor].midX
                             arrow(field: field, direction: 1)
-                                .scaleEffect(showsControls ? 1 : 0, anchor: .bottom)
+                                .opacity(controlsEnabled ? 1 : 0.62)
                                 .position(x: center, y: 22)
                             arrow(field: field, direction: -1)
-                                .scaleEffect(showsControls ? 1 : 0, anchor: .top)
+                                .opacity(controlsEnabled ? 1 : 0.62)
                                 .position(x: center, y: geometry.size.height - 22)
                             if showHandHints {
                                 ClockHintBadgeArrow(number: field == .minutes ? 2 : 1,
@@ -256,9 +257,9 @@ struct DigitalClockControl: View {
                         }
                     }
                 }
-                .allowsHitTesting(showsControls)
-                .accessibilityHidden(!showsControls)
-                .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: showsControls)
+                .disabled(!controlsEnabled)
+                .allowsHitTesting(controlsEnabled)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: controlsEnabled)
             }
             .padding(.top, showHandHints ? 48 : 0)
             .disabled(feedbackCorrect != nil)

@@ -4,7 +4,7 @@
 
 ## Gedrag
 
-Het native iOS-startbeeld toont al dezelfde achtergrond en klok als de kloktuin. Daardoor sluit de eerste appcompositie aan zonder wit tussenscherm. De opgeslagen Dino-kleuren worden buiten de hoofdthread voorbereid. Dino verschijnt eerst in de kloktuin; daarna wordt de kaart achter deze compositie klaargezet. Zodra de echte levelrij, de HUD en de naburige landschappen klaarstaan, verschijnt de kaart en beweegt dezelfde Dino met een boog naar de gemeten positie op zijn levelsteen. Na de landing neemt de kaart-Dino het op exact die plek over. Bij Minder beweging is de overgang korter en zonder sprongboog. Na terugkeer uit een level wordt de openingsanimatie niet herhaald.
+Het native iOS-startbeeld toont dezelfde basiskleur als de app. Sinds 23 oktober bestaat de opening uit een draaiende standaardklok en een native houten bord met de vertaalbare spelnaam op twee regels. De opgeslagen Dino-kleuren worden buiten de hoofdthread voorbereid. Dino komt achter het bord omhoog; daarna wordt de kaart achter deze compositie klaargezet. Zodra de echte levelrij, de HUD en de naburige landschappen klaarstaan, blijft de complete compositie één seconde zichtbaar. Dan vervagen bord en decor en springt dezelfde Dino met een boog naar de gemeten positie op zijn levelsteen. Na de landing neemt de kaart-Dino het op exact die plek over. Bij Minder beweging gebruikt de overgang een korte vervaging. Na terugkeer uit een level wordt de openingsanimatie niet herhaald. Zie [het nieuwe startscherm](StartScreenRedesign.md).
 
 De eerste layout gebruikt meteen de echte HUD-schaal en schermbreedte. Herstel van de opgeslagen scrollpositie gebeurt vóór de kaart zichtbaar wordt. De vriendenrij behoudt haar ruimte tijdens Game Center-authenticatie.
 

@@ -86,6 +86,7 @@
 		F951E834307BE03500FF04C4 /* DinoTimeAdventureApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E652307BE03500FF04C4 /* DinoTimeAdventureApp.swift */; };
 		F951E835307BE03500FF04C4 /* Dino/Core/SeededGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E650307BE03500FF04C4 /* Dino/Core/SeededGenerator.swift */; };
 		F951E836307BE03500FF04C4 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E65D307BE03500FF04C4 /* Localization.swift */; };
+		DB232026BD01000000000001 /* Dino/Views/MapOpeningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA232026BD01000000000001 /* Dino/Views/MapOpeningView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -168,6 +169,7 @@
 		F951E65C307BE03500FF04C4 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		F951E65D307BE03500FF04C4 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		FF502E855D8132CA2685C1B5 /* Dino/Social/FriendsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Social/FriendsManager.swift; sourceTree = SOURCE_ROOT; };
+		DA232026BD01000000000001 /* Dino/Views/MapOpeningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/MapOpeningView.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -278,6 +280,7 @@
 				DA1A20261011000000000003 /* Dino/Views/AdventureHeader.swift */,
 				EA69CB435385B9A4C726D862 /* Dino/Views/Friends.swift */,
 				0B80587E32D18C0831D8ACC9 /* Dino/Views/OnboardingFlow.swift */,
+				DA232026BD01000000000001 /* Dino/Views/MapOpeningView.swift */,
 				361CBFA8D6D56E667A6AB6CD /* Dino/Views/WorldMap.swift */,
 				5887DAD74B3F2A6183A38A01 /* Dino/Views/DinoUI.swift */,
 				6006716CA601E3DD24C0D9F6 /* Dino/Views/QuestionRenderer.swift */,
@@ -493,6 +496,7 @@
 				DD8D8D9B86AD1F7BD4729496 /* Dino/Views/OnboardingFlow.swift in Sources */,
 				7140D2190606B1466B055EDB /* Dino/Views/QuestionRenderer.swift in Sources */,
 				DCAE59100EB467AA8769FEF8 /* Dino/Views/Settings.swift in Sources */,
+				DB232026BD01000000000001 /* Dino/Views/MapOpeningView.swift in Sources */,
 				4620A862B268173EC07E4C75 /* Dino/Views/WorldMap.swift in Sources */,
 				4E733E9A52282094CFE05A3F /* Dino/Views/DinoCharacter.swift in Sources */,
 			);
