@@ -185,6 +185,41 @@ enum DinoAnimation {
     }
 }
 
+/// A straight jump from the opening logo, using the artist's complete eight-pose
+/// sequence. Crouch and recovery stay planted; only the flight travels to the map.
+enum DinoOpeningJump {
+    static let assets = (1...8).map { String(format: "dino-opening-jump-%02d", $0) }
+    static let takeoff = 0.14
+    static let landing = 0.76
+    static let duration = 0.94
+    static let poseStarts = [0, 0.035, takeoff, 0.23, 0.40, 0.56, landing, 0.86]
+
+    static func flightProgress(elapsed: Double) -> Double {
+        min(1, max(0, (elapsed - takeoff) / (landing - takeoff)))
+    }
+    static func travelProgress(elapsed: Double) -> Double {
+        // A jump keeps its momentum until contact. Easing both ends made the
+        // launch float away and put the brakes on before the feet hit the rock.
+        flightProgress(elapsed: elapsed)
+    }
+    static func sample(elapsed: Double, reducedMotion: Bool = false) -> DinoAnimation.Sample {
+        guard !reducedMotion else { return DinoAnimation.sample(.idle, elapsed: 0) }
+        guard elapsed < duration else { return DinoAnimation.sample(.idle, elapsed: 0) }
+        let index = poseStarts.lastIndex(where: { elapsed >= $0 }) ?? 0
+        // Register planted and reaching feet. The bent airborne feet remain
+        // free to rise instead of being dragged down to the ground.
+        let registration = [-1.0, 3.0, 0.0, 0.0, 0.0, 46.0, 9.0, -2.0][index] / 1254
+        let t = flightProgress(elapsed: elapsed)
+        let recovery = min(1, max(0, (elapsed - landing) / (duration - landing)))
+        // The drawings supply the big crouch. A brief, damped compression gives
+        // the contact weight without holding Dino in a slow landing pose.
+        let settle = elapsed >= landing ? 0.05 * sin(recovery * .pi) * (1 - recovery) : 0
+        return DinoAnimation.Sample(pose: .init(asset: assets[index], offsetY: registration),
+            angle: -5 * sin(.pi * t), height: -4 * t * (1 - t),
+            scaleX: 1 + settle * 0.4, scaleY: 1 - settle)
+    }
+}
+
 struct DinoWorldTransition: Equatable {
     let sourceLevel: Int
     let destinationLevel: Int

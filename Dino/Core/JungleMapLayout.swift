@@ -262,6 +262,20 @@ struct JungleMapLayout {
             result.append(item(.grass, i.isMultiple(of: 2) ? 0.23 : 0.79,
                                145 + CGFloat(i) * 61, 0.55 + CGFloat(i % 3) * 0.08))
         }
+        // The final grove belongs to the actual return below the boss. Its
+        // old fixed baselines extended beyond the jungle's clipped chapter.
+        let groveStart: CGFloat = 1680
+        let chapterEnd = Self.firstNodeY + 9 * Self.levelSpacing + Self.bossReturnSpan(for: width)
+        let lastRoot = chapterEnd - 40 * artScale
+        for index in result.indices where result[index].preferred.y >= groveStart {
+            let source = result[index]
+            let progress = min(1, (source.preferred.y - groveStart) / 200)
+            let bottom = footprint(of: source).map(\.maxY).max() ?? 0
+            let y = min(groveStart + progress * (lastRoot - groveStart), chapterEnd - 16 - bottom)
+            result[index] = Item(kind: source.kind, preferred: CGPoint(x: source.preferred.x, y: y),
+                                 size: source.size, mirrored: source.mirrored,
+                                 foreground: source.foreground, variant: source.variant, heightScale: source.heightScale)
+        }
         // Emit leaves from the lower crowns. Their whole drift envelope is
         // placed beside the road just like a static silhouette.
         for tree in result.filter({ $0.kind == .tree }) {

@@ -442,6 +442,11 @@ struct DinoCoreTests {
                    "static scenery shares a depth layer while animation stays independent")
             expect(scene.sceneryTiles.contains( where: { $0.includesBoss }),
                    "the jungle boss shares the scenery tiles instead of sitting behind every tree")
+            let chapterEnd = JungleMapLayout.firstNodeY + 9 * JungleMapLayout.levelSpacing + JungleMapLayout.bossReturnSpan(for: width)
+            for placement in scene.placements where !placement.item.kind.animated {
+                expect(placement.bounds.maxY <= chapterEnd - 16,
+                       "complete jungle roots and leaves stay above the desert edge at width \(width)")
+            }
             let trailWidth = min(width, 600) - 36
             for (index, fraction) in JungleMapLayout.levelPositions.enumerated() {
                 let y = JungleMapLayout.firstNodeY + CGFloat(index) * JungleMapLayout.levelSpacing
@@ -1397,7 +1402,8 @@ struct DinoCoreTests {
                              CGSize(width: 600, height: 184), CGSize(width: 760, height: 184)] {
                     let viewport = DinoTimeZoneViewport(journey: journey, size: size)
                     let labels = DinoTimeZoneLabelLayout(origin: viewport.point(reference, size: size),
-                                                        destination: viewport.point(destination, size: size), size: size)
+                                                        destination: viewport.point(destination, size: size), size: size,
+                                                        offsetHours: journey.offsetHours)
                     let a = CGRect(x: labels.origin.x - labels.width / 2, y: labels.origin.y - 38, width: labels.width, height: 76)
                     let b = CGRect(x: labels.destination.x - labels.width / 2, y: labels.destination.y - 38, width: labels.width, height: 76)
                     expect(!a.intersects(b), "capital labels never overlap, including narrow worked examples")
@@ -1408,6 +1414,11 @@ struct DinoCoreTests {
                     }
                     expect(CGRect(origin: .zero, size: size).contains(a) && CGRect(origin: .zero, size: size).contains(b),
                            "both city labels fit fully inside each map size")
+                    if journey.offsetHours > 0 {
+                        expect(b.minX >= a.maxX - 0.5, "a later city card sits to the right of the reference card")
+                    } else if journey.offsetHours < 0 {
+                        expect(a.minX >= b.maxX - 0.5, "an earlier city card sits to the left of the reference card")
+                    }
                 }
             }
         }
@@ -1780,6 +1791,49 @@ struct DinoCoreTests {
             return Double(last + 1) / Double(height)
         }
         let idleFootline = opaqueFootline("dino-idle")
+        var openingAssets: [String] = []
+        var openingProgress = 0.0
+        for step in 0...216 {
+            let elapsed = Double(step) / 120
+            let sample = DinoOpeningJump.sample(elapsed: elapsed)
+            let progress = DinoOpeningJump.travelProgress(elapsed: elapsed)
+            expect(progress >= openingProgress && progress <= 1 && progress - openingProgress < 0.02,
+                   "opening flight moves continuously toward its saved stone")
+            expect(sample.height <= 0 && sample.height >= -1 && abs(sample.angle) <= 5,
+                   "opening has a bounded jump arc and subtle tilt")
+            if elapsed <= DinoOpeningJump.takeoff || elapsed >= DinoOpeningJump.landing {
+                expect(sample.height == 0, "anticipation and landing stay on their ground plane")
+            }
+            let reduced = DinoOpeningJump.sample(elapsed: elapsed, reducedMotion: true)
+            expect(reduced.pose.asset == "dino-idle" && reduced.height == 0 && reduced.angle == 0,
+                   "reduced motion uses a still opening character")
+            if openingAssets.last != sample.pose.asset { openingAssets.append(sample.pose.asset) }
+            openingProgress = progress
+        }
+        expect(openingAssets == DinoOpeningJump.assets + ["dino-idle"], "all eight supplied opening poses play once in order")
+        expect(DinoOpeningJump.poseStarts.map { DinoOpeningJump.sample(elapsed: $0).pose.asset } == DinoOpeningJump.assets,
+               "native contents keyframes use the same pose boundaries as the flight sampler")
+        expect(zip(DinoOpeningJump.poseStarts, DinoOpeningJump.poseStarts.dropFirst()).allSatisfy { $0 < $1 }
+               && DinoOpeningJump.poseStarts.last! < DinoOpeningJump.duration,
+               "native pose key times are strictly ordered and leave time for recovery")
+        expect(DinoOpeningJump.travelProgress(elapsed: DinoOpeningJump.takeoff) == 0 &&
+               DinoOpeningJump.travelProgress(elapsed: DinoOpeningJump.landing) == 1,
+               "opening leaves its logo only after the crouch and arrives before recovery")
+        let flightDuration = DinoOpeningJump.landing - DinoOpeningJump.takeoff
+        for fraction in [0.02, 0.25, 0.75, 0.98] {
+            let elapsed = DinoOpeningJump.takeoff + flightDuration * fraction
+            let speed = (DinoOpeningJump.travelProgress(elapsed: elapsed + 0.001) -
+                         DinoOpeningJump.travelProgress(elapsed: elapsed)) / 0.001
+            expect(abs(speed - 1 / flightDuration) < 0.0001,
+                   "opening keeps its momentum through takeoff and contact instead of easing to a stop in the air")
+        }
+        expect(DinoOpeningJump.takeoff <= 0.16 && DinoOpeningJump.duration - DinoOpeningJump.landing <= 0.20,
+               "opening's anticipation and contact recovery stay brisk")
+        for elapsed in [0.0, 0.10, 0.78, 0.90] {
+            let pose = DinoOpeningJump.sample(elapsed: elapsed).pose
+            expect(abs(opaqueFootline(pose.asset) + pose.offsetY - idleFootline) < 1.0 / 1254,
+                   "opening's planted poses share the map figure's actual painted foot line")
+        }
         for elapsed in [0.0, 0.1, 1.2, 1.3, 1.5, 1.8] {
             let pose = DinoAnimation.sample(.worldJump, elapsed: elapsed).pose
             expect(abs(opaqueFootline(pose.asset) + pose.offsetY - idleFootline) < 1.0 / 1254,
@@ -2717,6 +2771,16 @@ struct DinoCoreTests {
     static func testDinoSpriteColors() {
         let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
         let bitmapInfo = CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
+        for asset in ["dino-idle", "dino-opening-jump-03"] {
+            let url = URL(fileURLWithPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
+            let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
+            let colors = DinoAppearance(bandana: 0x784DCB, spikes: 0xFFE15A, body: 0xF0A12C, belly: 0x81D349)
+            let original = DinoSpriteColorRenderer.recolored(source, appearance: colors, asset: asset, resolution: .original)!
+            let compact = DinoSpriteColorRenderer.recolored(source, appearance: colors, asset: asset)!
+            expect(original.width == source.width && original.height == source.height && original.width == 1254,
+                   "the large opening retains all source pixels after personalization")
+            expect(compact.width == 768, "ordinary companions keep their compact rendering budget")
+        }
         let size = 384
         func pixels(_ image: CGImage) -> [UInt8] {
             var bytes = [UInt8](repeating: 0, count: size * size * 4)
@@ -2745,7 +2809,7 @@ struct DinoCoreTests {
         for appearance in appearances {
             var idleLightness = [DinoAppearance.Part: [Double]]()
             var idleSaturation = [DinoAppearance.Part: Double]()
-            for asset in DinoAnimation.spriteAssets {
+            for asset in DinoAnimation.spriteAssets + DinoOpeningJump.assets {
                 let url = URL(fileURLWithPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
                 let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
                 let original = pixels(source)

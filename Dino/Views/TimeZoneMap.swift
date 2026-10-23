@@ -36,7 +36,8 @@ struct DinoTimeZoneMap: View {
                 let viewport = DinoTimeZoneViewport(journey: journey, size: size)
                 let origin = viewport.point(journey.origin, size: size)
                 let destination = viewport.point(journey.destination, size: size)
-                let labels = DinoTimeZoneLabelLayout(origin: origin, destination: destination, size: size)
+                let labels = DinoTimeZoneLabelLayout(origin: origin, destination: destination, size: size,
+                                                      offsetHours: journey.offsetHours)
                 let labelWidth = labels.width
                 let originLabel = labels.origin
                 let destinationLabel = labels.destination

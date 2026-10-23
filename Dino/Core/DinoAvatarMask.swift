@@ -38,10 +38,13 @@ enum DinoAvatarMask {
         let upperSpikes: CGPath
         let eyes: CGPath
         let mouth: CGPath
+        var protectsFaceBeforeCloth = false
 
         func part(hue: Double, saturation: Double, lightness: Double, x: Double, y: Double) -> DinoAppearance.Part? {
             guard saturation > 0.08 else { return nil }
             let point = CGPoint(x: x, y: y)
+            if protectsFaceBeforeCloth, hue < 0.18 || hue > 0.95,
+               eyes.contains(point) || (lightness < 0.60 && mouth.contains(point)) { return nil }
             if hue < 0.055 || hue > 0.95 {
                 return y < bandanaBottom || ((x < tailRight || x > tailLeft) && y < tailBottom) ? .bandana : nil
             }
@@ -59,7 +62,34 @@ enum DinoAvatarMask {
         }
     }
 
-    static func spriteRegions(for asset: String) -> SpriteRegions? { poses[asset] }
+    static func spriteRegions(for asset: String) -> SpriteRegions? { openingPoses[asset] ?? poses[asset] }
+
+    private static let openingPoses: [String: SpriteRegions] = {
+        let eyes: [[(Double, Double, Double, Double)]] = [
+            [(532, 286, 135, 135), (752, 243, 108, 121)],
+            [(657, 477, 138, 136), (897, 458, 104, 130)],
+            [(519, 262, 135, 130), (730, 209, 110, 108)],
+            [(532, 281, 136, 133), (752, 236, 108, 122)],
+            [(531, 269, 137, 130), (746, 215, 112, 113)],
+            [(565, 341, 134, 130), (788, 306, 105, 124)],
+            [(557, 393, 142, 140), (793, 356, 111, 129)],
+            [(532, 286, 135, 135), (752, 243, 108, 121)]
+        ]
+        let mouths: [(Double, Double, Double, Double)] = [
+            (596, 457, 245, 165), (719, 650, 250, 145), (588, 423, 240, 158),
+            (594, 447, 250, 171), (602, 425, 245, 170), (622, 512, 248, 158),
+            (620, 575, 268, 173), (594, 457, 248, 173)
+        ]
+        let shifts: [(Double, Double)] = [(0, 4), (165, 164), (-10, -6), (0, 0), (0, 0), (46, 49), (46, 79), (0, 4)]
+        let cloth = [0.35, 0.47, 0.34, 0.35, 0.35, 0.40, 0.44, 0.35]
+        return Dictionary(uniqueKeysWithValues: (0..<8).map { index in
+            var shift = CGAffineTransform(translationX: shifts[index].0 / 1254, y: shifts[index].1 / 1254)
+            let regions = SpriteRegions(bandanaBottom: cloth[index],
+                upperSpikes: upperSpikes.copy(using: &shift) ?? upperSpikes,
+                eyes: eyeContours(eyes[index]), mouth: eyeContours([mouths[index]]), protectsFaceBeforeCloth: true)
+            return (String(format: "dino-opening-jump-%02d", index + 1), regions)
+        })
+    }()
 
     /// Coordinates trace each animation illustration in a 1254 × 1254 reference space.
     private static let poses: [String: SpriteRegions] = [
@@ -331,8 +361,11 @@ enum DinoAvatarMask {
 
 /// Pose-independent coloring, shared with bitmap regression checks.
 enum DinoSpriteColorRenderer {
-    static func recolored(_ source: CGImage, appearance: DinoAppearance, asset: String) -> CGImage? {
-        let width = min(768, source.width)
+    enum Resolution: String { case standard, original }
+
+    static func recolored(_ source: CGImage, appearance: DinoAppearance, asset: String,
+                          resolution: Resolution = .standard) -> CGImage? {
+        let width = resolution == .original ? source.width : min(768, source.width)
         let height = source.height * width / source.width
         let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
         let bitmapInfo = CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
@@ -424,6 +457,14 @@ enum DinoSpriteColorRenderer {
     /// Tight print regions in each 1254-point illustration exclude the eyes,
     /// highlights and transparent background, even when the head is tilted.
     private static let bandanaLetteringBounds: [String: CGRect] = [
+        "dino-opening-jump-01": CGRect(x: 545, y: 90, width: 275, height: 135),
+        "dino-opening-jump-02": CGRect(x: 688, y: 292, width: 290, height: 128),
+        "dino-opening-jump-03": CGRect(x: 528, y: 74, width: 280, height: 134),
+        "dino-opening-jump-04": CGRect(x: 543, y: 88, width: 275, height: 136),
+        "dino-opening-jump-05": CGRect(x: 545, y: 87, width: 275, height: 135),
+        "dino-opening-jump-06": CGRect(x: 580, y: 155, width: 280, height: 128),
+        "dino-opening-jump-07": CGRect(x: 578, y: 191, width: 290, height: 138),
+        "dino-opening-jump-08": CGRect(x: 545, y: 90, width: 275, height: 135),
         "dino-world-jump-01": CGRect(x: 552, y: 88, width: 243, height: 107),
         "dino-world-jump-02": CGRect(x: 714, y: 270, width: 238, height: 105),
         "dino-world-jump-03": CGRect(x: 763, y: 237, width: 238, height: 110),
@@ -524,6 +565,14 @@ enum DinoSpriteColorRenderer {
         Tone(0.23333, 0.37255, 0.50980, 0.67539), Tone(0.55098, 0.79020, 0.88431, 0.71429)
     ]
     private static let palettes: [String: [Tone]] = [
+        "dino-opening-jump-01": [Tone(0.31225, 0.53162, 0.57510, 0.95575), Tone(0.10870, 0.20158, 0.39961, 0.55056), Tone(0.27075, 0.43849, 0.57115, 0.62771), Tone(0.62846, 0.82806, 0.90514, 0.75281)],
+        "dino-opening-jump-02": [Tone(0.31818, 0.53162, 0.57115, 0.94760), Tone(0.11508, 0.20319, 0.43849, 0.50909), Tone(0.25296, 0.42292, 0.55159, 0.59664), Tone(0.58498, 0.78854, 0.88583, 0.64151)],
+        "dino-opening-jump-03": [Tone(0.32411, 0.51976, 0.56522, 0.94845), Tone(0.12253, 0.20553, 0.46245, 0.53043), Tone(0.27668, 0.42688, 0.54941, 0.61290), Tone(0.63439, 0.81818, 0.89723, 0.75472)],
+        "dino-opening-jump-04": [Tone(0.31621, 0.51581, 0.56471, 0.93443), Tone(0.10474, 0.19048, 0.36667, 0.47619), Tone(0.25692, 0.41897, 0.55336, 0.60976), Tone(0.61265, 0.81028, 0.90000, 0.68932)],
+        "dino-opening-jump-05": [Tone(0.30237, 0.51186, 0.57480, 0.93407), Tone(0.12055, 0.20200, 0.40392, 0.47826), Tone(0.27866, 0.42460, 0.54348, 0.60360), Tone(0.60079, 0.81423, 0.89723, 0.70370)],
+        "dino-opening-jump-06": [Tone(0.30830, 0.50593, 0.55754, 0.93833), Tone(0.11155, 0.18254, 0.35771, 0.49495), Tone(0.25692, 0.42490, 0.55336, 0.60577), Tone(0.59486, 0.77668, 0.88583, 0.63478)],
+        "dino-opening-jump-07": [Tone(0.31818, 0.52372, 0.57341, 0.94760), Tone(0.12055, 0.19960, 0.37450, 0.48276), Tone(0.24506, 0.42095, 0.55929, 0.61739), Tone(0.61462, 0.78854, 0.88735, 0.66667)],
+        "dino-opening-jump-08": [Tone(0.29249, 0.51186, 0.56719, 0.94760), Tone(0.10474, 0.18972, 0.38340, 0.51020), Tone(0.25099, 0.41107, 0.54150, 0.61607), Tone(0.60672, 0.81496, 0.89370, 0.72043)],
         "dino-pirouette-01": [Tone(0.22727, 0.50198, 0.57371, 0.93548), Tone(0.10672, 0.19565, 0.36508, 0.51163), Tone(0.23320, 0.40316, 0.54348, 0.61386), Tone(0.59881, 0.80040, 0.89921, 0.68317)],
         "dino-pirouette-02": [Tone(0.26087, 0.52174, 0.57312, 0.94048), Tone(0.10277, 0.19763, 0.39921, 0.48571), Tone(0.25692, 0.42885, 0.56151, 0.56731), Tone(0.62598, 0.80632, 0.90157, 0.67619)],
         "dino-pirouette-03": [Tone(0.27559, 0.51581, 0.57341, 0.94819), Tone(0.09486, 0.18775, 0.33597, 0.47500), Tone(0.28854, 0.44071, 0.56471, 0.54386), Tone(0.62648, 0.77866, 0.88538, 0.63158)],

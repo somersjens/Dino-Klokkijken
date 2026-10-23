@@ -122,17 +122,32 @@ struct DinoDesertPainter {
     }
 
 
-    /// The first desert dune reaches into the jungle clearing. Its windward
-    /// crest, sand grain and leeward face are the same material as the desert.
+    /// One physical sand edge is shared by the floor and its distant formations.
+    private func jungleSandEdge(width w: CGFloat) -> Path {
+        var edge = Path(); edge.move(to: .init(x: -20, y: 18))
+        edge.addCurve(to: .init(x: w * 0.48, y: 34),
+                      control1: .init(x: w * 0.13, y: -4), control2: .init(x: w * 0.30, y: 24))
+        edge.addCurve(to: .init(x: w + 20, y: 8),
+                      control1: .init(x: w * 0.69, y: 44), control2: .init(x: w * 0.85, y: -8))
+        return edge
+    }
+
+    private func jungleSandFloor(in size: CGSize) -> Path {
+        var floor = jungleSandEdge(width: size.width)
+        floor.addLine(to: .init(x: size.width + 20, y: size.height + 2))
+        floor.addLine(to: .init(x: -20, y: size.height + 2)); floor.closeSubpath()
+        return floor
+    }
+
+    /// The last two jungle clearings continue through the chapter boundary;
+    /// the dune's own crest ends them, rather than a rectangular canvas edge.
     func jungleFloor(in size: CGSize) {
         let w = size.width, h = size.height
-        var dune = Path(); dune.move(to: .init(x: -20, y: -104))
-        dune.addCurve(to: .init(x: w * 0.48, y: -76),
-                      control1: .init(x: w * 0.13, y: -198), control2: .init(x: w * 0.30, y: -130))
-        dune.addCurve(to: .init(x: w + 20, y: -154),
-                      control1: .init(x: w * 0.69, y: -13), control2: .init(x: w * 0.85, y: -185))
-        let crest = dune
-        dune.addLine(to: .init(x: w + 20, y: h + 2)); dune.addLine(to: .init(x: -20, y: h + 2)); dune.closeSubpath()
+        context.fill(Path(CGRect(x: -20, y: 0, width: w + 40, height: 120)), with: .color(Color(dinoHex: 0xD4E6AD)))
+        let clearing = JunglePainter(context: context)
+        clearing.hill(x: -w * 0.45, y: -185, width: w * 0.98, height: 340, color: Color(dinoHex: 0xC2DCA7))
+        clearing.hill(x: w * 0.50, y: -125, width: w * 0.90, height: 270, color: Color(dinoHex: 0xC5DDA2))
+        let crest = jungleSandEdge(width: w), dune = jungleSandFloor(in: size)
         context.fill(dune, with: .linearGradient(Gradient(stops: [
             .init(color: Color(dinoHex: 0xFFE8B9), location: 0),
             .init(color: Color(dinoHex: 0xF6D293), location: 0.36),
@@ -149,14 +164,18 @@ struct DinoDesertPainter {
         let layout = WorldSceneryLayout(width: size.width, height: size.height, routeOffset: routeOffset)
         let w = size.width, h = size.height, s = layout.scale
         jungleFloor(in: size)
-        // Sunlit ground continues directly from the jungle, including behind the sign.
+        // Ground formations stop at the sand's crest. Only whole foreground
+        // silhouettes may rise above it; distant mesas never tint the grass.
+        var sand = context; sand.clip(to: jungleSandFloor(in: size))
         for layer in 0..<3 {
             let baseY = 68 + CGFloat(layer) * 69
             for i in 0..<Int(ceil(w / (105 * s))) + 1 {
                 let x = CGFloat(i) * 112 * s + (layer == 1 ? -42 : 8) * s
-                var c = context; c.opacity = 0.22 + Double(layer) * 0.12
-                DinoDesertPainter(context: c).at(CGPoint(x: x, y: baseY + CGFloat((i * 17) % 31)),
-                    size: (0.55 + CGFloat(layer) * 0.11) * s) { p in
+                let factor = (0.55 + CGFloat(layer) * 0.11) * s
+                let rise = (99 + CGFloat(((i + layer) * 17) % 43)) * factor
+                let y = max(baseY + CGFloat((i * 17) % 31), 44 + rise)
+                var c = sand; c.opacity = 0.22 + Double(layer) * 0.12
+                DinoDesertPainter(context: c).at(CGPoint(x: x, y: y), size: factor) { p in
                     p.mesa(variation: i + layer, distant: true)
                 }
             }
@@ -172,18 +191,18 @@ struct DinoDesertPainter {
             let crest = dune
             dune.addLine(to: CGPoint(x: w + 50, y: y + 210)); dune.addLine(to: CGPoint(x: -50, y: y + 210)); dune.closeSubpath()
             // Transparent leeward slopes prevent rectangular caps where dunes meet.
-            context.fill(dune, with: .linearGradient(Gradient(stops: [
+            sand.fill(dune, with: .linearGradient(Gradient(stops: [
                 .init(color: Color(dinoHex: row.isMultiple(of: 2) ? 0xFFE7B1 : 0xFBDCA2).opacity(0.65), location: 0),
                 .init(color: Color(dinoHex: 0xE8B875).opacity(0.18), location: 0.55),
                 .init(color: .clear, location: 1)
             ]), startPoint: CGPoint(x: 0, y: y - 50), endPoint: CGPoint(x: 0, y: y + 210)))
-            context.stroke(crest, with: .color(Color(dinoHex: 0xFFF2CC).opacity(0.48)), lineWidth: 1.2)
+            sand.stroke(crest, with: .color(Color(dinoHex: 0xFFF2CC).opacity(0.48)), lineWidth: 1.2)
             for ripple in 0..<(3 + row % 3) {
                 var r = Path(); let shift = CGFloat(ripple) * 5 + 9
                 r.move(to: CGPoint(x: -12, y: y + shift + 34 * sign))
                 r.addCurve(to: CGPoint(x: w + 12, y: y + shift + 14 * sign),
                            control1: CGPoint(x: w * 0.33, y: y + shift - 25), control2: CGPoint(x: w * 0.67, y: y + shift + 45))
-                context.stroke(r, with: .color(Color(dinoHex: ripple.isMultiple(of: 2) ? 0xD6A566 : 0xFFF1C2).opacity(0.12)), lineWidth: 0.7)
+                sand.stroke(r, with: .color(Color(dinoHex: ripple.isMultiple(of: 2) ? 0xD6A566 : 0xFFF1C2).opacity(0.12)), lineWidth: 0.7)
             }
         }
         var route = context; route.translateBy(x: 0, y: routeOffset)

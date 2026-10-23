@@ -183,7 +183,7 @@ struct DinoTimeZoneLabelLayout {
     let destination: CGPoint
     let width: CGFloat
 
-    init(origin: CGPoint, destination: CGPoint, size: CGSize) {
+    init(origin: CGPoint, destination: CGPoint, size: CGSize, offsetHours: Int) {
         let width = min(132, (size.width - 20) / 2)
         self.width = width
         func clamp(_ point: CGPoint) -> CGPoint {
@@ -210,6 +210,17 @@ struct DinoTimeZoneLabelLayout {
             let bounds = rect(label).insetBy(dx: -12, dy: -12)
             return [origin, destination].reduce(0) { $0 + (bounds.contains($1) ? 10_000 : 0) }
         }
+        /// A later city sits to the right of the reference card; an earlier city sits to the left.
+        func orderPenalty(_ reference: CGPoint, _ other: CGPoint) -> CGFloat {
+            guard offsetHours != 0 else { return 0 }
+            let later = offsetHours > 0
+            let ordered = later ? other.x - reference.x : reference.x - other.x
+            if ordered <= 1 { return 50_000 }
+            let leading = later ? rect(reference) : rect(other)
+            let trailing = later ? rect(other) : rect(reference)
+            let overlap = leading.maxX - trailing.minX
+            return overlap > 0 ? 8_000 + overlap : 0
+        }
         let originChoices = candidates(origin, below: true)
         let destinationChoices = candidates(destination, below: false)
         var best = (originChoices[0], destinationChoices[0])
@@ -218,7 +229,7 @@ struct DinoTimeZoneLabelLayout {
             for (j, b) in destinationChoices.enumerated() {
                 let overlap = rect(a).insetBy(dx: -4, dy: -4).intersects(rect(b)) ? CGFloat(10_000) : 0
                 let distance = hypot(a.x - origin.x, a.y - origin.y) + hypot(b.x - destination.x, b.y - destination.y)
-                let score = markerPenalty(a) + markerPenalty(b) + overlap + distance + CGFloat(i + j) * 2
+                let score = markerPenalty(a) + markerPenalty(b) + overlap + orderPenalty(a, b) + distance + CGFloat(i + j) * 2
                 if score < bestScore { bestScore = score; best = (a, b) }
             }
         }

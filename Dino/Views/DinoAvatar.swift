@@ -76,13 +76,13 @@ actor DinoSpriteLoader {
 
     /// The map only needs the standing pose. Keep its first recolor off the
     /// main thread without decoding twenty unused celebration frames at launch.
-    func idleImage(for colors: DinoAppearance) async -> UIImage? {
-        if let cached = DinoAvatarRenderer.cached(appearance: colors, portrait: false, asset: "dino-idle") {
+    func idleImage(for colors: DinoAppearance, resolution: DinoSpriteColorRenderer.Resolution = .standard) async -> UIImage? {
+        if let cached = DinoAvatarRenderer.cached(appearance: colors, portrait: false, asset: "dino-idle", resolution: resolution) {
             return cached
         }
         let preparation = Task.detached(priority: .userInitiated) {
             DinoAvatarRenderer.render(original: UIImage(named: "dino-idle")?.cgImage,
-                                      appearance: colors, portrait: false)
+                                      appearance: colors, portrait: false, resolution: resolution)
         }
         return await withTaskCancellationHandler { await preparation.value } onCancel: { preparation.cancel() }
     }
@@ -120,6 +120,30 @@ actor DinoSpriteLoader {
             return images
         }
         return await withTaskCancellationHandler { await preparation.value } onCancel: { preparation.cancel() }
+    }
+
+    /// Two background workers prepare the opening's original-size poses. Keep
+    /// these out of the ordinary reaction set and release them after landing.
+    func openingJumpImages(for colors: DinoAppearance) async -> [String: UIImage] {
+        await withTaskGroup(of: (String, UIImage?).self) { group in
+            var next = DinoOpeningJump.assets.makeIterator()
+            func enqueue(_ asset: String) {
+                group.addTask(priority: .userInitiated) {
+                    guard !Task.isCancelled else { return (asset, nil) }
+                    let image = DinoAvatarRenderer.render(original: UIImage(named: asset)?.cgImage,
+                        appearance: colors, portrait: false, asset: asset, resolution: .original)
+                    return (asset, image)
+                }
+            }
+            for _ in 0..<2 { if let asset = next.next() { enqueue(asset) } }
+            var images: [String: UIImage] = [:]
+            for await (asset, image) in group {
+                guard !Task.isCancelled else { group.cancelAll(); return [:] }
+                images[asset] = image
+                if let asset = next.next() { enqueue(asset) }
+            }
+            return images
+        }
     }
 }
 
@@ -198,31 +222,40 @@ enum DinoAvatarRenderer {
         return cache
     }()
 
-    private static func cacheKey(appearance: DinoAppearance, portrait: Bool, asset: String) -> NSString {
-        "\(asset)-\(appearance.bandana)-\(appearance.spikes)-\(appearance.body)-\(appearance.belly)-\(portrait)" as NSString
+    private static func cacheKey(appearance: DinoAppearance, portrait: Bool, asset: String,
+                                 resolution: DinoSpriteColorRenderer.Resolution = .standard) -> NSString {
+        "\(asset)-\(appearance.bandana)-\(appearance.spikes)-\(appearance.body)-\(appearance.belly)-\(portrait)-\(resolution.rawValue)" as NSString
     }
 
-    static func cached(appearance: DinoAppearance, portrait: Bool, asset: String) -> UIImage? {
-        cache.object(forKey: cacheKey(appearance: appearance, portrait: portrait, asset: asset))
+    static func cached(appearance: DinoAppearance, portrait: Bool, asset: String,
+                       resolution: DinoSpriteColorRenderer.Resolution = .standard) -> UIImage? {
+        cache.object(forKey: cacheKey(appearance: appearance, portrait: portrait, asset: asset, resolution: resolution))
     }
 
-    static func render(original: CGImage?, appearance: DinoAppearance, portrait: Bool, asset: String = "dino-idle") -> UIImage? {
+    static func releaseOpeningImages(appearance: DinoAppearance) {
+        for asset in ["dino-idle"] + DinoOpeningJump.assets {
+            cache.removeObject(forKey: cacheKey(appearance: appearance, portrait: false, asset: asset, resolution: .original))
+        }
+    }
+
+    static func render(original: CGImage?, appearance: DinoAppearance, portrait: Bool, asset: String = "dino-idle",
+                       resolution: DinoSpriteColorRenderer.Resolution = .standard) -> UIImage? {
         guard let original else { return nil }
-        let key = cacheKey(appearance: appearance, portrait: portrait, asset: asset)
+        let key = cacheKey(appearance: appearance, portrait: portrait, asset: asset, resolution: resolution)
         if let cached = cache.object(forKey: key) { return cached }
         let colored: CGImage
-        if portrait, let body = cached(appearance: appearance, portrait: false, asset: asset)?.cgImage {
+        if portrait, let body = cached(appearance: appearance, portrait: false, asset: asset, resolution: resolution)?.cgImage {
             colored = body
         } else if appearance == .standard, asset == "dino-idle" {
             // The default is the untouched original, including all original shades.
             colored = original
         } else {
-            guard let result = DinoSpriteColorRenderer.recolored(original, appearance: appearance, asset: asset) else { return nil }
+            guard let result = DinoSpriteColorRenderer.recolored(original, appearance: appearance, asset: asset, resolution: resolution) else { return nil }
             colored = result
             if portrait {
                 // Share the first recolor with the full character on the map.
                 cache.setObject(UIImage(cgImage: result),
-                                forKey: cacheKey(appearance: appearance, portrait: false, asset: asset),
+                                forKey: cacheKey(appearance: appearance, portrait: false, asset: asset, resolution: resolution),
                                 cost: result.width * result.height * 4)
             }
         }

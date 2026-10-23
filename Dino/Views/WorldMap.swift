@@ -44,6 +44,8 @@ struct WorldMap: View {
     @State private var initialArtworkReady = false
     @State private var initialPositionReady = false
     @State private var openingImage: UIImage?
+    @State private var openingJumpImages: [String: UIImage] = [:]
+    @State private var openingJumpPrepared = false
     @State private var preparedWorlds: Set<Int> = []
     @State private var introRevealed = false
     @State private var introFinished = false
@@ -78,7 +80,7 @@ struct WorldMap: View {
     private var openingReady: Bool {
         let world = (player.profile.mapLevel - 1) / 10 + 1
         let required = Set(max(1, world - 2)...min(10, world + 2))
-        return initialPositionReady && required.isSubset(of: preparedWorlds)
+        return initialPositionReady && required.isSubset(of: preparedWorlds) && openingJumpPrepared
     }
 
     private var guidedLevel: Int? { player.needsFirstLevelHint ? player.profile.mapLevel : hintedLevel }
@@ -203,9 +205,13 @@ struct WorldMap: View {
             if animatesOpening && !introFinished {
                 GeometryReader { geometry in
                     MapOpeningView(world: DinoWorldCatalog.world((player.profile.mapLevel - 1) / 10 + 1)!,
-                        image: openingImage, destination: anchor.map { geometry[$0] }, ready: openingReady,
+                        image: openingImage, jumpImages: openingJumpImages,
+                        destination: anchor.map { geometry[$0] }, ready: openingReady,
                         reveal: { introRevealed = true }, finished: {
                             introFinished = true
+                            openingJumpImages = [:]
+                            openingImage = nil
+                            DinoAvatarRenderer.releaseOpeningImages(appearance: player.profile.dinoAppearance ?? .standard)
                             openingFinished()
                         })
                 }
@@ -258,7 +264,12 @@ struct WorldMap: View {
             } catch { /* Navigating away, opening a menu or backgrounding cancels the request. */ }
         }
         .task {
-            openingImage = await DinoSpriteLoader.shared.idleImage(for: player.profile.dinoAppearance ?? .standard)
+            let colors = player.profile.dinoAppearance ?? .standard
+            // The small map sprite is ready before its view is constructed; the
+            // opening receives a separate original-resolution image and cache key.
+            let mapImage = await DinoSpriteLoader.shared.idleImage(for: colors)
+            openingImage = animatesOpening
+                ? await DinoSpriteLoader.shared.idleImage(for: colors, resolution: .original) : mapImage
             guard !Task.isCancelled else { return }
             // Commit Dino's emergence behind the title before constructing
             // the map tree; terrain preparation must not hide that first frame.
@@ -266,6 +277,11 @@ struct WorldMap: View {
                 do { try await Task.sleep(for: .milliseconds(180)) } catch { return }
             }
             initialArtworkReady = true
+            if animatesOpening {
+                openingJumpImages = await DinoSpriteLoader.shared.openingJumpImages(for: colors)
+                guard !Task.isCancelled else { return }
+                openingJumpPrepared = true
+            }
             if worldTransition != nil {
                 worldJumpImages = await DinoSpriteLoader.shared.worldJumpImages(for: player.profile.dinoAppearance ?? .standard)
             }
@@ -1455,6 +1471,7 @@ private struct WorldChapter: View, Equatable {
                         .padding(.horizontal, 18).frame(maxWidth: 600).frame(maxWidth: .infinity)
                     }
                     if world.id == 2 { DinoDesertFlights(routeOffset: routeOffset, viewportHeight: viewportHeight) }
+                    if world.id == 8 { TimeMachineRouteForeground(routeOffset: routeOffset, viewportHeight: viewportHeight) }
                     if world.id == 9 { PirateCoastFlights(routeOffset: routeOffset, viewportHeight: viewportHeight) }
                 }
             }
