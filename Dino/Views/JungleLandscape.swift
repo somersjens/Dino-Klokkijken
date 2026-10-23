@@ -4805,11 +4805,11 @@ private enum VolcanoWorldLayout {
     /// animated lava follow these same curves all the way out of view.
     static func outletStart(layout: WorldSceneryLayout, right: Bool) -> CGFloat {
         let lastBend = WorldRouteTrail.chapterFirstNodeY + 8 * WorldRouteTrail.levelSpacing
-        return layout.routeOffset + lastBend + (right ? 75 : 0)
+        return layout.routeOffset + lastBend + (right ? 115 : 85)
     }
 
     static func outletEnd(layout: WorldSceneryLayout, right: Bool) -> CGFloat {
-        layout.height - (right ? 70 : 150)
+        layout.height - (right ? 12 : 38)
     }
 
     static func channelPoint(layout: WorldSceneryLayout, right: Bool, y: CGFloat) -> CGPoint {
@@ -6202,11 +6202,11 @@ private struct VillageWorldPainter {
     /// volcanic rock keeps its complete silhouette above this planted floor.
     func volcanoMeadow(in size: CGSize) {
         let w = size.width, h = size.height
-        var meadow = Path(); meadow.move(to: .init(x: -20, y: -263))
-        meadow.addCurve(to: .init(x: w * 0.43, y: -313),
-                         control1: .init(x: w * 0.10, y: -379), control2: .init(x: w * 0.28, y: -347))
-        meadow.addCurve(to: .init(x: w + 20, y: -238),
-                         control1: .init(x: w * 0.68, y: -241), control2: .init(x: w * 0.90, y: -302))
+        var meadow = Path(); meadow.move(to: .init(x: -20, y: -63))
+        meadow.addCurve(to: .init(x: w * 0.43, y: -113),
+                         control1: .init(x: w * 0.10, y: -179), control2: .init(x: w * 0.28, y: -147))
+        meadow.addCurve(to: .init(x: w + 20, y: -38),
+                         control1: .init(x: w * 0.68, y: -41), control2: .init(x: w * 0.90, y: -102))
         meadow.addLine(to: .init(x: w + 20, y: h + 2)); meadow.addLine(to: .init(x: -20, y: h + 2)); meadow.closeSubpath()
         context.fill(meadow, with: .linearGradient(Gradient(stops: [
             .init(color: Color(dinoHex: 0xC7E8BE), location: 0),
@@ -6218,7 +6218,7 @@ private struct VillageWorldPainter {
         var turf = context; turf.clip(to: meadow)
         for i in 0..<26 {
             let x = CGFloat((i * 127 + 29) % max(1, Int(w)))
-            let y = -245 + CGFloat((i * 53) % 245)
+            let y = -45 + CGFloat((i * 53) % 245)
             let p = VillageWorldPainter(context: turf)
             p.line([.init(x: x - 3, y: y), .init(x: x - 5, y: y - 6)], 0x8BAF76, 0.8)
             p.line([.init(x: x, y: y), .init(x: x + 2, y: y - 8)], 0xA5C184, 0.9)
@@ -6232,9 +6232,6 @@ private struct VillageWorldPainter {
         volcanoMeadow(in: size)
         cottage(at: .init(x: w * 0.16, y: 167 * scale), size: scale * 0.48, leafRoof: true)
         cottage(at: .init(x: w * 0.86, y: 178 * scale), size: scale * 0.51, leafRoof: false)
-        var entry = context; entry.translateBy(x: 0, y: h)
-        let caveSize = WorldMapChapterSpacing.sceneSize(width: w)
-        CrystalCavePainter(context: entry).villageDoorstep(in: caveSize, routeOffset: WorldMapChapterSpacing.sceneOffset(width: w))
         var c = context; c.translateBy(x: 0, y: routeOffset)
         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         waterways(layout: scenery, context: c)
@@ -7233,6 +7230,9 @@ private struct CrystalCaveLife: View {
 }
 
 private enum CrystalCaveLifeLayout {
+    // Both banks have completely left the village before any cave stone enters.
+    static func entranceStart(_ layout: WorldSceneryLayout) -> CGFloat { 80 * layout.scale }
+
     struct Lamp: Identifiable {
         let id: Int
         let pivot: CGPoint
@@ -7308,7 +7308,7 @@ private enum CrystalCaveLifeLayout {
         let right = i.isMultiple(of:2), sign: CGFloat = right ? 1 : -1
         let y = layout.routeOffset + 62 + CGFloat(i/2)*64 + (right ? 0 : 39)
         let x = wallX(at:y,right:right,distance:153,layout:layout) + sign*18*layout.scale
-        let taper = 1 - 0.56 * departureProgress(at: y, layout: layout)
+        let taper = 1 - 0.56 * departureProgress(at: y, right: right, layout: layout)
         let size = layout.scale * (0.48 + CGFloat(i%4)*0.12) * taper
         var point = clearTimber(CGPoint(x:x,y:y),radius:66*size,rise:136*size,drop:28*size,right:right,layout:layout)
         let boss = CGRect(x: layout.width - 169 * layout.scale,
@@ -7349,15 +7349,19 @@ private enum CrystalCaveLifeLayout {
         let bend = layout.width / 2 + (layout.centerX(at: y - layout.routeOffset) - layout.width / 2) * smooth(y / 80)
         let relief = (sin(y / 89 + (right ? 0.9 : 0)) * 11 + sin(y / 43) * 4) * scale * edgeAmount
         let wall = bend + sign * (distance * scale + relief)
-        // Low outcrops rise into the cave walls along the open approach.
-        let entered = smooth((y + 300 * scale) / (430 * scale))
+        // The village lawn enters the cave first. Its walls rise only after
+        // both outgoing waterways have disappeared beyond the screen edges.
+        let entered = smooth((y - entranceStart(layout)) / (260 * scale))
         let enclosed = outside + (wall - outside) * entered
-        let departure = departureProgress(at: y, layout: layout)
+        let departure = departureProgress(at: y, right: right, layout: layout)
         return enclosed + (outside - enclosed) * departure
     }
 
-    static func departureProgress(at y: CGFloat, layout: WorldSceneryLayout) -> CGFloat {
-        let t = min(1, max(0, (y - layout.height + 310 * layout.scale) / (300 * layout.scale)))
+    static func departureProgress(at y: CGFloat, right: Bool = false, layout: WorldSceneryLayout) -> CGFloat {
+        // The last wall courses reach into the first city blocks. Each side
+        // opens at a different height, rather than ending on a transverse seam.
+        let start = layout.height - (right ? 92 : 155) * layout.scale
+        let t = min(1, max(0, (y - start) / (310 * layout.scale)))
         return t * t * t * (t * (6 * t - 15) + 10)
     }
 
@@ -7545,12 +7549,13 @@ private struct CrystalCavePainter {
         let outside = right ? layout.width + 160 : -160
         return Path { path in
             path.move(to: CGPoint(x: outside, y: -220))
-            let count = Int(ceil((layout.height + 244) / 8))
+            let end = layout.height + 260 * layout.scale
+            let count = Int(ceil((end + 220) / 8))
             for i in 0...count {
-                let y = -220 + (layout.height + 244) * CGFloat(i) / CGFloat(count)
+                let y = -220 + (end + 220) * CGFloat(i) / CGFloat(count)
                 path.addLine(to: CGPoint(x: wallX(at: y, right: right, distance: distance, layout: layout), y: y))
             }
-            path.addLine(to: CGPoint(x: outside, y: layout.height + 24))
+            path.addLine(to: CGPoint(x: outside, y: end))
             path.closeSubpath()
         }
     }
@@ -7628,7 +7633,7 @@ private struct CrystalCavePainter {
     /// separate columns at the screen edge. The first stones end offscreen.
     private func entranceShoulder(layout: WorldSceneryLayout, right: Bool) {
         let s = layout.scale, sign: CGFloat = right ? 1 : -1
-        let start = -220 * s, end = layout.routeOffset + 135 * s
+        let start = CrystalCaveLifeLayout.entranceStart(layout), end = layout.routeOffset + 135 * s
         let samples = Int(ceil((end - start) / (7 * s)))
         var previous = CGPoint(x: wallX(at: start, right: right, distance: 127, layout: layout), y: start)
         var distance: CGFloat = 50 * s
@@ -7666,10 +7671,10 @@ private struct CrystalCavePainter {
     private func wallBoulders(layout: WorldSceneryLayout, right: Bool) {
         let s = layout.scale, sign: CGFloat = right ? 1 : -1
         let step = 53 * s
-        let rows = Int(ceil((layout.height - layout.routeOffset + 90 * s) / step))
+        let rows = Int(ceil((layout.height - layout.routeOffset + 260 * s) / step))
         for row in 0..<rows {
             let base = layout.routeOffset + CGFloat(row) * step
-            let taper = 1 - 0.60 * CrystalCaveLifeLayout.departureProgress(at: base, layout: layout)
+            let taper = 1 - 0.60 * CrystalCaveLifeLayout.departureProgress(at: base, right: right, layout: layout)
             let height = (92 + CGFloat((row * 7 + (right ? 3 : 0)) % 5) * 7) * s * taper
             // Sample the full height so a projecting corner stays off the trail.
             let edges = (0...6).map { i in
@@ -7705,7 +7710,10 @@ private struct CrystalCavePainter {
     /// The city's actual street begins under the departing cave wall stones.
     private func departureGround(layout: WorldSceneryLayout) {
         var street = context; street.translateBy(x: 0, y: layout.height)
-        CityWorldPainter(context: street).caveStreet(in: WorldMapChapterSpacing.sceneSize(width: layout.width))
+        let citySize = WorldMapChapterSpacing.sceneSize(width: layout.width)
+        let painter = CityWorldPainter(context: street)
+        painter.caveStreet(in: citySize, caveFloor: false)
+        painter.caveNeighbourhood(in: citySize)
     }
 
     private func entranceWall(layout: WorldSceneryLayout, right: Bool) {
@@ -7791,17 +7799,22 @@ private struct CrystalCavePainter {
     }
 
 
-    /// A worn limestone threshold replaces the former transparent colour ramp.
-    /// Its chipped edge belongs to the cave floor, underneath both river exits.
+    /// The village lawn continues inside the cave in uneven grassy fingers.
+    /// Every part of this threshold lies below the completed river exits.
     func villageFloor(in size: CGSize, routeOffset: CGFloat) {
         let w = size.width, h = size.height
-        var floor = Path(); floor.move(to: .init(x: -12, y: -108))
-        floor.addCurve(to: .init(x: w * 0.45, y: -64),
-                       control1: .init(x: w * 0.14, y: -134), control2: .init(x: w * 0.30, y: -76))
-        floor.addCurve(to: .init(x: w + 12, y: -137),
-                       control1: .init(x: w * 0.68, y: -38), control2: .init(x: w * 0.86, y: -158))
-        let lip = floor
-        floor.addLine(to: .init(x: w + 12, y: h + 2)); floor.addLine(to: .init(x: -12, y: h + 2)); floor.closeSubpath()
+        let s = min(1.30, max(0.82, w / 390))
+        context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(dinoHex: 0xC3DBAD)))
+        var floor = Path(); floor.move(to: .init(x: -16, y: 105 * s))
+        floor.addCurve(to: .init(x: w * 0.18, y: 180 * s),
+                       control1: .init(x: w * 0.06, y: 105 * s), control2: .init(x: w * 0.10, y: 193 * s))
+        floor.addCurve(to: .init(x: w * 0.40, y: 262 * s),
+                       control1: .init(x: w * 0.29, y: 161 * s), control2: .init(x: w * 0.30, y: 260 * s))
+        floor.addCurve(to: .init(x: w * 0.64, y: 309 * s),
+                       control1: .init(x: w * 0.54, y: 242 * s), control2: .init(x: w * 0.57, y: 313 * s))
+        floor.addCurve(to: .init(x: w + 16, y: 122 * s),
+                       control1: .init(x: w * 0.77, y: 276 * s), control2: .init(x: w * 0.84, y: 137 * s))
+        floor.addLine(to: .init(x: w + 16, y: h + 16)); floor.addLine(to: .init(x: -16, y: h + 16)); floor.closeSubpath()
         fillFloor(floor, width: w)
         context.fill(floor, with: .linearGradient(Gradient(stops: [
             .init(color: Color(dinoHex: 0x172B51).opacity(0.93), location: 0),
@@ -7809,30 +7822,33 @@ private struct CrystalCavePainter {
             .init(color: Color(dinoHex: 0x425D83).opacity(0.35), location: 0.66),
             .init(color: .clear, location: 1)
         ]), startPoint: .zero, endPoint: .init(x: 0, y: routeOffset + 1390)))
-        context.stroke(lip.offsetBy(dx: 0, dy: 5), with: .color(Color(dinoHex: 0x334B6B)), lineWidth: 9)
-        context.stroke(lip, with: .color(Color(dinoHex: 0xB5C8C6)), lineWidth: 2)
-        // Native wall fragments break the entrance lip into real stone pieces.
-        for right in [false, true] {
-            for i in 0..<3 {
-                let x = right ? w - 16 - CGFloat(i) * 29 : 13 + CGFloat(i) * 31
-                let y = -105 + CGFloat(i % 2) * 22 + (right ? -20 : 0)
-                wallBoulder(in: CGRect(x: x - 23, y: y - 15, width: 46, height: 30), variation: i + (right ? 3 : 0), warm: true)
-                if i == 1 { moss(at: .init(x: x, y: y + 11), size: 0.29) }
-            }
+        let grass = JunglePainter(context: context)
+        for (fraction, y): (CGFloat, CGFloat) in [(0.09, 125), (0.18, 180), (0.29, 187),
+                                                  (0.38, 239), (0.61, 295), (0.72, 249), (0.85, 164)] {
+            grass.grass(at: .init(x: w * fraction, y: y * s), size: s * 0.34, color: Color(dinoHex: 0x7FAD70))
+            moss(at: .init(x: w * fraction + 7 * s, y: (y + 7) * s), size: s * 0.25)
         }
     }
 
-    /// Only the cave's real first wall stones can cross into the village.
-    /// No copy of the cave background is painted over the outgoing waterways.
-    func villageDoorstep(in size: CGSize, routeOffset: CGFloat) {
-        villageFloor(in: size, routeOffset: routeOffset)
-        var c = context; c.clip(to: Path(CGRect(x: 0, y: -200, width: size.width, height: 200)))
+    /// The outgoing wall is rendered from the same layout on both sides of
+    /// the chapter boundary. City buildings can stand against its last stones.
+    func cityOutcrops(in size: CGSize) {
+        let caveSize = WorldMapChapterSpacing.sceneSize(width: size.width)
+        let layout = WorldSceneryLayout(width: size.width, height: caveSize.height,
+                                        routeOffset: WorldMapChapterSpacing.sceneOffset(width: size.width))
+        var c = context
+        c.clip(to: Path(CGRect(x: 0, y: 0, width: size.width, height: 280 * layout.scale)))
+        c.translateBy(x: 0, y: -caveSize.height)
         let p = CrystalCavePainter(context: c)
-        let layout = WorldSceneryLayout(width: size.width, height: size.height, routeOffset: routeOffset)
         for right in [false, true] {
             p.entranceWall(layout: layout, right: right)
-            p.entranceShoulder(layout: layout, right: right)
+            p.wallBoulders(layout: layout, right: right)
         }
+    }
+
+    func cityBedrock(in size: CGSize) {
+        fillFloor(Path(CGRect(x: -16, y: 0, width: size.width + 32, height: 240 * min(1.30, max(0.82, size.width / 390)))),
+                  width: size.width)
     }
 
     func landscape(in size: CGSize, routeOffset: CGFloat) {
@@ -8365,6 +8381,8 @@ private struct CityMetroLine {
     let distances: [CGFloat]
     let path: Path
     let stationDistances: [CGFloat]
+    let bottomDistance: CGFloat
+    private let tangents: [CGPoint]
     private let foundationRows: [Int:[CGRect]]
     var length: CGFloat { distances.last ?? 0 }
 
@@ -8387,46 +8405,95 @@ private struct CityMetroLine {
         curve(CGPoint(x: -220 * s, y: 40), CGPoint(x: entry.x - 125 * s, y: 40),
               CGPoint(x: entry.x, y: 132), entry)
         var leftStation = 0, rightStation = 0
-        for y in stride(from: CGFloat(229), through: 1610, by: 3) {
+        for y in stride(from: CGFloat(229), through: 1580, by: 3) {
             if abs(y - 361) < 1 { leftStation = samples.count }
             samples.append(rail(y, false))
         }
-        let a = rail(1610, false), b = rail(1610, true)
-        let bottom = min(1750, layout.height - layout.routeOffset - 60 * s)
-        let controlY = 1610 + (bottom - 1610) / 0.75
+        let a = rail(1580, false), b = rail(1580, true)
+        let bottom = min(1728, layout.height - layout.routeOffset - 92 * s)
+        let controlY = 1580 + (bottom - 1580) / 0.75
         curve(a, CGPoint(x: a.x, y: controlY), CGPoint(x: b.x, y: controlY), b)
-        for y in stride(from: CGFloat(1607), through: 650, by: -3) {
+        for y in stride(from: CGFloat(1577), through: 650, by: -3) {
             if abs(y - 821) < 1 { rightStation = samples.count }
             samples.append(rail(y, true))
         }
         let exit = rail(650, true)
         curve(exit, CGPoint(x: exit.x, y: 541), CGPoint(x: layout.width + 65 * s, y: 500),
               CGPoint(x: layout.width + 220 * s, y: 500))
+        let stationPoints = [samples[leftStation],samples[rightStation]]
+        var rawLengths: [CGFloat] = [0]
+        for (a,b) in zip(samples,samples.dropFirst()) { rawLengths.append(rawLengths.last!+hypot(b.x-a.x,b.y-a.y)) }
+        let count = Int(ceil(rawLengths.last!/(3*s)))
+        var uniform: [CGPoint] = [], cursor = 0
+        for i in 0...count {
+            let d = rawLengths.last!*CGFloat(i)/CGFloat(count)
+            while cursor+1 < rawLengths.count-1 && rawLengths[cursor+1] < d { cursor += 1 }
+            let t = (d-rawLengths[cursor])/max(0.001,rawLengths[cursor+1]-rawLengths[cursor])
+            uniform.append(.init(x:samples[cursor].x+(samples[cursor+1].x-samples[cursor].x)*t,
+                                 y:samples[cursor].y+(samples[cursor+1].y-samples[cursor].y)*t))
+        }
+        // Arc-length filtering rounds the old joins without changing station order.
+        let weights = (-20...20).map { exp(-0.5*pow(Double($0)/8,2)) }
+        let totalWeight = CGFloat(weights.reduce(0,+))
+        let smooth = uniform.indices.map { i -> CGPoint in
+            if i == 0 || i == uniform.count-1 { return uniform[i] }
+            var x: CGFloat = 0, y: CGFloat = 0
+            for k in -20...20 {
+                let p = uniform[min(uniform.count-1,max(0,i+k))], w = CGFloat(weights[k+20])
+                x += p.x*w; y += p.y*w
+            }
+            return .init(x:x/totalWeight,y:y/totalWeight)
+        }
         var lengths: [CGFloat] = [0]
-        for (a, b) in zip(samples, samples.dropFirst()) { lengths.append(lengths.last! + hypot(b.x - a.x, b.y - a.y)) }
-        points = samples; distances = lengths
+        for (a,b) in zip(smooth,smooth.dropFirst()) { lengths.append(lengths.last!+hypot(b.x-a.x,b.y-a.y)) }
+        let directions = smooth.indices.map { i -> CGPoint in
+            let a = smooth[max(0,i-1)], b = smooth[min(smooth.count-1,i+1)]
+            let factor: CGFloat = i == 0 || i == smooth.count-1 ? 1:0.5
+            return .init(x:(b.x-a.x)*factor,y:(b.y-a.y)*factor)
+        }
+        let bottomIndex = smooth.indices.max { smooth[$0].y < smooth[$1].y }!
+        let bottomD = lengths[bottomIndex]
+        points = smooth; distances = lengths; tangents = directions; bottomDistance = bottomD
+        path = Path { p in
+            p.move(to:smooth[0])
+            for i in 0..<smooth.count-1 {
+                let a = smooth[i], b = smooth[i+1]
+                p.addCurve(to:b,control1:.init(x:a.x+directions[i].x/3,y:a.y+directions[i].y/3),
+                           control2:.init(x:b.x-directions[i+1].x/3,y:b.y-directions[i+1].y/3))
+            }
+        }
+        stationDistances = stationPoints.map { station in
+            let index = smooth.indices.min { hypot(smooth[$0].x-station.x,smooth[$0].y-station.y) < hypot(smooth[$1].x-station.x,smooth[$1].y-station.y) }!
+            return lengths[index]
+        }
         var rows: [Int:[CGRect]] = [:]
-        for (a,b) in zip(samples,samples.dropFirst()) {
-            let bed = CGRect(x:min(a.x,b.x),y:min(a.y,b.y),width:max(0.1,abs(b.x-a.x)),height:max(0.1,abs(b.y-a.y)))
-                .insetBy(dx:-29*s,dy:-29*s)
+        for i in 0..<smooth.count-1 {
+            let a = smooth[i], b = smooth[i+1]
+            let depthA = CityMetroTunnel.depth(at:lengths[i],center:bottomD,scale:s)
+            let depthB = CityMetroTunnel.depth(at:lengths[i+1],center:bottomD,scale:s)
+            // Reserve the cutting walls as well as the lower railway floor.
+            let minY = min(a.y,b.y), maxY = max(a.y+depthA,b.y+depthB)
+            let bed = CGRect(x:min(a.x,b.x),y:minY,width:max(0.1,abs(b.x-a.x)),height:max(0.1,maxY-minY))
+                .insetBy(dx:-31*s,dy:-31*s)
             for row in Int(floor(bed.minY/64))...Int(floor(bed.maxY/64)) { rows[row,default:[]].append(bed) }
         }
         foundationRows = rows
-        stationDistances = [lengths[leftStation], lengths[rightStation]]
-        path = Path { p in p.addLines(samples) }
     }
 
     func pose(at distance: CGFloat) -> Pose {
-        let d = min(length, max(0, distance))
-        var low = 0, high = distances.count - 1
-        while low + 1 < high {
-            let mid = (low + high) / 2
-            if distances[mid] < d { low = mid } else { high = mid }
+        let d = min(length,max(0,distance))
+        var low = 0, high = distances.count-1
+        while low+1 < high {
+            let mid = (low+high)/2
+            if distances[mid] < d { low=mid } else { high=mid }
         }
-        let a = points[low], b = points[high]
-        let t = (d - distances[low]) / max(0.001, distances[high] - distances[low])
-        return Pose(point: CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t),
-                    heading: Double(atan2(b.y - a.y, b.x - a.x)))
+        let t = (d-distances[low])/max(0.001,distances[high]-distances[low]), t2=t*t, t3=t*t*t
+        let a = points[low], b = points[high], u=tangents[low], v=tangents[high]
+        let x = (2*t3-3*t2+1)*a.x+(t3-2*t2+t)*u.x+(-2*t3+3*t2)*b.x+(t3-t2)*v.x
+        let y = (2*t3-3*t2+1)*a.y+(t3-2*t2+t)*u.y+(-2*t3+3*t2)*b.y+(t3-t2)*v.y
+        let dx = (6*t2-6*t)*a.x+(3*t2-4*t+1)*u.x+(-6*t2+6*t)*b.x+(3*t2-2*t)*v.x
+        let dy = (6*t2-6*t)*a.y+(3*t2-4*t+1)*u.y+(-6*t2+6*t)*b.y+(3*t2-2*t)*v.y
+        return Pose(point:.init(x:x,y:y),heading:Double(atan2(dy,dx)))
     }
 
     func point(at distance: CGFloat, offset: CGFloat) -> CGPoint {
@@ -8499,73 +8566,93 @@ private struct CityMetroLine {
     }
 }
 
-/// The low railway passes through a short stone bore beneath the level street.
+/// The rail floor descends into cuttings and continues below the unchanged street surface.
 private struct CityMetroTunnel {
     let line: CityMetroLine
     let scale: CGFloat
-    let centerDistance: CGFloat
-    var start: CGFloat { centerDistance-44*scale }
-    var end: CGFloat { centerDistance+44*scale }
+    var centerDistance: CGFloat { line.bottomDistance }
+    var start: CGFloat { centerDistance-135*scale }
+    var end: CGFloat { centerDistance+135*scale }
+    var rampStart: CGFloat { centerDistance-300*scale }
+    var rampEnd: CGFloat { centerDistance+300*scale }
+    var cuttings: [(CGFloat,CGFloat)] { [(rampStart,start),(end,rampEnd)] }
 
-    init(line: CityMetroLine, scale: CGFloat) {
-        self.line = line; self.scale = scale
-        let index = line.points.indices.max { line.points[$0].y < line.points[$1].y }!
-        centerDistance = line.distances[index]
+    static func depth(at distance:CGFloat,center:CGFloat,scale:CGFloat) -> CGFloat {
+        let distance = abs(distance-center)/scale
+        if distance <= 135 { return 58*scale }
+        if distance >= 300 { return 0 }
+        let t = (300-distance)/165
+        return 58*scale*t*t*t*(10+t*(-15+6*t))
     }
-
-    func point(_ d: CGFloat, lateral: CGFloat, height: CGFloat) -> CGPoint {
-        let p = line.point(at:d,offset:lateral*scale)
-        return CGPoint(x:p.x,y:p.y-height*scale)
+    func depth(at d:CGFloat)->CGFloat { Self.depth(at:d,center:centerDistance,scale:scale) }
+    func floorPoint(at d:CGFloat)->CGPoint {
+        let p = line.pose(at:d).point
+        return .init(x:p.x,y:p.y+depth(at:d))
     }
-
-    func strip(_ a: CGFloat, _ b: CGFloat, heightA: CGFloat, heightB: CGFloat) -> Path {
-        Path { path in
+    /// The two bogies define a rigid carriage's direction, including the ramp grade.
+    func carriagePose(at d:CGFloat)->CityMetroLine.Pose {
+        let a = floorPoint(at:d-10*scale), b = floorPoint(at:d+10*scale)
+        return .init(point:.init(x:(a.x+b.x)/2,y:(a.y+b.y)/2),heading:Double(atan2(b.y-a.y,b.x-a.x)))
+    }
+    func point(_ d:CGFloat,lateral:CGFloat,height:CGFloat=0,surface:Bool=false)->CGPoint {
+        let p = surface ? line.pose(at:d):carriagePose(at:d)
+        return .init(x:p.point.x-CGFloat(sin(p.heading))*lateral*scale,
+                     y:p.point.y+CGFloat(cos(p.heading))*lateral*scale-height*scale)
+    }
+    func railPath(offset:CGFloat=0,from start:CGFloat=0,to finish:CGFloat?=nil)->Path {
+        let end=finish ?? line.length
+        return Path { p in
             for d in stride(from:start,through:end,by:2*scale) {
-                let p = point(d,lateral:a,height:heightA)
-                if d == start { path.move(to:p) } else { path.addLine(to:p) }
+                let q=point(d,lateral:offset)
+                if d == start { p.move(to:q) } else { p.addLine(to:q) }
             }
-            path.addLine(to:point(end,lateral:a,height:heightA))
-            for d in stride(from:end,through:start,by:-2*scale) { path.addLine(to:point(d,lateral:b,height:heightB)) }
-            path.addLine(to:point(start,lateral:b,height:heightB)); path.closeSubpath()
+            p.addLine(to:point(end,lateral:offset))
         }
     }
-
-    func arch(at d: CGFloat, radius: CGFloat, crown: CGFloat) -> Path {
+    func wall(from a:CGFloat,to b:CGFloat,side:CGFloat)->Path {
         Path { p in
-            p.move(to:point(d,lateral:-radius,height:0))
-            p.addLine(to:point(d,lateral:-radius,height:32))
-            p.addCurve(to:point(d,lateral:radius,height:32),
-                       control1:point(d,lateral:-radius,height:crown),
-                       control2:point(d,lateral:radius,height:crown))
-            p.addLine(to:point(d,lateral:radius,height:0));p.closeSubpath()
+            for d in stride(from:a,through:b,by:3*scale) {
+                let q=point(d,lateral:side*29,surface:true)
+                if d == a { p.move(to:q) } else { p.addLine(to:q) }
+            }
+            p.addLine(to:point(b,lateral:side*29,surface:true))
+            for d in stride(from:b,through:a,by:-3*scale) { p.addLine(to:point(d,lateral:side*24)) }
+            p.addLine(to:point(a,lateral:side*24));p.closeSubpath()
         }
     }
-
-    /// The solid earth hides the complete height of a carriage, including its sparks.
-    /// A geometric cut, rather than an opacity animation, makes each car enter the bore.
-    var buriedVolume: Path {
-        var vertices: [CGPoint] = []
-        for d in stride(from:start,through:end,by:3*scale) {
-            for y: CGFloat in [-25,25] { for z: CGFloat in [0,58] { vertices.append(point(d,lateral:y,height:z)) } }
+    func arch(at d:CGFloat,radius:CGFloat,crown:CGFloat)->Path {
+        Path { p in
+            p.move(to:point(d,lateral:-radius))
+            p.addLine(to:point(d,lateral:-radius,height:30))
+            p.addCurve(to:point(d,lateral:radius,height:30),
+                       control1:point(d,lateral:-radius,height:crown),control2:point(d,lateral:radius,height:crown))
+            p.addLine(to:point(d,lateral:radius));p.closeSubpath()
         }
-        for y: CGFloat in [-25,25] { for z: CGFloat in [0,58] { vertices.append(point(end,lateral:y,height:z)) } }
-        let points = vertices.sorted { $0.x == $1.x ? $0.y < $1.y:$0.x < $1.x }
+    }
+    var buriedVolume:Path {
+        var vertices:[CGPoint]=[]
+        for d in stride(from:start+6*scale,through:end-6*scale,by:3*scale) {
+            for y:CGFloat in [-35,35] { for z:CGFloat in [-32,62] { vertices.append(point(d,lateral:y,height:z)) } }
+        }
+        let points=vertices.sorted { $0.x == $1.x ? $0.y < $1.y:$0.x < $1.x }
         func cross(_ a:CGPoint,_ b:CGPoint,_ c:CGPoint)->CGFloat { (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x) }
-        var lower: [CGPoint] = [], upper: [CGPoint] = []
+        var lower:[CGPoint]=[],upper:[CGPoint]=[]
         for p in points {
-            while lower.count >= 2 && cross(lower[lower.count-2],lower.last!,p) <= 0 { lower.removeLast() }
-            lower.append(p)
+            while lower.count>=2 && cross(lower[lower.count-2],lower.last!,p)<=0 { lower.removeLast() };lower.append(p)
         }
         for p in points.reversed() {
-            while upper.count >= 2 && cross(upper[upper.count-2],upper.last!,p) <= 0 { upper.removeLast() }
-            upper.append(p)
+            while upper.count>=2 && cross(upper[upper.count-2],upper.last!,p)<=0 { upper.removeLast() };upper.append(p)
         }
         return Path { p in p.addLines(Array(lower.dropLast())+Array(upper.dropLast()));p.closeSubpath() }
     }
-    var bounds: CGRect { buriedVolume.boundingRect.insetBy(dx:-18*scale,dy:-15*scale) }
+    var bounds:CGRect {
+        var r=buriedVolume.boundingRect
+        for (a,b) in cuttings { for side:CGFloat in [-1,1] { r=r.union(wall(from:a,to:b,side:side).boundingRect) } }
+        for d in [start,end] { r=r.union(arch(at:d,radius:29,crown:73).boundingRect) }
+        return r.insetBy(dx:-10*scale,dy:-10*scale)
+    }
 }
 
-/// The robot's court uses real land beside the loop, with enough room for both feet.
 private struct CityBossCourt {
     let point: CGPoint
     let scale: CGFloat
@@ -8697,7 +8784,7 @@ private enum CityInnerLayout {
     }
 
     private static func fit(_ source: Site, layout: WorldSceneryLayout, metro: CityMetroLine,
-                            innerFirst: Bool = true, edgePanorama: Bool = false) -> Site? {
+                            innerFirst: Bool = true, edgePanorama: Bool = false, arrival: Bool = false) -> Site? {
         let s = layout.scale, sign: CGFloat = source.right ? 1:-1
         let court = CityBossCourt(layout:layout,line:metro).groundBounds.insetBy(dx:-5*s,dy:-6*s)
         for inner in innerFirst ? [true,false]:[false] {
@@ -8716,7 +8803,7 @@ private enum CityInnerLayout {
                     let site = Site(id:source.id,point:.init(x:x,y:source.point.y),size:size,
                                     right:source.right,kind:source.kind,foreground:source.foreground)
                     if !edgePanorama && (site.contentBounds.minX < 5*s || site.contentBounds.maxX > layout.width-5*s) { continue }
-                    if site.contentBounds.minY+layout.routeOffset < 8*s || site.contentBounds.maxY+layout.routeOffset > layout.height-16*s { continue }
+                    if site.contentBounds.minY+layout.routeOffset < (arrival ? -140 : 8)*s || site.contentBounds.maxY+layout.routeOffset > layout.height-16*s { continue }
                     if edgePanorama && (site.contentBounds.maxX < 10*s || site.contentBounds.minX > layout.width-10*s) { continue }
                     if site.groundBounds.intersects(court) { continue }
                     if metro.groundIsClear(site.groundBounds, scale:s) { return site }
@@ -8789,8 +8876,27 @@ private enum CityInnerLayout {
                     if let site = fit(cafe,layout:layout,metro:metro,innerFirst:false) { result.append(site) }
                 }
             }
+            // The loop's lower arch opens onto a final inhabited street.
+            // These compact facades use the same route/rail footprint fitter.
+            for (i, y) in [CGFloat(1748), 1788].enumerated() {
+                let source = Site(id: 450 + i + (right ? 10 : 0),
+                                  point: .init(x: 0, y: y + (right ? -12 : 0)),
+                                  size: s * 0.86, right: right, kind: i == 0 ? 3 : 0, foreground: true)
+                if let site = fit(source, layout: layout, metro: metro, innerFirst: false) { result.append(site) }
+            }
         }
         return result.sorted { $0.point.y < $1.point.y }
+    }
+
+    static func caveBlocks(layout: WorldSceneryLayout) -> [Site] {
+        let s = layout.scale, metro = CityMetroLine(layout: layout)
+        return [false, true].flatMap { right in (0..<2).compactMap { row in
+            let source = Site(id: 480 + row + (right ? 10 : 0),
+                              point: .init(x: 0, y: -layout.routeOffset + (68 + CGFloat(row) * 104 + (right ? 26 : 0)) * s),
+                              size: s * (row == 0 ? 0.91 : 0.85), right: right,
+                              kind: row == 0 ? 0 : 3, foreground: false)
+            return fit(source, layout: layout, metro: metro, innerFirst: false, arrival: true)
+        } }
     }
 }
 
@@ -8808,14 +8914,18 @@ private struct CityWorldLife: View {
         GeometryReader { geometry in
             let layout = WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset)
             let line = CityMetroLine(layout: layout)
-            let tunnelCut = CityMetroTunnel(line:line,scale:layout.scale).buriedVolume
-            TimelineView(.animation(minimumInterval: 1.0 / 24,
+            let tunnel=CityMetroTunnel(line:line,scale:layout.scale)
+            let tunnelCut=tunnel.buriedVolume
+            TimelineView(.animation(minimumInterval: 1.0 / 60,
                                     paused: fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
                 let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 let travel = line.travel(at: time, scale: layout.scale)
                 let cars = (0..<CityMetroLine.carriageCount).map { index in
                     (index: index, distance: travel.distance - CGFloat(index) * CityMetroLine.carriagePitch * layout.scale)
-                }.map { (index: $0.index, distance: $0.distance, pose: line.pose(at: $0.distance)) }
+                }.map { car in
+                    (index:car.index,distance:car.distance,pose:tunnel.carriagePose(at:car.distance),
+                     trailing:tunnel.carriagePose(at:car.distance-CityMetroLine.carriagePitch*layout.scale))
+                }
                     .sorted { $0.pose.point.y < $1.pose.point.y }
                 ZStack(alignment: .topLeading) {
                     ForEach(cars, id: \.index) { car in
@@ -8825,6 +8935,11 @@ private struct CityWorldLife: View {
                             Canvas { context, _ in
                                 var c = context; c.translateBy(x: -frame.minX, y: routeOffset - frame.minY)
                                 c.clip(to:tunnelCut,options:.inverse)
+                                let shade=Double(tunnel.depth(at:car.distance)/(58*layout.scale))
+                                c.addFilter(.colorMultiply(Color(red:1-0.25*shade,green:1-0.18*shade,blue:1-0.12*shade)))
+                                if car.index<CityMetroLine.carriageCount-1 {
+                                    CityWorldPainter(context:c).metroCoupling(leading:car.pose,trailing:car.trailing,size:layout.scale)
+                                }
                                 CityWorldPainter(context: c).metroCar(at: car.pose.point, heading: car.pose.heading + (car.index == CityMetroLine.carriageCount - 1 ? .pi : 0),
                                     size: layout.scale, cab: car.index == 0 || car.index == CityMetroLine.carriageCount - 1,
                                     time: time + Double(car.index) * 0.17, speed: frozen || reduceMotion ? 0 : travel.speed,
@@ -8929,22 +9044,25 @@ private struct CityWorldPainter {
 
     /// The first street is made of the city's limestone paving. The cave rocks
     /// finish above this floor rather than disappearing under a join overlay.
-    func caveStreet(in size: CGSize) {
+    func caveStreet(in size: CGSize, caveFloor: Bool = true) {
         let w = size.width, h = size.height
-        var street = Path(); street.move(to: .init(x: -16, y: -147))
-        street.addCurve(to: .init(x: w * 0.37, y: -92),
-                        control1: .init(x: w * 0.12, y: -164), control2: .init(x: w * 0.25, y: -119))
-        street.addCurve(to: .init(x: w + 16, y: -166),
-                        control1: .init(x: w * 0.60, y: -37), control2: .init(x: w * 0.89, y: -191))
-        let curb = street
-        street.addLine(to: .init(x: w + 16, y: h + 2)); street.addLine(to: .init(x: -16, y: h + 2)); street.closeSubpath()
+        let s = min(1.30, max(0.82, w / 390))
+        if caveFloor { CrystalCavePainter(context: context).cityBedrock(in: size) }
+        let street = Path { p in
+            p.move(to: .init(x: -16, y: 88 * s))
+            p.addCurve(to: .init(x: w * 0.44, y: -76 * s),
+                       control1: .init(x: w * 0.17, y: 94 * s), control2: .init(x: w * 0.26, y: -89 * s))
+            p.addCurve(to: .init(x: w * 0.68, y: -102 * s),
+                       control1: .init(x: w * 0.53, y: -49 * s), control2: .init(x: w * 0.59, y: -137 * s))
+            p.addCurve(to: .init(x: w + 16, y: 132 * s),
+                       control1: .init(x: w * 0.84, y: -76 * s), control2: .init(x: w * 0.82, y: 128 * s))
+            p.addLine(to: .init(x: w + 16, y: h + 2)); p.addLine(to: .init(x: -16, y: h + 2)); p.closeSubpath()
+        }
         context.fill(street, with: .linearGradient(Gradient(stops: [
             .init(color: Color(dinoHex: 0xEAE1CA), location: 0),
             .init(color: Color(dinoHex: 0xEAE1CA), location: 0.50),
             .init(color: Color(dinoHex: 0xD7DDCC), location: 1)
         ]), startPoint: .zero, endPoint: .init(x: 0, y: h)))
-        context.stroke(curb.offsetBy(dx: 0, dy: 3), with: .color(Color(dinoHex: 0x9BAEAA)), lineWidth: 6)
-        context.stroke(curb, with: .color(Color(dinoHex: 0xF8EED5)), lineWidth: 2.5)
         var paving = context; paving.clip(to: street)
         // Courses continue into the actual streets, leaving the sandy play trail free.
         for right in [false, true] {
@@ -8958,6 +9076,16 @@ private struct CityWorldPainter {
         }
     }
 
+    /// These complete facades start among the last cave outcrops. The outgoing
+    /// chapter draws their roofs too, using these identical city coordinates.
+    func caveNeighbourhood(in size: CGSize) {
+        let offset = WorldMapChapterSpacing.sceneOffset(width: size.width)
+        let layout = WorldSceneryLayout(width: size.width, height: size.height, routeOffset: offset)
+        var c = context; c.translateBy(x: 0, y: offset)
+        let p = CityWorldPainter(context: c)
+        for site in CityInnerLayout.caveBlocks(layout: layout) { p.innerStreetSite(site) }
+    }
+
     func landscape(in size: CGSize, routeOffset: CGFloat, depth: WorldSceneryDepth) {
         let w = size.width, h = size.height
         let scale = min(1.30, max(0.82, w / 390))
@@ -8969,12 +9097,15 @@ private struct CityWorldPainter {
         let layout = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         let p = CityWorldPainter(context: c)
         p.cityDistricts(layout: layout)
+        caveNeighbourhood(in: size)
+        CrystalCavePainter(context: context).cityOutcrops(in: size)
         for site in CityInnerLayout.pocketSites(layout: layout) { p.innerStreetSite(site) }
         p.innerPromenades(layout: layout)
         let metro = CityMetroLine(layout: layout)
         for index in 0..<2 { p.stationPlatform(line: metro, index: index, scale: scale) }
-        p.metroViaduct(line: metro, scale: scale)
         p.tunnelInterior(CityMetroTunnel(line:metro,scale:scale))
+        p.metroViaduct(line: metro, scale: scale)
+        p.metroMouths(CityMetroTunnel(line:metro,scale:scale))
         p.streetLife(layout: layout, depth: depth)
         p.bossPlaza(width: w, scale: scale, layout: layout)
     }
@@ -9269,67 +9400,100 @@ private struct CityWorldPainter {
     }
 
     private func tunnelInterior(_ tunnel: CityMetroTunnel) {
-        material(tunnel.strip(-24,24,heightA:0,heightB:0),colors:[0x273A48,0x122733])
+        let s=tunnel.scale
+        // Open cuttings expose the lower rail floor. Their banks remain at street height.
+        for (a,b) in tunnel.cuttings {
+            for side:CGFloat in [-1,1] {
+                material(tunnel.wall(from:a,to:b,side:side),colors:[0xB5BAA9,0x7A9189,0x3F6265])
+                for fraction:CGFloat in [0.25,0.5,0.75] {
+                    var course=Path()
+                    for d in stride(from:a,through:b,by:3*s) {
+                        let top=tunnel.point(d,lateral:side*29,surface:true),bottom=tunnel.point(d,lateral:side*24)
+                        let p=CGPoint(x:top.x+(bottom.x-top.x)*fraction,y:top.y+(bottom.y-top.y)*fraction)
+                        if d == a { course.move(to:p) } else { course.addLine(to:p) }
+                    }
+                    context.stroke(course,with:.color(Color(dinoHex:0x526D6C).opacity(0.65)),lineWidth:0.7*s)
+                }
+                for d in stride(from:a+8*s,through:b,by:15*s) {
+                    let top=tunnel.point(d,lateral:side*29,surface:true),bottom=tunnel.point(d,lateral:side*24)
+                    line([top,bottom],color:0x74867D,width:0.7*s)
+                }
+            }
+        }
+    }
+
+    private func metroMouths(_ tunnel:CityMetroTunnel) {
         for d in [tunnel.start,tunnel.end] {
-            material(tunnel.arch(at:d,radius:21,crown:59),colors:[0x122431,0x284552,0x0C1D29])
+            material(tunnel.arch(at:d,radius:21,crown:62),colors:[0x0C1D29,0x17333C,0x314E50])
         }
     }
 
     func metroTunnel(_ tunnel: CityMetroTunnel) {
-        let s = tunnel.scale
-        // Curved masonry over the bore sits below the playable road surface.
-        material(tunnel.strip(-28,-28,heightA:0,heightB:33),colors:[0xB1B49F,0x71898A])
-        let ribs: [CGFloat] = [-28,-19,0,19,28], heights: [CGFloat] = [33,51,58,51,33]
-        for i in 0..<4 {
-            material(tunnel.strip(ribs[i],ribs[i+1],heightA:heights[i],heightB:heights[i+1]),
-                     colors:i < 2 ? [0xE5DCBC,0xB7B69D]:[0xF8E9C8,0xCDC3A3])
-        }
-        material(tunnel.strip(28,28,heightA:33,heightB:0),colors:[0xD8CBAA,0xA1AD9C,0x7F9591])
-        for d in stride(from:tunnel.start+9*s,through:tunnel.end-3*s,by:13*s) {
-            let rib = Path { p in
-                for (i,y) in ribs.enumerated() {
-                    let q = tunnel.point(d,lateral:y,height:heights[i]+0.3)
-                    if i == 0 { p.move(to:q) } else { p.addLine(to:q) }
+        let s=tunnel.scale
+        // Retaining-wall caps follow the original street edge, never the descending train.
+        for (a,b) in tunnel.cuttings {
+            for side:CGFloat in [-1,1] {
+                var cap=Path()
+                for d in stride(from:a,through:b,by:2*s) {
+                    let p=tunnel.point(d,lateral:side*29,surface:true)
+                    if d == a { cap.move(to:p) } else { cap.addLine(to:p) }
                 }
+                context.stroke(cap,with:.color(Color(dinoHex:0x82968B)),style:StrokeStyle(lineWidth:5*s,lineCap:.round))
+                context.stroke(cap.offsetBy(dx:0,dy:-s),with:.color(Color(dinoHex:0xE8DFC5)),style:StrokeStyle(lineWidth:2.8*s,lineCap:.round))
             }
-            context.stroke(rib,with:.color(Color(dinoHex:0x8E9C8E).opacity(0.55)),lineWidth:0.8*s)
         }
-        // Openings remain dark behind the train; these separate stone rings frame it.
-        for z: CGFloat in [8,20,31] {
-            var course = Path()
-            for d in stride(from:tunnel.start,through:tunnel.end,by:3*s) {
-                let p = tunnel.point(d,lateral:28,height:z)
-                if d == tunnel.start { course.move(to:p) } else { course.addLine(to:p) }
-            }
-            context.stroke(course,with:.color(Color(dinoHex:0x7F9386)),lineWidth:0.8*s)
-        }
+        // Only the embedded portal rings are above the train. There is no spanning roof sprite.
         for d in [tunnel.start,tunnel.end] {
-            // Recessed darkness is visible in front of the solid vault, rather than
-            // letting the light roof surface fill the opening from behind.
-            material(tunnel.arch(at:d,radius:19,crown:57),colors:[0x101F2A,0x1B3440,0x314B50])
-            let inside: CGFloat = d == tunnel.start ? 6:-6
-            for side: CGFloat in [-7,7] {
-                line([tunnel.point(d-inside,lateral:side,height:0),tunnel.point(d+inside,lateral:side,height:3)],color:0xA4B8B4,width:1.2*s)
+            var face=Path()
+            face.addLines([tunnel.point(d,lateral:-40,surface:true),tunnel.point(d,lateral:40,surface:true),
+                           tunnel.point(d,lateral:38),tunnel.point(d,lateral:-38)])
+            face.closeSubpath()
+            face.addPath(tunnel.arch(at:d,radius:20,crown:56))
+            context.fill(face,with:.linearGradient(Gradient(colors:[Color(dinoHex:0xC4C5AC),Color(dinoHex:0x83998D),Color(dinoHex:0x547570)]),
+                                                  startPoint:tunnel.point(d,lateral:0,surface:true),endPoint:tunnel.point(d,lateral:0)),style:FillStyle(eoFill:true))
+            var masonry=context;masonry.clip(to:face,style:FillStyle(eoFill:true))
+            for z:CGFloat in [10,23,36,49] {
+                var seam=Path();seam.addLines([tunnel.point(d,lateral:-39,height:z),tunnel.point(d,lateral:39,height:z)])
+                masonry.stroke(seam,with:.color(Color(dinoHex:0x577A70).opacity(0.7)),lineWidth:0.8*s)
             }
-            var ring = tunnel.arch(at:d,radius:29,crown:68)
-            ring.addPath(tunnel.arch(at:d,radius:19,crown:57))
-            context.fill(ring,with:.linearGradient(Gradient(colors:[Color(dinoHex:0xFFF0D1),Color(dinoHex:0xC7BBA0),Color(dinoHex:0x8A9F98)]),
-                                                   startPoint:tunnel.point(d,lateral:-29,height:60),endPoint:tunnel.point(d,lateral:29,height:0)),
-                         style:FillStyle(eoFill:true))
-            context.stroke(tunnel.arch(at:d,radius:19,crown:57),with:.color(Color(dinoHex:0x4C676A)),lineWidth:1.2*s)
-            for side: CGFloat in [-1,1] {
-                for z: CGFloat in [8,19,30] {
-                    line([tunnel.point(d,lateral:side*20,height:z),tunnel.point(d,lateral:side*28,height:z)],color:0x8A9585,width:0.8*s)
+            line([tunnel.point(d,lateral:-41,surface:true),tunnel.point(d,lateral:41,surface:true)],color:0xDFDFC5,width:3*s)
+            var ring=tunnel.arch(at:d,radius:28,crown:66)
+            ring.addPath(tunnel.arch(at:d,radius:20,crown:56))
+            context.fill(ring,with:.linearGradient(Gradient(colors:[Color(dinoHex:0xEAE1C4),Color(dinoHex:0xB4B59D),Color(dinoHex:0x728B86)]),
+                                                   startPoint:tunnel.point(d,lateral:-28,height:60),endPoint:tunnel.point(d,lateral:28)),style:FillStyle(eoFill:true))
+            context.stroke(tunnel.arch(at:d,radius:20,crown:56),with:.color(Color(dinoHex:0x3B595B)),lineWidth:1.1*s)
+            for side:CGFloat in [-1,1] {
+                for z:CGFloat in [8,19,29] {
+                    line([tunnel.point(d,lateral:side*21,height:z),tunnel.point(d,lateral:side*28,height:z)],color:0x788C7F,width:0.8*s)
                 }
-                let light = tunnel.point(d,lateral:side*25,height:24)
-                glow(light,radius:8*s,color:0xFFE0A0,opacity:0.18)
-                rounded(CGRect(x:light.x-1.3*s,y:light.y-3.2*s,width:2.6*s,height:6.4*s),radius:s,colors:[0xFFF3C7,0xC7A362])
+                let light=tunnel.point(d,lateral:side*24,height:33)
+                glow(light,radius:7*s,color:0xFFDB8F,opacity:0.23)
+                rounded(CGRect(x:light.x-s,y:light.y-2.5*s,width:2*s,height:5*s),radius:0.6*s,colors:[0xFFF3BB,0xB5914F])
             }
-            for i in 1..<8 {
-                let angle = Double(i)*Double.pi/8
-                line([tunnel.point(d,lateral:CGFloat(cos(angle))*20,height:32+CGFloat(sin(angle))*19),
-                      tunnel.point(d,lateral:CGFloat(cos(angle))*29,height:32+CGFloat(sin(angle))*27)],color:0x9AA08C,width:0.8*s)
+            for i in 1..<9 {
+                let angle=Double(i)*Double.pi/9
+                line([tunnel.point(d,lateral:CGFloat(cos(angle))*21,height:30+CGFloat(sin(angle))*19),
+                      tunnel.point(d,lateral:CGFloat(cos(angle))*28,height:30+CGFloat(sin(angle))*27)],color:0x8B9987,width:0.8*s)
             }
+        }
+    }
+
+    /// Bellows span the ends of neighbouring rigid cars instead of leaving angular roof gaps.
+    func metroCoupling(leading:CityMetroLine.Pose,trailing:CityMetroLine.Pose,size s:CGFloat) {
+        func end(_ pose:CityMetroLine.Pose,_ distance:CGFloat)->CGPoint {
+            .init(x:pose.point.x+CGFloat(cos(pose.heading))*distance*s,y:pose.point.y+CGFloat(sin(pose.heading))*distance*s)
+        }
+        let a=end(leading,-15.5),b=end(trailing,15.5)
+        func q(_ p:CGPoint,_ heading:Double,_ side:CGFloat,_ z:CGFloat)->CGPoint {
+            .init(x:p.x-CGFloat(sin(heading))*side*s,y:p.y+CGFloat(cos(heading))*side*s-z*s)
+        }
+        polygon([q(a,leading.heading,-10,29),q(a,leading.heading,10,29),q(b,trailing.heading,10,29),q(b,trailing.heading,-10,29)],colors:[0xA0B3BC,0x536F82,0x2B475E])
+        let side:CGFloat = cos(leading.heading)>=0 ? 10:-10
+        polygon([q(a,leading.heading,side,29),q(b,trailing.heading,side,29),q(b,trailing.heading,side,7),q(a,leading.heading,side,7)],colors:[0x68828E,0x284659])
+        for i in 1..<4 {
+            let t=CGFloat(i)/4,p=CGPoint(x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t)
+            let heading=atan2(sin(leading.heading)*(1-Double(t))+sin(trailing.heading)*Double(t),cos(leading.heading)*(1-Double(t))+cos(trailing.heading)*Double(t))
+            line([q(p,heading,-9,29.2),q(p,heading,9,29.2)],color:0xD1DCDC,width:0.55*s)
         }
     }
 
@@ -9350,36 +9514,51 @@ private struct CityWorldPainter {
         flowers(at:.init(x:point.x+20*s,y:point.y-7*s),size:s*0.35)
     }
 
-    private func metroViaduct(line metro: CityMetroLine, scale s: CGFloat) {
+    private func metroViaduct(line metro:CityMetroLine,scale s:CGFloat) {
+        let tunnel=CityMetroTunnel(line:metro,scale:s)
+        var c=context;c.clip(to:tunnel.buriedVolume,options:.inverse)
+        CityWorldPainter(context:c).metroTrack(line:metro,tunnel:tunnel,scale:s)
+    }
+
+    private func metroTrack(line metro:CityMetroLine,tunnel:CityMetroTunnel,scale s:CGFloat) {
         // Piers and the deep stone face sit below the rails, with no blank caps.
         for d in stride(from: CGFloat(90) * s, through: metro.length - 40 * s, by: 115 * s) {
             let pose = metro.pose(at: d)
-            guard abs(cos(pose.heading)) > 0.62 else { continue }
+            guard abs(cos(pose.heading)) > 0.62, tunnel.depth(at:d) < 0.5 else { continue }
             let p = CGPoint(x: pose.point.x, y: pose.point.y + 13 * s)
             rounded(CGRect(x: p.x - 8 * s, y: p.y, width: 16 * s, height: 24 * s), radius: 3 * s, colors: [0xE8D7B5, 0xB7B6A3, 0x8C9E9D])
             line([.init(x: p.x - 5 * s, y: p.y + 8 * s), .init(x: p.x + 5 * s, y: p.y + 8 * s)], color: 0xF5E5C8, width: 0.8 * s)
         }
-        for (width, color, dy): (CGFloat, UInt32, CGFloat) in [(45, 0x99A49A, 13), (43, 0xBEB397, 7), (39, 0xF7E6C5, 0), (29, 0x607783, 0), (24, 0x8C9FA5, 0)] {
-            context.stroke(metro.path.offsetBy(dx: 0, dy: dy * s), with: .color(Color(dinoHex: color)), style: StrokeStyle(lineWidth: width * s, lineCap: .butt, lineJoin: .round))
+        for (a,b) in [(CGFloat(0),tunnel.rampStart),(tunnel.rampEnd,metro.length)] {
+            for (width,color,dy):(CGFloat,UInt32,CGFloat) in [(45,0x99A49A,13),(43,0xBEB397,7),(39,0xF7E6C5,0),(29,0x607783,0),(24,0x8C9FA5,0)] {
+                context.stroke(tunnel.railPath(from:a,to:b).offsetBy(dx:0,dy:dy*s),with:.color(Color(dinoHex:color)),style:StrokeStyle(lineWidth:width*s,lineCap:.butt,lineJoin:.round))
+            }
+        }
+        // The excavated floor is darker and narrower than the elevated railway.
+        for (a,b) in [(tunnel.rampStart,tunnel.start+15*s),(tunnel.end-15*s,tunnel.rampEnd)] {
+            for (width,color):(CGFloat,UInt32) in [(46,0x34575A),(34,0x5C787B),(24,0x789294)] {
+                context.stroke(tunnel.railPath(from:a,to:b),with:.color(Color(dinoHex:color)),style:StrokeStyle(lineWidth:width*s,lineCap:.butt,lineJoin:.round))
+            }
         }
         var sleepers = Path()
         for distance in stride(from: CGFloat(0), through: metro.length, by: 10 * s) {
-            let a = metro.point(at: distance, offset: -10 * s), b = metro.point(at: distance, offset: 10 * s)
+            let a = tunnel.point(distance,lateral:-10), b = tunnel.point(distance,lateral:10)
             sleepers.move(to: a); sleepers.addLine(to: b)
         }
         context.stroke(sleepers, with: .color(Color(dinoHex: 0x405A6A)), style: StrokeStyle(lineWidth: 2.2 * s))
         for offset: CGFloat in [-7, 7] {
-            let rail = metro.offsetPath(offset * s)
+            let rail = tunnel.railPath(offset:offset)
             context.stroke(rail, with: .color(Color(dinoHex: 0x283D52)), style: StrokeStyle(lineWidth: 3.6 * s))
             context.stroke(rail, with: .color(Color(dinoHex: 0xE8F3ED)), style: StrokeStyle(lineWidth: 1.3 * s))
         }
         for offset: CGFloat in [-18, 18] {
-            context.stroke(metro.offsetPath(offset * s), with: .color(Color(dinoHex: 0x32566C)), style: StrokeStyle(lineWidth: 2 * s))
-            context.stroke(metro.offsetPath(offset * s).offsetBy(dx: 0, dy: -1.2 * s), with: .color(Color(dinoHex: 0xC3D9D5)), style: StrokeStyle(lineWidth: 0.7 * s))
+            context.stroke(tunnel.railPath(offset:offset), with: .color(Color(dinoHex: 0x32566C)), style: StrokeStyle(lineWidth: 2 * s))
+            context.stroke(tunnel.railPath(offset:offset).offsetBy(dx: 0, dy: -1.2 * s), with: .color(Color(dinoHex: 0xC3D9D5)), style: StrokeStyle(lineWidth: 0.7 * s))
         }
         for d in stride(from: CGFloat(35) * s, through: metro.length - 10 * s, by: 52 * s) {
+            guard tunnel.depth(at:d)<1 else { continue }
             for offset: CGFloat in [-18, 18] {
-                let q = metro.point(at: d, offset: offset * s)
+                let q = tunnel.point(d,lateral:offset)
                 line([.init(x: q.x, y: q.y + 2 * s), .init(x: q.x, y: q.y - 5 * s)], color: 0x3B6073, width: 1.5 * s)
                 oval(CGRect(x: q.x - 2 * s, y: q.y - 7 * s, width: 4 * s, height: 3 * s), colors: [0xF9DDA0, 0xB2925B])
             }
@@ -10414,9 +10593,11 @@ private enum TimeMachineLayout {
     static let waterDeep: UInt32 = 0x1375AD
     static let waterFoam: UInt32 = 0xD8FFFF
 
-    static func cityStart(_ layout: WorldSceneryLayout) -> CGFloat { -layout.routeOffset + 82 }
-    static func firstTerrace(_ layout: WorldSceneryLayout) -> CGFloat { cityStart(layout) + 300 * layout.scale }
+    static func cityStart(_ layout: WorldSceneryLayout) -> CGFloat { -layout.routeOffset + 8 }
+    static func firstTerrace(_ layout: WorldSceneryLayout) -> CGFloat { cityStart(layout) + 310 * layout.scale }
     static func quay(_ layout: WorldSceneryLayout) -> CGFloat { layout.height - layout.routeOffset - 154 * layout.scale }
+    /// The stone quay supports the complete drain, including its near lip.
+    static func quayEnd(_ layout: WorldSceneryLayout) -> CGFloat { quay(layout) + 116 * layout.scale }
 
     struct Terminal {
         let source: CGPoint
@@ -10627,7 +10808,9 @@ private enum TimeMachineLayout {
         (0..<9).map { index in
             let right = index % 4 == 0 || index % 4 == 3
             let size = layout.scale * 0.94
-            let y = CGFloat(193 + index * 175)
+            // Extend the first inventions upward while keeping the last one's
+            // footing at its established place beside the final clock tower.
+            let y = CGFloat(193 + index * 175) - 108 * layout.scale * CGFloat(8 - index) / 8
             let preferred = CGPoint(x: right ? layout.width - 61 * layout.scale : 61 * layout.scale, y: y)
             let point = layout.position(preferred, radius: 79 * size, rise: 184 * size)
             let landing = waterPoint(layout: layout, right: right, y: point.y + 88 * size)
@@ -10690,7 +10873,7 @@ private enum TimeMachineLayout {
             for column in 0..<Int(ceil(layout.width / stepX)) {
                 let seed = row * 131 + column * 71
                 let point = CGPoint(x: 29 * scale + CGFloat(column) * stepX + CGFloat(seed % 17 - 8) * scale,
-                                    y: -layout.routeOffset + 193 + CGFloat(row) * stepY)
+                                    y: -layout.routeOffset + 100 + CGFloat(row) * stepY)
                 let right = point.x > layout.centerX(at: point.y)
                 guard let owner = sites.filter({ ($0.point.x > layout.width / 2) == right })
                     .min(by: { abs($0.point.y - point.y) < abs($1.point.y - point.y) }),
@@ -10911,7 +11094,7 @@ private enum TimeMachineLayout {
     /// clear promenade around the level stones, including on narrow phones.
     static func cityBank(layout: WorldSceneryLayout, right: Bool) -> Path {
         let start = cityStart(layout)
-        let end = quay(layout) + 35 * layout.scale
+        let end = quayEnd(layout)
         let outside = right ? layout.width + 40 : -40
         var path = Path()
         path.move(to: .init(x: outside, y: start))
@@ -10957,7 +11140,7 @@ private enum TimeMachineLayout {
         let transitionBounds: CGRect
         init(layout: WorldSceneryLayout) {
             transitionBounds = CGRect(x: -60, y: cityStart(layout), width: layout.width + 120,
-                                      height: layout.height - layout.routeOffset - cityStart(layout) - 24)
+                                      height: quayEnd(layout) - cityStart(layout))
             terminals = TimeMachineLayout.terminals(layout: layout)
             quarters = TimeMachineLayout.quarters(layout: layout)
             let inventions = sites(layout: layout), apparatus = furnishings(layout: layout)
@@ -11314,7 +11497,7 @@ private struct TimeMachinePainter {
     /// Buildings stand on shared terraces; stairs land on those same cornices.
     private func clockworkKingdom(layout: WorldSceneryLayout, depth: WorldSceneryDepth) {
         let scale = layout.scale, field = TimeMachineLayout.waterField(layout: layout)
-        let start = firstFoundation(field: field), end = TimeMachineLayout.quay(layout) + 35 * scale
+        let start = firstFoundation(field: field), end = TimeMachineLayout.quayEnd(layout)
         for (index, right) in [false, true].enumerated() {
             var bank = context
             bank.clip(to: field.banks[index])
@@ -11331,13 +11514,13 @@ private struct TimeMachinePainter {
                     stairWidth: quarter.stairWidth, variation: quarter.variation)
             }
             let last = field.quarters.filter { $0.right == right }.max { $0.point.y < $1.point.y }!
-            var base = bank; base.translateBy(x: last.point.x, y: TimeMachineLayout.quay(layout))
+            var base = bank; base.translateBy(x: last.point.x, y: end - 35 * scale)
             base.scaleBy(x: right ? -scale : scale, y: scale)
             let endPainter = TimeMachinePainter(context: base)
             endPainter.rounded(CGRect(x: -28, y: -8, width: last.lowerExtent + 34, height: 43), 5, [0xDDD0C5, 0x9B9AB2, 0x646F8A])
             endPainter.masonry(in: CGRect(x: -26, y: 0, width: last.lowerExtent + 30, height: 32), course: 16, block: 30)
             endPainter.rounded(CGRect(x: -30, y: -13, width: last.lowerExtent + 38, height: 9), 2, [0xFFF0D1, 0xBAACB3, 0x80849E])
-            // The channel continues past the masonry, into its real drain.
+            // The channel and complete drain now rest on the same final course.
             bank = context
             bank.clip(to: field.protectedRoute, options: .inverse)
             let terminal = field.terminals[index]
@@ -12736,11 +12919,14 @@ private struct PirateCoastPainter {
     /// still enters through its original side inlets, with every coping stone intact.
     func clockworkBeach(in size: CGSize) {
         let w = size.width, h = size.height
-        var beach = Path(); beach.move(to: .init(x: -16, y: -137))
-        beach.addCurve(to: .init(x: w * 0.58, y: -91),
-                       control1: .init(x: w * 0.20, y: -208), control2: .init(x: w * 0.36, y: -63))
-        beach.addCurve(to: .init(x: w + 16, y: -172),
-                       control1: .init(x: w * 0.77, y: -111), control2: .init(x: w * 0.89, y: -192))
+        // The clockwork ground supports the whole quay and drain before sand
+        // enters, and continues through the first few points of this chapter.
+        context.fill(Path(CGRect(x: -16, y: 0, width: w + 32, height: 100)), with: .color(Color(dinoHex: 0xBBC2D2)))
+        var beach = Path(); beach.move(to: .init(x: -16, y: -27))
+        beach.addCurve(to: .init(x: w * 0.58, y: 19),
+                       control1: .init(x: w * 0.20, y: -98), control2: .init(x: w * 0.36, y: 47))
+        beach.addCurve(to: .init(x: w + 16, y: -62),
+                       control1: .init(x: w * 0.77, y: -1), control2: .init(x: w * 0.89, y: -82))
         let dune = beach
         beach.addLine(to: .init(x: w + 16, y: h + 2)); beach.addLine(to: .init(x: -16, y: h + 2)); beach.closeSubpath()
         context.fill(beach, with: .linearGradient(Gradient(stops: [
@@ -12755,8 +12941,8 @@ private struct PirateCoastPainter {
         let p = PirateCoastPainter(context: sand)
         for right in [false, true] {
             let x: CGFloat = right ? w - 24 : 22
-            p.shell(at: .init(x: x, y: -71), size: 0.43)
-            p.rock(at: .init(x: x + (right ? -21 : 20), y: -28), size: 0.41)
+            p.shell(at: .init(x: x, y: 39), size: 0.43)
+            p.rock(at: .init(x: x + (right ? -21 : 20), y: 82), size: 0.41)
         }
     }
 

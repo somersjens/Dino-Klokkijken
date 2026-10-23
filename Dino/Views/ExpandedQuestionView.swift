@@ -462,35 +462,43 @@ struct DinoAdvanceDifference: View {
     let minutes: Int
     let language: String
     var prefix = "question"
+    /// Added time sits to the right of the centered arrow. Removed time sits to the left.
+    var subtracting = false
 
     var body: some View {
         let combined = minutes / 60 > 0 && minutes % 60 > 0
         let ink = DinoStyle.deepGreen
-        let duration = "+\(DinoTimeWords.duration(minutes, language: language))"
-        // The arrow stays on the clock center. The duration hangs beside it, so the gap stays short.
-        ZStack {
-            VStack(spacing: -1) {
-                Capsule().fill(ink.opacity(highContrast ? 1 : 0.8)).frame(width: 3, height: 6)
-                Image(systemName: "arrowtriangle.down.fill")
-                    .font(.system(size: 9, weight: .black))
-            }
-            .accessibilityHidden(true)
-            Text(verbatim: duration)
-                .font(.system(size: combined ? 13 : 15, weight: .heavy, design: .rounded))
-                .lineLimit(1)
-                .minimumScaleFactor(0.65)
-                .padding(.horizontal, 9)
-                .padding(.vertical, 3)
-                .background(DinoStyle.green.opacity(highContrast ? 0.45 : 0.28), in: Capsule())
-                .overlay(Capsule().strokeBorder(ink.opacity(highContrast ? 1 : 0.4), lineWidth: highContrast ? 2 : 1.25))
-                .fixedSize()
-                .alignmentGuide(HorizontalAlignment.center) { $0[.leading] - 16 }
+        let duration = "\(subtracting ? "−" : "+")\(DinoTimeWords.duration(minutes, language: language))"
+        // Equal empty halves keep the arrow on the clock center. The label is only an overlay,
+        // so its width cannot pull the arrow sideways.
+        HStack(spacing: 8) {
+            Color.clear.frame(maxWidth: .infinity)
+                .overlay(alignment: .trailing) { if subtracting { durationLabel(duration, combined: combined, ink: ink) } }
+            Image(systemName: "arrow.down")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(ink)
+                .frame(width: 18)
+                .accessibilityHidden(true)
+            Color.clear.frame(maxWidth: .infinity)
+                .overlay(alignment: .leading) { if !subtracting { durationLabel(duration, combined: combined, ink: ink) } }
         }
-        .foregroundStyle(ink)
-        .frame(maxWidth: .infinity)
+        .padding(.vertical, 2)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: duration))
         .accessibilityIdentifier("\(prefix).advance.difference")
+    }
+
+    private func durationLabel(_ duration: String, combined: Bool, ink: Color) -> some View {
+        Text(verbatim: duration)
+            .font(.system(size: combined ? 13 : 15, weight: .heavy, design: .rounded))
+            .lineLimit(1)
+            .minimumScaleFactor(0.65)
+            .foregroundStyle(ink)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 3)
+            .background(DinoStyle.green.opacity(highContrast ? 0.45 : 0.28), in: Capsule())
+            .overlay(Capsule().strokeBorder(ink.opacity(highContrast ? 1 : 0.4), lineWidth: highContrast ? 2 : 1.25))
+            .fixedSize()
     }
 }
 
