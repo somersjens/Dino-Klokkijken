@@ -1,0 +1,99 @@
+Monitoring boot status for Dino Stone Proportions Compact (F19A1B74-35BC-4E5D-BF82-5AFDA8B65C20).
+[2026-10-24 12:59:02 +0000] Status=2, isTerminal=NO, Elapsed=00:01.
+	Waiting on Data Migration
+		Reason:(null)
+		Migration Elapsed:00:00 seconds
+
+[2026-10-24 12:59:03 +0000] Status=2, isTerminal=NO, Elapsed=00:02.
+	Waiting on Data Migration
+		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+		Migration Elapsed:00:01 seconds
+
+[2026-10-24 12:59:04 +0000] Status=2, isTerminal=NO, Elapsed=00:03.
+	Waiting on Data Migration
+		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+		Migration Elapsed:00:02 seconds
+
+[2026-10-24 12:59:05 +0000] Status=2, isTerminal=NO, Elapsed=00:04.
+	Waiting on Data Migration
+		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+		Migration Elapsed:00:03 seconds
+
+[2026-10-24 12:59:06 +0000] Status=2, isTerminal=NO, Elapsed=00:05.
+	Waiting on Data Migration
+		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+		Migration Elapsed:00:04 seconds
+
+[2026-10-24 12:59:07 +0000] Status=2, isTerminal=NO, Elapsed=00:06.
+	Waiting on Data Migration
+		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+		Migration Elapsed:00:05 seconds
+
+[2026-10-24 12:59:08 +0000] Status=2, isTerminal=NO, Elapsed=00:07.
+	Waiting on Data Migration
+		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+		Migration Elapsed:00:06 seconds
+
+[2026-10-24 12:59:09 +0000] Status=2, isTerminal=NO, Elapsed=00:08.
+	Waiting on Data Migration
+		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+		Migration Elapsed:00:07 seconds
+
+[2026-10-24 12:59:10 +0000] Status=2, isTerminal=NO, Elapsed=00:09.
+	Waiting on Data Migration
+		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+		Migration Elapsed:00:08 seconds
+
+[2026-10-24 12:59:11 +0000] Status=2, isTerminal=NO, Elapsed=00:10.
+	Waiting on Data Migration
+		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+		Migration Elapsed:00:09 seconds
+
+[2026-10-24 12:59:12 +0000] Status=2, isTerminal=NO, Elapsed=00:11.
+	Waiting on Data Migration
+		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+		Migration Elapsed:00:10 seconds
+
+[2026-10-24 12:59:13 +0000] Status=2, isTerminal=NO, Elapsed=00:12.
+	Waiting on Data Migration
+		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+		Migration Elapsed:00:11 seconds
+
+[2026-10-24 12:59:15 +0000] Status=2, isTerminal=NO, Elapsed=00:14.
+	Waiting on Data Migration
+		Reason:Running plugin com.apple.managedconfiguration.migrator (MCProfile.migrator, user-agnostic)
+		Migration Elapsed:00:12 seconds
+
+[2026-10-24 12:59:15 +0000] Status=2, isTerminal=NO, Elapsed=00:14.
+	Waiting on Data Migration
+		Reason:Running plugin com.apple.StocksMigrator (StocksMigrator.migrator)
+		Migration Elapsed:00:13 seconds
+
+[2026-10-24 12:59:16 +0000] Status=4, isTerminal=NO, Elapsed=00:15.
+	Waiting on System App
+
+[2026-10-24 12:59:17 +0000] Status=4, isTerminal=NO, Elapsed=00:16.
+	Waiting on System App
+
+[2026-10-24 12:59:18 +0000] Status=4, isTerminal=NO, Elapsed=00:17.
+	Waiting on System App
+
+[2026-10-24 12:59:19 +0000] Status=4294967295, isTerminal=YES, Elapsed=00:18.
+	Finished
+
+Hakketjak.Dino-Klokkijken: 61930
+Detected file type from extension: PNG
+Note: No display specified. Defaulting to display: 5B1BF4A2-779B-4815-B361-9ACC39F99C1A (screenID: 1, name: LCD)
+Wrote screenshot to: /Users/jenssomers/Desktop/Dino Klokkijken/Documentation/Screenshots/ResultStoneProportions/compact/world-06.png
+Hakketjak.Dino-Klokkijken: 62089
+Detected file type from extension: PNG
+Note: No display specified. Defaulting to display: 5B1BF4A2-779B-4815-B361-9ACC39F99C1A (screenID: 1, name: LCD)
+Wrote screenshot to: /Users/jenssomers/Desktop/Dino Klokkijken/Documentation/Screenshots/ResultStoneProportions/compact/world-09.png
+Hakketjak.Dino-Klokkijken: 62178
+Detected file type from extension: PNG
+Note: No display specified. Defaulting to display: 5B1BF4A2-779B-4815-B361-9ACC39F99C1A (screenID: 1, name: LCD)
+Wrote screenshot to: /Users/jenssomers/Desktop/Dino Klokkijken/Documentation/Screenshots/ResultStoneProportions/compact/boss-retry.png
+Hakketjak.Dino-Klokkijken: 63305
+Detected file type from extension: PNG
+Note: No display specified. Defaulting to display: 5B1BF4A2-779B-4815-B361-9ACC39F99C1A (screenID: 1, name: LCD)
+Wrote screenshot to: /Users/jenssomers/Desktop/Dino Klokkijken/Documentation/Screenshots/ResultStoneProportions/compact/world-06.png

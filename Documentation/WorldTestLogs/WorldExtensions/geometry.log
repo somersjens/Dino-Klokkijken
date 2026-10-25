@@ -1,0 +1,14 @@
+320pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+393pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+402pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+600pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+834pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+1194pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+PASS: 1680 native water/riverbank endpoint checks; all banks exit through the sides, with no cross-chapter caps
+320pt: 4 cave-side facades; lower metro: 0.86, 0.55; drain and masonry aligned; intact first roofs
+393pt: 4 cave-side facades; lower metro: 0.86, 0.55, 0.39; drain and masonry aligned; intact first roofs
+402pt: 4 cave-side facades; lower metro: 0.86, 0.55, 0.47; drain and masonry aligned; intact first roofs
+600pt: 4 cave-side facades; lower metro: 0.86, 0.76, 0.86, 0.86; drain and masonry aligned; intact first roofs
+834pt: 4 cave-side facades; lower metro: 0.86, 0.86, 0.86, 0.86; drain and masonry aligned; intact first roofs
+1194pt: 4 cave-side facades; lower metro: 0.86, 0.86, 0.86, 0.86; drain and masonry aligned; intact first roofs
+PASS: 1842 world-extension geometry checks

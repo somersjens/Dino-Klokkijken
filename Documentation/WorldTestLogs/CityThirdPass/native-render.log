@@ -1,0 +1,32 @@
+320pt: track 3555pt; nearest level 67pt; 26 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  56 inner city lots, protected level street: passed
+375pt: track 3752pt; nearest level 80pt; 26 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  56 inner city lots, protected level street: passed
+393pt: track 3820pt; nearest level 84pt; 26 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  56 inner city lots, protected level street: passed
+430pt: track 3957pt; nearest level 91pt; 26 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  56 inner city lots, protected level street: passed
+600pt: track 4508pt; nearest level 87pt; 29 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  56 inner city lots, protected level street: passed
+744pt: track 4643pt; nearest level 88pt; 37 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  56 inner city lots, protected level street: passed
+834pt: track 4729pt; nearest level 89pt; 42 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  56 inner city lots, protected level street: passed
+1024pt: track 4911pt; nearest level 90pt; 50 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  56 inner city lots, protected level street: passed
+1194pt: track 5075pt; nearest level 91pt; 54 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  56 inner city lots, protected level street: passed
+Train: 30 carriages, 932.0pt; cruise 132.5pt/s
+Rendered 320
+Rendered 393
+Rendered 834
+Rendered 1194

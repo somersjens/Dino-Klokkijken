@@ -1,0 +1,19 @@
+PORTAL 320 (-26.099785305416194, 1650.995487795214) FRONTAGE Site(id: 25000, point: (-26.099785305416194, 1700.2262570259834), size: 0.7056410256410256, right: false, kind: main.(unknown context at $104bd69b4).CityUrbanLayout.Kind.boulevard)
+320pt: 84 city plots, 10 cave frontages, 10 park frontages; continuous ramp profiles and complete footings
+PORTAL 375 (-28.040126267085995, 1663.289191069899) FRONTAGE Site(id: 25000, point: (-28.040126267085995, 1720.9814987622067), size: 0.826923076923077, right: false, kind: main.(unknown context at $104bd69b4).CityUrbanLayout.Kind.boulevard)
+375pt: 74 city plots, 10 cave frontages, 10 park frontages; continuous ramp profiles and complete footings
+PORTAL 393 (-29.072486155200544, 1666.4257743961334) FRONTAGE Site(id: 25000, point: (-29.072486155200544, 1726.887312857672), size: 0.8666153846153846, right: false, kind: main.(unknown context at $104bd69b4).CityUrbanLayout.Kind.boulevard)
+393pt: 71 city plots, 10 cave frontages, 10 park frontages; continuous ramp profiles and complete footings
+PORTAL 430 (-30.542612266261877, 1673.7553072428277) FRONTAGE Site(id: 25000, point: (-30.542612266261877, 1739.909153396674), size: 0.9482051282051283, right: false, kind: main.(unknown context at $104bd69b4).CityUrbanLayout.Kind.boulevard)
+430pt: 68 city plots, 10 cave frontages, 10 park frontages; continuous ramp profiles and complete footings
+PORTAL 600 (-32.24215571680627, 1690.9194929094494) FRONTAGE Site(id: 25000, point: (-32.24215571680627, 1768.9194929094494), size: 1.118, right: false, kind: main.(unknown context at $104bd69b4).CityUrbanLayout.Kind.boulevard)
+600pt: 86 city plots, 11 cave frontages, 15 park frontages; continuous ramp profiles and complete footings
+PORTAL 744 (-29.058674850124522, 1691.2101691953924) FRONTAGE Site(id: 25000, point: (-29.058674850124522, 1769.2101691953924), size: 1.118, right: false, kind: main.(unknown context at $104bd69b4).CityUrbanLayout.Kind.boulevard)
+744pt: 130 city plots, 15 cave frontages, 21 park frontages; continuous ramp profiles and complete footings
+PORTAL 834 (-27.916799748172707, 1690.6047807373855) FRONTAGE Site(id: 25000, point: (-27.916799748172707, 1768.6047807373855), size: 1.118, right: false, kind: main.(unknown context at $104bd69b4).CityUrbanLayout.Kind.boulevard)
+834pt: 145 city plots, 17 cave frontages, 21 park frontages; continuous ramp profiles and complete footings
+PORTAL 1024 (-25.292992027298645, 1689.8908550588292) FRONTAGE Site(id: 25000, point: (-25.292992027298645, 1767.8908550588292), size: 1.118, right: false, kind: main.(unknown context at $104bd69b4).CityUrbanLayout.Kind.boulevard)
+1024pt: 193 city plots, 21 cave frontages, 28 park frontages; continuous ramp profiles and complete footings
+PORTAL 1194 (-23.064707489395325, 1689.3839792782187) FRONTAGE Site(id: 25000, point: (-23.064707489395325, 1767.3839792782187), size: 1.118, right: false, kind: main.(unknown context at $104bd69b4).CityUrbanLayout.Kind.boulevard)
+1194pt: 225 city plots, 26 cave frontages, 32 park frontages; continuous ramp profiles and complete footings
+PASS: 169991 city geometry checks

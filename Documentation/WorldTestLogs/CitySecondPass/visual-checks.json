@@ -1,0 +1,16 @@
+{
+  "sha256": {
+    "motion-0.png": "272ef5102824506b510d3bdd5a938316d1864a07503a7ff41e0481d792bcd097",
+    "motion-1.png": "abc3b7daba533c32448d40933a42653d4c586003a74760f8d1e495c5a0a47a96",
+    "motion-2.png": "1a9508c370e857bb5e067d43b9cfabb87bd1a67813cb4fc74ec3ac869ff89c42",
+    "motion-3.png": "e626d6546896806f61fb3cfbbc64a27501398fb6468535e36d8f90dd53b14f77",
+    "reduced-0.png": "96799a9e8e23a5317689d5fe24ab7838cdf4b0821c66c60a17547dba86a59eea",
+    "reduced-1.png": "96799a9e8e23a5317689d5fe24ab7838cdf4b0821c66c60a17547dba86a59eea"
+  },
+  "motionFramesDiffer": true,
+  "reducedMotionFramesMatch": true,
+  "appMotionFramesDiffer": {
+    "iphone": true,
+    "ipad": true
+  }
+}

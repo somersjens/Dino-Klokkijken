@@ -1,0 +1,59 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/DinoCitySeamsDerivedData/Build/Products/CitySeams.xctestrun -destination "platform=iOS Simulator,id=68D41D1D-ABC6-4865-A431-20B1A98D5F80" -destination "platform=iOS Simulator,id=C1584FB3-BC11-404C-9182-8CB3E85B78CD" -resultBundlePath /tmp/CitySeamsVerifiedUI.xcresult -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testCityMetroRouteRemainsPlayable" "-only-testing:DinoUITests/DinoUITests/testWorldBannersHaveBalancedClearance"
+
+Writing result bundle at path:
+	/tmp/CitySeamsVerifiedUI.xcresult
+
+
+Testing on multiple destinations concurrently. Note that it is not possible to run tests in parallel on individual destinations in this mode. Pass -disable-concurrent-destination-testing instead to allow tests to run in parallel on each destination, but have the destinations run serially.Maximum concurrent test device destinations is unlimited. (Adjust this with -maximum-concurrent-test-device-destinations.) Maximum concurrent test simulator destinations is set to 4. (Adjust this with -maximum-concurrent-test-simulator-destinations.)
+
+2026-10-24 19:20:16.489 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:20:16.489 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:20:16.500 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:20:16.500 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:20:20.386 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:20:20.386 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:20:20.460 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:20:20.460 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:20:37.394 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:20:37.394 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:20:38.528 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:20:38.528 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:21:17.201 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:21:17.201 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:21:20.390 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:21:20.390 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:21:21.485 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:21:21.485 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:21:24.873 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:21:24.873 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:21:30.391 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:21:30.391 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:21:35.297 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:21:35.297 xcodebuild[98271:3160535] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:21:40.981 xcodebuild[98271:3160535] [MT] IDETestOperationsObserverDebug: 87.623 elapsed -- Testing started completed.
+2026-10-24 19:21:40.981 xcodebuild[98271:3160535] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-24 19:21:40.981 xcodebuild[98271:3160535] [MT] IDETestOperationsObserverDebug: 87.623 sec, +87.623 sec -- end
+2026-10-24 19:21:46.198 xcodebuild[98271:3160535] [MT] IDETestOperationsObserverDebug: 92.839 elapsed -- Testing started completed.
+2026-10-24 19:21:46.198 xcodebuild[98271:3160535] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-24 19:21:46.198 xcodebuild[98271:3160535] [MT] IDETestOperationsObserverDebug: 92.839 sec, +92.839 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/CitySeamsVerifiedUI.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
+Testing started
+Test suite 'Selected tests' started on 'Dino City Seam Check Phone - DinoUITests-Runner (98288)'
+Test suite 'Selected tests' started on 'Dino City Seam Check Pad - DinoUITests-Runner (98289)'
+Test suite 'DinoUITests.xctest' started on 'Dino City Seam Check Pad - DinoUITests-Runner (98289)'
+Test suite 'DinoUITests.xctest' started on 'Dino City Seam Check Phone - DinoUITests-Runner (98288)'
+Test suite 'DinoUITests' started on 'Dino City Seam Check Pad - DinoUITests-Runner (98289)'
+Test suite 'DinoUITests' started on 'Dino City Seam Check Phone - DinoUITests-Runner (98288)'
+Test case 'DinoUITests.testCityMetroRouteRemainsPlayable()' passed on 'Dino City Seam Check Phone - DinoUITests-Runner (98288)' (59.804 seconds)
+Test case 'DinoUITests.testCityMetroRouteRemainsPlayable()' passed on 'Dino City Seam Check Pad - DinoUITests-Runner (98289)' (64.112 seconds)
+Test case 'DinoUITests.testWorldBannersHaveBalancedClearance()' passed on 'Dino City Seam Check Phone - DinoUITests-Runner (98288)' (24.539 seconds)
+Testing passed on 'Dino City Seam Check Phone'
+Test case 'DinoUITests.testWorldBannersHaveBalancedClearance()' passed on 'Dino City Seam Check Pad - DinoUITests-Runner (98289)' (25.475 seconds)
+Testing passed on 'Dino City Seam Check Pad'

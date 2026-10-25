@@ -1,0 +1,129 @@
+320pt: both jetty landings dry (32 samples)
+320pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+375pt: both jetty landings dry (32 samples)
+375pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+393pt: both jetty landings dry (32 samples)
+393pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+402pt: both jetty landings dry (32 samples)
+402pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+430pt: both jetty landings dry (32 samples)
+430pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+600pt: both jetty landings dry (32 samples)
+600pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+744pt: both jetty landings dry (32 samples)
+744pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+834pt: both jetty landings dry (32 samples)
+834pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+1024pt: both jetty landings dry (32 samples)
+1024pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+1194pt: both jetty landings dry (32 samples)
+1194pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+Total geometry samples: 25520
+prepared 320: left=[5, 0, 5, 0, 5, 0, 5, 0, 5], right=[5, 0, 5, 0, 5, 0, 5, 0, 5]
+320pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+Track preparation seconds: 0.49105703830718994
+Wide passes 0, greatest offset 41.96957697301781
+Rendered mask check: 3 close passes, largest overlap 0.0 square points
+320pt: closest personal-space ratio 0.5931089506539912, biggest 0.13sec step 23.92143897846519pt
+Missing rests: [13, 74, 11, 32, 73, 55, 52, 54, 15, 70, 34, 30, 12, 35, 71, 50, 14, 53, 75, 72, 31, 33, 10, 51], missing flights: [], missing crossings: []
+320pt: residents rest; all gulls fly and cross between stones; 650 poses checked
+prepared 375: left=[5, 0, 5, 0, 5, 0, 5, 0, 5], right=[5, 0, 5, 0, 5, 0, 5, 0, 5]
+375pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+Track preparation seconds: 0.4823800325393677
+WIDE PASS width375.0 id44 t2.21 point(115.54021652192614, 941.7419717969746) midY867.5
+WIDE PASS width375.0 id44 t2.34 point(119.51729263716783, 927.9837825068361) midY867.5
+WIDE PASS width375.0 id2 t8.06 point(116.76567699919472, 275.72155178062445) midY167.5
+Wide passes 39, greatest offset 108.22219824869893
+Rendered mask check: 3 close passes, largest overlap 0.0 square points
+375pt: closest personal-space ratio 0.3138156068981746, biggest 0.13sec step 23.017038169326877pt
+Missing rests: [10, 74, 11, 15, 55, 73, 34, 70, 54, 30, 13, 52, 12, 35, 71, 50, 14, 53, 75, 31, 72, 33, 51, 32], missing flights: [], missing crossings: []
+375pt: residents rest; all gulls fly and cross between stones; 650 poses checked
+prepared 393: left=[5, 0, 5, 0, 5, 0, 5, 0, 5], right=[5, 0, 5, 0, 5, 0, 5, 0, 5]
+393pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+Track preparation seconds: 1.1405819654464722
+WIDE PASS width393.0 id2 t8.06 point(125.7110154078132, 279.5871629772297) midY167.5
+WIDE PASS width393.0 id2 t8.19 point(125.71324915078121, 279.5860301564517) midY167.5
+WIDE PASS width393.0 id2 t8.32 point(125.71376326504681, 279.585769224192) midY167.5
+Wide passes 71, greatest offset 159.0330371496916
+Rendered mask check: 2 close passes, largest overlap 0.0 square points
+393pt: closest personal-space ratio 0.559401206214601, biggest 0.13sec step 24.449582813974114pt
+Missing rests: [10, 74, 11, 15, 55, 73, 34, 70, 54, 30, 13, 52, 12, 35, 71, 50, 14, 53, 75, 31, 72, 33, 51, 32], missing flights: [], missing crossings: []
+393pt: residents rest; all gulls fly and cross between stones; 650 poses checked
+prepared 402: left=[5, 0, 5, 0, 5, 0, 5, 0, 5], right=[5, 0, 5, 0, 5, 0, 5, 0, 5]
+402pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+Track preparation seconds: 0.5848109722137451
+WIDE PASS width402.0 id2 t8.06 point(130.21087830321224, 281.401209426736) midY167.5
+WIDE PASS width402.0 id2 t8.19 point(130.21285929231163, 281.4001105578218) midY167.5
+WIDE PASS width402.0 id2 t8.32 point(130.21330142887732, 281.3998651259265) midY167.5
+Wide passes 49, greatest offset 113.90184294620343
+Rendered mask check: 2 close passes, largest overlap 0.0 square points
+402pt: closest personal-space ratio 0.5717144468584124, biggest 0.13sec step 22.911280551114533pt
+Missing rests: [10, 74, 11, 15, 55, 73, 34, 70, 54, 30, 13, 52, 12, 35, 71, 50, 14, 53, 75, 31, 72, 33, 51, 32], missing flights: [], missing crossings: []
+402pt: residents rest; all gulls fly and cross between stones; 650 poses checked
+prepared 430: left=[5, 0, 5, 0, 5, 0, 5, 0, 5], right=[5, 0, 5, 0, 5, 0, 5, 0, 5]
+430pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+Track preparation seconds: 0.3390920162200928
+WIDE PASS width430.0 id54 t14.690000000000001 point(225.42292820192114, 1105.9366803399853) midY1042.5
+WIDE PASS width430.0 id54 t14.82 point(230.87036044293643, 1107.601207253183) midY1042.5
+WIDE PASS width430.0 id54 t14.950000000000001 point(230.14036409788193, 1109.2053474716238) midY1042.5
+Wide passes 54, greatest offset 160.32104160561767
+Rendered mask check: 2 close passes, largest overlap 0.0 square points
+430pt: closest personal-space ratio 0.5651741980434499, biggest 0.13sec step 21.444474872902056pt
+Missing rests: [10, 74, 11, 15, 55, 73, 34, 70, 54, 30, 13, 52, 12, 35, 71, 50, 14, 53, 75, 31, 72, 33, 51, 32], missing flights: [], missing crossings: []
+430pt: residents rest; all gulls fly and cross between stones; 650 poses checked
+prepared 600: left=[5, 0, 5, 0, 5, 0, 5, 0, 5], right=[5, 0, 5, 0, 5, 0, 5, 0, 5]
+600pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+Track preparation seconds: 0.5368289947509766
+WIDE PASS width600.0 id41 t5.07 point(221.0076226718982, 939.1814643072331) midY867.5
+WIDE PASS width600.0 id41 t5.2 point(220.74770600850863, 940.5914931122229) midY867.5
+WIDE PASS width600.0 id41 t5.33 point(220.58450427028293, 941.4470575235808) midY867.5
+Wide passes 16, greatest offset 166.42466856365894
+Rendered mask check: 1 close passes, largest overlap 0.0 square points
+600pt: closest personal-space ratio 0.8775797030138407, biggest 0.13sec step 22.640768357645285pt
+Missing rests: [10, 74, 11, 15, 55, 73, 34, 70, 54, 30, 13, 52, 12, 35, 71, 50, 14, 53, 75, 31, 72, 33, 51, 32], missing flights: [], missing crossings: []
+600pt: residents rest; all gulls fly and cross between stones; 650 poses checked
+prepared 744: left=[5, 0, 5, 0, 5, 0, 5, 0, 5], right=[5, 0, 5, 0, 5, 0, 5, 0, 5]
+744pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+Track preparation seconds: 0.5110490322113037
+WIDE PASS width744.0 id1 t13.0 point(277.3321361576116, 246.3578649865873) midY167.5
+WIDE PASS width744.0 id1 t13.13 point(280.7554329709615, 239.9809323819541) midY167.5
+WIDE PASS width744.0 id63 t38.870000000000005 point(449.5912274867863, 1289.6882029435976) midY1217.5
+Wide passes 22, greatest offset 168.5841198270815
+Rendered mask check: 2 close passes, largest overlap 0.0 square points
+744pt: closest personal-space ratio 0.3022945405576515, biggest 0.13sec step 21.70467107230969pt
+Missing rests: [10, 74, 11, 15, 55, 73, 34, 70, 54, 30, 13, 52, 12, 35, 71, 50, 14, 53, 75, 31, 72, 33, 51, 32], missing flights: [], missing crossings: []
+744pt: residents rest; all gulls fly and cross between stones; 650 poses checked
+prepared 834: left=[5, 0, 5, 0, 5, 0, 5, 0, 5], right=[5, 0, 5, 0, 5, 0, 5, 0, 5]
+834pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+Track preparation seconds: 0.5015909671783447
+WIDE PASS width834.0 id1 t13.0 point(322.332136157613, 246.35786498658823) midY167.5
+WIDE PASS width834.0 id1 t13.13 point(325.75543297096266, 239.98093238195506) midY167.5
+WIDE PASS width834.0 id63 t39.39 point(494.6105406297121, 1289.7721130392129) midY1217.5
+Wide passes 24, greatest offset 168.30880877492783
+Rendered mask check: 1 close passes, largest overlap 0.0 square points
+834pt: closest personal-space ratio 0.3041203692271013, biggest 0.13sec step 22.721209424783776pt
+Missing rests: [10, 74, 11, 15, 55, 73, 34, 70, 54, 30, 13, 52, 12, 35, 71, 50, 14, 53, 75, 31, 72, 33, 51, 32], missing flights: [], missing crossings: []
+834pt: residents rest; all gulls fly and cross between stones; 650 poses checked
+prepared 1024: left=[5, 0, 5, 0, 5, 0, 5, 0, 5], right=[5, 0, 5, 0, 5, 0, 5, 0, 5]
+1024pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+Track preparation seconds: 0.5509330034255981
+WIDE PASS width1024.0 id1 t13.0 point(417.332136157616, 246.35786498659027) midY167.5
+WIDE PASS width1024.0 id1 t13.13 point(420.75543297096493, 239.98093238195736) midY167.5
+WIDE PASS width1024.0 id63 t40.82 point(589.6205648737679, 1289.4347002917477) midY1217.5
+Wide passes 20, greatest offset 166.67900395848514
+Rendered mask check: 4 close passes, largest overlap 0.0 square points
+1024pt: closest personal-space ratio 0.30716841621588176, biggest 0.13sec step 21.704671072309722pt
+Missing rests: [10, 74, 11, 15, 55, 73, 34, 70, 54, 30, 13, 52, 12, 35, 71, 50, 14, 53, 75, 31, 72, 33, 51, 32], missing flights: [], missing crossings: []
+1024pt: residents rest; all gulls fly and cross between stones; 650 poses checked
+prepared 1194: left=[5, 0, 5, 0, 5, 0, 5, 0, 5], right=[5, 0, 5, 0, 5, 0, 5, 0, 5]
+1194pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+Track preparation seconds: 0.4991800785064697
+WIDE PASS width1194.0 id1 t13.0 point(502.33213615761645, 246.35786498659044) midY167.5
+WIDE PASS width1194.0 id1 t13.13 point(505.7554329709653, 239.98093238195744) midY167.5
+WIDE PASS width1194.0 id63 t41.21 point(679.6606057391372, 1289.8223825738016) midY1217.5
+Wide passes 24, greatest offset 162.45309585095987
+Rendered mask check: 3 close passes, largest overlap 0.0 square points
+1194pt: closest personal-space ratio 0.309240743398843, biggest 0.13sec step 21.704671072309726pt
+Missing rests: [10, 74, 11, 15, 55, 73, 34, 70, 54, 30, 13, 52, 12, 35, 71, 50, 14, 53, 75, 31, 72, 33, 51, 32], missing flights: [], missing crossings: []
+1194pt: residents rest; all gulls fly and cross between stones; 650 poses checked
+Bird extent samples: 2086810; moving hull samples: 74240

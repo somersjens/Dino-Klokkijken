@@ -1,0 +1,50 @@
+320pt: track 3555pt; nearest level 67pt; 12 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 49
+  49 inner lots; 19 extra arrival/exit plots: railway and road clear
+  Bore hides complete carriages and sparks; robot court clear: passed
+375pt: track 3752pt; nearest level 80pt; 12 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 47
+  47 inner lots; 19 extra arrival/exit plots: railway and road clear
+  Bore hides complete carriages and sparks; robot court clear: passed
+393pt: track 3820pt; nearest level 84pt; 12 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 47
+  47 inner lots; 20 extra arrival/exit plots: railway and road clear
+  Bore hides complete carriages and sparks; robot court clear: passed
+430pt: track 3957pt; nearest level 91pt; 12 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 46
+  46 inner lots; 19 extra arrival/exit plots: railway and road clear
+  Bore hides complete carriages and sparks; robot court clear: passed
+600pt: track 4508pt; nearest level 87pt; 13 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 46
+  46 inner lots; 21 extra arrival/exit plots: railway and road clear
+  Bore hides complete carriages and sparks; robot court clear: passed
+744pt: track 4643pt; nearest level 88pt; 29 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 55
+  55 inner lots; 26 extra arrival/exit plots: railway and road clear
+  Bore hides complete carriages and sparks; robot court clear: passed
+834pt: track 4729pt; nearest level 89pt; 33 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 55
+  55 inner lots; 27 extra arrival/exit plots: railway and road clear
+  Bore hides complete carriages and sparks; robot court clear: passed
+1024pt: track 4911pt; nearest level 90pt; 46 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 55
+  55 inner lots; 27 extra arrival/exit plots: railway and road clear
+  Bore hides complete carriages and sparks; robot court clear: passed
+1194pt: track 5075pt; nearest level 91pt; 50 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 55
+  55 inner lots; 27 extra arrival/exit plots: railway and road clear
+  Bore hides complete carriages and sparks; robot court clear: passed
+Train: 30 carriages, 932.0pt; cruise 132.5pt/s
+Rendered 320
+Rendered 393
+Rendered 834
+Rendered 1194

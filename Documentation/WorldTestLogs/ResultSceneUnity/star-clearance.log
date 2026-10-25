@@ -1,0 +1,6 @@
+Conservatieve vierkante sterkaders inclusief draaiing en springovershoot.
+Demping 0.62, maximale overshoot 0.08353.
+Ster 1: 14.89 eenheden minimale marge over het volledige onthullingsbereik.
+Ster 2: 17.31 eenheden minimale marge over het volledige onthullingsbereik.
+Ster 3: 14.89 eenheden minimale marge over het volledige onthullingsbereik.
+PASS: alle drie sterkaders blijven binnen het display.

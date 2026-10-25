@@ -1,0 +1,68 @@
+320pt: track 3462pt; nearest level 58pt; 13 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 47
+  47 inner lots; 18 extra arrival/exit plots: railway and road clear
+  Previous maximum segment jump: 20.74768429275162 degrees
+  Max wagon turn per 0.5pt: 0.3542136929484025 degrees; local continuity 0.014168760058276473
+  Bore hides complete carriages and sparks; robot court clear: passed
+375pt: track 3633pt; nearest level 69pt; 13 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 47
+  47 inner lots; 17 extra arrival/exit plots: railway and road clear
+  Previous maximum segment jump: 24.288600740988446 degrees
+  Max wagon turn per 0.5pt: 0.324697703509398 degrees; local continuity 0.012987824056811531
+  Bore hides complete carriages and sparks; robot court clear: passed
+393pt: track 3690pt; nearest level 71pt; 13 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 46
+  46 inner lots; 20 extra arrival/exit plots: railway and road clear
+  Previous maximum segment jump: 25.407838869961417 degrees
+  Max wagon turn per 0.5pt: 0.32043662794311845 degrees; local continuity 0.012817093119217162
+  Bore hides complete carriages and sparks; robot court clear: passed
+430pt: track 3810pt; nearest level 75pt; 13 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 45
+  45 inner lots; 20 extra arrival/exit plots: railway and road clear
+  Previous maximum segment jump: 27.658347592386743 degrees
+  Max wagon turn per 0.5pt: 0.3811060344512452 degrees; local continuity 0.015244664319565329
+  Bore hides complete carriages and sparks; robot court clear: passed
+600pt: track 4313pt; nearest level 70pt; 14 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 45
+  45 inner lots; 24 extra arrival/exit plots: railway and road clear
+  Previous maximum segment jump: 36.88224895931226 degrees
+  Max wagon turn per 0.5pt: 0.5414959385171341 degrees; local continuity 0.021668892696158813
+  Bore hides complete carriages and sparks; robot court clear: passed
+744pt: track 4449pt; nearest level 70pt; 29 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 55
+  55 inner lots; 29 extra arrival/exit plots: railway and road clear
+  Previous maximum segment jump: 36.88224895931167 degrees
+  Max wagon turn per 0.5pt: 0.5357292921403717 degrees; local continuity 0.02143314964798916
+  Bore hides complete carriages and sparks; robot court clear: passed
+834pt: track 4534pt; nearest level 70pt; 33 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 55
+  55 inner lots; 31 extra arrival/exit plots: railway and road clear
+  Previous maximum segment jump: 36.88224895931284 degrees
+  Max wagon turn per 0.5pt: 0.5326180858434516 degrees; local continuity 0.021304903657239152
+  Bore hides complete carriages and sparks; robot court clear: passed
+1024pt: track 4717pt; nearest level 70pt; 46 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 55
+  55 inner lots; 31 extra arrival/exit plots: railway and road clear
+  Previous maximum segment jump: 36.88224895931284 degrees
+  Max wagon turn per 0.5pt: 0.535503417123827 degrees; local continuity 0.021419886791479555
+  Bore hides complete carriages and sparks; robot court clear: passed
+1194pt: track 4881pt; nearest level 70pt; 50 complete city silhouettes
+  Speed limit, two station stops, offscreen reset: passed
+  Occupied inner lots: 55
+  55 inner lots; 31 extra arrival/exit plots: railway and road clear
+  Previous maximum segment jump: 36.88224895931141 degrees
+  Max wagon turn per 0.5pt: 0.5325493516465736 degrees; local continuity 0.021300368322263903
+  Bore hides complete carriages and sparks; robot court clear: passed
+Train: 30 carriages, 932.0pt; cruise 132.5pt/s
+Rendered 320
+Rendered 393
+Rendered 834
+Rendered 1194

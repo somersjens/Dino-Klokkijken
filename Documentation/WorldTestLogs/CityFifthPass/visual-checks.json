@@ -1,0 +1,344 @@
+{
+  "city_source_sha256": "38949a97fcf53561f893251bc1ef4f394e0e541e4a0800ed117de02a6bb3ccb9",
+  "native_source_sha256": "5fa90f6e164880255232a10b9837afa629986ee1db05c46046399c42a3171d46",
+  "geometry_widths": [
+    320,
+    375,
+    393,
+    430,
+    600,
+    744,
+    834,
+    1024,
+    1194
+  ],
+  "tunnel_depth_before_scale": 58,
+  "underground_bore_length_before_scale": 270,
+  "animation_minimum_interval": "1/60 seconds",
+  "motion_frames": 121,
+  "motion_frame_rate": 30,
+  "motion_note": "Native fixed-time renderer; ordinary numbered circles replace app level artwork. Background and foreground are cached, moving train uses the same carriage poses, couplings, depth shading and clipping as the app.",
+  "ui_tests": {
+    "iPhone 17": "passed",
+    "iPad Pro 11-inch M5": "passed"
+  },
+  "visual_inspection": [
+    "excavation and embedded portals",
+    "entry and emergence sequence",
+    "bogie orientation and bellows",
+    "actual app lower city on phone and tablet"
+  ],
+  "images": {
+    "cab-0.png": {
+      "size": [
+        390,
+        390
+      ],
+      "sha256": "14db0fa19d6afad9c34ee814c84a2d8e4db27a23b9ee29aa08470f31a82cb1f2"
+    },
+    "cab-1.png": {
+      "size": [
+        390,
+        390
+      ],
+      "sha256": "899b911b5b67c8a57dbd4612d5a4bdbd78c06e49472e18c06e2f5d1a83debe40"
+    },
+    "cab-2.png": {
+      "size": [
+        390,
+        390
+      ],
+      "sha256": "b381ed6883509bbf5fefbab85796c30fc9bca1bdf98f7e9abf8c90206efbbfa1"
+    },
+    "cab-3.png": {
+      "size": [
+        390,
+        390
+      ],
+      "sha256": "9620599323bb533310a6c31e464a72b45daed19836e742f6f0f8d553a679d4b3"
+    },
+    "city-metro-entrance-ipad.png": {
+      "size": [
+        1668,
+        2420
+      ],
+      "sha256": "3b96985bedf1dc0a45a8655e3f11100d901ef59299206b2ff50a5f26f2b5788e"
+    },
+    "city-metro-entrance-iphone.png": {
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "23cb5634dfdb8ce34c3b3eceee8ad2fcf8b3495cc957699f88fbee400f5ba00b"
+    },
+    "city-metro-level-51-ipad.png": {
+      "size": [
+        1668,
+        2420
+      ],
+      "sha256": "1e02c65a39e33cb26691177831476a1c6f2a499ac2e83db04874132db4ef97c6"
+    },
+    "city-metro-level-51-iphone.png": {
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "8623007fdb3f88818f2a887948046c5f75bab01df8ed45315f8303b87f3f2929"
+    },
+    "city-metro-route-54-ipad.png": {
+      "size": [
+        1668,
+        2420
+      ],
+      "sha256": "4415d2456e3313cbd68409be1ceae91f0ef5d56aa4d58ff5ec8d595f1d1b6e8f"
+    },
+    "city-metro-route-54-iphone.png": {
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "684782ffd4ebbd1b345b5db9f62e13254101493d29f36615418cf120523f6b60"
+    },
+    "city-metro-route-54-motion-ipad.png": {
+      "size": [
+        1668,
+        2420
+      ],
+      "sha256": "baac03522df15733f91bcf02a8bd00e7bcbfe40b8bb845c1fe8c2458f6b986d0"
+    },
+    "city-metro-route-54-motion-iphone.png": {
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "29a1d5352eebe8786684aff546b866ff613193931879136387ccb21e92484f1e"
+    },
+    "city-metro-route-57-ipad.png": {
+      "size": [
+        1668,
+        2420
+      ],
+      "sha256": "d0ac251f20fcabe05c4a236bcb348ca5bcc31a29eb17dfbdc999bb2a47410a25"
+    },
+    "city-metro-route-57-iphone.png": {
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "01f6d19ace4df45204e08b55b94bfc322488ecab04b4b96d837f883da255f6d7"
+    },
+    "city-metro-route-60-ipad.png": {
+      "size": [
+        1668,
+        2420
+      ],
+      "sha256": "546c33ef8544c5303633c10f12f5245267e11e1e84da9f69f8752381a1059ac2"
+    },
+    "city-metro-route-60-iphone.png": {
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "b9224582afb8f0519b93d57b3cd6c370f00328630fa706565fe0cbc272bb3f8c"
+    },
+    "city-metro-tunnel-motion-ipad.png": {
+      "size": [
+        1668,
+        2420
+      ],
+      "sha256": "7a302c361b19adba729018a2bdb4ff24155bba930eb4119375792c0f345725ad"
+    },
+    "city-metro-tunnel-motion-iphone.png": {
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "55b822b6ba7fdf9945be080dfa0e3c7de745c133fa517dfea84db5a33b011789"
+    },
+    "motion-0.png": {
+      "size": [
+        393,
+        2090
+      ],
+      "sha256": "1cb4ee58082b462032ab664c89a456f78d9925e5cbf414fccd4b31279b5fa20c"
+    },
+    "motion-1.png": {
+      "size": [
+        393,
+        2090
+      ],
+      "sha256": "710c89736a3fdf0429ba830157c982cd544c110887db3f0bc86cdcf8556ad731"
+    },
+    "motion-2.png": {
+      "size": [
+        393,
+        2090
+      ],
+      "sha256": "26913fdd149f2af7087973c78a4c6d79cfa1d1ecb87c94a83387a4c391cc3ab5"
+    },
+    "motion-3.png": {
+      "size": [
+        393,
+        2090
+      ],
+      "sha256": "ea0c049db5323d2bc532629c28490dfa116759a086143889b5eb4454f55c51d6"
+    },
+    "native-1194.png": {
+      "size": [
+        1791,
+        3338
+      ],
+      "sha256": "dcd918002e998fa3cf513d86fb11b98c3b0236a605ba286f4437b4e9a555f779"
+    },
+    "native-320.png": {
+      "size": [
+        480,
+        3053
+      ],
+      "sha256": "a2488bd353b6d2af61ce12cd7c7d2227fcd2c5cd287c3abb9c231b594260c874"
+    },
+    "native-393.png": {
+      "size": [
+        590,
+        3134
+      ],
+      "sha256": "44fc9be271007d4116a6092787a657d5d9e24a0577a2003514924194ec29fff6"
+    },
+    "native-834.png": {
+      "size": [
+        1251,
+        3338
+      ],
+      "sha256": "0393d20440d26d49c0baa5f1d7b482d3fb5da0f778a9a4ea0469d788dd62dc39"
+    },
+    "reduced-0.png": {
+      "size": [
+        393,
+        2090
+      ],
+      "sha256": "41aeaa9c297c3ab79fd8774feaa982cdcee109b948f1b0c4a701b34433bee0a9"
+    },
+    "reduced-1.png": {
+      "size": [
+        393,
+        2090
+      ],
+      "sha256": "41aeaa9c297c3ab79fd8774feaa982cdcee109b948f1b0c4a701b34433bee0a9"
+    },
+    "tunnel-320-0.png": {
+      "size": [
+        480,
+        3053
+      ],
+      "sha256": "766a57dc94ca53705bfc57e2eca5262ba304ce8708b3c392179ea94841d18b09"
+    },
+    "tunnel-320-1.png": {
+      "size": [
+        480,
+        3053
+      ],
+      "sha256": "d46c224f7f20facfc99f7cf5bc3d0c0fd2e8e0e9e74ab9c78bc30974196726ec"
+    },
+    "tunnel-320-2.png": {
+      "size": [
+        480,
+        3053
+      ],
+      "sha256": "14e8b5973eaf481c59e8c97028e4b3ebd5c2b554e1ae546fd327cf074d6a7db5"
+    },
+    "tunnel-393-0.png": {
+      "size": [
+        590,
+        3134
+      ],
+      "sha256": "4c9258de6be8f64712263f0945038d5e0104a449286d0ee374ecf9eab1de1bb4"
+    },
+    "tunnel-393-1.png": {
+      "size": [
+        590,
+        3134
+      ],
+      "sha256": "aa83d3a9143ff1bae8cf785fb50d12deae608784b10d5031ae000b29be2285c0"
+    },
+    "tunnel-393-2.png": {
+      "size": [
+        590,
+        3134
+      ],
+      "sha256": "fdc88549c727d1170aacfffcbd191655eab9a7f9a5569feec77db0ab83f360fe"
+    },
+    "tunnel-834-0.png": {
+      "size": [
+        1251,
+        3338
+      ],
+      "sha256": "10e61ce5af71f4db78dfa112219b4f1ef11b1179af05e91ac8b4fd39e4065eaf"
+    },
+    "tunnel-834-1.png": {
+      "size": [
+        1251,
+        3338
+      ],
+      "sha256": "674c7b566d28f56daf50f987a82580459a068e7cd31d485e5dc57b8e535a0846"
+    },
+    "tunnel-834-2.png": {
+      "size": [
+        1251,
+        3338
+      ],
+      "sha256": "e6d4818f9e30cda6b0694f6575ea16d7ae8bdffde277d60117b3231e62a12544"
+    }
+  },
+  "previous_segment_jump_degrees": [
+    20.74768429275162,
+    24.288600740988446,
+    25.407838869961417,
+    27.658347592386743,
+    36.88224895931226,
+    36.88224895931167,
+    36.88224895931284,
+    36.88224895931284,
+    36.88224895931141
+  ],
+  "wagon_turn_per_half_scaled_point_degrees": [
+    0.3542136929484025,
+    0.324697703509398,
+    0.32043662794311845,
+    0.3811060344512452,
+    0.5414959385171341,
+    0.5357292921403717,
+    0.5326180858434516,
+    0.535503417123827,
+    0.5325493516465736
+  ],
+  "local_heading_change_degrees": [
+    0.014168760058276473,
+    0.012987824056811531,
+    0.012817093119217162,
+    0.015244664319565329,
+    0.021668892696158813,
+    0.02143314964798916,
+    0.021304903657239152,
+    0.021419886791479555,
+    0.021300368322263903
+  ],
+  "reduced_motion": {
+    "changed_bounds": null
+  },
+  "normal_motion": {
+    "changed_bounds": [
+      0,
+      335,
+      184,
+      1757
+    ]
+  },
+  "gif": {
+    "size": [
+      590,
+      773
+    ],
+    "frames": 121,
+    "bytes": 2904882
+  }
+}

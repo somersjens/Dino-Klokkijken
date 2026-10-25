@@ -1,0 +1,41 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/DinoTerrainFinishDerivedData/Build/Products/VillageQuayFinal.xctestrun -destination "platform=iOS Simulator,id=C52CEAA1-9B58-4446-9A39-93DBC1FA3B1F" -destination "platform=iOS Simulator,id=CD5048F9-F217-4BE9-8A78-37A684D8710B" -resultBundlePath /tmp/VillageQuayDeliveredUI.xcresult -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testWorldBannersHaveBalancedClearance"
+
+Writing result bundle at path:
+	/tmp/VillageQuayDeliveredUI.xcresult
+
+
+Testing on multiple destinations concurrently. Note that it is not possible to run tests in parallel on individual destinations in this mode. Pass -disable-concurrent-destination-testing instead to allow tests to run in parallel on each destination, but have the destinations run serially.Maximum concurrent test device destinations is unlimited. (Adjust this with -maximum-concurrent-test-device-destinations.) Maximum concurrent test simulator destinations is set to 4. (Adjust this with -maximum-concurrent-test-simulator-destinations.)
+
+2026-10-23 20:04:01.418 xcodebuild[30275:526012] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 20:04:01.418 xcodebuild[30275:526012] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-23 20:04:05.131 xcodebuild[30275:526012] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 20:04:05.131 xcodebuild[30275:526012] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-23 20:04:08.039 xcodebuild[30275:526012] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 20:04:08.039 xcodebuild[30275:526012] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-23 20:04:11.947 xcodebuild[30275:526012] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 20:04:11.947 xcodebuild[30275:526012] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-23 20:04:13.112 xcodebuild[30275:526012] [MT] IDETestOperationsObserverDebug: 12.879 elapsed -- Testing started completed.
+2026-10-23 20:04:13.112 xcodebuild[30275:526012] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-23 20:04:13.112 xcodebuild[30275:526012] [MT] IDETestOperationsObserverDebug: 12.879 sec, +12.879 sec -- end
+2026-10-23 20:04:19.687 xcodebuild[30275:526012] [MT] IDETestOperationsObserverDebug: 19.453 elapsed -- Testing started completed.
+2026-10-23 20:04:19.687 xcodebuild[30275:526012] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-23 20:04:19.687 xcodebuild[30275:526012] [MT] IDETestOperationsObserverDebug: 19.453 sec, +19.453 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/VillageQuayDeliveredUI.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
+Testing started
+Test suite 'Selected tests' started on 'iPhone 17 - DinoUITests-Runner (30287)'
+Test suite 'DinoUITests.xctest' started on 'iPhone 17 - DinoUITests-Runner (30287)'
+Test suite 'DinoUITests' started on 'iPhone 17 - DinoUITests-Runner (30287)'
+Test suite 'Selected tests' started on 'iPad Pro 11-inch (M5) - DinoUITests-Runner (30535)'
+Test suite 'DinoUITests.xctest' started on 'iPad Pro 11-inch (M5) - DinoUITests-Runner (30535)'
+Test suite 'DinoUITests' started on 'iPad Pro 11-inch (M5) - DinoUITests-Runner (30535)'
+Test case 'DinoUITests.testWorldBannersHaveBalancedClearance()' passed on 'iPhone 17 - DinoUITests-Runner (30287)' (11.401 seconds)
+Testing passed on 'iPhone 17'
+Test case 'DinoUITests.testWorldBannersHaveBalancedClearance()' passed on 'iPad Pro 11-inch (M5) - DinoUITests-Runner (30535)' (11.501 seconds)
+Testing passed on 'iPad Pro 11-inch (M5)'

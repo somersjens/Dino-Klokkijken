@@ -1,0 +1,56 @@
+320pt: both jetty landings dry (32 samples)
+320pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+375pt: both jetty landings dry (32 samples)
+375pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+393pt: both jetty landings dry (32 samples)
+393pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+402pt: both jetty landings dry (32 samples)
+402pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+430pt: both jetty landings dry (32 samples)
+430pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+600pt: both jetty landings dry (32 samples)
+600pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+744pt: both jetty landings dry (32 samples)
+744pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+834pt: both jetty landings dry (32 samples)
+834pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+1024pt: both jetty landings dry (32 samples)
+1024pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+1194pt: both jetty landings dry (32 samples)
+1194pt: 2 ships; 1872 hull samples entirely in water; 648 treasure-to-mainland samples dry
+Total geometry samples: 25520
+prepared 320: left=[5, 6, 5, 6, 5, 6, 5, 6, 5], right=[5, 6, 5, 6, 5, 6, 5, 6, 5]
+320pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+320pt: every gull rests, flies and crosses between stones; 500 poses checked
+prepared 375: left=[5, 6, 5, 6, 5, 6, 5, 6, 5], right=[5, 6, 5, 6, 5, 6, 5, 6, 5]
+375pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+375pt: every gull rests, flies and crosses between stones; 500 poses checked
+prepared 393: left=[5, 6, 5, 6, 5, 6, 5, 6, 5], right=[5, 6, 5, 6, 5, 6, 5, 6, 5]
+393pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+393pt: every gull rests, flies and crosses between stones; 500 poses checked
+prepared 402: left=[5, 6, 5, 6, 5, 6, 5, 6, 5], right=[5, 6, 5, 6, 5, 6, 5, 6, 5]
+402pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+402pt: every gull rests, flies and crosses between stones; 500 poses checked
+prepared 430: left=[5, 6, 5, 6, 5, 6, 5, 6, 5], right=[5, 6, 5, 6, 5, 6, 5, 6, 5]
+430pt: 49 gulls, landings: [5, 6, 5, 6, 5, 6, 5, 6, 5]
+430pt: every gull rests, flies and crosses between stones; 500 poses checked
+prepared 600: left=[5, 6, 5, 6, 5, 4, 5, 6, 3], right=[5, 6, 5, 6, 5, 6, 5, 6, 5]
+600pt: 45 gulls, landings: [5, 6, 5, 6, 5, 4, 5, 6, 3]
+600pt: every gull rests, flies and crosses between stones; 500 poses checked
+prepared 744: left=[5, 6, 5, 6, 5, 4, 5, 6, 3], right=[5, 6, 5, 6, 5, 6, 5, 6, 5]
+744pt: 45 gulls, landings: [5, 6, 5, 6, 5, 4, 5, 6, 3]
+744pt: every gull rests, flies and crosses between stones; 500 poses checked
+prepared 834: left=[5, 6, 5, 6, 5, 4, 5, 6, 3], right=[5, 6, 5, 6, 5, 6, 5, 6, 5]
+834pt: 45 gulls, landings: [5, 6, 5, 6, 5, 4, 5, 6, 3]
+834pt: every gull rests, flies and crosses between stones; 500 poses checked
+prepared 1024: left=[5, 6, 5, 6, 5, 4, 5, 6, 3], right=[5, 6, 5, 6, 5, 6, 5, 6, 5]
+1024pt: 45 gulls, landings: [5, 6, 5, 6, 5, 4, 5, 6, 3]
+1024pt: every gull rests, flies and crosses between stones; 500 poses checked
+prepared 1194: left=[5, 6, 5, 6, 5, 4, 5, 6, 3], right=[5, 6, 5, 6, 5, 6, 5, 6, 5]
+1194pt: 45 gulls, landings: [5, 6, 5, 6, 5, 4, 5, 6, 3]
+1194pt: every gull rests, flies and crosses between stones; 500 poses checked
+Bird extent samples: 2350000; moving hull samples: 2320000
+Rendered 320
+Rendered 393
+Rendered 834
+Rendered 1194

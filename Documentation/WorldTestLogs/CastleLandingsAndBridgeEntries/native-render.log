@@ -1,0 +1,37 @@
+Empty and initial layout proposals remain valid
+320pt: river-to-walk/hedge offset error <= 0.001pt
+320pt: all 9 flared hedge entrances meet the actual bridge newels and clear the game route
+320pt: 8 dry-bank flights, 9 bridges with endpoints on opposite dry banks; each flight is at least 55% visible
+375pt: river-to-walk/hedge offset error <= 0.001pt
+375pt: all 9 flared hedge entrances meet the actual bridge newels and clear the game route
+375pt: 8 dry-bank flights, 9 bridges with endpoints on opposite dry banks; each flight is at least 55% visible
+393pt: river-to-walk/hedge offset error <= 0.001pt
+393pt: all 9 flared hedge entrances meet the actual bridge newels and clear the game route
+393pt: 8 dry-bank flights, 9 bridges with endpoints on opposite dry banks; each flight is at least 55% visible
+402pt: river-to-walk/hedge offset error <= 0.001pt
+402pt: all 9 flared hedge entrances meet the actual bridge newels and clear the game route
+402pt: 8 dry-bank flights, 9 bridges with endpoints on opposite dry banks; each flight is at least 55% visible
+430pt: river-to-walk/hedge offset error <= 0.001pt
+430pt: all 9 flared hedge entrances meet the actual bridge newels and clear the game route
+430pt: 8 dry-bank flights, 9 bridges with endpoints on opposite dry banks; each flight is at least 55% visible
+600pt: river-to-walk/hedge offset error <= 0.001pt
+600pt: all 9 flared hedge entrances meet the actual bridge newels and clear the game route
+600pt: 8 dry-bank flights, 9 bridges with endpoints on opposite dry banks; each flight is at least 55% visible
+744pt: river-to-walk/hedge offset error <= 0.001pt
+744pt: all 9 flared hedge entrances meet the actual bridge newels and clear the game route
+744pt: 8 dry-bank flights, 9 bridges with endpoints on opposite dry banks; each flight is at least 55% visible
+834pt: river-to-walk/hedge offset error <= 0.001pt
+834pt: all 9 flared hedge entrances meet the actual bridge newels and clear the game route
+834pt: 8 dry-bank flights, 9 bridges with endpoints on opposite dry banks; each flight is at least 55% visible
+1024pt: river-to-walk/hedge offset error <= 0.001pt
+1024pt: all 9 flared hedge entrances meet the actual bridge newels and clear the game route
+1024pt: 8 dry-bank flights, 9 bridges with endpoints on opposite dry banks; each flight is at least 55% visible
+1194pt: river-to-walk/hedge offset error <= 0.001pt
+1194pt: all 9 flared hedge entrances meet the actual bridge newels and clear the game route
+1194pt: 8 dry-bank flights, 9 bridges with endpoints on opposite dry banks; each flight is at least 55% visible
+Checked 55579 rendered-flight footprint samples; all hedge contours clear the route
+All 9 actual rendered bridge arches leave the existing river visible
+Rendered 320pt
+Rendered 393pt
+Rendered 834pt
+Rendered 1194pt

@@ -1,0 +1,25 @@
+{
+  "16_seconds": {
+    "changed_pixels_above_6": 0,
+    "mean_channel_difference": 0.010555555555555556,
+    "pixels": 10200
+  },
+  "32_seconds": {
+    "changed_pixels_above_6": 0,
+    "mean_channel_difference": 0.2169281045751634,
+    "pixels": 10200
+  },
+  "water_393": {
+    "changed_pixels_above_10": 6463
+  },
+  "water_834": {
+    "changed_pixels_above_10": 7797
+  },
+  "reduced_motion_identical": true,
+  "drain_left": {
+    "changed_pixels_above_6": 627
+  },
+  "drain_right": {
+    "changed_pixels_above_6": 342
+  }
+}

@@ -1,0 +1,151 @@
+{
+  "date": "2026-10-23",
+  "reference_commit": "0751099433eb68aa43d65f8643904e3b8bea4dc8",
+  "test": "testSleepValleyToTimeMachineScrollPerformance",
+  "device": "Dino Scroll Verification, iPhone 18 Pro simulator, iOS 27.0",
+  "configuration": "Debug",
+  "measured_iterations": 3,
+  "gestures_per_iteration": "6 fast swipes up from level 51; verify level 71 has entered/passed viewport; 6 fast swipes down",
+  "hitch_metric_requested": true,
+  "hitch_measurements_returned": false,
+  "metrics": {
+    "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration": {
+      "name": "Duration (Scroll_DraggingAndDeceleration)",
+      "unit": "s",
+      "original_samples": [
+        2.582582333,
+        2.5659257920000003,
+        2.566733208
+      ],
+      "optimized_samples": [
+        2.566470416,
+        2.550167167,
+        2.5661312080000003
+      ],
+      "original_mean": 2.571747111,
+      "optimized_mean": 2.5609229303333336,
+      "change_percent": -0.4208882210995357
+    },
+    "com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical_absolute": {
+      "name": "Absolute Memory Physical (Dino-Klokkijken)",
+      "unit": "kB",
+      "original_samples": [
+        258247.776,
+        259558.496,
+        261246.048
+      ],
+      "optimized_samples": [
+        167611.344,
+        172002.256,
+        175492.048
+      ],
+      "original_mean": 259684.1066666667,
+      "optimized_mean": 171701.88266666667,
+      "change_percent": -33.88048083856551
+    },
+    "com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.time": {
+      "name": "CPU Time (Dino-Klokkijken)",
+      "unit": "s",
+      "original_samples": [
+        14.037006984000001,
+        14.615809601,
+        14.990250957
+      ],
+      "optimized_samples": [
+        14.514114349000002,
+        14.673990979000001,
+        15.257865460000001
+      ],
+      "original_mean": 14.547689180666667,
+      "optimized_mean": 14.815323596,
+      "change_percent": 1.8397039695418282
+    },
+    "com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.instructions_retired": {
+      "name": "CPU Instructions Retired (Dino-Klokkijken)",
+      "unit": "kI",
+      "original_samples": [
+        213363079.787,
+        218087621.663,
+        223778972.519
+      ],
+      "optimized_samples": [
+        209509082.269,
+        210226560.719,
+        220358359.235
+      ],
+      "original_mean": 218409891.32299998,
+      "optimized_mean": 213364667.40766668,
+      "change_percent": -2.30997959147925
+    },
+    "com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical": {
+      "name": "Memory Physical (Dino-Klokkijken)",
+      "unit": "kB",
+      "original_samples": [
+        16941.056,
+        1310.72,
+        1687.552
+      ],
+      "optimized_samples": [
+        -966.656,
+        4390.912,
+        3489.792
+      ],
+      "original_mean": 6646.442666666667,
+      "optimized_mean": 2304.6826666666666,
+      "change_percent": -65.32456861133936
+    },
+    "com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.cycles": {
+      "name": "CPU Cycles (Dino-Klokkijken)",
+      "unit": "kC",
+      "original_samples": [
+        60167030.169,
+        62440797.686,
+        63940655.582
+      ],
+      "optimized_samples": [
+        61510117.742,
+        61787921.645,
+        64286647.263
+      ],
+      "original_mean": 62182827.81233333,
+      "optimized_mean": 62528228.88333333,
+      "change_percent": 0.5554605397529055
+    },
+    "com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical_peak": {
+      "name": "Memory Peak Physical (Dino-Klokkijken)",
+      "unit": "kB",
+      "original_samples": [
+        261950.56,
+        261409.888,
+        263441.504
+      ],
+      "optimized_samples": [
+        171772.88,
+        174246.864,
+        177376.208
+      ],
+      "original_mean": 262267.3173333333,
+      "optimized_mean": 174465.31733333334,
+      "change_percent": -33.47805624152797
+    }
+  },
+  "terrain_pixel_comparison": {
+    "7": {
+      "size": [
+        804,
+        4192
+      ],
+      "different_pixels": 0,
+      "max_channel_difference": 0
+    },
+    "8": {
+      "size": [
+        804,
+        4192
+      ],
+      "different_pixels": 0,
+      "max_channel_difference": 0
+    }
+  },
+  "interpretation": "One sequential simulator comparison. CPU time is approximately unchanged. The scroll interval is not a device FPS measurement. No hitch or FPS values were returned by this simulator."
+}

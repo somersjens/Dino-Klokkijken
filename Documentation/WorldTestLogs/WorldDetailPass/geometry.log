@@ -1,0 +1,14 @@
+320pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+393pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+402pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+600pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+834pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+1194pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+PASS: 1680 native water/riverbank endpoint checks; all banks exit through the sides, with no cross-chapter caps
+320pt: 137 fitted city plots; 17 larger city blocks; 10 upright benches; continuous lava and tunnel landings
+393pt: 135 fitted city plots; 17 larger city blocks; 10 upright benches; continuous lava and tunnel landings
+402pt: 134 fitted city plots; 17 larger city blocks; 10 upright benches; continuous lava and tunnel landings
+600pt: 140 fitted city plots; 20 larger city blocks; 9 upright benches; continuous lava and tunnel landings
+834pt: 182 fitted city plots; 46 larger city blocks; 10 upright benches; continuous lava and tunnel landings
+1194pt: 198 fitted city plots; 66 larger city blocks; 10 upright benches; continuous lava and tunnel landings
+PASS: 20485 geometry checks for city buildings, benches, lava and tunnel landings

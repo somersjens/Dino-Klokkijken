@@ -1,0 +1,283 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/DinoCitySeamsDerivedData/Build/Products/CitySeams.xctestrun -destination "platform=iOS Simulator,id=C52CEAA1-9B58-4446-9A39-93DBC1FA3B1F" -destination "platform=iOS Simulator,id=CD5048F9-F217-4BE9-8A78-37A684D8710B" -resultBundlePath /tmp/CitySeamsFinalUI.xcresult -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testCityMetroRouteRemainsPlayable" "-only-testing:DinoUITests/DinoUITests/testWorldBannersHaveBalancedClearance"
+
+Writing result bundle at path:
+	/tmp/CitySeamsFinalUI.xcresult
+
+
+Testing on multiple destinations concurrently. Note that it is not possible to run tests in parallel on individual destinations in this mode. Pass -disable-concurrent-destination-testing instead to allow tests to run in parallel on each destination, but have the destinations run serially.Maximum concurrent test device destinations is unlimited. (Adjust this with -maximum-concurrent-test-device-destinations.) Maximum concurrent test simulator destinations is set to 4. (Adjust this with -maximum-concurrent-test-simulator-destinations.)
+
+2026-10-24 19:08:09.749 xcodebuild[93429:3088631] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:08:09.749 xcodebuild[93429:3088631] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:08:13.676 xcodebuild[93429:3088631] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:08:13.676 xcodebuild[93429:3088631] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:08:23.612 xcodebuild[93429:3088701]  iOSSimulator: C52CEAA1-9B58-4446-9A39-93DBC1FA3B1F: Failed to launch app with identifier: Hakketjak.Dino-Klokkijken.UITests.xctrunner and options: {
+    "activate_suspended" = 1;
+    arguments =     (
+    );
+    environment =     {
+        "APP_DISTRIBUTOR_ID_OVERRIDE" = "com.apple.AppStore";
+        "CA_ASSERT_MAIN_THREAD_TRANSACTIONS" = 0;
+        "CA_DEBUG_TRANSACTIONS" = 0;
+        "DINO_TEST_WORLD_IDS" = "6,7";
+        "DYLD_FRAMEWORK_PATH" = "/tmp/DinoCitySeamsDerivedData/Build/Products/Debug-iphonesimulator:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks:/tmp/DinoCitySeamsDerivedData/Build/Products/Debug-iphonesimulator:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks";
+        "DYLD_INSERT_LIBRARIES" = "/usr/lib/libRPAC.dylib:/Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/usr/lib/libMainThreadChecker.dylib:/Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/usr/lib/libMainThreadChecker.dylib";
+        "DYLD_LIBRARY_PATH" = "/tmp/DinoCitySeamsDerivedData/Build/Products/Debug-iphonesimulator:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib:/tmp/DinoCitySeamsDerivedData/Build/Products/Debug-iphonesimulator:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib";
+        "IDE_CHOSEN_LOGGING_METHOD" = 1;
+        "LLVM_PROFILE_FILE" = "/dev/null";
+        NSUnbufferedIO = YES;
+        "OS_ACTIVITY_DT_MODE" = YES;
+        "PERFC_ENABLE_EXTENDED_DIAGNOSTIC_FORMAT" = 1;
+        "PERFC_ENABLE_PROFILE_MODE" = 1;
+        "PERFC_RESET_INSERT_LIBRARIES" = 1;
+        "PERFC_SUPPRESS_SYSTEM_REPORTS" = 1;
+        "RUN_DESTINATION_DEVICE_NAME" = "iPhone 17";
+        "RUN_DESTINATION_DEVICE_PLATFORM_IDENTIFIER" = "com.apple.platform.iphonesimulator";
+        "RUN_DESTINATION_DEVICE_UDID" = "C52CEAA1-9B58-4446-9A39-93DBC1FA3B1F";
+        "SQLITE_ENABLE_THREAD_ASSERTIONS" = 1;
+        "SWIFT_BACKTRACE" = "enable=no";
+        TERM = dumb;
+        "XCODE_SCHEME_NAME" = "Dino Klokkijken";
+        XCTestBundleInjectPath = "/usr/lib/libRPAC.dylib:/Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/usr/lib/libMainThreadChecker.dylib:/Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/usr/lib/libMainThreadChecker.dylib";
+        XCTestBundlePath = "PlugIns/DinoUITests.xctest";
+        XCTestConfigurationFilePath = "";
+        XCTestSessionIdentifier = "797BE7EC-A800-45F2-890B-AE6FAD3561DF";
+        "__XCODE_BUILT_PRODUCTS_DIR_PATHS" = "/tmp/DinoCitySeamsDerivedData/Build/Products/Debug-iphonesimulator";
+        "__XPC_DYLD_FRAMEWORK_PATH" = "/tmp/DinoCitySeamsDerivedData/Build/Products/Debug-iphonesimulator:/tmp/DinoCitySeamsDerivedData/Build/Products/Debug-iphonesimulator";
+        "__XPC_DYLD_LIBRARY_PATH" = "/tmp/DinoCitySeamsDerivedData/Build/Products/Debug-iphonesimulator:/tmp/DinoCitySeamsDerivedData/Build/Products/Debug-iphonesimulator";
+        "__XPC_LLVM_PROFILE_FILE" = "/dev/null";
+    };
+    stderr = "/dev/ttys008";
+    stdout = "/dev/ttys008";
+    "terminate_running_process" = 1;
+    "wait_for_debugger" = 1;
+} (error = Error Domain=FBSOpenApplicationServiceErrorDomain Code=1 "Simulator device failed to launch Hakketjak.Dino-Klokkijken.UITests.xctrunner." UserInfo={NSLocalizedDescription=Simulator device failed to launch Hakketjak.Dino-Klokkijken.UITests.xctrunner., NSUnderlyingError=0x75be54fb40 {Error Domain=FBSOpenApplicationServiceErrorDomain Code=1 "The request to open "Hakketjak.Dino-Klokkijken.UITests.xctrunner" failed." UserInfo={BSErrorCodeDescription=RequestDenied, NSLocalizedDescription=The request to open "Hakketjak.Dino-Klokkijken.UITests.xctrunner" failed., NSUnderlyingError=0x75be54fb70 {Error Domain=FBSOpenApplicationErrorDomain Code=6 "Application failed preflight checks" UserInfo={BSErrorCodeDescription=Busy, NSLocalizedFailureReason=Application failed preflight checks}}, FBSOpenApplicationRequestID=0xc157, NSLocalizedFailureReason=The request was denied by service delegate (SBMainWorkspace) for reason: Busy ("Application failed preflight checks").}}, NSLocalizedFailureReason=The request was denied by service delegate (SBMainWorkspace) for reason: Busy ("Application failed preflight checks")., FBSOpenApplicationRequestID=0xc157, SimCallingSelector=launchApplicationWithID:options:pid:error:, BSErrorCodeDescription=RequestDenied})
+2026-10-24 19:08:23.614 xcodebuild[93429:3088631] [MT] IDELaunchReport: e05326dd552546c0:e05326dd564a6540:Launching DinoUITests Finished with error: Simulator device failed to launch Hakketjak.Dino-Klokkijken.UITests.xctrunner.
+Domain: FBSOpenApplicationServiceErrorDomain
+Code: 1
+Failure Reason: The request was denied by service delegate (SBMainWorkspace) for reason: Busy ("Application failed preflight checks").
+User Info: {
+    BSErrorCodeDescription = RequestDenied;
+    DVTErrorCreationDateKey = "2026-10-24 17:08:23 +0000";
+    FBSOpenApplicationRequestID = 0xc157;
+    IDERunOperationFailingWorker = IDELaunchiPhoneSimulatorLauncher;
+    SimCallingSelector = "launchApplicationWithID:options:pid:error:";
+}
+--
+The request to open "Hakketjak.Dino-Klokkijken.UITests.xctrunner" failed.
+Domain: FBSOpenApplicationServiceErrorDomain
+Code: 1
+Failure Reason: The request was denied by service delegate (SBMainWorkspace) for reason: Busy ("Application failed preflight checks").
+User Info: {
+    BSErrorCodeDescription = RequestDenied;
+    FBSOpenApplicationRequestID = 0xc157;
+}
+--
+The operation couldn’t be completed. Application failed preflight checks
+Domain: FBSOpenApplicationErrorDomain
+Code: 6
+Failure Reason: Application failed preflight checks
+User Info: {
+    BSErrorCodeDescription = Busy;
+}
+--
+
+2026-10-24 19:08:23.614 xcodebuild[93429:3088631] [MT] IDELaunchReport: e05326dd552546c0:e05326dd564a6540:Launching DinoUITests com.apple.dt.IDERunOperationWorkerFinished {
+    "device_identifier" = "C52CEAA1-9B58-4446-9A39-93DBC1FA3B1F";
+    "device_model" = "iPhone18,3";
+    "device_osBuild" = "26.5 (23F77)";
+    "device_osBuild_monotonic" = 23005077000000000;
+    "device_os_variant" = 1;
+    "device_platform" = "com.apple.platform.iphonesimulator";
+    "device_platform_family" = 2;
+    "device_reality" = 2;
+    "device_thinningType" = "iPhone18,3";
+    "device_transport" = 4;
+    "launchSession_initiator" = 1;
+    "launchSession_schemeCommand" = "Test Without Building";
+    "launchSession_schemeCommand_enum" = 102;
+    "launchSession_targetArch" = arm64;
+    "launchSession_targetArch_enum" = 6;
+    "operation_duration_ms" = 17943;
+    "operation_errorCode" = 1;
+    "operation_errorDomain" = FBSOpenApplicationServiceErrorDomain;
+    "operation_errorWorker" = IDELaunchiPhoneSimulatorLauncher;
+    "operation_error_reportable" = 1;
+    "operation_name" = IDELaunchiPhoneSimulatorLauncher;
+    "param_consoleMode" = 0;
+    "param_debugger_attachToExtensions" = 0;
+    "param_debugger_attachToXPC" = 0;
+    "param_debugger_type" = 1;
+    "param_destination_isProxy" = 0;
+    "param_destination_platform" = "com.apple.platform.iphonesimulator";
+    "param_diag_MTE_enable" = 0;
+    "param_diag_MainThreadChecker_stopOnIssue" = 0;
+    "param_diag_MallocStackLogging_enableDuringAttach" = 0;
+    "param_diag_MallocStackLogging_enableForXPC" = 0;
+    "param_diag_allowLocationSimulation" = 1;
+    "param_diag_checker_mtc_enable" = 0;
+    "param_diag_checker_tpc_enable" = 0;
+    "param_diag_gpu_frameCapture_enable" = 3;
+    "param_diag_gpu_shaderValidation_enable" = 0;
+    "param_diag_gpu_validation_enable" = 1;
+    "param_diag_guardMalloc_enable" = 0;
+    "param_diag_memoryGraphOnResourceException" = 0;
+    "param_diag_queueDebugging_enable" = 0;
+    "param_diag_runtimeProfile_generate" = 0;
+    "param_diag_sanitizer_asan_enable" = 0;
+    "param_diag_sanitizer_mtasan_enable" = 0;
+    "param_diag_sanitizer_tsan_enable" = 0;
+    "param_diag_sanitizer_tsan_stopOnIssue" = 0;
+    "param_diag_sanitizer_ubsan_enable" = 0;
+    "param_diag_sanitizer_ubsan_stopOnIssue" = 0;
+    "param_diag_showNonLocalizedStrings" = 0;
+    "param_diag_viewDebugging_enabled" = 0;
+    "param_diag_viewDebugging_insertDylibOnLaunch" = 0;
+    "param_install_style" = 2;
+    "param_launcher_UID" = 2;
+    "param_launcher_allowDeviceSensorReplayData" = 0;
+    "param_launcher_kind" = 0;
+    "param_launcher_style" = 0;
+    "param_launcher_substyle" = 64;
+    "param_runnable_appExtensionHostRunMode" = 0;
+    "param_runnable_productType" = "com.apple.product-type.application";
+    "param_testing_launchedForTesting" = 1;
+    "param_testing_suppressSimulatorApp" = 1;
+    "param_testing_usingCLI" = 0;
+    "sdk_canonicalName" = "iphonesimulator27.0";
+    "sdk_osVersion" = "27.0";
+    "sdk_platformID" = 7;
+    "sdk_variant" = iphonesimulator;
+    "sdk_version_monotonic" = 24000430000000000;
+}
+2026-10-24 19:08:23.615 xcodebuild[93429:3088631] [MT] IDELaunchReport: e05326dd552546c0:e05326dd552546c0: Finished with error: Simulator device failed to launch Hakketjak.Dino-Klokkijken.UITests.xctrunner.
+Domain: FBSOpenApplicationServiceErrorDomain
+Code: 1
+Failure Reason: The request was denied by service delegate (SBMainWorkspace) for reason: Busy ("Application failed preflight checks").
+User Info: {
+    BSErrorCodeDescription = RequestDenied;
+    DVTErrorCreationDateKey = "2026-10-24 17:08:23 +0000";
+    FBSOpenApplicationRequestID = 0xc157;
+    IDERunOperationFailingWorker = IDELaunchiPhoneSimulatorLauncher;
+    SimCallingSelector = "launchApplicationWithID:options:pid:error:";
+}
+--
+The request to open "Hakketjak.Dino-Klokkijken.UITests.xctrunner" failed.
+Domain: FBSOpenApplicationServiceErrorDomain
+Code: 1
+Failure Reason: The request was denied by service delegate (SBMainWorkspace) for reason: Busy ("Application failed preflight checks").
+User Info: {
+    BSErrorCodeDescription = RequestDenied;
+    FBSOpenApplicationRequestID = 0xc157;
+}
+--
+The operation couldn’t be completed. Application failed preflight checks
+Domain: FBSOpenApplicationErrorDomain
+Code: 6
+Failure Reason: Application failed preflight checks
+User Info: {
+    BSErrorCodeDescription = Busy;
+}
+--
+
+2026-10-24 19:08:23.615 xcodebuild[93429:3088631] [MT] IDELaunchReport: e05326dd552546c0:e05326dd552546c0: com.apple.dt.IDERunOperationWorkerFinished {
+    "device_identifier" = "C52CEAA1-9B58-4446-9A39-93DBC1FA3B1F";
+    "device_model" = "iPhone18,3";
+    "device_osBuild" = "26.5 (23F77)";
+    "device_osBuild_monotonic" = 23005077000000000;
+    "device_os_variant" = 1;
+    "device_platform" = "com.apple.platform.iphonesimulator";
+    "device_platform_family" = 2;
+    "device_reality" = 2;
+    "device_thinningType" = "iPhone18,3";
+    "device_transport" = 4;
+    "launchSession_initiator" = 1;
+    "launchSession_schemeCommand" = "Test Without Building";
+    "launchSession_schemeCommand_enum" = 102;
+    "launchSession_targetArch" = arm64;
+    "launchSession_targetArch_enum" = 6;
+    "operation_duration_ms" = 17945;
+    "operation_errorCode" = 1;
+    "operation_errorDomain" = FBSOpenApplicationServiceErrorDomain;
+    "operation_errorWorker" = IDELaunchiPhoneSimulatorLauncher;
+    "operation_error_reportable" = 1;
+    "operation_name" = IDERunOperationWorkerGroup;
+    "param_consoleMode" = 0;
+    "param_debugger_attachToExtensions" = 0;
+    "param_debugger_attachToXPC" = 0;
+    "param_debugger_type" = 1;
+    "param_destination_isProxy" = 0;
+    "param_destination_platform" = "com.apple.platform.iphonesimulator";
+    "param_diag_MTE_enable" = 0;
+    "param_diag_MainThreadChecker_stopOnIssue" = 0;
+    "param_diag_MallocStackLogging_enableDuringAttach" = 0;
+    "param_diag_MallocStackLogging_enableForXPC" = 0;
+    "param_diag_allowLocationSimulation" = 1;
+    "param_diag_checker_mtc_enable" = 0;
+    "param_diag_checker_tpc_enable" = 0;
+    "param_diag_gpu_frameCapture_enable" = 3;
+    "param_diag_gpu_shaderValidation_enable" = 0;
+    "param_diag_gpu_validation_enable" = 1;
+    "param_diag_guardMalloc_enable" = 0;
+    "param_diag_memoryGraphOnResourceException" = 0;
+    "param_diag_queueDebugging_enable" = 0;
+    "param_diag_runtimeProfile_generate" = 0;
+    "param_diag_sanitizer_asan_enable" = 0;
+    "param_diag_sanitizer_mtasan_enable" = 0;
+    "param_diag_sanitizer_tsan_enable" = 0;
+    "param_diag_sanitizer_tsan_stopOnIssue" = 0;
+    "param_diag_sanitizer_ubsan_enable" = 0;
+    "param_diag_sanitizer_ubsan_stopOnIssue" = 0;
+    "param_diag_showNonLocalizedStrings" = 0;
+    "param_diag_viewDebugging_enabled" = 0;
+    "param_diag_viewDebugging_insertDylibOnLaunch" = 0;
+    "param_install_style" = 2;
+    "param_launcher_UID" = 2;
+    "param_launcher_allowDeviceSensorReplayData" = 0;
+    "param_launcher_kind" = 0;
+    "param_launcher_style" = 0;
+    "param_launcher_substyle" = 64;
+    "param_runnable_appExtensionHostRunMode" = 0;
+    "param_runnable_productType" = "com.apple.product-type.application";
+    "param_testing_launchedForTesting" = 1;
+    "param_testing_suppressSimulatorApp" = 1;
+    "param_testing_usingCLI" = 0;
+    "sdk_canonicalName" = "iphonesimulator27.0";
+    "sdk_osVersion" = "27.0";
+    "sdk_platformID" = 7;
+    "sdk_variant" = iphonesimulator;
+    "sdk_version_monotonic" = 24000430000000000;
+}
+2026-10-24 19:08:31.980 xcodebuild[93429:3088631] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:08:31.980 xcodebuild[93429:3088631] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:08:34.283 xcodebuild[93429:3088631] [MT] IDETestOperationsObserverDebug: 29.449 elapsed -- Testing started completed.
+2026-10-24 19:08:34.283 xcodebuild[93429:3088631] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-24 19:08:34.283 xcodebuild[93429:3088631] [MT] IDETestOperationsObserverDebug: 29.449 sec, +29.449 sec -- end
+2026-10-24 19:09:13.063 xcodebuild[93429:3088631] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:09:13.063 xcodebuild[93429:3088631] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:09:16.356 xcodebuild[93429:3088631] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:09:16.356 xcodebuild[93429:3088631] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:09:28.293 xcodebuild[93429:3088631] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 19:09:28.293 xcodebuild[93429:3088631] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-24 19:09:42.380 xcodebuild[93429:3088631] [MT] IDETestOperationsObserverDebug: 97.546 elapsed -- Testing started completed.
+2026-10-24 19:09:42.380 xcodebuild[93429:3088631] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-24 19:09:42.380 xcodebuild[93429:3088631] [MT] IDETestOperationsObserverDebug: 97.546 sec, +97.546 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/CitySeamsFinalUI.xcresult
+
+Testing failed:
+	Simulator device failed to launch Hakketjak.Dino-Klokkijken.UITests.xctrunner.
+	DinoUITests-Runner encountered an error (Failed to install or launch the test runner. (Underlying Error: Simulator device failed to launch Hakketjak.Dino-Klokkijken.UITests.xctrunner. The request was denied by service delegate (SBMainWorkspace) for reason: Busy ("Application failed preflight checks"). (Underlying Error: The request to open "Hakketjak.Dino-Klokkijken.UITests.xctrunner" failed. The request was denied by service delegate (SBMainWorkspace) for reason: Busy ("Application failed preflight checks"). (Underlying Error: The operation couldn’t be completed. Application failed preflight checks))))
+
+** TEST EXECUTE FAILED **
+
+Testing started
+Testing started
+Test suite 'Selected tests' started on 'iPad Pro 11-inch (M5) - DinoUITests-Runner (93575)'
+Test suite 'DinoUITests.xctest' started on 'iPad Pro 11-inch (M5) - DinoUITests-Runner (93575)'
+Test suite 'DinoUITests' started on 'iPad Pro 11-inch (M5) - DinoUITests-Runner (93575)'
+Testing failed on 'iPhone 17'
+Test case 'DinoUITests.testCityMetroRouteRemainsPlayable()' passed on 'iPad Pro 11-inch (M5) - DinoUITests-Runner (93575)' (62.510 seconds)
+Test case 'DinoUITests.testWorldBannersHaveBalancedClearance()' passed on 'iPad Pro 11-inch (M5) - DinoUITests-Runner (93575)' (29.888 seconds)
+Testing passed on 'iPad Pro 11-inch (M5)'

@@ -1,0 +1,284 @@
+--- previous Castle
++++ current Castle
+@@ -3,8 +3,12 @@
+     static let innerWalkOffset: CGFloat = -28
+     static let outerWalkOffset: CGFloat = 34
+     static let innerHedgeOffset: CGFloat = -41
+-    static let middleLandingWidth: CGFloat = 76
++    static let middleLandingWidth: CGFloat = 64
+     static let middleLandingDepth: CGFloat = 24
++    static let bridgeBackEdge: CGFloat = -13
++    static let bridgeFrontEdge: CGFloat = 11
++    static let avenueHedgeHeight: CGFloat = 11
++    static let avenueHedgeWidth: CGFloat = 9
+     struct Landmark {
+         let kind: Kind
+         let point: CGPoint
+@@ -53,9 +57,26 @@
+         let right: Bool
+         let water: CGPoint
+         let inner: CGPoint
++        let entry: CGPoint
+         let outer: CGPoint
+         let scale: CGFloat
+         let riverSlope: CGFloat
++
++        var approachFloor: Path {
++            let innerX = (inner.x - water.x) / scale, entryX = (entry.x - water.x) / scale
++            let span = innerX - entryX
++            let back = CastleKingdomLayout.bridgeBackEdge, front = CastleKingdomLayout.bridgeFrontEdge
++            func point(_ t: CGFloat, _ y: CGFloat) -> CGPoint { .init(x: entryX + span * t, y: y) }
++            var floor = Path(); floor.move(to: point(0.12, back - 6))
++            floor.addCurve(to: point(1.1, back), control1: point(0.45, back - 6), control2: point(0.7, back))
++            floor.addLine(to: point(1.1, front))
++            floor.addCurve(to: point(0.12, front + 6), control1: point(0.7, front), control2: point(0.45, front + 6))
++            floor.addQuadCurve(to: point(0, front + 3), control: point(0, front + 6))
++            floor.addLine(to: point(0, back - 3))
++            floor.addQuadCurve(to: point(0.12, back - 6), control: point(0, back - 6))
++            floor.closeSubpath()
++            return floor
++        }
+     }
+     struct Fountain {
+         let point: CGPoint
+@@ -168,6 +189,7 @@
+                 let water = waterPoint(at: outer.y, right: court.right)
+                 return Crossing(district: court.id, upper: upper, right: court.right, water: water,
+                                 inner: walkPoint(at: outer.y, right: court.right, outer: false),
++                                entry: bankPoint(at: outer.y, right: court.right, offset: Self.innerHedgeOffset + Self.avenueHedgeWidth / 2, river: waterPoints(right: court.right)),
+                                 outer: outer, scale: scale,
+                                 riverSlope: (waterPoint(at: outer.y + 12, right: court.right).x - waterPoint(at: outer.y - 12, right: court.right).x) / 24)
+             }
+@@ -176,7 +198,9 @@
+             let outer = CGPoint(x: clock.point.x, y: clock.point.y + 34 * scale)
+             let water = waterPoint(at: outer.y, right: true)
+             result.append(Crossing(district: -1, upper: false, right: true, water: water,
+-                                   inner: walkPoint(at: outer.y, right: true, outer: false), outer: outer, scale: scale,
++                                   inner: walkPoint(at: outer.y, right: true, outer: false),
++                                   entry: bankPoint(at: outer.y, right: true, offset: Self.innerHedgeOffset + Self.avenueHedgeWidth / 2, river: waterPoints(right: true)),
++                                   outer: outer, scale: scale,
+                                    riverSlope: (waterPoint(at: outer.y + 12, right: true).x - waterPoint(at: outer.y - 12, right: true).x) / 24))
+         }
+         return result
+@@ -220,6 +244,52 @@
+ 
+     func walkPoint(at y: CGFloat, right: Bool, outer: Bool) -> CGPoint {
+         bankPoint(at: y, right: right, offset: outer ? Self.outerWalkOffset : Self.innerWalkOffset, river: waterPoints(right: right))
++    }
++
++    /// The hedge turns into each bridge's actual end posts. Its opening is
++    /// measured at ground level, including the hedge's upward extrusion.
++    func avenueHedges(right: Bool, crossings: [Crossing]) -> [[CGPoint]] {
++        let s = scale, sign: CGFloat = right ? 1 : -1
++        let height = Self.avenueHedgeHeight * s, shoulder: CGFloat = 22 * s
++        let river = waterPoints(right: right)
++        func foot(at y: CGFloat) -> CGPoint {
++            let top = bankPoint(at: y, right: right, offset: Self.innerHedgeOffset, river: river)
++            return CGPoint(x: top.x, y: top.y + height)
++        }
++        func bend(_ a: CGPoint, _ b: CGPoint, _ c: CGPoint, _ d: CGPoint) -> [CGPoint] {
++            (0...16).map { i in
++                let t = CGFloat(i) / 16, u = 1 - t
++                return CGPoint(x: u*u*u*a.x + 3*u*u*t*b.x + 3*u*t*t*c.x + t*t*t*d.x,
++                               y: u*u*u*a.y + 3*u*u*t*b.y + 3*u*t*t*c.y + t*t*t*d.y)
++            }
++        }
++        var runs: [[CGPoint]] = [], lead: [CGPoint] = []
++        var start = -scenery.routeOffset - 12
++        for crossing in crossings.filter({ $0.right == right }).sorted(by: { $0.water.y < $1.water.y }) {
++            let back = CGPoint(x: crossing.inner.x, y: crossing.water.y + Self.bridgeBackEdge * s)
++            let front = CGPoint(x: crossing.inner.x, y: crossing.water.y + Self.bridgeFrontEdge * s)
++            let end = back.y - shoulder - height
++            if start < end {
++                var points = lead + bankContour(right: right, offset: Self.innerHedgeOffset, from: start, to: end).map {
++                    CGPoint(x: $0.x, y: $0.y + height)
++                }
++                let a = foot(at: end), previous = foot(at: end - 1)
++                points += bend(a, .init(x: a.x + (a.x - previous.x) * shoulder * 0.6, y: a.y + shoulder * 0.6),
++                               .init(x: back.x - sign * 8 * s, y: back.y), back).dropFirst()
++                runs.append(points)
++            }
++            start = front.y + shoulder - height
++            let d = foot(at: start), next = foot(at: start + 1)
++            lead = bend(front, .init(x: front.x - sign * 8 * s, y: front.y),
++                        .init(x: d.x - (next.x - d.x) * shoulder * 0.6, y: d.y - shoulder * 0.6), d)
++        }
++        let end = scenery.height - scenery.routeOffset + 12
++        if start < end {
++            runs.append(lead + bankContour(right: right, offset: Self.innerHedgeOffset, from: start, to: end).map {
++                CGPoint(x: $0.x, y: $0.y + height)
++            })
++        }
++        return runs
+     }
+ 
+     func waterPoints(right: Bool) -> [CGPoint] {
+@@ -556,28 +626,39 @@
+                 context.stroke(walk, with: .color(Color(dinoHex: 0xA6AA8B).opacity(0.7)), style: StrokeStyle(lineWidth: (outer ? 19 : 12) * s, lineCap: .round))
+                 context.stroke(walk, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xF6E8C9), Color(dinoHex: 0xD5D0AF)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: 1700)), style: StrokeStyle(lineWidth: (outer ? 15 : 8) * s, lineCap: .round))
+             }
+-            // Curved hedge walls follow the avenue. Each bridge cuts a full
+-            // entrance through the hedge rather than stopping at a green bar.
+-            let openings = crossings.filter { $0.right == right }.map { $0.outer.y }.sorted()
+-            var intervals: [(CGFloat, CGFloat)] = []
+-            var startY = -scenery.routeOffset - 12
+-            for y in openings {
+-                if y - 35 * s > startY { intervals.append((startY, y - 35 * s)) }
+-                startY = y + 35 * s
+-            }
+-            let endY = scenery.height - scenery.routeOffset + 12
+-            if startY < endY { intervals.append((startY, endY)) }
+-            for (index, interval) in intervals.enumerated() {
+-                let points = layout.bankContour(right: right, offset: CastleKingdomLayout.innerHedgeOffset, from: interval.0, to: interval.1).map {
+-                    // The visible top, rather than the extruded foot, follows the river.
+-                    CGPoint(x: $0.x, y: $0.y + 11 * s)
+-                }
+-                hedge(along: points, height: 11 * s, width: 9 * s, roses: index % 2 == 0)
+-            }
+             for crossing in crossings where crossing.right == right && !crossing.upper {
+                 let start = CGPoint(x: scenery.centerX(at: crossing.inner.y) + sign * 23, y: crossing.inner.y)
+-                pavedLink(from: start, to: crossing.inner, width: 9 * s)
+-            }
++                pavedLink(from: start, to: crossing.entry, width: 9 * s)
++            }
++            for crossing in crossings where crossing.right == right {
++                bridgeApproach(crossing)
++            }
++            for (index, points) in layout.avenueHedges(right: right, crossings: crossings).enumerated() {
++                hedge(along: points, height: CastleKingdomLayout.avenueHedgeHeight * s,
++                      width: CastleKingdomLayout.avenueHedgeWidth * s, roses: index % 2 == 0)
++            }
++        }
++    }
++
++    private func bridgeApproach(_ crossing: CastleKingdomLayout.Crossing) {
++        at(crossing.water, size: crossing.scale) { p in
++            let inner = (crossing.inner.x - crossing.water.x) / crossing.scale
++            let entry = (crossing.entry.x - crossing.water.x) / crossing.scale
++            let span = inner - entry
++            let back = CastleKingdomLayout.bridgeBackEdge, front = CastleKingdomLayout.bridgeFrontEdge
++            // A level, gently flared apron connects the avenue through the hedge
++            // to the bridge deck. The hedge returns end at the same two newels.
++            let floor = crossing.approachFloor
++            p.context.stroke(floor, with: .color(Color(dinoHex: 0xB8B396)), style: StrokeStyle(lineWidth: 2, lineJoin: .round))
++            p.context.fill(floor, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xFFF4D4), Color(dinoHex: 0xDED0AB)]),
++                                                       startPoint: .init(x: entry, y: back - 6), endPoint: .init(x: inner, y: front + 6)))
++            var paving = p.context; paving.clip(to: floor)
++            let joints = CastleWorldPainter(context: paving)
++            for t: CGFloat in [0.25, 0.55, 0.85] {
++                let x = entry + span * t
++                joints.line([.init(x: x, y: back - 6), .init(x: x + 2, y: front + 6)], 0xBEB599, 0.6)
++            }
++            joints.line([.init(x: entry, y: -1), .init(x: inner, y: -1)], 0xC8BDA0, 0.55)
+         }
+     }
+ 
+@@ -647,23 +728,29 @@
+         context.stroke(top.offsetBy(dx: -width * 0.12, dy: -width * 0.18), with: .color(Color(dinoHex: 0xD6E5A6).opacity(0.33)), style: StrokeStyle(lineWidth: 0.7, lineCap: .round))
+     }
+ 
+-    private func landing(at point: CGPoint, width: CGFloat, depth: CGFloat, right: Bool, exit: Bool = false, terminal: Bool = false) {
++    private func landing(at point: CGPoint, width: CGFloat, depth: CGFloat, right: Bool, exit: Bool = false, terminal: Bool = false,
++                         arrival: CGFloat = 0, departure: CGFloat = 0) {
+         at(point) { p in
+             let half = width / 2, back = -depth / 2, front = depth / 2
+-            let backHalf = half - (exit ? 0 : 4)
+-            // A shallow slab and foreshortened paving make the floor read horizontally.
+-            p.polygon([.init(x: -half, y: front), .init(x: half, y: front),
+-                       .init(x: half, y: front + 3), .init(x: -half, y: front + 3)], [0xD6CBAD, 0xB6B69A])
+-            p.polygon([.init(x: -backHalf, y: back), .init(x: backHalf, y: back),
+-                       .init(x: half, y: front), .init(x: -half, y: front)], [0xFFF5D9, 0xE9DEBF])
++            let floor = Path(roundedRect: CGRect(x: -half, y: back, width: width, height: depth), cornerRadius: 3)
++            // The slab stays close to the stair cheeks, with rounded corners
++            // rather than the previous flared, pointed balcony and zigzag rail.
++            p.context.fill(floor.offsetBy(dx: 0, dy: 2.5), with: .color(Color(dinoHex: 0xB6B69A)))
++            p.rounded(CGRect(x: -half, y: back, width: width, height: depth), 3, [0xFFF5D9, 0xE9DEBF])
++            var paving = p.context; paving.clip(to: floor)
++            let joints = CastleWorldPainter(context: paving)
+             for x in stride(from: -half + 12, through: half - 6, by: 15) {
+-                p.line([.init(x: x * backHalf / half, y: back + 1), .init(x: x, y: front - 1)], 0xC6BDA2, 0.55, opacity: 0.7)
++                joints.line([.init(x: x, y: back + 1), .init(x: x, y: front - 1)], 0xC6BDA2, 0.55, opacity: 0.7)
+             }
+             for t: CGFloat in [0.33, 0.67] {
+-                let y = back + depth * t, reach = backHalf + (half - backHalf) * t
+-                p.line([.init(x: -reach + 1, y: y), .init(x: reach - 1, y: y)], 0xC9BFA3, 0.6, opacity: 0.7)
+-            }
+-            p.line([.init(x: -half, y: front), .init(x: half, y: front)], 0xFFFAE4, 1.3)
++                let y = back + depth * t
++                joints.line([.init(x: -half + 1, y: y), .init(x: half - 1, y: y)], 0xC9BFA3, 0.6, opacity: 0.7)
++            }
++            var lip = Path(); lip.move(to: .init(x: -half, y: front - 3))
++            lip.addQuadCurve(to: .init(x: -half + 3, y: front), control: .init(x: -half, y: front))
++            lip.addLine(to: .init(x: half - 3, y: front))
++            lip.addQuadCurve(to: .init(x: half, y: front - 3), control: .init(x: half, y: front))
++            p.context.stroke(lip, with: .color(Color(dinoHex: 0xFFFAE4)), style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
+             if terminal {
+                 for x in stride(from: -half + 5, through: half - 4, by: 9) {
+                     p.rounded(CGRect(x: x - 1.7, y: front - 21, width: 3.4, height: 20), 1.4, [0xFFF1D1, 0xB9B497])
+@@ -672,13 +759,16 @@
+             }
+             if !exit {
+                 let sign: CGFloat = right ? -1 : 1
+-                let rail = [CGPoint(x: sign * 25, y: back), .init(x: sign * (half - 3), y: 0), .init(x: sign * 25, y: front)]
+-                for pair in zip(rail, rail.dropFirst()) {
+-                    for t: CGFloat in [0, 0.5, 1] {
+-                        let x = pair.0.x + (pair.1.x - pair.0.x) * t, y = pair.0.y + (pair.1.y - pair.0.y) * t
+-                        p.rounded(CGRect(x: x - 1.8, y: y - 22, width: 3.6, height: 21), 1.4, [0xFFF1D1, 0xB9B497])
+-                    }
+-                }
++                let rail = (0...16).map { i -> CGPoint in
++                    let t = CGFloat(i) / 16, u = 1 - t
++                    return CGPoint(x: sign * 25 + 3*u*u*t*arrival*8 - 3*u*t*t*departure*8,
++                                   y: back + depth * t)
++                }
++                for i in [0, 8, 16] {
++                    let e = rail[i]
++                    p.rounded(CGRect(x: e.x - 1.8, y: e.y - 22, width: 3.6, height: 21), 1.4, [0xFFF1D1, 0xB9B497])
++                }
++                p.line(rail.map { .init(x: $0.x, y: $0.y - 23) }, 0xA8A88E, 5.6)
+                 p.line(rail.map { .init(x: $0.x, y: $0.y - 25) }, 0xFFF2D0, 3.4)
+             }
+         }
+@@ -741,13 +831,16 @@
+                 p.pavedLink(from: mid, to: CGPoint(x: gardenCenter.x, y: mid.y), width: 12)
+             }
+             p.stairFlight(from: local(district.flights[0].top), to: local(district.flights[0].bottom), variation: district.id)
+-            p.landing(at: mid, width: CastleKingdomLayout.middleLandingWidth, depth: CastleKingdomLayout.middleLandingDepth, right: district.right)
++            let first = district.flights[0], second = district.flights[1]
++            p.landing(at: mid, width: CastleKingdomLayout.middleLandingWidth, depth: CastleKingdomLayout.middleLandingDepth, right: district.right,
++                      arrival: (first.bottom.x - first.top.x) / (first.bottom.y - first.top.y),
++                      departure: (second.bottom.x - second.top.x) / (second.bottom.y - second.top.y))
+             p.stairFlight(from: local(district.flights[1].top), to: local(district.flights[1].bottom), variation: district.id + 1)
+             p.landing(at: low, width: 64, depth: 36, right: district.right, exit: true, terminal: true)
+             if gardenWidth > 21 {
+                 p.gardenGate(at: CGPoint(x: mid.x + sign * 47, y: mid.y + 2), size: 0.48, iron: true)
+             }
+-            p.lantern(at: CGPoint(x: mid.x - sign * 32, y: mid.y - 10), size: 0.44)
++            p.lantern(at: CGPoint(x: mid.x - sign * 25, y: mid.y - 1), size: 0.36)
+             p.lantern(at: CGPoint(x: low.x + sign * 30, y: low.y - 9), size: 0.45)
+             p.planter(at: CGPoint(x: sign * 57, y: -20), size: 0.48)
+             p.flowers(at: CGPoint(x: low.x + sign * 47, y: low.y + 9), size: 0.42)
+@@ -874,6 +967,7 @@
+             let inner = (crossing.inner.x - crossing.water.x) / crossing.scale
+             let outer = (crossing.outer.x - crossing.water.x) / crossing.scale
+             let left = min(inner, outer), right = max(inner, outer)
++            let backEdge = CastleKingdomLayout.bridgeBackEdge, frontEdge = CastleKingdomLayout.bridgeFrontEdge
+             let slope = crossing.riverSlope
+             let skew = CGAffineTransform(a: 1, b: 0, c: slope, d: 1, tx: 0, ty: 0)
+             var wall = Path(roundedRect: CGRect(x: left - 4, y: -5, width: right - left + 8, height: 43), cornerRadius: 3)
+@@ -895,13 +989,13 @@
+             // stays open from the inner promenade to the shared outer landing.
+             for front in [false, true] {
+                 if front {
+-                    p.polygon([.init(x: left - 5, y: -13), .init(x: right + 5, y: -13), .init(x: right + 5, y: 11), .init(x: left - 5, y: 11)], [0xFFF4D4, 0xDED0AB])
++                    p.polygon([.init(x: left - 5, y: backEdge), .init(x: right + 5, y: backEdge), .init(x: right + 5, y: frontEdge), .init(x: left - 5, y: frontEdge)], [0xFFF4D4, 0xDED0AB])
+                     for x in stride(from: left + 7, through: right - 3, by: 12) {
+                         p.line([.init(x: x, y: -12), .init(x: x + 4, y: 10)], 0xBEB599, 0.65)
+                     }
+                     p.line([.init(x: left - 4, y: 11), .init(x: right + 4, y: 11)], 0xFFF8DB, 1.8)
+                 }
+-                let y: CGFloat = front ? 9 : -13
++                let y = front ? frontEdge - 2 : backEdge
+                 for x in stride(from: left + 4, through: right - 3, by: 10) {
+                     p.rounded(CGRect(x: x - 1.8, y: y - 21, width: 3.6, height: 20), 1.5, [0xFFF2D0, 0xBFB393])
+                     p.oval(CGRect(x: x - 2.8, y: y - 16, width: 5.6, height: 6), [0xF3E7C4, 0xB8B095])

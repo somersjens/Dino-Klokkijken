@@ -1,0 +1,22 @@
+{
+  "screen_widths": [
+    320,
+    375,
+    393,
+    402,
+    430,
+    600,
+    744,
+    834,
+    1024,
+    1194
+  ],
+  "gulls_each_width": 49,
+  "samples_per_width": 650,
+  "sample_interval_seconds": 0.13,
+  "level_clearance_samples": 2086810,
+  "moving_hull_samples": 74240,
+  "geometry_samples": 25520,
+  "max_step_points_per_0_13_seconds": 24.449582813974114,
+  "largest_close_pass_overlap_square_points": 0.0
+}

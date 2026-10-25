@@ -1,0 +1,195 @@
+Test Suite 'Selected tests' started at 2026-10-23 22:07:17.766.
+Test Suite 'DinoUITests.xctest' started at 2026-10-23 22:07:17.767.
+Test Suite 'DinoUITests' started at 2026-10-23 22:07:17.767.
+Test Case '-[DinoUITests.DinoUITests testCityMetroRouteRemainsPlayable]' started.
+    t =     0.00s Start Test at 2026-10-23 22:07:17.768
+    t =     0.21s Set Up
+    t =     0.21s     Setting device orientation to Portrait
+    t =     0.21s         Device orientation changed to Portrait
+    t =     0.23s         Wait for com.apple.springboard to idle
+    t =     0.28s     Open Hakketjak.Dino-Klokkijken
+    t =     0.28s         Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:07:18.320 xcodebuild[49661:794939] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:07:18.320 xcodebuild[49661:794939] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.59s             Setting up automation session
+    t =     2.44s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.92s Terminate Hakketjak.Dino-Klokkijken:50440
+    t =     5.00s Open Hakketjak.Dino-Klokkijken
+    t =     5.00s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:07:22.767 xcodebuild[49661:794939] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:07:22.767 xcodebuild[49661:794939] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     5.21s         Setting up automation session
+    t =     6.04s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     7.60s Waiting 8.0s for "header.settings" Button to exist
+    t =     8.66s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =     8.66s         Checking existence of `"header.settings" Button`
+    t =    10.73s Checking existence of `"map.preparing" Any`
+    t =    11.70s Checking existence of `"map.preparing" Any`
+    t =    12.70s Checking existence of `"map.preparing" Any`
+    t =    13.02s Find the "header.settings" Button
+    t =    13.34s Find the "map.level.51" Button
+    t =    13.75s Checking existence of `"map.level.51" Button`
+    t =    14.06s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.32s Checking existence of `"map.level.51" Button`
+    t =    14.62s Find the "map.level.51" Button
+    t =    15.01s Find the "map.level.51" Button
+    t =    15.35s Find the "header.settings" Button
+    t =    15.71s Find the "map.level.51" Button
+    t =    16.06s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    16.34s Find the "map.level.51" Button
+    t =    16.85s Added attachment named 'city-metro-entrance'
+    t =    16.89s Tap "map.level.51" Button[0.50, 0.50]
+    t =    16.89s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    16.94s     Find the "map.level.51" Button
+    t =    17.27s     Check for interrupting elements affecting "map.level.51" Button
+    t =    17.64s     Synthesize event
+    t =    17.64s         Find the "map.level.51" Button
+    t =    18.09s         Find the "map.level.51" Button
+    t =    18.50s         Find the "map.level.51" Button
+    t =    19.30s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    19.31s Waiting 5.0s for "level.play" Button to exist
+    t =    20.39s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =    20.39s         Checking existence of `"level.play" Button`
+    t =    20.43s Checking existence of `"level.play" Any`
+    t =    20.49s Checking existence of `"onboarding.next" Button`
+    t =    20.56s Checking existence of `"onboarding.customClock" Button`
+    t =    20.63s Checking existence of `"personalize.done" Button`
+    t =    20.69s Checking existence of `"theme.done" Button`
+    t =    20.76s Find the "level.play" Any
+    t =    20.87s Tap "level.play" Button
+    t =    20.87s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    20.92s     Find the "level.play" Button
+    t =    20.98s     Check for interrupting elements affecting "level.play" Button
+    t =    21.14s     Synthesize event
+    t =    21.53s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.59s Waiting 5.0s for "question.option.0" Button to exist
+    t =    22.67s     Checking `Expect predicate `existsNoRetry == 1` for object "question.option.0" Button`
+    t =    22.67s         Checking existence of `"question.option.0" Button`
+    t =    22.84s Added attachment named 'city-metro-level-51'
+    t =    22.85s Terminate Hakketjak.Dino-Klokkijken:50461
+    t =    23.94s Open Hakketjak.Dino-Klokkijken
+    t =    23.94s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:07:41.706 xcodebuild[49661:794939] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:07:41.706 xcodebuild[49661:794939] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    24.16s         Setting up automation session
+    t =    25.22s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    26.70s Waiting 8.0s for "header.settings" Button to exist
+    t =    27.78s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    27.78s         Checking existence of `"header.settings" Button`
+    t =    29.23s Checking existence of `"map.preparing" Any`
+    t =    30.21s Checking existence of `"map.preparing" Any`
+    t =    31.18s Checking existence of `"map.preparing" Any`
+    t =    31.52s Find the "header.settings" Button
+    t =    31.82s Find the "map.level.54" Button
+    t =    32.12s Checking existence of `"map.level.54" Button`
+    t =    32.37s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    32.53s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.72] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.47] with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    32.53s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    32.53s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    32.70s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    32.88s     Synthesize event
+    t =    32.93s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    33.10s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    33.27s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    33.43s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    33.60s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    34.49s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    36.31s Find the "header.settings" Button
+    t =    36.60s Find the "map.level.54" Button
+    t =    36.91s Checking existence of `"map.level.54" Button`
+    t =    37.16s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    37.32s Checking existence of `"map.level.54" Button`
+    t =    37.56s Find the "map.level.54" Button
+    t =    37.86s Find the "map.level.54" Button
+    t =    38.20s Find the "header.settings" Button
+    t =    38.51s Find the "map.level.54" Button
+    t =    38.83s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.01s Find the "map.level.54" Button
+    t =    39.47s Added attachment named 'city-metro-route-54'
+    t =    42.13s Added attachment named 'city-metro-route-54-motion'
+    t =    42.13s Find the "header.settings" Button
+    t =    42.53s Find the "map.level.57" Button
+    t =    42.90s Checking existence of `"map.level.57" Button`
+    t =    43.13s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    43.28s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.72] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.47] with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    43.28s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    43.28s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    43.44s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    43.72s     Synthesize event
+    t =    43.76s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    43.93s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    44.13s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    44.32s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    44.51s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    45.48s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    47.33s Find the "header.settings" Button
+    t =    47.62s Find the "map.level.57" Button
+    t =    47.97s Checking existence of `"map.level.57" Button`
+    t =    48.28s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    48.47s Checking existence of `"map.level.57" Button`
+    t =    48.74s Find the "map.level.57" Button
+    t =    49.07s Find the "map.level.57" Button
+    t =    49.39s Find the "header.settings" Button
+    t =    49.72s Find the "map.level.57" Button
+    t =    50.06s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    50.26s Find the "map.level.57" Button
+    t =    50.78s Added attachment named 'city-metro-route-57'
+    t =    50.79s Find the "header.settings" Button
+    t =    51.11s Find the "map.level.60" Button
+    t =    51.54s Checking existence of `"map.level.60" Button`
+    t =    51.82s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    52.03s Press Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.72] for 0.1 seconds, then drag to Target Application 'Hakketjak.Dino-Klokkijken'[0.50, 0.47] with velocity of 500.00 pixels per second, and then hold for 0.0 seconds 
+    t =    52.03s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    52.03s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    52.24s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    52.45s     Synthesize event
+    t =    52.52s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    52.73s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    52.95s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    53.16s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    53.37s         Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    54.32s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    56.24s Find the "header.settings" Button
+    t =    56.70s Find the "map.level.60" Button
+    t =    57.20s Checking existence of `"map.level.60" Button`
+    t =    57.54s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    57.83s Checking existence of `"map.level.60" Button`
+    t =    58.20s Find the "map.level.60" Button
+    t =    58.68s Find the "map.level.60" Button
+    t =    59.01s Find the "header.settings" Button
+    t =    59.38s Find the "map.level.60" Button
+    t =    59.71s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    59.91s Find the "map.level.60" Button
+    t =    60.45s Added attachment named 'city-metro-route-60'
+    t =    63.70s Added attachment named 'city-metro-tunnel-motion'
+    t =    63.71s Find the "map.level.60" Button
+    t =    64.02s Tap "map.level.60" Button[0.50, 0.50]
+    t =    64.02s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    64.03s     Find the "map.level.60" Button
+    t =    64.39s     Check for interrupting elements affecting "map.level.60" Button
+    t =    64.65s     Synthesize event
+    t =    64.65s         Find the "map.level.60" Button
+    t =    65.01s         Find the "map.level.60" Button
+    t =    65.32s         Find the "map.level.60" Button
+    t =    66.06s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    66.11s Waiting 5.0s for "level.play" Button to exist
+    t =    67.14s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =    67.14s         Checking existence of `"level.play" Button`
+    t =    67.21s Tear Down
+Test Case '-[DinoUITests.DinoUITests testCityMetroRouteRemainsPlayable]' passed (67.796 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-23 22:08:25.565.
+	 Executed 1 test, with 0 failures (0 unexpected) in 67.796 (67.798) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-23 22:08:25.565.
+	 Executed 1 test, with 0 failures (0 unexpected) in 67.796 (67.799) seconds
+Test Suite 'Selected tests' passed at 2026-10-23 22:08:25.566.
+	 Executed 1 test, with 0 failures (0 unexpected) in 67.796 (67.800) seconds
+2026-10-23 22:08:25.919 xcodebuild[49661:794939] [MT] IDETestOperationsObserverDebug: 78.837 elapsed -- Testing started completed.
+2026-10-23 22:08:25.919 xcodebuild[49661:794939] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-23 22:08:25.919 xcodebuild[49661:794939] [MT] IDETestOperationsObserverDebug: 78.837 sec, +78.837 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/CityRedesignComplete.xcresult
+
+** TEST SUCCEEDED **
+
+Testing started

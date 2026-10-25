@@ -1,0 +1,30 @@
+{
+  "source": "Dino/Views/JungleLandscape.swift",
+  "sha256": "82ad146934561df35792aa26079f8fbdbda895561b6e189bee4e4ed687d77c60",
+  "nativeWidths": [
+    320,
+    375,
+    393,
+    430,
+    600,
+    744,
+    834,
+    1024,
+    1194
+  ],
+  "geometryChecks": 169991,
+  "uiResult": "TEST EXECUTE SUCCEEDED",
+  "uiTests": [
+    "testCityMetroRouteRemainsPlayable",
+    "testWorldBannersHaveBalancedClearance"
+  ],
+  "worldIDs": [
+    6,
+    7
+  ],
+  "simulatorDevices": {
+    "iphone": "68D41D1D-ABC6-4865-A431-20B1A98D5F80",
+    "ipad": "C1584FB3-BC11-404C-9182-8CB3E85B78CD"
+  },
+  "temporarySimulatorsRemoved": true
+}

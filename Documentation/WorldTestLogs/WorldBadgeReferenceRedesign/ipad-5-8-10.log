@@ -1,0 +1,132 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -destination id=0F76FE91-CC6E-40EE-9107-BCEBBFA965F6 -derivedDataPath /tmp/dino-badge-reference-build -parallel-testing-enabled NO -resultBundlePath /tmp/dino-badge-reference-ipad-5-8-10.xcresult CODE_SIGNING_ALLOWED=NO "-only-testing:DinoUITests/DinoUITests/testWorldBannersHaveBalancedClearance" test-without-building
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Writing result bundle at path:
+	/tmp/dino-badge-reference-ipad-5-8-10.xcresult
+
+2026-10-24 14:13:40.364737+0200 DinoUITests-Runner[47442:2504873] [Default] Running tests...
+2026-10-24 14:13:40.554232+0200 DinoUITests-Runner[47442:2504873] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-24 14:13:42.975.
+Test Suite 'DinoUITests.xctest' started at 2026-10-24 14:13:42.975.
+Test Suite 'DinoUITests' started at 2026-10-24 14:13:42.975.
+Test Case '-[DinoUITests.DinoUITests testWorldBannersHaveBalancedClearance]' started.
+    t =     0.00s Start Test at 2026-10-24 14:13:42.977
+    t =     0.02s Set Up
+    t =     0.03s     Setting device orientation to Portrait
+    t =     0.04s         Wait for com.apple.springboard to idle
+    t =     0.05s     Open Hakketjak.Dino-Klokkijken
+    t =     0.05s         Launch Hakketjak.Dino-Klokkijken
+2026-10-24 14:13:43.067 xcodebuild[47409:2504419] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 14:13:43.067 xcodebuild[47409:2504419] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[47442]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_24A434/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x107d6c398) and /Library/Developer/CoreSimulator/Volumes/iOS_24A434/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x107e60310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.58s             Setting up automation session
+    t =     2.49s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.29s Terminate Hakketjak.Dino-Klokkijken:47489
+    t =     5.38s Open Hakketjak.Dino-Klokkijken
+    t =     5.39s     Launch Hakketjak.Dino-Klokkijken
+2026-10-24 14:13:48.362 xcodebuild[47409:2504419] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 14:13:48.362 xcodebuild[47409:2504419] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     5.60s         Setting up automation session
+    t =     6.97s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    10.18s Waiting 8.0s for "header.settings" Button to exist
+    t =    11.25s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    11.25s         Checking existence of `"header.settings" Button`
+    t =    11.55s Find the "header.settings" Button
+    t =    11.84s Find the "map.level.41" Button
+    t =    12.06s Checking existence of `"map.level.41" Button`
+    t =    12.26s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.41s Checking existence of `"map.level.41" Button`
+    t =    12.62s Find the "map.level.41" Button
+    t =    12.88s Find the "map.level.41" Button
+    t =    13.09s Find the "header.settings" Button
+    t =    13.40s Find the "map.level.41" Button
+    t =    13.67s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.80s Checking existence of `"map.level.40" Button`
+    t =    14.01s Checking existence of `"map.world.5" StaticText`
+    t =    14.23s Find the "map.world.5" StaticText
+    t =    14.47s Find the "map.level.40" Button
+    t =    14.73s Find the "map.level.41" Button
+    t =    15.05s Find the "map.world.5" StaticText
+    t =    15.31s Find the "map.level.41" Button
+    t =    15.57s Find the "map.level.40" Button
+    t =    16.00s Added attachment named 'world-banner-spacing-5'
+    t =    16.01s Terminate Hakketjak.Dino-Klokkijken:47521
+    t =    17.01s Open Hakketjak.Dino-Klokkijken
+    t =    17.01s     Launch Hakketjak.Dino-Klokkijken
+2026-10-24 14:13:59.991 xcodebuild[47409:2504419] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 14:13:59.991 xcodebuild[47409:2504419] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    17.23s         Setting up automation session
+    t =    18.58s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.56s Waiting 8.0s for "header.settings" Button to exist
+    t =    22.64s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    22.64s         Checking existence of `"header.settings" Button`
+    t =    22.87s Find the "header.settings" Button
+    t =    23.20s Find the "map.level.71" Button
+    t =    23.47s Checking existence of `"map.level.71" Button`
+    t =    23.73s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    24.05s Checking existence of `"map.level.71" Button`
+    t =    24.28s Find the "map.level.71" Button
+    t =    24.76s Find the "map.level.71" Button
+    t =    25.09s Find the "header.settings" Button
+    t =    25.39s Find the "map.level.71" Button
+    t =    25.72s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    25.91s Checking existence of `"map.level.70" Button`
+    t =    26.19s Checking existence of `"map.world.8" StaticText`
+    t =    26.46s Find the "map.world.8" StaticText
+    t =    26.72s Find the "map.level.70" Button
+    t =    27.08s Find the "map.level.71" Button
+    t =    27.42s Find the "map.world.8" StaticText
+    t =    27.84s Find the "map.level.71" Button
+    t =    28.18s Find the "map.level.70" Button
+    t =    28.69s Added attachment named 'world-banner-spacing-8'
+    t =    28.69s Terminate Hakketjak.Dino-Klokkijken:47627
+    t =    29.70s Open Hakketjak.Dino-Klokkijken
+    t =    29.70s     Launch Hakketjak.Dino-Klokkijken
+2026-10-24 14:14:12.680 xcodebuild[47409:2504419] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-24 14:14:12.680 xcodebuild[47409:2504419] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    29.92s         Setting up automation session
+    t =    31.34s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    32.76s Waiting 8.0s for "header.settings" Button to exist
+    t =    33.84s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    33.84s         Checking existence of `"header.settings" Button`
+    t =    34.09s Find the "header.settings" Button
+    t =    34.33s Find the "map.level.91" Button
+    t =    34.57s Checking existence of `"map.level.91" Button`
+    t =    34.79s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    34.96s Checking existence of `"map.level.91" Button`
+    t =    35.16s Find the "map.level.91" Button
+    t =    35.39s Find the "map.level.91" Button
+    t =    35.60s Find the "header.settings" Button
+    t =    35.81s Find the "map.level.91" Button
+    t =    36.06s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    36.22s Checking existence of `"map.level.90" Button`
+    t =    36.42s Checking existence of `"map.world.10" StaticText`
+    t =    36.60s Find the "map.world.10" StaticText
+    t =    36.82s Find the "map.level.90" Button
+    t =    37.12s Find the "map.level.91" Button
+    t =    37.37s Find the "map.world.10" StaticText
+    t =    37.58s Find the "map.level.91" Button
+    t =    37.79s Find the "map.level.90" Button
+    t =    38.16s Added attachment named 'world-banner-spacing-10'
+    t =    38.16s Tear Down
+Test Case '-[DinoUITests.DinoUITests testWorldBannersHaveBalancedClearance]' passed (38.534 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-24 14:14:21.511.
+	 Executed 1 test, with 0 failures (0 unexpected) in 38.534 (38.536) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-24 14:14:21.513.
+	 Executed 1 test, with 0 failures (0 unexpected) in 38.534 (38.538) seconds
+Test Suite 'Selected tests' passed at 2026-10-24 14:14:21.513.
+	 Executed 1 test, with 0 failures (0 unexpected) in 38.534 (38.539) seconds
+2026-10-24 14:14:21.806 xcodebuild[47409:2504419] [MT] IDETestOperationsObserverDebug: 43.062 elapsed -- Testing started completed.
+2026-10-24 14:14:21.806 xcodebuild[47409:2504419] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-24 14:14:21.806 xcodebuild[47409:2504419] [MT] IDETestOperationsObserverDebug: 43.062 sec, +43.062 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-badge-reference-ipad-5-8-10.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

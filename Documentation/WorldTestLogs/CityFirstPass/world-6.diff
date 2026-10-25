@@ -1,0 +1,720 @@
+--- CityWorldPainter before
++++ City metro and streets first pass
+@@ -1,3 +1,134 @@
++/// One winding metro service, with staggered termini on opposite sides of the city.
++/// Arc-length sampling keeps every carriage on the rails through the bends.
++private struct CityMetroLine {
++    struct Pose { let point: CGPoint; let heading: Double }
++    let points: [CGPoint]
++    let distances: [CGFloat]
++    let path: Path
++    var length: CGFloat { distances.last ?? 0 }
++
++    init(layout: WorldSceneryLayout) {
++        let s = layout.scale
++        func rail(_ y: CGFloat, _ right: Bool) -> CGPoint {
++            CGPoint(x: layout.centerX(at: y) + (right ? 104 : -104) * s, y: y)
++        }
++        var samples: [CGPoint] = []
++        for y in stride(from: CGFloat(180), through: 1635, by: 4) { samples.append(rail(y, false)) }
++        let a = rail(1635, false), b = rail(1635, true)
++        samples.append(a)
++        // The return curve lives below the last level, with a vertical tangent
++        // where it joins both flanks. It never crosses a playable level stone.
++        for i in 0...100 {
++            let t = CGFloat(i) / 100, u = 1 - t
++            samples.append(CGPoint(x: u*u*u*a.x + 3*u*u*t*a.x + 3*u*t*t*b.x + t*t*t*b.x,
++                                   y: u*u*u*a.y + 3*u*u*t*1800 + 3*u*t*t*1800 + t*t*t*b.y))
++        }
++        for y in stride(from: CGFloat(1635), through: 360, by: -4) { samples.append(rail(y, true)) }
++        var lengths: [CGFloat] = [0]
++        for (a, b) in zip(samples, samples.dropFirst()) { lengths.append(lengths.last! + hypot(b.x - a.x, b.y - a.y)) }
++        points = samples; distances = lengths
++        path = Path { p in p.addLines(samples) }
++    }
++
++    func pose(at distance: CGFloat) -> Pose {
++        let d = min(length, max(0, distance))
++        var low = 0, high = distances.count - 1
++        while low + 1 < high {
++            let mid = (low + high) / 2
++            if distances[mid] < d { low = mid } else { high = mid }
++        }
++        let a = points[low], b = points[high]
++        let t = (d - distances[low]) / max(0.001, distances[high] - distances[low])
++        return Pose(point: CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t),
++                    heading: Double(atan2(b.y - a.y, b.x - a.x)))
++    }
++
++    func offsetPath(_ offset: CGFloat) -> Path {
++        Path { p in
++            for i in points.indices {
++                let a = points[max(0, i - 1)], b = points[min(points.count - 1, i + 1)]
++                let d = max(0.001, hypot(b.x - a.x, b.y - a.y))
++                let q = CGPoint(x: points[i].x - (b.y - a.y) * offset / d,
++                                y: points[i].y + (b.x - a.x) * offset / d)
++                if i == 0 { p.move(to: q) } else { p.addLine(to: q) }
++            }
++        }
++    }
++
++    /// A brief dwell and smooth acceleration at each platform; brisk cruising.
++    func travel(at time: TimeInterval, scale: CGFloat) -> (distance: CGFloat, direction: CGFloat, speed: CGFloat) {
++        let trainLength = 45 * scale, start = trainLength, end = length - trainLength
++        let span = end - start, duration = Double(span / (265 * scale))
++        let dwell = 1.15, leg = duration + dwell
++        let phase = (time + 2.8).truncatingRemainder(dividingBy: leg * 2)
++        let forward = phase < leg
++        let local = forward ? phase : phase - leg
++        let t = min(1, max(0, (local - dwell) / duration))
++        // Cosine easing makes stopping visible without a sudden teleport.
++        let progress = CGFloat(t - sin(2 * .pi * t) / (2 * .pi))
++        let speed = CGFloat(1 - cos(2 * .pi * t))
++        return (forward ? start + span * progress : end - span * progress, forward ? 1 : -1, speed)
++    }
++}
++
++private struct CityWorldLife: View {
++    let routeOffset: CGFloat
++    let viewportHeight: CGFloat
++    var fixedTime: TimeInterval? = nil
++    var frozen = false
++    @Environment(\.accessibilityReduceMotion) private var reduceMotion
++    @Environment(\.scenePhase) private var scenePhase
++    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
++    @State private var viewport = CGRect.zero
++
++    var body: some View {
++        GeometryReader { geometry in
++            let layout = WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset)
++            let line = CityMetroLine(layout: layout)
++            TimelineView(.animation(minimumInterval: 1.0 / 30,
++                                    paused: fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
++                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
++                let travel = line.travel(at: time, scale: layout.scale)
++                ZStack(alignment: .topLeading) {
++                    ForEach(0..<3, id: \.self) { carriage in
++                        let distance = travel.distance + CGFloat(carriage - 1) * 30 * layout.scale
++                        let pose = line.pose(at: distance)
++                        let frame = CGRect(x: pose.point.x - 50 * layout.scale, y: pose.point.y + routeOffset - 50 * layout.scale,
++                                           width: 100 * layout.scale, height: 100 * layout.scale)
++                        if fixedTime != nil || frame.intersects(viewport) {
++                            Canvas { context, _ in
++                                var c = context; c.translateBy(x: -frame.minX, y: routeOffset - frame.minY)
++                                CityWorldPainter(context: c).metroCar(at: pose.point,
++                                    heading: pose.heading + (travel.direction < 0 ? .pi : 0), size: layout.scale,
++                                    cab: carriage == (travel.direction > 0 ? 2 : 0), time: time, speed: frozen || reduceMotion ? 0 : travel.speed)
++                            }
++                            .frame(width: frame.width, height: frame.height).clipped()
++                            .position(x: frame.midX, y: frame.midY)
++                        }
++                    }
++                }.frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
++            }
++            .overlay(alignment: .topLeading) {
++                // The plaza and city guardian stand in front of the live train.
++                // Keep this static foreground out of the 30fps carriage canvases.
++                let s = layout.scale
++                let frame = CGRect(x: layout.width - 189 * s, y: routeOffset + 1675 - 210 * s,
++                                   width: 220 * s, height: 250 * s)
++                Canvas { context, _ in
++                    var c = context; c.translateBy(x: -frame.minX, y: routeOffset - frame.minY)
++                    CityWorldPainter(context: c).metroForeground(layout: layout)
++                }
++                .frame(width: frame.width, height: frame.height).clipped()
++                .position(x: frame.midX, y: frame.midY)
++            }
++        }
++        .readGeometry(for: CGRect.self) { geometry in
++            DinoMapViewport.preparedAnimationBounds(frame: geometry.frame(in: .named("adventure.map.viewport")), viewportHeight: viewportHeight)
++        } action: { viewport = $0 }
++        .clipped().allowsHitTesting(false).accessibilityHidden(true)
++    }
++}
++
+ /// Cream stone, copper trim and turquoise domes distinguish Dino Stad.
+ private struct CityWorldPainter {
+     let context: GraphicsContext
+@@ -44,227 +175,349 @@
+         let scale = min(1.30, max(0.82, w / 390))
+         context.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(stops: [
+             .init(color: Color(dinoHex: 0xACBEB4), location: 0),
+-            .init(color: Color(dinoHex: 0xC5D1B9), location: 0.055),
+-            .init(color: Color(dinoHex: 0xE5EBCF), location: (routeOffset + 110) / h),
+-            .init(color: Color(dinoHex: 0xDFE5BF), location: 0.38),
+-            .init(color: Color(dinoHex: 0xD1DFBB), location: 0.70),
++            .init(color: Color(dinoHex: 0xE2E9D9), location: (routeOffset + 20) / h),
++            .init(color: Color(dinoHex: 0xEEE5CD), location: 0.35),
++            .init(color: Color(dinoHex: 0xDBDFC7), location: 0.76),
+             .init(color: Color(dinoHex: 0xCED0E6), location: 1)
+         ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
+-        entrance(width: w, scale: scale)
++        // Ease sunlight and skyline in after the cave, keeping the join continuous.
++        var arrival = context
++        arrival.clipToLayer { mask in
++            mask.fill(Path(CGRect(origin: .zero, size: size)),
++                      with: .linearGradient(Gradient(colors: [.clear, .white]),
++                                            startPoint: .zero, endPoint: CGPoint(x: 0, y: 72 * scale)))
++        }
++        CityWorldPainter(context: arrival).entrance(width: w, scale: scale)
+         var c = context; c.translateBy(x: 0, y: routeOffset)
+-        let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
+-        scenery.drawBanks(in: c, worldID: 6, nextWorldID: 2)
+-        let p = CityWorldPainter(context: c, depth: depth, depthOffset: routeOffset)
+-        p.quays(along: scenery)
+-
+-        let crossings: [(right: Bool, y: CGFloat)] = [(false, 480), (true, 815), (false, 1165), (true, 1505)]
+-        p.bankDetails(along: scenery, crossings: crossings)
+-        p.pocketGardens(along: scenery)
+-        p.canalBoat(along: scenery, right: false, y: 575)
+-
+-        // Foundations stay beyond the outer quay, even on the tight phone bends.
+-        let districts: [(right: Bool, y: CGFloat, size: CGFloat, kind: Int)] = [
+-            (false, 360, 0.58, 1), (false, 450, 0.73, 0), (true, 790, 0.82, 1),
+-            (false, 1140, 0.84, 2), (true, 1480, 0.73, 0)
+-        ]
+-        for district in districts {
+-            let objectScale = scale * district.size
+-            let halfWidth: CGFloat = district.kind == 0 ? 76 : district.kind == 1 ? 68 : 61
+-            let point = p.outerBankFoundation(along: scenery, right: district.right,
+-                                              y: district.y, halfWidth: halfWidth * objectScale)
+-            p.district(at: point, size: objectScale, variation: district.kind)
+-        }
+-        for crossing in crossings {
+-            p.canalCrossing(along: scenery, right: crossing.right, y: crossing.y)
+-        }
+-        p.bossPlaza(width: w, scale: scale, layout: scenery)
++        let layout = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
++        let p = CityWorldPainter(context: c)
++        p.cityDistricts(layout: layout)
++        p.metroViaduct(line: CityMetroLine(layout: layout), scale: scale)
++        // Staggered station forecourts meet the two actual line endpoints.
++        p.metroStation(at: CGPoint(x: layout.centerX(at: 180) - 104 * scale, y: 180), size: scale, right: false)
++        p.metroStation(at: CGPoint(x: layout.centerX(at: 360) + 104 * scale, y: 360), size: scale, right: true)
++        p.streetLife(layout: layout, depth: depth)
++        let boss = CityWorldPainter(context: c, depth: depth, depthOffset: routeOffset)
++        boss.bossPlaza(width: w, scale: scale, layout: layout)
++    }
++
++    /// Solid city flanks are cut to the bends, leaving the playable promenade open.
++    private func cityBank(layout: WorldSceneryLayout, right: Bool, inset: CGFloat = 128) -> Path {
++        let start: CGFloat = 35, end: CGFloat = 1595
++        let sign: CGFloat = right ? 1 : -1
++        return Path { p in
++            for y in stride(from: start, through: end, by: 4) {
++                let point = CGPoint(x: layout.centerX(at: y) + sign * inset * layout.scale, y: y)
++                if y == start { p.move(to: point) } else { p.addLine(to: point) }
++            }
++            let outside = right ? layout.width + 400 : -400
++            p.addLine(to: CGPoint(x: outside, y: end)); p.addLine(to: CGPoint(x: outside, y: start)); p.closeSubpath()
++        }
++    }
++
++    private func cityDistricts(layout: WorldSceneryLayout) {
++        let s = layout.scale
++        for right in [false, true] {
++            var c = context; c.clip(to: cityBank(layout: layout, right: right))
++            c.clipToLayer { mask in
++                mask.fill(Path(CGRect(x: 0, y: 35, width: layout.width, height: 1560)),
++                          with: .linearGradient(Gradient(stops: [
++                            .init(color: .clear, location: 0), .init(color: .white, location: 0.065),
++                            .init(color: .white, location: 0.95), .init(color: .clear, location: 1)
++                          ]), startPoint: .init(x: 0, y: 35), endPoint: .init(x: 0, y: 1595)))
++            }
++            let p = CityWorldPainter(context: c)
++            p.material(Path(CGRect(x: 0, y: 35, width: layout.width, height: 1560)), colors: [0xE6DEC7, 0xB8C1B3, 0xC6CDBB])
++            // Continuous limestone paving, rather than isolated oval islands.
++            var joints = Path()
++            for row in 0..<91 {
++                let y = CGFloat(row) * 18 + 35
++                joints.move(to: CGPoint(x: 0, y: y)); joints.addLine(to: CGPoint(x: layout.width, y: y))
++                for col in 0...Int(layout.width / 34) {
++                    let x = CGFloat(col) * 34 + CGFloat(row % 2) * 17
++                    joints.move(to: CGPoint(x: x, y: y)); joints.addLine(to: CGPoint(x: x, y: y + 18))
++                }
++            }
++            c.stroke(joints, with: .color(Color(dinoHex: 0x899F9B).opacity(0.25)), lineWidth: 0.65)
++            // Each bend opens onto a real raised terrace with its own facade.
++            for i in 0..<10 {
++                let y = 180 + CGFloat(i) * 148 + (right ? 55 : 0)
++                let sign: CGFloat = right ? 1 : -1
++                let edge = layout.centerX(at: y) + sign * 133 * s
++                let available = right ? layout.width - edge : edge
++                guard available > -22 * s else { continue }
++                let center = edge + sign * min(72 * s, max(39 * s, available * 0.38))
++                let terraceWidth = max(145 * s, available + 35 * s)
++                p.at(CGPoint(x: center, y: y), size: s) { block in
++                    block.urbanTerrace(width: terraceWidth / s, variation: i, right: right)
++                    if i % 3 == 0 {
++                        block.civicBuilding(at: CGPoint(x: sign * 7, y: -25), size: 0.88, kind: (i / 3 + (right ? 1 : 0)) % 3)
++                    } else {
++                        block.building(at: CGPoint(x: -21, y: -33), size: 0.85 + CGFloat(i % 2) * 0.12, tower: i % 5 == 2, cafe: true)
++                        block.building(at: CGPoint(x: 43, y: -38), size: 0.74, tower: i % 7 == 4, cafe: i % 2 == 0)
++                    }
++                    block.cafeTerrace(at: CGPoint(x: -sign * 19, y: 20), size: 0.8, variation: i)
++                    block.streetTree(at: CGPoint(x: sign * 56, y: 27), size: 0.69)
++                    block.lamp(at: CGPoint(x: -sign * 61, y: 22), size: 0.68, banner: true)
++                }
++                // Tablets receive inhabited outer blocks too.
++                if available > 210 * s {
++                    for extra in 0..<Int((available - 120 * s) / (100 * s)) {
++                        let x = center + sign * (110 + CGFloat(extra) * 105) * s
++                        if (i + extra) % 4 == 0 {
++                            p.civicBuilding(at: CGPoint(x: x, y: y - 24), size: s * 0.86, kind: 1 + extra % 2)
++                        } else {
++                            p.building(at: CGPoint(x: x, y: y - 24), size: s * 0.97, tower: (i + extra) % 7 == 0, cafe: true)
++                        }
++                        p.cafeTerrace(at: CGPoint(x: x, y: y + 28), size: s * 0.85, variation: i + extra)
++                    }
++                }
++            }
++            let rim = Path { path in
++                for y in stride(from: CGFloat(35), through: 1595, by: 4) {
++                    let q = CGPoint(x: layout.centerX(at: y) + (right ? 130 : -130) * s, y: y)
++                    if y == 35 { path.move(to: q) } else { path.addLine(to: q) }
++                }
++            }
++            c.stroke(rim, with: .color(Color(dinoHex: 0xFFF3D7)), style: StrokeStyle(lineWidth: 3 * s))
++        }
++    }
++
++    private func urbanTerrace(width: CGFloat, variation: Int, right: Bool) {
++        rounded(CGRect(x: -width / 2, y: -43, width: width, height: 83), radius: 5, colors: [0xFAEDD0, 0xD4C4A7, 0xA9AF9D])
++        for y: CGFloat in [-17, -4, 9] { line([.init(x: -width / 2 + 2, y: y), .init(x: width / 2 - 2, y: y)], color: 0xF5E7CB, width: 1.2) }
++        // Short flights tie the cafe floor to the public pavement.
++        let stairX: CGFloat = right ? -width / 2 + 21 : width / 2 - 21
++        for i in 0..<6 {
++            let y = 31 + CGFloat(i) * 3.6
++            rounded(CGRect(x: stairX - 17, y: y, width: 34, height: 4.5), radius: 0.8, colors: [0xFFF1D7, 0xB5B49E])
++        }
++        for x: CGFloat in [-width / 2 + 5, width / 2 - 5] {
++            line([.init(x: x, y: -6), .init(x: x, y: 32)], color: 0x376A7D, width: 2)
++            oval(CGRect(x: x - 3, y: -9, width: 6, height: 4), colors: [0xFDE1A0, 0xB4915C])
++        }
++        line([.init(x: -width / 2 + 6, y: 27), .init(x: width / 2 - 6, y: 27)], color: 0x34677B, width: 2)
++        for x in stride(from: -width / 2 + 10, through: width / 2 - 10, by: 9) {
++            line([.init(x: x, y: 27), .init(x: x, y: 36)], color: 0x4D7D87, width: 1)
++        }
++        for x: CGFloat in [-width / 2 + 14, width / 2 - 14] { planter(at: .init(x: x, y: 30), size: 0.44) }
++    }
++
++    private func streetLife(layout: WorldSceneryLayout, depth: WorldSceneryDepth) {
++        let s = layout.scale
++        // Narrow planted walks between the game route and the viaduct.
++        for right in [false, true] {
++            for i in 0..<15 {
++                let y = 290 + CGFloat(i) * 85 + (right ? 27 : 0)
++                guard y < 1550 else { continue }
++                let point = CGPoint(x: layout.centerX(at: y) + (right ? 68 : -68) * s, y: y)
++                guard point.x > 4, point.x < layout.width - 4 else { continue }
++                var street = context; street.clip(to: cityBank(layout: layout, right: right, inset: 53))
++                let p = CityWorldPainter(context: street, depth: depth, depthOffset: layout.routeOffset)
++                p.at(point, size: s * 0.45) { item in
++                    if i % 3 == 0 { item.lamp(at: .zero, size: 0.78, banner: false) }
++                    else if i % 3 == 1 { item.planter(at: .zero, size: 0.72) }
++                    else { item.flowers(at: .zero, size: 0.8) }
++                }
++            }
++        }
++    }
++
++    func metroForeground(layout: WorldSceneryLayout) {
++        bossPlaza(width: layout.width, scale: layout.scale, layout: layout)
++        WorldBossPainter(context: context).draw(worldID: 6,
++            at: CGPoint(x: layout.width - 79 * layout.scale, y: 1675), size: layout.scale * 0.88)
+     }
+ 
+     private func bossPlaza(width: CGFloat, scale: CGFloat, layout: WorldSceneryLayout) {
+         let point = CGPoint(x: width - 79 * scale, y: 1687)
+-        let approach = Path { p in
+-            p.move(to: CGPoint(x: layout.centerX(at: 1710), y: 1710))
+-            p.addQuadCurve(to: point, control: CGPoint(x: point.x - 45 * scale, y: 1710))
+-        }
+-        for (w, color): (CGFloat, UInt32) in [(18, 0xBAC3A5), (13, 0xF2E4C3)] {
+-            context.stroke(approach, with: .color(Color(dinoHex: color)), style: StrokeStyle(lineWidth: w * scale, lineCap: .round))
+-        }
+         paving(at: point, width: 135 * scale)
+         planter(at: CGPoint(x: point.x - 49 * scale, y: point.y + 12 * scale), size: scale * 0.43)
+         flowers(at: CGPoint(x: point.x + 48 * scale, y: point.y + 11 * scale), size: scale * 0.53)
+     }
+ 
+-    private func canalPath(along layout: WorldSceneryLayout, right: Bool, offset: CGFloat) -> Path {
+-        Path { path in
+-            let start = -layout.routeOffset + 12
+-            let end = layout.height - layout.routeOffset - 12
+-            let count = Int(ceil((end - start) / 5))
+-            for i in 0...count {
+-                let y = start + (end - start) * CGFloat(i) / CGFloat(count)
+-                let point = layout.cityCanalPoint(at: y, right: right, offset: offset)
+-                if i == 0 { path.move(to: point) } else { path.addLine(to: point) }
+-            }
+-        }
+-    }
+-
+-    private func quays(along layout: WorldSceneryLayout) {
+-        let s = layout.scale
+-        for right in [false, true] { for bank: CGFloat in [-1, 1] {
+-            let promenade = canalPath(along: layout, right: right, offset: bank * 36 * s)
+-            for (width, color): (CGFloat, UInt32) in [(19, 0xBCC6A4), (13, 0xDFD9BC), (10, 0xF0E4C8)] {
+-                context.stroke(promenade, with: .color(Color(dinoHex: color)),
+-                               style: StrokeStyle(lineWidth: width * s, lineCap: .round, lineJoin: .round))
+-            }
+-            let coping = canalPath(along: layout, right: right, offset: bank * 24 * s)
+-            context.stroke(coping, with: .color(Color(dinoHex: 0x769F9A).opacity(0.6)),
+-                           style: StrokeStyle(lineWidth: 2.7 * s, lineCap: .round, lineJoin: .round))
+-            context.stroke(coping, with: .color(Color(dinoHex: 0xFFF0CD)),
+-                           style: StrokeStyle(lineWidth: 1.3 * s, lineCap: .round, lineJoin: .round))
+-            for i in 0..<91 {
+-                let y = 105 + CGFloat(i) * 18
+-                let a = layout.cityCanalPoint(at: y, right: right, offset: bank * 31 * s)
+-                let b = layout.cityCanalPoint(at: y, right: right, offset: bank * 41 * s)
+-                line([a, b], color: 0xB9BAA0, width: 0.65 * s, opacity: 0.6)
+-            }
+-        } }
+-    }
+-
+-    private func outerBankFoundation(along layout: WorldSceneryLayout, right: Bool, y: CGFloat, halfWidth: CGFloat) -> CGPoint {
+-        var edge: CGFloat = right ? -1000 : layout.width + 1000
+-        // Check the whole ground footprint, rather than its centre alone.
+-        for i in 0...14 {
+-            let point = layout.cityCanalPoint(at: y - 18 * layout.scale + CGFloat(i) * 4 * layout.scale,
+-                                              right: right, offset: 44 * layout.scale)
+-            edge = right ? max(edge, point.x) : min(edge, point.x)
+-        }
+-        return CGPoint(x: edge + (right ? halfWidth : -halfWidth), y: y)
+-    }
+-
+-    private func district(at point: CGPoint, size: CGFloat, variation: Int) {
+-        at(point, size: size) { p in
+-            p.paving(at: CGPoint(x: 0, y: 9), width: variation == 0 ? 144 : variation == 2 ? 122 : 132)
+-            switch variation {
+-            case 0:
+-                p.station(at: CGPoint(x: 0, y: -2), size: 0.94)
+-                p.planter(at: CGPoint(x: -53, y: 19), size: 0.48)
+-                p.flowers(at: CGPoint(x: 47, y: 20), size: 0.55)
+-            case 1:
+-                p.building(at: CGPoint(x: -18, y: -8), size: 0.86, tower: false, cafe: true)
+-                p.palm(at: CGPoint(x: 40, y: 1), size: 0.69)
+-                p.bench(at: CGPoint(x: 28, y: 20), size: 0.57)
+-            default:
+-                p.building(at: CGPoint(x: -8, y: -4), size: 0.9, tower: true)
+-                p.fountain(at: CGPoint(x: 31, y: 23), size: 0.49)
+-                p.flowers(at: CGPoint(x: -31, y: 24), size: 0.7)
+-            }
+-        }
+-    }
+-
+-    private func pocketGardens(along layout: WorldSceneryLayout) {
+-        let s = layout.scale
+-        for (i, y): (Int, CGFloat) in [350.0, 600, 965, 1320].enumerated() {
+-            for right in [false, true] {
+-                let point = outerBankFoundation(along: layout, right: right, y: y, halfWidth: 48 * s)
+-                guard point.x > 44 * s, point.x < layout.width - 44 * s else { continue }
+-                garden(at: point, size: s * 0.72, variation: i)
+-            }
+-        }
+-    }
+-
+-    private func canalBoat(along layout: WorldSceneryLayout, right: Bool, y: CGFloat) {
+-        let point = layout.cityCanalPoint(at: y, right: right)
+-        let a = layout.cityCanalPoint(at: y - 1, right: right)
+-        let b = layout.cityCanalPoint(at: y + 1, right: right)
+-        var c = context; c.translateBy(x: point.x, y: point.y)
+-        c.rotate(by: .radians(Double(-atan2(b.x - a.x, b.y - a.y))))
++    private func metroViaduct(line metro: CityMetroLine, scale s: CGFloat) {
++        // The old water is completely replaced with limestone and steel.
++        for (width, color, dy): (CGFloat, UInt32, CGFloat) in [(44, 0x9EAA9E, 9), (40, 0xCCC3AA, 5), (37, 0xF4E6C9, 0), (27, 0x697F87, 0), (23, 0x91A5A7, 0)] {
++            context.stroke(metro.path.offsetBy(dx: 0, dy: dy * s), with: .color(Color(dinoHex: color)), style: StrokeStyle(lineWidth: width * s, lineCap: .round, lineJoin: .round))
++        }
++        var sleepers = Path()
++        for distance in stride(from: CGFloat(0), through: metro.length, by: 11 * s) {
++            let pose = metro.pose(at: distance)
++            let n = CGPoint(x: -sin(pose.heading) * 10 * s, y: cos(pose.heading) * 10 * s)
++            sleepers.move(to: CGPoint(x: pose.point.x - n.x, y: pose.point.y - n.y))
++            sleepers.addLine(to: CGPoint(x: pose.point.x + n.x, y: pose.point.y + n.y))
++        }
++        context.stroke(sleepers, with: .color(Color(dinoHex: 0x4A636F)), style: StrokeStyle(lineWidth: 2.3 * s))
++        for offset: CGFloat in [-7, 7] {
++            let rail = metro.offsetPath(offset * s)
++            context.stroke(rail, with: .color(Color(dinoHex: 0x345265)), style: StrokeStyle(lineWidth: 3.3 * s))
++            context.stroke(rail, with: .color(Color(dinoHex: 0xE8F3E8)), style: StrokeStyle(lineWidth: 1.25 * s))
++        }
++        for offset: CGFloat in [-17, 17] {
++            context.stroke(metro.offsetPath(offset * s), with: .color(Color(dinoHex: 0x426F7D)), style: StrokeStyle(lineWidth: 1.8 * s))
++        }
++        // Stone piers and golden rail caps reinforce the raised railway.
++        for distance in stride(from: CGFloat(70), through: metro.length - 45, by: 93 * s) {
++            let pose = metro.pose(at: distance)
++            for sign: CGFloat in [-1, 1] {
++                let q = CGPoint(x: pose.point.x - CGFloat(sin(pose.heading)) * sign * 18 * s,
++                                y: pose.point.y + CGFloat(cos(pose.heading)) * sign * 18 * s)
++                rounded(CGRect(x: q.x - 2.5 * s, y: q.y - 4 * s, width: 5 * s, height: 9 * s), radius: s, colors: [0xFFF0CD, 0xB7B49B])
++                oval(CGRect(x: q.x - 3 * s, y: q.y - 5 * s, width: 6 * s, height: 3 * s), colors: [0xFFE7AE, 0xAF9867])
++            }
++        }
++    }
++
++    private func metroStation(at point: CGPoint, size: CGFloat, right: Bool) {
++        at(point, size: size, mirror: right) { p in
++            // Platform lies outside the rails; canopy remains clear of the train.
++            p.rounded(CGRect(x: -52, y: -20, width: 35, height: 108), radius: 6, colors: [0xFCEDD0, 0xD0C4AA, 0x9AABAA])
++            p.line([.init(x: -18, y: -17), .init(x: -18, y: 84)], color: 0xF6D378, width: 2)
++            for y: CGFloat in [-13, 12, 37, 62] {
++                p.rounded(CGRect(x: -48, y: y - 26, width: 4, height: 30), radius: 1, colors: [0xCCDBD4, 0x3A6D80])
++            }
++            let canopy = Path { c in
++                c.move(to: .init(x: -59, y: -42)); c.addQuadCurve(to: .init(x: -20, y: -42), control: .init(x: -39, y: -69))
++                c.addLine(to: .init(x: -20, y: 49)); c.addQuadCurve(to: .init(x: -59, y: 49), control: .init(x: -39, y: 30)); c.closeSubpath()
++            }
++            p.material(canopy, colors: [0xC8E5DF, 0x76ACB9, 0x365C7F])
++            for y in stride(from: CGFloat(-40), through: 46, by: 14) {
++                p.line([.init(x: -58, y: y), .init(x: -39, y: y - 11), .init(x: -21, y: y)], color: 0xE5EBD8, width: 1.2)
++            }
++            p.rounded(CGRect(x: -51, y: 52, width: 25, height: 17), radius: 3, colors: [0x1D536D, 0x14394E])
++            var text = p.context
++            if right { text.scaleBy(x: -1, y: 1) }
++            text.draw(Text(verbatim: "M").font(.system(size: 11, weight: .heavy, design: .rounded)).canvasInk(Color(dinoHex: 0xFFE4A0)), at: .init(x: right ? 39 : -39, y: 60))
++            for i in 0..<5 { p.line([.init(x: -52 - CGFloat(i) * 2, y: 77 + CGFloat(i) * 4), .init(x: -22, y: 77 + CGFloat(i) * 4)], color: 0xFAE8C8, width: 3) }
++            p.lamp(at: .init(x: -64, y: 86), size: 0.55, banner: false)
++            p.flowers(at: .init(x: -58, y: 101), size: 0.6)
++            p.line([.init(x: -10, y: -23), .init(x: 10, y: -23)], color: 0x38566B, width: 4)
++            p.line([.init(x: -10, y: -25), .init(x: 10, y: -25)], color: 0xE5BF78, width: 2)
++        }
++    }
++
++    func metroCar(at point: CGPoint, heading: Double, size: CGFloat, cab: Bool, time: TimeInterval, speed: CGFloat) {
++        var c = context; c.translateBy(x: point.x, y: point.y); c.rotate(by: .radians(heading)); c.scaleBy(x: size, y: size)
+         let p = CityWorldPainter(context: c)
+-        p.at(.zero, size: layout.scale * 0.72) { boat in
+-            for x: CGFloat in [-15, 15] {
+-                boat.line([.init(x: x, y: -5), .init(x: x, y: 12)], color: 0xE8F9E7, width: 1, opacity: 0.7)
+-            }
+-            let hull = Path { h in
+-                h.move(to: .init(x: 0, y: -26))
+-                h.addCurve(to: .init(x: 0, y: 24), control1: .init(x: 18, y: -12), control2: .init(x: 14, y: 20))
+-                h.addCurve(to: .init(x: 0, y: -26), control1: .init(x: -14, y: 20), control2: .init(x: -18, y: -12))
+-            }
+-            boat.material(hull, colors: [0xFBE3A3, 0xC39F64, 0xA67F54])
+-            boat.oval(CGRect(x: -8, y: -14, width: 16, height: 31), colors: [0x578B91, 0x3B6975])
+-            for seat: CGFloat in [-6, 9] {
+-                boat.rounded(CGRect(x: -9, y: seat, width: 18, height: 4), radius: 1.5, colors: [0xF6D69B, 0xC29F6A])
+-            }
+-            boat.line([.init(x: -11, y: -12), .init(x: 10, y: 16)], color: 0xE8BE79, width: 1.8)
+-        }
+-    }
+-
+-    private func canalCrossing(along layout: WorldSceneryLayout, right: Bool, y: CGFloat) {
+-        let s = layout.scale
+-        var left = CGFloat.greatestFiniteMagnitude, rightEdge = -CGFloat.greatestFiniteMagnitude
+-        // Span the river's full screen-space width beneath the deck and feet.
+-        // Keep the bridge level, with both landings beyond the water's stone rim.
+-        for i in 0...10 {
+-            let sampleY = y + (-6 + CGFloat(i) * 4) * s
+-            let point = layout.cityCanalPoint(at: sampleY, right: right)
+-            let a = layout.cityCanalPoint(at: sampleY - 1, right: right)
+-            let b = layout.cityCanalPoint(at: sampleY + 1, right: right)
+-            let slope = (b.x - a.x) / 2
+-            let rim = 27 * s * sqrt(1 + slope * slope)
+-            left = min(left, point.x - rim)
+-            rightEdge = max(rightEdge, point.x + rim)
+-        }
+-        let centerX = (left + rightEdge) / 2
+-        let halfSpan = max(54 * s, (rightEdge - left) / 2 + 21 * s)
+-        let inner = CGPoint(x: centerX + (right ? -halfSpan : halfSpan), y: y + 3 * s)
+-        let start = CGPoint(x: layout.centerX(at: y + 12 * s), y: y + 12 * s)
+-        let lane = Path { p in
+-            p.move(to: start)
+-            p.addCurve(to: inner, control1: CGPoint(x: start.x + (inner.x - start.x) * 0.45, y: start.y),
+-                       control2: CGPoint(x: inner.x, y: inner.y))
+-        }
+-        for (width, color): (CGFloat, UInt32) in [(17, 0xB6BFA1), (13, 0xF2E4BD), (8, 0xF9EDCF)] {
+-            context.stroke(lane, with: .color(Color(dinoHex: color)), style: StrokeStyle(lineWidth: width * s, lineCap: .round))
+-        }
+-        bridge(at: CGPoint(x: centerX, y: y), size: s, span: halfSpan * 2 / s)
+-    }
+-
+-    private func bankDetails(along layout: WorldSceneryLayout, crossings: [(right: Bool, y: CGFloat)]) {
+-        let s = layout.scale
+-        for right in [false, true] { for bank: CGFloat in [-1, 1] {
+-            for i in 0..<15 {
+-                let y = 300 + CGFloat(i) * 88 + (right ? 34 : 0) + (bank > 0 ? 23 : 0)
+-                if crossings.contains(where: { $0.right == right && abs($0.y - y) < 55 }) { continue }
+-                let point = layout.cityCanalPoint(at: y, right: right, offset: bank * 48 * s)
+-                guard point.x > -15 * s && point.x < layout.width + 15 * s else { continue }
+-                at(point, size: s * 0.47) { p in
+-                    // Small planted pockets sit on land beside the continuous paving.
+-                    switch (i + (right ? 1 : 0) + (bank > 0 ? 2 : 0)) % 4 {
+-                    case 0:
+-                        p.paving(at: .zero, width: 32)
+-                        p.lamp(at: .zero, size: 0.9, banner: false)
+-                        p.flowers(at: CGPoint(x: 15, y: 5), size: 0.4)
+-                    case 1:
+-                        p.paving(at: .zero, width: 60)
+-                        p.bench(at: .zero, size: 0.78)
+-                        p.flowers(at: CGPoint(x: -25, y: 7), size: 0.44)
+-                    case 2:
+-                        p.planter(at: .zero, size: 0.72, palm: false)
+-                    default:
+-                        p.plants(at: .zero, size: 0.75)
+-                        p.flowers(at: CGPoint(x: 13, y: 5), size: 0.6)
++        p.rounded(CGRect(x: -16, y: -10, width: 33, height: 23), radius: 6, colors: [0x526574, 0x314558])
++        p.rounded(CGRect(x: -16, y: -13, width: 33, height: 23), radius: 6, colors: [0xF2EBD2, 0xA8C6CD, 0x49749B])
++        p.rounded(CGRect(x: -14, y: -12, width: 28, height: 8), radius: 3, colors: [0xDFE9E1, 0x83A6B7])
++        p.line([.init(x: -14, y: 7), .init(x: 13, y: 7)], color: 0xE6B95E, width: 2.6)
++        for x: CGFloat in [-11, -3, 5] {
++            p.rounded(CGRect(x: x, y: -1, width: 6, height: 6), radius: 1.1, colors: [0xFFEAB1, 0xE7A94D])
++            p.line([.init(x: x + 1, y: 0), .init(x: x + 3, y: 3)], color: 0xFFF6D3, width: 0.6)
++        }
++        p.rounded(CGRect(x: -8, y: -9, width: 13, height: 4), radius: 1, colors: [0x688898, 0x3D607A])
++        if cab {
++            p.rounded(CGRect(x: 10, y: -9, width: 5, height: 13), radius: 2, colors: [0x385369, 0x192E49])
++            for y: CGFloat in [-8, 7] { p.oval(CGRect(x: 13, y: y, width: 3, height: 3), colors: [0xFFFADE, 0xFFC75C]) }
++            p.glow(.init(x: 18, y: 5), radius: 13, color: 0xFFDE87, opacity: 0.2)
++        }
++        // Electric contact arcs and short speed streaks follow the moving car.
++        if speed > 0.25 {
++            for i in 0..<4 {
++                let phase = CGFloat((time * 17 + Double(i) * 0.23).truncatingRemainder(dividingBy: 1))
++                let x = -12 - phase * 18, y: CGFloat = i % 2 == 0 ? 12 : -14
++                p.line([.init(x: x + 9, y: y), .init(x: x + 4, y: y - 3), .init(x: x, y: y + 3), .init(x: x - 5, y: y)], color: i % 2 == 0 ? 0x9EF4FF : 0xFFF3AF, width: 0.9, opacity: Double(1 - phase) * 0.9)
++                p.line([.init(x: -18 - phase * 11, y: y + 4), .init(x: -24 - phase * 11, y: y + 4)], color: 0xD9FAFF, width: 0.8, opacity: Double(1 - phase) * 0.6)
++            }
++        }
++    }
++
++    private func cafeTerrace(at point: CGPoint, size: CGFloat, variation: Int) {
++        at(point, size: size) { p in
++            for i in 0..<2 {
++                let x: CGFloat = i == 0 ? -25 : 25, y: CGFloat = i == 0 ? 0 : 11
++                // Chairs have backs and legs; cups sit on round cafe tables.
++                for side: CGFloat in [-1, 1] {
++                    p.rounded(CGRect(x: x + side * 15 - 5, y: y - 8, width: 10, height: 5), radius: 2, colors: [0xDDB579, 0x8E6C48])
++                    p.line([.init(x: x + side * 15 - 4, y: y - 8), .init(x: x + side * 15 - 4, y: y + 5)], color: 0x6A674F, width: 1.1)
++                    p.line([.init(x: x + side * 15 + 4, y: y - 8), .init(x: x + side * 15 + 4, y: y + 5)], color: 0x6A674F, width: 1.1)
++                }
++                p.line([.init(x: x, y: y - 9), .init(x: x, y: y + 6)], color: 0x466478, width: 2.5)
++                p.oval(CGRect(x: x - 13, y: y - 16, width: 26, height: 10), colors: [0xFFF0C4, 0xC99D65])
++                p.rounded(CGRect(x: x - 7, y: y - 17, width: 4, height: 4), radius: 1, colors: [0xFFFEED, 0xE2D5B5])
++                p.oval(CGRect(x: x + 3, y: y - 14, width: 4, height: 2), colors: [0xF2D686, 0xAF8350])
++                p.line([.init(x: x, y: y - 48), .init(x: x, y: y - 8)], color: 0xA58D61, width: 1.8)
++                let blue = (variation + i) % 3 != 0
++                let canopy = Path { c in
++                    c.move(to: .init(x: x - 29, y: y - 36))
++                    c.addQuadCurve(to: .init(x: x, y: y - 54), control: .init(x: x - 15, y: y - 54))
++                    c.addQuadCurve(to: .init(x: x + 29, y: y - 36), control: .init(x: x + 16, y: y - 53))
++                    c.addQuadCurve(to: .init(x: x - 29, y: y - 36), control: .init(x: x, y: y - 29)); c.closeSubpath()
++                }
++                p.material(canopy, colors: blue ? [0xEFF7E8, 0x9FCBDA, 0x4D83AC] : [0xFFF2B7, 0xF5CE7C, 0xD9A666])
++                var clipped = p.context; clipped.clip(to: canopy)
++                for segment in 0..<6 {
++                    let a = x - 30 + CGFloat(segment) * 10
++                    if segment % 2 == 0 {
++                        var stripe = Path(); stripe.addLines([.init(x: x, y: y - 54), .init(x: a, y: y - 30), .init(x: a + 10, y: y - 30)]); stripe.closeSubpath()
++                        clipped.fill(stripe, with: .color(Color(dinoHex: blue ? 0x326D9D : 0xFFF5CD).opacity(0.7)))
+                     }
+                 }
+-            }
+-            // Low mooring posts make both edges legible without hiding the water.
+-            for i in 0..<25 {
+-                let y = 280 + CGFloat(i) * 55
+-                if crossings.contains(where: { $0.right == right && abs($0.y - y) < 43 }) { continue }
+-                let point = layout.cityCanalPoint(at: y, right: right, offset: bank * 25 * s)
+-                at(point, size: s) { p in
+-                    p.oval(CGRect(x: -3, y: -1, width: 6, height: 3), colors: [0x9AAE98, 0xD8D1AF])
+-                    p.rounded(CGRect(x: -1.7, y: -8, width: 3.4, height: 8), radius: 1.4, colors: [0xA1C5B2, 0x4C8C92])
+-                    p.oval(CGRect(x: -3, y: -9, width: 6, height: 3), colors: [0xF4D698, 0xB69C69])
+-                }
+-            }
+-        } }
++                p.line([.init(x: x - 28, y: y - 36), .init(x: x, y: y - 32), .init(x: x + 28, y: y - 36)], color: 0xFFF2C9, width: 1)
++                p.oval(CGRect(x: x - 2, y: y - 56, width: 4, height: 4), colors: [0xFFF1BD, 0xB59057])
++            }
++            // A cafe menu and a warm little pool of lamplight finish the square.
++            p.polygon([.init(x: -3, y: -5), .init(x: 11, y: -5), .init(x: 14, y: 17), .init(x: -6, y: 17)], colors: [0xBB935B, 0x7F6A48])
++            p.rounded(CGRect(x: -1, y: -3, width: 10, height: 14), radius: 1, colors: [0x2E5B63, 0x23434E])
++            for y: CGFloat in [0, 4, 8] { p.line([.init(x: 1, y: y), .init(x: 7, y: y)], color: 0xF7E2AD, width: 0.7) }
++            p.flowers(at: .init(x: -47, y: 18), size: 0.55)
++        }
++    }
++
++    /// A town hall, archive and civic theatre share the city's limestone palette.
++    private func civicBuilding(at point: CGPoint, size: CGFloat, kind: Int) {
++        at(point, size: size) { p in
++            let height: CGFloat = kind == 0 ? 124 : kind == 1 ? 100 : 112
++            p.rounded(CGRect(x: -65, y: -height, width: 130, height: height), radius: 5, colors: [0xFFF2D3, 0xE1D3B5, 0xB6BBA9])
++            p.rounded(CGRect(x: -65, y: -height + 27, width: 130, height: 6), radius: 1, colors: [0xFFF4D6, 0xC4AC80])
++            for row in 0..<3 { for x: CGFloat in [-49, -25, 25, 49] {
++                p.window(at: .init(x: x, y: -height + 46 + CGFloat(row) * 27), size: 0.59)
++            } }
++            p.rounded(CGRect(x: -19, y: -52, width: 38, height: 53), radius: 15, colors: [0xD8BE8C, 0xA2A78C])
++            p.rounded(CGRect(x: -13, y: -47, width: 26, height: 46), radius: 11, colors: [0x749CA8, 0x244C66])
++            p.line([.init(x: 0, y: -41), .init(x: 0, y: -3)], color: 0xE1CD9D, width: 1.2)
++            for x: CGFloat in [-56, -35, 35, 56] {
++                p.rounded(CGRect(x: x - 4, y: -69, width: 8, height: 68), radius: 2, colors: [0xFFF7DA, 0xD3C5A8, 0xACAA95])
++                p.rounded(CGRect(x: x - 7, y: -73, width: 14, height: 6), radius: 1, colors: [0xF8E7BD, 0xB9AD8C])
++                p.rounded(CGRect(x: x - 7, y: -3, width: 14, height: 6), radius: 1, colors: [0xF5E6C9, 0xB2AE99])
++            }
++            p.polygon([.init(x: -72, y: -height + 3), .init(x: 0, y: -height - 30), .init(x: 72, y: -height + 3)], colors: [0xF6E9C8, 0xCFBD97, 0xA6AC9B])
++            p.line([.init(x: -66, y: -height), .init(x: 0, y: -height - 25), .init(x: 66, y: -height)], color: 0xFFF6DC, width: 2.2)
++            if kind == 0 {
++                p.rounded(CGRect(x: -20, y: -height - 65, width: 40, height: 49), radius: 3, colors: [0xFFF2CF, 0xD4C6A6])
++                ThemePainter(context: p.context, colors: WorldThemeColors(DinoWorldCatalog.world(6)!))
++                    .clock(at: .init(x: 0, y: -height - 42), time: .init(hour: 10, minute: 10), size: 14)
++                p.dome(at: .init(x: 0, y: -height - 65), width: 52)
++            } else {
++                // Civic seal: a golden dinosaur footprint under the pediment.
++                p.oval(CGRect(x: -10, y: -height - 14, width: 20, height: 18), colors: [0x4B8596, 0x24556F])
++                p.oval(CGRect(x: -4, y: -height - 5, width: 8, height: 6), colors: [0xFFE7A5, 0xD9B66E])
++                for x: CGFloat in [-5, 0, 5] { p.oval(CGRect(x: x - 1.6, y: -height - 10, width: 3.2, height: 4.6), colors: [0xFFF0BB, 0xD0AF72]) }
++            }
++            for i in 0..<4 { p.rounded(CGRect(x: -40 - CGFloat(i) * 4, y: CGFloat(i) * 4, width: 80 + CGFloat(i) * 8, height: 5), radius: 1, colors: [0xFFF0D0, 0xC1B49A]) }
++            for x: CGFloat in [-69, 69] {
++                p.line([.init(x: x, y: -height - 8), .init(x: x, y: -height + 47)], color: 0x5F7A7E, width: 1.8)
++                p.polygon([.init(x: x + 2, y: -height - 7), .init(x: x + 18, y: -height - 4), .init(x: x + 17, y: -height + 20), .init(x: x + 3, y: -height + 17)], colors: [0x85BAC8, 0x326C91])
++                p.flowers(at: .init(x: x, y: 9), size: 0.6)
++            }
++        }
++    }
++
++    private func streetTree(at point: CGPoint, size: CGFloat) {
++        at(point, size: size) { p in
++            p.rounded(CGRect(x: -17, y: -3, width: 34, height: 12), radius: 4, colors: [0xE7D9BB, 0x9EA892])
++            p.line([.init(x: 0, y: 0), .init(x: 0, y: -64)], color: 0x7C7857, width: 6)
++            for i in 0..<11 {
++                let a = Double(i) * 2.399, r = sqrt(CGFloat(i) / 11) * 23
++                let x = CGFloat(cos(a)) * r, y = -65 + CGFloat(sin(a)) * r * 0.75
++                p.oval(CGRect(x: x - 15, y: y - 19, width: 30, height: 34), colors: [0xB3D66D, 0x5A9D67, 0x34785F])
++                p.oval(CGRect(x: x - 9, y: y - 13, width: 5, height: 4), colors: [0xD5E69A, 0x83BA72])
++            }
++            p.flowers(at: .init(x: 0, y: 1), size: 0.63)
++        }
+     }
+ 
+     private func entrance(width: CGFloat, scale: CGFloat) {
+@@ -293,7 +546,7 @@
+             far.at(CGPoint(x: CGFloat(i) * width / 4, y: (206 + CGFloat(i % 2) * 23) * scale), size: scale) { p in
+                 p.cliff(at: .zero, size: 1.6)
+                 p.building(at: CGPoint(x: -3, y: -76), size: 0.56 + CGFloat(i % 2) * 0.14, tower: i % 2 == 1)
+-                if i == 1 || i == 3 { p.waterfall(at: CGPoint(x: 29, y: -49), size: 0.75) }
++                p.streetTree(at: CGPoint(x: 29, y: -44), size: 0.65)
+             }
+         }
+         far.bridge(at: CGPoint(x: width * 0.47, y: 172 * scale), size: 1.65 * scale)
+@@ -477,7 +730,7 @@
+     private func window(at point: CGPoint, size: CGFloat) {
+         at(point, size: size) { p in
+             p.rounded(CGRect(x: -10, y: -18, width: 20, height: 31), radius: 9, colors: [0xE6CA94, 0xBDA372])
+-            p.rounded(CGRect(x: -7, y: -15, width: 14, height: 25), radius: 7, colors: [0xC7E9DA, 0x79B9C1, 0x548EA4])
++            p.rounded(CGRect(x: -7, y: -15, width: 14, height: 25), radius: 7, colors: [0xFFF1C5, 0xE3C77F, 0x7CA3AA])
+             p.line([.init(x: 0, y: -14), .init(x: 0, y: 10)], color: 0xE8D4AA, width: 1.5)
+             p.line([.init(x: -7, y: -2), .init(x: 7, y: -2)], color: 0xE8D4AA, width: 1.5)
+             p.line([.init(x: -5, y: -11), .init(x: -2, y: -6)], color: 0xF3FFF3, width: 1.3, opacity: 0.8)
+@@ -513,7 +766,7 @@
+                 clock.clock(at: CGPoint(x: 0, y: -h + 40), time: .init(hour: 10, minute: 30), size: 22)
+                 p.window(at: CGPoint(x: -17, y: -56), size: 0.65)
+                 p.window(at: CGPoint(x: 17, y: -56), size: 0.65)
+-                p.digital(at: CGPoint(x: 0, y: -84), size: 0.85, time: "10:30")
++                p.window(at: CGPoint(x: 0, y: -84), size: 0.85)
+             } else {
+                 for x: CGFloat in [-18, 18] { p.window(at: CGPoint(x: x, y: -65), size: 0.8) }
+                 p.rounded(CGRect(x: -29, y: -44, width: 58, height: 7), radius: 2, colors: [0xF4DFB5, 0xB4BC9B])

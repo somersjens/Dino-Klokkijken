@@ -1,0 +1,14 @@
+Verification: world 3 exit, 21 October 2026
+
+iOS Simulator Debug build
+** BUILD SUCCEEDED **
+
+iPhone 17 UI tests
+Test Case '-[DinoUITests.DinoUITests testWorldBannersHaveBalancedClearance]' passed (58.397 seconds).
+Test Case '-[DinoUITests.DinoUITests testWorldBossSceneryRemainsPlayable]' passed (180.128 seconds).
+** TEST SUCCEEDED **
+
+Geometry: 9 widths; 109395 volcano silhouette samples; no route/lava contacts or basalt coverage gaps.
+Native SwiftUI/Canvas renders: 320, 393, 834 and 1194pt inspected.
+Actual app captures: world 3 boss and world 4 banner inspected.
+git diff --check: passed.

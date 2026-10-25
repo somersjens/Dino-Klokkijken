@@ -1,0 +1,7 @@
+393pt: 10995 changed scene pixels at t=0.00 vs t=0.65
+393pt: 0 changed pixels inside stairs mask
+393pt: 0 changed pixels inside route mask
+834pt: 16977 changed scene pixels at t=0.00 vs t=0.65
+834pt: 0 changed pixels inside stairs mask
+834pt: 0 changed pixels inside route mask
+Both fixed-time scenes change while stairs, landings and the playable route remain static.

@@ -1,0 +1,14 @@
+393pt, 0.00s vs 0.65s: 0 changed pixels inside stairs mask
+393pt, 0.00s vs 0.65s: 0 changed pixels inside route mask
+393pt, cascade within (251, 751, 393, 836): 546 changed pixels
+393pt, cascade within (62, 1351, 264, 1436): 530 changed pixels
+393pt, fountain within (0, 1192, 84, 1288): 698 changed pixels
+834pt, 0.00s vs 0.65s: 0 changed pixels inside stairs mask
+834pt, 0.00s vs 0.65s: 0 changed pixels inside route mask
+834pt, cascade within (501, 807, 761, 916): 175 changed pixels
+834pt, cascade within (267, 1407, 527, 1516): 918 changed pixels
+834pt, fountain within (701, 1111, 768, 1174): 291 changed pixels
+834pt, fountain within (138, 1223, 269, 1347): 1244 changed pixels
+834pt, fountain within (807, 1786, 834, 1849): 98 changed pixels
+Live iPhone simulator, same scroll position: river, fountain and cascade all show moving water.
+Native route and staircase masks remain unchanged across both animation phases.

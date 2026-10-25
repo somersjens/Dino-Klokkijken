@@ -1,0 +1,3 @@
+Native SwiftUI/Canvas audit compiled successfully with swiftc (exit 0).
+Input: /tmp/all-world-joins-native.swift; output: /tmp/all-world-joins-render.
+All 36 renders completed successfully; see native-renders.log.

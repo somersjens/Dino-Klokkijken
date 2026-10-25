@@ -1,0 +1,50 @@
+320pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+393pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+402pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+600pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+834pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+1194pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+PASS: 1680 native water/riverbank endpoint checks; all banks exit through the sides, with no cross-chapter caps
+320pt: 4 cave-side facades; lower metro: 0.86, 0.55; drain and masonry aligned; intact first roofs
+393pt: 4 cave-side facades; lower metro: 0.86, 0.55, 0.39; drain and masonry aligned; intact first roofs
+402pt: 4 cave-side facades; lower metro: 0.86, 0.55, 0.47; drain and masonry aligned; intact first roofs
+600pt: 4 cave-side facades; lower metro: 0.86, 0.76, 0.86, 0.86; drain and masonry aligned; intact first roofs
+834pt: 4 cave-side facades; lower metro: 0.86, 0.86, 0.86, 0.86; drain and masonry aligned; intact first roofs
+1194pt: 4 cave-side facades; lower metro: 0.86, 0.86, 0.86, 0.86; drain and masonry aligned; intact first roofs
+PASS: 1842 world-extension geometry checks
+Rendered 1 → 2, 320pt
+Rendered 2 → 3, 320pt
+Rendered 3 → 4, 320pt
+Rendered 4 → 5, 320pt
+Rendered 5 → 6, 320pt
+Rendered 6 → 7, 320pt
+Rendered 7 → 8, 320pt
+Rendered 8 → 9, 320pt
+Rendered 9 → 10, 320pt
+Rendered 1 → 2, 393pt
+Rendered 2 → 3, 393pt
+Rendered 3 → 4, 393pt
+Rendered 4 → 5, 393pt
+Rendered 5 → 6, 393pt
+Rendered 6 → 7, 393pt
+Rendered 7 → 8, 393pt
+Rendered 8 → 9, 393pt
+Rendered 9 → 10, 393pt
+Rendered 1 → 2, 834pt
+Rendered 2 → 3, 834pt
+Rendered 3 → 4, 834pt
+Rendered 4 → 5, 834pt
+Rendered 5 → 6, 834pt
+Rendered 6 → 7, 834pt
+Rendered 7 → 8, 834pt
+Rendered 8 → 9, 834pt
+Rendered 9 → 10, 834pt
+Rendered 1 → 2, 1194pt
+Rendered 2 → 3, 1194pt
+Rendered 3 → 4, 1194pt
+Rendered 4 → 5, 1194pt
+Rendered 5 → 6, 1194pt
+Rendered 6 → 7, 1194pt
+Rendered 7 → 8, 1194pt
+Rendered 8 → 9, 1194pt
+Rendered 9 → 10, 1194pt

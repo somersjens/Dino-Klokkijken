@@ -1,0 +1,176 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "68D41D1D-ABC6-4865-A431-20B1A98D5F80",
+        "deviceName" : "Dino City Seam Check Phone",
+        "exportedFileName" : "79B8826C-9C21-4207-B034-88398A21FC8C.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "city-metro-tunnel-motion_0_8B3CEF0D-B321-4858-9CD7-42F743DCDC7F.png",
+        "timestamp" : 1792862472.688
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "68D41D1D-ABC6-4865-A431-20B1A98D5F80",
+        "deviceName" : "Dino City Seam Check Phone",
+        "exportedFileName" : "3DD162BE-A813-44AB-AD49-7A6DE8598A3F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "city-metro-route-60_0_562C1A5C-CA89-4845-B30D-2528095C3317.png",
+        "timestamp" : 1792862469.549
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "68D41D1D-ABC6-4865-A431-20B1A98D5F80",
+        "deviceName" : "Dino City Seam Check Phone",
+        "exportedFileName" : "20C2A828-B869-4430-AA93-CE119E00FD90.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "city-metro-route-57_0_1A5FBA02-276A-41ED-B345-C7F33DCF67C8.png",
+        "timestamp" : 1792862461.642
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "68D41D1D-ABC6-4865-A431-20B1A98D5F80",
+        "deviceName" : "Dino City Seam Check Phone",
+        "exportedFileName" : "9D46BC85-39C9-4DCA-AAD2-6D8FBBA6A0B2.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "city-metro-route-54-motion_0_1F722F53-1823-48DA-8580-1FD6E7D5613C.png",
+        "timestamp" : 1792862453.899
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "68D41D1D-ABC6-4865-A431-20B1A98D5F80",
+        "deviceName" : "Dino City Seam Check Phone",
+        "exportedFileName" : "8B987AC1-BBC1-4691-B904-C1A5EBBD8271.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "city-metro-route-54_0_B0BA258A-B0DB-4514-B4A8-7ABAB853A314.png",
+        "timestamp" : 1792862451.25
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "68D41D1D-ABC6-4865-A431-20B1A98D5F80",
+        "deviceName" : "Dino City Seam Check Phone",
+        "exportedFileName" : "73EC7E06-C6D4-4694-BF94-12579023619E.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "city-metro-level-51_0_4697BE86-79CD-403F-B66E-66837C1DA254.png",
+        "timestamp" : 1792862436.38
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "68D41D1D-ABC6-4865-A431-20B1A98D5F80",
+        "deviceName" : "Dino City Seam Check Phone",
+        "exportedFileName" : "7A34B0C0-2A64-4515-A5FC-E30773CF7B2B.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "city-metro-entrance_0_7AB8A8B8-6043-4547-A3BA-AA21229F618D.png",
+        "timestamp" : 1792862431.577
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "C1584FB3-BC11-404C-9182-8CB3E85B78CD",
+        "deviceName" : "Dino City Seam Check Pad",
+        "exportedFileName" : "91FEC58D-DD23-4579-A31C-AAF0A9CC68EC.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "city-metro-tunnel-motion_0_5E80B987-57EB-4B00-8584-74840DCDA4DA.png",
+        "timestamp" : 1792862476.741
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "C1584FB3-BC11-404C-9182-8CB3E85B78CD",
+        "deviceName" : "Dino City Seam Check Pad",
+        "exportedFileName" : "ADFB80EF-9E33-45DD-98C5-4B219E47D07E.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "city-metro-route-60_0_6F828396-5051-4CAA-AF7A-6234E5B9DA29.png",
+        "timestamp" : 1792862473.573
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "C1584FB3-BC11-404C-9182-8CB3E85B78CD",
+        "deviceName" : "Dino City Seam Check Pad",
+        "exportedFileName" : "CB7917BF-C176-42A9-9B69-06AFF08B0DF5.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "city-metro-route-57_0_D67B6196-1DEC-47B9-93C9-15D58941B394.png",
+        "timestamp" : 1792862464.807
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "C1584FB3-BC11-404C-9182-8CB3E85B78CD",
+        "deviceName" : "Dino City Seam Check Pad",
+        "exportedFileName" : "6DEFF29F-89FF-4A2D-8C72-CF00DFD4E7FA.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "city-metro-route-54-motion_0_B3E164C6-DA01-428F-9624-53549E2FF4F9.png",
+        "timestamp" : 1792862456.695
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "C1584FB3-BC11-404C-9182-8CB3E85B78CD",
+        "deviceName" : "Dino City Seam Check Pad",
+        "exportedFileName" : "78B56307-A449-49E1-95A0-17BE4F8940FE.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "city-metro-route-54_0_0EF5A792-35B8-4C9C-95DA-1D543F21A56A.png",
+        "timestamp" : 1792862453.987
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "C1584FB3-BC11-404C-9182-8CB3E85B78CD",
+        "deviceName" : "Dino City Seam Check Pad",
+        "exportedFileName" : "5154A15F-2C2B-4C5B-BFD0-AE5A8CA80F16.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "city-metro-level-51_0_B8072395-4D38-40C6-A61E-A88F2227E9AF.png",
+        "timestamp" : 1792862437.476
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "C1584FB3-BC11-404C-9182-8CB3E85B78CD",
+        "deviceName" : "Dino City Seam Check Pad",
+        "exportedFileName" : "F5F15EE5-02B7-4D71-9B8F-A1A0649AC6EE.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "city-metro-entrance_0_9EB62F39-839C-489B-992B-2F977C7A8DF0.png",
+        "timestamp" : 1792862432.049
+      }
+    ],
+    "testIdentifier" : "DinoUITests/testCityMetroRouteRemainsPlayable()",
+    "testIdentifierURL" : "test://com.apple.xcode/Dino%20Klokkijken/DinoUITests/DinoUITests/testCityMetroRouteRemainsPlayable"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "68D41D1D-ABC6-4865-A431-20B1A98D5F80",
+        "deviceName" : "Dino City Seam Check Phone",
+        "exportedFileName" : "EE4B52E9-1BB2-4825-96B4-6F0C48DA47EB.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "world-banner-spacing-7_0_34463E47-1972-4EDF-AE75-777280334C57.png",
+        "timestamp" : 1792862500.343
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "68D41D1D-ABC6-4865-A431-20B1A98D5F80",
+        "deviceName" : "Dino City Seam Check Phone",
+        "exportedFileName" : "0064BDBF-9066-420B-9580-AB3C7CB4C8F6.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "world-banner-spacing-6_0_76FA9209-1021-47E8-8D69-DD28056007DA.png",
+        "timestamp" : 1792862489.313
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "C1584FB3-BC11-404C-9182-8CB3E85B78CD",
+        "deviceName" : "Dino City Seam Check Pad",
+        "exportedFileName" : "C918C7F5-C230-4A98-A71E-800FCF84635E.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "world-banner-spacing-7_0_0AC15A01-F2EE-40E6-A592-DA3CD80E71A6.png",
+        "timestamp" : 1792862505.554
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "C1584FB3-BC11-404C-9182-8CB3E85B78CD",
+        "deviceName" : "Dino City Seam Check Pad",
+        "exportedFileName" : "D073E18F-C153-4BB6-82B1-2B94BB16B996.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "world-banner-spacing-6_0_66145D37-63FC-4495-B087-B8E77764F969.png",
+        "timestamp" : 1792862494.206
+      }
+    ],
+    "testIdentifier" : "DinoUITests/testWorldBannersHaveBalancedClearance()",
+    "testIdentifierURL" : "test://com.apple.xcode/Dino%20Klokkijken/DinoUITests/DinoUITests/testWorldBannersHaveBalancedClearance"
+  }
+]

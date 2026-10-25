@@ -1,0 +1,16 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -configuration Debug -sdk iphonesimulator -destination "platform=iOS Simulator,id=ECD11779-862B-4409-B684-04869F1B2EE9" -derivedDataPath /tmp/dino-castle-third-pass-build CODE_SIGNING_ALLOWED=NO build-for-testing
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+    SDKROOT = iphonesimulator27.0
+
+ComputePackagePrebuildTargetDependencyGraph
+...
+PruneExplicitPrecompiledModules /tmp/dino-castle-third-pass-build/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/dino-castle-third-pass-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+note: Disabling hardened runtime with ad-hoc codesigning. (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+** TEST BUILD SUCCEEDED **
+

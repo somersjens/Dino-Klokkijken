@@ -1,0 +1,748 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun "/tmp/dino-podium-build/Build/Products/Dino Klokkijken_iphonesimulator27.0-arm64.xctestrun" -destination "platform=iOS Simulator,id=095CC0B5-6252-403C-B1FF-B1DA89E92FCC" "-only-testing:DinoUITests/DinoUITests/testAllWorldResultScenery" "-only-testing:DinoUITests/DinoUITests/testResultRewardStatesAndNavigation" -parallel-testing-enabled NO -resultBundlePath /tmp/dino-podium-ipad-final.xcresult
+
+Writing result bundle at path:
+	/tmp/dino-podium-ipad-final.xcresult
+
+2026-10-23 22:05:22.585158+0200 DinoUITests-Runner[49134:784315] [Default] Running tests...
+2026-10-23 22:05:22.606045+0200 DinoUITests-Runner[49134:784315] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+objc[49134]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x10a290310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x10a1f0398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+Test Suite 'Selected tests' started at 2026-10-23 22:05:25.147.
+Test Suite 'DinoUITests.xctest' started at 2026-10-23 22:05:25.148.
+Test Suite 'DinoUITests' started at 2026-10-23 22:05:25.148.
+Test Case '-[DinoUITests.DinoUITests testAllWorldResultScenery]' started.
+    t =     0.00s Start Test at 2026-10-23 22:05:25.149
+    t =     0.36s Set Up
+    t =     0.37s     Setting device orientation to Portrait
+    t =     0.37s         Device orientation changed to Portrait
+    t =     0.41s         Wait for com.apple.DocumentManager.DockFolderViewService to idle
+    t =     0.47s         Wait for com.apple.springboard to idle
+    t =     0.53s     Open Hakketjak.Dino-Klokkijken
+    t =     0.53s         Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:05:25.841 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:05:25.841 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     2.17s             Setting up automation session
+    t =     3.74s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     5.88s Terminate Hakketjak.Dino-Klokkijken:49207
+    t =     6.91s Open Hakketjak.Dino-Klokkijken
+    t =     6.91s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:05:32.068 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:05:32.068 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     7.14s         Setting up automation session
+    t =     8.66s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    13.28s Waiting 8.0s for "result.map" Button to exist
+    t =    14.30s     Checking `Expect predicate `existsNoRetry == 1` for object "result.map" Button`
+    t =    14.32s         Checking existence of `"result.map" Button`
+    t =    18.40s Find the "result.stars" Any
+    t =    18.45s Checking existence of `"5/5" StaticText`
+    t =    18.48s Find the "result.next" Button
+    t =    18.55s Find the "result.next" Button
+    t =    18.60s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.62s Find the "result.next" Button
+    t =    18.67s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.70s Find the "result.next" Button
+    t =    18.74s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.76s Find the "result.retry" Button
+    t =    18.82s Find the "result.retry" Button
+    t =    18.87s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.90s Find the "result.retry" Button
+    t =    18.95s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.97s Find the "result.retry" Button
+    t =    19.02s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.04s Find the "result.map" Button
+    t =    19.09s Find the "result.map" Button
+    t =    19.14s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.16s Find the "result.map" Button
+    t =    19.21s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.23s Find the "result.map" Button
+    t =    19.28s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.58s Added attachment named 'result-biome-world-1'
+    t =    19.58s Terminate Hakketjak.Dino-Klokkijken:49245
+    t =    20.67s Open Hakketjak.Dino-Klokkijken
+    t =    20.67s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:05:45.820 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:05:45.820 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    20.89s         Setting up automation session
+    t =    22.51s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    25.22s Waiting 8.0s for "result.map" Button to exist
+    t =    26.25s     Checking `Expect predicate `existsNoRetry == 1` for object "result.map" Button`
+    t =    26.26s         Checking existence of `"result.map" Button`
+    t =    30.26s Find the "result.stars" Any
+    t =    30.28s Checking existence of `"5/5" StaticText`
+    t =    30.31s Find the "result.next" Button
+    t =    30.35s Find the "result.next" Button
+    t =    30.38s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.40s Find the "result.next" Button
+    t =    30.42s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.44s Find the "result.next" Button
+    t =    30.47s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.49s Find the "result.retry" Button
+    t =    30.53s Find the "result.retry" Button
+    t =    30.56s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.57s Find the "result.retry" Button
+    t =    30.61s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.63s Find the "result.retry" Button
+    t =    30.66s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.68s Find the "result.map" Button
+    t =    30.72s Find the "result.map" Button
+    t =    30.75s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.77s Find the "result.map" Button
+    t =    30.81s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.82s Find the "result.map" Button
+    t =    30.86s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    31.11s Added attachment named 'result-biome-world-2'
+    t =    31.11s Terminate Hakketjak.Dino-Klokkijken:49312
+    t =    32.14s Open Hakketjak.Dino-Klokkijken
+    t =    32.14s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:05:57.294 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:05:57.294 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    32.35s         Setting up automation session
+    t =    33.07s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    34.87s Waiting 8.0s for "result.map" Button to exist
+    t =    35.94s     Checking `Expect predicate `existsNoRetry == 1` for object "result.map" Button`
+    t =    35.94s         Checking existence of `"result.map" Button`
+    t =    39.88s Find the "result.stars" Any
+    t =    39.91s Checking existence of `"5/5" StaticText`
+    t =    39.93s Find the "result.next" Button
+    t =    39.98s Find the "result.next" Button
+    t =    40.01s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    40.02s Find the "result.next" Button
+    t =    40.05s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    40.06s Find the "result.next" Button
+    t =    40.09s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    40.10s Find the "result.retry" Button
+    t =    40.14s Find the "result.retry" Button
+    t =    40.17s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    40.19s Find the "result.retry" Button
+    t =    40.21s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    40.23s Find the "result.retry" Button
+    t =    40.25s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    40.26s Find the "result.map" Button
+    t =    40.30s Find the "result.map" Button
+    t =    40.33s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    40.34s Find the "result.map" Button
+    t =    40.37s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    40.38s Find the "result.map" Button
+    t =    40.41s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    40.60s Added attachment named 'result-biome-world-3'
+    t =    40.61s Terminate Hakketjak.Dino-Klokkijken:49351
+    t =    41.63s Open Hakketjak.Dino-Klokkijken
+    t =    41.63s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:06:06.779 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:06:06.779 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    41.84s         Setting up automation session
+    t =    42.71s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    44.77s Waiting 8.0s for "result.map" Button to exist
+    t =    45.84s     Checking `Expect predicate `existsNoRetry == 1` for object "result.map" Button`
+    t =    45.84s         Checking existence of `"result.map" Button`
+    t =    49.77s Find the "result.stars" Any
+    t =    49.79s Checking existence of `"5/5" StaticText`
+    t =    49.81s Find the "result.next" Button
+    t =    49.84s Find the "result.next" Button
+    t =    49.86s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    49.87s Find the "result.next" Button
+    t =    49.89s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    49.90s Find the "result.next" Button
+    t =    49.92s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    49.93s Find the "result.retry" Button
+    t =    49.96s Find the "result.retry" Button
+    t =    49.98s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    49.99s Find the "result.retry" Button
+    t =    50.01s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    50.02s Find the "result.retry" Button
+    t =    50.04s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    50.05s Find the "result.map" Button
+    t =    50.07s Find the "result.map" Button
+    t =    50.09s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    50.11s Find the "result.map" Button
+    t =    50.13s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    50.14s Find the "result.map" Button
+    t =    50.16s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    50.31s Added attachment named 'result-biome-world-4'
+    t =    50.31s Terminate Hakketjak.Dino-Klokkijken:49387
+    t =    51.32s Open Hakketjak.Dino-Klokkijken
+    t =    51.32s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:06:16.468 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:06:16.468 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    51.53s         Setting up automation session
+    t =    52.71s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    53.87s Waiting 8.0s for "result.map" Button to exist
+    t =    54.95s     Checking `Expect predicate `existsNoRetry == 1` for object "result.map" Button`
+    t =    54.95s         Checking existence of `"result.map" Button`
+    t =    58.89s Find the "result.stars" Any
+    t =    58.91s Checking existence of `"5/5" StaticText`
+    t =    58.92s Find the "result.next" Button
+    t =    58.95s Find the "result.next" Button
+    t =    58.97s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    58.98s Find the "result.next" Button
+    t =    58.99s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    59.00s Find the "result.next" Button
+    t =    59.02s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    59.03s Find the "result.retry" Button
+    t =    59.06s Find the "result.retry" Button
+    t =    59.07s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    59.08s Find the "result.retry" Button
+    t =    59.10s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    59.11s Find the "result.retry" Button
+    t =    59.13s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    59.14s Find the "result.map" Button
+    t =    59.17s Find the "result.map" Button
+    t =    59.19s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    59.20s Find the "result.map" Button
+    t =    59.22s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    59.23s Find the "result.map" Button
+    t =    59.25s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    59.40s Added attachment named 'result-biome-world-5'
+    t =    59.40s Terminate Hakketjak.Dino-Klokkijken:49428
+    t =    60.42s Open Hakketjak.Dino-Klokkijken
+    t =    60.42s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:06:25.573 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:06:25.573 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    60.63s         Setting up automation session
+    t =    61.29s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    62.96s Waiting 8.0s for "result.map" Button to exist
+    t =    64.02s     Checking `Expect predicate `existsNoRetry == 1` for object "result.map" Button`
+    t =    64.02s         Checking existence of `"result.map" Button`
+    t =    67.95s Find the "result.stars" Any
+    t =    67.99s Checking existence of `"5/5" StaticText`
+    t =    68.01s Find the "result.next" Button
+    t =    68.03s Find the "result.next" Button
+    t =    68.05s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    68.06s Find the "result.next" Button
+    t =    68.08s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    68.09s Find the "result.next" Button
+    t =    68.11s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    68.12s Find the "result.retry" Button
+    t =    68.15s Find the "result.retry" Button
+    t =    68.17s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    68.18s Find the "result.retry" Button
+    t =    68.20s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    68.22s Find the "result.retry" Button
+    t =    68.23s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    68.24s Find the "result.map" Button
+    t =    68.27s Find the "result.map" Button
+    t =    68.28s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    68.29s Find the "result.map" Button
+    t =    68.31s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    68.32s Find the "result.map" Button
+    t =    68.34s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    68.48s Added attachment named 'result-biome-world-6'
+    t =    68.48s Terminate Hakketjak.Dino-Klokkijken:49515
+    t =    69.49s Open Hakketjak.Dino-Klokkijken
+    t =    69.49s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:06:34.640 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:06:34.641 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    69.70s         Setting up automation session
+    t =    70.26s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    72.00s Waiting 8.0s for "result.map" Button to exist
+    t =    73.06s     Checking `Expect predicate `existsNoRetry == 1` for object "result.map" Button`
+    t =    73.06s         Checking existence of `"result.map" Button`
+    t =    77.01s Find the "result.stars" Any
+    t =    77.11s Checking existence of `"5/5" StaticText`
+    t =    77.14s Find the "result.next" Button
+    t =    77.24s Find the "result.next" Button
+    t =    77.29s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    77.32s Find the "result.next" Button
+    t =    77.37s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    77.43s Find the "result.next" Button
+    t =    77.47s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    77.49s Find the "result.retry" Button
+    t =    77.59s Find the "result.retry" Button
+    t =    77.63s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    77.65s Find the "result.retry" Button
+    t =    77.68s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    77.70s Find the "result.retry" Button
+    t =    77.73s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    77.75s Find the "result.map" Button
+    t =    77.81s Find the "result.map" Button
+    t =    77.90s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    77.91s Find the "result.map" Button
+    t =    77.95s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    77.96s Find the "result.map" Button
+    t =    78.00s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    78.21s Added attachment named 'result-biome-world-7'
+    t =    78.22s Terminate Hakketjak.Dino-Klokkijken:49553
+    t =    79.31s Open Hakketjak.Dino-Klokkijken
+    t =    79.31s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:06:44.463 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:06:44.463 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    79.53s         Setting up automation session
+    t =    80.39s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    82.44s Waiting 8.0s for "result.map" Button to exist
+    t =    83.50s     Checking `Expect predicate `existsNoRetry == 1` for object "result.map" Button`
+    t =    83.50s         Checking existence of `"result.map" Button`
+    t =    87.45s Find the "result.stars" Any
+    t =    87.48s Checking existence of `"5/5" StaticText`
+    t =    87.50s Find the "result.next" Button
+    t =    87.53s Find the "result.next" Button
+    t =    87.56s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    87.57s Find the "result.next" Button
+    t =    87.60s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    87.61s Find the "result.next" Button
+    t =    87.63s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    87.64s Find the "result.retry" Button
+    t =    87.67s Find the "result.retry" Button
+    t =    87.70s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    87.71s Find the "result.retry" Button
+    t =    87.73s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    87.75s Find the "result.retry" Button
+    t =    87.77s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    87.78s Find the "result.map" Button
+    t =    87.82s Find the "result.map" Button
+    t =    87.84s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    87.86s Find the "result.map" Button
+    t =    87.88s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    87.89s Find the "result.map" Button
+    t =    87.92s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    88.09s Added attachment named 'result-biome-world-8'
+    t =    88.09s Terminate Hakketjak.Dino-Klokkijken:49978
+    t =    89.12s Open Hakketjak.Dino-Klokkijken
+    t =    89.12s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:06:54.272 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:06:54.272 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    89.33s         Setting up automation session
+    t =    90.10s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    91.98s Waiting 8.0s for "result.map" Button to exist
+    t =    93.04s     Checking `Expect predicate `existsNoRetry == 1` for object "result.map" Button`
+    t =    93.04s         Checking existence of `"result.map" Button`
+    t =    96.99s Find the "result.stars" Any
+    t =    97.03s Checking existence of `"5/5" StaticText`
+    t =    97.06s Find the "result.next" Button
+    t =    97.14s Find the "result.next" Button
+    t =    97.17s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    97.19s Find the "result.next" Button
+    t =    97.22s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    97.24s Find the "result.next" Button
+    t =    97.27s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    97.29s Find the "result.retry" Button
+    t =    97.33s Find the "result.retry" Button
+    t =    97.36s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    97.39s Find the "result.retry" Button
+    t =    97.42s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    97.44s Find the "result.retry" Button
+    t =    97.48s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    97.49s Find the "result.map" Button
+    t =    97.58s Find the "result.map" Button
+    t =    97.63s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    97.67s Find the "result.map" Button
+    t =    97.70s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    97.75s Find the "result.map" Button
+    t =    97.79s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    97.99s Added attachment named 'result-biome-world-9'
+    t =    97.99s Terminate Hakketjak.Dino-Klokkijken:50093
+    t =    99.00s Open Hakketjak.Dino-Klokkijken
+    t =    99.00s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:07:04.153 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:07:04.153 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    99.23s         Setting up automation session
+    t =   100.09s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   102.21s Waiting 8.0s for "result.map" Button to exist
+    t =   103.28s     Checking `Expect predicate `existsNoRetry == 1` for object "result.map" Button`
+    t =   103.28s         Checking existence of `"result.map" Button`
+    t =   107.24s Find the "result.stars" Any
+    t =   107.27s Checking existence of `"5/5" StaticText`
+    t =   107.30s Find the "result.next" Button
+    t =   107.34s Find the "result.next" Button
+    t =   107.37s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   107.39s Find the "result.next" Button
+    t =   107.43s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   107.45s Find the "result.next" Button
+    t =   107.50s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   107.51s Find the "result.retry" Button
+    t =   107.56s Find the "result.retry" Button
+    t =   107.60s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   107.62s Find the "result.retry" Button
+    t =   107.67s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   107.70s Find the "result.retry" Button
+    t =   107.75s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   107.77s Find the "result.map" Button
+    t =   107.82s Find the "result.map" Button
+    t =   107.86s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   107.88s Find the "result.map" Button
+    t =   107.91s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   107.93s Find the "result.map" Button
+    t =   107.96s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   108.20s Added attachment named 'result-biome-world-10'
+    t =   108.24s Tear Down
+Test Case '-[DinoUITests.DinoUITests testAllWorldResultScenery]' passed (110.230 seconds).
+Test Case '-[DinoUITests.DinoUITests testResultRewardStatesAndNavigation]' started.
+    t =     0.00s Start Test at 2026-10-23 22:07:15.379
+    t =     0.05s Set Up
+    t =     0.05s     Setting device orientation to Portrait
+    t =     0.07s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     0.08s         Wait for com.apple.springboard to idle
+    t =     0.08s     Open Hakketjak.Dino-Klokkijken
+    t =     0.08s         Launch Hakketjak.Dino-Klokkijken
+    t =     0.08s             Terminate Hakketjak.Dino-Klokkijken:50238
+2026-10-23 22:07:16.521 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:07:16.521 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.35s             Setting up automation session
+    t =     2.32s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.80s Terminate Hakketjak.Dino-Klokkijken:50424
+    t =     4.85s Open Hakketjak.Dino-Klokkijken
+    t =     4.85s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:07:20.231 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:07:20.231 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     5.06s         Setting up automation session
+    t =     5.85s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     7.73s Waiting 8.0s for "result.retry" Button to exist
+    t =     8.77s     Checking `Expect predicate `existsNoRetry == 1` for object "result.retry" Button`
+    t =     8.77s         Checking existence of `"result.retry" Button`
+    t =    12.72s Find the "result.map" Button
+    t =    12.75s Find the "result.map" Button
+    t =    12.78s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.79s Find the "result.map" Button
+    t =    12.82s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.83s Find the "result.map" Button
+    t =    12.86s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.87s Find the "result.retry" Button
+    t =    12.90s Find the "result.retry" Button
+    t =    12.92s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.94s Find the "result.retry" Button
+    t =    12.96s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.97s Find the "result.retry" Button
+    t =    12.99s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.01s Find the "result.stars" Any
+    t =    13.03s Get number of matches for: Elements matching predicate '"dino.pirouette" IN identifiers'
+    t =    13.06s Get number of matches for: Elements matching predicate '"dino.backflip" IN identifiers'
+    t =    13.08s Checking existence of `"result.next" Button`
+    t =    13.09s Checking existence of `"2/5" StaticText`
+    t =    13.12s Checking existence of `"result.level" Any`
+    t =    13.14s Find the "2/5" StaticText
+    t =    13.16s Find the "result.level" Any
+    t =    13.40s Added attachment named 'result-redesign-0-stars'
+    t =    13.41s Checking existence of `"result.retry" Any`
+    t =    13.43s Checking existence of `"onboarding.next" Button`
+    t =    13.45s Checking existence of `"onboarding.customClock" Button`
+    t =    13.47s Checking existence of `"personalize.done" Button`
+    t =    13.49s Checking existence of `"theme.done" Button`
+    t =    13.51s Find the "result.retry" Any
+    t =    13.54s Tap "result.retry" Button
+    t =    13.54s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    13.55s     Find the "result.retry" Button
+    t =    13.57s     Check for interrupting elements affecting "result.retry" Button
+    t =    13.58s         Wait for com.apple.springboard to idle
+    t =    13.62s     Synthesize event
+    t =    14.03s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    14.31s Waiting 5.0s for "header.pause" Button to exist
+    t =    15.38s     Checking `Expect predicate `existsNoRetry == 1` for object "header.pause" Button`
+    t =    15.38s         Checking existence of `"header.pause" Button`
+    t =    15.42s Terminate Hakketjak.Dino-Klokkijken:50455
+    t =    16.49s Open Hakketjak.Dino-Klokkijken
+    t =    16.49s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:07:31.872 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:07:31.872 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    16.71s         Setting up automation session
+    t =    17.61s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    19.64s Waiting 8.0s for "result.retry" Button to exist
+    t =    20.71s     Checking `Expect predicate `existsNoRetry == 1` for object "result.retry" Button`
+    t =    20.71s         Checking existence of `"result.retry" Button`
+    t =    24.66s Find the "result.map" Button
+    t =    24.70s Find the "result.map" Button
+    t =    24.73s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    24.75s Find the "result.map" Button
+    t =    24.78s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    24.79s Find the "result.map" Button
+    t =    24.82s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    24.83s Find the "result.retry" Button
+    t =    24.87s Find the "result.retry" Button
+    t =    24.90s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    24.92s Find the "result.retry" Button
+    t =    24.95s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    24.96s Find the "result.retry" Button
+    t =    24.99s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    25.01s Find the "result.stars" Any
+    t =    25.03s Get number of matches for: Elements matching predicate '"dino.pirouette" IN identifiers'
+    t =    25.06s Get number of matches for: Elements matching predicate '"dino.backflip" IN identifiers'
+    t =    25.08s Checking existence of `"result.next" Button`
+    t =    25.11s Checking existence of `"3/5" StaticText`
+    t =    25.13s Checking existence of `"result.level" Any`
+    t =    25.16s Find the "3/5" StaticText
+    t =    25.19s Find the "result.level" Any
+    t =    25.48s Added attachment named 'result-redesign-1-stars'
+    t =    25.49s Checking existence of `"result.map" Any`
+    t =    25.52s Checking existence of `"onboarding.next" Button`
+    t =    25.54s Checking existence of `"onboarding.customClock" Button`
+    t =    25.56s Checking existence of `"personalize.done" Button`
+    t =    25.59s Checking existence of `"theme.done" Button`
+    t =    25.61s Find the "result.map" Any
+    t =    25.65s Tap "result.map" Button
+    t =    25.65s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    25.65s     Find the "result.map" Button
+    t =    25.67s     Check for interrupting elements affecting "result.map" Button
+    t =    25.70s         Wait for com.apple.springboard to idle
+    t =    25.73s     Synthesize event
+    t =    26.02s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    26.02s Waiting 5.0s for "header.settings" Button to exist
+    t =    27.09s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    27.09s         Checking existence of `"header.settings" Button`
+    t =    28.97s Terminate Hakketjak.Dino-Klokkijken:50498
+    t =    30.05s Open Hakketjak.Dino-Klokkijken
+    t =    30.05s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:07:45.427 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:07:45.427 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    30.28s         Setting up automation session
+    t =    31.41s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    34.20s Waiting 8.0s for "result.retry" Button to exist
+    t =    35.27s     Checking `Expect predicate `existsNoRetry == 1` for object "result.retry" Button`
+    t =    35.27s         Checking existence of `"result.retry" Button`
+    t =    39.21s Find the "result.map" Button
+    t =    39.24s Find the "result.map" Button
+    t =    39.26s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.27s Find the "result.map" Button
+    t =    39.29s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.31s Find the "result.map" Button
+    t =    39.33s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.34s Find the "result.retry" Button
+    t =    39.37s Find the "result.retry" Button
+    t =    39.39s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.41s Find the "result.retry" Button
+    t =    39.44s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.45s Find the "result.retry" Button
+    t =    39.47s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    39.48s Find the "result.stars" Any
+    t =    39.49s Get number of matches for: Elements matching predicate '"dino.pirouette" IN identifiers'
+    t =    39.51s Get number of matches for: Elements matching predicate '"dino.backflip" IN identifiers'
+    t =    39.53s Checking existence of `"result.next" Button`
+    t =    39.55s Checking existence of `"4/5" StaticText`
+    t =    39.57s Checking existence of `"result.level" Any`
+    t =    39.58s Find the "4/5" StaticText
+    t =    39.60s Find the "result.level" Any
+    t =    39.79s Added attachment named 'result-redesign-2-stars'
+    t =    39.79s Checking existence of `"result.map" Any`
+    t =    39.81s Checking existence of `"onboarding.next" Button`
+    t =    39.83s Checking existence of `"onboarding.customClock" Button`
+    t =    39.85s Checking existence of `"personalize.done" Button`
+    t =    39.87s Checking existence of `"theme.done" Button`
+    t =    39.89s Find the "result.map" Any
+    t =    39.91s Tap "result.map" Button
+    t =    39.91s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    39.91s     Find the "result.map" Button
+    t =    39.93s     Check for interrupting elements affecting "result.map" Button
+    t =    39.94s         Wait for com.apple.springboard to idle
+    t =    39.97s     Synthesize event
+    t =    40.26s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    40.26s Waiting 5.0s for "header.settings" Button to exist
+    t =    41.32s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    41.32s         Checking existence of `"header.settings" Button`
+    t =    43.23s Added attachment named 'result-redesign-map-gold-stars'
+    t =    43.24s Checking existence of `"header.stars" Any`
+    t =    43.25s Checking existence of `"onboarding.next" Button`
+    t =    43.62s Checking existence of `"onboarding.customClock" Button`
+    t =    43.84s Checking existence of `"personalize.done" Button`
+    t =    44.08s Checking existence of `"theme.done" Button`
+    t =    44.33s Find the "header.stars" Any
+    t =    44.36s Swipe up Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    44.36s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    44.37s     Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    44.50s     Check for interrupting elements affecting "Tijd Dino" Application
+    t =    44.81s         Wait for com.apple.springboard to idle
+    t =    44.84s     Synthesize event
+    t =    45.37s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    45.38s Checking existence of `"onboarding.next" Button`
+    t =    45.63s Checking existence of `"onboarding.customClock" Button`
+    t =    45.89s Checking existence of `"personalize.done" Button`
+    t =    46.18s Checking existence of `"theme.done" Button`
+    t =    46.49s Find the "header.stars" Button
+    t =    46.57s Tap "header.stars" Button
+    t =    46.57s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    46.58s     Find the "header.stars" Button
+    t =    46.60s     Check for interrupting elements affecting "header.stars" Button
+    t =    46.78s         Wait for com.apple.springboard to idle
+    t =    46.81s     Synthesize event
+    t =    47.11s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    47.22s Waiting 5.0s for "stars.overview" ScrollView to exist
+    t =    48.29s     Checking `Expect predicate `existsNoRetry == 1` for object "stars.overview" ScrollView`
+    t =    48.29s         Checking existence of `"stars.overview" ScrollView`
+    t =    48.80s Added attachment named 'result-redesign-overview-gold-stars'
+    t =    48.80s Checking existence of `"stars.close" Any`
+    t =    49.55s Checking existence of `"onboarding.next" Button`
+    t =    49.83s Checking existence of `"onboarding.customClock" Button`
+    t =    50.12s Checking existence of `"personalize.done" Button`
+    t =    50.41s Checking existence of `"theme.done" Button`
+    t =    50.68s Find the "stars.close" Any
+    t =    51.25s Tap "stars.close" Button
+    t =    51.25s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    51.30s     Find the "stars.close" Button
+    t =    51.84s     Check for interrupting elements affecting "stars.close" Button
+    t =    52.00s         Wait for com.apple.springboard to idle
+    t =    52.04s     Synthesize event
+    t =    52.33s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    52.85s Waiting 5.0s for "header.stars" Button to exist
+    t =    53.93s     Checking `Expect predicate `existsNoRetry == 1` for object "header.stars" Button`
+    t =    53.93s         Checking existence of `"header.stars" Button`
+    t =    54.19s Terminate Hakketjak.Dino-Klokkijken:50559
+    t =    55.23s Open Hakketjak.Dino-Klokkijken
+    t =    55.23s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:08:10.610 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:08:10.610 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    55.44s         Setting up automation session
+    t =    56.33s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    58.77s Waiting 8.0s for "result.retry" Button to exist
+    t =    59.84s     Checking `Expect predicate `existsNoRetry == 1` for object "result.retry" Button`
+    t =    59.84s         Checking existence of `"result.retry" Button`
+    t =    63.80s Find the "result.map" Button
+    t =    63.86s Find the "result.map" Button
+    t =    63.90s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    63.92s Find the "result.map" Button
+    t =    63.96s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    63.97s Find the "result.map" Button
+    t =    64.01s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    64.03s Find the "result.retry" Button
+    t =    64.08s Find the "result.retry" Button
+    t =    64.12s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    64.14s Find the "result.retry" Button
+    t =    64.18s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    64.20s Find the "result.retry" Button
+    t =    64.24s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    64.26s Find the "result.stars" Any
+    t =    64.29s Get number of matches for: Elements matching predicate '"dino.pirouette" IN identifiers'
+    t =    64.34s Get number of matches for: Elements matching predicate '"dino.backflip" IN identifiers'
+    t =    64.38s Checking existence of `"result.next" Button`
+    t =    64.41s Checking existence of `"5/5" StaticText`
+    t =    64.45s Checking existence of `"result.level" Any`
+    t =    64.48s Find the "5/5" StaticText
+    t =    64.53s Find the "result.level" Any
+    t =    64.89s Added attachment named 'result-redesign-3-stars'
+    t =    64.89s Checking existence of `"result.next" Any`
+    t =    64.92s Checking existence of `"onboarding.next" Button`
+    t =    64.96s Checking existence of `"onboarding.customClock" Button`
+    t =    64.99s Checking existence of `"personalize.done" Button`
+    t =    65.02s Checking existence of `"theme.done" Button`
+    t =    65.05s Find the "result.next" Any
+    t =    65.10s Tap "result.next" Button
+    t =    65.10s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    65.10s     Find the "result.next" Button
+    t =    65.13s     Check for interrupting elements affecting "result.next" Button
+    t =    65.16s         Wait for com.apple.springboard to idle
+    t =    65.21s     Synthesize event
+    t =    65.51s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    65.56s Waiting 5.0s for "header.pause" Button to exist
+    t =    66.62s     Checking `Expect predicate `existsNoRetry == 1` for object "header.pause" Button`
+    t =    66.62s         Checking existence of `"header.pause" Button`
+    t =    66.66s Terminate Hakketjak.Dino-Klokkijken:50799
+    t =    67.70s Open Hakketjak.Dino-Klokkijken
+    t =    67.70s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:08:23.080 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:08:23.080 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    67.92s         Setting up automation session
+    t =    69.05s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    71.31s Waiting 8.0s for "result.retry" Button to exist
+    t =    72.38s     Checking `Expect predicate `existsNoRetry == 1` for object "result.retry" Button`
+    t =    72.38s         Checking existence of `"result.retry" Button`
+    t =    76.33s Find the "result.map" Button
+    t =    76.38s Find the "result.map" Button
+    t =    76.41s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    76.42s Find the "result.map" Button
+    t =    76.45s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    76.47s Find the "result.map" Button
+    t =    76.50s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    76.51s Find the "result.retry" Button
+    t =    76.55s Find the "result.retry" Button
+    t =    76.58s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    76.60s Find the "result.retry" Button
+    t =    76.62s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    76.64s Find the "result.retry" Button
+    t =    76.67s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    76.69s Find the "result.stars" Any
+    t =    76.71s Checking existence of `"result.next" Button`
+    t =    76.97s Added attachment named 'result-redesign-boss-retry'
+    t =    76.98s Terminate Hakketjak.Dino-Klokkijken:50880
+    t =    78.02s Open Hakketjak.Dino-Klokkijken
+    t =    78.03s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:08:33.409 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:08:33.409 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    78.24s         Setting up automation session
+    t =    79.16s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    81.22s Waiting 8.0s for "result.retry" Button to exist
+    t =    82.27s     Checking `Expect predicate `existsNoRetry == 1` for object "result.retry" Button`
+    t =    82.28s         Checking existence of `"result.retry" Button`
+    t =    86.24s Find the "result.next" Button
+    t =    86.28s Find the "result.next" Button
+    t =    86.32s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    86.33s Find the "result.next" Button
+    t =    86.36s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    86.38s Find the "result.next" Button
+    t =    86.41s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    86.43s Find the "result.retry" Button
+    t =    86.47s Find the "result.retry" Button
+    t =    86.50s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    86.52s Find the "result.retry" Button
+    t =    86.55s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    86.57s Find the "result.retry" Button
+    t =    86.60s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    86.61s Find the "result.stars" Any
+    t =    86.64s Find the "result.next" Button
+    t =    86.92s Added attachment named 'result-redesign-boss-perfect-english'
+    t =    86.92s Checking existence of `"result.next" Any`
+    t =    86.95s Checking existence of `"onboarding.next" Button`
+    t =    86.98s Checking existence of `"onboarding.customClock" Button`
+    t =    87.00s Checking existence of `"personalize.done" Button`
+    t =    87.03s Checking existence of `"theme.done" Button`
+    t =    87.05s Find the "result.next" Any
+    t =    87.10s Tap "result.next" Button
+    t =    87.10s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    87.10s     Find the "result.next" Button
+    t =    87.13s     Check for interrupting elements affecting "result.next" Button
+    t =    87.15s         Wait for com.apple.springboard to idle
+    t =    87.19s     Synthesize event
+    t =    87.49s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    87.74s Waiting 15.0s for "map.dino.11" Any to exist
+    t =    88.81s     Checking `Expect predicate `existsNoRetry == 1` for object "map.dino.11" Any`
+    t =    88.81s         Checking existence of `"map.dino.11" Any`
+    t =    89.54s         Capturing element debug description
+    t =    89.75s     Checking `Expect predicate `existsNoRetry == 1` for object "map.dino.11" Any`
+    t =    89.75s         Checking existence of `"map.dino.11" Any`
+    t =    90.23s         Capturing element debug description
+    t =    90.75s     Checking `Expect predicate `existsNoRetry == 1` for object "map.dino.11" Any`
+    t =    90.75s         Checking existence of `"map.dino.11" Any`
+    t =    91.05s         Capturing element debug description
+    t =    91.79s     Checking `Expect predicate `existsNoRetry == 1` for object "map.dino.11" Any`
+    t =    91.79s         Checking existence of `"map.dino.11" Any`
+    t =    92.05s         Capturing element debug description
+    t =    92.80s     Checking `Expect predicate `existsNoRetry == 1` for object "map.dino.11" Any`
+    t =    92.80s         Checking existence of `"map.dino.11" Any`
+    t =    93.04s Terminate Hakketjak.Dino-Klokkijken:50910
+    t =    94.08s Open Hakketjak.Dino-Klokkijken
+    t =    94.08s     Launch Hakketjak.Dino-Klokkijken
+2026-10-23 22:08:49.459 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-23 22:08:49.459 xcodebuild[48932:780665] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    94.28s         Setting up automation session
+    t =    94.89s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    96.44s Waiting 8.0s for "result.retry" Button to exist
+    t =    97.51s     Checking `Expect predicate `existsNoRetry == 1` for object "result.retry" Button`
+    t =    97.51s         Checking existence of `"result.retry" Button`
+    t =   101.45s Find the "result.map" Button
+    t =   101.48s Find the "result.map" Button
+    t =   101.50s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   101.51s Find the "result.map" Button
+    t =   101.53s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   101.54s Find the "result.map" Button
+    t =   101.56s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   101.57s Find the "result.retry" Button
+    t =   101.59s Find the "result.retry" Button
+    t =   101.61s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   101.61s Find the "result.retry" Button
+    t =   101.63s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   101.64s Find the "result.retry" Button
+    t =   101.66s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   101.66s Find the "result.next" Button
+    t =   101.85s Added attachment named 'result-redesign-night-world'
+    t =   101.86s Tear Down
+Test Case '-[DinoUITests.DinoUITests testResultRewardStatesAndNavigation]' passed (102.535 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-23 22:08:57.915.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 212.765 (212.767) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-23 22:08:57.916.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 212.765 (212.768) seconds
+Test Suite 'Selected tests' passed at 2026-10-23 22:08:57.916.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 212.765 (212.769) seconds
+2026-10-23 22:08:58.314 xcodebuild[48932:780665] [MT] IDETestOperationsObserverDebug: 233.221 elapsed -- Testing started completed.
+2026-10-23 22:08:58.314 xcodebuild[48932:780665] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-23 22:08:58.314 xcodebuild[48932:780665] [MT] IDETestOperationsObserverDebug: 233.221 sec, +233.221 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-podium-ipad-final.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

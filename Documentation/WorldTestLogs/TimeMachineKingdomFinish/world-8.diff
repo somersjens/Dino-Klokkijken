@@ -1,0 +1,865 @@
+--- before/struct WorldTitleBanner
++++ after/struct WorldTitleBanner
+@@ -7,8 +7,16 @@
+             let layout = WorldBannerLayout(width: geometry.size.width)
+             let palette = WorldBannerPalette(worldID: world.themeID)
+             ZStack(alignment: .topLeading) {
+-                Canvas { context, size in
+-                    WorldBannerPainter(context: context, world: world).draw(in: size)
++                Group {
++                    if world.themeID == 8 {
++                        TimeMachineBannerMotion { time in
++                            Canvas { context, size in
++                                WorldBannerPainter(context: context, world: world, motionTime: time).draw(in: size)
++                            }
++                        }
++                    } else {
++                        Canvas { context, size in WorldBannerPainter(context: context, world: world).draw(in: size) }
++                    }
+                 }.allowsHitTesting(false).accessibilityHidden(true)
+                 Text("dino.worldNumber \(world.id)")
+                     .textCase(.uppercase)
+@@ -50,22 +58,40 @@
+     }
+ }
+ 
+-/// The skill plaque pairs its clock with the label so both sit on one center line.
++/// The world 8 sign follows the map's motion and visibility preferences.
++private struct TimeMachineBannerMotion<Content: View>: View {
++    @ViewBuilder var content: (TimeInterval) -> Content
++    @Environment(\.accessibilityReduceMotion) private var reduceMotion
++    @Environment(\.scenePhase) private var scenePhase
++    @Environment(\.dinoMapAnimationEpoch) private var epoch
++    @State private var visible = false
++    var body: some View {
++        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion || !visible || scenePhase != .active)) { timeline in
++            content(reduceMotion ? 0 : timeline.date.timeIntervalSince(epoch ?? Date(timeIntervalSinceReferenceDate: 0)))
++        }
++        .readGeometry(for: Bool.self) { geometry in
++            let frame = geometry.frame(in: .named("adventure.map.viewport"))
++            return frame.maxY > -64 && frame.minY < 1600
++        } action: { visible = $0 }
++    }
++}
++
++/// The skill plaque pairs its clock with the label on one centre line.
+ private struct WorldSkillMark: View {
+     let world: DinoWorld
+-
+     var body: some View {
++        Group {
++            if world.themeID == 8 { TimeMachineBannerMotion { time in mark(time: time) } }
++            else { mark(time: 0) }
++        }.frame(width: 24, height: 24).accessibilityHidden(true)
++    }
++    private func mark(time: TimeInterval) -> some View {
+         Canvas { context, size in
+-            let painter = WorldBannerPainter(context: context, world: world)
++            let painter = WorldBannerPainter(context: context, world: world, motionTime: time)
+             let center = CGPoint(x: size.width / 2, y: size.height / 2)
+-            if world.themeID == 2 {
+-                painter.moon(at: center, radius: 7)
+-            } else {
+-                painter.clock(at: center, radius: 8, time: WorldBossClock.time(in: world.themeID))
+-            }
+-        }
+-        .frame(width: 24, height: 24)
+-        .accessibilityHidden(true)
++            if world.themeID == 2 { painter.moon(at: center, radius: 7) }
++            else { painter.clock(at: center, radius: 8, time: WorldBossClock.time(in: world.themeID)) }
++        }
+     }
+ }
+ 
+@@ -146,6 +172,8 @@
+ private struct WorldBannerPainter {
+     let context: GraphicsContext
+     let world: DinoWorld
++    var motionTime: TimeInterval = 0
++    var mirrored = false
+     private var themeID: Int { world.themeID }
+     private var palette: WorldBannerPalette { .init(worldID: themeID) }
+ 
+@@ -178,7 +206,7 @@
+     private func transformed(at point: CGPoint, scale: CGFloat = 1, mirror: Bool = false, draw: (WorldBannerPainter) -> Void) {
+         var layer = context
+         layer.translateBy(x: point.x, y: point.y); layer.scaleBy(x: mirror ? -scale : scale, y: scale)
+-        draw(.init(context: layer, world: world))
++        draw(.init(context: layer, world: world, motionTime: motionTime, mirrored: mirrored != mirror))
+     }
+ 
+     func draw(in size: CGSize) {
+@@ -529,9 +557,15 @@
+                 line([CGPoint(x: -21, y: -45), CGPoint(x: -21, y: 53)], color: 0x806D4A, width: 9)
+                 line([CGPoint(x: -23, y: -43), CGPoint(x: -23, y: 51)], color: 0xF6DB9A, width: 1.5)
+                 line([CGPoint(x: -21, y: -3), CGPoint(x: -36, y: -3)], color: 0x9B8152, width: 6)
+-                gear(at: CGPoint(x: -20, y: -31), radius: 19)
+-                gear(at: CGPoint(x: -37, y: -3), radius: 14)
+-                gear(at: CGPoint(x: -20, y: 26), radius: 20)
++                let train = TimeMachineLayout.gearPair(at: .init(x: -20, y: -31), radius: 19, follower: 14,
++                                                      direction: .init(x: -17, y: 28), phase: 0.2)
++                for g in train { gear(at: g.point, radius: g.radius, phase: g.phase, speed: g.speed, teeth: g.teeth) }
++                let middle = train[1]
++                let last = TimeMachineLayout.gearPair(at: middle.point, radius: middle.radius, follower: 20,
++                                                     direction: .init(x: 17, y: 29), phase: middle.phase, driverTeeth: middle.teeth)
++                let follower = last[1]
++                gear(at: follower.point, radius: follower.radius, phase: follower.phase,
++                     speed: -middle.speed * Double(middle.teeth) / Double(follower.teeth), teeth: follower.teeth)
+                 line([CGPoint(x: -32, y: -52), CGPoint(x: -32, y: -17), CGPoint(x: -27, y: -14)],
+                      color: 0x9A8153, width: 0.9, opacity: 0.8)
+             } else {
+@@ -841,9 +875,9 @@
+         for i in 0..<4 { line([CGPoint(x: r.minX + 7, y: r.minY + 11 + CGFloat(i) * 11), CGPoint(x: r.maxX - 3, y: r.minY + 11 + CGFloat(i) * 11)], color: 0xAAF2D9, width: 2.3) }
+         rivet(at: CGPoint(x: point.x, y: r.maxY - 7), radius: 2)
+     }
+-    private func gear(at point: CGPoint, radius: CGFloat) {
+-        let pts = (0..<48).map { i -> CGPoint in
+-            let a = Double(i) * .pi / 24, r = i % 4 < 2 ? radius : radius * 0.78
++    private func gear(at point: CGPoint, radius: CGFloat, phase: Double = 0, speed: Double = 0.8, teeth: Int = 12) {
++        let pts = (0..<(teeth * 4)).map { i -> CGPoint in
++            let a = Double(i) * .pi * 2 / Double(teeth * 4) + phase - .pi / (2 * Double(teeth)) + motionTime * speed, r = i % 4 < 2 ? radius : radius * 0.78
+             return CGPoint(x: point.x + CGFloat(cos(a)) * r, y: point.y + CGFloat(sin(a)) * r)
+         }
+         polygon(pts.map { CGPoint(x: $0.x, y: $0.y + 2) }, light: 0xBFA368, face: 0xA88C58, dark: 0x716C55)
+@@ -853,7 +887,7 @@
+         oval(CGRect(x: point.x - radius * 0.4, y: point.y - radius * 0.4, width: radius * 0.8, height: radius * 0.8),
+              light: 0xDCD8B4, face: 0xA8B4A9, dark: 0x697F85)
+         for i in 0..<6 {
+-            let angle = Double(i) * .pi / 3
++            let angle = Double(i) * .pi / 3 + phase + motionTime * speed
+             let inner = CGPoint(x: point.x + CGFloat(cos(angle)) * radius * 0.45,
+                                 y: point.y + CGFloat(sin(angle)) * radius * 0.45)
+             let outer = CGPoint(x: point.x + CGFloat(cos(angle)) * radius * 0.57,
+@@ -877,7 +911,8 @@
+         }
+         for (angle, reach, weight) in [(Double(time.hour % 12) * .pi / 6 + Double(time.minute) * .pi / 360, CGFloat(0.48), CGFloat(1.2)),
+                                        (Double(time.minute) * .pi / 30, CGFloat(0.68), CGFloat(0.9))] {
+-            line([point, CGPoint(x: point.x + CGFloat(sin(angle)) * radius * reach, y: point.y - CGFloat(cos(angle)) * radius * reach)],
++            let movingAngle = angle + (mirrored ? 1 : -1) * motionTime * (reach < 0.6 ? .pi / 3 : .pi * 4)
++            line([point, CGPoint(x: point.x + CGFloat(sin(movingAngle)) * radius * reach, y: point.y - CGFloat(cos(movingAngle)) * radius * reach)],
+                  color: 0x345E6B, width: weight)
+         }
+         pearl(at: point, radius: 1.1)
+--- before/private enum TimeMachineLayout {
++++ after/private enum TimeMachineLayout {
+@@ -3,6 +3,173 @@
+     static let waterLight: UInt32 = 0x50DDF8
+     static let waterDeep: UInt32 = 0x1375AD
+     static let waterFoam: UInt32 = 0xD8FFFF
++
++    static func cityStart(_ layout: WorldSceneryLayout) -> CGFloat { -layout.routeOffset + 82 }
++    static func firstTerrace(_ layout: WorldSceneryLayout) -> CGFloat { cityStart(layout) + 300 * layout.scale }
++    static func quay(_ layout: WorldSceneryLayout) -> CGFloat { layout.height - layout.routeOffset - 154 * layout.scale }
++
++    struct Terminal {
++        let source: CGPoint
++        let drain: CGPoint
++        let right: Bool
++        let size: CGFloat
++        var sourceBounds: CGRect { CGRect(x: source.x - 39 * size, y: source.y - 106 * size, width: 78 * size, height: 120 * size) }
++        var drainBounds: CGRect { CGRect(x: drain.x - 40 * size, y: drain.y - 23 * size, width: 80 * size, height: 59 * size) }
++    }
++    static func terminals(layout: WorldSceneryLayout) -> [Terminal] {
++        [false, true].map { right in
++            let y = firstTerrace(layout) - 45 * layout.scale
++            var source = waterPoint(layout: layout, right: right, y: y)
++            // The whole source house, including its roof, clears the promenade.
++            for dy in stride(from: CGFloat(-106), through: 0, by: 6) {
++                let edge = layout.centerX(at: y + dy * layout.scale) + (right ? 1 : -1) * (28 + 40 * layout.scale)
++                source.x = right ? max(source.x, edge) : min(source.x, edge)
++            }
++            return Terminal(source: source, drain: waterPoint(layout: layout, right: right, y: quay(layout) + 80 * layout.scale),
++                            right: right, size: layout.scale)
++        }
++    }
++
++    struct Gear {
++        let point: CGPoint
++        let radius: CGFloat
++        var teeth = 12
++        var phase: Double = 0
++        var speed: Double = 0.8
++    }
++    static func gearPair(at point: CGPoint, radius: CGFloat, follower: CGFloat, direction: CGPoint, phase: Double, driverTeeth: Int = 12) -> [Gear] {
++        let teeth = max(6, Int((CGFloat(driverTeeth) * follower / radius).rounded()))
++        let r = radius * CGFloat(teeth) / CGFloat(driverTeeth)
++        let angle = atan2(Double(direction.y), Double(direction.x))
++        let distance = (radius + r) * 0.91
++        // A tooth centre on the driver meets a gap on the follower.
++        let contact = (angle - phase) * Double(driverTeeth) / (.pi * 2)
++        let followerPhase = angle + .pi - (0.25 - contact) * .pi * 2 / Double(teeth)
++        return [Gear(point: point, radius: radius, teeth: driverTeeth, phase: phase),
++                Gear(point: .init(x: point.x + CGFloat(cos(angle)) * distance, y: point.y + CGFloat(sin(angle)) * distance),
++                     radius: r, teeth: teeth, phase: followerPhase, speed: -0.8 * Double(driverTeeth) / Double(teeth))]
++    }
++    enum Part {
++        case gear(Gear)
++        case hands(CGPoint, CGFloat, ClockTime)
++        case fullClock(CGPoint, CGFloat, ClockTime)
++        var bounds: CGRect {
++            let point: CGPoint, radius: CGFloat
++            switch self {
++            case .gear(let gear): point = gear.point; radius = gear.radius + 4
++            case .hands(let p, let r, _), .fullClock(let p, let r, _): point = p; radius = r + 5
++            }
++            return CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)
++        }
++    }
++    struct Assembly: Identifiable {
++        let id: Int
++        let origin: CGPoint
++        let size: CGFloat
++        var mirror = false
++        let depth: CGFloat
++        let parts: [Part]
++        var bounds: CGRect {
++            let local = parts.reduce(CGRect.null) { $0.union($1.bounds) }
++            return CGRect(x: origin.x + (mirror ? -local.maxX : local.minX) * size,
++                          y: origin.y + local.minY * size, width: local.width * size, height: local.height * size)
++        }
++    }
++    private final class AssemblyField {
++        let assemblies: [Assembly]
++        init(_ assemblies: [Assembly]) { self.assemblies = assemblies }
++    }
++    private static let assemblyFields: NSCache<NSString, AssemblyField> = {
++        let cache = NSCache<NSString, AssemblyField>(); cache.countLimit = 8; return cache
++    }()
++    static func assemblies(layout: WorldSceneryLayout) -> [Assembly] {
++        let key = "\(layout.width):\(layout.height):\(layout.routeOffset)" as NSString
++        if let field = assemblyFields.object(forKey: key) { return field.assemblies }
++        let field = waterField(layout: layout)
++        var result: [Assembly] = []
++        func add(_ origin: CGPoint, _ size: CGFloat, _ depth: CGFloat, _ parts: [Part], mirror: Bool = false) {
++            guard !parts.isEmpty else { return }
++            result.append(Assembly(id: result.count, origin: origin, size: size, mirror: mirror, depth: depth, parts: parts))
++        }
++        for q in field.quarters {
++            add(q.point, q.size, q.point.y + 66 * q.size,
++                gearPair(at: .init(x: q.width - 20, y: 36), radius: q.variation % 2 == 0 ? 20 : 15,
++                         follower: 11, direction: .init(x: -19, y: 21), phase: Double(q.variation) * 0.28).map(Part.gear), mirror: q.right)
++            let count = max(1, Int((q.buildingWidth + 20) / 107))
++            let module = min(126, max(76, (q.buildingWidth + 18) / CGFloat(count)))
++            for column in 0..<count where (q.variation + column * 2) % 3 == 0 {
++                add(q.point, q.size, q.point.y - 71 * q.size,
++                    [.gear(Gear(point: .init(x: -14 + module * (CGFloat(column) + 0.5), y: -152), radius: 14, phase: 0.2))], mirror: q.right)
++            }
++        }
++        for clock in field.wallClocks {
++            add(clock.point, clock.size, clock.depth, [.hands(.zero, clock.radius, .init(hour: 10, minute: 10))])
++        }
++        for site in sites(layout: layout) where site.id % 3 == 1 {
++            add(site.point, site.size, site.point.y, [.hands(.init(x: -66, y: -88), 10, .init(hour: 3))])
++        }
++        for item in furnishings(layout: layout) {
++            var parts: [Part] = []
++            switch item.kind {
++            case .pump:
++                parts = [.hands(.init(x: 23, y: -45), 11, .init(hour: 2 + item.variation % 8, minute: 15)),
++                         .gear(Gear(point: .init(x: -20, y: -22), radius: 14, phase: Double(item.variation) * 0.3))]
++            case .workbench:
++                parts = [.gear(Gear(point: .init(x: -30 * 1.12, y: -30 * 1.12), radius: 6 * 1.12, phase: 0.2))]
++            case .gearRack:
++                parts = [.hands(.init(x: 0, y: -88), 28, .init(hour: 4 + item.variation % 4, minute: 25))]
++                parts += gearPair(at: .init(x: -20, y: -40), radius: 16, follower: 17,
++                                  direction: .init(x: 1, y: 0), phase: 0.4).map(Part.gear)
++            case .telescope:
++                parts = [.hands(.init(x: -19 + 17 * 0.91, y: -3 - 30 * 0.91), 11 * 0.91, .init(hour: 2, minute: 40)),
++                         .hands(.init(x: 30, y: -12 - 107 * 0.69), 18 * 0.69, .init(hour: 9, minute: 10))]
++            }
++            add(item.point, item.size, item.point.y, parts)
++        }
++        // Pendel's three hat clocks belong to this world, too.
++        add(.init(x: layout.width - 79 * layout.scale, y: 1675), layout.scale * 0.88, 1675.5,
++            [.fullClock(.init(x: 10, y: -158), 11, .init(hour: 6, minute: 25)),
++             .fullClock(.init(x: -7, y: -174), 8, .init(hour: 10, minute: 10)),
++             .fullClock(.init(x: -9, y: -190), 5.5, .init(hour: 3))])
++        assemblyFields.setObject(AssemblyField(result), forKey: key)
++        return result
++    }
++
++    struct HourglassState {
++        let cycle: Int
++        let progress: CGFloat
++        let angle: Double
++        init(time: TimeInterval) {
++            let time = max(0, time)
++            cycle = Int(floor(time / 16))
++            let local = time - Double(cycle) * 16
++            progress = CGFloat(min(1, local / 14.4))
++            let turn = max(0, min(1, (local - 14.4) / 1.6))
++            angle = Double(cycle % 2) * 180 + 180 * turn * turn * (3 - 2 * turn)
++        }
++        // Quantiles of the curved bulb's area conserve the amount of sand.
++        static let levels: [CGFloat] = {
++            var samples: [(CGFloat, CGFloat)] = [], area: CGFloat = 0
++            var previous = CGPoint(x: -24, y: -130)
++            for i in 1...240 {
++                let t = CGFloat(i) / 240, u = 1 - t
++                let point = CGPoint(x: u*u*u * -24 + 3*u*u*t * -27 + 3*u*t*t * -12 + t*t*t * -3,
++                                    y: u*u*u * -130 + 3*u*u*t * -101 + 3*u*t*t * -87 + t*t*t * -73.5)
++                area += -(previous.x + point.x) * (point.y - previous.y)
++                samples.append((point.y, area)); previous = point
++            }
++            return (0...240).map { index in
++                if index == 0 { return -130 }
++                let target = area * CGFloat(index) / 240
++                return samples.first { $0.1 >= target }?.0 ?? -73.5
++            }
++        }()
++        var upperSurface: CGFloat {
++            let index = progress * 240, lo = Int(index), hi = min(240, lo + 1)
++            return Self.levels[lo] + (Self.levels[hi] - Self.levels[lo]) * (index - CGFloat(lo))
++        }
++        var lowerSurface: CGFloat { -147 - upperSurface }
++    }
+ 
+     struct Discharge {
+         let source: CGPoint
+@@ -272,7 +439,7 @@
+             let inner = max(27, min(q.stairWidth - 24, q.buildingWidth + 48)), outer = max(10, inner - 45)
+             let top = q.variation % 2 == 0 ? inner : outer
+             let bottom = q.variation % 2 == 0 ? outer : inner
+-            for (x, y, scale): (CGFloat, CGFloat, CGFloat) in [(top + 21, -70, 0.9), (bottom - 24, 66, 0.83)] {
++            for (x, y, scale): (CGFloat, CGFloat, CGFloat) in [(max(9, min(top + 21, q.upperExtent - 60)), -70, 0.9), (max(9, min(bottom - 24, q.lowerExtent - 60)), 66, 0.83)] {
+                 let point = CGPoint(x: q.point.x + (q.right ? -x : x) * q.size, y: q.point.y + y * q.size)
+                 result.append(place(point, size: q.size * scale, right: q.right))
+             }
+@@ -284,10 +451,10 @@
+         return result
+     }
+     static func quarters(layout: WorldSceneryLayout) -> [Quarter] {
+-        let s = layout.scale, start = -layout.routeOffset + 62
+-        let count = Int(ceil((layout.height - 108 + 150) / 205))
++        let s = layout.scale, start = firstTerrace(layout), end = quay(layout) - 74 * s
++        let count = max(2, Int((end - start) / (205 * s)) + 1)
+         return [false, true].flatMap { right in (0..<count).map { row in
+-            let y = start + 167 + CGFloat(row) * 205
++            let y = start + CGFloat(row) * (end - start) / CGFloat(count - 1)
+             let limits = (0...12).map { i -> CGFloat in
+                 let x = layout.centerX(at: y - 240 * s + CGFloat(i) * 20 * s)
+                 return (right ? layout.width - x - 62 * s : x - 62 * s) / s
+@@ -333,8 +500,8 @@
+     /// Architecture and water share the trail's exact bends. This reserves a
+     /// clear promenade around the level stones, including on narrow phones.
+     static func cityBank(layout: WorldSceneryLayout, right: Bool) -> Path {
+-        let start = -layout.routeOffset + 62
+-        let end = layout.height - layout.routeOffset - 46
++        let start = cityStart(layout)
++        let end = quay(layout) + 35 * layout.scale
+         let outside = right ? layout.width + 40 : -40
+         var path = Path()
+         path.move(to: .init(x: outside, y: start))
+@@ -349,14 +516,7 @@
+     }
+ 
+     static func clipCityTransition(context: inout GraphicsContext, bounds: CGRect, scale: CGFloat) {
+-        let entry = min(0.16, 104 * scale / bounds.height)
+-        let exit = max(0.84, 1 - 80 * scale / bounds.height)
+-        context.clipToLayer { mask in
+-            mask.fill(Path(bounds), with: .linearGradient(Gradient(stops: [
+-                .init(color: .clear, location: 0), .init(color: .white, location: entry),
+-                .init(color: .white, location: exit), .init(color: .clear, location: 1)
+-            ]), startPoint: .init(x: 0, y: bounds.minY), endPoint: .init(x: 0, y: bounds.maxY)))
+-        }
++        context.clip(to: Path(bounds))
+     }
+ 
+     static func waterPoint(layout: WorldSceneryLayout, right: Bool, y: CGFloat) -> CGPoint {
+@@ -378,6 +538,7 @@
+     final class WaterField {
+         let banks: [Path]
+         let currents: [Path]
++        let terminals: [Terminal]
+         let quarters: [Quarter]
+         let bridges: [Bridge]
+         let lanterns: [Lantern]
+@@ -385,7 +546,9 @@
+         let protectedRoute: Path
+         let transitionBounds: CGRect
+         init(layout: WorldSceneryLayout) {
+-            transitionBounds = CGRect(x: -40, y: -layout.routeOffset + 62, width: layout.width + 80, height: layout.height - 108)
++            transitionBounds = CGRect(x: -60, y: cityStart(layout), width: layout.width + 120,
++                                      height: layout.height - layout.routeOffset - cityStart(layout) - 24)
++            terminals = TimeMachineLayout.terminals(layout: layout)
+             quarters = TimeMachineLayout.quarters(layout: layout)
+             let inventions = sites(layout: layout), apparatus = furnishings(layout: layout)
+             wallClocks = quarters.flatMap(\.wallClocks).map { clock in
+@@ -400,9 +563,17 @@
+             lanterns = TimeMachineLayout.lanterns(layout: layout, quarters: quarters, bridges: bridges)
+             protectedRoute = TimeMachineLayout.protectedRoute(layout: layout)
+             banks = [false, true].map { cityBank(layout: layout, right: $0) }
+-            currents = [false, true].map {
+-                watercourse(layout: layout, right: $0, from: -layout.routeOffset + 62,
+-                            to: layout.height - layout.routeOffset - 46)
++            currents = terminals.map { terminal in
++                let joinY = terminal.source.y + 38 * layout.scale
++                let join = waterPoint(layout: layout, right: terminal.right, y: joinY)
++                var path = Path(); path.move(to: terminal.source)
++                path.addCurve(to: join, control1: .init(x: terminal.source.x, y: joinY - 16 * layout.scale),
++                              control2: .init(x: join.x, y: joinY - 14 * layout.scale))
++                for y in stride(from: joinY, to: terminal.drain.y, by: 4) {
++                    path.addLine(to: waterPoint(layout: layout, right: terminal.right, y: y))
++                }
++                path.addLine(to: terminal.drain)
++                return path
+             }
+         }
+     }
+@@ -437,6 +608,13 @@
+                         .frame(width: frame.width, height: frame.height)
+                         .offset(y: frame.minY)
+                 }
++                ForEach(TimeMachineLayout.assemblies(layout: layout)) { assembly in
++                    let frame = assembly.bounds.offsetBy(dx: 0, dy: routeOffset)
++                    TimeMachinePartsSurface(layout: layout, assembly: assembly, viewportHeight: viewportHeight,
++                                            fixedTime: fixedTime, frozen: frozen)
++                        .frame(width: frame.width, height: frame.height)
++                        .offset(x: frame.minX, y: frame.minY)
++                }
+                 ForEach(sites) { site in
+                     let frame = site.bounds.offsetBy(dx: 0, dy: routeOffset)
+                     TimeMachineMechanismSurface(site: site, viewportHeight: viewportHeight,
+@@ -447,6 +625,52 @@
+                 }
+             }
+         }.allowsHitTesting(false).accessibilityHidden(true)
++    }
++}
++
++/// Each clock face and gear train reuses a small, visibility-paused surface.
++private struct TimeMachinePartsSurface: View {
++    let layout: WorldSceneryLayout
++    let assembly: TimeMachineLayout.Assembly
++    let viewportHeight: CGFloat
++    var fixedTime: TimeInterval?
++    var frozen: Bool
++    @Environment(\.accessibilityReduceMotion) private var reduceMotion
++    @Environment(\.scenePhase) private var scenePhase
++    @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
++    @State private var visible = false
++    var body: some View {
++        let bounds = assembly.bounds
++        TimelineView(.animation(minimumInterval: 1.0 / 20,
++                                paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
++            Canvas { context, _ in
++                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
++                var c = context; c.translateBy(x: -bounds.minX, y: -bounds.minY)
++                TimeMachinePainter(context: c, time: time).movingParts(assembly)
++            }
++        }
++        .mask {
++            Canvas { context, size in
++                context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.white))
++                var c = context; c.translateBy(x: -bounds.minX, y: -bounds.minY); c.blendMode = .destinationOut
++                let p = TimeMachinePainter(context: c)
++                for site in TimeMachineLayout.sites(layout: layout) where site.point.y > assembly.depth && site.bounds.intersects(bounds) {
++                    p.scene(at: site.point, size: site.size, variation: site.id)
++                    p.dischargeHardware(site.discharge)
++                }
++                for item in TimeMachineLayout.furnishings(layout: layout) where item.point.y > assembly.depth && item.bounds.intersects(bounds) { p.furnishing(item) }
++                let foreground = WorldSceneryDepth(minimumDepth: assembly.depth + 0.01, visibleBounds: bounds)
++                p.appendKingdomDetails(layout: layout, depth: foreground); foreground.draw()
++                if assembly.depth < 1675 && bounds.maxY > 1675 - 210 * layout.scale {
++                    WorldBossPainter(context: c).draw(worldID: 8, at: .init(x: layout.width - 79 * layout.scale, y: 1675), size: layout.scale * 0.88)
++                }
++                c.fill(TimeMachineLayout.waterField(layout: layout).protectedRoute, with: .color(.white))
++            }
++        }
++        .readGeometry(for: Bool.self) { geometry in
++            let frame = geometry.frame(in: .named("adventure.map.viewport"))
++            return frame.maxY > -128 && frame.minY < viewportHeight + 128
++        } action: { visible = $0 }
+     }
+ }
+ 
+@@ -654,7 +878,7 @@
+         var c = context; c.translateBy(x: 0, y: routeOffset)
+         let scenery = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
+         ambientFloor(layout: scenery, context: c)
+-        TimeMachinePainter(context: c).clockworkKingdom(layout: scenery, depth: depth)
++        TimeMachinePainter(context: c, liveMachinery: liveMachinery).clockworkKingdom(layout: scenery, depth: depth)
+         let placed = TimeMachinePainter(context: c, depth: depth, depthOffset: routeOffset, liveMachinery: liveMachinery)
+         for site in TimeMachineLayout.sites(layout: scenery) {
+             floorAura(site: site, context: c)
+@@ -679,12 +903,12 @@
+     /// Buildings stand on shared terraces; stairs land on those same cornices.
+     private func clockworkKingdom(layout: WorldSceneryLayout, depth: WorldSceneryDepth) {
+         let scale = layout.scale, field = TimeMachineLayout.waterField(layout: layout)
+-        let start = field.transitionBounds.minY, end = field.transitionBounds.maxY
++        let start = firstFoundation(field: field), end = TimeMachineLayout.quay(layout) + 35 * scale
+         for (index, right) in [false, true].enumerated() {
+             var bank = context
+             bank.clip(to: field.banks[index])
+             TimeMachineLayout.clipCityTransition(context: &bank, bounds: field.transitionBounds, scale: scale)
+-            let p = TimeMachinePainter(context: bank)
++            let p = TimeMachinePainter(context: bank, liveMachinery: liveMachinery)
+             p.material(Path(CGRect(x: -20, y: start, width: layout.width + 40, height: end - start)),
+                        [0xA2A4BE, 0x777E9D, 0x515D7C])
+             p.masonry(in: CGRect(x: 0, y: start, width: layout.width, height: end - start),
+@@ -692,9 +916,21 @@
+             for quarter in field.quarters where quarter.right == right {
+                 var c = bank; c.translateBy(x: quarter.point.x, y: quarter.point.y)
+                 c.scaleBy(x: right ? -scale : scale, y: scale)
+-                TimeMachinePainter(context: c).kingdomQuarter(width: quarter.width, buildingWidth: quarter.buildingWidth,
++                TimeMachinePainter(context: c, liveMachinery: liveMachinery).kingdomQuarter(width: quarter.width, buildingWidth: quarter.buildingWidth,
+                     stairWidth: quarter.stairWidth, variation: quarter.variation)
+             }
++            let last = field.quarters.filter { $0.right == right }.max { $0.point.y < $1.point.y }!
++            var base = bank; base.translateBy(x: last.point.x, y: TimeMachineLayout.quay(layout))
++            base.scaleBy(x: right ? -scale : scale, y: scale)
++            let endPainter = TimeMachinePainter(context: base)
++            endPainter.rounded(CGRect(x: -28, y: -8, width: last.lowerExtent + 34, height: 43), 5, [0xDDD0C5, 0x9B9AB2, 0x646F8A])
++            endPainter.masonry(in: CGRect(x: -26, y: 0, width: last.lowerExtent + 30, height: 32), course: 16, block: 30)
++            endPainter.rounded(CGRect(x: -30, y: -13, width: last.lowerExtent + 38, height: 9), 2, [0xFFF0D1, 0xBAACB3, 0x80849E])
++            // The channel continues past the masonry, into its real drain.
++            bank = context
++            bank.clip(to: field.protectedRoute, options: .inverse)
++            let terminal = field.terminals[index]
++            TimeMachinePainter(context: bank).drain(terminal, front: false)
+             let water = field.currents[index]
+             bank.stroke(water.offsetBy(dx: 2 * scale, dy: 3 * scale), with: .color(Color(dinoHex: 0x263E65).opacity(0.55)),
+                         style: StrokeStyle(lineWidth: 29 * scale, lineCap: .round))
+@@ -707,6 +943,10 @@
+         appendKingdomDetails(layout: layout, depth: depth, depthOffset: layout.routeOffset)
+     }
+ 
++    private func firstFoundation(field: TimeMachineLayout.WaterField) -> CGFloat {
++        (field.quarters.map(\.point.y).min() ?? 0) - 74 * (field.quarters.first?.size ?? 1)
++    }
++
+     /// Balconies, bridge decks and projecting details share the machines' ground
+     /// order. Only their foundations are trimmed to the masonry footprint.
+     func appendKingdomDetails(layout: WorldSceneryLayout, depth: WorldSceneryDepth, depthOffset: CGFloat = 0) {
+@@ -714,12 +954,20 @@
+         var free = context
+         free.clip(to: field.protectedRoute, options: .inverse)
+         TimeMachineLayout.clipCityTransition(context: &free, bounds: field.transitionBounds, scale: layout.scale)
++        for terminal in field.terminals {
++            depth.add(at: depthOffset + terminal.source.y + 0.1, bounds: terminal.sourceBounds.offsetBy(dx: 0, dy: depthOffset)) {
++                TimeMachinePainter(context: free).springhouse(terminal)
++            }
++            depth.add(at: depthOffset + terminal.drain.y + 1, bounds: terminal.drainBounds.offsetBy(dx: 0, dy: depthOffset)) {
++                TimeMachinePainter(context: free).drain(terminal, front: true)
++            }
++        }
+         for q in field.quarters {
+             for (layer, baseline) in [(QuarterLayer.upper, CGFloat(-70)), (.lower, CGFloat(66))] {
+                 depth.add(at: depthOffset + q.point.y + baseline * q.size, bounds: q.bounds.offsetBy(dx: 0, dy: depthOffset)) {
+                     var c = free; c.translateBy(x: q.point.x, y: q.point.y)
+                     c.scaleBy(x: q.right ? -q.size : q.size, y: q.size)
+-                    TimeMachinePainter(context: c).kingdomQuarter(width: q.width, buildingWidth: q.buildingWidth,
++                    TimeMachinePainter(context: c, liveMachinery: liveMachinery).kingdomQuarter(width: q.width, buildingWidth: q.buildingWidth,
+                         stairWidth: q.stairWidth, variation: q.variation, layer: layer,
+                         upperExtent: q.upperExtent, lowerExtent: q.lowerExtent)
+                 }
+@@ -740,16 +988,76 @@
+         for lantern in field.lanterns {
+             depth.add(at: depthOffset + lantern.point.y + 0.1, bounds: lantern.bounds.offsetBy(dx: 0, dy: depthOffset)) {
+                 let p = TimeMachinePainter(context: free)
+-                p.line([lantern.mount, lantern.point], 0xC6984D, 3 * lantern.size)
++                let s = lantern.size, a = lantern.mount, b = lantern.point
++                p.rounded(CGRect(x: a.x - 9 * s, y: a.y - 2 * s, width: 18 * s, height: 13 * s), 2 * s, [0xE8DBBE, 0x9997AD, 0x666E88])
++                if abs(a.x - b.x) > 2 * s {
++                    p.line([.init(x: a.x, y: a.y + 10 * s), b, a], 0x92703C, 4 * s)
++                    p.line([a, b], 0xF1CA82, 2 * s)
++                    p.rivet(.init(x: a.x, y: a.y + 7 * s), radius: 2 * s)
++                } else {
++                    p.rounded(CGRect(x: b.x - 12 * s, y: b.y, width: 24 * s, height: 6 * s), 2 * s, [0xFFF0D0, 0xA5A0B2])
++                }
+                 p.lamp(at: lantern.point, size: lantern.size)
+             }
+         }
+         for clock in field.wallClocks {
+             depth.add(at: depthOffset + clock.depth, bounds: clock.bounds.offsetBy(dx: 0, dy: depthOffset)) {
+-                TimeMachinePainter(context: free).at(clock.point, size: clock.size) { p in
++                TimeMachinePainter(context: free, liveMachinery: liveMachinery).at(clock.point, size: clock.size) { p in
+                     p.clock(at: .zero, radius: clock.radius, time: .init(hour: 10, minute: 10))
+                 }
+             }
++        }
++    }
++
++    private func springhouse(_ terminal: TimeMachineLayout.Terminal) {
++        at(terminal.source, size: terminal.size) { p in
++            p.rounded(CGRect(x: -35, y: -78, width: 70, height: 84), 5, [0xD9CCCA, 0x9696B1, 0x626E8E])
++            p.masonry(in: CGRect(x: -33, y: -76, width: 66, height: 80), course: 16, block: 23)
++            p.archedWindow(at: .init(x: 0, y: -9), width: 37, height: 57, lit: false)
++            p.polygon([.init(x: -39, y: -77), .init(x: 0, y: -103), .init(x: 39, y: -77)], [0x5CC6DB, 0x2673A1, 0x304F80])
++            p.line([.init(x: -39, y: -77), .init(x: 0, y: -103), .init(x: 39, y: -77)], 0xE9C47F, 3)
++            p.rivet(.init(x: 0, y: -104), radius: 3)
++            p.rounded(CGRect(x: -11, y: -15, width: 22, height: 17), 3, [0xFFF0B8, 0xBB8E45, 0x775A35])
++            p.oval(CGRect(x: -7, y: -11, width: 14, height: 9), [0x233C5B, 0x4C7794])
++            p.line([.init(x: -6, y: -5), .init(x: -6, y: 9), .init(x: 6, y: 9), .init(x: 6, y: -5)], TimeMachineLayout.waterLight, 2)
++            p.flowerGarland(from: .init(x: -33, y: -74), length: 20, hanging: 28, variation: 2)
++        }
++    }
++
++    private func drain(_ terminal: TimeMachineLayout.Terminal, front: Bool) {
++        at(terminal.drain, size: terminal.size) { p in
++            if !front {
++                p.oval(CGRect(x: -39, y: -20, width: 78, height: 51), [0xD8D0CE, 0x8A8DA7, 0x586683])
++                p.oval(CGRect(x: -34, y: -22, width: 68, height: 40), [0xFFE4A5, 0xBE975B, 0x7E6848])
++                p.oval(CGRect(x: -26, y: -15, width: 52, height: 28), [0x268AC0, 0x155B88, 0x142F50])
++                return
++            }
++            // Only the near lip masks moving water; the open basin stays alive.
++            var lip = Path(); lip.move(to: .init(x: -34, y: -1))
++            lip.addCurve(to: .init(x: 34, y: -1), control1: .init(x: -27, y: 26), control2: .init(x: 27, y: 26))
++            lip.addLine(to: .init(x: 34, y: 9))
++            lip.addCurve(to: .init(x: -34, y: 9), control1: .init(x: 26, y: 38), control2: .init(x: -26, y: 38)); lip.closeSubpath()
++            p.material(lip, [0xF3D69A, 0xAC8C58, 0x6D614B])
++            for x: CGFloat in [-26, -13, 0, 13, 26] {
++                p.line([.init(x: x, y: 15 - abs(x) * 0.25), .init(x: x, y: 24 - abs(x) * 0.25)], 0x7B6D55, 1)
++            }
++        }
++    }
++
++    private func terminalWater(_ terminal: TimeMachineLayout.Terminal) {
++        at(terminal.drain, size: terminal.size) { p in
++            var c = p.context
++            c.clip(to: Path(ellipseIn: CGRect(x: -25, y: -14, width: 50, height: 27)))
++            for arm in 0..<3 {
++                var spiral = Path()
++                for i in 0...56 {
++                    let r = Double(i) / 56, angle = r * .pi * 3 - time * 2.8 + Double(arm) * .pi * 2 / 3
++                    let point = CGPoint(x: cos(angle) * r * 26, y: sin(angle) * r * 13 - 1)
++                    if i == 0 { spiral.move(to: point) } else { spiral.addLine(to: point) }
++                }
++                c.stroke(spiral, with: .color(Color(dinoHex: TimeMachineLayout.waterFoam).opacity(0.8)), style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
++            }
++            TimeMachinePainter(context: c).oval(CGRect(x: -5, y: -4, width: 10, height: 7), [0x19354F, 0x0E243C])
+         }
+     }
+ 
+@@ -813,7 +1121,7 @@
+             if edge > stairX + 27 {
+                 balustrade(from: .init(x: stairX + 21, y: -76), to: .init(x: edge + 3, y: -76), height: 21)
+             }
+-            royalPennant(at: .init(x: min(edge - 10, stairX + 43), y: -52), size: 0.72)
++            royalPennant(at: .init(x: max(6, min(buildingWidth - 6, edge - 68)) + 18 * 0.72, y: -52), size: 0.72)
+             flowerGarland(from: .init(x: -19, y: -66), length: max(24, stairX - 16), hanging: 43, variation: variation)
+             if edge > 126 {
+                 flowerGarland(from: .init(x: edge - 49, y: -63), length: 45, hanging: 70, variation: variation + 2)
+@@ -821,8 +1129,8 @@
+             return
+         }
+         balustrade(from: .init(x: -25, y: 64), to: .init(x: min(lowerExtent, max(-17, bottomX - 21)), y: 64), height: 20)
+-        gear(at: .init(x: width - 20, y: 36), radius: variation % 2 == 0 ? 20 : 15, phase: Double(variation) * 0.28)
+-        gear(at: .init(x: width - 39, y: 57), radius: 11, phase: 0.3)
++        gearPair(at: .init(x: width - 20, y: 36), radius: variation % 2 == 0 ? 20 : 15,
++                 follower: 11, direction: .init(x: -19, y: 21), phase: Double(variation) * 0.28)
+     }
+ 
+     private func arch(_ r: CGRect) -> Path {
+@@ -882,7 +1190,9 @@
+             polygon([.init(x: left - 6, y: -height), .init(x: 0, y: -height - 40), .init(x: -left + 6, y: -height)],
+                     [0x409BB9, 0x1F658E, 0x234B76])
+             line([.init(x: left - 6, y: -height), .init(x: 0, y: -height - 40), .init(x: -left + 6, y: -height)], 0xE6BC70, 2.5)
+-            royalPennant(at: .init(x: 0, y: -height - 42), size: 0.56)
++            line([.init(x: 0, y: -height - 3), .init(x: 0, y: -height - 49)], 0x9B773F, 3)
++            line([.init(x: -0.7, y: -height - 3), .init(x: -0.7, y: -height - 49)], 0xFFE1A1, 1)
++            royalPennant(at: .init(x: 18 * 0.56, y: -height - 42), size: 0.56)
+         } else {
+             let domeRect = CGRect(x: left - 5, y: -height - 37, width: width + 10, height: 74)
+             var dome = arch(domeRect)
+@@ -906,7 +1216,7 @@
+             balustrade(from: .init(x: left + 9, y: -45), to: .init(x: -left - 9, y: -45), height: 15)
+         }
+         rounded(CGRect(x: left - 7, y: 0, width: width + 14, height: 7), 2, [0xF8DFC0, 0xA7A0B3, 0x6D7596])
+-        royalPennant(at: .init(x: left + 10, y: -height + 21), size: 0.59)
++        royalPennant(at: .init(x: left + 18 * 0.59 + 3, y: -height + 21), size: 0.59)
+         flowerGarland(from: .init(x: left + 4, y: -4), length: width - 8, hanging: 24, variation: variation)
+     }
+ 
+@@ -961,6 +1271,9 @@
+ 
+     private func royalPennant(at point: CGPoint, size: CGFloat) {
+         at(point, size: size) { p in
++            p.rounded(CGRect(x: -22, y: -13, width: 8, height: 17), 2, [0xF1D49B, 0x9C7844, 0x6B573D])
++            p.rivet(.init(x: -18, y: -10), radius: 1.6)
++            p.rivet(.init(x: -18, y: 1), radius: 1.6)
+             p.line([.init(x: -18, y: -6), .init(x: -18, y: 9), .init(x: 22, y: 9)], 0x74552C, 4)
+             p.line([.init(x: -18, y: -7), .init(x: -18, y: 7), .init(x: 23, y: 7)], 0xF4CB75, 2)
+             p.rivet(.init(x: 24, y: 8), radius: 3)
+@@ -1041,6 +1354,7 @@
+     }
+ 
+     func kingdomWaterLight(field: TimeMachineLayout.WaterField, scale: CGFloat) {
++        for terminal in field.terminals { terminalWater(terminal) }
+         // Several independently moving currents cover the full water ribbon.
+         // Shared paths keep their motion continuous across the 320pt canvases.
+         for current in field.currents {
+@@ -1144,11 +1458,12 @@
+                      with: .radialGradient(Gradient(colors: [Color(dinoHex: 0x3D416A).opacity(0.32), .clear]),
+                                            center: .init(x: 2, y: 4), startRadius: 0, endRadius: width * 0.51))
+     }
+-    private func gear(at point: CGPoint, radius: CGFloat, phase: Double = 0) {
++    private func gear(at point: CGPoint, radius: CGFloat, phase: Double = 0, teeth: Int = 12, speed: Double = 0.8) {
++        guard !liveMachinery else { return }
+         at(point) { p in
+             var points: [CGPoint] = []
+-            for i in 0..<48 {
+-                let a = Double(i) * .pi / 24 + phase + time * 0.19
++            for i in 0..<(teeth * 4) {
++                let a = Double(i) * .pi * 2 / Double(teeth * 4) + phase + time * speed
+                 let r = radius * (i % 4 == 1 || i % 4 == 2 ? 1 : 0.84)
+                 points.append(.init(x: CGFloat(cos(a)) * r, y: CGFloat(sin(a)) * r))
+             }
+@@ -1158,7 +1473,7 @@
+             p.oval(CGRect(x: -radius * 0.7, y: -radius * 0.7, width: radius * 1.4, height: radius * 1.4), [0xF6D896, 0xA9915A])
+             p.oval(CGRect(x: -radius * 0.53, y: -radius * 0.53, width: radius * 1.06, height: radius * 1.06), [0x687F81, 0x465F6C])
+             for i in 0..<4 {
+-                let a = Double(i) * .pi / 2 + phase + time * 0.19
++                let a = Double(i) * .pi / 2 + phase + time * speed
+                 p.line([.zero, .init(x: CGFloat(cos(a)) * radius * 0.57, y: CGFloat(sin(a)) * radius * 0.57)], 0xC5A467, radius * 0.16)
+             }
+             p.oval(CGRect(x: -radius * 0.23, y: -radius * 0.23, width: radius * 0.46, height: radius * 0.46), [0xFFE5A5, 0xA98851])
+@@ -1171,6 +1486,35 @@
+             p.rivet(.zero, radius: radius * 0.10)
+         }
+     }
++    private func gearPair(at point: CGPoint, radius: CGFloat, follower: CGFloat, direction: CGPoint, phase: Double) {
++        for g in TimeMachineLayout.gearPair(at: point, radius: radius, follower: follower, direction: direction, phase: phase) {
++            gear(at: g.point, radius: g.radius, phase: g.phase, teeth: g.teeth, speed: g.speed)
++        }
++    }
++
++    func movingParts(_ assembly: TimeMachineLayout.Assembly) {
++        at(assembly.origin, size: assembly.size, mirror: assembly.mirror) { p in
++            for part in assembly.parts {
++                switch part {
++                case .gear(let g): p.gear(at: g.point, radius: g.radius, phase: g.phase, teeth: g.teeth, speed: g.speed)
++                case .hands(let point, let radius, let initial): p.clockHands(at: point, radius: radius, initial: initial)
++                case .fullClock(let point, let radius, let initial): p.clock(at: point, radius: radius, time: initial)
++                }
++            }
++        }
++    }
++
++    private func clockHands(at point: CGPoint, radius: CGFloat, initial: ClockTime) {
++        at(point) { p in
++            for (base, length, width, speed) in [(initial.hourAngle, radius * 0.48, CGFloat(3), 60.0),
++                                               (initial.minuteAngle, radius * 0.72, CGFloat(1.8), 720.0)] {
++                let angle = (base - p.time * speed).truncatingRemainder(dividingBy: 360) * .pi / 180
++                p.line([.zero, .init(x: sin(angle) * length, y: -cos(angle) * length)], 0x365967, min(width, radius * 0.18))
++            }
++            p.rivet(.zero, radius: min(2.3, radius * 0.18))
++        }
++    }
++
+     private func tube(at point: CGPoint, size: CGFloat) {
+         at(point, size: size) { p in
+             p.glow(CGPoint(x: 0, y: -30), radius: 48, color: 0x8BF6FA, opacity: 0.24)
+@@ -1214,7 +1558,11 @@
+     func dischargeWater(_ outlet: TimeMachineLayout.Discharge) {
+         let s = outlet.size, shape = outlet.water, drop = outlet.landing.y - outlet.mouth.y
+         // No separate bowl: this ribbon ends on the exact river centerline.
+-        context.fill(shape, with: .color(Color(dinoHex: TimeMachineLayout.waterBase)))
++        context.fill(shape, with: .linearGradient(Gradient(stops: [
++            .init(color: Color(dinoHex: 0xA4F3E9), location: 0),
++            .init(color: Color(dinoHex: 0x6AE6E6), location: 0.24),
++            .init(color: Color(dinoHex: TimeMachineLayout.waterBase), location: 0.88)
++        ]), startPoint: outlet.mouth, endPoint: outlet.landing))
+         var flow = context; flow.clip(to: shape)
+         flow.fill(shape, with: .linearGradient(Gradient(colors: [Color(dinoHex: TimeMachineLayout.waterLight).opacity(0.7), .clear]),
+                     startPoint: .init(x: outlet.mouth.x - 8 * s, y: outlet.mouth.y),
+@@ -1361,11 +1709,8 @@
+                 let inner = radius * (i % 5 == 0 ? 0.78 : 0.88)
+                 p.line([.init(x: CGFloat(sin(a)) * inner, y: -CGFloat(cos(a)) * inner), .init(x: CGFloat(sin(a)) * radius * 0.94, y: -CGFloat(cos(a)) * radius * 0.94)], 0x536E76, i % 5 == 0 ? 1.4 : 0.5, opacity: i % 5 == 0 ? 1 : 0.65)
+             }
+-            for (a, length, width) in [(time.hourAngle, radius * 0.48, CGFloat(3)), (time.minuteAngle, radius * 0.72, CGFloat(1.8))] {
+-                let angle = (a + p.time * (length < radius * 0.6 ? 0.625 : 7.5)) * .pi / 180
+-                p.line([.zero, .init(x: CGFloat(sin(angle)) * length, y: -CGFloat(cos(angle)) * length)], 0x365967, width)
+-            }
+-            p.rivet(.zero, radius: 2.3)
++            if !p.liveMachinery { p.clockHands(at: .zero, radius: radius, initial: time) }
++
+         }
+     }
+     private func console(at point: CGPoint, size: CGFloat, time: ClockTime) {
+@@ -1481,8 +1826,7 @@
+         oval(CGRect(x: -11, y: -43, width: 22, height: 23), [0xFFF1BF, 0xCCA262, 0x87704B])
+         magicStar(at: .init(x: 0, y: -32), radius: 5, color: 0xD6FFF3)
+         clock(at: .init(x: 0, y: -88), radius: 28, time: .init(hour: 4 + variation % 4, minute: 25))
+-        gear(at: .init(x: -33, y: -52), radius: 16, phase: 0.4)
+-        gear(at: .init(x: 34, y: -40), radius: 17, phase: -0.2)
++        gearPair(at: .init(x: -20, y: -40), radius: 16, follower: 17, direction: .init(x: 1, y: 0), phase: 0.4)
+         for x: CGFloat in [-28, 28] { rivet(.init(x: x, y: -17), radius: 2.5) }
+         line([.init(x: -22, y: -124), .init(x: 0, y: -139), .init(x: 22, y: -124)], 0xF3D49A, 3)
+         oval(CGRect(x: -5, y: -145, width: 10, height: 13), [0xFAF0BD, 0xB9995C])
+@@ -1578,13 +1922,12 @@
+         case 0:
+             portal(at: .init(x: -5, y: -12), size: variation == 6 ? 1.02 : 0.92, variant: variation)
+             tube(at: .init(x: 49, y: -10), size: 0.68)
+-            gear(at: .init(x: -44, y: -29), radius: 25, phase: Double(variation) * 0.4)
+-            gear(at: .init(x: -26, y: -9), radius: 14, phase: -time * 0.5)
++            gearPair(at: .init(x: -44, y: -29), radius: 25, follower: 14, direction: .init(x: 18, y: 20), phase: Double(variation) * 0.4)
+         case 1:
+             tube(at: .init(x: -39, y: -21), size: 0.84)
+             console(at: .init(x: 13, y: -12), size: 0.77, time: .init(hour: variation == 1 ? 6 : 10, minute: variation == 1 ? 25 : 40))
+             invention(at: .init(x: -9, y: -98), size: 0.64)
+-            gear(at: .init(x: 47, y: -42), radius: 16, phase: -time * 0.4)
++            gear(at: .init(x: 47, y: -42), radius: 16, phase: 0.4)
+         default:
+             if variation == 8 { orrery(at: .init(x: -9, y: -18), size: 1.22) }
+             else { hourglass(at: .init(x: -12, y: -15), size: 1.04) }
+@@ -1601,33 +1944,38 @@
+                 base.rounded(CGRect(x: sign * 52 - 9, y: 10, width: 18, height: 7), 2.5, [0xF8E4B4, 0xB18B52])
+                 base.rivet(.init(x: sign * 32, y: -73.5), radius: 4)
+             }
+-            let cycle = (time / 16).truncatingRemainder(dividingBy: 1)
+-            let turn = max(0, (cycle - 0.90) / 0.10)
++            let state = TimeMachineLayout.HourglassState(time: time)
+             var rotating = base.context
+             rotating.translateBy(x: 0, y: -73.5)
+-            rotating.rotate(by: .degrees(180 * turn * turn * (3 - 2 * turn)))
++            rotating.rotate(by: .degrees(state.angle))
+             rotating.translateBy(x: 0, y: 73.5)
+             let p = TimeMachinePainter(context: rotating, time: time)
+-            p.glow(.init(x: 0, y: -73), radius: 54, color: 0xA7F1ED, opacity: 0.23)
+-            // Curved glass bulbs meet at a narrow physical neck.
++            p.glow(.init(x: 0, y: -73.5), radius: 54, color: 0xA7F1ED, opacity: 0.23)
++            // Both bulbs are exact reflections around the pivot.
+             var glass = Path(); glass.move(to: .init(x: -24, y: -130))
+-            glass.addCurve(to: .init(x: -4, y: -73), control1: .init(x: -27, y: -94), control2: .init(x: -10, y: -91))
+-            glass.addCurve(to: .init(x: -24, y: -17), control1: .init(x: -8, y: -55), control2: .init(x: -27, y: -51))
++            glass.addCurve(to: .init(x: -3, y: -73.5), control1: .init(x: -27, y: -101), control2: .init(x: -12, y: -87))
++            glass.addCurve(to: .init(x: -24, y: -17), control1: .init(x: -12, y: -60), control2: .init(x: -27, y: -46))
+             glass.addLine(to: .init(x: 24, y: -17))
+-            glass.addCurve(to: .init(x: 4, y: -73), control1: .init(x: 27, y: -51), control2: .init(x: 8, y: -55))
+-            glass.addCurve(to: .init(x: 24, y: -130), control1: .init(x: 10, y: -91), control2: .init(x: 27, y: -94)); glass.closeSubpath()
++            glass.addCurve(to: .init(x: 3, y: -73.5), control1: .init(x: 27, y: -46), control2: .init(x: 12, y: -60))
++            glass.addCurve(to: .init(x: 24, y: -130), control1: .init(x: 12, y: -87), control2: .init(x: 27, y: -101)); glass.closeSubpath()
+             p.material(glass, [0xEAFFFA, 0x8BD6DE, 0x467E9F, 0xB8ECE4])
+-            var sand = p.context; sand.clip(to: glass)
+-            let fill = CGFloat(min(1, cycle / 0.90))
+-            let top = -123 + fill * 49
+-            TimeMachinePainter(context: sand).polygon([.init(x: -25, y: top), .init(x: 25, y: top), .init(x: 0, y: -74)], [0xFFF0B7, 0xEBC875, 0xC3974D])
+-            let mound = -24 - fill * 49
+-            TimeMachinePainter(context: sand).polygon([.init(x: -25, y: -24), .init(x: 0, y: mound), .init(x: 25, y: -24)], [0xFFF2C0, 0xE9BF68, 0xBB914A])
+-            if cycle < 0.90 {
+-                p.line([.init(x: 0, y: -72), .init(x: 0, y: mound)], 0xFFE8A0, 1.3)
+-                for i in 0..<6 {
+-                    let y = -72 + CGFloat((time * 24 + Double(i * 8)).truncatingRemainder(dividingBy: Double(max(2, mound + 72))))
+-                    p.oval(CGRect(x: -0.7, y: y, width: 1.4, height: 2), [0xFFF9DD, 0xEAC16B])
++            var sand = p.context
++            if state.cycle % 2 == 1 {
++                sand.translateBy(x: 0, y: -73.5); sand.rotate(by: .degrees(180)); sand.translateBy(x: 0, y: 73.5)
++            }
++            sand.clip(to: glass)
++            var grains = Path()
++            grains.addRect(CGRect(x: -28, y: state.upperSurface, width: 56, height: max(0, -73.5 - state.upperSurface)))
++            grains.addRect(CGRect(x: -28, y: state.lowerSurface, width: 56, height: max(0, -17 - state.lowerSurface)))
++            sand.fill(grains, with: .radialGradient(Gradient(colors: [Color(dinoHex: 0xFFF2BC), Color(dinoHex: 0xE7BC65), Color(dinoHex: 0xBA8A3F)]),
++                      center: .init(x: 0, y: -73.5), startRadius: 0, endRadius: 67))
++            let streamOpacity = Double(min(1, state.progress * 35, (1 - state.progress) * 35))
++            if streamOpacity > 0 {
++                let flow = TimeMachinePainter(context: sand)
++                flow.line([.init(x: 0, y: -73.5), .init(x: 0, y: state.lowerSurface)], 0xFFE8A0, 1.3, opacity: streamOpacity)
++                for i in 0..<7 {
++                    let y = -73.5 + CGFloat((time * 32 + Double(i * 9)).truncatingRemainder(dividingBy: Double(max(2, state.lowerSurface + 73.5))))
++                    sand.fill(Path(ellipseIn: CGRect(x: -0.6, y: y, width: 1.2, height: 1.7)), with: .color(Color(dinoHex: 0xFFF8D5).opacity(streamOpacity)))
+                 }
+             }
+             p.line([.init(x: -17, y: -122), .init(x: -17, y: -109), .init(x: -10, y: -91)], 0xFFFFFF, 2, opacity: 0.8)

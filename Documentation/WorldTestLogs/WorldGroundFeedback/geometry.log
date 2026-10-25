@@ -1,0 +1,14 @@
+320pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+393pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+402pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+600pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+834pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+1194pt: village canals, valley rivers, pirate inlets, castle moats and lava outlets clear both chapter edges
+PASS: 1680 native water/riverbank endpoint checks; all banks exit through the sides, with no cross-chapter caps
+320pt: last visible bank at -17pt; earliest possible entrance stone at +8pt; both walls clear the outgoing village
+393pt: last visible bank at -18pt; earliest possible entrance stone at +10pt; both walls clear the outgoing village
+402pt: last visible bank at -18pt; earliest possible entrance stone at +10pt; both walls clear the outgoing village
+600pt: last visible bank at -17pt; earliest possible entrance stone at +13pt; both walls clear the outgoing village
+834pt: last visible bank at -14pt; earliest possible entrance stone at +13pt; both walls clear the outgoing village
+1194pt: last visible bank at -12pt; earliest possible entrance stone at +13pt; both walls clear the outgoing village
+PASS: 7006 cave entrance clearance checks

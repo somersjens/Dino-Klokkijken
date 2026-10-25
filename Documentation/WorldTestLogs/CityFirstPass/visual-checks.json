@@ -1,0 +1,12 @@
+{
+  "sha256": {
+    "motion-0.png": "00003ba2ea9145d29a75832334e404a2c60941dac04696e5b519835af1d31988",
+    "motion-1.png": "3edfd0cec5b290b7a915103fe077dc2485cc74845dd6a5f0e32a4c3bf95eca36",
+    "motion-2.png": "8756a767ac4afb7eb0fba11f14cb2d92c6b42a3642528a1ce122caaec33b07e2",
+    "motion-3.png": "0077001eddfd5975fca936cf3b487b709215fe5cb191b98e19e801c597cb97b1",
+    "reduced-0.png": "0ab6ada2a65a56ec8edc4fdb53ab470f32f89a40a7b8bfa483a23b2f0ec45eb5",
+    "reduced-1.png": "0ab6ada2a65a56ec8edc4fdb53ab470f32f89a40a7b8bfa483a23b2f0ec45eb5"
+  },
+  "motionFramesDiffer": true,
+  "reducedMotionFramesMatch": true
+}
