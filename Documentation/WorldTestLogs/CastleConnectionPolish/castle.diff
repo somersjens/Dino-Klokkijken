@@ -1,0 +1,144 @@
+--- castle-before.swift
++++ castle-after.swift
+@@ -64,15 +64,15 @@
+         let entry: CGPoint
+         let outer: CGPoint
+         let scale: CGFloat
+-        let riverSlope: CGFloat
+ 
+         /// Local tread edges join the bridge lip to a lower, dry-bank landing.
+         func approachPoint(_ t: CGFloat, edge: CGFloat) -> CGPoint {
+             let innerX = (inner.x - water.x) / scale - (right ? 5 : -5)
+             let entryX = (entry.x - water.x) / scale
+             let drop = (entry.y - water.y) / scale
+-            let middle = (CastleKingdomLayout.bridgeBackEdge + CastleKingdomLayout.bridgeFrontEdge) / 2
+-            return CGPoint(x: innerX + (entryX - innerX) * t + (edge - middle) * 0.22,
++            // Both edges start on the same vertical bridge lip. A fixed skew
++            // left a wedge-shaped gap and leaned the steps on the opposite bank.
++            return CGPoint(x: innerX + (entryX - innerX) * t,
+                            y: edge + drop * t)
+         }
+     }
+@@ -81,7 +81,7 @@
+         let scale: CGFloat
+         let depth: CGFloat
+     }
+-    static let cascades: [(y: CGFloat, right: Bool)] = [(510, true), (1110, false)]
++    static let cascades: [(y: CGFloat, right: Bool)] = [(510, true), (1160, false)]
+ 
+     func fountains(for district: District) -> [Fountain] {
+         let sign: CGFloat = district.right ? 1 : -1, s = scale
+@@ -201,8 +201,7 @@
+                 return Crossing(district: court.id, upper: upper, right: court.right, water: water,
+                                 inner: walkPoint(at: outer.y, right: court.right, outer: false),
+                                 entry: entry(at: outer.y, right: court.right),
+-                                outer: outer, scale: scale,
+-                                riverSlope: (waterPoint(at: outer.y + 12, right: court.right).x - waterPoint(at: outer.y - 12, right: court.right).x) / 24)
++                                outer: outer, scale: scale)
+             }
+         }
+         if let clock = landmarks.first {
+@@ -211,8 +210,7 @@
+             result.append(Crossing(district: -1, upper: false, right: true, water: water,
+                                    inner: walkPoint(at: outer.y, right: true, outer: false),
+                                    entry: entry(at: outer.y, right: true),
+-                                   outer: outer, scale: scale,
+-                                   riverSlope: (waterPoint(at: outer.y + 12, right: true).x - waterPoint(at: outer.y - 12, right: true).x) / 24))
++                                   outer: outer, scale: scale))
+         }
+         return result
+     }
+@@ -432,6 +430,14 @@
+             let depth = WorldSceneryDepth(minimumDepth: cutoff)
+             CastleWorldPainter(context: c, liveWater: true).appendScenery(layout: layout, districts: plan.districts, crossings: plan.crossings, depth: depth)
+             depth.draw()
++            // A waterfall's spray can reach back over an earlier bridge. Its
++            // complete stone silhouette still belongs in front of that water.
++            if cutoff.isFinite {
++                let bridges = WorldSceneryDepth()
++                CastleWorldPainter(context: c, liveWater: true).appendBridges(
++                    layout: layout, crossings: plan.crossings.filter { $0.outer.y + 42 * $0.scale <= cutoff }, depth: bridges)
++                bridges.draw()
++            }
+             if 1675 > cutoff {
+                 WorldBossPainter(context: c).draw(worldID: 10, at: .init(x: layout.scenery.width - 79 * layout.scale, y: 1675), size: layout.scale * 0.88)
+             }
+@@ -581,8 +587,13 @@
+         for district in districts {
+             depth.add(at: offset + district.lower.y + 41 * layout.scale) { royalDistrict(district, layout: layout) }
+         }
++        appendBridges(layout: layout, crossings: crossings, depth: depth, offset: offset)
++    }
++
++    func appendBridges(layout: CastleKingdomLayout, crossings: [CastleKingdomLayout.Crossing],
++                       depth: WorldSceneryDepth, offset: CGFloat = 0) {
+         for crossing in crossings {
+-            depth.add(at: offset + crossing.outer.y + 42 * layout.scale) { royalBridge(crossing) }
++            depth.add(at: offset + crossing.outer.y + 42 * crossing.scale) { royalBridge(crossing, layout: layout) }
+         }
+     }
+ 
+@@ -981,17 +992,27 @@
+         }
+     }
+ 
+-    private func royalBridge(_ crossing: CastleKingdomLayout.Crossing) {
++    private func royalBridge(_ crossing: CastleKingdomLayout.Crossing, layout: CastleKingdomLayout) {
+         bridgeApproach(crossing)
+         at(crossing.water, size: crossing.scale) { p in
+             let inner = (crossing.inner.x - crossing.water.x) / crossing.scale
+             let outer = (crossing.outer.x - crossing.water.x) / crossing.scale
+             let left = min(inner, outer), right = max(inner, outer)
+             let backEdge = CastleKingdomLayout.bridgeBackEdge, frontEdge = CastleKingdomLayout.bridgeFrontEdge
+-            let slope = crossing.riverSlope
+-            let skew = CGAffineTransform(a: 1, b: 0, c: slope, d: 1, tx: 0, ty: 0)
++            func riverX(at y: CGFloat) -> CGFloat {
++                (layout.waterPoint(at: crossing.water.y + y * crossing.scale, right: crossing.right).x - crossing.water.x) / crossing.scale
++            }
++            // Follow the river through the full arch, including its bend below
++            // the deck. Extrapolating one tangent cut the water across a pier.
++            let archRows = (0...40).map { CGFloat($0) + 8 }
++            func archEdge(at y: CGFloat, side: CGFloat) -> CGPoint {
++                let radius = y < 31 ? sqrt(max(0, 23 * 23 - (y - 31) * (y - 31))) : 23
++                return CGPoint(x: riverX(at: y) + side * radius, y: y)
++            }
++            var opening = Path()
++            opening.addLines(archRows.map { archEdge(at: $0, side: -1) } + archRows.reversed().map { archEdge(at: $0, side: 1) })
++            opening.closeSubpath()
+             var wall = Path(roundedRect: CGRect(x: left - 4, y: -5, width: right - left + 8, height: 43), cornerRadius: 3)
+-            let opening = Path(roundedRect: CGRect(x: -23, y: 8, width: 46, height: 60), cornerRadius: 23).applying(skew)
+             wall.addPath(opening)
+             var face = p.context
+             face.clip(to: Path(CGRect(x: left - 4, y: -5, width: right - left + 8, height: 43)))
+@@ -1000,7 +1021,7 @@
+                 let a = Double(i) * .pi / 11 + .pi, b = Double(i + 1) * .pi / 11 + .pi
+                 func voussoir(_ angle: Double, _ radius: CGFloat) -> CGPoint {
+                     let y = 31 + CGFloat(sin(angle)) * radius
+-                    return CGPoint(x: CGFloat(cos(angle)) * radius + slope * y, y: y)
++                    return CGPoint(x: CGFloat(cos(angle)) * radius + riverX(at: y), y: y)
+                 }
+                 p.polygon([voussoir(a, 29), voussoir(b, 29), voussoir(b, 23), voussoir(a, 23)], i % 3 == 0 ? [0xFFF7DC, 0xD2BD94] : [0xF3E5C2, 0xC5B18D])
+                 p.line([voussoir(a, 23.5), voussoir(a, 28.5)], 0xA9A68B, 0.6)
+@@ -1036,12 +1057,16 @@
+     private func cascade(layout: CastleKingdomLayout, at y: CGFloat, right: Bool) {
+         let s = layout.scale, middle = layout.waterPoint(at: y, right: right)
+         let channel = layout.waterway(right: right)
+-        // The masonry ends at the banks. No cap or oblique stroke crosses the water.
+-        var stone = context
+-        stone.clip(to: channel.strokedPath(StrokeStyle(lineWidth: 33 * s, lineCap: .round, lineJoin: .round)), options: .inverse)
+-        CastleWorldPainter(context: stone).at(middle, size: s) { p in
+-            p.retainingWall(width: 58, height: 33, arches: 2)
+-            p.ivy(at: CGPoint(x: right ? 28 : -28, y: -30), size: 0.40)
++        // Small bank drops follow the canal instead of placing a straight,
++        // arched wall across a bend and cutting through the promenade.
++        for side: CGFloat in [-1, 1] {
++            let direction = side * (right ? 1 : -1)
++            let inner = layout.bankContour(right: right, offset: direction * 16.5, from: y - 28 * s, to: y + 8 * s)
++            let outer = layout.bankContour(right: right, offset: direction * 20.5, from: y - 28 * s, to: y + 8 * s)
++            var bank = Path(); bank.addLines(inner + outer.reversed()); bank.closeSubpath()
++            context.fill(bank, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xFFF0CC), Color(dinoHex: 0xB6B69A)]),
++                startPoint: .init(x: middle.x, y: y - 28 * s), endPoint: .init(x: middle.x, y: y + 8 * s)))
++            line([inner[0], outer[0]], 0xFFF7DA, 2 * s)
+         }
+         var water = context
+         water.clip(to: channel.strokedPath(StrokeStyle(lineWidth: 19 * s, lineCap: .round, lineJoin: .round)))

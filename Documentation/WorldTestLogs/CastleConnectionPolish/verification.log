@@ -1,0 +1,19 @@
+iOS simulator: iPhone 18 Pro, iOS 27.0
+xcodebuild build-for-testing: TEST BUILD SUCCEEDED
+
+DinoUITests/testWorldBossSceneryRemainsPlayable
+DINO_TEST_WORLD_IDS=10
+Passed (30.106 seconds): level 100 remained enabled and opened its start screen.
+
+DinoUITests/testNativeWorldChaptersAndMinuteQuestions
+DINO_TEST_WORLD_IDS=10
+Initial fixture (completed world bosses only): level 91 was locked; assertion failed before opening the level.
+Rerun with isolated UITargetAppEnvironmentVariables.DINO_TEST_COMPLETED_LEVEL=90:
+Passed (39.507 seconds), 1 test, 0 failures, TEST EXECUTE SUCCEEDED.
+Verified world 10, enabled level 91, start screen and answering its first question.
+
+Source tests and progression logic were not changed for this refinement.
+Full local build/test output:
+/tmp/dino-castle-joins/build.log
+/tmp/dino-castle-joins/iphone-world10.log
+/tmp/dino-castle-joins/level91.log
