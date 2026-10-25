@@ -6,6 +6,12 @@ Het bovenste bord heeft nu eigen materialen en ornamenten voor alle tien werelde
 
 Een gewonnen eindbaas gebruikt ditzelfde scorescherm met de behaalde score en trofee. De twee volledige knoppen staan onder elkaar: de groene **Naar de volgende wereld** en de witte **Opnieuw spelen**. Er is geen apart wereldvoltooiingsscherm. Bij wereld 10 is de groene knop **Levelkaart**. De overgang naar een nieuwe wereld toont de salto tussen de echte kaartstenen; zie [Dino-animaties](Animation.md).
 
+De podiums onder Dino hebben sinds 23 oktober elk een eigen constructie en uitgewerkte terreinversiering. Ook de gloed en kleine glinsteringen volgen het wereldmateriaal. [Podiumverfijning per wereld](ResultPodiumRefinement.md).
+
+Het terrein volgt sinds 24 oktober de werkelijke podiumpositie en de landschappen zijn verder verbonden. [Landschapssamenhang](ResultSceneUnity.md). De aanvankelijk vrijgehouden sterzone is in de huidige uitvoering volledig verwijderd; de sterren staan rechtstreeks op het doorlopende materiaal. [Materiaal, mosranden en laagvolgorde](ResultNaturalLayers.md).
+
+De actuele uitvoering gebruikt compactere stenen en relatief grotere sterren, direct op het doorlopende wereldmateriaal. De zichtbare voorpanelen zijn verwijderd. [Huidige verhoudingen en vergelijking](ResultStoneProportions.md).
+
 ## Opbouw en aanpassingen
 
 - `ResultScenery` gebruikt vier landschapslagen voor de jungle, de eigen woestijntekening voor de woestijn en `ResultBiomePainter` voor de overige acht landschappen. Een aparte `DinoResultHeaderBackdrop` deelt het materiaal en de compositie met het levelbord. De bovenhoeken gebruiken dezelfde bladeren, steen of metaal als de wereldversiering van het bord. De oude achtergrondillustraties worden hier niet meer geladen.
@@ -14,9 +20,9 @@ Een gewonnen eindbaas gebruikt ditzelfde scorescherm met de behaalde score en tr
 - De score staat met zijn materiaalvlak direct onder het houten bord in de lucht. De vrijgekomen ruimte onder de steen laat Dino en het podium nog iets zakken. Eén layout berekent de voetlijn, het stenen bovenoppervlak en de sterren op de voorzijde samen, zodat ze ook op een kleine iPhone bij elkaar blijven passen.
 - De leveltitel is 10% kleiner en optisch gecentreerd op het hout.
 - Het landschap heeft een voller uitgewerkte onderkant: 1.250 onregelmatig verdeelde graspollen met gevulde, gebogen sprieten, zachte lichtvlekken, meerdere overlappende bladgroepen en varens, en kleine bloemen. De bladeren hebben licht over hun breedte, een donkerdere onderzijde, zachte slagschaduw en subtiele nerven.
-- De native plantenlagen delen de positie en schaal van de steen. Hoge bladeren groeien achter de zijkanten; grotere, bredere bladgroepen groeien vóór de steen en bedekken de onderste zijvlakken. Mossige kappen hangen over de bovenranden en een doorlopende mosmat groeit rondom de voet. De beloningssterren staan vóór deze begroeiing.
+- De native plantenlagen delen de positie en schaal van de steen. Hoge bladeren groeien achter de zijkanten; grotere, bredere bladgroepen en hangende ranken groeien vóór de steen. Mossige kappen hangen met afgeronde, onregelmatige randen over de bovenkant. Afzonderlijke graspollen verbinden de voet met het landschap zonder een brede mosstrook. De beloningssterren staan vóór deze begroeiing.
 - Kaartsterren zijn van 22 naar 26 punten vergroot en staan dichter onder de levelcirkel. De zijsterren draaien iets minder, met de middelste ster licht verhoogd.
-- Verdiende sterren hebben vanaf het begin hun gouden uiterlijk, maar blijven volledig transparant tot hun eigen vlucht start. Onverdiende grijze sterren verschijnen pas nadat de beloningsanimatie klaar is. Zo is er geen grijze ster zichtbaar die later goud wordt of opnieuw komt aanvliegen.
+- Drie lichtgrijze sterren staan vanaf het begin op hun vaste plek op de steen. Alleen verdiende gouden sterren komen na Dino's landing één voor één met de bestaande animatie over deze plekken heen. Onverdiende sterren blijven stil en grijs. Bij Minder beweging staan de verdiende gouden sterren direct op hun plek.
 
 ## Native steen en laagvolgorde
 

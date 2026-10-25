@@ -533,7 +533,10 @@ final class DinoSession: ObservableObject, Identifiable {
                     attempt: player.profile.record(level.id).attempts, difficulty: difficulty,
                     previousTarget: previous.target, usedHours: usedHours,
                     optionPosition: (previous.options.firstIndex(of: previous.target) ?? 0) + 1,
-                    language: language, dayPartSchedule: dayPartSchedule, using: &questionRNG)
+                    language: language, dayPartSchedule: dayPartSchedule,
+                    recentQuestions: Array(attempt.questions.prefix(attempt.index)).filter {
+                        $0.kind == recipe.kind && $0.timeFamily == level.time(for: recipe)
+                    }, using: &questionRNG)
                 attempt.replaceCurrent(with: replacement)
             }
             nextDifficultyLimit = nil

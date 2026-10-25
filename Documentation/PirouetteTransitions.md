@@ -1,39 +1,65 @@
-# Pirouette – vloeiendere afzet en landing
+# Pirouette – tussenbeelden voor de volledige draai
 
-De veertien beelden van de tweesterrensprong zijn genummerd in de afspeelvolgorde, van `dino-pirouette-01` tot en met `dino-pirouette-14`. De extra tussenbeelden zijn gemaakt met de ingebouwde imagegen-tool. De originele eindafbeelding `dino-pirouette-14`, de offsets (`−0,012`, `−0,029`) en de resultaatsteen blijven behouden.
+De tweesterrensprong gebruikt achttien beelden: de originele reeks `dino-pirouette-01` t/m `14`, aangevuld met `06a`, `07a`, `08a` en `10a`. Deze vier nieuwe tussenbeelden zijn gemaakt met de ingebouwde imagegen-tool, met telkens de twee aangrenzende originele beelden als referentie. Ze vullen de grote kijkhoekwisselingen rond de achterkant en de overgang naar de landing op. De originele eindafbeelding `dino-pirouette-14`, de offsets (`−0,012`, `−0,029`) en de resultaatsteen blijven behouden.
 
 ## Assets in afspeelvolgorde
 
-| Asset | Pose |
-| --- | --- |
-| [dino-pirouette-01](../Assets.xcassets/dino-pirouette-01.imageset/dino-pirouette-01.png) | Staan |
-| [dino-pirouette-02](../Assets.xcassets/dino-pirouette-02.imageset/dino-pirouette-02.png) | Inveren voor afzet |
-| [dino-pirouette-03](../Assets.xcassets/dino-pirouette-03.imageset/dino-pirouette-03.png) | Afzetten |
-| [dino-pirouette-04](../Assets.xcassets/dino-pirouette-04.imageset/dino-pirouette-04.png) | Begin draai |
-| [dino-pirouette-05](../Assets.xcassets/dino-pirouette-05.imageset/dino-pirouette-05.png) | Rechterzijaanzicht |
-| [dino-pirouette-06](../Assets.xcassets/dino-pirouette-06.imageset/dino-pirouette-06.png) | Draaien naar achteren |
-| [dino-pirouette-07](../Assets.xcassets/dino-pirouette-07.imageset/dino-pirouette-07.png) | Achteraanzicht |
-| [dino-pirouette-08](../Assets.xcassets/dino-pirouette-08.imageset/dino-pirouette-08.png) | Achter-links |
-| [dino-pirouette-09](../Assets.xcassets/dino-pirouette-09.imageset/dino-pirouette-09.png) | Linkerzijaanzicht |
-| [dino-pirouette-10](../Assets.xcassets/dino-pirouette-10.imageset/dino-pirouette-10.png) | Draaien naar voren |
-| [dino-pirouette-11](../Assets.xcassets/dino-pirouette-11.imageset/dino-pirouette-11.png) | Landing opvangen |
-| [dino-pirouette-12](../Assets.xcassets/dino-pirouette-12.imageset/dino-pirouette-12.png) | Overeind komen |
-| [dino-pirouette-13](../Assets.xcassets/dino-pirouette-13.imageset/dino-pirouette-13.png) | Armen heffen |
-| [dino-pirouette-14](../Assets.xcassets/dino-pirouette-14.imageset/dino-pirouette-14.png) | Juichen |
+| Asset | Pose | Duur |
+| --- | --- | --- |
+| [dino-pirouette-01](../Assets.xcassets/dino-pirouette-01.imageset/dino-pirouette-01.png) | Staan | 320 ms, inclusief schermovergang |
+| [dino-pirouette-02](../Assets.xcassets/dino-pirouette-02.imageset/dino-pirouette-02.png) | Inveren voor afzet | 140 ms |
+| [dino-pirouette-03](../Assets.xcassets/dino-pirouette-03.imageset/dino-pirouette-03.png) | Afzetten | 80 ms |
+| [dino-pirouette-04](../Assets.xcassets/dino-pirouette-04.imageset/dino-pirouette-04.png) | Begin draai | 60 ms |
+| [dino-pirouette-05](../Assets.xcassets/dino-pirouette-05.imageset/dino-pirouette-05.png) | Rechterzijaanzicht | 65 ms |
+| [dino-pirouette-06](../Assets.xcassets/dino-pirouette-06.imageset/dino-pirouette-06.png) | Draaien naar achteren | 75 ms |
+| [dino-pirouette-06a](../Assets.xcassets/dino-pirouette-06a.imageset/dino-pirouette-06a.png) | Achter-rechts, 140° | 75 ms |
+| [dino-pirouette-07](../Assets.xcassets/dino-pirouette-07.imageset/dino-pirouette-07.png) | Achteraanzicht | 65 ms |
+| [dino-pirouette-07a](../Assets.xcassets/dino-pirouette-07a.imageset/dino-pirouette-07a.png) | Begin achter-links, 202,5°; staart naar camera | 50 ms |
+| [dino-pirouette-08](../Assets.xcassets/dino-pirouette-08.imageset/dino-pirouette-08.png) | Achter-links | 50 ms |
+| [dino-pirouette-08a](../Assets.xcassets/dino-pirouette-08a.imageset/dino-pirouette-08a.png) | Overgang achter-links naar zijaanzicht, 247,5° | 50 ms |
+| [dino-pirouette-09](../Assets.xcassets/dino-pirouette-09.imageset/dino-pirouette-09.png) | Linkerzijaanzicht | 70 ms |
+| [dino-pirouette-10](../Assets.xcassets/dino-pirouette-10.imageset/dino-pirouette-10.png) | Draaien naar voren | 55 ms |
+| [dino-pirouette-10a](../Assets.xcassets/dino-pirouette-10a.imageset/dino-pirouette-10a.png) | Benen uitstrekken voor landing, 325° | 50 ms |
+| [dino-pirouette-11](../Assets.xcassets/dino-pirouette-11.imageset/dino-pirouette-11.png) | Landing opvangen | 130 ms |
+| [dino-pirouette-12](../Assets.xcassets/dino-pirouette-12.imageset/dino-pirouette-12.png) | Overeind komen | 150 ms |
+| [dino-pirouette-13](../Assets.xcassets/dino-pirouette-13.imageset/dino-pirouette-13.png) | Armen heffen | 170 ms |
+| [dino-pirouette-14](../Assets.xcassets/dino-pirouette-14.imageset/dino-pirouette-14.png) | Juichen | Blijft staan |
 
-De gegenereerde PNG’s zijn met hun oorspronkelijke alpha naar de assetcatalogus gekopieerd. De vier beelden hebben eigen contourmaskers, gebieden voor de cijfers en gemeten lichtpaletten voor de gekozen Dino-kleuren.
+De gegenereerde PNG’s zijn met hun oorspronkelijke alpha naar de assetcatalogus gekopieerd. De nieuwe beelden hebben eigen contourmaskers en gemeten lichtpaletten voor de gekozen Dino-kleuren. De zichtbare opdruk op `08a` en `10a` heeft ook een eigen gebied voor donkere cijfers op lichte hoofdbanden. De achteraanzichten hebben geen zichtbare opdruk. De originele veertien PNG’s zijn niet gewijzigd.
 
 ## Timing
 
-De schermovergang krijgt 0,24 seconde aanloop. De volledige posevolgorde speelt daarna op 1,7× tempo: ongeveer 0,28 seconde voorbereiding, 0,82 seconde springen en draaien, en twee landingsposes van elk 0,09 seconde. De voeten landen na ongeveer 1,35 seconde; de hele animatie duurt ongeveer 1,63 seconde. De verplaatsing gebruikt een curve met een krachtige start (`0,20 / 0,65 / 0,35 / 1`): na het inveren krijgt Dino onmiddellijk vaart omhoog en remt hij af naar de steen. De sprongboog zorgt onderweg voor hoogte boven de landingsplek. Alle veertien beelden, kleurmaskers en de exacte eindpositie blijven behouden. De sterren beginnen na de landing. De beweging bij drie sterren en de statische weergave bij Minder beweging blijven behouden.
+Elke pose heeft een eigen afspeelduur in `DinoAnimation.pirouetteFrames`. De eerdere globale versnelling van 1,7× liet een aantal tussenbeelden maar 31–33 ms zien en hield de getekende landingspose ongeveer 230 ms in de lucht. De actuele tijdlijn versnelt de vlucht van 830 naar 665 ms, ongeveer 25% vlotter. De langste draaiende beelden zijn ingekort en de laatste luchtpose krijgt 50 ms in plaats van 100 ms. De geplante landing behoudt zijn herstelritme.
 
-## Verificatie
+De schermovergang duurt 0,24 seconde, gevolgd door 0,30 seconde voorbereiding: 80 ms staan, 140 ms inveren en 80 ms afzetten. De sprong duurt 0,665 seconde. Tijdens de vlucht varieert de beeldduur van 50 tot 75 ms; de benen krijgen vlak voor contact 50 ms om uit te strekken. Op 1,205 seconde begint de geplante landingspose. Daarna volgen 130 ms opvangen, 150 ms overeind komen en 170 ms armen heffen. Op 1,655 seconde staat de blijvende eindpose; de tijdlijn stopt direct omdat de beweging dan is afgelopen.
 
-De hernoeming is gecontroleerd met SHA-256: alle veertien PNG’s zijn ongewijzigd en staan nu in hun afspeelvolgorde. De assetcatalogus bevat precies `dino-pirouette-01` t/m `14`; bestandsnamen, kleurmaskers, lichtpaletten, opdrukgebieden en documentatielinks zijn bijgewerkt. Verouderde pirouettevoorbeelden en dubbele documentatie zijn verwijderd. De actuele kernsuite slaagt met 805.404 controles, inclusief de volledige genummerde afspeelvolgorde. De SwiftUI-aanroep voor de nieuwe bewegingscurve is apart op types gecontroleerd.
+Een monotone kubische interpolatie houdt draaihoek én draaisnelheid doorlopend tussen de beeldwisselingen, ook bij ongelijke beeldduur. De geschilderde hoekstappen blijven maximaal 40°; de kleine perspectiefcorrectie blijft begrensd op 9°. De sprongbaan en de gedeelde reis gebruiken dezelfde afzet- en landingstijden. De eerste ster verschijnt na contact, op ongeveer 1,245 seconde. Alle achttien afbeeldingen en uitlijningen blijven behouden.
 
-De voorafgaande versie is vanuit een volledig gespeeld level gecontroleerd op iPhone 17 en iPad Pro 11-inch. De laatste wijziging maakt de afzet krachtiger en de reis korter. Een nieuwe Xcode-build kon niet worden uitgevoerd: de automatische goedkeuringscontrole bereikte de gebruikslimiet. De onderstaande simulatoropname toont daarom de voorafgaande versie; het kleurenoverzicht toont de actuele nummering.
+[Vlottere draai](Screenshots/PirouetteTimingFaster/pirouette.gif) · [Vorige timing en vlottere draai naast elkaar](Screenshots/PirouetteTimingFaster/timing-comparison.gif).
 
-[Vorige simulatoropname](Animations/pirouette-two-stars-v4-iphone.mp4) · [Actuele assets en kleuren](Screenshots/PirouetteV4/colors.jpg) · [iPhone](Screenshots/PirouetteV4/iphone.png) · [iPad](Screenshots/PirouetteV4/ipad.png).
+## Verificatie van de timing
+
+- **6.981 animatiecontroles slagen**, inclusief de exacte beeldgrenzen, contact bij de landing, doorlopende hoeksnelheid en alle achttien beelden bij 30 én 60 fps met vier verschillende verversingsfasen.
+- Elke actieve pose heeft 50–170 ms leestijd; de eerste staande pose bevat ook de schermovergang. De benen blijven tot het grondcontact in de luchtpose.
+- De iOS-simulatorbuild met de aangepaste timing slaagt (`xcodebuild build`, Debug).
+- De voorbeelden zijn op 50 fps gerenderd uit de echte kleurverwerking en tijdsamples. Ze tonen Dino los van de schermreis en de kleine SwiftUI-3D-correctie. Het vergelijkingsvoorbeeld gebruikt dezelfde klok voor beide versies.
+- De oude afbeeldings-, kleur- en transparantiecontroles hieronder horen bij het toevoegen van de vier beelden; de timingwijziging wijzigt geen PNG’s of kleurmaskers.
+
+## Verificatie van de tussenbeelden
+
+- De volledige kernsuite slaagt met **822.851 controles**. De gerichte animatie-, transparantie-, kleur- en opdrukcontrole slaagt met **6.710 controles**.
+- De animatietest controleert de volledige reeks van achttien poses, vooraf laden, een maximale posewissel van 40°, de doorlopende sprongbaan, de bestaande landing en de statische eindpose bij Minder beweging.
+- Alle nieuwe PNG’s zijn 1254 × 1254 RGBA met echte transparantie. De vier assetmanifesten verwijzen naar bestaande bestanden. De originele veertien PNG’s zijn ongewijzigd ten opzichte van Git.
+- De Xcode-simulatorbuild (`build-for-testing`, iPhone 17 / iOS 26.5) slaagt. De bestaande UI-test `testTwoStarPirouetteFromQuestionToStone` werd tijdens het personaliseren onderbroken door een onverwachte runner-herstart, vóór het level en de pirouette; daarom is die test niet als geslaagd geteld.
+- Het kleurenoverzicht toont de echte kleurverwerking met standaardkleuren en blauw/paars/roze/oranje. Het GIF-voorbeeld gebruikt de actuele poses, offsets, spronghoogte en squash op 50 fps; het toont de sprite los van de schermreis en de kleine SwiftUI-3D-correctie.
+
+[Vorige timing](Screenshots/PirouetteV5/pirouette.gif) · [Alle achttien poses en kleuren](Screenshots/PirouetteV5/colors.png) · [Exacte nieuwe imagegen-prompts](PirouetteV5Prompts.json).
+
+De eerdere simulatoropname blijft beschikbaar als historisch voorbeeld: [versie 4](Animations/pirouette-two-stars-v4-iphone.mp4).
+
+## Nieuwe imagegen-prompts
+
+De ingebouwde imagegen-tool is gebruikt, met `transparent_background: true`, één aanroep per nieuw beeld. De volledige prompts staan in [PirouetteV5Prompts.json](PirouetteV5Prompts.json), met sleutels voor de aangrenzende originele beelden. De nieuwe bestanden staan rechtstreeks in de vier hierboven gelinkte `.imageset`-mappen in `Assets.xcassets`.
 
 ## Exacte prompts
 

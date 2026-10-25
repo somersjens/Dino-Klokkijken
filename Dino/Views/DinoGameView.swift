@@ -125,6 +125,11 @@ struct DinoGameView: View {
             .onValueChange(of: session.hasFeedback ? (session.correctFeedback ? DinoAnimation.Clip.thumbsUp : .wrongAnswer) : .idle, initial: true) { reaction in
                 onCompanionReaction(reaction)
             }
+            .onValueChange(of: session.rejectedResponses.count) { rejected in
+                // Another wrong choice is a new reaction even though its clip
+                // has the same name as the previous wrong-answer animation.
+                if rejected > 1 { onCompanionReaction(.wrongAnswer) }
+            }
             .onValueChange(of: session.result != nil) { hasResult in
                 if hasResult, let result = session.result { onResult(result) }
             }
@@ -153,7 +158,7 @@ struct DinoGameView: View {
                         Button { showsDayPartSettings = true } label: {
                             Label("dino.dayPart.changeSettings", systemImage: "gearshape.fill")
                         }
-                        .buttonStyle(DinoButtonStyle(color: Color(dinoHex: 0xD0D7DC), inkLabel: true))
+                        .buttonStyle(DinoDayPartSettingsButtonStyle())
                         .frame(width: min(420, width))
                         .accessibilityIdentifier("question.dayPart.settings")
                     }
@@ -236,6 +241,26 @@ struct DinoGameView: View {
     }
 
 
+}
+
+private struct DinoDayPartSettingsButtonStyle: ButtonStyle {
+    @Environment(\.dinoHighContrast) private var highContrast
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 20, weight: .bold, design: .rounded))
+            .foregroundStyle(DinoStyle.ink)
+            .padding(.horizontal, 24)
+            .frame(minHeight: 58)
+            .frame(maxWidth: .infinity)
+            .background(Color(dinoHex: configuration.isPressed ? 0xDCE4E9 : 0xE8EDF1),
+                        in: RoundedRectangle(cornerRadius: 20))
+            .overlay {
+                RoundedRectangle(cornerRadius: 20)
+                    .strokeBorder(DinoStyle.ink.opacity(highContrast ? 1 : 0.12),
+                                  lineWidth: highContrast ? 3 : 1)
+            }
+    }
 }
 
 struct InteractionDemonstration: View {
@@ -590,7 +615,6 @@ struct DinoAnalogAdvanceDemonstration: View {
 
 struct DinoQuestionTitle: View {
     @ObservedObject private var language = LanguageManager.shared
-    @Environment(\.dinoHighContrast) private var highContrast
     let question: ClockQuestion
     var instructionKey: String? = nil
     var fontSize: CGFloat = 21
@@ -600,6 +624,7 @@ struct DinoQuestionTitle: View {
 
     var body: some View {
         title.font(.system(size: fontSize, weight: .heavy, design: .rounded))
+            .foregroundColor(DinoStyle.ink)
             .multilineTextAlignment(.center).frame(maxWidth: .infinity)
             .speakQuestionTitle(spokenText, identity: "\(speechScope)-\(question.id)", active: announces)
     }
@@ -633,12 +658,10 @@ struct DinoQuestionTitle: View {
         switch emphasis {
         case .plain:
             return DinoStyle.ink
-        case .clock:
-            return highContrast ? Color(dinoHex: 0x21556B) : Color(dinoHex: 0x377C95)
         case .forward:
             return DinoStyle.deepGreen
         case .backward:
-            return DinoTimeDirection.earlier
+            return DinoStyle.warning
         }
     }
 }

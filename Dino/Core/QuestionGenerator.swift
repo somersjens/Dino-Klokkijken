@@ -10,7 +10,7 @@ struct ClockQuestion: Identifiable, Equatable, Sendable {
     let companionClocks: [ClockTime]
     var relatedTimes: [ClockTime] = []
     var durationMinutes = 0
-    var offsetHours = 0
+    var offsetMinutes = 0
     var timeZoneJourney: DinoTimeZoneJourney? = nil
     var daySchedule: DinoDaySchedule? = nil
     var statement: ClockTime? = nil
@@ -44,15 +44,18 @@ enum DinoQuestionGenerator {
         precondition(!level.allowedHours.isEmpty && level.allowedHours.allSatisfy { (1...12).contains($0) })
         var usedHours = Set<Int>()
         var previous: ClockTime?
+        var history = DinoQuestionHistory()
         let positionOffset = Int.random(in: 0..<12, using: &rng)
         return (0..<level.questionCount).map { index in
             let recipe = level.recipe(at: index)
             let difficulty = difficulties[level.skill(for: recipe)] ?? level.plannedDifficulty(for: recipe)
             let question = generateQuestion(level: level, recipe: recipe, index: index, attempt: attempt,
                 difficulty: difficulty, previousTarget: previous, usedHours: usedHours,
-                optionPosition: positionOffset + index, language: language, dayPartSchedule: dayPartSchedule, using: &rng)
+                optionPosition: positionOffset + index, language: language, dayPartSchedule: dayPartSchedule,
+                recentQuestions: history.recent(kind: recipe.kind, time: level.time(for: recipe)), using: &rng)
             usedHours.insert(question.target.hour)
             previous = question.target
+            history.record(question)
             return question
         }
     }
@@ -60,13 +63,14 @@ enum DinoQuestionGenerator {
     static func generateQuestion<R: RandomNumberGenerator>(level: LevelConfiguration, recipe: QuestionRecipe,
         index: Int, attempt: Int = 0, difficulty: DinoQuestionDifficulty, previousTarget: ClockTime?,
         usedHours: Set<Int> = [], optionPosition: Int? = nil, language: String = "nl",
-        dayPartSchedule: DinoDayPartSchedule = .standard, using rng: inout R) -> ClockQuestion {
+        dayPartSchedule: DinoDayPartSchedule = .standard, recentQuestions: [ClockQuestion] = [], using rng: inout R) -> ClockQuestion {
         let family = level.time(for: recipe)
         let minutes = recipe.time == nil ? level.allowedMinutes : family.minutes
         if recipe.kind.isExpanded {
             return DinoExpandedQuestions.generate(kind: recipe.kind, minutes: minutes,
                 minuteStep: family.minuteStep, index: index, previousTarget: previousTarget,
-                language: language, difficulty: difficulty, dayPartSchedule: dayPartSchedule, using: &rng)
+                language: language, difficulty: difficulty, dayPartSchedule: dayPartSchedule,
+                recentQuestions: recentQuestions, using: &rng)
         }
         let activity: DinoActivity? = recipe.kind == .activity ? DinoActivity.allCases[index % 5] : nil
         let pool = level.allowedHours.flatMap { hour in
@@ -82,7 +86,7 @@ enum DinoQuestionGenerator {
                 if !freshHours.isEmpty { candidates = freshHours }
             }
             target = DinoQuestionTeaching.target(pool: candidates, time: family,
-                difficulty: difficulty, previous: previousTarget, using: &rng)
+                difficulty: difficulty, previous: previousTarget, recent: recentQuestions.map(\.target), using: &rng)
         }
         let optionPool = family.minuteStep == 60 ? (1...12).map { ClockTime(hour: $0) } : pool
         let others = DinoQuestionTeaching.distractors(pool: optionPool, target: target, kind: recipe.kind,

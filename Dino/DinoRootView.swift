@@ -16,6 +16,7 @@ struct DinoRootView: View {
     @State private var practiceEntry: DinoPracticeQuestion?
     @State private var mapHUDHeight: CGFloat = 103
     @State private var gameCompanionClip: DinoAnimation.Clip = .idle
+    @State private var gameCompanionReactionID = 0
     @State private var hasShownMap = false
 
     var body: some View {
@@ -35,7 +36,7 @@ struct DinoRootView: View {
                 DinoCompanionLayer(destination: anchor.map { geometry[$0] },
                                    clip: companionClip, isResult: result != nil && startCard == nil,
                                    worldID: result?.level.worldID ?? session?.level.worldID ?? 1,
-                                   compactPortrait: geometry.size.height < 430)
+                                   compactPortrait: geometry.size.height < 430, reactionID: gameCompanionReactionID)
             }.allowsHitTesting(false)
         }
         .preferredColorScheme(.light)
@@ -94,7 +95,10 @@ struct DinoRootView: View {
                     withAnimation(.easeOut(duration: 0.24)) {
                         self.result = value; self.session = nil
                     }
-                }, onCompanionReaction: { gameCompanionClip = $0 }).id(ObjectIdentifier(session))
+                }, onCompanionReaction: {
+                    gameCompanionClip = $0
+                    gameCompanionReactionID += 1
+                }).id(ObjectIdentifier(session))
             } else {
                 WorldMap(openLevel: presentStartCard, openSettings: { showsSettings = true },
                          openPractice: { practiceEntry = nil; showsPractice = true },

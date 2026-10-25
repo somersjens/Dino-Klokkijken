@@ -182,6 +182,7 @@ struct DinoPracticeGenerator {
     private var rng: SeededGenerator
     private var mixedTypes: [DinoPracticeQuestion] = []
     private var previousTarget: ClockTime?
+    private var history = DinoQuestionHistory()
     private let language: String
     private var dayPartSchedule: DinoDayPartSchedule
 
@@ -212,8 +213,9 @@ struct DinoPracticeGenerator {
     private mutating func make(_ type: DinoPracticeQuestion, index: Int, difficulty: DinoQuestionDifficulty) -> ClockQuestion {
         let question = DinoQuestionGenerator.generateQuestion(level: configuration.level, recipe: type.recipe,
             index: index, difficulty: difficulty, previousTarget: previousTarget, language: language,
-            dayPartSchedule: dayPartSchedule, using: &rng)
+            dayPartSchedule: dayPartSchedule, recentQuestions: history.recent(kind: type.recipe.kind, time: configuration.time), using: &rng)
         previousTarget = question.target
+        history.record(question)
         return question
     }
 

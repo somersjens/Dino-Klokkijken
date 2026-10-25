@@ -9,7 +9,6 @@ struct DinoResultView: View {
     let map: () -> Void
     var sharedCompanion = false
     @State private var starsRevealed = 0
-    @State private var rewardSettled = false
     @State private var confetti = false
     private var succeeded: Bool { result.level.isBoss ? result.victory != .none : result.stars > 0 }
     private var nextAvailable: Bool { result.level.isBoss ? succeeded : player.profile.isUnlocked(result.level.id + 1) }
@@ -18,10 +17,6 @@ struct DinoResultView: View {
         GeometryReader { geometry in
             let layout = ResultLayout(size: geometry.size, needsMessage: !succeeded)
             ZStack {
-                ResultScenery(worldID: result.level.worldID,
-                              signFrame: CGRect(x: (geometry.size.width - layout.signWidth) / 2 + geometry.safeAreaInsets.leading,
-                                                y: layout.topInset + geometry.safeAreaInsets.top,
-                                                width: layout.signWidth, height: layout.signHeight))
                 VStack(spacing: 0) {
                     DinoResultLevelSign(levelID: result.level.id, worldID: result.level.worldID)
                         .frame(width: layout.signWidth, height: layout.signHeight)
@@ -40,6 +35,16 @@ struct DinoResultView: View {
                 .frame(width: geometry.size.width, height: geometry.size.height)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
+            .backgroundPreferenceValue(ResultPodiumBoundsKey.self) { anchor in
+                GeometryReader { scene in
+                    let podium = anchor.map { scene[$0] } ?? .zero
+                    ResultScenery(worldID: result.level.worldID,
+                                  signFrame: CGRect(x: (geometry.size.width - layout.signWidth) / 2 + geometry.safeAreaInsets.leading,
+                                                    y: layout.topInset + geometry.safeAreaInsets.top,
+                                                    width: layout.signWidth, height: layout.signHeight),
+                                  podiumFrame: podium.offsetBy(dx: geometry.safeAreaInsets.leading, dy: geometry.safeAreaInsets.top))
+                }
+            }
         }
         .foregroundStyle(DinoStyle.ink)
         .task(id: result.level.id) { await playReward() }
@@ -72,15 +77,13 @@ struct DinoResultView: View {
         .accessibilityIdentifier("result.score")
     }
 
-    /// The jump finishes on the rock first. Earned stars then drop in one by one,
+    /// The jump finishes on the rock first. Earned stars then settle onto the stone one by one,
     /// and a three-star landing sends confetti out from behind Dino.
     private func playReward() async {
         starsRevealed = 0
-        rewardSettled = false
         confetti = false
         if reduceMotion {
             starsRevealed = result.stars
-            rewardSettled = true
             confetti = result.stars >= 3
             return
         }
@@ -95,43 +98,33 @@ struct DinoResultView: View {
             try? await Task.sleep(for: .seconds(settles))
             guard !Task.isCancelled else { return }
         }
-        rewardSettled = true
         if result.stars >= 3 { confetti = true }
     }
 
     private func stage(layout: ResultLayout) -> some View {
         ZStack(alignment: .bottom) {
-            ResultSunburst(strength: result.stars > 0 ? (starsRevealed > 0 ? 1 : 0.78) : 0.3)
+            ResultSunburst(worldID: result.level.worldID, strength: result.stars > 0 ? (starsRevealed > 0 ? 1 : 0.78) : 0.3)
                 .frame(width: layout.podiumWidth * 1.38, height: layout.podiumWidth * 1.38)
                 .position(x: layout.stageWidth / 2, y: layout.dinoCenterY + layout.dinoSize * 0.05)
-            Ellipse()
-                .fill(Color(dinoHex: 0x355D29).opacity(0.25))
-                .frame(width: layout.podiumWidth * 0.88, height: layout.podiumHeight * 0.10)
-                .blur(radius: 6)
-                .position(x: layout.podiumCenterX, y: layout.stageHeight + layout.podiumLift - 7)
-            ResultRockPlanting(worldID: result.level.worldID)
-                .frame(width: layout.podiumWidth * 1.20, height: layout.podiumHeight * 1.36)
-                .position(x: layout.podiumCenterX, y: layout.stageHeight - layout.podiumHeight * 0.68 + layout.podiumLift)
-            ResultRock(worldID: result.level.worldID)
+            if result.level.worldID == 1 {
+                junglePlanting(layout: layout, foreground: false)
+            }
+            podiumSurround(layout: layout, foreground: false)
+            ResultWorldPodium(worldID: result.level.worldID)
+                .anchorPreference(key: ResultPodiumBoundsKey.self, value: .bounds) { $0 }
                 .frame(width: layout.podiumWidth, height: layout.podiumHeight)
                 .position(x: layout.podiumCenterX, y: layout.stageHeight - layout.podiumHeight / 2 + layout.podiumLift)
             Ellipse()
-                .fill(Color(dinoHex: 0x304627).opacity(0.24))
+                .fill(Color(dinoHex: ResultPodiumPalette(worldID: result.level.worldID).edge).opacity(0.24))
                 .frame(width: layout.dinoSize * 0.55, height: layout.dinoSize * 0.055)
                 .blur(radius: 3)
                 .position(x: layout.podiumCenterX, y: layout.contactY)
             character(size: layout.dinoSize)
                 .position(x: layout.stageWidth / 2, y: layout.dinoCenterY)
-            // Each world's ground details overlap the podium; rewards stay in front.
-            ResultRockPlanting(worldID: result.level.worldID, foreground: true)
-                .frame(width: layout.podiumWidth * (result.level.worldID == 2 ? 1.08 : 1.18),
-                       height: layout.podiumHeight * (result.level.worldID == 2 ? 0.45 : 0.82))
-                .position(x: layout.podiumCenterX,
-                          y: layout.stageHeight + layout.podiumLift + 3 - layout.podiumHeight * (result.level.worldID == 2 ? 0.09 : 0.34))
-            ResultStarReward(count: result.stars, revealed: starsRevealed,
-                             settled: rewardSettled, size: layout.starSize)
+            foregroundDetails(layout: layout)
+            ResultStarReward(count: result.stars, revealed: starsRevealed, size: layout.starSize)
                 .position(x: layout.podiumCenterX, y: layout.rewardCenterY)
-            ResultCelebrationMotes(active: result.stars > 0)
+            ResultCelebrationMotes(worldID: result.level.worldID, active: result.stars > 0)
                 .allowsHitTesting(false)
             if confetti {
                 ResultConfetti()
@@ -140,6 +133,28 @@ struct DinoResultView: View {
             }
         }
         .frame(width: layout.stageWidth, height: layout.stageHeight)
+    }
+
+    private func foregroundDetails(layout: ResultLayout) -> some View {
+        ZStack {
+            if result.level.worldID == 1 {
+                junglePlanting(layout: layout, foreground: true)
+            }
+            podiumSurround(layout: layout, foreground: true)
+        }
+        .frame(width: layout.stageWidth, height: layout.stageHeight)
+    }
+
+    private func junglePlanting(layout: ResultLayout, foreground: Bool) -> some View {
+        ResultRockPlanting(worldID: result.level.worldID, foreground: foreground)
+            .frame(width: layout.podiumWidth * 1.24, height: layout.podiumHeight * 1.6)
+            .position(x: layout.podiumCenterX, y: layout.stageHeight - layout.podiumHeight / 2 + layout.podiumLift)
+    }
+
+    private func podiumSurround(layout: ResultLayout, foreground: Bool) -> some View {
+        ResultPodiumSurround(worldID: result.level.worldID, foreground: foreground)
+            .frame(width: layout.podiumWidth * 1.24, height: layout.podiumHeight * 1.6)
+            .position(x: layout.podiumCenterX, y: layout.stageHeight - layout.podiumHeight / 2 + layout.podiumLift)
     }
 
     private func character(size: CGFloat) -> some View {
@@ -204,6 +219,13 @@ struct DinoResultView: View {
     }
 }
 
+private struct ResultPodiumBoundsKey: PreferenceKey {
+    static var defaultValue: Anchor<CGRect>? { nil }
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        if let next = nextValue() { value = next }
+    }
+}
+
 /// Reserve space for the controls first, then scale the illustration as one scene.
 /// This keeps Dino's feet, the rock and the stars registered on every window size.
 private struct ResultLayout {
@@ -216,15 +238,16 @@ private struct ResultLayout {
     var stageWidth: CGFloat { min(size.width * 1.12, 700) }
     var availableHeight: CGFloat { max(160, size.height - signHeight - topInset - (needsMessage ? 224 : 194)) }
     var dinoSize: CGFloat { min(size.width * 0.73, availableHeight / 1.65, 360) }
-    var podiumWidth: CGFloat { min(stageWidth * 0.88, dinoSize * 1.62) }
-    var podiumHeight: CGFloat { podiumWidth / 2.2 }
+    var podiumWidth: CGFloat { min(stageWidth * 0.88, dinoSize * 1.40) }
+    var podiumHeight: CGFloat { podiumWidth * ResultPodiumGeometry.height / ResultPodiumGeometry.width }
     var podiumCenterX: CGFloat { stageWidth / 2 + dinoSize * 0.04 }
     var podiumLift: CGFloat { -dinoSize * 0.015 }
     var stageHeight: CGFloat { min(availableHeight, dinoSize + podiumHeight * 0.85 + 20) }
     var contactY: CGFloat { stageHeight - podiumHeight * 0.82 + podiumLift }
     var dinoCenterY: CGFloat { contactY - dinoSize * 0.44 }
-    var starSize: CGFloat { min(podiumWidth * 0.23, 122) }
-    var rewardCenterY: CGFloat { stageHeight - podiumHeight * 0.35 + podiumLift }
+    var starSize: CGFloat { podiumWidth * ResultPodiumGeometry.starWidth }
+    var rewardCenterY: CGFloat { stageHeight - podiumHeight + podiumLift + podiumHeight * ResultPodiumGeometry.rewardY / ResultPodiumGeometry.height }
+
 }
 
 private struct ResultAdventureButtonStyle: ButtonStyle {
@@ -265,6 +288,7 @@ private struct ResultAdventureButtonStyle: ButtonStyle {
 private struct ResultScenery: View {
     let worldID: Int
     let signFrame: CGRect
+    let podiumFrame: CGRect
     var windPhase: Double = 0
 
     var body: some View {
@@ -286,6 +310,10 @@ private struct ResultScenery: View {
                     ResultBiomePainter(context: context, size: size, themeID: palette.themeID).landscape()
                 }
             }
+            Canvas(rendersAsynchronously: true) { context, size in
+                ResultBiomePainter(context: context, size: size, themeID: palette.themeID)
+                    .connectToPodium(podiumFrame)
+            }
             DinoResultHeaderBackdrop(worldID: worldID, signFrame: signFrame, windPhase: windPhase)
         }
         .ignoresSafeArea()
@@ -302,17 +330,10 @@ private struct ResultRockPlanting: View {
     var foreground = false
     var body: some View {
         Canvas(rendersAsynchronously: true) { context, size in
-            let palette = ResultLandscapePalette(worldID: worldID)
-            if palette.themeID == 7 {
-                DinoDesertPainter(context: context).rewardGroundCover(in: size, foreground: foreground)
-                return
-            }
-            if palette.themeID != 1 {
-                ResultBiomePainter(context: context, size: size, themeID: palette.themeID)
-                    .podiumSurround(foreground: foreground)
-                return
-            }
-            let painter = ResultLandscapePainter(context: context, size: size,
+            var art = context
+            art.scaleBy(x: size.width / 1240, y: size.height / 728)
+            art.translateBy(x: 120, y: 136.5)
+            let painter = ResultLandscapePainter(context: art, size: CGSize(width: 1000, height: 455),
                                                  palette: ResultLandscapePalette(worldID: worldID))
             if foreground { painter.stoneGroundCover() }
             else { painter.stoneGarden() }
@@ -436,6 +457,17 @@ private struct ResultLandscapePainter {
              top: color(palette.hillNear).opacity(0.86), bottom: color(palette.grassLight))
         hill(start: point(0.27, 0.75), peak: point(0.92, 0.56), end: point(1.27, 0.74),
              top: color(palette.hillNear).opacity(0.76), bottom: color(palette.grassLight))
+        // Connected canopy ribbons follow the foot of the hills and meet the side banks.
+        for right in [false, true] {
+            func q(_ x: CGFloat, _ y: CGFloat) -> CGPoint { point(right ? 1 - x : x, y) }
+            var canopy = Path(); canopy.move(to: q(-0.04, 0.61))
+            canopy.addCurve(to: q(0.10, 0.62), control1: q(0.01, 0.58), control2: q(0.07, 0.57))
+            canopy.addCurve(to: q(0.23, 0.65), control1: q(0.16, 0.59), control2: q(0.21, 0.60))
+            canopy.addQuadCurve(to: q(0.30, 0.72), control: q(0.29, 0.64))
+            canopy.addLine(to: q(-0.04, 0.74)); canopy.closeSubpath()
+            context.fill(canopy, with: .linearGradient(Gradient(colors: [color(0x5E9C72).opacity(0.42), color(palette.grassLight).opacity(0.34)]),
+                startPoint: q(0.1, 0.60), endPoint: q(0.1, 0.74)))
+        }
         // Palm silhouettes break up the distant hills without filling the clearing.
         for index in 0..<18 {
             let side = index.isMultiple(of: 2)
@@ -490,6 +522,20 @@ private struct ResultLandscapePainter {
                        with: .color(color(palette.grassLight).opacity(0.70)))
             }
         }
+        // A narrow creek cuts into one continuous grassy bank beside the clearing.
+        var creek = Path(); creek.move(to: point(0.075, 0.65))
+        creek.addCurve(to: point(0.13, 0.79), control1: point(0.04, 0.70), control2: point(0.18, 0.73))
+        creek.addCurve(to: point(0.025, 1.08), control1: point(0.04, 0.90), control2: point(0.10, 0.98))
+        creek.addLine(to: point(-0.065, 1.08))
+        creek.addCurve(to: point(0.095, 0.79), control1: point(0.02, 0.96), control2: point(0.01, 0.88))
+        creek.addCurve(to: point(0.075, 0.65), control1: point(0.14, 0.74), control2: point(0.045, 0.70)); creek.closeSubpath()
+        context.stroke(creek, with: .color(color(0x76A659).opacity(0.65)), style: StrokeStyle(lineWidth: 7 * scale, lineJoin: .round))
+        context.fill(creek, with: .linearGradient(Gradient(colors: [color(0xA0CCB4), color(0x69A8A6)]), startPoint: point(0.1, 0.66), endPoint: point(0.02, 1.08)))
+        for i in 0..<9 {
+            let y = 0.76 + CGFloat(i) * 0.03
+            var ripple = Path(); ripple.move(to: point(0.075, y)); ripple.addQuadCurve(to: point(0.11, y + 0.005), control: point(0.095, y + 0.008))
+            context.stroke(ripple, with: .color(color(0xE6EFD0).opacity(0.40)), lineWidth: 1)
+        }
         for index in 0..<20 {
             let side = index.isMultiple(of: 2)
             let x: CGFloat = side ? 0.035 + CGFloat(index % 5) * 0.035 : 0.83 + CGFloat(index % 5) * 0.035
@@ -532,88 +578,77 @@ private struct ResultLandscapePainter {
     }
 
     func stoneGarden() {
-        let unit = w / 470
-        mossMat(in: CGRect(x: w * 0.025, y: h * 0.89, width: w * 0.95, height: h * 0.10), seed: 7727)
-        for side in 0..<2 {
-            var c = context
-            c.translateBy(x: side == 0 ? 0 : w, y: 0)
-            c.scaleBy(x: side == 0 ? 1 : -1, y: 1)
-            let painter = ResultLandscapePainter(context: c, size: size, palette: palette)
-            // These roots share the podium baseline on every device size.
-            painter.rosette(at: CGPoint(x: w * 0.14, y: h * 0.90), length: 173 * unit,
-                            lean: side == 0 ? -21 : -9, seed: side + 2)
-            painter.rosette(at: CGPoint(x: w * 0.065, y: h * 0.98), length: 69 * unit,
-                            lean: 31, seed: side + 6)
-            painter.fern(at: CGPoint(x: w * 0.10, y: h * 0.97), length: 47 * unit, angle: -28)
-            painter.flower(at: CGPoint(x: w * 0.115, y: h * 0.92), radius: 4.2 * unit)
-            painter.flower(at: CGPoint(x: w * 0.055, y: h * 0.955), radius: 3.2 * unit)
+        for right in [false, true] {
+            var art = context
+            if right { art.translateBy(x: 1000, y: 0); art.scaleBy(x: -1, y: 1) }
+            let garden = ResultLandscapePainter(context: art, size: size, palette: palette)
+            let root = CGPoint(x: 22, y: right ? 435 : 426)
+            for (i, angle) in [-37.0, -4, 24].enumerated() {
+                let length = CGFloat([220, 260, 210][i])
+                garden.leaf(at: root, length: length, width: length * 0.40,
+                            angle: angle + (right ? 5 : 0), bright: i == 1)
+            }
         }
     }
 
     func stoneGroundCover() {
-        let unit = w / 420
-        // Roots stay on the shared ground line; the larger leaves overlap the side faces.
-        let mound = CGRect(x: w * 0.04, y: h * 0.84, width: w * 0.92, height: h * 0.12)
-        ellipticalGlow(in: mound, colors: [
-            color(palette.grassShade).opacity(0.48), color(palette.grass).opacity(0.24), .clear
-        ])
-        mossMat(in: CGRect(x: w * 0.012, y: h * 0.87, width: w * 0.976, height: h * 0.13), seed: 4283)
-        for index in 0..<54 {
-            let x = noise(index, seed: 9821)
-            let y = h * (0.90 + noise(index, seed: 2731) * 0.07)
-            let edge = abs(x - 0.5) * 2
-            let s = (0.30 + edge * 0.30 + CGFloat(index % 4) * 0.055) * unit
-            grass(at: CGPoint(x: w * x, y: y), scale: s, light: index % 3 != 0, opacity: 0.96)
-        }
-        for side in 0..<2 {
-            var c = context
-            c.translateBy(x: side == 0 ? 0 : w, y: 0)
-            c.scaleBy(x: side == 0 ? 1 : -1, y: 1)
-            let painter = ResultLandscapePainter(context: c, size: size, palette: palette)
-            let root = CGPoint(x: w * 0.10, y: h * (side == 0 ? 0.91 : 0.93))
-            for (index, angle) in [-40.0, -13, 20, 48, 74].enumerated() {
-                let reach = CGFloat([0.14, 0.215, 0.198, 0.16, 0.125][index])
-                let length = w * reach * (side == 0 ? 1 : 0.93)
-                painter.leaf(at: root, length: length, width: length * 0.52,
-                             angle: angle + (side == 0 ? 0 : 6), bright: index == 2)
+        // These leaves overlap the stone's side facets; their tips stay outside the reward row.
+        for right in [false, true] {
+            var art = context
+            if right { art.translateBy(x: 1000, y: 0); art.scaleBy(x: -1, y: 1) }
+            let garden = ResultLandscapePainter(context: art, size: size, palette: palette)
+            let root = CGPoint(x: 63, y: right ? 446 : 440)
+            for (i, angle) in [-37.0, -10, 14].enumerated() {
+                let length = CGFloat([125, 172, 156][i])
+                garden.leaf(at: root, length: length, width: length * (i == 0 ? 0.46 : 0.38),
+                            angle: angle, bright: i == 2)
             }
-            // A smaller second spray covers the roots and breaks up the mirrored outline.
-            painter.leaf(at: CGPoint(x: root.x + w * 0.035, y: root.y + h * 0.025),
-                         length: w * 0.115, width: w * 0.055, angle: 57, bright: true)
-            painter.flower(at: CGPoint(x: w * 0.13, y: h * 0.83), radius: 4.0 * unit)
-            painter.flower(at: CGPoint(x: w * 0.075, y: h * 0.90), radius: 2.8 * unit)
+            garden.trailingSprig(root: CGPoint(x: right ? 149 : 151, y: right ? 123 : 126),
+                                 tip: CGPoint(x: right ? 133 : 111, y: right ? 204 : 226),
+                                 bend: right ? -18 : -29, seed: right ? 5 : 2)
+            garden.flower(at: CGPoint(x: 59, y: 429), radius: 5)
+            garden.flower(at: CGPoint(x: 88, y: 448), radius: 3.5)
         }
-        for (index, x) in [CGFloat(0.39), 0.58, 0.72].enumerated() {
-            let root = CGPoint(x: w * x, y: h * 0.965)
-            for angle in [-32.0, 8, 39] {
-                leaf(at: root, length: w * (index == 1 ? 0.060 : 0.042),
-                     width: w * 0.016, angle: angle, bright: angle == 8)
-            }
+        // Individual irregular tufts join the stone to the meadow without a separate grass mat.
+        for i in 0..<50 {
+            let x = 8 + noise(i, seed: 9821) * 984
+            let y = 444 + noise(i, seed: 2731) * 24
+            grass(at: CGPoint(x: x, y: y), scale: 0.7 + noise(i, seed: 1913) * 0.65,
+                  light: i % 3 != 0, opacity: 0.9)
         }
     }
 
-    private func mossMat(in rect: CGRect, seed: UInt64) {
-        func at(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
-            CGPoint(x: rect.minX + rect.width * x, y: rect.minY + rect.height * y)
+    private func trailingSprig(root: CGPoint, tip: CGPoint, bend: CGFloat, seed: Int) {
+        let control = CGPoint(x: root.x + bend, y: root.y + (tip.y - root.y) * 0.55)
+        func node(_ t: CGFloat) -> CGPoint {
+            CGPoint(x: (1 - t) * (1 - t) * root.x + 2 * (1 - t) * t * control.x + t * t * tip.x,
+                    y: (1 - t) * (1 - t) * root.y + 2 * (1 - t) * t * control.y + t * t * tip.y)
         }
-        var mat = Path()
-        mat.move(to: at(0.015, 0.55))
-        for index in 0..<32 {
-            let x = CGFloat(index) / 32
-            let next = CGFloat(index + 1) / 32
-            let y = 0.16 + noise(index, seed: seed) * 0.28
-            mat.addQuadCurve(to: at(next, 0.24 + noise(index + 1, seed: seed) * 0.30),
-                             control: at((x + next) / 2, y - 0.28))
+        var stem = Path(); stem.move(to: root); stem.addQuadCurve(to: tip, control: control)
+        context.drawLayer { shadow in
+            shadow.addFilter(.shadow(color: color(palette.leafShade).opacity(0.24), radius: 1.5, x: 1, y: 2))
+            shadow.stroke(stem, with: .color(color(palette.leafShade)),
+                          style: StrokeStyle(lineWidth: 2.6, lineCap: .round))
         }
-        mat.addQuadCurve(to: at(0.97, 0.88), control: at(1.025, 0.80))
-        for index in stride(from: 31, through: 0, by: -1) {
-            let x = CGFloat(index) / 32
-            mat.addQuadCurve(to: at(x, 0.81 + noise(index, seed: seed + 241) * 0.17),
-                             control: at(x + 0.015, 1.06))
+        context.stroke(stem, with: .linearGradient(Gradient(colors: [color(palette.leaf), color(palette.leafShade)]),
+                                                   startPoint: root, endPoint: tip),
+                       style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
+        for i in 0..<4 {
+            let t = CGFloat(i) * 0.20 + 0.20
+            let joint = node(t)
+            for side: CGFloat in [-1, 1] {
+                let base = CGPoint(x: joint.x + side * 5, y: joint.y + 3)
+                var stalk = Path(); stalk.move(to: joint)
+                stalk.addQuadCurve(to: base, control: CGPoint(x: base.x, y: joint.y))
+                context.stroke(stalk, with: .color(color(palette.leaf)),
+                               style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
+                let length = (CGFloat(31 + (i + seed) % 3 * 3) - t * 16) * (side < 0 ? 1 : 0.88)
+                leaf(at: base, length: length, width: length * 0.52,
+                     angle: Double(side) * Double(111 + (i + seed) % 3 * 7), bright: (i + seed).isMultiple(of: 3))
+            }
         }
-        mat.addQuadCurve(to: at(0.015, 0.55), control: at(-0.02, 0.80))
-        mat.closeSubpath()
-        ResultMossPainter(context: context, palette: palette).patch(mat, seed: seed, cushions: 12)
+        // A terminal leaf closes the branch; every leaf base shares the stem's actual curve.
+        leaf(at: node(0.95), length: 18, width: 9, angle: 169, bright: false)
     }
 
     private func rosette(at origin: CGPoint, length: CGFloat, lean: Double, seed: Int) {
@@ -840,8 +875,10 @@ private struct ResultLandscapePainter {
 
 /// Wide tapered rays fade out into the scenery, leaving a warm focal light behind Dino.
 private struct ResultSunburst: View {
+    let worldID: Int
     var strength: Double
     var body: some View {
+        let palette = ResultPodiumPalette(worldID: worldID)
         Canvas { context, size in
             let center = CGPoint(x: size.width / 2, y: size.height / 2)
             let reach = min(size.width, size.height) * 0.50
@@ -856,14 +893,14 @@ private struct ResultSunburst: View {
                 wedge.addQuadCurve(to: CGPoint(x: length * 0.14, y: -length), control: CGPoint(x: 0, y: -length * 1.03))
                 wedge.closeSubpath()
                 ray.fill(wedge, with: .linearGradient(Gradient(colors: [
-                    Color(dinoHex: 0xFFFBC9).opacity(0.30 * strength),
-                    Color(dinoHex: 0xFFFAAE).opacity(0.13 * strength), .clear
+                    Color(dinoHex: palette.glow).opacity(0.22 * strength),
+                    Color(dinoHex: palette.glow).opacity(0.09 * strength), .clear
                 ]), startPoint: .zero, endPoint: CGPoint(x: 0, y: -length)))
             }
             context.fill(Path(ellipseIn: CGRect(origin: .zero, size: size)), with: .radialGradient(Gradient(colors: [
-                Color(dinoHex: 0xFFFFE8).opacity(0.90 * strength),
-                Color(dinoHex: 0xFFF9AD).opacity(0.60 * strength),
-                Color(dinoHex: 0xFFF4A0).opacity(0.12 * strength), .clear
+                Color(dinoHex: palette.glow).opacity(0.52 * strength),
+                Color(dinoHex: palette.glow).opacity(0.30 * strength),
+                Color(dinoHex: palette.glow).opacity(0.06 * strength), .clear
             ]), center: center, startRadius: 0, endRadius: reach * 0.85))
         }
         .animation(.easeOut(duration: 0.45), value: strength)
@@ -871,306 +908,9 @@ private struct ResultSunburst: View {
     }
 }
 
-private struct ResultRock: View {
-    let worldID: Int
-    var body: some View {
-        Canvas(rendersAsynchronously: true) { context, size in
-            var art = context
-            art.scaleBy(x: size.width / 1000, y: size.height / 455)
-            ResultStonePainter(context: art, palette: ResultLandscapePalette(worldID: worldID))
-                .draw(hasMoss: [1, 2, 4].contains(ResultLandscapePalette(worldID: worldID).themeID))
-        }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
-}
-
-/// The former 2.2:1 sprite's silhouette and top plane, expressed entirely as paths.
-/// Drawing coordinates are fixed; the scene scales feet, rock and plants together.
-private struct ResultStonePainter {
-    let context: GraphicsContext
-    let palette: ResultLandscapePalette
-    private func color(_ hex: UInt32) -> Color { Color(dinoHex: hex) }
-    private func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x, y: y) }
-    // One mineral palette picks up the clearing's light and reflected ground colour.
-    // Individual facets vary in exposure, rather than switching to unrelated greys.
-    private var coolLight: Bool { palette.night || palette.themeID == 5 }
-    private var mineral: (UInt32, UInt32, UInt32)? {
-        switch palette.themeID {
-        case 3: return (0x928C96, 0x56505F, 0x302E40) // Basalt
-        case 5: return (0xD8FAF7, 0x80B6C5, 0x426C91) // Quartz
-        case 6: return (0xD5ECEA, 0x7EADB8, 0x426174) // City alloy
-        case 8: return (0xE8D2A0, 0xB28B58, 0x665B60) // Brass
-        case 9: return (0xFAE6BC, 0xCBB182, 0x967C59) // Coastal sandstone
-        case 10: return (0xE8E8D8, 0xACB7B3, 0x717F8B) // Castle limestone
-        default: return nil
-        }
-    }
-    private var light: UInt32 { mineral?.0 ?? ResultLandscapePalette.mix(coolLight ? 0xDDE8E3 : 0xEFE3BC, palette.grassLight, 0.17) }
-    private var face: UInt32 { mineral?.1 ?? ResultLandscapePalette.mix(coolLight ? 0xA2B6B8 : 0xC1B792, palette.hillNear, 0.16) }
-    private var shade: UInt32 { mineral?.2 ?? ResultLandscapePalette.mix(coolLight ? 0x6E858A : 0x85846B, palette.grassShade, 0.27) }
-    private func noise(_ index: Int, seed: UInt64) -> CGFloat {
-        var value = UInt64(index) &+ seed
-        value = (value ^ (value >> 16)) &* 0x45D9F3B
-        value = (value ^ (value >> 16)) &* 0x45D9F3B
-        value ^= value >> 16
-        return CGFloat(value & 65535) / 65535
-    }
-
-    private var silhouette: Path {
-        Path { p in
-            p.move(to: point(156, 66))
-            p.addCurve(to: point(500, 16), control1: point(224, 20), control2: point(377, 11))
-            p.addCurve(to: point(834, 58), control1: point(642, 8), control2: point(786, 16))
-            p.addCurve(to: point(882, 99), control1: point(863, 67), control2: point(872, 81))
-            p.addCurve(to: point(982, 267), control1: point(932, 148), control2: point(975, 228))
-            p.addCurve(to: point(985, 310), control1: point(992, 286), control2: point(992, 294))
-            p.addCurve(to: point(924, 402), control1: point(969, 348), control2: point(951, 392))
-            p.addCurve(to: point(721, 444), control1: point(887, 433), control2: point(800, 440))
-            p.addCurve(to: point(361, 448), control1: point(609, 453), control2: point(452, 453))
-            p.addCurve(to: point(121, 430), control1: point(245, 447), control2: point(157, 447))
-            p.addCurve(to: point(66, 388), control1: point(94, 421), control2: point(80, 406))
-            p.addCurve(to: point(22, 321), control1: point(44, 363), control2: point(30, 341))
-            p.addCurve(to: point(20, 281), control1: point(17, 312), control2: point(16, 298))
-            p.addCurve(to: point(65, 166), control1: point(23, 249), control2: point(43, 201))
-            p.addCurve(to: point(156, 66), control1: point(97, 125), control2: point(126, 90))
-            p.closeSubpath()
-        }
-    }
-
-    private var topPlane: Path {
-        Path { p in
-            p.move(to: point(156, 66))
-            p.addCurve(to: point(500, 16), control1: point(224, 20), control2: point(377, 11))
-            p.addCurve(to: point(834, 58), control1: point(642, 8), control2: point(786, 16))
-            p.addCurve(to: point(882, 99), control1: point(863, 67), control2: point(872, 81))
-            p.addQuadCurve(to: point(845, 107), control: point(898, 114))
-            p.addCurve(to: point(634, 104), control1: point(774, 105), control2: point(703, 103))
-            p.addCurve(to: point(414, 110), control1: point(548, 105), control2: point(489, 112))
-            p.addCurve(to: point(197, 104), control1: point(324, 108), control2: point(252, 111))
-            p.addQuadCurve(to: point(150, 81), control: point(150, 97))
-            p.addQuadCurve(to: point(156, 66), control: point(147, 74))
-            p.closeSubpath()
-        }
-    }
-
-    func draw(hasMoss: Bool) {
-        context.drawLayer { clipped in
-            clipped.clip(to: silhouette)
-            let stone = ResultStonePainter(context: clipped, palette: palette)
-            stone.material()
-            stone.grain()
-            stone.topSurface()
-            ResultBiomePainter(context: clipped, size: CGSize(width: 1000, height: 455), themeID: palette.themeID)
-                .podiumDetails()
-        }
-        if hasMoss { caps() }
-    }
-
-    private func roundedFacet(_ vertices: [(CGFloat, CGFloat)], rounding: CGFloat = 0.08) -> Path {
-        let points = vertices.map { point($0.0, $0.1) }
-        func blend(_ a: CGPoint, _ b: CGPoint, _ t: CGFloat) -> CGPoint {
-            CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t)
-        }
-        return Path { p in
-            guard let first = points.first, let last = points.last else { return }
-            p.move(to: blend(last, first, 1 - rounding))
-            for index in points.indices {
-                let at = points[index], next = points[(index + 1) % points.count]
-                p.addQuadCurve(to: blend(at, next, rounding), control: at)
-                p.addLine(to: blend(at, next, 1 - rounding))
-            }
-            p.closeSubpath()
-        }
-    }
-
-    private func facet(_ vertices: [(CGFloat, CGFloat)], exposure: Double) {
-        let path = roundedFacet(vertices), bounds = path.boundingRect
-        let mid = ResultLandscapePalette.mix(shade, face, exposure)
-        context.fill(path, with: .radialGradient(Gradient(stops: [
-            .init(color: color(ResultLandscapePalette.mix(mid, light, 0.24)), location: 0),
-            .init(color: color(mid), location: 0.60),
-            .init(color: color(ResultLandscapePalette.mix(mid, shade, 0.20)), location: 1)
-        ]), center: point(bounds.minX + bounds.width * 0.34, bounds.minY + bounds.height * 0.20),
-            startRadius: 0, endRadius: max(bounds.width, bounds.height) * 1.12))
-    }
-
-    private func material() {
-        context.fill(silhouette, with: .linearGradient(Gradient(colors: [color(light), color(face), color(shade)]),
-                                                       startPoint: point(530, 65), endPoint: point(500, 455)))
-        facet([(8, 300), (62, 161), (156, 66), (199, 105), (179, 155), (151, 213), (86, 322), (62, 391)],
-              exposure: 0.57)
-        facet([(199, 104), (337, 106), (438, 140), (379, 196), (252, 246), (151, 213), (179, 145)],
-              exposure: 0.96)
-        facet([(151, 213), (252, 246), (379, 196), (348, 332), (232, 399), (219, 450), (111, 438), (62, 389)],
-              exposure: 0.70)
-        facet([(348, 332), (412, 401), (462, 453), (354, 456), (219, 450), (232, 399)],
-              exposure: 0.61)
-        facet([(438, 140), (534, 187), (699, 166), (768, 259), (733, 321), (585, 452),
-               (462, 453), (412, 401), (348, 332)],
-              exposure: 0.86)
-        facet([(438, 140), (472, 108), (589, 104), (661, 105), (699, 166), (558, 194), (534, 187)],
-              exposure: 1.10)
-        facet([(661, 105), (838, 105), (875, 135), (887, 211), (857, 258), (768, 259), (699, 166)],
-              exposure: 1.06)
-        facet([(838, 105), (882, 99), (988, 266), (993, 312), (928, 409), (914, 351), (857, 258), (887, 211), (875, 135)],
-              exposure: 0.94)
-        facet([(768, 259), (853, 279), (908, 336), (929, 408), (825, 442), (585, 452), (648, 391), (733, 321)],
-              exposure: 0.77)
-        // A few connected seams describe one boulder rather than separate outlined tiles.
-        seam([(199, 105), (179, 156), (151, 213), (86, 322)], highlight: false)
-        seam([(438, 140), (401, 203), (348, 332), (411, 399)], highlight: false)
-        seam([(661, 105), (699, 166), (768, 259), (733, 321), (648, 391)], highlight: true)
-        seam([(768, 259), (815, 264), (857, 280), (908, 336)], highlight: true)
-        context.fill(silhouette, with: .linearGradient(Gradient(stops: [
-            .init(color: .clear, location: 0), .init(color: .clear, location: 0.50),
-            .init(color: color(palette.grassShade).opacity(0.25), location: 1)
-        ]), startPoint: point(500, 0), endPoint: point(500, 455)))
-        context.fill(silhouette, with: .radialGradient(Gradient(stops: [
-            .init(color: color(light).opacity(0.26), location: 0),
-            .init(color: .clear, location: 0.56),
-            .init(color: color(shade).opacity(0.12), location: 1)
-        ]), center: point(540, 100), startRadius: 0, endRadius: 590))
-    }
-
-    private func seam(_ vertices: [(CGFloat, CGFloat)], highlight: Bool) {
-        var line = Path()
-        line.addLines(vertices.map { point($0.0, $0.1) })
-        context.stroke(line, with: .color(color(shade).opacity(highlight ? 0.20 : 0.24)),
-                       style: StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round))
-        context.stroke(line.offsetBy(dx: highlight ? 1.2 : -0.8, dy: -0.8),
-                       with: .color(color(light).opacity(highlight ? 0.25 : 0.13)),
-                       style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round))
-    }
-
-    private func grain() {
-        // Deterministic vector grains: no noise texture, bitmap or per-frame random work.
-        for index in 0..<130 {
-            let x = noise(index, seed: 2731) * 1000
-            let y = 80 + noise(index, seed: 8701) * 375
-            let r = 0.6 + noise(index, seed: 6619) * 2.5
-            let warm = index.isMultiple(of: 3)
-            let rect = CGRect(x: x, y: y, width: r * (warm ? 1.8 : 1.1), height: r * 0.8)
-            context.fill(Path(ellipseIn: rect), with: .color(color(warm ? light : shade).opacity(0.10)))
-        }
-        for index in 0..<15 {
-            let x = 100 + noise(index, seed: 7627) * 810
-            let y = 130 + noise(index, seed: 9151) * 280
-            let r = 1.1 + noise(index, seed: 4421) * 3.4
-            let pit = CGRect(x: x - r, y: y - r, width: r * 1.8, height: r * 2.0)
-            context.fill(Path(ellipseIn: pit.offsetBy(dx: 0.6, dy: 1.1)), with: .color(color(light).opacity(0.12)))
-            context.fill(Path(ellipseIn: pit), with: .color(color(shade).opacity(0.16)))
-        }
-    }
-
-    private func topSurface() {
-        context.fill(topPlane, with: .linearGradient(Gradient(stops: [
-            .init(color: color(light), location: 0),
-            .init(color: color(ResultLandscapePalette.mix(light, face, 0.20)), location: 0.45),
-            .init(color: color(ResultLandscapePalette.mix(light, face, 0.37)), location: 0.78),
-            .init(color: color(light), location: 1)
-        ]), startPoint: point(380, 10), endPoint: point(495, 114)))
-        context.drawLayer { c in
-            c.clip(to: topPlane)
-            c.drawLayer { clouded in
-                clouded.addFilter(.blur(radius: 4))
-                for index in 0..<10 {
-                    let x = 150 + noise(index, seed: 5413) * 740
-                    let y = 24 + noise(index, seed: 7507) * 90
-                    let rx = 10 + noise(index, seed: 3727) * 48
-                    let rect = CGRect(x: x - rx, y: y - rx * 0.18, width: rx * 2, height: rx * 0.36)
-                    clouded.fill(Path(ellipseIn: rect), with: .color(color(index.isMultiple(of: 2) ? light : face).opacity(0.13)))
-                }
-            }
-            for index in 0..<35 {
-                let x = 140 + noise(index, seed: 1193) * 750
-                let y = 15 + noise(index, seed: 3179) * 95
-                let rx = 1 + noise(index, seed: 2251) * 8
-                let rect = CGRect(x: x, y: y, width: rx, height: rx * 0.23)
-                c.fill(Path(ellipseIn: rect), with: .color(color(index.isMultiple(of: 2) ? light : face).opacity(0.14)))
-            }
-            for (x, y, width) in [(CGFloat(325), CGFloat(62), CGFloat(108)), (680, 62, 138), (520, 36, 70)] {
-                var pit = c
-                pit.translateBy(x: x, y: y)
-                pit.scaleBy(x: width / 2, y: 6)
-                pit.fill(Path(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2)),
-                         with: .radialGradient(Gradient(colors: [color(shade).opacity(0.18), .clear]),
-                                               center: .zero, startRadius: 0, endRadius: 1))
-            }
-        }
-        var rim = Path()
-        rim.move(to: point(161, 86))
-        rim.addCurve(to: point(414, 110), control1: point(181, 113), control2: point(330, 107))
-        rim.addCurve(to: point(634, 104), control1: point(489, 112), control2: point(549, 105))
-        rim.addQuadCurve(to: point(848, 107), control: point(755, 104))
-        context.stroke(rim, with: .color(color(light).opacity(0.40)),
-                       style: StrokeStyle(lineWidth: 1.8, lineCap: .round))
-    }
-
-    private func caps() {
-        let moss = ResultMossPainter(context: context, palette: palette)
-        func patch(_ points: [(CGFloat, CGFloat)]) -> Path { roundedFacet(points, rounding: 0.36) }
-        let left = patch([(155, 109), (170, 98), (195, 94), (217, 100), (247, 99), (274, 106),
-                                 (285, 119), (264, 129), (244, 128), (241, 143), (225, 148), (219, 166),
-                                 (205, 175), (195, 168), (199, 147), (187, 142), (180, 131), (161, 137), (149, 129)])
-        let right = patch([(725, 108), (748, 100), (771, 106), (789, 99), (812, 105), (833, 105),
-                                  (862, 117), (882, 131), (889, 151), (883, 162), (889, 181), (881, 199),
-                                  (869, 210), (854, 207), (847, 187), (839, 172), (825, 170), (815, 151),
-                                  (795, 147), (778, 141), (756, 143), (739, 135), (723, 127)])
-        moss.patch(left.applying(CGAffineTransform(a: 1.45, b: 0, c: 0, d: 1, tx: -99, ty: 0)), seed: 713, cushions: 4)
-        moss.patch(right.applying(CGAffineTransform(a: 1.22, b: 0, c: 0, d: 1, tx: -178, ty: 0)), seed: 1337, cushions: 5)
-        moss.patch(patch([(220, 92), (231, 84), (252, 81), (263, 86), (279, 83), (289, 92), (279, 99), (249, 97)]), seed: 391, cushions: 2)
-        moss.patch(patch([(788, 91), (803, 83), (818, 84), (831, 91), (829, 101), (812, 102)]), seed: 571, cushions: 2)
-    }
-}
-
-/// Broad, quiet moss cushions use the same greens and level of detail as the foliage.
-private struct ResultMossPainter {
-    let context: GraphicsContext
-    let palette: ResultLandscapePalette
-    private func noise(_ index: Int, seed: UInt64) -> CGFloat {
-        var value = UInt64(index) &+ seed
-        value = (value ^ (value >> 16)) &* 0x45D9F3B
-        value = (value ^ (value >> 16)) &* 0x45D9F3B
-        value ^= value >> 16
-        return CGFloat(value & 65535) / 65535
-    }
-
-    func patch(_ path: Path, seed: UInt64, cushions: Int) {
-        let bounds = path.boundingRect
-        let light = Color(dinoHex: ResultLandscapePalette.mix(palette.grassLight, palette.leafLight, 0.38))
-        let face = Color(dinoHex: ResultLandscapePalette.mix(palette.grass, palette.leaf, 0.15))
-        let dark = Color(dinoHex: ResultLandscapePalette.mix(palette.grassShade, palette.grass, 0.30))
-        let unit = max(0.3, min(bounds.width * 0.012, bounds.height * 0.045))
-        context.drawLayer { shadow in
-            shadow.addFilter(.blur(radius: unit * 1.6))
-            shadow.fill(path.offsetBy(dx: 0, dy: unit * 1.2),
-                        with: .color(Color(dinoHex: palette.leafShade).opacity(0.22)))
-        }
-        context.fill(path, with: .linearGradient(Gradient(stops: [
-            .init(color: light, location: 0), .init(color: face, location: 0.48), .init(color: dark, location: 1)
-        ]), startPoint: CGPoint(x: bounds.minX, y: bounds.minY), endPoint: CGPoint(x: bounds.maxX * 0.4 + bounds.minX * 0.6, y: bounds.maxY)))
-        context.drawLayer { c in
-            c.clip(to: path)
-            // A handful of large, softly lit cushions replaces thousands of speckles.
-            for index in 0..<cushions {
-                let width = bounds.width / CGFloat(cushions) * 1.7
-                let height = bounds.height * (0.48 + noise(index, seed: seed) * 0.30)
-                let x = bounds.minX + bounds.width * (CGFloat(index) + 0.45) / CGFloat(cushions)
-                let y = bounds.minY + bounds.height * (0.24 + noise(index, seed: seed &+ 313) * 0.22)
-                var cushion = c
-                cushion.translateBy(x: x, y: y)
-                cushion.scaleBy(x: width / 2, y: height / 2)
-                cushion.fill(Path(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2)),
-                             with: .radialGradient(Gradient(colors: [light.opacity(0.25), .clear]),
-                                                   center: .zero, startRadius: 0, endRadius: 1))
-            }
-        }
-    }
-}
-
 /// Small suspended flecks keep the final composition festive after the confetti has landed.
 private struct ResultCelebrationMotes: View {
+    let worldID: Int
     let active: Bool
     var body: some View {
         Canvas { context, size in
@@ -1193,7 +933,7 @@ private struct ResultCelebrationMotes: View {
                     path.addQuadCurve(to: CGPoint(x: 0, y: r), control: CGPoint(x: r * 0.18, y: r * 0.16))
                     path.addQuadCurve(to: CGPoint(x: -r * 0.65, y: 0), control: CGPoint(x: -r * 0.18, y: r * 0.16))
                     path.addQuadCurve(to: CGPoint(x: 0, y: -r), control: CGPoint(x: -r * 0.18, y: -r * 0.16))
-                    spark.fill(path, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xFFF7A0), Color(dinoHex: 0xFFD02F)]),
+                    spark.fill(path, with: .linearGradient(Gradient(colors: [Color(dinoHex: ResultPodiumPalette(worldID: worldID).glow), Color(dinoHex: ResultPodiumPalette(worldID: worldID).accent)]),
                         startPoint: CGPoint(x: 0, y: -r), endPoint: CGPoint(x: 0, y: r)))
                 } else {
                     spark.fill(Path(ellipseIn: CGRect(x: -item.2 / 2, y: -item.2 / 2, width: item.2, height: item.2)), with: .color(.white.opacity(0.9)))
@@ -1207,7 +947,6 @@ private struct ResultStarReward: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let count: Int
     let revealed: Int
-    let settled: Bool
     var size: CGFloat
     var body: some View {
         HStack(alignment: .center, spacing: -size * 0.02) {
@@ -1221,17 +960,22 @@ private struct ResultStarReward: View {
     }
 
     private func star(_ index: Int) -> some View {
-        let earned = index < count
         let shown = index < revealed
-        let visible = earned ? shown : settled
-        return DinoRewardStar(size: size, earned: earned, dimmed: !earned,
-                              glowing: true, showsSparkle: true)
-            .opacity(visible ? 1 : 0)
-            .scaleEffect((index == 1 ? 1.12 : 0.96) * (earned ? (shown ? 1 : 0.3) : 0.92))
-            .offset(y: earned && !shown ? -size * 1.8 : (index == 1 ? -size * 0.12 : size * 0.03))
-            .rotationEffect(.degrees(index == 1 ? 0 : index == 0 ? -9 : 9))
-            .animation(reduceMotion ? nil : .spring(response: 0.48, dampingFraction: 0.62), value: shown)
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: settled)
+        let scale: CGFloat = index == 1 ? 1.08 : 0.96
+        return ZStack {
+            // Empty slots stay on the stone while only earned gold stars fly in.
+            DinoRewardStar(size: size, earned: false, dimmed: true)
+                .scaleEffect(scale)
+            if index < count {
+                DinoRewardStar(size: size, glowing: true, showsSparkle: true)
+                    .opacity(shown ? 1 : 0)
+                    .scaleEffect(scale * (shown ? 1 : 0.3))
+                    .offset(y: shown ? 0 : -size * 0.07)
+                    .animation(reduceMotion ? nil : .spring(response: 0.48, dampingFraction: 0.62), value: shown)
+            }
+        }
+        .offset(y: index == 1 ? -size * 0.08 : size * 0.01)
+        .rotationEffect(.degrees(index == 1 ? 0 : index == 0 ? -6 : 6))
     }
 }
 

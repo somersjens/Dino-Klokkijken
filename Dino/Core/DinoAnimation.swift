@@ -19,21 +19,56 @@ enum DinoAnimation {
         var scaleY = 1.0
     }
 
-    static let correctAnswerDelay = 0.72
+    // Hold one expression while continuous motion carries the gesture. Changing
+    // faces and silhouettes on every beat made the supplied art feel like slides.
+    static let correctAnswerDelay = duration(.thumbsUp) + 0.12
+    static let wrongAnswerAssets = [DinoAnswerArtwork.wrongAssets[1]]
+    static let correctAnswerAssets = [DinoAnswerArtwork.correctAssets[2]]
+    static let answerGestureStart = 0.08
+    static let answerGestureEnd = 0.66
+    struct TimedPose {
+        let start: Double
+        let pose: Pose
+    }
+
+    // Seconds after the result fade: read the crouch, launch quickly, let every
+    // turn drawing register at a brisk pace, then let the planted recovery breathe.
+    static let pirouetteTakeoff = 0.30
+    static let pirouetteLanding = 0.965
+    static let pirouetteFrames: [TimedPose] = [
+        TimedPose(start: 0, pose: Pose(asset: "dino-pirouette-01", offsetX: -0.017, offsetY: -0.017)),
+        TimedPose(start: 0.08, pose: Pose(asset: "dino-pirouette-02", offsetX: -0.036, offsetY: -0.018)),
+        TimedPose(start: 0.22, pose: Pose(asset: "dino-pirouette-03", paintedYaw: 15, offsetX: -0.023, offsetY: -0.034)),
+        TimedPose(start: pirouetteTakeoff, pose: Pose(asset: "dino-pirouette-04", paintedYaw: 30, offsetX: -0.033, offsetY: 0.018)),
+        TimedPose(start: 0.36, pose: Pose(asset: "dino-pirouette-05", paintedYaw: 65, offsetX: -0.030, offsetY: 0.019)),
+        TimedPose(start: 0.425, pose: Pose(asset: "dino-pirouette-06", paintedYaw: 100, offsetX: -0.051, offsetY: 0.012)),
+        TimedPose(start: 0.50, pose: Pose(asset: "dino-pirouette-06a", paintedYaw: 140, offsetX: -0.090, offsetY: 0.006)),
+        TimedPose(start: 0.575, pose: Pose(asset: "dino-pirouette-07", paintedYaw: 180, offsetX: -0.029)),
+        TimedPose(start: 0.64, pose: Pose(asset: "dino-pirouette-07a", paintedYaw: 202.5, offsetX: -0.053, offsetY: -0.001)),
+        TimedPose(start: 0.69, pose: Pose(asset: "dino-pirouette-08", paintedYaw: 225, offsetX: -0.046)),
+        TimedPose(start: 0.74, pose: Pose(asset: "dino-pirouette-08a", paintedYaw: 247.5, offsetX: -0.021, offsetY: 0.009)),
+        TimedPose(start: 0.79, pose: Pose(asset: "dino-pirouette-09", paintedYaw: 270, offsetX: -0.007, offsetY: 0.017)),
+        TimedPose(start: 0.86, pose: Pose(asset: "dino-pirouette-10", paintedYaw: 310, offsetX: 0, offsetY: 0.004)),
+        TimedPose(start: 0.915, pose: Pose(asset: "dino-pirouette-10a", paintedYaw: 325, offsetX: -0.041, offsetY: -0.014)),
+        TimedPose(start: pirouetteLanding, pose: Pose(asset: "dino-pirouette-11", paintedYaw: 340, offsetX: -0.031, offsetY: -0.012)),
+        TimedPose(start: pirouetteLanding + 0.13, pose: Pose(asset: "dino-pirouette-12", paintedYaw: 350, offsetX: -0.019, offsetY: -0.022)),
+        TimedPose(start: pirouetteLanding + 0.28, pose: Pose(asset: "dino-pirouette-13", paintedYaw: 360, offsetX: -0.012, offsetY: -0.031)),
+        TimedPose(start: pirouetteLanding + 0.45, pose: Pose(asset: "dino-pirouette-14", paintedYaw: 360, offsetX: -0.012, offsetY: -0.029))
+    ]
+    static let pirouetteAssets = pirouetteFrames.map { $0.pose.asset }
     static let spriteAssets = ["dino-idle", "dino-thumbs-up-08", "dino-wrong-answer-04",
                                "dino-backflip-01", "dino-backflip-03", "dino-backflip-07", "dino-backflip-08"]
-        + (1...14).map { String(format: "dino-pirouette-%02d", $0) }
+        + wrongAnswerAssets + correctAnswerAssets
+        + pirouetteAssets
     static let worldJumpAssets = [1, 2, 3, 6, 7].map { String(format: "dino-world-jump-%02d", $0) }
 
-    /// Keep the painted pose sequence together while giving the jump a brisk,
-    /// natural cadence. The short lead-in matches the result screen's fade.
-    static let pirouettePlaybackRate = 1.7
+    /// The short lead-in matches the result screen's fade.
     static func leadIn(_ clip: Clip) -> Double { clip == .pirouette ? 0.24 : 0 }
 
     /// Show the anticipation in the portrait before Dino leaves the circle.
     static func travelDelay(_ clip: Clip) -> Double {
         switch clip {
-        case .pirouette: leadIn(clip) + 0.48 / pirouettePlaybackRate
+        case .pirouette: leadIn(clip) + pirouetteTakeoff
         case .backflip, .worldJump: 0.18
         default: 0
         }
@@ -43,17 +78,17 @@ enum DinoAnimation {
     static func travelDuration(_ clip: Clip) -> Double {
         switch clip {
         case .backflip, .worldJump: 1.22
-        case .pirouette: leadIn(clip) + 1.88 / pirouettePlaybackRate
+        case .pirouette: leadIn(clip) + pirouetteLanding
         default: 0.42
         }
     }
     static func duration(_ clip: Clip) -> Double {
         switch clip {
         case .idle: 0
-        case .thumbsUp: 0.52
-        case .wrongAnswer: 0.5
+        case .thumbsUp: 0.78
+        case .wrongAnswer: 0.80
         case .backflip, .worldJump: 1.62
-        case .pirouette: leadIn(clip) + 2.36 / pirouettePlaybackRate
+        case .pirouette: leadIn(clip) + pirouetteFrames.last!.start
         }
     }
 
@@ -64,68 +99,32 @@ enum DinoAnimation {
     }
 
     static func sample(_ clip: Clip, elapsed: Double, reducedMotion: Bool = false) -> Sample {
-        let rate = clip == .pirouette ? pirouettePlaybackRate : 1
-        let t = max(0, elapsed - leadIn(clip)) * rate
+        let t = max(0, elapsed - leadIn(clip))
         switch clip {
         case .idle:
             return Sample(pose: Pose(asset: "dino-idle"))
         case .thumbsUp:
-            // The other supplied thumbs poses change the face and hands too much for a short reaction.
-            let emphasis = reducedMotion ? 0 : 0.035 * pulse(t, start: 0, end: 0.38)
-            return Sample(pose: Pose(asset: "dino-thumbs-up-08"), scaleX: 1 + emphasis, scaleY: 1 + emphasis)
+            return answerSample(.thumbsUp, elapsed: t, reducedMotion: reducedMotion)
         case .wrongAnswer:
-            // One gentle shrug, then keep the same pose until the child chooses Next.
-            let p = min(t / duration(.wrongAnswer), 1)
-            let tilt = reducedMotion || p == 1 ? 0 : 2 * sin(2 * .pi * p) * sin(.pi * p)
-            return Sample(pose: Pose(asset: "dino-wrong-answer-04"), angle: tilt)
+            return answerSample(.wrongAnswer, elapsed: t, reducedMotion: reducedMotion)
         case .pirouette:
-            let finalPose = Pose(asset: "dino-pirouette-14", paintedYaw: 360, offsetX: -0.012, offsetY: -0.029)
+            let finalPose = pirouetteFrames.last!.pose
             guard !reducedMotion else {
                 // The turn is already painted into the final image; no 3D transform is needed.
                 return Sample(pose: Pose(asset: finalPose.asset, offsetX: finalPose.offsetX, offsetY: finalPose.offsetY))
             }
-            let takeoff = (travelDelay(.pirouette) - leadIn(.pirouette)) * rate
-            let landing = (travelDuration(.pirouette) - leadIn(.pirouette)) * rate
-            let yaw = t < takeoff ? 15 * smooth((t - 0.28) / 0.20)
-                : 15 + 345 * smooth((t - takeoff) / 1.22)
-            let pose: Pose
-            // Register the airborne poses by their painted centre of mass, rather
-            // than by the moving tail or lifted toes. The landing keeps the old foot line.
-            if t < 0.14 {
-                pose = Pose(asset: "dino-pirouette-01", offsetX: -0.017, offsetY: -0.017)
-            } else if t < 0.32 {
-                pose = Pose(asset: "dino-pirouette-02", offsetX: -0.036, offsetY: -0.018)
-            } else if t < takeoff {
-                pose = Pose(asset: "dino-pirouette-03", paintedYaw: 15, offsetX: -0.023, offsetY: -0.034)
-            } else if yaw < 47.5 {
-                pose = Pose(asset: "dino-pirouette-04", paintedYaw: 30, offsetX: -0.033, offsetY: 0.018)
-            } else if yaw < 82.5 {
-                pose = Pose(asset: "dino-pirouette-05", paintedYaw: 65, offsetX: -0.030, offsetY: 0.019)
-            } else if yaw < 140 {
-                pose = Pose(asset: "dino-pirouette-06", paintedYaw: 100, offsetX: -0.051, offsetY: 0.012)
-            } else if yaw < 202.5 {
-                pose = Pose(asset: "dino-pirouette-07", paintedYaw: 180, offsetX: -0.029)
-            } else if yaw < 247.5 {
-                pose = Pose(asset: "dino-pirouette-08", paintedYaw: 225, offsetX: -0.046)
-            } else if yaw < 290 {
-                pose = Pose(asset: "dino-pirouette-09", paintedYaw: 270, offsetX: -0.007, offsetY: 0.017)
-            } else if yaw < 325 {
-                pose = Pose(asset: "dino-pirouette-10", paintedYaw: 310, offsetX: 0, offsetY: 0.004)
-            } else if t < landing {
-                pose = Pose(asset: "dino-pirouette-11", paintedYaw: 340, offsetX: -0.031, offsetY: -0.012)
-            } else if t < landing + 0.15 {
-                pose = Pose(asset: "dino-pirouette-12", paintedYaw: 350, offsetX: -0.019, offsetY: -0.022)
-            } else if t < landing + 0.30 {
-                pose = Pose(asset: "dino-pirouette-13", paintedYaw: 360, offsetX: -0.012, offsetY: -0.031)
-            } else {
-                pose = finalPose
-            }
+            let takeoff = pirouetteTakeoff, landing = pirouetteLanding
+            // Compare absolute times so a subtraction rounding error cannot
+            // postpone a painted contact pose past the shared journey's landing.
+            let index = pirouetteFrames.lastIndex { elapsed >= leadIn(.pirouette) + $0.start } ?? 0
+            let pose = pirouetteFrames[index].pose
+            let yaw = pirouetteYaw(at: t, frame: index)
             let flight = min(max((t - takeoff) / (landing - takeoff), 0), 1)
             let height = -0.32 * pow(sin(.pi * flight), 1.2)
             // The drawings now carry the crouch and recovery. Keep only a little
             // spring in the landing so the planted feet remain on the same line.
-            let landingSquash = 0.025 * pulse(t, start: landing, end: landing + 0.30)
-            let squash = 0.025 * pulse(t, start: 0.12, end: takeoff) + landingSquash
+            let landingSquash = 0.025 * pulse(t, start: landing, end: landing + 0.28)
+            let squash = 0.025 * pulse(t, start: 0.08, end: takeoff) + landingSquash
             return Sample(pose: pose, yaw: yaw, height: height, scaleX: 1 + squash * 0.35, scaleY: 1 - squash)
         case .worldJump:
             guard !reducedMotion else { return Sample(pose: Pose(asset: "dino-idle")) }
@@ -173,6 +172,57 @@ enum DinoAnimation {
             let squash = 0.07 * pulse(t, start: 0.02, end: 0.20) + 0.10 * pulse(t, start: 1.24, end: 1.44)
             return Sample(pose: pose, angle: angle, height: height, scaleX: 1 + squash * 0.4, scaleY: 1 - squash)
         }
+    }
+
+    private static func answerSample(_ clip: Clip, elapsed t: Double, reducedMotion: Bool) -> Sample {
+        let happy = clip == .thumbsUp
+        // Register the head against idle; the camera and portrait rim stay fixed.
+        let expression = happy
+            ? Pose(asset: correctAnswerAssets[0], offsetX: 10.0 / 1254, offsetY: 12.0 / 1254)
+            : Pose(asset: wrongAnswerAssets[0], offsetX: -14.0 / 1254)
+        guard !reducedMotion else { return Sample(pose: expression) }
+        guard t < duration(clip) else { return sample(.idle, elapsed: 0) }
+        let p = min(1, max(0, (t - answerGestureStart) / (answerGestureEnd - answerGestureStart)))
+        let arc = sin(.pi * p)
+        let pose = t >= answerGestureStart && t < answerGestureEnd ? expression : Pose(asset: "dino-idle")
+        if happy {
+            // A small wind-up, one buoyant rise and a soft compression on return.
+            // The expression stays unchanged throughout that complete movement.
+            let compression = 0.025 * pulse(t, start: 0, end: 0.14)
+                + 0.018 * pulse(t, start: 0.54, end: 0.76)
+            return Sample(pose: pose, angle: -2.5 * sin(2 * .pi * p) * arc,
+                          height: -0.032 * arc * arc,
+                          scaleX: 1 + compression * 0.4, scaleY: 1 - compression)
+        }
+        // One gentle left/right shake around the neck. The sine envelope gives
+        // both ends zero velocity instead of stopping or reversing abruptly.
+        return Sample(pose: pose, angle: -3.2 * sin(2 * .pi * p) * arc * arc,
+                      height: 0.004 * arc * arc)
+    }
+
+    // Each switch occurs halfway between the adjacent painted angles. A
+    // monotone cubic joins those angles with continuous speed, so retiming a
+    // drawing never makes the small 3D correction stop, reverse or overshoot.
+    private static let pirouetteYawStops = [0.0] + zip(pirouetteFrames, pirouetteFrames.dropFirst()).map {
+        ($0.pose.paintedYaw + $1.pose.paintedYaw) / 2
+    }
+    private static let pirouetteYawSpeeds = pirouetteFrames.indices.map { index -> Double in
+        guard index > 0, index < pirouetteFrames.count - 1 else { return 0 }
+        let before = (pirouetteYawStops[index] - pirouetteYawStops[index - 1])
+            / (pirouetteFrames[index].start - pirouetteFrames[index - 1].start)
+        let after = (pirouetteYawStops[index + 1] - pirouetteYawStops[index])
+            / (pirouetteFrames[index + 1].start - pirouetteFrames[index].start)
+        return before > 0 && after > 0 ? 2 * before * after / (before + after) : 0
+    }
+    private static func pirouetteYaw(at time: Double, frame index: Int) -> Double {
+        guard index < pirouetteFrames.count - 1 else { return 360 }
+        let span = pirouetteFrames[index + 1].start - pirouetteFrames[index].start
+        let p = min(1, max(0, (time - pirouetteFrames[index].start) / span))
+        let p2 = p * p, p3 = p2 * p
+        return (2 * p3 - 3 * p2 + 1) * pirouetteYawStops[index]
+            + (p3 - 2 * p2 + p) * span * pirouetteYawSpeeds[index]
+            + (-2 * p3 + 3 * p2) * pirouetteYawStops[index + 1]
+            + (p3 - p2) * span * pirouetteYawSpeeds[index + 1]
     }
 
     private static func smooth(_ value: Double) -> Double {

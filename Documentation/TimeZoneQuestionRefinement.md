@@ -6,15 +6,15 @@ Het voorbeeld zet twee dezelfde klokken naast elkaar, met een grijs **+0** ertus
 
 De gekozen speltaal bepaalt de referentiestad: Nederlands gebruikt Amsterdam, Engels Londen. Dit is een eenvoudige taalvoorkeur, zonder locatiegegevens. De overige steden zijn echte hoofdsteden van bekende landen. Turkije gebruikt Ankara; Istanbul is geen hoofdstad. Een paar gebruikt altijd verschillende landen én verschillende tijdzones.
 
-| Gekozen tijdsoort | Bereik |
+| Verborgen moeilijkheid | Bereik bij iedere tijdsoort |
 | --- | --- |
-| Hele en halve uren | Hoofdsteden in Europa met één uur verschil |
-| Kwartieren en tien minuten | Europa en omgeving, maximaal drie uur verschil |
-| Vijf minuten en mix | Verder gelegen hoofdsteden, minimaal vier uur verschil |
+| Kennismaken | Hoofdsteden in Europa met één uur verschil |
+| Vertrouwd | Europa en omgeving, maximaal drie uur verschil |
+| Uitdagen | Verder gelegen hoofdsteden, vanaf drieënhalf uur verschil |
 
 De kaart past de uitsnede aan de afstand en schermverhouding aan. Nabije steden krijgen een ingezoomde Europese kaart; verre steden een breder deel van de wereld. De stadslabels hebben verbindingslijntjes naar hun geografische punten en wijken uit als ze elkaar of een stadsmarkering zouden afdekken. De kaart gebruikt zachte zeekleuren, lichte landen, subtiele landsgrenzen en gestippelde tijdzonegrenzen. Onderaan staan relatieve uurverschillen. De kleuren sluiten aan op het bestaande spel. iPad gebruikt een bredere kaart; voorbeelden houden een compactere kaart. In iPad-landschap wordt de kaart minder hoog, zodat de vraag en alle vier antwoorden samen in beeld passen.
 
-De kaart heeft geen hoekbijschriften: geen titel, datum, legenda of 24-uursklok. Het uurverschil tussen de twee steden komt uit Foundation/IANA op de datum van vandaag om 12:00 UTC. De gekozen hoofdsteden houden hele uurverschillen. De gestippelde banden blijven de vereenvoudigde winterkaart van 15 januari 2026; een band kan daardoor in de zomertijd een uur verschillen van het stadslabel. Een verre uitsnede houdt dezelfde vorm, maar schuift omhoog zodat er geen lege strook boven het land blijft. Alle antwoordkeuzes behouden de gekozen minutensoort, zijn uniek en bevatten het juiste antwoord precies eenmaal. Berekeningen over middernacht blijven geldig.
+De kaart heeft geen hoekbijschriften: geen titel, datum, legenda of 24-uursklok. Het uurverschil tussen de twee steden komt uit Foundation/IANA op de datum van vandaag om 12:00 UTC. De gekozen hoofdsteden houden hele of halve uurverschillen. New Delhi gebruikt de echte IANA-zone Asia/Kolkata. Hele-urenvragen sluiten halfuurverschillen uit; overige tijdsoorten behouden hun raster. De voorbeeldreeks eindigt zo nodig met een halve uurstap en toont bijvoorbeeld +5½. Recente bestemmingen worden afgewisseld. Zie de [herziene selectieregels](AdaptiveDifficultyVerification.md). De gestippelde banden blijven de vereenvoudigde winterkaart van 15 januari 2026; een band kan daardoor in de zomertijd een uur verschillen van het stadslabel. Een verre uitsnede houdt dezelfde vorm, maar schuift omhoog zodat er geen lege strook boven het land blijft. Alle antwoordkeuzes behouden de gekozen minutensoort, zijn uniek en bevatten het juiste antwoord precies eenmaal. Berekeningen over middernacht blijven geldig.
 
 ## Kaartgegevens
 
@@ -25,7 +25,7 @@ De kaart heeft geen hoekbijschriften: geen titel, datum, legenda of 24-uursklok.
 
 De brongeometrie is vereenvoudigd met een tolerantie van 0,16 graad. Tijdzonekenmerken zijn naar de vaste lesdatum omgerekend met hun IANA-identificaties. Gewijzigde zones in Turkije, Marokko, Belarus, Jordanië, Syrië, Kazachstan, Armenië, Azerbeidzjan en Georgië zijn gecorrigeerd met landsgrenzen. Gebieden met hetzelfde uurverschil zijn samengevoegd. Het is een educatieve kaart met vereenvoudigde grenzen. Er is geen internetverbinding of kaartaccount nodig tijdens het spelen.
 
-De geografische ligging van alle 21 hoofdsteden is gecontroleerd tegen de gebundelde tijdzonevlakken en de IANA-offset op de lesdatum; alle bestemmingen liggen in het passende tijdzonevlak.
+De geografische ligging van de oorspronkelijke 21 hoofdsteden is gecontroleerd tegen de gebundelde tijdzonevlakken en de IANA-offset op de lesdatum; alle bestemmingen liggen in het passende tijdzonevlak.
 
 ## Verificatie
 

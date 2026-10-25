@@ -39,7 +39,9 @@ struct DinoLearningProgress: Codable, Equatable, Sendable {
         } else {
             guard presented.rawValue >= difficulty.rawValue else { return }
             consecutiveCorrect += 1
-            if consecutiveCorrect >= 3 {
+            // One welcoming question, then two successes before the full challenge.
+            // Recovering after a mistake uses the same short, predictable route.
+            if consecutiveCorrect >= (presented == .introduction ? 1 : 2) {
                 difficulty = presented.harder
                 consecutiveCorrect = 0
                 if let recoveryTarget, difficulty.rawValue >= recoveryTarget.rawValue { self.recoveryTarget = nil }
@@ -73,49 +75,68 @@ extension DinoPracticeTime {
         switch (self, difficulty) {
         case (.whole, _): return [0]
         case (.half, _): return [30]
-        case (.quarter, .introduction): return [15]
-        case (.quarter, .familiar): return [15, 30]
-        case (.quarter, .challenge): return [45]
-        case (.tenMinutes, .introduction): return [10]
-        case (.tenMinutes, .familiar): return [20, 40]
-        case (.tenMinutes, .challenge): return [50]
-        case (.fiveMinutes, .introduction): return [5, 10]
-        case (.fiveMinutes, .familiar): return [20, 25, 35, 40]
-        case (.fiveMinutes, .challenge): return [50, 55]
-        case (.minutes, .introduction): return focusMinutes.filter { $0 < 15 }
-        case (.minutes, .familiar): return focusMinutes.filter { (16...39).contains($0) }
-        case (.minutes, .challenge): return focusMinutes.filter { $0 > 40 }
+        case (.quarter, .introduction): return [15, 45]
+        case (.tenMinutes, .introduction): return [10, 50]
+        case (.fiveMinutes, .introduction): return [5, 55]
+        case (.minutes, .introduction): return [1, 2, 58, 59]
+        default: return minutes
         }
     }
 
-    func reviewMinutes(_ difficulty: DinoQuestionDifficulty) -> [Int] {
-        if difficulty == .challenge { return minutes }
-        switch self {
-        case .whole: return [0]
-        case .half: return [0]
-        case .quarter: return [0, 30]
-        case .tenMinutes: return [0, 30]
-        case .fiveMinutes: return [0, 15, 30, 45]
-        case .minutes: return Array(stride(from: 0, to: 60, by: 5))
-        }
+}
+
+/// Bounded history per skill, shared by free practice and the adventure generator.
+/// Difficulty controls support and operations; it never locks a session to a small set of times.
+struct DinoQuestionHistory {
+    private var questions: [DinoQuestionSkill: [ClockQuestion]] = [:]
+
+    func recent(kind: ClockQuestionKind, time: DinoPracticeTime) -> [ClockQuestion] {
+        questions[.init(kind: kind, time: time)] ?? []
+    }
+
+    mutating func record(_ question: ClockQuestion) {
+        let key = DinoQuestionSkill(kind: question.kind, time: question.timeFamily)
+        questions[key, default: []].append(question)
+        let limit = max(12, question.timeFamily.minutes.count)
+        if questions[key]!.count > limit { questions[key]!.removeFirst() }
     }
 }
 
 /// Shared target and distractor rules for adventure and practice, including all six time families.
 enum DinoQuestionTeaching {
     static func target<R: RandomNumberGenerator>(pool: [ClockTime], time: DinoPracticeTime,
-                                                 difficulty: DinoQuestionDifficulty, previous: ClockTime?, using rng: inout R) -> ClockTime {
+                                                 difficulty: DinoQuestionDifficulty, previous: ClockTime?,
+                                                 recent: [ClockTime] = [], using rng: inout R) -> ClockTime {
         let fresh = pool.filter { $0 != previous }
         var candidates = fresh.isEmpty ? pool : fresh
-        if difficulty == .introduction {
+        if difficulty == .introduction && recent.isEmpty {
             let clearHands = candidates.filter { [3, 6, 9, 0].contains($0.hour % 12) }
             if !clearHands.isEmpty { candidates = clearHands }
+            let preferred = candidates.filter { time.teachingMinutes(difficulty).contains($0.minute) }
+            if !preferred.isEmpty { candidates = preferred }
         }
-        let focus = time.teachingMinutes(difficulty)
-        let review = time.reviewMinutes(difficulty)
-        let selected = Int.random(in: 0..<4, using: &rng) < 3 ? focus : review
-        let preferred = candidates.filter { selected.contains($0.minute) }
-        return (preferred.isEmpty ? candidates : preferred).randomElement(using: &rng)!
+        // Balance exact minutes, positions around the dial, then hours. Every tie is random,
+        // so the session is varied without becoming a fixed ascending clock exercise.
+        if !recent.isEmpty {
+            candidates = leastUsed(candidates, recent: recent, key: { $0.minute })
+            candidates = leastUsed(candidates, recent: recent, key: { $0.minute / 15 })
+            let differentHour = candidates.filter { $0.hour % 12 != previous.map { $0.hour % 12 } }
+            if !differentHour.isEmpty { candidates = differentHour }
+            candidates = leastUsed(candidates, recent: recent, key: { $0.hour })
+        }
+        return candidates.randomElement(using: &rng)!
+    }
+
+    static func varied<T: Equatable, R: RandomNumberGenerator>(_ values: [T], recent: [T], using rng: inout R) -> T {
+        let counts = values.map { value in recent.filter { $0 == value }.count }
+        let minimum = counts.min()!
+        return values.enumerated().filter { counts[$0.offset] == minimum }.randomElement(using: &rng)!.element
+    }
+
+    private static func leastUsed(_ pool: [ClockTime], recent: [ClockTime], key: (ClockTime) -> Int) -> [ClockTime] {
+        let counts = Dictionary(grouping: recent, by: key).mapValues(\.count)
+        let minimum = pool.map { counts[key($0), default: 0] }.min()!
+        return pool.filter { counts[key($0), default: 0] == minimum }
     }
 
     /// Wrong answers are plausible confusions for this question, ordered from the closest trap.

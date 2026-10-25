@@ -24,7 +24,7 @@ struct DinoTimeZoneMap: View {
 
     private let originColor = Color(dinoHex: 0x25674C)
     private var destinationColor: Color {
-        DinoTimeDirection.color(later: journey.offsetHours > 0, highContrast: highContrast)
+        DinoTimeDirection.color(later: journey.offsetMinutes > 0, highContrast: highContrast)
     }
     private var code: String { language.effective.code }
     private var prefix: String { isDemonstration ? "demo" : "question" }
@@ -37,7 +37,7 @@ struct DinoTimeZoneMap: View {
                 let origin = viewport.point(journey.origin, size: size)
                 let destination = viewport.point(journey.destination, size: size)
                 let labels = DinoTimeZoneLabelLayout(origin: origin, destination: destination, size: size,
-                                                      offsetHours: journey.offsetHours)
+                                                      offsetMinutes: journey.offsetMinutes)
                 let labelWidth = labels.width
                 let originLabel = labels.origin
                 let destinationLabel = labels.destination
@@ -64,6 +64,7 @@ struct DinoTimeZoneMap: View {
                     .stroke(highContrast ? DinoStyle.ink : Color(dinoHex: 0x83ADB4).opacity(0.65), lineWidth: highContrast ? 2 : 1))
             }
             .frame(height: isDemonstration ? 224 : compactLayout ? 184 : 252)
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier("\(prefix).timeZone.map")
     }
 
@@ -78,9 +79,9 @@ struct DinoTimeZoneMap: View {
 
     private func cityLabel(_ capital: DinoCapital, time: String, isOrigin: Bool, width: CGFloat) -> some View {
         let color = isOrigin ? originColor : destinationColor
-        let later = journey.offsetHours > 0
+        let later = journey.offsetMinutes > 0
         let direction = DinoTimeDirection.color(later: later, highContrast: highContrast)
-        let difference = isOrigin ? 0 : journey.offsetHours
+        let difference = isOrigin ? 0 : journey.offsetMinutes
         let offset = difference == 0 ? L(key: "dino.timeZone.reference") : differenceText(difference)
         return VStack(spacing: 2) {
             Text(verbatim: capital.name(language: code))
@@ -101,10 +102,11 @@ struct DinoTimeZoneMap: View {
         .padding(.vertical, 7).frame(width: width)
         .background(.white.opacity(0.96), in: RoundedRectangle(cornerRadius: 13))
         .overlay(RoundedRectangle(cornerRadius: 13).stroke(color.opacity(0.5), lineWidth: 1))
+        .accessibilityElement(children: .combine)
     }
 
     private func differenceText(_ difference: Int) -> String {
-        String(format: L(key: difference > 0 ? "dino.timeZone.later" : "dino.timeZone.earlier"), abs(difference))
+        String(format: L(key: difference > 0 ? "dino.timeZone.later" : "dino.timeZone.earlier"), DinoTimeWords.zoneHours(difference))
     }
 
     private func drawLeader(context: inout GraphicsContext, from point: CGPoint, to label: CGPoint, labelWidth: CGFloat, color: Color) {
@@ -158,9 +160,9 @@ struct DinoTimeZoneMap: View {
         var runs: [(offset: Int, start: CGFloat, end: CGFloat)] = []
         for x in stride(from: CGFloat(0), through: size.width, by: 4) {
             let coordinate = CGPoint(x: x, y: y).applying(inverse)
-            guard let zone = atlas.zones.first(where: { $0.path.contains(coordinate) }),
-                  zone.offset.rounded() == zone.offset else { continue }
-            let offset = Int(zone.offset) - journey.origin.atlasUTCHours
+            guard let zone = atlas.zones.first(where: { $0.path.contains(coordinate) }) else { continue }
+            let offset = Int((zone.offset * 60).rounded()) - journey.origin.atlasUTCMinutes
+            guard offset.isMultiple(of: 30) else { continue }
             if let last = runs.last, last.offset == offset, x - last.end <= 8 {
                 runs[runs.count - 1].end = x
             } else { runs.append((offset, x, x)) }
@@ -168,7 +170,7 @@ struct DinoTimeZoneMap: View {
         for run in runs where run.end - run.start >= 42 {
             let sign = run.offset < 0 ? "−" : run.offset > 0 ? "+" : ""
             let unit = code == "nl" ? "u" : "h"
-            let text = Text(verbatim: "\(sign)\(abs(run.offset)) \(unit)")
+            let text = Text(verbatim: "\(sign)\(DinoTimeWords.zoneHours(run.offset)) \(unit)")
                 .font(.system(size: 10, weight: .heavy, design: .rounded))
                 .canvasInk(Color(dinoHex: 0x315F6B))
             let x = (run.start + run.end) / 2
@@ -193,16 +195,16 @@ struct DinoTimeZoneLesson: View {
     var explainsLive = false
     @State private var applied = 0
 
-    private var total: Int { abs(journey.offsetHours) }
+    private var total: Int { abs(journey.offsetMinutes) }
     private var clockFont: CGFloat { min(28, max(18, (width - 120) / 8)) }
-    private var signedHours: Int { journey.offsetHours >= 0 ? applied : -applied }
-    private var resultTime: ClockTime { referenceTime.adding(minutes: signedHours * 60) }
+    private var signedMinutes: Int { journey.offsetMinutes >= 0 ? applied : -applied }
+    private var resultTime: ClockTime { referenceTime.adding(minutes: signedMinutes) }
     /// Spoken form keeps the sign. The chip shows only the number; the icon carries + or −.
     private var differenceCaption: String {
         if applied == 0 { return "+0" }
-        return signedHours > 0 ? "+\(applied)" : "−\(applied)"
+        return "\(signedMinutes > 0 ? "+" : "−")\(differenceNumber)"
     }
-    private var differenceNumber: String { "\(applied)" }
+    private var differenceNumber: String { DinoTimeWords.zoneHours(applied) }
 
     var body: some View {
         VStack(spacing: 10) {
@@ -239,16 +241,17 @@ struct DinoTimeZoneLesson: View {
                 .accessibilityIdentifier(isDemonstration ? "demo.answer" : "question.timeZone.result")
         }
         .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("\(prefix).timeZone.steps")
     }
 
     private var difference: some View {
         let resting = applied == 0
-        let negative = signedHours < 0
+        let negative = signedMinutes < 0
         let ink = resting ? DinoStyle.muted : negative ? DinoTimeDirection.earlier : DinoStyle.deepGreen
         let fill = resting ? DinoStyle.muted : negative ? DinoTimeDirection.earlier : DinoStyle.green
         return HStack(spacing: 4) {
-            Image(systemName: signedHours < 0 ? "minus.circle.fill" : "plus.circle.fill")
+            Image(systemName: signedMinutes < 0 ? "minus.circle.fill" : "plus.circle.fill")
                 .font(.system(size: 15, weight: .bold))
             Text(verbatim: differenceNumber)
                 .font(.system(size: 15, weight: .heavy, design: .rounded))
@@ -278,10 +281,10 @@ struct DinoTimeZoneLesson: View {
         applied = 0
         do {
             try await Task.sleep(for: .milliseconds(900))
-            for step in 1...total {
+            for step in stride(from: 0, to: total, by: 60) {
                 try Task.checkCancellation()
-                withAnimation(.easeInOut(duration: 0.35)) { applied = step }
-                if step < total { try await Task.sleep(for: .milliseconds(700)) }
+                withAnimation(.easeInOut(duration: 0.35)) { applied = min(step + 60, total) }
+                if applied < total { try await Task.sleep(for: .milliseconds(700)) }
             }
         } catch { /* Closing the example or loading another one cancels the walk. */ }
     }

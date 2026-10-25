@@ -29,11 +29,18 @@ struct DinoCoreTests {
         }
         if CommandLine.arguments.contains("--difficulty") {
             testAdaptiveDifficulty()
+            testQuestionVariation()
             print("PASS: \(checks) adaptive difficulty checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--variation") {
+            testQuestionVariation()
+            print("PASS: \(checks) question variation checks.")
             return
         }
         testLevelCurriculum()
         testAdaptiveDifficulty()
+        testQuestionVariation()
         testClocks()
         testHandSelection()
         testHandHintClearance()
@@ -178,13 +185,13 @@ struct DinoCoreTests {
         let stored = store.loadLearningProgress()
         let key = DinoLearningProgress.key(kind: .sayTime, time: .minutes)
         expect(stored[key]?.recoveryTarget == .challenge, "the previous level is remembered during recovery")
-        for _ in 0..<3 {
+        for _ in 0..<2 {
             let lesson = DinoSession(level: finalLevel, player: restarted)
             expect(lesson.question.difficulty == .familiar, "recovery does not jump to maximum early")
             lesson.submit(lesson.question.expectedAnswer)
             lesson.submit(lesson.question.expectedAnswer)
         }
-        expect(DinoSession(level: finalLevel, player: restarted).question.difficulty == .challenge, "three successful first answers restore the planned maximum")
+        expect(DinoSession(level: finalLevel, player: restarted).question.difficulty == .challenge, "two successful first answers restore the planned maximum")
         expect(finalLevel.recipes.allSatisfy { $0.difficulty == .challenge }, "adaptive support never mutates the authored curriculum")
 
         let legacy = try! JSONDecoder().decode(DinoLearningProgress.self, from: Data(#"{"difficulty":1,"consecutiveCorrect":2}"#.utf8))
@@ -244,12 +251,12 @@ struct DinoCoreTests {
                         let times = q.relatedTimes + [q.target]
                         expect(zip(times, times.dropFirst()).allSatisfy { $0.adding(minutes: q.durationMinutes) == $1 }, "sequence steps agree in all categories")
                     case .flightArrival:
-                        expect(q.relatedTimes[0].adding(minutes: q.durationMinutes + q.offsetHours * 60) == q.target, "all flight tiers have consistent tickets")
-                        expect((q.offsetHours == 0) == (category.difficulty == .introduction), "flights introduce duration before adding zone changes")
+                        expect(q.relatedTimes[0].adding(minutes: q.durationMinutes + q.offsetMinutes) == q.target, "all flight tiers have consistent tickets")
+                        expect((q.offsetMinutes == 0) == (category.difficulty == .introduction), "flights introduce duration before adding zone changes")
                     case .timeZone:
-                        expect(q.relatedTimes[0].adding(minutes: q.offsetHours * 60) == q.target, "all geographic tiers agree with their displayed offset")
-                        if category.difficulty == .introduction { expect(abs(q.offsetHours) == 1, "first maps use a single hour") }
-                        if category.difficulty == .challenge { expect(abs(q.offsetHours) >= 4, "later maps use distant countries in every minute family") }
+                        expect(q.relatedTimes[0].adding(minutes: q.offsetMinutes) == q.target, "all geographic tiers agree with their displayed offset")
+                        if category.difficulty == .introduction { expect(abs(q.offsetMinutes) == 60, "first maps use a single hour") }
+                        if category.difficulty == .challenge { expect(abs(q.offsetMinutes) >= 210, "later maps use distant countries in every minute family") }
                     case .daySchedule:
                         expect(q.daySchedule?.end == q.target && q.daySchedule?.totalMinutes == q.durationMinutes, "train tiers include both trains and the transfer")
                     case .sayTime:
@@ -266,21 +273,21 @@ struct DinoCoreTests {
         for time in DinoPracticeTime.allCases {
             var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.chooseDigital)), seed: 87)
             var targets = Set<Int>(), options = Set<Int>()
-            var focused = 0
+            var minuteCounts: [Int: Int] = [:]
             for index in 0..<1600 {
                 let q = generator.next(index: index, difficultyForKind: { _ in .challenge })
                 targets.insert(q.target.minute); options.formUnion(q.options.map(\.minute))
-                if time.teachingMinutes(.challenge).contains(q.target.minute) { focused += 1 }
+                minuteCounts[q.target.minute, default: 0] += 1
             }
             let missingTargets = Set(time.minutes).subtracting(targets)
             let missingOptions = Set(time.minutes).subtracting(options)
             expect(missingTargets.isEmpty && missingOptions.isEmpty,
                    "\(time) targets missing \(missingTargets.sorted()) options missing \(missingOptions.sorted())")
-            expect(focused > 1000, "the selected teaching step remains the focus while reviewing familiar positions")
+            expect(minuteCounts.values.max()! < 2 * minuteCounts.values.min()!, "all allowed minutes remain well represented")
         }
         var quarters = DinoPracticeGenerator(configuration: .init(time: .quarter, order: .specific(.chooseAnalog)), seed: 11)
         let introductoryMinutes = Set((0..<100).map { quarters.next(index: $0).target.minute })
-        expect(introductoryMinutes == [0, 15, 30], "quarter past is introduced before quarter to, with familiar whole and half hours")
+        expect(introductoryMinutes == [0, 15, 30, 45], "even introduction varies over every quarter position after its first question")
         var rng = SeededGenerator(seed: 30)
         for code in ["nl", "en"] {
             let language = SpokenTimeCatalog.language(code: code)
@@ -301,17 +308,17 @@ struct DinoCoreTests {
         let configuration = DinoPracticeConfiguration(time: .whole, order: .specific(.chooseAnalog))
         let session = DinoSession(level: configuration.level, player: player, practice: configuration)
         expect(session.question.difficulty == .introduction, "the first encounter introduces the exercise gently")
-        for _ in 0..<3 { session.submit(session.question.expectedAnswer); session.advance() }
-        expect(session.question.difficulty == .familiar, "three correct first answers raise one teaching step")
-        for _ in 0..<3 { session.submit(session.question.expectedAnswer); session.advance() }
-        expect(session.question.difficulty == .challenge, "six successful answers can reach the challenging tier")
+        session.submit(session.question.expectedAnswer); session.advance()
+        expect(session.question.difficulty == .familiar, "one correct first answer moves beyond the welcoming question")
+        for _ in 0..<2 { session.submit(session.question.expectedAnswer); session.advance() }
+        expect(session.question.difficulty == .challenge, "three successful answers reach the challenging tier")
         session.submit(session.question.responses.first { $0 != session.question.expectedAnswer }!)
         expect(player.questionDifficulty(kind: .chooseAnalog, time: .whole) == .familiar, "a first-attempt error immediately lowers the saved skill")
         let afterWrong = memory.object(forKey: DinoProgressStore.learningKey) as? Data
         session.submit(session.question.expectedAnswer)
         expect(memory.object(forKey: DinoProgressStore.learningKey) as? Data == afterWrong, "a correct retry does not undo the adaptive reduction")
         session.advance()
-        expect(session.question.difficulty == .familiar && session.practiceAnswered == 7, "the next live question is easier without adding or removing scores")
+        expect(session.question.difficulty == .familiar && session.practiceAnswered == 4, "the next live question is easier without adding or removing scores")
         expect(player.questionDifficulty(kind: .chooseDigital, time: .whole) == .introduction && player.questionDifficulty(kind: .chooseAnalog, time: .half) == .introduction,
                "difficulty is independent per exercise and time family")
         let reloaded = DinoPlayer(store: store)
@@ -383,6 +390,94 @@ struct DinoCoreTests {
         memory.set("mix", forKey: "dino.settings.practiceOrder")
         let settings = DinoSettings(defaults: memory)
         expect(settings.practiceTime == .minutes && settings.practiceOrder == .mix, "old preferences migrate to exact Minutes without changing question order")
+    }
+
+    static func testQuestionVariation() {
+        // Every type and teaching step must explore the full selected grid promptly,
+        // even when a player keeps making mistakes and remains at introduction.
+        for seed: UInt64 in [7, 20261025] {
+            for category in DinoQuestionCategory.all {
+                var generator = DinoPracticeGenerator(configuration: .init(time: category.time, order: .specific(category.type)), seed: seed)
+                var minutes = Set<Int>(), hours = Set<Int>()
+                var previous: ClockTime?
+                let count = max(12, category.time.minutes.count)
+                for index in 0..<count {
+                    let question = generator.next(index: index, difficultyForKind: { _ in category.difficulty })
+                    minutes.insert(question.target.minute); hours.insert(question.target.hour)
+                    expect(question.target != previous, "varied questions do not repeat the preceding answer")
+                    previous = question.target
+                    if index == 0 && category.difficulty == .introduction {
+                        expect([0, 3, 6, 9].contains(question.target.hour % 12), "only the welcoming question prefers clear hour-hand positions")
+                    }
+                    if let schedule = question.daySchedule {
+                        expect(schedule.start.minutesOfDay >= 360 && schedule.end.minutesOfDay <= 1320 && schedule.start.minutesOfDay < schedule.end.minutesOfDay,
+                               "every train leg and transfer occurs between 06:00 and 22:00 on one day")
+                        expect(schedule.firstMinutes >= 10 && schedule.secondMinutes >= 10 && schedule.breakMinutes <= max(30, category.time.minuteStep),
+                               "train legs and transfers have believable durations on the chosen grid")
+                    }
+                }
+                expect(minutes == Set(category.time.minutes), "\(category) explores all minute positions within \(count) questions, got \(minutes.sorted())")
+                expect(hours.count >= 4, "\(category) varies hours as well as minute positions")
+            }
+        }
+        // Ascending and shuffled practice retain a separate history for every skill.
+        for order in [DinoPracticeOrder.ascending, .mix] {
+            var generator = DinoPracticeGenerator(configuration: .init(time: .fiveMinutes, order: order), seed: 81)
+            var minutes: [ClockQuestionKind: Set<Int>] = [:]
+            for index in 0..<(12 * DinoPracticeQuestion.allCases.count) {
+                let question = generator.next(index: index, difficultyForKind: { _ in .familiar })
+                minutes[question.kind, default: []].insert(question.target.minute)
+            }
+            expect(minutes.count == 20 && minutes.values.allSatisfy { $0 == Set(DinoPracticeTime.fiveMinutes.minutes) },
+                   "both mixed orders cover every five-minute position in every exercise type")
+        }
+        for kind in [ClockQuestionKind.addTime, .subtractTime, .advanceAnalog, .timeSequence, .minutesBetween, .flightArrival] {
+            var generator = DinoPracticeGenerator(configuration: .init(time: .fiveMinutes, order: .specific(DinoPracticeQuestion(rawValue: kind.rawValue)!)), seed: 35)
+            var durations = Set<Int>()
+            for index in 0..<24 { durations.insert(generator.next(index: index, difficultyForKind: { _ in .challenge }).durationMinutes) }
+            expect(durations.count >= 8, "\(kind) varies calculation durations beyond the old first three steps")
+            if [.addTime, .subtractTime, .advanceAnalog].contains(kind) {
+                expect(durations.contains { $0 > 60 && !$0.isMultiple(of: 60) }, "challenging arithmetic combines hours and minutes")
+            }
+        }
+        for language in ["nl", "en"] {
+            for family in DinoPracticeTime.allCases {
+                for type in [DinoPracticeQuestion.timeZone, .flightArrival] {
+                    var generator = DinoPracticeGenerator(configuration: .init(time: family, order: .specific(type)), seed: 91, language: language)
+                    var halfHours = 0
+                    for index in 0..<80 {
+                        let q = generator.next(index: index, difficultyForKind: { _ in .challenge })
+                        expect(q.offsetMinutes.isMultiple(of: 30) && q.offsetMinutes.isMultiple(of: family.minuteStep),
+                               "zone differences are whole or half hours and preserve the chosen time grid")
+                        if !q.offsetMinutes.isMultiple(of: 60) { halfHours += 1 }
+                    }
+                    expect(30.isMultiple(of: family.minuteStep) ? (1...30).contains(halfHours) : halfHours == 0,
+                           "half-hour zones occur occasionally and only in compatible time families")
+                }
+            }
+        }
+        let london = DinoTimeZoneJourney.capitals.first { $0.id == "london" }!
+        let delhi = DinoTimeZoneJourney.capitals.first { $0.id == "newDelhi" }!
+        for journey in [DinoTimeZoneJourney(origin: london, destination: delhi), .init(origin: delhi, destination: london)] {
+            let start = ClockTime(hour: 23, minute: 45), steps = journey.steps(from: ClockTime(hour: 23, minute: 45))
+            expect(abs(journey.offsetMinutes) % 60 == 30, "real half-hour city offsets are not truncated")
+            expect(steps.last?.time == start.adding(minutes: journey.offsetMinutes) && steps.last?.addedMinutes == journey.offsetMinutes,
+                   "both directions of the worked zone example include the final half hour across midnight")
+            expect(abs(steps.last!.addedMinutes - (steps.dropLast().last?.addedMinutes ?? 0)) == 30, "the final animation step is thirty minutes")
+        }
+        expect(DinoTimeWords.zoneDifference(330, language: "nl") == "+5½ uur" && DinoTimeWords.zoneDifference(-210, language: "en") == "−3½ h",
+               "compact labels retain half hours and the direction")
+        let work = DinoFlightArrivalWork(departure: .init(hour: 22, minute: 15), durationMinutes: 360, offsetMinutes: -210, arrival: .init(hour: 0, minute: 45))
+        expect(work.combinedMinutes == 150 && work.departure.adding(minutes: work.combinedMinutes) == work.arrival,
+               "flight calculations preserve a half-hour zone difference across midnight")
+        var custom = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.dayPart)), seed: 19,
+            dayPartSchedule: .init(night: 0, morning: 1, afternoon: 2, evening: 3))
+        var previous: ClockTime?
+        for index in 0..<80 {
+            let question = custom.next(index: index, difficultyForKind: { _ in .familiar })
+            expect(question.target != previous, "a custom one-hour day part cannot force an immediately repeated question")
+            previous = question.target
+        }
     }
 
     static func testMapAnimationViewport() {
@@ -766,18 +861,18 @@ struct DinoCoreTests {
 
     static func testFlightArrivals() {
         let forward = DinoFlightArrivalWork(departure: .init(hour: 8, minute: 15), durationMinutes: 240,
-                                            offsetHours: 2, arrival: .init(hour: 14, minute: 15))
+                                            offsetMinutes: 120, arrival: .init(hour: 14, minute: 15))
         expect(forward.combinedMinutes == 360, "duration and a later zone become one shift")
         expect(forward.differenceLine(language: "nl") == "4 uur + 2 uur = 6 uur", "Dutch flight sum adds duration and zone first")
         expect(forward.arrivalLine(language: "nl") == "08:15 + 6 uur = 14:15", "Dutch flight sum then adds that shift to the departure")
         expect(forward.differenceLine(language: "en") == "4 h + 2 h = 6 h", "English flight sum adds duration and zone first")
         expect(forward.arrivalLine(language: "en") == "08:15 + 6 h = 14:15", "English flight sum then adds that shift to the departure")
         let backward = DinoFlightArrivalWork(departure: .init(hour: 14), durationMinutes: 300,
-                                             offsetHours: -3, arrival: .init(hour: 16))
+                                             offsetMinutes: -180, arrival: .init(hour: 16))
         expect(backward.differenceLine(language: "nl") == "5 uur − 3 uur = 2 uur", "a negative zone is subtracted from the duration")
         expect(backward.arrivalLine(language: "nl") == "14:00 + 2 uur = 16:00", "the remaining shift is added to the departure")
         let sameZone = DinoFlightArrivalWork(departure: .init(hour: 9, minute: 30), durationMinutes: 150,
-                                             offsetHours: 0, arrival: .init(hour: 12))
+                                             offsetMinutes: 0, arrival: .init(hour: 12))
         expect(sameZone.arrivalLine(language: "nl") == "09:30 + 2 uur 30 min = 12:00", "one zone uses the duration as the only shift")
         expect(forward.walkMinutes(step: 15) == [60, 120, 180, 240, 300, 360], "a whole-hour shift counts one hour at a time")
         expect(sameZone.walkMinutes(step: 30) == [60, 120, 150], "half hours add the leftover thirty minutes in one step")
@@ -785,9 +880,9 @@ struct DinoCoreTests {
                "five-minute questions add a fifteen-minute remainder in steps of five")
         expect(sameZone.walkMinutes(step: 15) == [60, 120, 135, 150], "quarter hours add the remainder a quarter at a time")
         let removed = DinoFlightArrivalWork(departure: .init(hour: 10), durationMinutes: 60,
-                                            offsetHours: -3, arrival: .init(hour: 8))
+                                            offsetMinutes: -180, arrival: .init(hour: 8))
         expect(removed.combinedMinutes == -120 && removed.walkMinutes(step: 60) == [-60, -120], "time comes off one hour at a time")
-        expect(DinoExpandedQuestions.flightDurationMinutes(offsetHours: 4, minuteStep: 5, extraSteps: 0) == 360,
+        expect(DinoExpandedQuestions.flightDurationMinutes(offsetMinutes: 240, minuteStep: 5, extraSteps: 0) == 360,
                "a four-hour zone change needs at least a six-hour flight")
         expect(DinoTimeWords.hourDifference(2, language: "nl") == "+2 uur" &&
                DinoTimeWords.hourDifference(-1, language: "en") == "−1 h", "the ticket states a signed hour difference")
@@ -798,22 +893,22 @@ struct DinoCoreTests {
             var positive = false, negative = false
             for index in 0..<120 {
                 let q = generator.next(index: index, difficultyForKind: { _ in .challenge })
-                let shift = q.durationMinutes + q.offsetHours * 60
+                let shift = q.durationMinutes + q.offsetMinutes
                 expect(q.relatedTimes[0].adding(minutes: shift) == q.target, "departure, duration and zone determine the arrival")
                 expect(q.options.count == 4 && Set(q.options).count == 4 && q.options.contains(q.target), "four unique flight choices include the arrival")
                 expect(q.options.allSatisfy { family.minutes.contains($0.minute) }, "flight choices keep the selected minute family")
                 if q.difficulty == .introduction {
-                    expect(q.offsetHours == 0, "introductory flights keep the same time zone")
+                    expect(q.offsetMinutes == 0, "introductory flights keep the same time zone")
                 } else {
-                    expect((2...4).contains(abs(q.offsetHours)), "challenging flights state a whole-hour difference")
-                    expect(q.durationMinutes >= (abs(q.offsetHours) + 2) * 60, "the flight is at least two hours longer than the zone change")
+                    expect((120...240).contains(abs(q.offsetMinutes)) && q.offsetMinutes.isMultiple(of: 30), "challenging flights state a whole-hour difference")
+                    expect(q.durationMinutes >= abs(q.offsetMinutes) + 120, "the flight is at least two hours longer than the zone change")
                     let forgotten = q.relatedTimes[0].adding(minutes: q.durationMinutes)
                     expect(q.options.contains(forgotten), "forgetting the time zone remains one of the choices")
-                    positive = positive || q.offsetHours > 0
-                    negative = negative || q.offsetHours < 0
+                    positive = positive || q.offsetMinutes > 0
+                    negative = negative || q.offsetMinutes < 0
                     let work = DinoFlightArrivalWork(departure: q.relatedTimes[0], durationMinutes: q.durationMinutes,
-                                                     offsetHours: q.offsetHours, arrival: q.target)
-                    expect(work.afterDuration.adding(minutes: q.offsetHours * 60) == q.target, "the example sum reaches the arrival")
+                                                     offsetMinutes: q.offsetMinutes, arrival: q.target)
+                    expect(work.afterDuration.adding(minutes: q.offsetMinutes) == q.target, "the example sum reaches the arrival")
                 }
             }
             if family.minuteStep < 30 {
@@ -1135,17 +1230,17 @@ struct DinoCoreTests {
                     case .addTime, .advanceAnalog, .timeSequence:
                         expect(q.relatedTimes.last!.adding(minutes: q.durationMinutes) == q.target, "example addition and sequence answers agree with their context")
                     case .flightArrival:
-                        expect(q.relatedTimes[0].adding(minutes: q.durationMinutes + q.offsetHours * 60) == q.target, "example flight adds duration and the stated zone difference")
-                        expect(q.offsetHours == 0, "introductory flight examples teach duration in a single time zone")
-                        if q.offsetHours != 0 {
+                        expect(q.relatedTimes[0].adding(minutes: q.durationMinutes + q.offsetMinutes) == q.target, "example flight adds duration and the stated zone difference")
+                        expect(q.offsetMinutes == 0, "introductory flight examples teach duration in a single time zone")
+                        if q.offsetMinutes != 0 {
                             let work = DinoFlightArrivalWork(departure: q.relatedTimes[0], durationMinutes: q.durationMinutes,
-                                                             offsetHours: q.offsetHours, arrival: q.target)
-                            expect(work.afterDuration.adding(minutes: q.offsetHours * 60) == q.target, "worked flight sum reaches the shown arrival")
+                                                             offsetMinutes: q.offsetMinutes, arrival: q.target)
+                            expect(work.afterDuration.adding(minutes: q.offsetMinutes) == q.target, "worked flight sum reaches the shown arrival")
                         }
                     case .subtractTime:
                         expect(q.relatedTimes[0].adding(minutes: -q.durationMinutes) == q.target, "example subtraction answer agrees with its context")
                     case .timeZone:
-                        expect(q.relatedTimes[0].adding(minutes: q.offsetHours * 60) == q.target, "example zone answer agrees with the stated offset")
+                        expect(q.relatedTimes[0].adding(minutes: q.offsetMinutes) == q.target, "example zone answer agrees with the stated offset")
                     default: break
                     }
                     previous = q.target
@@ -1266,13 +1361,13 @@ struct DinoCoreTests {
             learned.submit(learned.question.expectedAnswer)
             learned.advance()
         }
-        expect(player.questionDifficulty(kind: .dayPart, time: .whole) == .familiar, "three day-part answers move up a step")
+        expect(player.questionDifficulty(kind: .dayPart, time: .whole) == .challenge, "three day-part answers reach the highest step")
         let missed = learned.question.responses.first { $0 != learned.question.expectedAnswer }!
         learned.submit(missed)
         expect(!learned.offersDayPartSettings, "the settings button waits until the question is closed")
         learned.showAnswer()
         expect(learned.offersDayPartSettings && learned.attempt.answers.last == false, "a closed miss offers the timetable")
-        expect(player.questionDifficulty(kind: .dayPart, time: .whole) == .introduction, "the miss drops back a step")
+        expect(player.questionDifficulty(kind: .dayPart, time: .whole) == .familiar, "the miss drops back a step")
         expect(player.practiceRecord(time: .whole, question: .dayPart) == DinoPracticeRecord(bestStreak: 3, questionsAnswered: 4, currentStreak: 0),
                "the miss breaks the streak without forgetting the earlier record")
         guard case .dayPart(let picked) = missed else { expect(false, "a day-part choice"); return }
@@ -1282,7 +1377,7 @@ struct DinoCoreTests {
                "the first answer is right under the new timetable and waits for Next")
         expect(!learned.offersDayPartSettings && !learned.rejectedResponses.contains(missed), "the rescued choice is no longer marked wrong")
         expect(learned.question.expectedAnswer == .dayPart(picked), "the question now expects the first choice")
-        expect(player.questionDifficulty(kind: .dayPart, time: .whole) == .familiar, "a rescued answer keeps the step earned before it")
+        expect(player.questionDifficulty(kind: .dayPart, time: .whole) == .challenge, "a rescued answer keeps the step earned before it")
         expect(player.practiceRecord(time: .whole, question: .dayPart) == DinoPracticeRecord(bestStreak: 4, questionsAnswered: 4, currentStreak: 4),
                "the rescued answer continues the streak it had interrupted")
         learned.rejudgeDayPart(using: corrected)
@@ -1336,8 +1431,8 @@ struct DinoCoreTests {
                utc.component(.day, from: DinoTimeZoneJourney.atlasDate) == 15,
                "simplified zone bands stay on the winter atlas date")
         expect(catalog.allSatisfy {
-            TimeZone(identifier: $0.timeZoneID)!.secondsFromGMT(for: DinoTimeZoneJourney.referenceDate).isMultiple(of: 3_600)
-        }, "every capital keeps a whole-hour offset today")
+            TimeZone(identifier: $0.timeZoneID)!.secondsFromGMT(for: DinoTimeZoneJourney.referenceDate).isMultiple(of: 1_800)
+        }, "every capital keeps a whole- or half-hour offset today")
         let formatter = DateFormatter()
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.setLocalizedDateFormatFromTemplate("dMMMM")
@@ -1356,18 +1451,18 @@ struct DinoCoreTests {
                     let q = generator.next(index: index, difficultyForKind: { _ in .challenge })
                     guard let journey = q.timeZoneJourney else { fatalError("time-zone task needs two capitals") }
                     expect(journey.origin.id == (language == "nl" ? "amsterdam" : "london"), "chosen language determines the reference capital")
-                    expect(journey.origin.countryCode != journey.destination.countryCode && q.offsetHours != 0, "two capitals always use different countries and time zones")
-                    expect(q.offsetHours == journey.offsetHours, "map and question use the same real-world offset")
-                    expect(q.relatedTimes[0].adding(minutes: 60 * journey.offsetHours) == q.target, "geographic time-zone calculation survives midnight")
-                    let walked = journey.hourSteps(from: q.relatedTimes[0])
-                    expect(walked.map { abs($0.addedHours) } == Array(1...abs(q.offsetHours)) && walked.last?.time == q.target,
+                    expect(journey.origin.countryCode != journey.destination.countryCode && q.offsetMinutes != 0, "two capitals always use different countries and time zones")
+                    expect(q.offsetMinutes == journey.offsetMinutes, "map and question use the same real-world offset")
+                    expect(q.relatedTimes[0].adding(minutes: journey.offsetMinutes) == q.target, "geographic time-zone calculation survives midnight")
+                    let walked = journey.steps(from: q.relatedTimes[0])
+                    expect(walked.map { abs($0.addedMinutes) } == stride(from: 0, to: abs(q.offsetMinutes), by: 60).map { min($0 + 60, abs(q.offsetMinutes)) } && walked.last?.time == q.target,
                            "the example counts +1, +2 until the new time and then stops")
                     expect(q.options.count == 4 && Set(q.options).count == 4 && q.options.contains(q.target), "four distinct answer choices include the correct time")
                     expect(q.options.allSatisfy { family.minutes.contains($0.minute) }, "time-zone choices retain the selected minute family")
                     switch q.difficulty {
-                    case .introduction: expect(abs(q.offsetHours) == 1, "easy maps use a nearby one-hour difference")
-                    case .familiar: expect(abs(q.offsetHours) <= 3, "medium maps keep regional hour differences")
-                    case .challenge: expect(abs(q.offsetHours) >= 4, "hard maps include distant capitals")
+                    case .introduction: expect(abs(q.offsetMinutes) == 60, "easy maps use a nearby one-hour difference")
+                    case .familiar: expect(abs(q.offsetMinutes) <= 180, "medium maps keep regional hour differences")
+                    case .challenge: expect(abs(q.offsetMinutes) >= 210, "hard maps include distant capitals")
                     }
                     for size in [CGSize(width: 230, height: 224), CGSize(width: 340, height: 252), CGSize(width: 760, height: 252)] {
                         let viewport = DinoTimeZoneViewport(journey: journey, size: size)
@@ -1378,7 +1473,7 @@ struct DinoCoreTests {
                         }
                     }
                     seenDestinations.insert(journey.destination.id)
-                    crossesMidnight = crossesMidnight || abs(q.target.minutesOfDay - q.relatedTimes[0].minutesOfDay) != abs(q.offsetHours * 60)
+                    crossesMidnight = crossesMidnight || abs(q.target.minutesOfDay - q.relatedTimes[0].minutesOfDay) != abs(q.offsetMinutes)
                 }
                 expect(seenDestinations.count >= 4, "each language and difficulty offers varied familiar countries")
                 expect(crossesMidnight, "each minute family covers a change of day")
@@ -1403,7 +1498,7 @@ struct DinoCoreTests {
                     let viewport = DinoTimeZoneViewport(journey: journey, size: size)
                     let labels = DinoTimeZoneLabelLayout(origin: viewport.point(reference, size: size),
                                                         destination: viewport.point(destination, size: size), size: size,
-                                                        offsetHours: journey.offsetHours)
+                                                        offsetMinutes: journey.offsetMinutes)
                     let a = CGRect(x: labels.origin.x - labels.width / 2, y: labels.origin.y - 38, width: labels.width, height: 76)
                     let b = CGRect(x: labels.destination.x - labels.width / 2, y: labels.destination.y - 38, width: labels.width, height: 76)
                     expect(!a.intersects(b), "capital labels never overlap, including narrow worked examples")
@@ -1414,9 +1509,9 @@ struct DinoCoreTests {
                     }
                     expect(CGRect(origin: .zero, size: size).contains(a) && CGRect(origin: .zero, size: size).contains(b),
                            "both city labels fit fully inside each map size")
-                    if journey.offsetHours > 0 {
+                    if journey.offsetMinutes > 0 {
                         expect(b.minX >= a.maxX - 0.5, "a later city card sits to the right of the reference card")
-                    } else if journey.offsetHours < 0 {
+                    } else if journey.offsetMinutes < 0 {
                         expect(a.minX >= b.maxX - 0.5, "an earlier city card sits to the left of the reference card")
                     }
                 }
@@ -1440,7 +1535,7 @@ struct DinoCoreTests {
                 expect(schedule.firstActivity != schedule.secondActivity, "every schedule has two different activities")
                 expect(schedule.durations.allSatisfy { $0 > 0 && $0.isMultiple(of: time.minuteStep) },
                        "both activities and the break respect the selected difficulty")
-                expect(schedule.start.minutesOfDay >= 8 * 60 && schedule.end.minutesOfDay <= 20 * 60 &&
+                expect(schedule.start.minutesOfDay >= 6 * 60 && schedule.end.minutesOfDay <= 22 * 60 &&
                        schedule.start.minutesOfDay < schedule.end.minutesOfDay,
                        "the complete schedule stays within the same daytime")
                 expect(schedule.end == question.target && question.relatedTimes == [schedule.start] &&
@@ -1661,9 +1756,9 @@ struct DinoCoreTests {
                             }
                         }
                     case .flightArrival:
-                        let shift = q.durationMinutes + q.offsetHours * 60
+                        let shift = q.durationMinutes + q.offsetMinutes
                         expect(q.relatedTimes[0].adding(minutes: shift) == q.target, "flight arrival adds duration and time zone")
-                        expect((2...4).contains(abs(q.offsetHours)), "challenging flights combine durations and time zones in every family")
+                        expect((120...240).contains(abs(q.offsetMinutes)) && q.offsetMinutes.isMultiple(of: 30), "challenging flights combine durations and time zones in every family")
                         let linear = q.relatedTimes[0].minutesOfDay + shift
                         sawMidnight = sawMidnight || linear < 0 || linear >= 24 * 60
                     case .subtractTime:
@@ -1676,7 +1771,7 @@ struct DinoCoreTests {
                             expect(pair.0.adding(minutes: q.durationMinutes) == pair.1, "every sequence step is identical")
                         }
                     case .timeZone:
-                        expect(q.relatedTimes[0].adding(minutes: q.offsetHours * 60) == q.target, "explicit zone difference determines answer")
+                        expect(q.relatedTimes[0].adding(minutes: q.offsetMinutes) == q.target, "explicit zone difference determines answer")
                     case .sortTimes:
                         guard case .ordering(let ordered) = q.expectedAnswer else { fatalError("sorting answer") }
                         expect(ordered.count == 4 && Set(ordered) == Set(q.options), "sorting uses exactly the displayed clocks")
@@ -1861,33 +1956,68 @@ struct DinoCoreTests {
                    "pirouette makes one upright turn around the vertical axis")
             expect(abs(sample.yaw - previousTurn.yaw) < 7 && abs(sample.height - previousTurn.height) < 0.02,
                    "pirouette follows a continuous turn and jump arc")
-            expect(abs(sample.yaw - sample.pose.paintedYaw) <= 40 && sample.height <= 0.00001,
+            expect(abs(sample.yaw - sample.pose.paintedYaw) <= 20.001 && sample.height <= 0.00001,
                    "each supplied view turns toward the next without flipping its sprite over")
+            if sample.pose.asset != previousTurn.pose.asset {
+                expect(abs(sample.pose.paintedYaw - previousTurn.pose.paintedYaw) <= 40,
+                       "the generated in-betweens remove the former eighty-degree jump")
+            }
             if turnAssets.last != sample.pose.asset { turnAssets.append(sample.pose.asset) }
             previousTurn = sample
         }
-        expect(turnAssets == (1...14).map { String(format: "dino-pirouette-%02d", $0) },
-               "all fourteen assets play once in their numbered order, including takeoff and recovery")
+        let expectedTurns = ["01", "02", "03", "04", "05", "06", "06a", "07", "07a",
+                             "08", "08a", "09", "10", "10a", "11", "12", "13", "14"]
+            .map { "dino-pirouette-" + $0 }
+        expect(turnAssets == expectedTurns && DinoAnimation.pirouetteAssets == expectedTurns,
+               "all eighteen poses play once and are preloaded, including the four generated in-betweens")
         expect(previousTurn.yaw == 360 && abs(previousTurn.height) < 0.00001 && previousTurn.pose.asset == "dino-pirouette-14",
                "pirouette lands in its stable final pose")
         expect(previousTurn.pose.offsetX == -0.012 && previousTurn.pose.offsetY == -0.029,
                "the revised pirouette preserves the exact previous final registration on the stone")
         let landing = DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.travelDuration(.pirouette))
-        expect(abs(landing.height) < 0.00001 && landing.pose.asset == "dino-pirouette-12",
-               "the shared character reaches the stone when its feet land")
-        let preparation = [(0.0, "01"), (0.20, "02"), (0.40, "03")]
+        expect(abs(landing.height) < 0.00001 && landing.pose.asset == "dino-pirouette-11",
+               "the planted contact drawing begins exactly when the shared character reaches the stone")
+        let beforeLanding = DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.travelDuration(.pirouette) - 1.0 / 60)
+        expect(beforeLanding.pose.asset == "dino-pirouette-10a" && beforeLanding.height < 0,
+               "the airborne reaching pose carries the descent until contact, without holding planted feet in the air")
+        let preparation = [(0.0, "01"), (0.15, "02"), (0.26, "03")]
         for (time, pose) in preparation {
-            let sample = DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.leadIn(.pirouette) + time / DinoAnimation.pirouettePlaybackRate)
+            let sample = DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.leadIn(.pirouette) + time)
             expect(sample.height == 0 && sample.pose.asset == "dino-pirouette-\(pose)"
-                   && time / DinoAnimation.pirouettePlaybackRate < DinoAnimation.travelDelay(.pirouette),
+                   && DinoAnimation.leadIn(.pirouette) + time < DinoAnimation.travelDelay(.pirouette),
                    "each preparation pose is visible before the journey leaves the HUD portrait")
         }
         expect(DinoAnimation.travelDelay(.backflip) == 0.18 && DinoAnimation.travelDelay(.idle) == 0,
                "the backflip prepares in the portrait until takeoff while idle has no travel delay")
-        expect(DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.leadIn(.pirouette) + 2.08 / DinoAnimation.pirouettePlaybackRate).pose.asset == "dino-pirouette-13",
+        expect(DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.travelDuration(.pirouette) + 0.35).pose.asset == "dino-pirouette-13",
                "the arms lift through an intermediate pose before the unchanged celebration")
         expect(DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.leadIn(.pirouette) - 0.01).pose.asset == "dino-pirouette-01",
                "the result transition gets a standing lead-in before the short preparation poses")
+        for (frame, next) in zip(DinoAnimation.pirouetteFrames, DinoAnimation.pirouetteFrames.dropFirst()) {
+            let hold = next.start - frame.start
+            expect(hold >= 0.05 - 0.000001 && hold <= 0.18,
+                   "every active drawing has readable exposure without a quarter-second freeze")
+            let boundary = DinoAnimation.leadIn(.pirouette) + next.start
+            expect(DinoAnimation.sample(.pirouette, elapsed: boundary).pose.asset == next.pose.asset
+                   && DinoAnimation.sample(.pirouette, elapsed: boundary - 0.000001).pose.asset == frame.pose.asset,
+                   "the per-pose exposure changes on its exact authored boundary")
+            let epsilon = 0.00001
+            let before = DinoAnimation.sample(.pirouette, elapsed: boundary - epsilon).yaw
+            let at = DinoAnimation.sample(.pirouette, elapsed: boundary).yaw
+            let after = DinoAnimation.sample(.pirouette, elapsed: boundary + epsilon).yaw
+            expect(abs((at - before) / epsilon - (after - at) / epsilon) < 1,
+                   "the continuous turn keeps its speed across exposure boundaries")
+        }
+        for fps in [30.0, 60.0] {
+            for phase in [0.0, 0.25, 0.5, 0.75] {
+                var seen = [String]()
+                for step in 0...Int((DinoAnimation.duration(.pirouette) + 0.2) * fps) {
+                    let pose = DinoAnimation.sample(.pirouette, elapsed: (Double(step) + phase) / fps).pose.asset
+                    if seen.last != pose { seen.append(pose) }
+                }
+                expect(seen == expectedTurns, "all poses remain readable at 30 and 60 fps, regardless of refresh phase")
+            }
+        }
         let normal = DinoLevelCatalog.level(1)!
         for (correct, clip) in [(2, DinoAnimation.Clip.idle), (3, .idle), (4, .pirouette), (5, .backflip)] {
             let result = DinoLevelResult(level: normal, correct: correct, stars: StarCalculator.stars(correct: correct), victory: .none)
@@ -1899,19 +2029,56 @@ struct DinoCoreTests {
                                          stars: StarCalculator.stars(correct: correct, questionCount: 10), victory: .none)
             expect(result.stars == stars && result.animationClip == clip, "boss stars use the same reward animations")
         }
-        for (clip, asset) in [(DinoAnimation.Clip.backflip, "dino-backflip-08"), (.pirouette, "dino-pirouette-14"), (.thumbsUp, "dino-thumbs-up-08"), (.wrongAnswer, "dino-wrong-answer-04")] {
+        for (clip, asset) in [(DinoAnimation.Clip.backflip, "dino-backflip-08"), (.pirouette, "dino-pirouette-14"),
+                               (.thumbsUp, DinoAnimation.correctAnswerAssets[0]), (.wrongAnswer, DinoAnimation.wrongAnswerAssets[0])] {
             for step in 0...180 {
-                let t = Double(step) / 120
-                let reduced = DinoAnimation.sample(clip, elapsed: t, reducedMotion: true)
-                expect(reduced.height == 0 && reduced.angle == 0 && reduced.yaw == 0 && reduced.scaleX == 1 && reduced.scaleY == 1 && reduced.pose.asset == asset, "reduced motion remains completely static")
-                guard clip != .backflip && clip != .pirouette else { continue }
-                let reaction = DinoAnimation.sample(clip, elapsed: t)
-                expect(reaction.pose.asset == asset && reaction.height == 0, "one reaction image without pose flicker or jumping")
-                expect(abs(reaction.angle) <= 2 && (1...1.04).contains(reaction.scaleX), "subtle bounded reaction")
-                if t >= DinoAnimation.duration(clip) {
-                    expect(reaction.angle == 0 && reaction.scaleX == 1 && reaction.scaleY == 1, "reaction settles and stays still until next question")
-                }
+                let reduced = DinoAnimation.sample(clip, elapsed: Double(step) / 120, reducedMotion: true)
+                expect(reduced.height == 0 && reduced.angle == 0 && reduced.yaw == 0 && reduced.scaleX == 1
+                       && reduced.scaleY == 1 && reduced.pose.asset == asset,
+                       "reduced motion holds the same clear expression completely still")
             }
+        }
+        for clip in [DinoAnimation.Clip.thumbsUp, .wrongAnswer] {
+            let asset = (clip == .thumbsUp ? DinoAnimation.correctAnswerAssets : DinoAnimation.wrongAnswerAssets)[0]
+            var seen: [String] = []
+            var movingSamples = 0
+            var previous = DinoAnimation.sample(clip, elapsed: 0)
+            var minAngle = 0.0, maxAngle = 0.0, highest = 0.0
+            for step in 0...600 {
+                let t = Double(step) / 600
+                let reaction = DinoAnimation.sample(clip, elapsed: t)
+                if seen.last != reaction.pose.asset { seen.append(reaction.pose.asset) }
+                expect(abs(reaction.angle) <= 3.2 && abs(reaction.height) <= 0.032
+                       && (1...1.011).contains(reaction.scaleX) && (0.974...1).contains(reaction.scaleY),
+                       "answer motion stays subtle inside the fixed portrait")
+                expect(abs(reaction.angle - previous.angle) < 0.13
+                       && abs(reaction.height - previous.height) < 0.0004
+                       && abs(reaction.scaleX - previous.scaleX) < 0.002
+                       && abs(reaction.scaleY - previous.scaleY) < 0.002,
+                       "the gesture moves continuously through anticipation, emphasis and recovery")
+                if reaction.angle != previous.angle || reaction.height != previous.height || reaction.scaleY != previous.scaleY {
+                    movingSamples += 1
+                }
+                minAngle = min(minAngle, reaction.angle); maxAngle = max(maxAngle, reaction.angle)
+                highest = min(highest, reaction.height)
+                if t == 0 || t >= DinoAnimation.duration(clip) {
+                    expect(reaction.pose.asset == "dino-idle" && reaction.pose.offsetX == 0 && reaction.pose.offsetY == 0
+                           && reaction.angle == 0 && reaction.height == 0 && reaction.scaleX == 1 && reaction.scaleY == 1,
+                           "start and finish use the exact original idle image and placement")
+                }
+                previous = reaction
+            }
+            expect(seen == ["dino-idle", asset, "dino-idle"],
+                   "one held expression carries the movement, with just entry and exit image changes")
+            expect(movingSamples > 300, "the held pose remains animated between image changes")
+            if clip == .wrongAnswer {
+                expect(minAngle < -1 && maxAngle > 1, "wrong feedback makes one readable left/right shake")
+            } else {
+                expect(highest < -0.025, "correct feedback makes one buoyant rise")
+            }
+            expect(FileManager.default.fileExists(atPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
+                   && DinoAvatarMask.spriteRegions(for: asset) != nil,
+                   "the selected supplied artwork retains its personal-color mask")
         }
         expect(DinoAnimation.duration(.thumbsUp) < DinoAnimation.correctAnswerDelay && DinoAnimation.correctAnswerDelay < 1, "complete thumbs before quick advance")
     }
@@ -1943,7 +2110,7 @@ struct DinoCoreTests {
                     end.adding(minutes: 60), end.adding(minutes: -60)].contains(wrong) { return true }
             }
             if question.kind == .timeZone {
-                let zone = [question.relatedTimes[0], question.target.adding(minutes: -2 * question.offsetHours * 60),
+                let zone = [question.relatedTimes[0], question.target.adding(minutes: -2 * question.offsetMinutes),
                             question.target.adding(minutes: 60), question.target.adding(minutes: -60)]
                 if zone.contains(wrong) { return true }
             }
@@ -1952,16 +2119,16 @@ struct DinoCoreTests {
                 let change: Int
                 switch question.kind {
                 case .subtractTime: change = -question.durationMinutes
-                case .flightArrival: change = question.durationMinutes + question.offsetHours * 60
+                case .flightArrival: change = question.durationMinutes + question.offsetMinutes
                 default: change = question.durationMinutes
                 }
                 let hourPart = (change / 60) * 60
                 let named = [shown, shown.adding(minutes: -change), shown.adding(minutes: change * 2),
                              shown.adding(minutes: hourPart), shown.adding(minutes: change - hourPart),
                              question.target.adding(minutes: change * 2), question.target.adding(minutes: -change * 2),
-                             question.target.adding(minutes: -question.offsetHours * 60),
-                             question.target.adding(minutes: question.offsetHours * 60),
-                             question.target.adding(minutes: question.offsetHours >= 0 ? 60 : -60)]
+                             question.target.adding(minutes: -question.offsetMinutes),
+                             question.target.adding(minutes: question.offsetMinutes),
+                             question.target.adding(minutes: question.offsetMinutes >= 0 ? 60 : -60)]
                 if named.contains(wrong) { return true }
             }
             return false
@@ -2867,6 +3034,8 @@ struct DinoCoreTests {
             ("dino-pirouette-01", CGRect(x: 580, y: 150, width: 252, height: 105)),
             ("dino-pirouette-04", CGRect(x: 700, y: 135, width: 195, height: 100)),
             ("dino-pirouette-10", CGRect(x: 390, y: 120, width: 195, height: 117)),
+            ("dino-pirouette-08a", CGRect(x: 392, y: 165, width: 60, height: 62)),
+            ("dino-pirouette-10a", CGRect(x: 439, y: 203, width: 231, height: 120)),
             ("dino-pirouette-09", CGRect(x: 350, y: 139, width: 155, height: 94)),
             ("dino-pirouette-14", CGRect(x: 560, y: 118, width: 246, height: 110)),
             ("dino-pirouette-11", CGRect(x: 433, y: 208, width: 246, height: 109)),
@@ -2874,7 +3043,7 @@ struct DinoCoreTests {
             ("dino-pirouette-03", CGRect(x: 681, y: 157, width: 220, height: 104)),
             ("dino-pirouette-12", CGRect(x: 568, y: 161, width: 245, height: 83)),
             ("dino-pirouette-13", CGRect(x: 559, y: 112, width: 236, height: 104))
-        ]
+        ] + DinoSpriteColorRenderer.answerLetteringBounds.map { ($0.key, $0.value) }
         expect(DinoAppearance.standard.bandanaLetteringHex == 0xFFFFFF,
                "the original red bandana retains white lettering")
         for color: UInt32 in [0xFFFFFF, 0xFFF4CE] {
@@ -2951,7 +3120,7 @@ struct DinoCoreTests {
             var question = ClockQuestion(id: 1, kind: kind, target: target, options: options, activity: nil, companionClocks: [])
             question.relatedTimes = related
             question.durationMinutes = duration
-            question.offsetHours = offset
+            question.offsetMinutes = offset * 60
             question.statement = statement
             question.daySchedule = schedule
             question.timeZoneJourney = journey
@@ -2962,7 +3131,7 @@ struct DinoCoreTests {
         let matching = question(kind: .chooseAnalog, target: ClockTime(hour: 3), options: four)
         let englishMatch = prompt(matching, "en")
         expect(sentence(englishMatch, "en") == "Which of the four clocks matches three o’clock?", "question 1 names the clock time")
-        expect(englishMatch.arguments.map(\.emphasis) == [.plain, .clock], "only the clock time is tinted")
+        expect(englishMatch.arguments.allSatisfy { $0.emphasis == .plain }, "clock times use the title's base color")
         expect(sentence(prompt(matching, "nl"), "nl") == "Welke van de vier klokken hoort bij drie uur?", "Dutch question 1 names the time")
         let two = question(kind: .chooseAnalog, target: ClockTime(hour: 3), options: Array(four.prefix(2)))
         expect(sentence(prompt(two, "en"), "en") == "Which of the two clocks matches three o’clock?", "two choices are counted honestly")
@@ -2973,7 +3142,7 @@ struct DinoCoreTests {
         expect(sentence(prompt(spoken, "en"), "en") == "Which of the four clocks shows three o’clock?", "a spoken time still asks which clock")
         let claim = question(kind: .trueFalse, target: ClockTime(hour: 4), statement: ClockTime(hour: 3))
         expect(sentence(prompt(claim, "nl"), "nl") == "Het is nu drie uur.", "a true-or-false title is the claim, not the verdict")
-        expect(prompt(claim, "nl").arguments.map(\.emphasis) == [.clock], "the claimed time can be scanned")
+        expect(prompt(claim, "nl").arguments.map(\.emphasis) == [.plain], "the claimed time uses the title's base color")
 
         for kind in [ClockQuestionKind.chooseDigital, .readDigital, .sayTime, .setAnalog, .setDigital, .read24Hour, .dayPart, .match, .sortTimes] {
             let asked = question(kind: kind, target: ClockTime(hour: 3), options: four, related: four)
@@ -2992,13 +3161,13 @@ struct DinoCoreTests {
         let addedTitle = prompt(added, "nl")
         expect(sentence(addedTitle, "nl") == "Hoe laat is het 1 uur en 30 minuten later dan drie uur ’s middags?",
                "adding time repeats the start and the step")
-        expect(addedTitle.arguments.map(\.emphasis) == [.forward, .forward, .clock], "later is green with the added amount")
+        expect(addedTitle.arguments.map(\.emphasis) == [.forward, .forward, .plain], "later is green with the added amount")
         expect(!sentence(addedTitle, "nl").contains("vier"), "the later time is not spoken")
 
         let earlier = question(kind: .subtractTime, target: ClockTime(hour: 2), related: [ClockTime(hour: 4)], duration: 120)
         let earlierTitle = prompt(earlier, "en")
         expect(sentence(earlierTitle, "en") == "What time was 2 hours earlier than four o’clock?", "going back names the step")
-        expect(earlierTitle.arguments.map(\.emphasis) == [.backward, .backward, .clock], "earlier is red with the step")
+        expect(earlierTitle.arguments.map(\.emphasis) == [.backward, .backward, .plain], "earlier is red with the step")
         expect(!sentence(earlierTitle, "en").contains("two"), "the earlier result is not spoken")
 
         let between = question(kind: .minutesBetween, target: ClockTime(hour: 4),
@@ -3006,14 +3175,14 @@ struct DinoCoreTests {
         let betweenTitle = prompt(between, "en")
         expect(sentence(betweenTitle, "en") == "How many minutes are there between three o’clock and four o’clock?",
                "the gap question names both clocks")
-        expect(betweenTitle.arguments.map(\.emphasis) == [.clock, .clock], "both clocks use the scan color")
+        expect(betweenTitle.arguments.map(\.emphasis) == [.plain, .plain], "both clocks use the title's base color")
         expect(!sentence(betweenTitle, "en").contains("1 hour"), "the minute answer is not spoken")
 
         let sequence = question(kind: .timeSequence, target: ClockTime(hour: 5),
                                 related: [ClockTime(hour: 2), ClockTime(hour: 3), ClockTime(hour: 4)], duration: 60)
         expect(sentence(prompt(sequence, "nl"), "nl") == "Kijk naar de reeks hieronder. Welke tijd komt er na vier uur?",
                "the sequence names the last clock without the step")
-        expect(prompt(sequence, "en").arguments.map(\.emphasis) == [.clock], "the sequence does not color a difference")
+        expect(prompt(sequence, "en").arguments.map(\.emphasis) == [.plain], "the sequence uses the title's base color")
         expect(!sentence(prompt(sequence, "en"), "en").contains("hour"), "the sequence step stays off the title")
 
         let schedule = DinoDaySchedule(start: ClockTime(hour: 8), firstActivity: .drawing, firstMinutes: 60,
@@ -3028,26 +3197,26 @@ struct DinoCoreTests {
         let washington = DinoTimeZoneJourney.capitals.first { $0.id == "washington" }!
         let toParis = DinoTimeZoneJourney(origin: london, destination: paris)
         let parisQuestion = question(kind: .timeZone, target: ClockTime(hour: 4), related: [ClockTime(hour: 3)], journey: toParis)
-        expect(toParis.offsetHours > 0, "Paris is ahead of London in this check")
-        let parisShift = DinoTimeWords.spokenDuration(toParis.offsetHours * 60, language: "en")
+        expect(toParis.offsetMinutes > 0, "Paris is ahead of London in this check")
+        let parisShift = DinoTimeWords.spokenDuration(toParis.offsetMinutes, language: "en")
         expect(sentence(prompt(parisQuestion, "en"), "en")
                == "It is three o’clock in London. Paris is \(parisShift) ahead, what time is it in Paris?",
                "a later city names the difference")
-        expect(prompt(parisQuestion, "en").arguments.map(\.emphasis) == [.clock, .plain, .plain, .forward, .forward, .plain],
+        expect(prompt(parisQuestion, "en").arguments.map(\.emphasis) == [.plain, .plain, .plain, .forward, .forward, .plain],
                "ahead is green with the hour difference")
         let toWashington = DinoTimeZoneJourney(origin: london, destination: washington)
         let washingtonQuestion = question(kind: .timeZone, target: ClockTime(hour: 10), related: [ClockTime(hour: 15)], journey: toWashington)
-        expect(toWashington.offsetHours < 0, "Washington is behind London in this check")
+        expect(toWashington.offsetMinutes < 0, "Washington is behind London in this check")
         expect(prompt(washingtonQuestion, "nl").arguments.dropLast().last?.emphasis == .backward, "a city behind is red")
         expect(!sentence(prompt(washingtonQuestion, "en"), "en").contains("ten"), "the destination time is not spoken")
 
         let flight = question(kind: .flightArrival, target: ClockTime(hour: 6), related: [ClockTime(hour: 3)], duration: 120, offset: 1)
         expect(sentence(prompt(flight, "en"), "en") == "The plane leaves at three o’clock and flies for 2 hours. The destination is 1 hour ahead. What time does it arrive?",
                "a flight names the ride and the zone")
-        expect(prompt(flight, "en").arguments.map(\.emphasis) == [.clock, .forward, .forward, .forward],
+        expect(prompt(flight, "en").arguments.map(\.emphasis) == [.plain, .forward, .forward, .forward],
                "a later zone colors the word ahead")
         let returning = question(kind: .flightArrival, target: ClockTime(hour: 2), related: [ClockTime(hour: 3)], duration: 180, offset: -2)
-        expect(prompt(returning, "nl").arguments.map(\.emphasis) == [.clock, .forward, .backward, .backward],
+        expect(prompt(returning, "nl").arguments.map(\.emphasis) == [.plain, .forward, .backward, .backward],
                "a zone behind colors the word achter")
         expect(sentence(prompt(returning, "nl"), "nl") == "Het vliegtuig vertrekt om drie uur en vliegt 3 uur. De bestemming is 2 uur achter. Hoe laat komt het aan?",
                "Dutch flight titles keep the zone direction")
@@ -3055,6 +3224,40 @@ struct DinoCoreTests {
         expect(sentence(prompt(sameZone, "en"), "en") == "The plane leaves at three o’clock and flies for 2 hours. What time does it arrive?",
                "a flight without a zone change leaves that part out")
         expect(!sentence(prompt(flight, "en"), "en").contains("six"), "the arrival time is not spoken")
+
+        for language in ["nl", "en"] {
+            for hour in [0, 12, 15, 20, 23] {
+                let start = ClockTime(hour: hour, minute: 45)
+                let end = start.adding(minutes: 30)
+                let shortTime = DinoTimeWords.time(start, language: language)
+                let shortEnd = DinoTimeWords.time(end, language: language)
+                for kind in [ClockQuestionKind.chooseAnalog, .spokenTime, .activity, .trueFalse] {
+                    let analog = question(kind: kind, target: start, options: four, statement: start)
+                    let title = prompt(analog, language)
+                    expect(title.arguments.last?.text == shortTime,
+                           "\(kind) omits the day part for an analog face at \(start.digitalText) in \(language)")
+                    expect(title.arguments.allSatisfy { $0.emphasis == .plain }, "analog titles have one color")
+                }
+                let interval = question(kind: .minutesBetween, target: end, related: [start, end], duration: 30)
+                expect(prompt(interval, language).arguments.map(\.text) == [shortTime, shortEnd],
+                       "short intervals omit both day parts, including across noon and midnight")
+                let series = question(kind: .timeSequence, target: end, related: [start], duration: 30)
+                expect(prompt(series, language).arguments.map(\.text) == [shortTime],
+                       "the sequence's visible clocks provide the 24-hour context")
+            }
+            let afternoon = ClockTime(hour: 15)
+            let fullTime = DinoTimeWords.promptTime(afternoon, language: language)
+            for kind in [ClockQuestionKind.addTime, .subtractTime] {
+                let arithmetic = question(kind: kind, target: ClockTime(hour: 16), related: [afternoon], duration: 60)
+                expect(prompt(arithmetic, language).arguments.last?.text == fullTime,
+                       "an absolute 24-hour calculation keeps the starting day part")
+            }
+            let zone = question(kind: .timeZone, target: ClockTime(hour: 16), related: [afternoon], journey: toParis)
+            let afternoonFlight = question(kind: .flightArrival, target: ClockTime(hour: 17), related: [afternoon], duration: 120)
+            expect(prompt(zone, language).arguments.first?.text == fullTime &&
+                   prompt(afternoonFlight, language).arguments.first?.text == fullTime,
+                   "time zones and flights retain the day part needed for their 24-hour answer")
+        }
     }
 
     static func testQuestionSpeechVoices() {

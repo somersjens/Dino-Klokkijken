@@ -145,7 +145,7 @@ struct DinoExpandedQuestionView: View {
 
     private var flightWork: DinoFlightArrivalWork {
         DinoFlightArrivalWork(departure: q.relatedTimes[0], durationMinutes: q.durationMinutes,
-                              offsetHours: q.offsetHours, arrival: q.target)
+                              offsetMinutes: q.offsetMinutes, arrival: q.target)
     }
 
     private var timeSequence: some View {
@@ -908,17 +908,17 @@ private struct DinoFlightTicket: View {
                     factRow(title: "dino.expanded.flightDuration", systemImage: "clock",
                             value: work.durationText(language), color: DinoFlightInk.duration, fill: DinoStyle.green,
                             identifier: "\(prefix).flight.duration")
-                    if work.offsetHours != 0 {
+                    if work.offsetMinutes != 0 {
                         factRow(title: "dino.expanded.flightZoneDifference", systemImage: "globe",
-                                value: DinoTimeWords.hourDifference(work.offsetHours, language: language),
-                                color: work.offsetHours < 0 ? DinoTimeDirection.earlier : DinoStyle.deepGreen,
-                                fill: work.offsetHours < 0 ? DinoTimeDirection.earlier : DinoStyle.green,
+                                value: DinoTimeWords.zoneDifference(work.offsetMinutes, language: language),
+                                color: work.offsetMinutes < 0 ? DinoTimeDirection.earlier : DinoStyle.deepGreen,
+                                fill: work.offsetMinutes < 0 ? DinoTimeDirection.earlier : DinoStyle.green,
                                 identifier: "\(prefix).flight.zone")
                         totalReveal
                     }
                 }
 
-                if work.offsetHours == 0 {
+                if work.offsetMinutes == 0 {
                     Text("dino.expanded.flightZone")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(secondaryInk)
@@ -1046,7 +1046,7 @@ private struct DinoFlightTicket: View {
         if isDemonstration || reduceMotion || steps.isEmpty {
             walking = true
             appliedMinutes = reduceMotion || steps.isEmpty ? work.combinedMinutes : 0
-            totalProgress = work.offsetHours != 0 ? 1 : 0
+            totalProgress = work.offsetMinutes != 0 ? 1 : 0
             if isDemonstration && !reduceMotion && !steps.isEmpty {
                 appliedMinutes = 0
             } else {
@@ -1059,7 +1059,7 @@ private struct DinoFlightTicket: View {
             totalProgress = 0
         }
         do {
-            if !isDemonstration && work.offsetHours != 0 {
+            if !isDemonstration && work.offsetMinutes != 0 {
                 try await Task.sleep(for: .milliseconds(180))
                 withAnimation(.easeInOut(duration: 0.72)) { totalProgress = 1 }
             }
@@ -1207,11 +1207,13 @@ struct DinoDayPartLine: View {
             ZStack(alignment: .topLeading) {
                 bar.padding(.top, showsSelection ? 13 : 0)
                 if showsSelection {
-                    Image(systemName: "arrowtriangle.down.fill")
-                        .font(.system(size: 13, weight: .black))
-                        .foregroundStyle(DinoStyle.deepGreen)
-                        .shadow(color: .white, radius: 1)
-                        .frame(width: 14, height: 12)
+                    DinoDayPartMarker()
+                        .fill(DinoStyle.deepGreen)
+                        .background {
+                            DinoDayPartMarker()
+                                .stroke(.white, style: StrokeStyle(lineWidth: 2, lineJoin: .round))
+                        }
+                        .frame(width: 14, height: barHeight + 8)
                         .offset(x: fraction * width - 7, y: 1)
                         .accessibilityHidden(true)
                 }
@@ -1271,33 +1273,7 @@ struct DinoDayPartLine: View {
             }
         }
         .frame(height: barHeight)
-        .overlay {
-            if showsSelection {
-                GeometryReader { geometry in
-                    ZStack {
-                        Capsule().fill(.white).frame(width: 7, height: geometry.size.height - 8)
-                        Capsule().fill(DinoStyle.deepGreen).frame(width: 3, height: geometry.size.height - 12)
-                    }
-                    .position(x: fraction * geometry.size.width, y: geometry.size.height / 2)
-                }
-            }
-        }
         .clipShape(Capsule())
-        .overlay {
-            GeometryReader { geometry in
-                ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
-                    if showsSelection && segment.part == active {
-                        let start = geometry.size.width * CGFloat(segment.start) / 24
-                        let end = geometry.size.width * CGFloat(segment.end) / 24
-                        Capsule()
-                            .strokeBorder(.white.opacity(0.95), lineWidth: 2)
-                            .frame(width: max(6, end - start - 8), height: geometry.size.height - 8)
-                            .position(x: (start + end) / 2, y: geometry.size.height / 2)
-                    }
-                }
-            }
-            .allowsHitTesting(false)
-        }
         .overlay(Capsule().strokeBorder(highContrast ? DinoStyle.ink : .white.opacity(0.55), lineWidth: highContrast ? 2.5 : 2))
         .shadow(color: DinoStyle.ink.opacity(0.16), radius: 0, y: 3)
         .accessibilityHidden(true)
@@ -1395,6 +1371,24 @@ struct DinoDayPartLine: View {
     }
 
     private func hourText(_ hour: Int) -> String { String(format: "%02d", hour) }
+}
+
+/// A single silhouette joins the pointer above the ruler to the exact time inside it.
+private struct DinoDayPartMarker: Shape {
+    func path(in rect: CGRect) -> Path {
+        let center = rect.midX
+        let halfStem: CGFloat = 1.5
+        return Path { path in
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.addLine(to: CGPoint(x: center + halfStem, y: rect.minY + 10))
+            path.addLine(to: CGPoint(x: center + halfStem, y: rect.maxY - halfStem))
+            path.addQuadCurve(to: CGPoint(x: center - halfStem, y: rect.maxY - halfStem),
+                              control: CGPoint(x: center, y: rect.maxY + halfStem))
+            path.addLine(to: CGPoint(x: center - halfStem, y: rect.minY + 10))
+            path.closeSubpath()
+        }
+    }
 }
 
 private extension DinoDayPart {
@@ -1502,13 +1496,13 @@ struct DinoExpandedDemonstration: View {
             case .addTime, .advanceAnalog: answer = "\(clockText(q.relatedTimes[0], kind: q.kind)) + \(duration) = \(clockText(time, kind: q.kind))"
             case .flightArrival:
                 let work = DinoFlightArrivalWork(departure: q.relatedTimes[0], durationMinutes: q.durationMinutes,
-                                                 offsetHours: q.offsetHours, arrival: time)
-                let shift = q.offsetHours == 0 ? work.durationText(code) : work.combinedText(code)
+                                                 offsetMinutes: q.offsetMinutes, arrival: time)
+                let shift = q.offsetMinutes == 0 ? work.durationText(code) : work.combinedText(code)
                 let sum = "\(clockText(work.departure, kind: q.kind)) + \(shift) = \(clockText(work.arrival, kind: q.kind))"
-                answer = q.offsetHours == 0 ? sum : "\(work.differenceLine(language: code))\n\(sum)"
+                answer = q.offsetMinutes == 0 ? sum : "\(work.differenceLine(language: code))\n\(sum)"
             case .subtractTime: answer = "\(clockText(q.relatedTimes[0], kind: q.kind)) − \(duration) = \(clockText(time, kind: q.kind))"
             case .timeSequence: answer = "\(clockText(q.relatedTimes.last!, kind: q.kind)) + \(duration) = \(clockText(time, kind: q.kind))"
-            case .timeZone: answer = "\(clockText(q.relatedTimes[0], kind: q.kind)) \(q.offsetHours >= 0 ? "+" : "−") \(abs(q.offsetHours)) h = \(clockText(time, kind: q.kind))"
+            case .timeZone: answer = "\(clockText(q.relatedTimes[0], kind: q.kind)) \(DinoTimeWords.zoneDifference(q.offsetMinutes, language: code)) = \(clockText(time, kind: q.kind))"
             default: answer = clockText(time, kind: q.kind)
             }
         case .truth(let correct): answer = "\(DinoTimeWords.time(q.target, language: code)) → \(L(key: correct ? "dino.expanded.true" : "dino.expanded.false"))"

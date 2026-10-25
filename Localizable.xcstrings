@@ -7128,13 +7128,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d h earlier"
+            "value" : "%@ h earlier"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d uur eerder"
+            "value" : "%@ uur eerder"
           }
         }
       }
@@ -7162,13 +7162,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d h later"
+            "value" : "%@ h later"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d uur later"
+            "value" : "%@ uur later"
           }
         }
       }

@@ -9,6 +9,7 @@ struct DinoCharacter: View {
     var givesThumbsUp = false
     var exposesAnimationIdentifier = true
     var preparesReactions = true
+    var companionPresentation: DinoCompanionPresentation?
     @EnvironmentObject private var player: DinoPlayer
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
@@ -41,11 +42,19 @@ struct DinoCharacter: View {
             // schedule to the new jump before the playback task starts.
             let elapsed = playbackClip != clip ? 0 : finished ? DinoAnimation.duration(clip) : context.date.timeIntervalSince(start)
             let sample = DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reduceMotion)
-            sprite(sample.pose, angle: sample.angle, yaw: sample.yaw)
+            let drawing = sprite(sample.pose, angle: sample.angle, yaw: sample.yaw)
                 .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
                 .offset(y: size * sample.height)
-                // Feedback must never inherit the answer cards' opacity/layout animation.
+                // Only the pose bypasses answer-card animations. The portrait
+                // modifier must retain its animated unfold during a result jump.
                 .transaction { $0.animation = nil }
+            Group {
+                if let companionPresentation {
+                    drawing.modifier(companionPresentation)
+                } else {
+                    drawing
+                }
+            }
         }
         .id(clip)
         .transition(.identity)
@@ -80,7 +89,8 @@ struct DinoCharacter: View {
         }.frame(width: size, height: size)
             .offset(x: size * pose.offsetX, y: size * pose.offsetY)
             .rotationEffect(.degrees(angle - pose.paintedAngle),
-                            anchor: clip == .backflip ? UnitPoint(x: 0.5, y: 0.52) : .bottom)
+                            anchor: clip == .backflip ? UnitPoint(x: 0.5, y: 0.52)
+                                : clip == .thumbsUp || clip == .wrongAnswer ? UnitPoint(x: 0.54, y: 0.48) : .bottom)
         if clip == .pirouette {
             // The supplied views carry the turn. A small residual motion keeps
             // them alive without squeezing Dino into a thin rotating card.
@@ -119,6 +129,7 @@ struct DinoCompanionLayer: View {
     let isResult: Bool
     var worldID = 1
     var compactPortrait = false
+    var reactionID = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var placement = CGRect.zero
     @State private var visible = false
@@ -133,15 +144,13 @@ struct DinoCompanionLayer: View {
                 ZStack {
                     DinoCharacter(state: presentedClip == .wrongAnswer ? .sad : .idle, size: 210,
                                   performsBackflip: presentedClip == .backflip, performsPirouette: presentedClip == .pirouette,
-                                  givesThumbsUp: presentedClip == .thumbsUp, exposesAnimationIdentifier: false)
+                                  givesThumbsUp: presentedClip == .thumbsUp, exposesAnimationIdentifier: false,
+                                  companionPresentation: DinoCompanionPresentation(portraitAmount: portraitAmount,
+                                      palette: HUDPalette(worldID: worldID), rimRatio: 4 / (compactPortrait ? 52 : 78)))
                         // Give each reaction fresh playback state as well as a fresh timeline.
                         // Position and scale still belong to this persistent companion layer.
-                        .id(presentedClip)
+                        .id("\(presentedClip.rawValue)-\(reactionID)")
                         .transition(.identity)
-                        .modifier(DinoCompanionPresentation(portraitAmount: portraitAmount,
-                                                           palette: HUDPalette(worldID: worldID),
-                                                           rimRatio: 4 / (compactPortrait ? 52 : 78),
-                                                           showsHands: presentedClip != .idle))
                         .accessibilityHidden(true)
                     // Give VoiceOver the portrait bounds rather than the uncropped sprite.
                     Color.clear.frame(width: 210, height: 210)
@@ -209,34 +218,33 @@ struct DinoCompanionLayer: View {
 }
 
 /// The HUD and the result share one drawing buffer. Only its crop changes on takeoff.
-private struct DinoCompanionPresentation: AnimatableModifier {
+struct DinoCompanionPresentation: AnimatableModifier {
     var portraitAmount: CGFloat
     let palette: HUDPalette
     let rimRatio: CGFloat
-    let showsHands: Bool
     var animatableData: CGFloat {
         get { portraitAmount }
         set { portraitAmount = newValue }
     }
 
     func body(content: Content) -> some View {
+        // Every answer pose uses the idle portrait's exact camera. The only
+        // camera change is the existing unfold when travelling to the result.
+        let drawing = content
+            .scaleEffect(1 + (1 / 0.62 - 1) * portraitAmount)
+            .offset(x: -210 * 0.065 * portraitAmount, y: 210 * 0.339 * portraitAmount)
         ZStack {
             Circle().fill(LinearGradient(colors: [palette.portraitLight, palette.accent],
                                          startPoint: .topLeading, endPoint: .bottomTrailing))
                 .overlay(Circle().strokeBorder(palette.outline, lineWidth: 210 * rimRatio / 2))
                 .opacity(portraitAmount)
-            content
-                .scaleEffect(1 + (1 / (showsHands ? 0.78 : 0.62) - 1) * portraitAmount)
-                .offset(x: -210 * (showsHands ? 0.025 : 0.065) * portraitAmount,
-                        y: 210 * (showsHands ? 0.14 : 0.339) * portraitAmount)
-                .mask(DinoCompanionReveal(portraitAmount: portraitAmount))
+            drawing.mask(DinoCompanionReveal(portraitAmount: portraitAmount))
             Circle().strokeBorder(palette.rim, lineWidth: 210 * rimRatio)
-                .mask {
-                    Path { path in
-                        path.addRect(CGRect(x: -210, y: -210, width: 630, height: 630))
-                        path.addPath(DinoBustOverflowMask(diameter: 210).path(in: CGRect(x: 0, y: 0, width: 210, height: 210)))
-                    }.fill(style: FillStyle(eoFill: true))
-                }
+                .opacity(portraitAmount)
+            // Paint the actual bandana/spike pixels over the complete rim.
+            // Cutting rectangles out of the rim left gaps when a pose moved.
+            // This is the same sampled image, so both crops stay frame-perfect.
+            drawing.mask(DinoBustOverflowMask(diameter: 210))
                 .opacity(portraitAmount)
         }.frame(width: 210, height: 210)
     }

@@ -11,21 +11,21 @@ struct DinoCapital: Equatable, Sendable {
     let longitude: Double
 
     func name(language: String) -> String { language == "nl" ? dutchName : englishName }
-    var utcHours: Int { gmtHours(on: DinoTimeZoneJourney.referenceDate) }
+    var utcMinutes: Int { gmtMinutes(on: DinoTimeZoneJourney.referenceDate) }
     /// Offset baked into the simplified winter zone bands.
-    var atlasUTCHours: Int { gmtHours(on: DinoTimeZoneJourney.atlasDate) }
+    var atlasUTCMinutes: Int { gmtMinutes(on: DinoTimeZoneJourney.atlasDate) }
 
-    private func gmtHours(on date: Date) -> Int {
-        TimeZone(identifier: timeZoneID)!.secondsFromGMT(for: date) / 3_600
+    private func gmtMinutes(on date: Date) -> Int {
+        TimeZone(identifier: timeZoneID)!.secondsFromGMT(for: date) / 60
     }
 }
 
-/// One hour of the worked example, counted from the reference until the new time.
-struct DinoTimeZoneHourStep: Equatable, Sendable {
-    let addedHours: Int
+/// Whole hours and, when needed, a final half hour of the worked example.
+struct DinoTimeZoneStep: Equatable, Sendable {
+    let addedMinutes: Int
     let time: ClockTime
 
-    var caption: String { "\(addedHours > 0 ? "+" : "−")\(abs(addedHours))" }
+    var caption: String { "\(addedMinutes > 0 ? "+" : "−")\(DinoTimeWords.zoneHours(abs(addedMinutes)))" }
 }
 
 enum DinoTimeZoneDifficulty: CaseIterable {
@@ -39,7 +39,7 @@ enum DinoTimeZoneDifficulty: CaseIterable {
 struct DinoTimeZoneJourney: Equatable, Sendable {
     let origin: DinoCapital
     let destination: DinoCapital
-    var offsetHours: Int { destination.utcHours - origin.utcHours }
+    var offsetMinutes: Int { destination.utcMinutes - origin.utcMinutes }
 
     /// Noon UTC on the player's current calendar day. The header and the city
     /// difference both use this instant, so the shown date matches the answer.
@@ -61,34 +61,37 @@ struct DinoTimeZoneJourney: Equatable, Sendable {
         return formatter.string(from: referenceDate)
     }
 
-    /// +1, then +2, through the destination. A westward journey counts −1, −2.
-    func hourSteps(from reference: ClockTime) -> [DinoTimeZoneHourStep] {
-        let count = abs(offsetHours)
+    /// +1, then +2, through the destination, including a final half-hour step.
+    func steps(from reference: ClockTime) -> [DinoTimeZoneStep] {
+        let count = abs(offsetMinutes)
         guard count > 0 else { return [] }
-        let direction = offsetHours > 0 ? 1 : -1
-        return (1...count).map { step in
-            let added = direction * step
-            return DinoTimeZoneHourStep(addedHours: added, time: reference.adding(minutes: added * 60))
+        let direction = offsetMinutes > 0 ? 1 : -1
+        return stride(from: 0, to: count, by: 60).map { step in
+            let added = direction * min(step + 60, count)
+            return DinoTimeZoneStep(addedMinutes: added, time: reference.adding(minutes: added))
         }
     }
 
     static func generate<R: RandomNumberGenerator>(language: String, difficulty: DinoTimeZoneDifficulty,
+                                                   minuteStep: Int = 60, recentDestinations: [String] = [],
                                                    using rng: inout R) -> Self {
         let origin = capitals.first { $0.id == (language == "nl" ? "amsterdam" : "london") }!
         let candidates = capitals.filter { capital in
-            let difference = abs(capital.utcHours - origin.utcHours)
+            let difference = abs(capital.utcMinutes - origin.utcMinutes)
             let distance = hypot(capital.longitude - origin.longitude, capital.latitude - origin.latitude)
-            guard capital.id != origin.id, difference != 0 else { return false }
+            guard capital.id != origin.id, difference != 0, difference.isMultiple(of: 30),
+                  difference.isMultiple(of: minuteStep) else { return false }
             switch difficulty {
-            case .nearby: return difference == 1 && distance < 40
-            case .regional: return (1...3).contains(difference) && distance < 70
-            case .worldwide: return difference >= 4
+            case .nearby: return difference == 60 && distance < 40
+            case .regional: return (60...180).contains(difference) && distance < 70
+            case .worldwide: return difference >= 210
             }
         }
-        return Self(origin: origin, destination: candidates.randomElement(using: &rng)!)
+        let destination = DinoQuestionTeaching.varied(candidates.map(\.id), recent: recentDestinations, using: &rng)
+        return Self(origin: origin, destination: candidates.first { $0.id == destination }!)
     }
 
-    // Familiar countries, whole-hour zones and actual capitals; Istanbul is
+    // Familiar countries, whole-hour and occasional half-hour zones and actual capitals; Istanbul is
     // deliberately excluded because Ankara is Turkey's capital.
     static let capitals: [DinoCapital] = [
         .init(id: "amsterdam", dutchName: "Amsterdam", englishName: "Amsterdam", countryCode: "NLD", timeZoneID: "Europe/Amsterdam", latitude: 52.37, longitude: 4.90),
@@ -109,6 +112,7 @@ struct DinoTimeZoneJourney: Equatable, Sendable {
         .init(id: "ottawa", dutchName: "Ottawa", englishName: "Ottawa", countryCode: "CAN", timeZoneID: "America/Toronto", latitude: 45.42, longitude: -75.70),
         .init(id: "brasilia", dutchName: "Brasília", englishName: "Brasília", countryCode: "BRA", timeZoneID: "America/Sao_Paulo", latitude: -15.79, longitude: -47.88),
         .init(id: "beijing", dutchName: "Peking", englishName: "Beijing", countryCode: "CHN", timeZoneID: "Asia/Shanghai", latitude: 39.90, longitude: 116.41),
+        .init(id: "newDelhi", dutchName: "New Delhi", englishName: "New Delhi", countryCode: "IND", timeZoneID: "Asia/Kolkata", latitude: 28.61, longitude: 77.21),
         .init(id: "tokyo", dutchName: "Tokio", englishName: "Tokyo", countryCode: "JPN", timeZoneID: "Asia/Tokyo", latitude: 35.68, longitude: 139.69),
         .init(id: "seoul", dutchName: "Seoul", englishName: "Seoul", countryCode: "KOR", timeZoneID: "Asia/Seoul", latitude: 37.57, longitude: 126.98),
         .init(id: "canberra", dutchName: "Canberra", englishName: "Canberra", countryCode: "AUS", timeZoneID: "Australia/Sydney", latitude: -35.28, longitude: 149.13)
@@ -183,7 +187,7 @@ struct DinoTimeZoneLabelLayout {
     let destination: CGPoint
     let width: CGFloat
 
-    init(origin: CGPoint, destination: CGPoint, size: CGSize, offsetHours: Int) {
+    init(origin: CGPoint, destination: CGPoint, size: CGSize, offsetMinutes: Int) {
         let width = min(132, (size.width - 20) / 2)
         self.width = width
         func clamp(_ point: CGPoint) -> CGPoint {
@@ -212,8 +216,8 @@ struct DinoTimeZoneLabelLayout {
         }
         /// A later city sits to the right of the reference card; an earlier city sits to the left.
         func orderPenalty(_ reference: CGPoint, _ other: CGPoint) -> CGFloat {
-            guard offsetHours != 0 else { return 0 }
-            let later = offsetHours > 0
+            guard offsetMinutes != 0 else { return 0 }
+            let later = offsetMinutes > 0
             let ordered = later ? other.x - reference.x : reference.x - other.x
             if ordered <= 1 { return 50_000 }
             let leading = later ? rect(reference) : rect(other)

@@ -67,6 +67,7 @@ struct DinoMinutesBetweenCard: View {
             .strokeBorder(highContrast ? DinoStyle.ink : DinoStyle.deepGreen.opacity(0.16),
                           lineWidth: highContrast ? 2.5 : 1.5))
         .shadow(color: DinoStyle.deepGreen.opacity(0.08), radius: 14, y: 6)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("\(prefix).minutesBetween.card")
     }
 

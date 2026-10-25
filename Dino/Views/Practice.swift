@@ -147,7 +147,8 @@ private struct DinoPracticeGame: View {
                     DinoCompanionLayer(destination: anchors[.game].map { geometry[$0] },
                                        clip: session.hasFeedback ? (session.correctFeedback ? .thumbsUp : .wrongAnswer) : .idle,
                                        isResult: false, worldID: session.level.worldID,
-                                       compactPortrait: geometry.size.height < 430)
+                                       compactPortrait: geometry.size.height < 430,
+                                       reactionID: session.rejectedResponses.count)
                 }.allowsHitTesting(false)
             }.preferredColorScheme(.light)
     }

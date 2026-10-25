@@ -46,7 +46,7 @@ struct DigitalClockOutline: InsettableShape {
         let bounds = rect.insetBy(dx: insetAmount, dy: insetAmount)
         switch shape {
         case .oval: return Path(ellipseIn: bounds)
-        case .roundedRectangle: return Path(roundedRect: bounds, cornerRadius: bounds.height * 0.24)
+        case .roundedRectangle: return Path(roundedRect: bounds, cornerRadius: max(0, rect.height * 0.24 - insetAmount))
         case .rectangle: return Path(bounds)
         }
     }
@@ -70,34 +70,57 @@ struct DigitalClock: View {
     var exposesControlFields = false
     /// Lessons that teach the 24-hour clock keep those digits even when the player prefers 12-hour time.
     var notation: DigitalHourNotation? = nil
+    var feedbackCorrect: Bool? = nil
     private var reading: DigitalClockReading {
         time.digitalReading(notation: notation ?? theme.resolvedHourNotation(device: deviceHourFormat.notation),
                             languageCode: language.effective.code)
     }
     var body: some View {
+        let value = reading
+        // Measure each complete, single-line display before choosing its size. Digits,
+        // AM/PM and padding always shrink together, in every clock style.
+        ZStack {
+            ViewThatFits(in: .horizontal) {
+                display(value, fontSize: fontSize)
+                display(value, fontSize: fontSize * 0.9)
+                display(value, fontSize: fontSize * 0.8)
+                display(value, fontSize: fontSize * 0.7)
+                display(value, fontSize: fontSize * 0.6)
+                display(value, fontSize: fontSize * 0.5)
+                display(value, fontSize: fontSize * 0.4)
+                display(value, fontSize: fontSize * 0.3)
+            }
+        }
+        .padding(.top, showHandHints ? 48 : 0)
+        .environment(\.layoutDirection, .leftToRight)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(value.text)
+    }
+
+    private func display(_ reading: DigitalClockReading, fontSize: CGFloat) -> some View {
         HStack(alignment: .center, spacing: fontSize * 0.12) {
             HStack(spacing: theme.numerals == .digital ? fontSize * 0.1 : 0) {
-                pair(reading.hour, number: 1, ink: theme.hourHex)
+                pair(reading.hour, number: 1, ink: theme.hourHex, fontSize: fontSize)
                 if theme.numerals == .digital {
                     SevenSegmentDigit(character: ":").frame(width: fontSize * 0.15, height: fontSize * 0.86)
                 } else {
                     Text(verbatim: ":")
                 }
-                pair(reading.minute, number: 2, ink: theme.minuteHex)
+                pair(reading.minute, number: 2, ink: theme.minuteHex, fontSize: fontSize)
             }
             if let period = reading.period {
                 Text(verbatim: period)
                     .font(.system(size: fontSize * 0.34, weight: .heavy, design: theme.numerals.fontDesign))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.6)
                     .accessibilityHidden(true)
             }
         }
         .font(.system(size: fontSize, weight: .heavy, design: theme.numerals.fontDesign))
         .monospacedDigit()
+        .lineLimit(1)
         .padding(.vertical, theme.numerals == .digital ? fontSize * 0.08 : 0)
         .foregroundStyle(Color(dinoHex: theme.digitalInkHex))
-        .padding(.horizontal, showsDisplay ? fontSize * horizontalPadding : 0)
+        .padding(.horizontal, showsDisplay ? fontSize * horizontalPadding(for: reading) : 0)
         .padding(.vertical, showsDisplay ? fontSize * 0.22 : 0)
         .background {
             if showsDisplay {
@@ -108,21 +131,28 @@ struct DigitalClock: View {
             if showsDisplay {
                 DigitalClockOutline(shape: theme.digitalShape)
                     .strokeBorder(DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: highContrast ? 3 : 2)
+                if let feedbackCorrect {
+                    // The stroke sits entirely outside the display and follows its
+                    // exact shape, rather than cutting across its rounded corners.
+                    DigitalClockOutline(shape: theme.digitalShape)
+                        .inset(by: -2)
+                        .stroke(feedbackCorrect ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : DinoStyle.wrong(highContrast),
+                                lineWidth: 4)
+                }
             }
         }
-        .padding(.top, showHandHints ? 48 : 0)
-        .environment(\.layoutDirection, .leftToRight)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(reading.text)
+        // Reserve the ring even before feedback so checking cannot move the clock.
+        .padding(showsDisplay ? 4 : 0)
+        .fixedSize(horizontal: true, vertical: true)
     }
 
-    private var horizontalPadding: CGFloat {
+    private func horizontalPadding(for reading: DigitalClockReading) -> CGFloat {
         let oval = theme.digitalShape == .oval
         if reading.period == nil { return oval ? 0.62 : 0.38 }
         return oval ? 0.46 : 0.28
     }
 
-    private func pair(_ text: String, number: Int, ink: UInt32) -> some View {
+    private func pair(_ text: String, number: Int, ink: UInt32, fontSize: CGFloat) -> some View {
         DigitalClockDigits(text: text, numerals: theme.numerals, fontSize: fontSize)
             .anchorPreference(key: DigitalClockFieldAnchors.self, value: .bounds) { anchor in
                 exposesControlFields ? [number == 2 ? .minutes : .hours: anchor] : [:]
@@ -229,9 +259,9 @@ struct DigitalClockControl: View {
     }
 
     var body: some View {
-        DigitalClock(time: time, theme: theme, fontSize: fontSize, exposesControlFields: true, notation: notation)
+        DigitalClock(time: time, theme: theme, fontSize: fontSize, exposesControlFields: true,
+                     notation: notation, feedbackCorrect: feedbackCorrect)
             .accessibilityHidden(true)
-            .modifier(ClockAnswerOutline(visible: feedbackCorrect != nil, correct: feedbackCorrect == true))
             .padding(.vertical, 48)
             .overlayPreferenceValue(DigitalClockFieldAnchors.self) { anchors in
                 GeometryReader { geometry in

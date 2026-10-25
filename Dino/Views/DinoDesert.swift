@@ -664,14 +664,31 @@ struct DinoDesertPainter {
             var c = context; c.opacity = 0.4
             DinoDesertPainter(context: c).at(CGPoint(x: x, y: h * 0.40 + CGFloat(i % 2) * 21), size: s * 0.85) { $0.mesa(variation: i, distant: true) }
         }
+        // Mesa foothills run into the same dunes, without a hard cut at their bases.
+        var foothills = Path(); foothills.move(to: CGPoint(x: -w * 0.1, y: h * 0.465))
+        foothills.addCurve(to: CGPoint(x: w * 1.1, y: h * 0.47), control1: CGPoint(x: w * 0.28, y: h * 0.42), control2: CGPoint(x: w * 0.64, y: h * 0.51))
+        foothills.addLine(to: CGPoint(x: w * 1.1, y: h * 0.59)); foothills.addLine(to: CGPoint(x: -w * 0.1, y: h * 0.59)); foothills.closeSubpath()
+        material(foothills, [0xE4C795, 0xEED49F])
         for i in 0..<4 {
             let y = h * (0.47 + CGFloat(i) * 0.16)
             var dune = Path(); dune.move(to: CGPoint(x: -30, y: y))
             dune.addCurve(to: CGPoint(x: w + 30, y: y + 30), control1: CGPoint(x: w * 0.30, y: y - 50), control2: CGPoint(x: w * 0.70, y: y + 80))
             let crest = dune
             for point in [CGPoint(x: w + 30, y: h + 20), CGPoint(x: -30, y: h + 20)] { dune.addLine(to: point) }; dune.closeSubpath()
-            material(dune, [0xFFE4AC, 0xEFC78A, 0xE6B778])
+            let colors: [UInt32] = i < 2 ? [0xF8E3B3, 0xEBC993, 0xE4BC86] : [0xF3D5A0, 0xDDB47E, 0xD1A36F]
+            material(dune, colors)
             context.stroke(crest, with: .color(Color(dinoHex: 0xFFF1C6).opacity(0.7)), lineWidth: 1.5)
+        }
+        // Long wind-carved ribs share the curvature and perspective of the dunes.
+        for right in [false, true] {
+            for i in 0..<8 {
+                let y = h * (0.67 + CGFloat(i) * 0.044)
+                let x = right ? w * 0.98 : w * 0.02, sign: CGFloat = right ? -1 : 1
+                var rib = Path(); rib.move(to: CGPoint(x: x - sign * w * 0.08, y: y))
+                rib.addQuadCurve(to: CGPoint(x: x + sign * w * (0.20 + CGFloat(i) * 0.009), y: y + h * 0.023),
+                                 control: CGPoint(x: x + sign * w * 0.09, y: y - h * 0.013))
+                context.stroke(rib, with: .color(Color(dinoHex: 0xFFE6B8).opacity(0.44)), lineWidth: 0.9 + CGFloat(i) * 0.15)
+            }
         }
         at(CGPoint(x: w * 0.06, y: h * 0.68), size: s * 0.9) { $0.cactus(variation: 1) }
         at(CGPoint(x: w * 0.94, y: h * 0.64), size: s * 0.62) { $0.ruin() }
