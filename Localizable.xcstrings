@@ -2039,6 +2039,74 @@
         }
       }
     },
+    "dino.expanded.arithmetic.hours" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hours"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uren"
+          }
+        }
+      }
+    },
+    "dino.expanded.arithmetic.minutes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minutes"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minuten"
+          }
+        }
+      }
+    },
+    "dino.expanded.arithmetic.newTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New time"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe tijd"
+          }
+        }
+      }
+    },
+    "dino.expanded.arithmetic.split" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Split"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Splitsom"
+          }
+        }
+      }
+    },
     "dino.expanded.playground" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5660,53 +5728,19 @@
         }
       }
     },
-    "dino.question.flightArrival.ahead.format" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The plane leaves at %@ and flies for %@. The destination is %@ %@. What time does it arrive?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Het vliegtuig vertrekt om %@ en vliegt %@. De bestemming is %@ %@. Hoe laat komt het aan?"
-          }
-        }
-      }
-    },
-    "dino.question.flightArrival.behind.format" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The plane leaves at %@ and flies for %@. The destination is %@ %@. What time does it arrive?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Het vliegtuig vertrekt om %@ en vliegt %@. De bestemming is %@ %@. Hoe laat komt het aan?"
-          }
-        }
-      }
-    },
     "dino.question.flightArrival.format" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The plane leaves at %@ and flies for %@. What time does it arrive?"
+            "value" : "The plane leaves at %@. What time does it arrive?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Het vliegtuig vertrekt om %@ en vliegt %@. Hoe laat komt het aan?"
+            "value" : "Het vliegtuig vertrekt om %@. Hoe laat komt het aan?"
           }
         }
       }

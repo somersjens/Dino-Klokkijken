@@ -63,6 +63,7 @@ struct DinoCoreTests {
         testSpokenTime()
         testFlightArrivals()
         testMinutesBetweenQuestions()
+        testClockArithmetic()
         testDaySchedules()
         testCapitalTimeZones()
         testUnambiguousQuestionTimes()
@@ -964,6 +965,73 @@ struct DinoCoreTests {
                 crossedHour = crossedHour || start.hour != end.hour
             }
             expect(crossedHour, "minute differences include hour changes for every time family")
+        }
+    }
+
+    static func testClockArithmetic() {
+        let sketch = DinoClockArithmetic(start: ClockTime(hour: 0, minute: 2), durationMinutes: 5, adding: false)
+        expect(sketch.difference == ClockTime(hour: 0, minute: 5), "the duration is written as a time of day")
+        expect(sketch.minutes.sums.map(\.equation) == ["2 − 5 = −3", "−3 + 60 = 57"], "minutes borrow through the same digit")
+        expect(sketch.hours.sums.map(\.equation) == ["0 − 0 = 0", "0 − 1 = −1", "−1 + 24 = 23"], "midnight reuses the hour that fell short")
+        expect(sketch.minutes.sums[1].reusesFirstTerm && sketch.hours.sums[1].reusesFirstTerm, "each second sum starts from the first result")
+        expect(sketch.result == ClockTime(hour: 23, minute: 57) && sketch.crossesMidnight, "the two results form the new time")
+
+        let borrow = DinoClockArithmetic(start: ClockTime(hour: 10, minute: 2), durationMinutes: 5, adding: false)
+        expect(borrow.hours.sums.map(\.equation) == ["10 − 0 = 10", "10 − 1 = 9"] && borrow.minutes.sums.count == 2,
+               "a minute borrow keeps a matching hour step, even through zero")
+        expect(borrow.result == ClockTime(hour: 9, minute: 57), "borrowed minutes land on the previous hour")
+
+        let plainAdd = DinoClockArithmetic(start: ClockTime(hour: 10, minute: 20), durationMinutes: 5, adding: true)
+        expect(plainAdd.hours.sums.isEmpty && plainAdd.hours.passthrough == 10, "an unchanged hour is not written as a sum")
+        expect(plainAdd.minutes.sums.map(\.equation) == ["20 + 5 = 25"], "only the minute sum is shown")
+        expect(plainAdd.result == ClockTime(hour: 10, minute: 25), "the kept hour and the new minutes form the time")
+
+        let carry = DinoClockArithmetic(start: ClockTime(hour: 10, minute: 50), durationMinutes: 20, adding: true)
+        expect(carry.minutes.sums.map(\.equation) == ["50 + 20 = 70", "70 − 60 = 10"], "extra minutes continue in a second sum")
+        expect(carry.hours.sums.map(\.equation) == ["10 + 0 = 10", "10 + 1 = 11"], "the carried hour follows the unchanged hours")
+        expect(carry.result == ClockTime(hour: 11, minute: 10), "carried minutes become the next hour")
+
+        let both = DinoClockArithmetic(start: ClockTime(hour: 23, minute: 30), durationMinutes: 90, adding: true)
+        expect(both.hours.sums.map(\.equation) == ["23 + 1 = 24", "24 + 1 = 25", "25 − 24 = 1"], "midnight follows the hour and the carried hour separately")
+        expect(both.minutes.sums.map(\.equation) == ["30 + 30 = 60", "60 − 60 = 0"], "a full hour of minutes is reduced beside the first sum")
+        expect(both.result == ClockTime(hour: 1) && both.crossesMidnight, "both corrections agree on the new time")
+
+        let earlier = DinoClockArithmetic(start: ClockTime(hour: 3, minute: 10), durationMinutes: 90, adding: false)
+        expect(earlier.hours.sums.map(\.equation) == ["3 − 1 = 2", "2 − 1 = 1"], "the borrowed hour reuses the hour sum")
+        expect(earlier.minutes.sums[0].equation == "10 − 30 = −20" && earlier.result == ClockTime(hour: 1, minute: 40),
+               "hours and minutes stay tied to the same duration")
+
+        let wholeHour = DinoClockArithmetic(start: ClockTime(hour: 10), durationMinutes: 60, adding: false)
+        expect(wholeHour.minutes.sums.isEmpty && wholeHour.minutes.passthrough == 0, "unchanged minutes are not a sum")
+        expect(wholeHour.hours.sums.map(\.equation) == ["10 − 1 = 9"] && wholeHour.result == ClockTime(hour: 9),
+               "a whole hour only changes the hour column")
+
+        for hour in 0..<24 {
+            for minute in [0, 2, 10, 30, 50, 59] {
+                for duration in [1, 15, 59, 60, 61, 90, 120, 240] {
+                    for adding in [true, false] {
+                        let start = ClockTime(hour: hour, minute: minute)
+                        let work = DinoClockArithmetic(start: start, durationMinutes: duration, adding: adding)
+                        let signed = adding ? duration : -duration
+                        expect(work.difference == ClockTime(hour: duration / 60, minute: duration % 60), "the difference uses 00:00")
+                        expect(work.result == start.adding(minutes: signed), "the column results are the new time")
+                        expect(work.hours.sums.count <= 3 && work.minutes.sums.count <= 2, "each column stays a short stack of sums")
+                        expect(work.hours.sums.isEmpty == (work.hours.passthrough != nil), "a quiet hour is not also a sum")
+                        expect(work.minutes.sums.isEmpty == (work.minutes.passthrough != nil), "quiet minutes are not also a sum")
+                        for column in [work.hours, work.minutes] {
+                            for (index, sum) in column.sums.enumerated() {
+                                let zeros = sum.terms.dropFirst().filter { $0 == 0 }
+                                let balancingZero = column.sums.count > 1 && index == 0 && zeros == [0]
+                                expect(zeros.isEmpty || balancingZero, "only a carried hour may pass through zero")
+                                if index > 0 {
+                                    expect(sum.reusesFirstTerm && sum.terms[0] == column.sums[index - 1].result,
+                                           "the second sum starts with the same digit")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -2030,7 +2098,7 @@ struct DinoCoreTests {
             expect(result.stars == stars && result.animationClip == clip, "boss stars use the same reward animations")
         }
         for (clip, asset) in [(DinoAnimation.Clip.backflip, "dino-backflip-08"), (.pirouette, "dino-pirouette-14"),
-                               (.thumbsUp, DinoAnimation.correctAnswerAssets[0]), (.wrongAnswer, DinoAnimation.wrongAnswerAssets[0])] {
+                               (.thumbsUp, DinoAnimation.correctAnswerStillAsset), (.wrongAnswer, DinoAnimation.wrongAnswerAssets[0])] {
             for step in 0...180 {
                 let reduced = DinoAnimation.sample(clip, elapsed: Double(step) / 120, reducedMotion: true)
                 expect(reduced.height == 0 && reduced.angle == 0 && reduced.yaw == 0 && reduced.scaleX == 1
@@ -2038,8 +2106,40 @@ struct DinoCoreTests {
                        "reduced motion holds the same clear expression completely still")
             }
         }
-        for clip in [DinoAnimation.Clip.thumbsUp, .wrongAnswer] {
-            let asset = (clip == .thumbsUp ? DinoAnimation.correctAnswerAssets : DinoAnimation.wrongAnswerAssets)[0]
+        let applauseAssets = (1...8).map { String(format: "dino_applaus_frame_%02d", $0) }
+        expect(DinoAnimation.correctAnswerAssets == applauseAssets, "correct answers use the eight supplied applause drawings")
+        for fps in [30.0, 60.0] {
+            for phase in [0.0, 0.25, 0.5, 0.75] {
+                var seen = [String]()
+                for step in 0...Int(ceil(DinoAnimation.duration(.thumbsUp) * fps)) {
+                    let reaction = DinoAnimation.sample(.thumbsUp, elapsed: (Double(step) + phase) / fps)
+                    if seen.last != reaction.pose.asset { seen.append(reaction.pose.asset) }
+                    expect(reaction.angle == 0 && reaction.height == 0 && reaction.scaleX == 1 && reaction.scaleY == 1,
+                           "the drawings carry the claps without the former cheering bounce")
+                }
+                expect(seen == applauseAssets + ["dino-idle"],
+                       "every clap drawing plays in order at 30 and 60 fps, then returns to idle")
+            }
+        }
+        for (index, start) in DinoAnimation.correctAnswerFrameStarts.enumerated() {
+            expect(DinoAnimation.sample(.thumbsUp, elapsed: start).pose.asset == applauseAssets[index],
+                   "each applause drawing starts at its authored time")
+            if index > 0 {
+                expect(DinoAnimation.sample(.thumbsUp, elapsed: start - 0.000001).pose.asset == applauseAssets[index - 1],
+                       "applause never skips a drawing at a frame boundary")
+            }
+        }
+        for asset in applauseAssets {
+            expect(DinoAnimation.spriteAssets.contains(asset)
+                   && FileManager.default.fileExists(atPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
+                   && DinoAvatarMask.spriteRegions(for: asset) != nil,
+                   "every applause drawing is available, preloaded and supports personal colors")
+        }
+        let recovered = DinoAnimation.sample(.thumbsUp, elapsed: DinoAnimation.duration(.thumbsUp))
+        expect(recovered.pose.asset == "dino-idle" && recovered.pose.offsetX == 0 && recovered.pose.offsetY == 0,
+               "applause finishes at the original idle placement before the next question")
+        for clip in [DinoAnimation.Clip.wrongAnswer] {
+            let asset = DinoAnimation.wrongAnswerAssets[0]
             var seen: [String] = []
             var movingSamples = 0
             var previous = DinoAnimation.sample(clip, elapsed: 0)
@@ -2071,16 +2171,13 @@ struct DinoCoreTests {
             expect(seen == ["dino-idle", asset, "dino-idle"],
                    "one held expression carries the movement, with just entry and exit image changes")
             expect(movingSamples > 300, "the held pose remains animated between image changes")
-            if clip == .wrongAnswer {
-                expect(minAngle < -1 && maxAngle > 1, "wrong feedback makes one readable left/right shake")
-            } else {
-                expect(highest < -0.025, "correct feedback makes one buoyant rise")
-            }
+            expect(minAngle < -1 && maxAngle > 1, "wrong feedback makes one readable left/right shake")
             expect(FileManager.default.fileExists(atPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
                    && DinoAvatarMask.spriteRegions(for: asset) != nil,
                    "the selected supplied artwork retains its personal-color mask")
         }
-        expect(DinoAnimation.duration(.thumbsUp) < DinoAnimation.correctAnswerDelay && DinoAnimation.correctAnswerDelay < 1, "complete thumbs before quick advance")
+        expect(DinoAnimation.duration(.thumbsUp) < DinoAnimation.correctAnswerDelay && DinoAnimation.correctAnswerDelay < 1,
+               "complete applause before the quick advance to the next question")
     }
 
     static func testPlausibleChoices() {
@@ -3094,12 +3191,8 @@ struct DinoCoreTests {
             "dino.question.minutesBetween.format": ("How many minutes are there between %@ and %@?", "Hoeveel minuten zitten er tussen %@ en %@?"),
             "dino.question.timeSequence.format": ("Looking at the sequence below, what time comes after %@?",
                                                  "Kijk naar de reeks hieronder. Welke tijd komt er na %@?"),
-            "dino.question.flightArrival.format": ("The plane leaves at %@ and flies for %@. What time does it arrive?",
-                                                   "Het vliegtuig vertrekt om %@ en vliegt %@. Hoe laat komt het aan?"),
-            "dino.question.flightArrival.ahead.format": ("The plane leaves at %@ and flies for %@. The destination is %@ %@. What time does it arrive?",
-                                                         "Het vliegtuig vertrekt om %@ en vliegt %@. De bestemming is %@ %@. Hoe laat komt het aan?"),
-            "dino.question.flightArrival.behind.format": ("The plane leaves at %@ and flies for %@. The destination is %@ %@. What time does it arrive?",
-                                                          "Het vliegtuig vertrekt om %@ en vliegt %@. De bestemming is %@ %@. Hoe laat komt het aan?"),
+            "dino.question.flightArrival.format": ("The plane leaves at %@. What time does it arrive?",
+                                                   "Het vliegtuig vertrekt om %@. Hoe laat komt het aan?"),
             "dino.question.timeZone.ahead.format": ("It is %@ in %@. %@ is %@ %@, what time is it in %@?",
                                                    "Het is %@ in %@. %@ is %@ %@, hoe laat is het in %@?"),
             "dino.question.timeZone.behind.format": ("It is %@ in %@. %@ is %@ %@, what time is it in %@?",
@@ -3211,18 +3304,18 @@ struct DinoCoreTests {
         expect(!sentence(prompt(washingtonQuestion, "en"), "en").contains("ten"), "the destination time is not spoken")
 
         let flight = question(kind: .flightArrival, target: ClockTime(hour: 6), related: [ClockTime(hour: 3)], duration: 120, offset: 1)
-        expect(sentence(prompt(flight, "en"), "en") == "The plane leaves at three o’clock and flies for 2 hours. The destination is 1 hour ahead. What time does it arrive?",
-               "a flight names the ride and the zone")
-        expect(prompt(flight, "en").arguments.map(\.emphasis) == [.plain, .forward, .forward, .forward],
-               "a later zone colors the word ahead")
+        expect(sentence(prompt(flight, "en"), "en") == "The plane leaves at three o’clock. What time does it arrive?",
+               "a flight title asks for arrival using only the departure")
+        expect(prompt(flight, "en").arguments.map(\.emphasis) == [.plain],
+               "flight duration and zone emphasis stay on the ticket")
         let returning = question(kind: .flightArrival, target: ClockTime(hour: 2), related: [ClockTime(hour: 3)], duration: 180, offset: -2)
-        expect(prompt(returning, "nl").arguments.map(\.emphasis) == [.plain, .forward, .backward, .backward],
-               "a zone behind colors the word achter")
-        expect(sentence(prompt(returning, "nl"), "nl") == "Het vliegtuig vertrekt om drie uur en vliegt 3 uur. De bestemming is 2 uur achter. Hoe laat komt het aan?",
-               "Dutch flight titles keep the zone direction")
+        expect(prompt(returning, "nl").arguments.map(\.emphasis) == [.plain],
+               "Dutch flight titles keep the departure in one color")
+        expect(sentence(prompt(returning, "nl"), "nl") == "Het vliegtuig vertrekt om drie uur. Hoe laat komt het aan?",
+               "Dutch flight titles use the same short question")
         let sameZone = question(kind: .flightArrival, target: ClockTime(hour: 5), related: [ClockTime(hour: 3)], duration: 120)
-        expect(sentence(prompt(sameZone, "en"), "en") == "The plane leaves at three o’clock and flies for 2 hours. What time does it arrive?",
-               "a flight without a zone change leaves that part out")
+        expect(sentence(prompt(sameZone, "en"), "en") == "The plane leaves at three o’clock. What time does it arrive?",
+               "a flight without a zone change uses the same short question")
         expect(!sentence(prompt(flight, "en"), "en").contains("six"), "the arrival time is not spoken")
 
         for language in ["nl", "en"] {

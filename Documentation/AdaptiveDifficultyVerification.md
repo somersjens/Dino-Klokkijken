@@ -46,3 +46,7 @@ De bestaande `dino.learning.records.v1` blijft leesbaar. Leerstand blijft per co
 De kernsuite controleert alle 360 categorieën in Nederlands en Engels, de volledige avontuurroute, correcte sommen, unieke antwoorden, tijdsoorten, snel herstel en opslag. Aanvullende variatietests controleren met twee seeds voor ieder type en niveau alle minuten binnen een korte reeks, beide gemengde oefenvolgorden, gevarieerde rekenduren, realistische treinreizen en incidentele halfuurzones. Positieve en negatieve halfuurberekeningen en de laatste halve animatiestap worden apart gecontroleerd.
 
 Uitgevoerd: de volledige kernsuite slaagt met **843.852 controles**. Na een extra controle op aangepaste dagdelen met slechts één uur slaagt de gerichte variatiesuite met **19.563 controles**. De Debug-build voor iOS Simulator slaagt. De schermtest voor de opbouw na één en drie goede antwoorden slaagt op iPhone 17 (iOS 26.5); ook de Engelse referentiekaart met Londen slaagt.
+
+De hervatte eindcontrole `testHalfHourTimeZonePreservesMapAndWorkedAnswer` slaagt eveneens op iPhone 17 (iOS 26.5). Een echte oefensessie bereikt New Delhi, toont het halve uur in de kaart en vraagtekst en eindigt na antwoordonthulling met exact **+4½** en de juiste kloktijd. Kaartsteden en de afzonderlijke klokstappen zijn als toegankelijke groepen opgenomen, zodat hun namen, tijden en verschillen zelfstandig herkenbaar blijven.
+
+Visueel gecontroleerd: [halfuurverschil en uitgewerkt antwoord op iPhone](Screenshots/QuestionVariation/half-hour-worked-answer.png).

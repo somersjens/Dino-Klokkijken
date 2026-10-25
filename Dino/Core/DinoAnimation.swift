@@ -19,11 +19,13 @@ enum DinoAnimation {
         var scaleY = 1.0
     }
 
-    // Hold one expression while continuous motion carries the gesture. Changing
-    // faces and silhouettes on every beat made the supplied art feel like slides.
     static let correctAnswerDelay = duration(.thumbsUp) + 0.12
     static let wrongAnswerAssets = [DinoAnswerArtwork.wrongAssets[1]]
-    static let correctAnswerAssets = [DinoAnswerArtwork.correctAssets[2]]
+    static let correctAnswerAssets = (1...8).map { String(format: "dino_applaus_frame_%02d", $0) }
+    // Two claps, followed by the supplied recovery pose before returning to idle.
+    // Keep every drawing visible at both 30 and 60 Hz without delaying the next question.
+    static let correctAnswerFrameStarts = [0.0, 0.06, 0.16, 0.26, 0.36, 0.46, 0.56, 0.66]
+    static let correctAnswerStillAsset = correctAnswerAssets[5]
     static let answerGestureStart = 0.08
     static let answerGestureEnd = 0.66
     struct TimedPose {
@@ -56,9 +58,10 @@ enum DinoAnimation {
         TimedPose(start: pirouetteLanding + 0.45, pose: Pose(asset: "dino-pirouette-14", paintedYaw: 360, offsetX: -0.012, offsetY: -0.029))
     ]
     static let pirouetteAssets = pirouetteFrames.map { $0.pose.asset }
-    static let spriteAssets = ["dino-idle", "dino-thumbs-up-08", "dino-wrong-answer-04",
+    // Prepare answer reactions first so even a quick first answer finds warm bitmaps.
+    static let spriteAssets = ["dino-idle"] + correctAnswerAssets + wrongAnswerAssets
+        + ["dino-thumbs-up-08", "dino-wrong-answer-04",
                                "dino-backflip-01", "dino-backflip-03", "dino-backflip-07", "dino-backflip-08"]
-        + wrongAnswerAssets + correctAnswerAssets
         + pirouetteAssets
     static let worldJumpAssets = [1, 2, 3, 6, 7].map { String(format: "dino-world-jump-%02d", $0) }
 
@@ -104,9 +107,14 @@ enum DinoAnimation {
         case .idle:
             return Sample(pose: Pose(asset: "dino-idle"))
         case .thumbsUp:
-            return answerSample(.thumbsUp, elapsed: t, reducedMotion: reducedMotion)
+            guard !reducedMotion else { return Sample(pose: Pose(asset: correctAnswerStillAsset)) }
+            guard t < duration(.thumbsUp) else { return sample(.idle, elapsed: 0) }
+            let index = correctAnswerFrameStarts.lastIndex { t >= $0 } ?? 0
+            // The artwork supplies the hand movement; keep the portrait camera
+            // and body still instead of adding the former cheering bounce.
+            return Sample(pose: Pose(asset: correctAnswerAssets[index]))
         case .wrongAnswer:
-            return answerSample(.wrongAnswer, elapsed: t, reducedMotion: reducedMotion)
+            return wrongAnswerSample(elapsed: t, reducedMotion: reducedMotion)
         case .pirouette:
             let finalPose = pirouetteFrames.last!.pose
             guard !reducedMotion else {
@@ -174,26 +182,14 @@ enum DinoAnimation {
         }
     }
 
-    private static func answerSample(_ clip: Clip, elapsed t: Double, reducedMotion: Bool) -> Sample {
-        let happy = clip == .thumbsUp
+    private static func wrongAnswerSample(elapsed t: Double, reducedMotion: Bool) -> Sample {
         // Register the head against idle; the camera and portrait rim stay fixed.
-        let expression = happy
-            ? Pose(asset: correctAnswerAssets[0], offsetX: 10.0 / 1254, offsetY: 12.0 / 1254)
-            : Pose(asset: wrongAnswerAssets[0], offsetX: -14.0 / 1254)
+        let expression = Pose(asset: wrongAnswerAssets[0], offsetX: -14.0 / 1254)
         guard !reducedMotion else { return Sample(pose: expression) }
-        guard t < duration(clip) else { return sample(.idle, elapsed: 0) }
+        guard t < duration(.wrongAnswer) else { return sample(.idle, elapsed: 0) }
         let p = min(1, max(0, (t - answerGestureStart) / (answerGestureEnd - answerGestureStart)))
         let arc = sin(.pi * p)
         let pose = t >= answerGestureStart && t < answerGestureEnd ? expression : Pose(asset: "dino-idle")
-        if happy {
-            // A small wind-up, one buoyant rise and a soft compression on return.
-            // The expression stays unchanged throughout that complete movement.
-            let compression = 0.025 * pulse(t, start: 0, end: 0.14)
-                + 0.018 * pulse(t, start: 0.54, end: 0.76)
-            return Sample(pose: pose, angle: -2.5 * sin(2 * .pi * p) * arc,
-                          height: -0.032 * arc * arc,
-                          scaleX: 1 + compression * 0.4, scaleY: 1 - compression)
-        }
         // One gentle left/right shake around the neck. The sine envelope gives
         // both ends zero velocity instead of stopping or reversing abruptly.
         return Sample(pose: pose, angle: -3.2 * sin(2 * .pi * p) * arc * arc,

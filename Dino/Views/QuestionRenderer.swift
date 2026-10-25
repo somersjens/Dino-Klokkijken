@@ -129,11 +129,20 @@ struct QuestionRenderer: View {
 
     private var analogOptions: some View {
         let columns = wideLayout && question.options.count == 4 ? 4 : 2
-        let size = min(answerClockSize, width >= 600 ? 210 : 150, (width - CGFloat(columns - 1) * 12) / CGFloat(columns) - 18)
+        let available = min(answerClockSize, width >= 600 ? 210 : 150, (width - CGFloat(columns - 1) * 12) / CGFloat(columns) - 18)
+        // Keep the digital explanation inside the existing answer area's height.
+        let size = min(available, max(88, available - 44))
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 14) {
             ForEach(Array(question.options.enumerated()), id: \.offset) { index, option in
+                let wrong = session.hasFeedback && session.rejectedResponses.contains(.time(option))
                 answerButton(option: option, index: index) {
-                    AnalogClock(time: option, theme: theme, size: size).allowsHitTesting(false).padding(8)
+                    AnswerTimeExplanation(time: option, theme: theme, visible: wrong,
+                                          fontSize: min(24, size * 0.19),
+                                          content: AnalogClock(time: option, theme: theme, size: size)
+                                            .allowsHitTesting(false))
+                        .padding(8)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(theme.digitalReading(option, languageCode: language.effective.code))
                 }
             }
         }.id("question.answers").questionAnswerFocus()
@@ -174,6 +183,27 @@ struct QuestionRenderer: View {
     }
 }
 
+/// Keep the explanation's space reserved while a choice is still unanswered.
+struct AnswerTimeExplanation<Content: View>: View {
+    let time: ClockTime
+    let theme: ClockTheme
+    let visible: Bool
+    var fontSize: CGFloat = 24
+    var notation: DigitalHourNotation? = nil
+    let content: Content
+
+    var body: some View {
+        ZStack {
+            VStack(spacing: 8) {
+                content
+                DigitalClock(time: time, theme: theme, fontSize: fontSize, notation: notation)
+            }
+            .opacity(visible ? 1 : 0)
+            if !visible { content }
+        }
+    }
+}
+
 struct QuestionAnswerFrameKey: PreferenceKey {
     static var defaultValue: CGRect? { nil }
     static func reduce(value: inout CGRect?, nextValue: () -> CGRect?) {
@@ -197,6 +227,7 @@ extension View {
 struct DinoAnalogClockControls: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.isEnabled) private var isEnabled
     @Namespace private var handSelection
     @Binding var adjustingMinutes: Bool
     let allowsMinutes: Bool
@@ -213,9 +244,11 @@ struct DinoAnalogClockControls: View {
                     handButton(minutes: true)
                 }
                 .padding(4)
-                .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                .background(isEnabled ? .white : DinoStyle.disabledBackground, in: RoundedRectangle(cornerRadius: 16))
                 .overlay(RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(DinoStyle.ink.opacity(highContrast ? 1 : 0.22), lineWidth: highContrast ? 3 : 1.5))
+                    .strokeBorder(isEnabled ? DinoStyle.ink.opacity(highContrast ? 1 : 0.22)
+                        : highContrast ? DinoStyle.disabledInk(true) : DinoStyle.disabledBorder,
+                        lineWidth: highContrast ? 3 : 1.5))
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("\(prefix).hand")
             }
@@ -233,17 +266,17 @@ struct DinoAnalogClockControls: View {
             Text(LocalizedStringKey(minutes ? "dino.minutes" : "dino.hours"))
                 .font(.system(size: 17, weight: .bold, design: .rounded))
                 .minimumScaleFactor(0.75).lineLimit(1)
-                .foregroundStyle(selected ? Color.white : DinoStyle.ink)
+                .foregroundStyle(isEnabled ? (selected ? Color.white : DinoStyle.ink) : DinoStyle.disabledInk(highContrast))
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .contentShape(Rectangle())
                 .background {
                     if selected {
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(DinoStyle.ink)
+                            .fill(isEnabled ? DinoStyle.ink : DinoStyle.disabledSelection)
                             .matchedGeometryEffect(id: "selectedHand", in: handSelection)
                     }
                 }
-        }.buttonStyle(.plain)
+        }.buttonStyle(DinoAnswerButtonStyle())
             .accessibilityIdentifier("\(prefix).hand.\(minutes ? "minutes" : "hours")")
             .accessibilityAddTraits(selected ? .isSelected : [])
             .overlay(alignment: .bottomTrailing) { if demonstratedAction == action { DinoClockTapCue() } }

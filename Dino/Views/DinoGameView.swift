@@ -77,6 +77,12 @@ struct DinoGameView: View {
                         .onValueChange(of: session.question.id) { _ in
                             proxy.scrollTo("question.top", anchor: .top)
                         }
+                        .onValueChange(of: session.showsWorkedExplanation) { showing in
+                            guard showing, [.addTime, .subtractTime].contains(session.question.kind) else { return }
+                            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.35)) {
+                                proxy.scrollTo("question.timeArithmetic", anchor: .top)
+                            }
+                        }
                         .onValueChange(of: session.hasFeedback) { showing in
                             if showing { DinoQuestionSpeech.shared.interrupt() }
                         }

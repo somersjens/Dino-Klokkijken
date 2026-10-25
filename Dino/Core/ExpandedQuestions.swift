@@ -755,3 +755,95 @@ struct DinoFlightArrivalWork: Equatable {
         return steps
     }
 }
+
+enum DinoClockOperation: Equatable, Sendable {
+    case add, subtract
+    var symbol: String { self == .add ? "+" : "−" }
+    func apply(_ lhs: Int, _ rhs: Int) -> Int { self == .add ? lhs + rhs : lhs - rhs }
+}
+
+/// One written sum. A follow-up starts with the previous result, the same digit beside it.
+struct DinoClockSum: Equatable, Sendable {
+    var terms: [Int]
+    var operation: DinoClockOperation
+    var result: Int
+    var reusesFirstTerm: Bool
+
+    var equation: String {
+        let body = terms.map(DinoClockArithmetic.format).joined(separator: " \(operation.symbol) ")
+        return "\(body) = \(DinoClockArithmetic.format(result))"
+    }
+}
+
+/// The hour column or the minute column. No sum is stored when that part of the clock does not change.
+struct DinoClockColumnWork: Equatable, Sendable {
+    var sums: [DinoClockSum]
+    var passthrough: Int?
+    var result: Int { sums.last?.result ?? passthrough ?? 0 }
+}
+
+/// Splits adding or subtracting a duration into the hour sum and the minute sum.
+/// A second sum appears only when the first result does not fit on a clock, and it reuses that result.
+struct DinoClockArithmetic: Equatable, Sendable {
+    var start: ClockTime
+    var adding: Bool
+    var differenceHours: Int
+    var differenceMinutes: Int
+    var hours: DinoClockColumnWork
+    var minutes: DinoClockColumnWork
+
+    var difference: ClockTime { ClockTime(hour: differenceHours, minute: differenceMinutes) }
+    var result: ClockTime { ClockTime(hour: hours.result, minute: minutes.result) }
+    var crossesMidnight: Bool { hours.sums.contains { $0.terms.contains(24) } }
+
+    init(start: ClockTime, durationMinutes: Int, adding: Bool) {
+        let duration = max(0, durationMinutes)
+        self.start = start
+        self.adding = adding
+        differenceHours = duration / 60
+        differenceMinutes = duration % 60
+
+        let minuteOperation: DinoClockOperation = adding ? .add : .subtract
+        if differenceMinutes == 0 {
+            minutes = DinoClockColumnWork(sums: [], passthrough: start.minute)
+        } else {
+            let raw = minuteOperation.apply(start.minute, differenceMinutes)
+            var sums = [DinoClockSum(terms: [start.minute, differenceMinutes], operation: minuteOperation,
+                                     result: raw, reusesFirstTerm: false)]
+            if adding && raw >= 60 {
+                sums.append(DinoClockSum(terms: [raw, 60], operation: .subtract, result: raw - 60, reusesFirstTerm: true))
+            } else if !adding && raw < 0 {
+                sums.append(DinoClockSum(terms: [raw, 60], operation: .add, result: raw + 60, reusesFirstTerm: true))
+            }
+            minutes = DinoClockColumnWork(sums: sums, passthrough: nil)
+        }
+
+        let hourOperation: DinoClockOperation = adding ? .add : .subtract
+        var adjustments: [Int] = []
+        if differenceHours > 0 { adjustments.append(differenceHours) }
+        // A minute carry keeps the hour column as long as the minute column, even when the hours themselves are 0.
+        if minutes.sums.count == 2 {
+            if adjustments.isEmpty { adjustments.append(0) }
+            adjustments.append(1)
+        }
+        var value = start.hour
+        var sums: [DinoClockSum] = []
+        for adjustment in adjustments {
+            let next = hourOperation.apply(value, adjustment)
+            sums.append(DinoClockSum(terms: [value, adjustment], operation: hourOperation,
+                                     result: next, reusesFirstTerm: !sums.isEmpty))
+            value = next
+        }
+        if adding && value >= 24 {
+            sums.append(DinoClockSum(terms: [value, 24], operation: .subtract, result: value - 24, reusesFirstTerm: !sums.isEmpty))
+        } else if !adding && value < 0 {
+            sums.append(DinoClockSum(terms: [value, 24], operation: .add, result: value + 24, reusesFirstTerm: !sums.isEmpty))
+        }
+        hours = sums.isEmpty ? DinoClockColumnWork(sums: [], passthrough: start.hour)
+                             : DinoClockColumnWork(sums: sums, passthrough: nil)
+    }
+
+    static func format(_ value: Int) -> String {
+        value < 0 ? "−\(abs(value))" : String(value)
+    }
+}

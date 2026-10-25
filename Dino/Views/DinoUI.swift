@@ -2,6 +2,37 @@ import SwiftUI
 import UIKit
 import Combine
 
+/// Answer stones share a line count and font size. Break at the most even word boundary.
+struct DinoAnswerTextLayout {
+    let titles: [String]
+    let fontSize: CGFloat
+
+    init(titles: [String], width: CGFloat, fontSize: CGFloat = 17) {
+        let base = UIFont.systemFont(ofSize: fontSize, weight: .bold)
+        let font = UIFont(descriptor: base.fontDescriptor.withDesign(.rounded) ?? base.fontDescriptor,
+                          size: fontSize)
+        func measure(_ text: String) -> CGFloat {
+            (text as NSString).size(withAttributes: [.font: font]).width
+        }
+        let available = max(1, width - 2)
+        let usesTwoLines = titles.contains { measure($0) > available }
+        self.titles = titles.map { title in
+            let words = title.split(whereSeparator: \.isWhitespace).map(String.init)
+            guard usesTwoLines, words.count > 1 else { return title }
+            let split = (1..<words.count).min { lhs, rhs in
+                func difference(at index: Int) -> CGFloat {
+                    abs(measure(words[..<index].joined(separator: " "))
+                        - measure(words[index...].joined(separator: " ")))
+                }
+                return difference(at: lhs) < difference(at: rhs)
+            }!
+            return words[..<split].joined(separator: " ") + "\n" + words[split...].joined(separator: " ")
+        }
+        let longestLine = self.titles.flatMap { $0.components(separatedBy: "\n") }.map(measure).max() ?? 0
+        self.fontSize = fontSize * min(1, available / max(1, longestLine))
+    }
+}
+
 private struct DinoMapPreparingKey: EnvironmentKey { static let defaultValue = false }
 private struct DinoMapInitialWorldKey: EnvironmentKey { static let defaultValue = 1 }
 private struct DinoMapArtworkPreparedKey: EnvironmentKey { static let defaultValue: (Int) -> Void = { _ in } }
@@ -366,6 +397,13 @@ enum DinoStyle {
     static let warning = Color(dinoHex: 0x8F2435)
     static let orange = Color(dinoHex: 0xF59A32)
     static let deepOrange = Color(dinoHex: 0xC45E00)
+    static let disabledBackground = Color(uiColor: .systemGray5)
+    static let disabledSelection = Color(uiColor: .systemGray4)
+    static let disabledBorder = Color(uiColor: .systemGray3)
+
+    static func disabledInk(_ highContrast: Bool) -> Color {
+        Color(dinoHex: highContrast ? 0x3A3A3C : 0x636366)
+    }
 
     static func wrong(_ highContrast: Bool) -> Color {
         highContrast ? deepOrange : orange
@@ -566,6 +604,7 @@ struct ClockHintBadgeArrow: View {
 /// Clock controls keep the same colors regardless of the player's clock theme.
 struct DinoClockControlButtonStyle: ButtonStyle {
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.isEnabled) private var isEnabled
     var selected = true
     var expands = false
     var compact = false
@@ -576,15 +615,17 @@ struct DinoClockControlButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: compact ? 15 : 17, weight: .bold, design: .rounded))
-            .foregroundStyle(selected ? Color.white : DinoStyle.ink)
+            .foregroundStyle(isEnabled ? (selected ? Color.white : DinoStyle.ink) : DinoStyle.disabledInk(highContrast))
             .lineLimit(1)
             .padding(.horizontal, width == nil ? (compact ? 12 : 18) : 0)
             .frame(width: width, height: height)
             .frame(minHeight: height ?? (compact ? 40 : 48))
             .frame(maxWidth: expands ? .infinity : nil)
-            .background(selected ? DinoStyle.ink : .white, in: RoundedRectangle(cornerRadius: cornerRadius))
+            .background(isEnabled ? (selected ? DinoStyle.ink : .white) : DinoStyle.disabledBackground,
+                        in: RoundedRectangle(cornerRadius: cornerRadius))
             .overlay(RoundedRectangle(cornerRadius: cornerRadius)
-                .strokeBorder(DinoStyle.ink.opacity(highContrast || selected ? 1 : 0.22),
+                .strokeBorder(isEnabled ? DinoStyle.ink.opacity(highContrast || selected ? 1 : 0.22)
+                    : highContrast ? DinoStyle.disabledInk(true) : DinoStyle.disabledBorder,
                               lineWidth: highContrast ? 3 : 1.5))
             .opacity(configuration.isPressed ? 0.85 : 1)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)

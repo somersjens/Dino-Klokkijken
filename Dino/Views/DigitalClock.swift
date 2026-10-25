@@ -170,6 +170,47 @@ struct DigitalClock: View {
     }
 }
 
+/// One piece of a digital time, drawn with the same display as the full clock.
+struct DigitalClockReadout: View {
+    @Environment(\.dinoHighContrast) private var highContrast
+    let text: String
+    let theme: ClockTheme
+    var fontSize: CGFloat = 28
+    var width: CGFloat? = nil
+    var emphasis: Emphasis = .plain
+
+    enum Emphasis { case plain, bridge, final }
+
+    var body: some View {
+        DigitalClockDigits(text: text, numerals: theme.numerals, fontSize: fontSize)
+            .font(.system(size: fontSize, weight: .heavy, design: theme.numerals.fontDesign))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .foregroundStyle(Color(dinoHex: theme.digitalInkHex))
+            .frame(width: width, height: fontSize * 1.22)
+            .padding(.horizontal, width == nil ? fontSize * 0.34 : 0)
+            .padding(.vertical, fontSize * 0.12)
+            .frame(minWidth: width ?? fontSize * 1.7)
+            .background {
+                DigitalClockOutline(shape: theme.digitalShape).fill(Color(dinoHex: theme.displayHex))
+            }
+            .overlay {
+                DigitalClockOutline(shape: theme.digitalShape)
+                    .strokeBorder(border, lineWidth: emphasis == .plain && !highContrast ? 2 : highContrast ? 2.5 : 3)
+            }
+            .fixedSize(horizontal: width == nil, vertical: true)
+    }
+
+    private var border: Color {
+        switch emphasis {
+        case .plain: return DinoStyle.ink.opacity(highContrast ? 1 : 0.12)
+        case .bridge: return highContrast ? DinoStyle.ink : Color(dinoHex: 0x154A86)
+        case .final: return highContrast ? DinoStyle.ink : DinoStyle.deepGreen
+        }
+    }
+}
+
 private extension DigitalNumerals {
     var fontDesign: Font.Design {
         switch self {
@@ -238,6 +279,7 @@ private struct SevenSegmentDigit: View {
 struct DigitalClockControl: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.isEnabled) private var isEnabled
     @ObservedObject private var language = LanguageManager.shared
     @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
     @Binding var hour: Int
@@ -249,7 +291,7 @@ struct DigitalClockControl: View {
     var valueIdentifier = "clock.value"
     var showHandHints = false
     var feedbackCorrect: Bool? = nil
-    /// False keeps the arrows visible and grayed out, so a checked answer does not remove them.
+    /// False keeps the arrows visible in their disabled colors after checking an answer.
     var controlsEnabled = true
     var notation: DigitalHourNotation? = nil
     private var time: ClockTime { ClockTime(hour: hour, minute: minute) }
@@ -269,10 +311,8 @@ struct DigitalClockControl: View {
                         if let anchor = anchors[field] {
                             let center = geometry[anchor].midX
                             arrow(field: field, direction: 1)
-                                .opacity(controlsEnabled ? 1 : 0.62)
                                 .position(x: center, y: 22)
                             arrow(field: field, direction: -1)
-                                .opacity(controlsEnabled ? 1 : 0.62)
                                 .position(x: center, y: geometry.size.height - 22)
                             if showHandHints {
                                 ClockHintBadgeArrow(number: field == .minutes ? 2 : 1,
@@ -305,14 +345,15 @@ struct DigitalClockControl: View {
             ? (direction > 0 ? "dino.minuteMore" : "dino.minuteLess")
             : (direction > 0 ? "dino.hourMore" : "dino.hourLess")
         let value = minutes ? reading.minute : reading.hour
+        let enabled = isEnabled && controlsEnabled && feedbackCorrect == nil && (!minutes || onMinuteChange != nil)
         return Button { adjust(direction, minutes: minutes) } label: {
             Image(systemName: direction > 0 ? "chevron.up" : "chevron.down")
                 .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(DinoStyle.ink.opacity(highContrast ? 1 : 0.75))
+                .foregroundStyle(enabled ? DinoStyle.ink.opacity(highContrast ? 1 : 0.75) : DinoStyle.disabledInk(highContrast))
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(DinoAnswerButtonStyle())
         .disabled(minutes && onMinuteChange == nil)
         .accessibilityLabel(LocalizedStringKey(labelKey))
         .accessibilityValue(value)

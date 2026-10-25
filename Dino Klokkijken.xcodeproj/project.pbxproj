@@ -69,6 +69,7 @@
 		DB192026BD01000000000002 /* Dino/Views/TimeZoneMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000002 /* Dino/Views/TimeZoneMap.swift */; };
 		DB192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json in Resources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json */; };
 		DB212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift */; };
+		DB212026BD01000000000002 /* Dino/Views/TimeArithmeticExplanation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA212026BD01000000000002 /* Dino/Views/TimeArithmeticExplanation.swift */; };
 		DC121026AB12000000000001 /* Dino/Core/DinoAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AB12000000000001 /* Dino/Core/DinoAppearance.swift */; };
 		DC121026AB13000000000001 /* Dino/Core/DinoAvatarMask.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AB13000000000001 /* Dino/Core/DinoAvatarMask.swift */; };
 		DC121026AC01000000000001 /* Dino/Core/PracticeConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AC01000000000001 /* Dino/Core/PracticeConfiguration.swift */; };
@@ -160,6 +161,7 @@
 		DA1A20261011000000000001 /* Dino/Views/JungleLandscape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/JungleLandscape.swift; sourceTree = SOURCE_ROOT; };
 		DA1A20261011000000000003 /* Dino/Views/AdventureHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/AdventureHeader.swift; sourceTree = SOURCE_ROOT; };
 		DA212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/MinutesBetweenQuestion.swift; sourceTree = SOURCE_ROOT; };
+		DA212026BD01000000000002 /* Dino/Views/TimeArithmeticExplanation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/TimeArithmeticExplanation.swift; sourceTree = SOURCE_ROOT; };
 		DCDF56484DA8108CF908CF1F /* DinoInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = DinoInfo.plist; sourceTree = SOURCE_ROOT; };
 		E0EF4D0B58F41DAEDFA25C60 /* Dino/Core/ProgressManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/ProgressManager.swift; sourceTree = SOURCE_ROOT; };
 		EA69CB435385B9A4C726D862 /* Dino/Views/Friends.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/Friends.swift; sourceTree = SOURCE_ROOT; };
@@ -271,6 +273,7 @@
 				DA121026AC02000000000002 /* Dino/Views/ExpandedQuestionView.swift */,
 				DA1820261018000000000002 /* Dino/Views/SpokenTimeQuestion.swift */,
 				DA212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift */,
+				DA212026BD01000000000002 /* Dino/Views/TimeArithmeticExplanation.swift */,
 				DA192026BD01000000000002 /* Dino/Views/TimeZoneMap.swift */,
 				DA121026AC01000000000002 /* Dino/Views/Practice.swift */,
 				DA162026BD01000000000001 /* Dino/Views/StarsOverview.swift */,
@@ -456,6 +459,7 @@
 				DB121026AC01000000000001 /* Dino/Core/PracticeConfiguration.swift in Sources */,
 				DB121026AC02000000000002 /* Dino/Views/ExpandedQuestionView.swift in Sources */,
 				DB212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift in Sources */,
+				DB212026BD01000000000002 /* Dino/Views/TimeArithmeticExplanation.swift in Sources */,
 				DB121026AC01000000000002 /* Dino/Views/Practice.swift in Sources */,
 				DB162026BD01000000000001 /* Dino/Views/StarsOverview.swift in Sources */,
 				DB121026AB13000000000001 /* Dino/Core/DinoAvatarMask.swift in Sources */,

@@ -9151,8 +9151,12 @@ private enum CityUrbanLayout {
         // Reserve the entrance blocks on city paving before filling the inner
         // streets. Only their roofs and upper facades overlap the cave floor.
         // Low shops fit in front of the metro entry along the left street edge.
-        for column in 0..<max(2,Int(ceil(layout.width/(90*s)))) {
-            let y = 258+30*s-layout.routeOffset
+        let entranceColumns = max(2,Int(ceil(layout.width/(90*s))))
+        let innerShopY = min(CityGroundLayout.entranceStreetY+30*s,
+                             layout.routeOffset+80-44*s-28*0.72*s-1)
+        for column in 0..<entranceColumns {
+            let edgeProgress = min(1,CGFloat(column)/CGFloat(max(1,entranceColumns/2)))
+            let y = innerShopY+(258+30*s-innerShopY)*edgeProgress-layout.routeOffset
             place(id:16000+column,y:y,kind:.shop,factor:0.72,right:false,
                   outerDistance:CGFloat(column)*54*s,arrival:true)
         }

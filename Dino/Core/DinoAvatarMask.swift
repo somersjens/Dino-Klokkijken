@@ -71,7 +71,40 @@ enum DinoAvatarMask {
         }
     }
 
-    static func spriteRegions(for asset: String) -> SpriteRegions? { answerPoses[asset] ?? openingPoses[asset] ?? poses[asset] }
+    static func spriteRegions(for asset: String) -> SpriteRegions? {
+        applausePoses[asset] ?? answerPoses[asset] ?? openingPoses[asset] ?? poses[asset]
+    }
+
+    /// Keep the clapping accents gold and protect the eyes and mouth in all eight drawings.
+    private static let applausePoses: [String: SpriteRegions] = {
+        let accents: [[CGRect]] = [
+            [],
+            [CGRect(x: 943, y: 444, width: 82, height: 104), CGRect(x: 973, y: 536, width: 87, height: 59)],
+            [CGRect(x: 843, y: 552, width: 72, height: 88), CGRect(x: 864, y: 632, width: 80, height: 53),
+             CGRect(x: 863, y: 703, width: 62, height: 56), CGRect(x: 463, y: 614, width: 76, height: 73),
+             CGRect(x: 455, y: 701, width: 75, height: 52)],
+            [CGRect(x: 926, y: 516, width: 82, height: 93), CGRect(x: 949, y: 623, width: 74, height: 56)],
+            [CGRect(x: 924, y: 468, width: 82, height: 99), CGRect(x: 952, y: 559, width: 85, height: 55)],
+            [CGRect(x: 888, y: 490, width: 86, height: 97), CGRect(x: 909, y: 586, width: 86, height: 57),
+             CGRect(x: 496, y: 594, width: 79, height: 71), CGRect(x: 493, y: 683, width: 73, height: 55)],
+            [CGRect(x: 923, y: 475, width: 78, height: 97), CGRect(x: 953, y: 565, width: 79, height: 55)],
+            []
+        ]
+        return Dictionary(uniqueKeysWithValues: (1...8).map { frame in
+            let atRest = frame == 1 || frame == 8
+            var shift = CGAffineTransform(translationX: -45.0 / 1254, y: -5.0 / 1254)
+            let decorations = CGMutablePath()
+            for rect in accents[frame - 1] {
+                decorations.addRect(rect.applying(CGAffineTransform(scaleX: 1 / 1254, y: 1 / 1254)))
+            }
+            let regions = SpriteRegions(bandanaBottom: 0.34, tailRight: 0.32, tailBottom: 0.41,
+                upperSpikes: atRest ? upperSpikes : upperSpikes.copy(using: &shift) ?? upperSpikes,
+                eyes: atRest ? eyes : frame < 5 ? eyeContours([(488, 300, 153, 151), (721, 247, 129, 143)]) : CGMutablePath(),
+                mouth: atRest ? mouthInterior : eyeContours([(560, 465, 260, 155)]),
+                protectsFaceBeforeCloth: true, decorations: decorations)
+            return (String(format: "dino_applaus_frame_%02d", frame), regions)
+        })
+    }()
 
     /// Trace the moving face in the new answer drawings, including the dizzy
     /// eyes and tilted mouth. Their gold stars retain their painted color.
@@ -564,7 +597,11 @@ enum DinoSpriteColorRenderer {
             CGRect(x: 545, y: 85, width: 275, height: 140),
             CGRect(x: 545, y: 85, width: 275, height: 140)
         ]
-        return Dictionary(uniqueKeysWithValues: zip(DinoAnswerArtwork.wrongAssets + DinoAnswerArtwork.correctAssets, rects))
+        let answers = Dictionary(uniqueKeysWithValues: zip(DinoAnswerArtwork.wrongAssets + DinoAnswerArtwork.correctAssets, rects))
+        let applause = (1...8).map { frame in
+            (String(format: "dino_applaus_frame_%02d", frame), CGRect(x: 500, y: 80, width: 300, height: 150))
+        }
+        return answers.merging(Dictionary(uniqueKeysWithValues: applause)) { existing, _ in existing }
     }()
 
     private static let bandanaLetteringBounds: [String: CGRect] = [
@@ -696,6 +733,14 @@ enum DinoSpriteColorRenderer {
         "ChatGPT-afbeelding 24 okt 2026, 21_15_48-8": [Tone(0.30040, 0.50198, 0.57312, 0.92373), Tone(0.10277, 0.18577, 0.34325, 0.50000), Tone(0.24704, 0.40316, 0.53557, 0.61081), Tone(0.59486, 0.80830, 0.89328, 0.68750)],
     ]
     private static let palettes: [String: [Tone]] = [
+        "dino_applaus_frame_01": [Tone(0.32213, 0.51779, 0.57115, 0.94167), Tone(0.10079, 0.19763, 0.38142, 0.56098), Tone(0.27075, 0.42688, 0.55731, 0.63090), Tone(0.60474, 0.81818, 0.90119, 0.70787)],
+        "dino_applaus_frame_02": [Tone(0.34325, 0.52767, 0.62205, 0.90950), Tone(0.09921, 0.18924, 0.35573, 0.58140), Tone(0.27075, 0.42292, 0.53360, 0.61345), Tone(0.55138, 0.75889, 0.86759, 0.59322)],
+        "dino_applaus_frame_03": [Tone(0.33730, 0.52778, 0.61858, 0.91189), Tone(0.10474, 0.19763, 0.37698, 0.55556), Tone(0.26680, 0.42688, 0.54348, 0.61086), Tone(0.53175, 0.74704, 0.86759, 0.57025)],
+        "dino_applaus_frame_04": [Tone(0.34387, 0.52767, 0.63439, 0.90717), Tone(0.10359, 0.19721, 0.35968, 0.55556), Tone(0.27273, 0.41897, 0.53953, 0.61039), Tone(0.56972, 0.77075, 0.86364, 0.62162)],
+        "dino_applaus_frame_05": [Tone(0.33992, 0.52590, 0.61660, 0.91379), Tone(0.09325, 0.18254, 0.34921, 0.57895), Tone(0.26482, 0.43083, 0.52767, 0.60870), Tone(0.55336, 0.76285, 0.86561, 0.59649)],
+        "dino_applaus_frame_06": [Tone(0.33992, 0.53162, 0.63294, 0.91000), Tone(0.10672, 0.19246, 0.33399, 0.57009), Tone(0.26389, 0.43281, 0.53162, 0.61017), Tone(0.55159, 0.76285, 0.86561, 0.60000)],
+        "dino_applaus_frame_07": [Tone(0.34190, 0.53162, 0.62451, 0.91262), Tone(0.09684, 0.19170, 0.36653, 0.56989), Tone(0.27075, 0.42688, 0.52964, 0.61086), Tone(0.57708, 0.77866, 0.86166, 0.63793)],
+        "dino_applaus_frame_08": [Tone(0.32213, 0.51779, 0.57115, 0.94167), Tone(0.10079, 0.19763, 0.38142, 0.56098), Tone(0.27075, 0.42688, 0.55731, 0.63090), Tone(0.60474, 0.81818, 0.90119, 0.70787)],
         "dino-pirouette-06a": [Tone(0.31818, 0.50198, 0.56126, 0.90598), Tone(0.12846, 0.22925, 0.32609, 0.42169), Tone(0.24704, 0.39328, 0.49407, 0.59596), Tone(0.58135, 0.67787, 0.79365, 0.46914)],
         "dino-pirouette-07a": [Tone(0.33794, 0.49209, 0.56917, 0.90909), Tone(0.16206, 0.25099, 0.38889, 0.36691), Tone(0.25000, 0.39526, 0.50395, 0.56190), Tone(0.60980, 0.69565, 0.80237, 0.51190)],
         "dino-pirouette-08a": [Tone(0.36561, 0.51976, 0.56746, 0.91228), Tone(0.15613, 0.24506, 0.38538, 0.38843), Tone(0.30159, 0.46047, 0.54348, 0.53509), Tone(0.63834, 0.76181, 0.86166, 0.62295)],
