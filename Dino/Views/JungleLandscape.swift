@@ -702,6 +702,9 @@ private struct WorldBannerPainter {
         signFoundation(layout)
         chapterSeat(layout)
         titleBoard(layout.titlePanel)
+        // The rigging wraps the face, but its ends are tucked beneath the
+        // chapter plaque and the beach ornaments drawn over it.
+        if themeID == 9 { pirateRigging(layout) }
         chapterTab(layout.tab)
         skillPlaque(layout.subtitle)
         scenery(layout, foreground: true)
@@ -1022,8 +1025,8 @@ private struct WorldBannerPainter {
                 boulder(at:.init(x:x+13*d*s,y:195),width:26*s,height:102*s,light:0x716275,face:0x494251,dark:0x2F303E)
                 line([.init(x:x+9*d*s,y:105),.init(x:x+7*d*s,y:139),.init(x:x+13*d*s,y:166),.init(x:x+8*d*s,y:192)],color:0xEFA84D,width:2)
             }
-            for side in 0..<2 {let x=side == 0 ? 30*s : w-29*s;boulder(at:.init(x:x,y:202),width:54*s,height:33,light:0x75616B,face:0x423B4B,dark:0x282C38);boulder(at:.init(x:x+(side == 0 ? 21 : -21)*s,y:204),width:25*s,height:20,light:0x76636E,face:0x514150,dark:0x302C3D)}
             line([.init(x:49*s,y:199),.init(x:w*0.4,y:201),.init(x:w*0.64,y:199),.init(x:w-48*s,y:200)],color:0xFFBE29,width:2)
+            for side in 0..<2 {let x=side == 0 ? 30*s : w-29*s;boulder(at:.init(x:x,y:202),width:54*s,height:33,light:0x75616B,face:0x423B4B,dark:0x282C38);boulder(at:.init(x:x+(side == 0 ? 21 : -21)*s,y:204),width:25*s,height:20,light:0x76636E,face:0x514150,dark:0x302C3D)}
         }
     }
 
@@ -1034,19 +1037,26 @@ private struct WorldBannerPainter {
             for side in 0..<2 {bush(at:.init(x:side == 0 ? 72*s : w-70*s,y:51),size:0.93*s)}
             for side in 0..<2 {let x=side == 0 ? 27*s : w-25*s;bush(at:.init(x:x,y:129),size:1.15*s)}
         } else {
+            // Each climbing stem continues into the upper branch. The clock
+            // houses cover the stems, with the low garden in front of their feet.
             for side in 0..<2 {
-                clockHouse(at:.init(x:side == 0 ? 28*s : w-28*s,y:184),size:0.84*s,city:false)
+                let x=side == 0 ? 29*s : w-29*s,d:CGFloat=side == 0 ? 1 : -1
+                let join=CGPoint(x:x+31*d*s,y:58)
+                let tabEdge=side == 0 ? l.tab.minX : l.tab.maxX
+                vine([.init(x:x+12*d*s,y:192),.init(x:x+6*d*s,y:131),.init(x:x+23*d*s,y:77),join])
+                vine([join,.init(x:x+45*d*s,y:47),.init(x:tabEdge-13*d,y:56),.init(x:tabEdge-5*d,y:39)])
+                for i in 0..<3 {leaf(at:.init(x:x+CGFloat(14+i*6)*d*s,y:149-CGFloat(i)*34),length:18*s,width:11*s,angle:Double(d)*(-32),light:0xBDDE64,face:0x75AC36,dark:0x3C772D)}
+                leaf(at:.init(x:tabEdge-18*d,y:51),length:17*s,width:11*s,angle:Double(d)*48,light:0xBDDE64,face:0x75AC36,dark:0x3C772D)
+                blossom(at:join,size:0.6*s,pink:true)
             }
-            crownGrowth(l)
+            for side in 0..<2 {
+                clockHouse(at:.init(x:side == 0 ? 28*s : w-28*s,y:188),size:0.84*s,city:false)
+            }
             for side in 0..<2 {
                 let x=side == 0 ? 29*s : w-27*s
-                bush(at:.init(x:x,y:183),size:0.9*s)
-                let d:CGFloat=side == 0 ? 1 : -1
-                vine([.init(x:x+12*d,y:173),.init(x:x+6*d,y:121),.init(x:x+23*d,y:77),.init(x:x+31*d,y:54)])
-                for i in 0..<3 {leaf(at:.init(x:x+CGFloat(14+i*4)*d,y:149-CGFloat(i)*34),length:18*s,width:11*s,angle:Double(d)*(-32),light:0xBDDE64,face:0x75AC36,dark:0x3C772D)}
-                blossom(at:.init(x:x+29*d,y:60),size:0.6*s,pink:true)
-                for i in 0..<3 {blossom(at:.init(x:x+CGFloat(i-1)*10*s,y:173+CGFloat(i%2)*13),size:0.66*s,pink:i == 1)}
-                if side == 1 {lantern(at:.init(x:x+9*s,y:150),size:0.65*s)}
+                if side == 1 {lantern(at:.init(x:x+9*s,y:156),size:0.65*s)}
+                bush(at:.init(x:x,y:192),size:0.9*s)
+                for i in 0..<3 {blossom(at:.init(x:x+CGFloat(i-1)*10*s,y:182+CGFloat(i%2)*13),size:0.66*s,pink:i == 1)}
             }
             for i in 0..<7 {
                 let x=45*s+CGFloat(i)*(w-90*s)/6
@@ -1068,11 +1078,11 @@ private struct WorldBannerPainter {
             for side in 0..<2 {
                 transformed(at:.init(x:side == 0 ? 26*s : w-26*s,y:195),scale:s,mirror:side == 1) { p in
                     p.boulder(at:.init(x:2,y:0),width:44,height:132,light:0x538ACA,face:0x285697,dark:0x22376D)
-                    p.crystal(at:.init(x:-8,y:-3),height:103,width:21,color:0x35C8F2)
-                    p.crystal(at:.init(x:12,y:-5),height:128,width:20,color:0x4DA8F5)
-                    p.crystal(at:.init(x:-11,y:-1),height:84,width:23,color:0xD277EE)
-                    p.crystal(at:.init(x:17,y:-2),height:81,width:15,color:0x9987F2)
-                    p.crystal(at:.init(x:0,y:3),height:51,width:18,color:side == 0 ? 0xE882F3 : 0x68E0F1)
+                    p.crystal(at:.init(x:-8,y:-3),height:103,width:21,color:0x35C8F2,angle:-6)
+                    p.crystal(at:.init(x:12,y:-5),height:128,width:20,color:0x4DA8F5,angle:-4)
+                    p.crystal(at:.init(x:-11,y:-1),height:84,width:23,color:0xD277EE,angle:-9)
+                    p.crystal(at:.init(x:17,y:-2),height:81,width:15,color:0x9987F2,angle:8)
+                    p.crystal(at:.init(x:0,y:3),height:51,width:18,color:side == 0 ? 0xE882F3 : 0x68E0F1,angle:15)
                     p.glow(at:.init(x:-9,y:-59),radius:17,color:0xCA6AFE,opacity:0.22)
                 }
             }
@@ -1099,6 +1109,20 @@ private struct WorldBannerPainter {
         let s=l.scale,w=l.width
         if !foreground {
             ground(l,light:0xCCDDE0,face:0x8EB5C4,dark:0x4E829F)
+            // A domed skyline and narrow spires rise above the shoulder of
+            // the sign; the nearer clock towers overlap its outer corners.
+            for side in 0..<2 {
+                transformed(at:.init(x:side == 0 ? 29*s : w-29*s,y:195),scale:s,mirror:side == 1) { p in
+                    p.cityTurret(at:.init(x:34,y:-2),size:0.62,height:271/s,spire:true)
+                    p.cityTurret(at:.init(x:8,y:0),size:1,height:175/s)
+                }
+            }
+            // The elevated ring returns behind the sign and is carried by
+            // columns on the same footing as the towers.
+            for (x,y):(CGFloat,CGFloat) in [(w-12*s,139),(w-25*s,154)] {
+                line([.init(x:x,y:y),.init(x:x,y:193)],color:0x638FA3,width:4*s)
+                line([.init(x:x-s,y:y),.init(x:x-s,y:193)],color:0xD6E7DD,width:1*s)
+            }
             for side in 0..<2 {
                 let x=side == 0 ? 28*s : w-28*s
                 let d:CGFloat=side == 0 ? 1 : -1
@@ -1109,17 +1133,91 @@ private struct WorldBannerPainter {
             }
         } else {
             for side in 0..<2 {
+                transformed(at:.init(x:side == 0 ? 28*s : w-28*s,y:195),scale:s,mirror:side == 1) { p in
+                    p.cityTurret(at:.init(x:-6,y:0),size:0.87,height:154/s,clockFace:true)
+                }
+            }
+            let skyway=Path { p in
+                p.move(to:.init(x:w-42*s,y:132))
+                p.addCurve(to:.init(x:w-5*s,y:140),control1:.init(x:w-12*s,y:125),control2:.init(x:w-2*s,y:130))
+                p.addCurve(to:.init(x:w-43*s,y:166),control1:.init(x:w-3*s,y:151),control2:.init(x:w-18*s,y:161))
+            }.offsetBy(dx:0,dy:max(0,s-1)*70)
+            context.stroke(skyway.offsetBy(dx:0,dy:2),with:.color(paintColor(0x4E788E)),style:.init(lineWidth:8*s,lineCap:.round))
+            context.stroke(skyway,with:.color(paintColor(0xE3C483)),style:.init(lineWidth:7*s,lineCap:.round))
+            context.stroke(skyway,with:.color(paintColor(0x649FB9)),style:.init(lineWidth:3.5*s,lineCap:.round))
+            context.stroke(skyway.offsetBy(dx:0,dy:-2*s),with:.color(paintColor(0xF8E9B8)),style:.init(lineWidth:1*s,lineCap:.round))
+            cityTurret(at:.init(x:16*s,y:196),size:0.57*s,height:114/s)
+            for side in 0..<2 {
                 let x=side == 0 ? 28*s : w-28*s,d:CGFloat=side == 0 ? 1 : -1
-                // Clock houses stand on the city paving below the chapter
-                // sign; attaching one here would put it in the cave again.
                 line([.init(x:x+14*d*s,y:72),.init(x:x+14*d*s,y:181)],color:0x4D7E97,width:6*s)
                 line([.init(x:x+13*d*s,y:73),.init(x:x+13*d*s,y:180)],color:0xA7D9D8,width:2*s)
                 for y:CGFloat in [83,139,178] {
                     material(Path(roundedRect:.init(x:x+10*d*s-5*s,y:y,width:10*s,height:9),cornerRadius:2),light:0xCFE3DE,face:0x98BDBF,dark:0x668F9F)
                     rivet(at:.init(x:x+10*d*s,y:y+4.5),radius:1.3)
                 }
+                let footing=CGRect(x:x-2*s,y:170,width:27*s,height:28)
+                    .offsetBy(dx:side == 0 ? 0 : -23*s,dy:0)
+                material(Path(roundedRect:footing,cornerRadius:4*s),light:0xE8D5A3,face:0xBCA56E,dark:0x8B8F7B)
+                let inset=footing.insetBy(dx:5*s,dy:4*s)
+                material(Path(roundedRect:inset,cornerRadius:3*s),light:0x8BB3BB,face:0x568394,dark:0x466B80)
+                gear(at:.init(x:footing.midX,y:footing.midY),radius:6.8*s,teeth:8)
+                for y in [footing.minY+5*s,footing.maxY-5*s] {
+                    rivet(at:.init(x:footing.minX+3*s,y:y),radius:1.1*s)
+                    rivet(at:.init(x:footing.maxX-3*s,y:y),radius:1.1*s)
+                }
             }
-            for side in 0..<2 {let x=side == 0 ? 28*s : w-28*s;cloud(at:.init(x:x,y:192),size:0.72*s);gem(at:.init(x:x,y:175),radius:4,color:0xEAB442)}
+            for side in 0..<2 {
+                let x=side == 0 ? 23*s : w-23*s
+                cloud(at:.init(x:x,y:199),size:0.72*s)
+                cloud(at:.init(x:side == 0 ? 40*s : w-40*s,y:201),size:0.48*s)
+            }
+        }
+    }
+
+    private func cityTurret(at c: CGPoint, size s: CGFloat, height h: CGFloat, clockFace: Bool = false, spire: Bool = false) {
+        transformed(at:c,scale:s) { p in
+            let roofY = -h+38
+            let body=Path(roundedRect:.init(x:-17,y:roofY,width:34,height:-roofY),cornerRadius:5)
+            p.material(body,light:0xD6E7DC,face:0x8CBAC1,dark:0x53869E)
+            p.material(Path(roundedRect:.init(x:-11,y:roofY+3,width:12,height:-roofY-4),cornerRadius:3),light:0xE8EEE0,face:0xBDD9D4,dark:0x82B1BC)
+            for x:CGFloat in [-15,14] {p.line([.init(x:x,y:roofY+3),.init(x:x,y:-4)],color:0xDFC98E,width:2)}
+            for y in stride(from:roofY+14,through:CGFloat(-17),by:28) {
+                for x:CGFloat in [-9,9] {
+                    let opening=Path(roundedRect:.init(x:x-2.5,y:y,width:5,height:17),cornerRadius:2.5)
+                    p.material(opening,light:0xBEE7ED,face:0x62A4C3,dark:0x3E759A)
+                    p.line([.init(x:x-1,y:y+3),.init(x:x-1,y:y+14)],color:0xDCF2E9,width:0.7)
+                }
+            }
+            let roof=Path { q in
+                q.move(to:.init(x:-23,y:roofY))
+                if spire {
+                    q.addLine(to:.init(x:0,y:-h+6));q.addLine(to:.init(x:23,y:roofY))
+                } else {
+                    q.addCurve(to:.init(x:0,y:-h+10),control1:.init(x:-24,y:-h+19),control2:.init(x:-8,y:-h+13))
+                    q.addCurve(to:.init(x:23,y:roofY),control1:.init(x:12,y:-h+13),control2:.init(x:24,y:-h+22))
+                }
+                q.closeSubpath()
+            }
+            p.material(roof,light:0x9CD5E2,face:0x4C98BD,dark:0x356D9D)
+            if !spire {
+                let rib=Path { q in
+                    q.move(to:.init(x:-15,y:roofY-3))
+                    q.addQuadCurve(to:.init(x:0,y:-h+12),control:.init(x:-17,y:-h+21))
+                    q.addQuadCurve(to:.init(x:11,y:roofY-3),control:.init(x:9,y:-h+24))
+                }
+                p.context.stroke(rib,with:.color(p.paintColor(0xC4E9E8).opacity(0.65)),lineWidth:0.9)
+            }
+            p.line([.init(x:-23,y:roofY),.init(x:23,y:roofY)],color:0xDBBA6F,width:4)
+            p.line([.init(x:-21,y:roofY-1),.init(x:21,y:roofY-1)],color:0xF8E8B2,width:1)
+            p.line([.init(x:0,y:-h+10),.init(x:0,y:-h+1)],color:0xD6B365,width:2)
+            p.gem(at:.init(x:0,y:-h+2),radius:2.6,color:0xE8C676)
+            if clockFace {
+                let clockY=roofY+24
+                p.oval(.init(x:-13,y:clockY-13,width:26,height:26),light:0xF7E8B9,face:0xD9BE7E,dark:0x8D926F)
+                p.clock(at:.init(x:0,y:clockY),radius:11,time:WorldBossClock.time(in:6))
+                p.line([.init(x:-19,y:clockY+18),.init(x:19,y:clockY+18)],color:0xDDC386,width:3)
+            }
+            p.material(Path(roundedRect:.init(x:-20,y:-8,width:40,height:9),cornerRadius:3),light:0xE5D7A9,face:0xAFC6BD,dark:0x6B929E)
         }
     }
 
@@ -1127,19 +1225,35 @@ private struct WorldBannerPainter {
         let s=l.scale,w=l.width
         if !foreground {
             ground(l,light:0xC0BDD0,face:0xA4A2BD,dark:0x858BA6)
-            for side in 0..<2 {bush(at:.init(x:side == 0 ? 73*s : w-68*s,y:53),size:1.15*s,night:true)}
             for side in 0..<2 {
                 transformed(at:.init(x:side == 0 ? 49*s : w-49*s,y:180),scale:s,mirror:side == 1) { p in
                     p.bush(at:.init(x:4,y:-50),size:1.5,night:true)
                     for (x,y,h,a):(CGFloat,CGFloat,CGFloat,Double) in [(-5,4,44,-80),(-6,-17,46,-37),(0,-37,44,-8),(8,5,38,38)] {p.broadLeaf(at:.init(x:x,y:y),length:h,width:29,angle:a,night:true)}
                 }
             }
-            vine([.init(x:18*s,y:122),.init(x:9*s,y:35),.init(x:41*s,y:30),.init(x:89*s,y:25)],night:true)
-            lantern(at:.init(x:29*s,y:58),size:0.87*s)
-            lantern(at:.init(x:62*s,y:33),size:0.61*s)
             moon(at:.init(x:w-31*s,y:46),radius:18*s)
             for c in [CGPoint(x:w-68*s,y:31),.init(x:88*s,y:12),.init(x:w-18*s,y:94)] {star(at:c,radius:3.4,color:0xFFE087)}
         } else {
+            // Soft cloud banks sit over the shoulders, instead of appearing
+            // as clipped bushes behind the upper edge of the sign.
+            cloud(at:.init(x:65*s,y:53),size:0.58*s,night:true)
+            cloud(at:.init(x:w-63*s,y:53),size:0.66*s,night:true)
+            let post=Path { p in
+                p.move(to:.init(x:18*s,y:197))
+                p.addCurve(to:.init(x:26*s,y:60),control1:.init(x:8*s,y:145),control2:.init(x:11*s,y:91))
+                p.addCurve(to:.init(x:88*s,y:28),control1:.init(x:41*s,y:31),control2:.init(x:67*s,y:29))
+            }
+            context.stroke(post,with:.color(paintColor(0x485977)),style:.init(lineWidth:5*s,lineCap:.round))
+            context.stroke(post.offsetBy(dx:-0.7*s,dy:-0.6),with:.color(paintColor(0xA3B7BD)),style:.init(lineWidth:1.5*s,lineCap:.round))
+            // A wall bracket and buried foot make the support read as one
+            // fitted lantern post. Both hanging loops touch its upper curve.
+            line([.init(x:16*s,y:130),.init(x:40*s,y:130)],color:0x687B91,width:3*s)
+            material(Path(roundedRect:.init(x:35*s,y:123,width:9*s,height:14),cornerRadius:2),light:0xCAD1D5,face:0x98ABB9,dark:0x70849B)
+            rivet(at:.init(x:39*s,y:130),radius:1.5*s)
+            line([.init(x:35*s,y:45),.init(x:35*s,y:49)],color:0xA5782C,width:1.5*s)
+            line([.init(x:69*s,y:30),.init(x:69*s,y:33)],color:0xA5782C,width:1.2*s)
+            lantern(at:.init(x:35*s,y:48+21*0.87*s),size:0.87*s)
+            lantern(at:.init(x:69*s,y:33+21*0.61*s),size:0.61*s)
             for side in 0..<2 {
                 let x=side == 0 ? 35*s : w-35*s,d:CGFloat=side == 0 ? 1 : -1
                 for y:CGFloat in [119,155,183] {
@@ -1147,13 +1261,10 @@ private struct WorldBannerPainter {
                 }
             }
             for side in 0..<2 {let x=side == 0 ? 29*s : w-28*s;bush(at:.init(x:x,y:194),size:0.85*s,night:true)}
-            transformed(at:.init(x:35*s,y:181),scale:0.85*s) { p in
-                p.oval(.init(x:-22,y:-14,width:41,height:28),light:0xFFF2FF,face:0xE4CBEE,dark:0xB89ACD)
-                p.oval(.init(x:-9,y:-26,width:28,height:25),light:0xFFF7FF,face:0xEED8F3,dark:0xC0A6DA)
-                p.line([.init(x:5,y:-13),.init(x:9,y:-11),.init(x:13,y:-13)],color:0x8C68A4,width:1.3)
-                p.pearl(at:.init(x:15,y:-8),radius:0.8)
-                p.line([.init(x:-10,y:0),.init(x:-3,y:3),.init(x:4,y:1)],color:0xAE8BC5,width:1.1)
-                for x:CGFloat in [-11,-2,7] {p.polygon([.init(x:x,y:-22),.init(x:x+3,y:-28),.init(x:x+7,y:-20)],light:0xDDC6F0,face:0xB991D6,dark:0x9677BC)}
+            broadLeaf(at:.init(x:31*s,y:198),length:32*s,width:19*s,angle:-53,night:true)
+            broadLeaf(at:.init(x:37*s,y:198),length:25*s,width:16*s,angle:34,night:true)
+            for (x,y):(CGFloat,CGFloat) in [(21,201),(39,204)] {
+                oval(.init(x:(x-6)*s,y:y-4,width:12*s,height:7),light:0xCCD5DA,face:0xA4B6C3,dark:0x7F95AC)
             }
         }
     }
@@ -1225,14 +1336,6 @@ private struct WorldBannerPainter {
             context.stroke(rope,with:.color(paintColor(0xE5BD76)),lineWidth:3.5)
             context.stroke(rope,with:.color(paintColor(0xFFF0B3)),style:.init(lineWidth:1.5,dash:[1.2,3]))
         } else {
-            for side in 0..<2 {
-                let d:CGFloat=side == 0 ? 1 : -1,x=side == 0 ? 44*s : w-44*s
-                var rigging=Path()
-                rigging.move(to:.init(x:side == 0 ? l.tab.minX+3 : l.tab.maxX-3,y:23))
-                rigging.addQuadCurve(to:.init(x:x,y:58),control:.init(x:x-d*s,y:24))
-                rigging.addCurve(to:.init(x:x-d*8*s,y:184),control1:.init(x:x-d*11*s,y:96),control2:.init(x:x-d*2*s,y:146))
-                rope(rigging)
-            }
             transformed(at:.init(x:29*s,y:130),scale:0.94*s) {$0.anchor(at:.zero)}
             transformed(at:.init(x:w-25*s,y:131),scale:0.93*s) {$0.shipWheel(at:.zero,radius:20)}
             for side in 0..<2 {
@@ -1246,8 +1349,26 @@ private struct WorldBannerPainter {
             }
             shell(at:.init(x:39*s,y:194))
             clock(at:.init(x:w-33*s,y:190),radius:14*s,time:.init(hour:10,minute:10))
-            rope(from:.init(x:51*s,y:190),to:.init(x:w-55*s,y:198))
         }
+    }
+
+    private func pirateRigging(_ l: WorldBannerLayout) {
+        let s=l.scale,w=l.width
+        for side in 0..<2 {
+            let d:CGFloat=side == 0 ? 1 : -1,x=side == 0 ? 44*s : w-44*s
+            var rigging=Path()
+            rigging.move(to:.init(x:side == 0 ? l.tab.minX+12 : l.tab.maxX-12,y:35))
+            rigging.addQuadCurve(to:.init(x:x,y:61),control:.init(x:x-d*4*s,y:31))
+            rigging.addCurve(to:.init(x:side == 0 ? 39*s : w-33*s,y:196),control1:.init(x:x-d*10*s,y:101),control2:.init(x:x-d*3*s,y:153))
+            rope(rigging)
+        }
+        let bottom=Path { p in
+            p.move(to:.init(x:39*s,y:196))
+            p.addQuadCurve(to:.init(x:65*s,y:201),control:.init(x:42*s,y:204))
+            p.addCurve(to:.init(x:w-65*s,y:198),control1:.init(x:w*0.35,y:207),control2:.init(x:w*0.65,y:197))
+            p.addQuadCurve(to:.init(x:w-33*s,y:193),control:.init(x:w-42*s,y:204))
+        }
+        rope(bottom)
     }
 
     private func castleScene(_ l: WorldBannerLayout, foreground: Bool) {
@@ -1278,7 +1399,12 @@ private struct WorldBannerPainter {
         }
     }
 
-    private func crystal(at c: CGPoint, height h: CGFloat, width w: CGFloat, color: UInt32) {
+    private func crystal(at c: CGPoint, height h: CGFloat, width w: CGFloat, color: UInt32, angle: Double = 0) {
+        if angle != 0 {
+            var layer=context;layer.translateBy(x:c.x,y:c.y);layer.rotate(by:.degrees(angle))
+            WorldBannerPainter(context:layer,world:world,mirrored:mirrored).crystal(at:.zero,height:h,width:w,color:color)
+            return
+        }
         let tip=CGPoint(x:c.x+2,y:c.y-h),left=CGPoint(x:c.x-w/2,y:c.y-h*0.74),right=CGPoint(x:c.x+w/2,y:c.y-h*0.77)
         polygon([.init(x:c.x-w/2,y:c.y),left,tip,right,.init(x:c.x+w/2,y:c.y)],light:0xD8FCFF,face:color,dark:0x365AA4)
         polygon([left,tip,.init(x:c.x+2,y:c.y-1),.init(x:c.x-w/2,y:c.y)],light:0xD8FDFF,face:color,dark:0x5176C1)
@@ -1355,10 +1481,10 @@ private struct WorldBannerPainter {
         polygon([.init(x:c.x,y:c.y-r),.init(x:c.x+r*0.23,y:c.y-r*0.23),.init(x:c.x+r,y:c.y),.init(x:c.x+r*0.23,y:c.y+r*0.23),.init(x:c.x,y:c.y+r),.init(x:c.x-r*0.23,y:c.y+r*0.23),.init(x:c.x-r,y:c.y),.init(x:c.x-r*0.23,y:c.y-r*0.23)],light:0xFFFFFF,face:color,dark:0xE7AE4C)
     }
 
-    private func cloud(at c: CGPoint, size s: CGFloat) {
+    private func cloud(at c: CGPoint, size s: CGFloat, night: Bool = false) {
         transformed(at:c,scale:s) { p in
             let shape=Path { q in q.move(to:.init(x:-28,y:9));q.addCurve(to:.init(x:-18,y:-7),control1:.init(x:-34,y:0),control2:.init(x:-29,y:-11));q.addCurve(to:.init(x:7,y:-10),control1:.init(x:-20,y:-28),control2:.init(x:4,y:-29));q.addQuadCurve(to:.init(x:24,y:1),control:.init(x:25,y:-17));q.addQuadCurve(to:.init(x:27,y:14),control:.init(x:37,y:10));q.addQuadCurve(to:.init(x:-28,y:9),control:.init(x:3,y:21));q.closeSubpath() }
-            p.material(shape,light:0xFFFFFF,face:0xF1F8FD,dark:0xC1DDEB)
+            p.material(shape,light:night ? 0xE7E5F2 : 0xFFFFFF,face:night ? 0xCFCDDF : 0xF1F8FD,dark:night ? 0xAEB4CF : 0xC1DDEB)
             var curl=Path();curl.move(to:.init(x:-18,y:-7));curl.addQuadCurve(to:.init(x:-12,y:6),control:.init(x:-7,y:-7))
             p.context.stroke(curl,with:.color(paintColor(0xCEE6F0)),style:.init(lineWidth:0.7,lineCap:.round))
         }
@@ -1475,7 +1601,7 @@ private struct WorldBannerPainter {
         }
         for (angle, reach, weight) in [(Double(time.hour % 12) * .pi / 6 + Double(time.minute) * .pi / 360, CGFloat(0.48), CGFloat(1.2)),
                                        (Double(time.minute) * .pi / 30, CGFloat(0.68), CGFloat(0.9))] {
-            let movingAngle = angle + (mirrored ? 1 : -1) * motionTime * (reach < 0.6 ? .pi / 3 : .pi * 4)
+            let movingAngle = (mirrored ? -angle : angle) + (mirrored ? 1 : -1) * motionTime * (reach < 0.6 ? .pi / 3 : .pi * 4)
             line([point, CGPoint(x: point.x + CGFloat(sin(movingAngle)) * radius * reach, y: point.y - CGFloat(cos(movingAngle)) * radius * reach)],
                  color: 0x345E6B, width: weight*max(1,radius/13))
         }
@@ -6222,6 +6348,20 @@ private enum VillagePlan {
         layout.villageCanalPoint(at: y, right: right).x
     }
 
+    private static func benchAngle(id: Int, y: CGFloat, right: Bool, layout: WorldSceneryLayout) -> Double {
+        let slope = (canalX(y: y + 24, right: right, layout: layout)
+                     - canalX(y: y - 24, right: right, layout: layout)) / 48
+        let tangent = -atan(Double(slope))
+        let variation = Double((id * 5) % 7 - 3) * .pi / 180
+        let limit = Double(18 + id % 4) * .pi / 180
+        let angle = min(limit, max(-limit, tangent + variation))
+        let minimum = Double(5 + id % 3) * .pi / 180
+        // Even the quiet stretches have a small turn; each bend keeps its
+        // own direction, with a slightly different angle for every bench.
+        let direction = abs(tangent) > 0.01 ? tangent : (id.isMultiple(of: 2) ? 1.0 : -1.0)
+        return abs(angle) < minimum ? (direction < 0 ? -minimum : minimum) : angle
+    }
+
     private struct Row {
         let y: CGFloat
         let road: CGFloat
@@ -6277,15 +6417,18 @@ private enum VillagePlan {
                 let size = scale * factor
                 for shift: CGFloat in [0, -18, 18, -36, 36, -54, 54, -80, 80, -110, 110] {
                     let y = target + shift
-                    let slope = (canalX(y: y + 8, right: preferredRight, layout: layout)
-                                 - canalX(y: y - 8, right: preferredRight, layout: layout)) / 16
-                    let angle = kind == .bench ? min(0.26, max(-0.26, -atan(Double(slope)))) : 0
-                    let b = kind.localBounds.applying(CGAffineTransform(rotationAngle: angle))
-                    let minY = y + b.minY * size, maxY = y + b.maxY * size
-                    guard minY > -55, maxY < 1540 else { continue }
-                    let first = max(0, Int(floor((minY - startY) / 4)))
-                    let last = min(rows.count - 1, Int(ceil((maxY - startY) / 4)))
                     for right in [preferredRight, !preferredRight] {
+                        let angle = kind == .bench ? benchAngle(id: id, y: y, right: right, layout: layout) : 0
+                        let rotation = CGAffineTransform(rotationAngle: angle)
+                        let local = kind.localBounds
+                        let footprint = [CGPoint(x: local.minX, y: local.minY), CGPoint(x: local.maxX, y: local.minY),
+                                         CGPoint(x: local.maxX, y: local.maxY), CGPoint(x: local.minX, y: local.maxY)]
+                            .map { $0.applying(rotation) }
+                        let b = local.applying(rotation)
+                        let minY = y + b.minY * size, maxY = y + b.maxY * size
+                        guard minY > -55, maxY < 1540 else { continue }
+                        let first = max(0, Int(floor((minY - startY) / 4)))
+                        let last = min(rows.count - 1, Int(ceil((maxY - startY) / 4)))
                         for outer in (kind == .bench ? [false] : [true]) {
                             var low = 5 * scale - b.minX * size
                             var high = layout.width - 5 * scale - b.maxX * size
@@ -6313,8 +6456,20 @@ private enum VillagePlan {
                                     laneMin = outer ? -200 * scale : row.left + row.leftMargin
                                     laneMax = outer && grounded ? min(row.road - roadMargin, row.left - row.leftMargin) : row.road - roadMargin
                                 }
-                                let minX = grounded && kind == .orchard ? -kind.foundationHalfWidth : b.minX
-                                let maxX = grounded && kind == .orchard ? kind.foundationHalfWidth : b.maxX
+                                var minX = grounded && kind == .orchard ? -kind.foundationHalfWidth : b.minX
+                                var maxX = grounded && kind == .orchard ? kind.foundationHalfWidth : b.maxX
+                                if kind == .bench {
+                                    // Test the rigid, rotated footprint at this row.
+                                    // Its enclosing box would push seats out of bends.
+                                    let localY = min(b.maxY, max(b.minY, (row.y - y) / size))
+                                    let intersections = footprint.indices.compactMap { edge -> CGFloat? in
+                                        let a = footprint[edge], b = footprint[(edge + 1) % footprint.count]
+                                        guard localY >= min(a.y, b.y), localY <= max(a.y, b.y), abs(b.y - a.y) > 0.0001 else { return nil }
+                                        return a.x + (b.x - a.x) * (localY - a.y) / (b.y - a.y)
+                                    }
+                                    minX = intersections.min() ?? minX
+                                    maxX = intersections.max() ?? maxX
+                                }
                                 low = max(low, laneMin - minX * size)
                                 high = min(high, laneMax - maxX * size)
                                 if low > high { break }
@@ -6473,17 +6628,38 @@ private struct VillageWorldPainter {
         for plot in plots {
             p.parcel(at: plot.point, size: plot.size, kind: plot.kind, variation: plot.id, right: plot.right, angle: plot.angle)
         }
-        // Connected planted borders, rather than isolated dots on a large lawn.
-        for index in 0..<80 {
-            let y = 45 + CGFloat(index) * 20
-            for onRight in [false, true] {
-                let point = scenery.villageCanalPoint(at: y, right: onRight, offset: -53 * scale)
-                guard point.x > 12 * scale, point.x < w - 12 * scale,
-                      abs(point.x - scenery.centerX(at: point.y)) > 48,
+        p.riversideGardens(layout: scenery, plots: plots)
+    }
+
+    /// The inner shore continues a little below the chapter boundary as the
+    /// river turns sideways. Paint that same garden on the next strip too.
+    func exitGardens(in size: CGSize) {
+        let villageSize = WorldMapChapterSpacing.sceneSize(width: size.width)
+        let offset = WorldMapChapterSpacing.sceneOffset(width: size.width)
+        let layout = WorldSceneryLayout(width: size.width, height: villageSize.height, routeOffset: offset)
+        var c = context
+        c.clip(to: Path(CGRect(x: 0, y: 0, width: size.width, height: 80 * layout.scale)))
+        c.translateBy(x: 0, y: offset - villageSize.height)
+        VillageWorldPainter(context: c).riversideGardens(layout: layout, plots: VillagePlan.plots(layout: layout))
+    }
+
+    private func riversideGardens(layout: WorldSceneryLayout, plots: [VillagePlan.Plot]) {
+        let scale = layout.scale, w = layout.width
+        // Equal distances along the water keep the planting continuous even
+        // where the outgoing river turns horizontally beyond the boss.
+        for route in VillageRiverTrafficLayout.routes(layout: layout) {
+            let start = route.distance(atY: 45)
+            for index in 0...Int(ceil((route.length - start) / 20)) {
+                let pose = route.pose(at: min(route.length, start + CGFloat(index) * 20))
+                let offset: CGFloat = (route.right ? -1 : 1) * 53 * scale
+                let point = CGPoint(x: pose.point.x + sin(pose.heading) * offset,
+                                    y: pose.point.y - cos(pose.heading) * offset)
+                guard point.x > -18 * scale, point.x < w + 18 * scale,
+                      abs(point.x - layout.centerX(at: point.y)) > 48,
                       !plots.contains(where: { $0.bounds.insetBy(dx: -5, dy: -3).contains(point) }) else { continue }
-                p.plants(at: point, size: scale * (index % 3 == 0 ? 0.57 : 0.38))
+                plants(at: point, size: scale * (index % 3 == 0 ? 0.57 : 0.38))
                 if index.isMultiple(of: 2) {
-                    p.flowers(at: CGPoint(x: point.x + 5 * scale, y: point.y + 4), size: scale * 0.38, pink: index % 3 == 0)
+                    flowers(at: CGPoint(x: point.x + 5 * scale, y: point.y + 4), size: scale * 0.38, pink: index % 3 == 0)
                 }
             }
         }
@@ -8119,7 +8295,7 @@ private struct CrystalCavePainter {
         let layout = WorldSceneryLayout(width: size.width, height: caveSize.height,
                                         routeOffset: WorldMapChapterSpacing.sceneOffset(width: size.width))
         var c = context
-        c.clip(to: Path(CGRect(x: 0, y: 0, width: size.width, height: 440 * layout.scale)))
+        c.clip(to: Path(CGRect(x: 0, y: 0, width: size.width, height: CityGroundLayout.entranceStreetY)))
         c.translateBy(x: 0, y: -caveSize.height)
         let p = CrystalCavePainter(context: c)
         for right in [false, true] {
@@ -8138,6 +8314,7 @@ private struct CrystalCavePainter {
         let layout = WorldSceneryLayout(width: w, height: h, routeOffset: routeOffset)
         let floor = Path(CGRect(origin: .zero, size: size))
         villageFloor(in: size, routeOffset: routeOffset)
+        VillageWorldPainter(context: context).exitGardens(in: size)
         var interior = context; interior.clip(to: floor)
         let light = CrystalCavePainter(context: interior)
         for (y, color): (CGFloat, UInt32) in [(routeOffset + 260, 0xB8EEE9), (routeOffset + 790, 0xD9C6F0), (routeOffset + 1330, 0xB3E8E5)] {
@@ -8692,11 +8869,18 @@ private struct CityMetroLine {
             if abs(y - 361) < 1 { leftStation = samples.count }
             samples.append(rail(y, false))
         }
-        let a = rail(1580, false), b = rail(1580, true)
+        let a = rail(1580, false)
+        let descentIndex = samples.count-1
+        // The underground return bends beyond the viewport itself, rather
+        // than beyond the capped play-route width used on iPad.
+        let b = CGPoint(x: layout.width + 220*s, y: 1580)
         let bottom = min(1700, layout.height - layout.routeOffset - 120 * s)
         let controlY = 1580 + (bottom - 1580) / 0.75
         curve(a, CGPoint(x: a.x, y: controlY), CGPoint(x: b.x, y: controlY), b)
-        for y in stride(from: CGFloat(1577), through: 650, by: -3) {
+        let returnIndex = samples.count-1
+        let reentry = rail(1400, true)
+        curve(b, CGPoint(x: b.x, y: 1440), CGPoint(x: reentry.x, y: 1505), reentry)
+        for y in stride(from: CGFloat(1397), through: 650, by: -3) {
             if abs(y - 821) < 1 { rightStation = samples.count }
             samples.append(rail(y, true))
         }
@@ -8736,9 +8920,15 @@ private struct CityMetroLine {
         }
         let bottomIndex = smooth.indices.max { smooth[$0].y < smooth[$1].y }!
         let bottomD = lengths[bottomIndex]
-        // Keep both tunnel mouths on the lower city loop, including on iPhone.
-        // Only the middle of the bend is buried; both sloping approaches stay visible.
-        let buried = (bottomD - 135 * s)...(bottomD + 135 * s)
+        func nearestDistance(to point: CGPoint) -> CGFloat {
+            let index = smooth.indices.min {
+                hypot(smooth[$0].x-point.x,smooth[$0].y-point.y) < hypot(smooth[$1].x-point.x,smooth[$1].y-point.y)
+            }!
+            return lengths[index]
+        }
+        // Keep the left descent, then conceal the complete return under the
+        // neighbourhood. The right climb finishes beyond every screen edge.
+        let buried = (nearestDistance(to:samples[descentIndex])+72*s)...nearestDistance(to:samples[returnIndex])
         points = smooth; distances = lengths; tangents = directions; bottomDistance = bottomD
         undergroundRange = buried
         path = Path { p in
@@ -8959,12 +9149,13 @@ private struct CityMetroTunnel {
         return r.insetBy(dx:-10*scale,dy:-10*scale)
     }
 
-    /// Reserve the visible train and masonry, so foreground roofs cannot hide the descent or climb.
+    /// Reserve the open descent. Its last few metres disappear behind a real
+    /// street frontage; the return cutting is entirely outside the viewport.
     var approachClearances: [CGRect] {
-        var clearances = [start,end].map {
+        var clearances = [end].map {
             arch(at:$0,radius:41,crown:73).boundingRect.insetBy(dx:-5*scale,dy:-5*scale)
         }
-        for (a,b) in cuttings {
+        for (a,b) in [(rampStart,start-60*scale),(end,rampEnd)] {
             for d in stride(from:a,through:b,by:8*scale) {
                 let point = floorPoint(at:d)
                 clearances.append(CGRect(x:point.x-34*scale,y:point.y-62*scale,
@@ -9038,6 +9229,8 @@ private enum CityUrbanLayout {
         }
         var bounds: CGRect { contentBounds.insetBy(dx: -8*size, dy: -8*size) }
         var arrival: Bool { (10000..<20000).contains(id) }
+        var coversMetroEntrance: Bool { (60000..<61000).contains(id) }
+        var skyline: Bool { (61000..<62000).contains(id) }
         func promenadeClearance(layout:WorldSceneryLayout) -> CGFloat {
             // Above the first level stone, short entrance roofs only need to
             // clear the trail. Buildings beside playable nodes keep more room.
@@ -9074,7 +9267,26 @@ private enum CityUrbanLayout {
             metro.ribbon(from: $0-111*s, to: $0+111*s, inner: 18*s, outer: 91*s)
                 .boundingRect.insetBy(dx: -8*s, dy: -15*s)
         }
-        var result: [Site] = []
+        // A continuous row overlaps the raised cave/street join. Its centre
+        // sits behind the world emblem; no play nodes occupy this header.
+        let skylineSize = 0.88*s
+        let frontageWidth = 74*skylineSize
+        let columns = Int(ceil(layout.width/(frontageWidth-3*s)))
+        var result: [Site] = (0...columns).map { column in
+            let x = CGFloat(column)*(frontageWidth-3*s)
+            return Site(id:61000+column,
+                        point:.init(x:x,y:CityGroundLayout.entranceStreetY+(18+CGFloat(column%3)*5)*skylineSize-layout.routeOffset),
+                        size:skylineSize*(1+CGFloat(column%3)*0.035),right:x>layout.width/2,kind:.gabled)
+        }
+        // A pair of houses is built over the buried railway. Their opaque
+        // facades cover the portal while the approach still slopes down.
+        let entrance = tunnel.arch(at:tunnel.start,radius:29,crown:73).boundingRect
+        let frontageY = entrance.maxY-8*s
+        for column in 0..<2 {
+            result.append(Site(id:60000+column,
+                               point:.init(x:entrance.midX+CGFloat(column == 0 ? -46:4)*s,y:frontageY),
+                               size:1.12*s,right:false,kind:.shop))
+        }
         // Different cadences and silhouettes make actual streets, rather than
         // several identical neighbourhood patterns superimposed on one another.
         let left: [(CGFloat, Kind, CGFloat)] = [
@@ -9286,16 +9498,16 @@ private enum CityUrbanLayout {
 private enum CityGroundLayout {
     /// Every entrance-curve control point is at or above this city-side limit.
     /// Keeping the full footing below it seats every building on city paving.
-    static let entranceStreetY: CGFloat = 306
+    static let entranceStreetY: CGFloat = 178
 
     static func streetSurface(in size:CGSize) -> Path {
         let w = size.width,h = size.height
         return Path { p in
-            p.move(to: .init(x: -16, y: 258))
-            p.addCurve(to: .init(x: w*0.46, y: 291),
-                       control1: .init(x: w*0.17, y: 244), control2: .init(x: w*0.31, y: entranceStreetY))
-            p.addCurve(to: .init(x: w+16, y: 271),
-                       control1: .init(x: w*0.65, y: 276), control2: .init(x: w*0.83, y: 252))
+            p.move(to: .init(x: -16, y: 139))
+            p.addCurve(to: .init(x: w*0.46, y: 163),
+                       control1: .init(x: w*0.17, y: 131), control2: .init(x: w*0.31, y: entranceStreetY))
+            p.addCurve(to: .init(x: w+16, y: 151),
+                       control1: .init(x: w*0.65, y: 152), control2: .init(x: w*0.83, y: 136))
             p.addLine(to: .init(x: w+16, y: h+2)); p.addLine(to: .init(x: -16, y: h+2)); p.closeSubpath()
         }
     }
@@ -9411,7 +9623,7 @@ private struct CityMetroForeground: View {
 
             ForEach(CityUrbanLayout.sites(layout: layout)) { site in
                 CityBuildingArtwork(site: site,routeOffset: layout.routeOffset).equatable()
-                    .zIndex(Double(site.point.y))
+                    .zIndex(Double(site.coversMetroEntrance ? max(site.point.y,tunnel.bounds.maxY+1):site.point.y))
             }
             ForEach(0..<2, id: \.self) { index in
                 let point = line.pose(at: line.stationDistances[index]).point
@@ -9673,6 +9885,7 @@ private struct CityWorldPainter {
                     colors:i%2 == 0 ? [0xF4E6C7,0xDDCFAD]:[0x7A9F9D,0x4A7B82])
         }
         planter(at:.init(x:-22,y:8),size:0.28)
+        facadeClock(at:.init(x:-4,y:-141),radius:9,variation:variation)
     }
 
     private func cornerShop(variation: Int) {
@@ -9697,6 +9910,7 @@ private struct CityWorldPainter {
         }
         for x: CGFloat in [-25,25] { planter(at:.init(x:x,y:7),size:0.30) }
         line([.init(x:-31,y:6),.init(x:30,y:6)],color:0xE7DCC0,width:3)
+        facadeClock(at:.init(x:0,y:-53),radius:9,variation:variation)
     }
 
     private func gabledHouse(variation: Int) {
@@ -9707,7 +9921,7 @@ private struct CityWorldPainter {
         polygon([.init(x: -44,y: -109),.init(x: -3,y: -152),.init(x: 44,y: -109)],
                 colors: variation%3 == 0 ? [0xCB977B,0x9A6A63,0x6B5961] : [0x81ACBA,0x416C89,0x2A4B68])
         line([.init(x: -41,y: -109),.init(x: -3,y: -148),.init(x: 40,y: -109)],color: 0xF8E8C5,width: 2.4)
-        rounded(CGRect(x: -12,y: -128,width: 21,height: 21),radius: 9,colors: [0xF3DCB4,0x3C6878])
+        facadeClock(at:.init(x:-2,y:-119),radius:10,variation:variation)
         window(at: .init(x: -19,y: -83),size: 0.72)
         window(at: .init(x: 17,y: -83),size: 0.72)
         for y: CGFloat in [-62,-42] { line([.init(x: -38,y: y),.init(x: 38,y: y)],color: 0xF5E4C2,width: 3) }
@@ -9740,6 +9954,7 @@ private struct CityWorldPainter {
         rounded(CGRect(x: -26,y: -91,width: 52,height: 15),radius: 4,colors: [0xDCC18F,0x315E6E])
         for x: CGFloat in [-16,-5,6,17] { oval(CGRect(x: x-2,y: -87,width: 4,height: 5),colors: [0xFFE8AD,0xD9BA7B]) }
         for x: CGFloat in [-46,46] { flowers(at: .init(x: x,y: 8),size: 0.62) }
+        facadeClock(at:.init(x:0,y:-84),radius:11,variation:variation)
     }
 
     private func clockTower(variation: Int) {
@@ -9775,6 +9990,7 @@ private struct CityWorldPainter {
         rounded(CGRect(x: -13,y: -40,width: 26,height: 44),radius: 10,colors: [0xE7D4A8,0x396C78])
         line([.init(x: 0,y: -34),.init(x: 0,y: 1)],color: 0xE9D6A8,width: 1.5)
         for x: CGFloat in [-52,52] { planter(at: .init(x: x,y: 7),size: 0.57,palm: variation%2 == 0) }
+        facadeClock(at:.init(x:0,y:-66),radius:10,variation:variation)
     }
 
     /// A planted arrival court and descending park terraces finish the chapter.
@@ -9811,6 +10027,29 @@ private struct CityWorldPainter {
             }
             p.planter(at: .init(x: -43, y: 7), size: 0.5)
             p.planter(at: .init(x: 42, y: 9), size: 0.5)
+            p.facadeClock(at:.init(x:0,y:-159),radius:11,variation:variation)
+        }
+    }
+
+    /// Ivory faces and dark hands stay readable even on the smallest shops.
+    private func facadeClock(at point: CGPoint, radius: CGFloat, variation: Int) {
+        at(point) { p in
+            p.oval(.init(x:-radius-2,y:-radius,width:2*radius+4,height:2*radius+4),colors:[0x8F9C90,0x5C7879])
+            p.oval(.init(x:-radius-1,y:-radius-1,width:2*radius+2,height:2*radius+2),colors:[0xFFF0C2,0xC6A66D])
+            p.oval(.init(x:-radius+1,y:-radius+1,width:2*radius-2,height:2*radius-2),colors:[0xFFFDF0,0xEDE9D3])
+            for tick in 0..<12 {
+                let angle = CGFloat(tick) * .pi / 6
+                let inner = radius*(tick%3 == 0 ? 0.64:0.76)
+                p.line([.init(x:sin(angle)*inner,y:-cos(angle)*inner),
+                        .init(x:sin(angle)*radius*0.86,y:-cos(angle)*radius*0.86)],
+                       color:0x315C6A,width:tick%3 == 0 ? 0.95:0.6)
+            }
+            let minute = CGFloat((variation%4)*15+5)
+            let hour = CGFloat(variation%12)+minute/60
+            let h = hour*CGFloat.pi/6, m = minute*CGFloat.pi/30
+            p.line([.zero,.init(x:sin(h)*radius*0.46,y:-cos(h)*radius*0.46)],color:0x244F64,width:1.6)
+            p.line([.zero,.init(x:sin(m)*radius*0.69,y:-cos(m)*radius*0.69)],color:0x244F64,width:1.1)
+            p.oval(.init(x:-1.4,y:-1.4,width:2.8,height:2.8),colors:[0xD2AB67,0x846E46])
         }
     }
 
@@ -10310,10 +10549,7 @@ private struct CityWorldPainter {
                     .clock(at: .init(x: 0, y: -height - 42), time: .init(hour: 10, minute: 10), size: 14)
                 p.dome(at: .init(x: 0, y: -height - 65), width: 52)
             } else {
-                // Civic seal: a golden dinosaur footprint under the pediment.
-                p.oval(CGRect(x: -10, y: -height - 14, width: 20, height: 18), colors: [0x4B8596, 0x24556F])
-                p.oval(CGRect(x: -4, y: -height - 5, width: 8, height: 6), colors: [0xFFE7A5, 0xD9B66E])
-                for x: CGFloat in [-5, 0, 5] { p.oval(CGRect(x: x - 1.6, y: -height - 10, width: 3.2, height: 4.6), colors: [0xFFF0BB, 0xD0AF72]) }
+                p.facadeClock(at:.init(x:0,y:-height-7),radius:12,variation:kind)
             }
             for i in 0..<4 { p.rounded(CGRect(x: -40 - CGFloat(i) * 4, y: CGFloat(i) * 4, width: 80 + CGFloat(i) * 8, height: 5), radius: 1, colors: [0xFFF0D0, 0xC1B49A]) }
             for x: CGFloat in [-69, 69] {
@@ -10572,6 +10808,7 @@ private struct CityWorldPainter {
                 p.window(at: CGPoint(x: 0, y: -84), size: 0.85)
             } else {
                 for x: CGFloat in [-18, 18] { p.window(at: CGPoint(x: x, y: -65), size: 0.8) }
+                p.facadeClock(at:.init(x:0,y:-h+18),radius:11,variation:3)
                 p.rounded(CGRect(x: -29, y: -44, width: 58, height: 7), radius: 2, colors: [0xF4DFB5, 0xB4BC9B])
                 for x: CGFloat in [-25, -15, -5, 5, 15, 25] { p.line([.init(x: x, y: -54), .init(x: x, y: -42)], color: 0x6FA6A0, width: 1.2) }
                 p.plants(at: CGPoint(x: -25, y: -45), size: 0.38)
@@ -15214,15 +15451,15 @@ private struct CastleKingdomLayout {
         let entry: CGPoint
         let outer: CGPoint
         let scale: CGFloat
-        let riverSlope: CGFloat
 
         /// Local tread edges join the bridge lip to a lower, dry-bank landing.
         func approachPoint(_ t: CGFloat, edge: CGFloat) -> CGPoint {
             let innerX = (inner.x - water.x) / scale - (right ? 5 : -5)
             let entryX = (entry.x - water.x) / scale
             let drop = (entry.y - water.y) / scale
-            let middle = (CastleKingdomLayout.bridgeBackEdge + CastleKingdomLayout.bridgeFrontEdge) / 2
-            return CGPoint(x: innerX + (entryX - innerX) * t + (edge - middle) * 0.22,
+            // Both edges start on the same vertical bridge lip. A fixed skew
+            // left a wedge-shaped gap and leaned the steps on the opposite bank.
+            return CGPoint(x: innerX + (entryX - innerX) * t,
                            y: edge + drop * t)
         }
     }
@@ -15231,7 +15468,7 @@ private struct CastleKingdomLayout {
         let scale: CGFloat
         let depth: CGFloat
     }
-    static let cascades: [(y: CGFloat, right: Bool)] = [(510, true), (1110, false)]
+    static let cascades: [(y: CGFloat, right: Bool)] = [(510, true), (1160, false)]
 
     func fountains(for district: District) -> [Fountain] {
         let sign: CGFloat = district.right ? 1 : -1, s = scale
@@ -15351,8 +15588,7 @@ private struct CastleKingdomLayout {
                 return Crossing(district: court.id, upper: upper, right: court.right, water: water,
                                 inner: walkPoint(at: outer.y, right: court.right, outer: false),
                                 entry: entry(at: outer.y, right: court.right),
-                                outer: outer, scale: scale,
-                                riverSlope: (waterPoint(at: outer.y + 12, right: court.right).x - waterPoint(at: outer.y - 12, right: court.right).x) / 24)
+                                outer: outer, scale: scale)
             }
         }
         if let clock = landmarks.first {
@@ -15361,8 +15597,7 @@ private struct CastleKingdomLayout {
             result.append(Crossing(district: -1, upper: false, right: true, water: water,
                                    inner: walkPoint(at: outer.y, right: true, outer: false),
                                    entry: entry(at: outer.y, right: true),
-                                   outer: outer, scale: scale,
-                                   riverSlope: (waterPoint(at: outer.y + 12, right: true).x - waterPoint(at: outer.y - 12, right: true).x) / 24))
+                                   outer: outer, scale: scale))
         }
         return result
     }
@@ -15582,6 +15817,14 @@ private struct CastleWaterOcclusion: View {
             let depth = WorldSceneryDepth(minimumDepth: cutoff)
             CastleWorldPainter(context: c, liveWater: true).appendScenery(layout: layout, districts: plan.districts, crossings: plan.crossings, depth: depth)
             depth.draw()
+            // A waterfall's spray can reach back over an earlier bridge. Its
+            // complete stone silhouette still belongs in front of that water.
+            if cutoff.isFinite {
+                let bridges = WorldSceneryDepth()
+                CastleWorldPainter(context: c, liveWater: true).appendBridges(
+                    layout: layout, crossings: plan.crossings.filter { $0.outer.y + 42 * $0.scale <= cutoff }, depth: bridges)
+                bridges.draw()
+            }
             if 1675 > cutoff {
                 WorldBossPainter(context: c).draw(worldID: 10, at: .init(x: layout.scenery.width - 79 * layout.scale, y: 1675), size: layout.scale * 0.88)
             }
@@ -15731,8 +15974,13 @@ private struct CastleWorldPainter {
         for district in districts {
             depth.add(at: offset + district.lower.y + 41 * layout.scale) { royalDistrict(district, layout: layout) }
         }
+        appendBridges(layout: layout, crossings: crossings, depth: depth, offset: offset)
+    }
+
+    func appendBridges(layout: CastleKingdomLayout, crossings: [CastleKingdomLayout.Crossing],
+                       depth: WorldSceneryDepth, offset: CGFloat = 0) {
         for crossing in crossings {
-            depth.add(at: offset + crossing.outer.y + 42 * layout.scale) { royalBridge(crossing) }
+            depth.add(at: offset + crossing.outer.y + 42 * crossing.scale) { royalBridge(crossing, layout: layout) }
         }
     }
 
@@ -16131,17 +16379,27 @@ private struct CastleWorldPainter {
         }
     }
 
-    private func royalBridge(_ crossing: CastleKingdomLayout.Crossing) {
+    private func royalBridge(_ crossing: CastleKingdomLayout.Crossing, layout: CastleKingdomLayout) {
         bridgeApproach(crossing)
         at(crossing.water, size: crossing.scale) { p in
             let inner = (crossing.inner.x - crossing.water.x) / crossing.scale
             let outer = (crossing.outer.x - crossing.water.x) / crossing.scale
             let left = min(inner, outer), right = max(inner, outer)
             let backEdge = CastleKingdomLayout.bridgeBackEdge, frontEdge = CastleKingdomLayout.bridgeFrontEdge
-            let slope = crossing.riverSlope
-            let skew = CGAffineTransform(a: 1, b: 0, c: slope, d: 1, tx: 0, ty: 0)
+            func riverX(at y: CGFloat) -> CGFloat {
+                (layout.waterPoint(at: crossing.water.y + y * crossing.scale, right: crossing.right).x - crossing.water.x) / crossing.scale
+            }
+            // Follow the river through the full arch, including its bend below
+            // the deck. Extrapolating one tangent cut the water across a pier.
+            let archRows = (0...40).map { CGFloat($0) + 8 }
+            func archEdge(at y: CGFloat, side: CGFloat) -> CGPoint {
+                let radius = y < 31 ? sqrt(max(0, 23 * 23 - (y - 31) * (y - 31))) : 23
+                return CGPoint(x: riverX(at: y) + side * radius, y: y)
+            }
+            var opening = Path()
+            opening.addLines(archRows.map { archEdge(at: $0, side: -1) } + archRows.reversed().map { archEdge(at: $0, side: 1) })
+            opening.closeSubpath()
             var wall = Path(roundedRect: CGRect(x: left - 4, y: -5, width: right - left + 8, height: 43), cornerRadius: 3)
-            let opening = Path(roundedRect: CGRect(x: -23, y: 8, width: 46, height: 60), cornerRadius: 23).applying(skew)
             wall.addPath(opening)
             var face = p.context
             face.clip(to: Path(CGRect(x: left - 4, y: -5, width: right - left + 8, height: 43)))
@@ -16150,7 +16408,7 @@ private struct CastleWorldPainter {
                 let a = Double(i) * .pi / 11 + .pi, b = Double(i + 1) * .pi / 11 + .pi
                 func voussoir(_ angle: Double, _ radius: CGFloat) -> CGPoint {
                     let y = 31 + CGFloat(sin(angle)) * radius
-                    return CGPoint(x: CGFloat(cos(angle)) * radius + slope * y, y: y)
+                    return CGPoint(x: CGFloat(cos(angle)) * radius + riverX(at: y), y: y)
                 }
                 p.polygon([voussoir(a, 29), voussoir(b, 29), voussoir(b, 23), voussoir(a, 23)], i % 3 == 0 ? [0xFFF7DC, 0xD2BD94] : [0xF3E5C2, 0xC5B18D])
                 p.line([voussoir(a, 23.5), voussoir(a, 28.5)], 0xA9A68B, 0.6)
@@ -16186,12 +16444,16 @@ private struct CastleWorldPainter {
     private func cascade(layout: CastleKingdomLayout, at y: CGFloat, right: Bool) {
         let s = layout.scale, middle = layout.waterPoint(at: y, right: right)
         let channel = layout.waterway(right: right)
-        // The masonry ends at the banks. No cap or oblique stroke crosses the water.
-        var stone = context
-        stone.clip(to: channel.strokedPath(StrokeStyle(lineWidth: 33 * s, lineCap: .round, lineJoin: .round)), options: .inverse)
-        CastleWorldPainter(context: stone).at(middle, size: s) { p in
-            p.retainingWall(width: 58, height: 33, arches: 2)
-            p.ivy(at: CGPoint(x: right ? 28 : -28, y: -30), size: 0.40)
+        // Small bank drops follow the canal instead of placing a straight,
+        // arched wall across a bend and cutting through the promenade.
+        for side: CGFloat in [-1, 1] {
+            let direction = side * (right ? 1 : -1)
+            let inner = layout.bankContour(right: right, offset: direction * 16.5, from: y - 28 * s, to: y + 8 * s)
+            let outer = layout.bankContour(right: right, offset: direction * 20.5, from: y - 28 * s, to: y + 8 * s)
+            var bank = Path(); bank.addLines(inner + outer.reversed()); bank.closeSubpath()
+            context.fill(bank, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xFFF0CC), Color(dinoHex: 0xB6B69A)]),
+                startPoint: .init(x: middle.x, y: y - 28 * s), endPoint: .init(x: middle.x, y: y + 8 * s)))
+            line([inner[0], outer[0]], 0xFFF7DA, 2 * s)
         }
         var water = context
         water.clip(to: channel.strokedPath(StrokeStyle(lineWidth: 19 * s, lineCap: .round, lineJoin: .round)))

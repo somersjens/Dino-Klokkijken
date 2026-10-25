@@ -42,7 +42,7 @@ struct DinoCharacter: View {
             // schedule to the new jump before the playback task starts.
             let elapsed = playbackClip != clip ? 0 : finished ? DinoAnimation.duration(clip) : context.date.timeIntervalSince(start)
             let sample = DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reduceMotion)
-            let drawing = sprite(sample.pose, angle: sample.angle, yaw: sample.yaw)
+            let drawing = characterDrawing(sample)
                 .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
                 .offset(y: size * sample.height)
                 // Only the pose bypasses answer-card animations. The portrait
@@ -79,6 +79,34 @@ struct DinoCharacter: View {
         }
     }
 
+    @ViewBuilder private func characterDrawing(_ sample: DinoAnimation.Sample) -> some View {
+        if clip == .thumbsUp {
+            ZStack {
+                ZStack {
+                    if let previous = sample.previousPose, sample.poseBlend < 1 {
+                        applauseBody(previous).opacity(1 - sample.poseBlend)
+                    }
+                    applauseBody(sample.pose).opacity(sample.previousPose == nil ? 1 : sample.poseBlend)
+                        .blendMode(.plusLighter)
+                }.compositingGroup()
+                // This is the same cached bitmap, camera and mask on every frame.
+                sprite(.init(asset: "dino-idle"), angle: 0, yaw: 0)
+                    .mask(DinoApplauseHeadMask().fill(style: FillStyle(eoFill: true)))
+            }
+        } else {
+            sprite(sample.pose, angle: sample.angle, yaw: sample.yaw)
+        }
+    }
+
+    @ViewBuilder private func applauseBody(_ pose: DinoAnimation.Pose) -> some View {
+        if pose.asset == "dino-idle" || pose.asset == DinoAnimation.correctAnswerAssets.first || pose.asset == DinoAnimation.correctAnswerAssets.last {
+            sprite(.init(asset: "dino-idle"), angle: 0, yaw: 0)
+                .mask(DinoApplauseHeadMask(inverted: true).fill(style: FillStyle(eoFill: true)))
+        } else {
+            sprite(pose, angle: 0, yaw: 0)
+        }
+    }
+
     @ViewBuilder private func sprite(_ pose: DinoAnimation.Pose, angle: Double, yaw: Double) -> some View {
         let image = Group {
             if let prepared, prepared.appearance == appearance, let image = prepared.images[pose.asset] {
@@ -99,6 +127,15 @@ struct DinoCharacter: View {
         } else {
             image
         }
+    }
+}
+
+private struct DinoApplauseHeadMask: Shape {
+    var inverted = false
+    func path(in rect: CGRect) -> Path {
+        var path = inverted ? Path(rect) : Path()
+        path.addPath(Path(DinoAvatarMask.standingHead).applying(CGAffineTransform(scaleX: rect.width, y: rect.height)))
+        return path
     }
 }
 

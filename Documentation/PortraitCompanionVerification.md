@@ -4,7 +4,7 @@ Tijdens levels en oefenen staat Dino alleen in de cirkel linksboven. Het portret
 
 ## Gedrag
 
-- Goede antwoorden spelen de acht nieuwe `dino_applaus_frame_01` t/m `08` af: twee klapbewegingen en herstel naar rust. Foute antwoorden geven één zacht hoofdschudden. Beide behouden dezelfde portretcamera als in rust. Na 0,78 respectievelijk 0,80 seconde staat Dino weer in zijn oorspronkelijke rusthouding. De cirkelrand wordt volledig getekend; alleen echte pixels van de bandana en stekels komen ervoor. Elk nieuw goed antwoord en elke herhaalde fout starten hun reactie opnieuw.
+- Goede antwoorden spelen de acht nieuwe `dino_applaus_frame_01` t/m `08` af: twee klapbewegingen en herstel naar rust. De kop blijft exact gelijk aan rust; alleen de nieuwe handen, romp en klapaccenten bewegen. Overgangen van 35 ms tussen de handstanden maken de beweging vloeiender zonder overlappende gezichten. Foute antwoorden geven één zacht hoofdschudden. Beide behouden dezelfde portretcamera als in rust. Na 0,70 respectievelijk 0,80 seconde staat Dino weer in zijn oorspronkelijke rusthouding. De cirkelrand wordt volledig getekend; alleen echte pixels van de bandana en stekels komen ervoor. Elk nieuw goed antwoord en elke herhaalde fout starten hun reactie opnieuw.
 - De backflip en pirouette wachten totdat de resultaatsteen zijn positie heeft doorgegeven. De sprite en de verplaatsing beginnen samen. De ronde uitsnede opent tijdens de afzet in 0,24 seconde naar het hele lichaam. De bestaande landingsposes en offsets blijven behouden.
 - De backflip krijgt 0,18 seconde voorbereiding in het portret. De pirouette behoudt zijn bestaande voorbereiding, tempo en afwisseling van poses. De sterren verschijnen na de landing. Minder beweging toont direct de eindpose op de steen.
 - Onder de vragen is een vaste strook van 80 punten gereserveerd. **Toon antwoord** en **Verder** staan daarin gecentreerd, maximaal 420 punten breed, boven de onderste veilige schermrand. Scrollen en feedback verplaatsen de knop niet.
@@ -42,3 +42,11 @@ De antwoordreacties gebruiken nu één gekozen expressie met doorlopende bewegin
 De Debug-build slaagt en de kernsuite slaagt met **824.165 controles**, waaronder begrensde beweging en continuïteit op 600 tijdstappen per seconde. `testFourChoicesAndPersistentWrongAnswer` slaagt op iPhone 17 met iOS 26.5 en doorloopt zowel een goed als fout antwoord. De simulatoropname is per 0,05 seconde bekeken: het gezicht blijft tijdens elk gebaar gelijk, de cirkel blijft heel en Dino keert terug naar zijn vaste rustplek.
 
 [Huidige foutreactie](Animations/answer-gesture-wrong-iphone.mp4) · [Huidige goedreactie](Animations/answer-gesture-correct-iphone.mp4).
+
+## Applaus met vaste kop · 25 oktober 2026
+
+De nieuwe applausafbeeldingen verschillen ook in kopvorm en gezichtsverhoudingen. Alleen de bitmaps verschuiven en schalen hield het gezicht daardoor onvoldoende stil. Het portret gebruikt nu tijdens het hele applaus de exacte rustkop. De gekleurde handen, romp en gouden klapaccenten komen uit de nieuwe reeks; de eigen koppen van die frames worden vóór het bewaren van de bitmaps verwijderd. De handstanden gaan in 35 ms in elkaar over. Begin, herstel en einde gebruiken de exacte oorspronkelijke rusthouding.
+
+De Debug-build slaagt en `Tools/test-dino.sh` slaagt met **860.617 controles**, inclusief de acht poses op 30 en 60 Hz, kleurbehoud en volledige vingertoppen zonder een tweede kop. Op iPad (A16), iPadOS 27, slagen `testConsecutiveCorrectPracticeAnswersKeepCompanionInPortrait` en `testPlayCardAndContinuousResultDino`: drie goede oefenantwoorden en een volledig level met vijf goede antwoorden en gekozen kleuren. De simulatoropname is per 0,05 seconde bekeken: de kop en cirkel blijven staan, de handen klappen en de animatie herstart bij nieuwe antwoorden.
+
+[Definitief applaus met gekozen kleuren](Screenshots/Applause/applause-fixed-ipad.mp4).

@@ -55,3 +55,15 @@ De heggen stoppen vóór de brugtoegangen, met minstens twaalf geschaalde tekenp
 [Voor en na op telefoon- en tabletbreedte](Screenshots/CastleBridgeDescents/bridge-before-after.jpg).
 
 De native composities zijn visueel gecontroleerd op 320, 393, 834 en 1194 punten breed. De geometriecontrole op tien breedtes controleert 105.441 punten in de treden en bordessen: alle aansluitingen blijven droog en vrij van de speelroute; de heggen houden hun vrije ruimte. De definitieve simulatorbuild slaagt. De gewijzigde brugtoegangen zijn ook in de iPhone-app bekeken.
+
+## Aansluitingen en linker waterloop — 25 oktober 2026
+
+Alle negen korte brugtrappen beginnen nu precies op de rechte rand van het brugdek. De vaste scheefstand is verwijderd: de voor- en achterzijde van de trap raken dezelfde dekrand en het laatste treetje sluit aan op het droge bordes.
+
+De brugopeningen en hun boogstenen volgen de werkelijke rivierbocht onder het dek. De linker cascade ligt vijftig tekenpunten verder stroomafwaarts. De losse gemetselde wand met bogen is vervangen door smalle oevers die de kanaalcontour volgen. Ook bruggen die eerder in de dieptevolgorde liggen, schermen de bewegende waterlaag af.
+
+[Voor en na](Screenshots/CastleConnectionPolish/before-after.jpg) · [Alle negen bruggen](Screenshots/CastleConnectionPolish/all-bridges.jpg) · [Vier schermbreedtes](Screenshots/CastleConnectionPolish/all-widths.jpg).
+
+De geometriecontrole op tien breedtes controleert 69.750 punten: alle trapjes raken het brugdek en het bordes en blijven vrij van rivier en speelroute. Native composities op 320, 393, 834 en 1194 punten zijn visueel gecontroleerd. Bij de vergelijking van bewegend water op 0,00 en 0,65 seconde veranderen nul pixels binnen de ondoorzichtige brug- en trapvlakken, op zowel 393 als 834 punten. [Geometrie](WorldTestLogs/CastleConnectionPolish/native-render.log) · [Watermasker](WorldTestLogs/CastleConnectionPolish/animation.log) · [Wijzigingen](WorldTestLogs/CastleConnectionPolish/castle.diff).
+
+De simulatorbuild slaagt. De bestaande schermtests voor wereld 10 bevestigen dat level 91 opent, een vraag kan worden beantwoord en de eindbaas bereikbaar en bedienbaar blijft. De controle voor level 91 gebruikt een geïsoleerd profiel met alle eerste 90 levels voltooid; het aanvankelijke profiel met alleen voltooide eindbazen liet level 91 vergrendeld. Er zijn geen tests of spelregels voor deze aanpassing gewijzigd. [Verificatielog](WorldTestLogs/CastleConnectionPolish/verification.log).

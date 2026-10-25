@@ -251,7 +251,7 @@ enum DinoAvatarRenderer {
             colored = original
         } else {
             guard let result = DinoSpriteColorRenderer.recolored(original, appearance: appearance, asset: asset, resolution: resolution) else { return nil }
-            colored = result
+            colored = DinoSpriteColorRenderer.applauseBody(result, original: original, asset: asset) ?? result
             if portrait {
                 // Share the first recolor with the full character on the map.
                 cache.setObject(UIImage(cgImage: result),

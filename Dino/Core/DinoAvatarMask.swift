@@ -10,6 +10,21 @@ enum DinoAnswerArtwork {
 
 /// Color regions follow the original illustration, including bright spike highlights.
 enum DinoAvatarMask {
+    /// The unchanged idle head, following the jaw while excluding both fists.
+    static let standingHead: CGPath = {
+        let path = CGMutablePath()
+        path.move(to: .zero)
+        path.addLine(to: CGPoint(x: 1, y: 0))
+        path.addLine(to: CGPoint(x: 1, y: 0.415))
+        path.addLine(to: CGPoint(x: 0.72, y: 0.415))
+        path.addCurve(to: CGPoint(x: 0.573, y: 0.469), control1: CGPoint(x: 0.650, y: 0.452), control2: CGPoint(x: 0.625, y: 0.469))
+        path.addCurve(to: CGPoint(x: 0.438, y: 0.440), control1: CGPoint(x: 0.519, y: 0.468), control2: CGPoint(x: 0.473, y: 0.449))
+        path.addCurve(to: CGPoint(x: 0.425, y: 0.449), control1: CGPoint(x: 0.432, y: 0.445), control2: CGPoint(x: 0.429, y: 0.449))
+        path.addLine(to: CGPoint(x: 0, y: 0.449))
+        path.closeSubpath()
+        return path
+    }()
+
     static func part(hue: Double, saturation: Double, lightness: Double,
                      x: Double, y: Double, regions: SpriteRegions? = nil) -> DinoAppearance.Part? {
         if let regions { return regions.part(hue: hue, saturation: saturation, lightness: lightness, x: x, y: y) }
@@ -483,6 +498,41 @@ enum DinoAvatarMask {
 /// Pose-independent coloring, shared with bitmap regression checks.
 enum DinoSpriteColorRenderer {
     enum Resolution: String { case standard, original }
+
+    /// The supplied head moves independently of the hands. Remove that head
+    /// before caching the moving layer; DinoCharacter draws the exact idle head above it.
+    static func applauseBody(_ colored: CGImage, original: CGImage, asset: String) -> CGImage? {
+        guard asset.hasPrefix("dino_applaus_frame_"), !asset.hasSuffix("_01"), !asset.hasSuffix("_08") else { return colored }
+        let width = colored.width, height = colored.height
+        let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
+        let bitmapInfo = CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
+        var source = [UInt8](repeating: 0, count: width * height * 4)
+        source.withUnsafeMutableBytes { buffer in
+            let context = CGContext(data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8,
+                bytesPerRow: width * 4, space: colorSpace, bitmapInfo: bitmapInfo)!
+            context.interpolationQuality = .high
+            context.draw(original, in: CGRect(x: 0, y: 0, width: width, height: height))
+        }
+        var pixels = [UInt8](colored.dataProvider!.data! as Data)
+        let accents = DinoAvatarMask.spriteRegions(for: asset)?.decorations
+        for y in 0..<height {
+            for x in 0..<width {
+                let i = (y * width + x) * 4
+                let px = Double(x) / Double(width), py = Double(y) / Double(height)
+                let r = Double(source[i]), g = Double(source[i + 1]), b = Double(source[i + 2])
+                // Keep complete fingertips above the chin without retaining the
+                // cream jaw or red mouth. Classify original green before recoloring.
+                let fingers = py >= 550.0 / 1254 && (550.0 / 1254...950.0 / 1254).contains(px)
+                    && g > r * 1.03 && g > b * 1.1
+                if py >= 650.0 / 1254 || fingers || accents?.contains(CGPoint(x: px, y: py)) == true { continue }
+                pixels[i] = 0; pixels[i + 1] = 0; pixels[i + 2] = 0; pixels[i + 3] = 0
+            }
+        }
+        guard let provider = CGDataProvider(data: Data(pixels) as CFData) else { return nil }
+        return CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 32,
+                       bytesPerRow: width * 4, space: colorSpace, bitmapInfo: CGBitmapInfo(rawValue: bitmapInfo),
+                       provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+    }
 
     static func recolored(_ source: CGImage, appearance: DinoAppearance, asset: String,
                           resolution: Resolution = .standard) -> CGImage? {

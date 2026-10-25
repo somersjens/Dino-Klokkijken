@@ -2135,6 +2135,26 @@ struct DinoCoreTests {
                    && DinoAvatarMask.spriteRegions(for: asset) != nil,
                    "every applause drawing is available, preloaded and supports personal colors")
         }
+        for asset in applauseAssets.dropFirst().dropLast() {
+            let url = URL(fileURLWithPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
+            let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
+            let colored = DinoSpriteColorRenderer.recolored(source, appearance: DinoAppearance(body: 0xFF1493), asset: asset)!
+            let body = DinoSpriteColorRenderer.applauseBody(colored, original: source, asset: asset)!
+            let before = [UInt8](colored.dataProvider!.data! as Data)
+            let after = [UInt8](body.dataProvider!.data! as Data)
+            var headRemoved = true, bodyPreserved = true, fingertips = 0
+            for y in 0..<body.height {
+                for x in 0..<body.width {
+                    let i = y * body.bytesPerRow + x * 4
+                    let py = Double(y) / Double(body.height)
+                    if py < 0.35 { headRemoved = headRemoved && after[i + 3] == 0 }
+                    if py > 0.55 { bodyPreserved = bodyPreserved && (0...3).allSatisfy { before[i + $0] == after[i + $0] } }
+                    if (0.44..<0.51).contains(py), after[i + 3] > 220 { fingertips += 1 }
+                }
+            }
+            expect(headRemoved, "\(asset) cannot expose a shifting second head behind the fixed idle head")
+            expect(bodyPreserved && fingertips > 100, "\(asset) keeps the supplied hands, complete fingertips and personalized torso")
+        }
         let recovered = DinoAnimation.sample(.thumbsUp, elapsed: DinoAnimation.duration(.thumbsUp))
         expect(recovered.pose.asset == "dino-idle" && recovered.pose.offsetX == 0 && recovered.pose.offsetY == 0,
                "applause finishes at the original idle placement before the next question")

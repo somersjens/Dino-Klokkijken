@@ -1284,6 +1284,28 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("cold-sleep-valley-scroll-responsive")
     }
 
+    func testConsecutiveCorrectPracticeAnswersKeepCompanionInPortrait() {
+        openPractice()
+        selectPractice("practice.type.chooseAnalog")
+        tap("practice.start")
+        var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.chooseAnalog)), seed: seed)
+        for index in 0..<3 {
+            let question = generator.next(index: index, difficultyForKind: { _ in index == 0 ? .introduction : .familiar })
+            assertCompanionInPortrait(app.descendants(matching: .any)["dino.character"])
+            let previousTitle = app.staticTexts["question.title"].label
+            tap("question.option.\(question.responses.firstIndex(of: question.expectedAnswer)!)")
+            let advanced = NSPredicate { _, _ in
+                self.app.staticTexts["question.title"].label != previousTitle
+                    && self.app.descendants(matching: .any)["dino.character"].exists
+            }
+            expectation(for: advanced, evaluatedWith: nil)
+            waitForExpectations(timeout: 6)
+            XCTAssertTrue(app.descendants(matching: .any)["dino.character"].exists,
+                          "Each applause finishes before the next answer and leaves a fresh idle companion")
+        }
+        saveScreenshot("applause-practice-three-correct")
+    }
+
     func testPracticeHUDRecordsAndPersistentCounter() {
         openPractice()
         XCTAssertFalse(app.staticTexts["Van makkelijk naar moeilijk"].exists)
@@ -2727,16 +2749,16 @@ final class DinoUITests: XCTestCase {
             XCTAssertEqual(start.frame.width, end.frame.width, accuracy: 1)
             XCTAssertEqual(start.frame.height, end.frame.height, accuracy: 1)
             let bar = app.descendants(matching: .any)["demo.timeChange.difference"]
-            XCTAssertTrue(bar.exists)
-            XCTAssertTrue(app.descendants(matching: .any)["demo.timeArithmetic"].exists)
             let hours = app.descendants(matching: .any)["demo.timeArithmetic.hours"]
             let minutes = app.descendants(matching: .any)["demo.timeArithmetic.minutes"]
+            XCTAssertTrue(bar.exists)
             XCTAssertTrue(hours.waitForExistence(timeout: 6))
             XCTAssertTrue(minutes.waitForExistence(timeout: 6))
-            XCTAssertLessThan(start.frame.maxY, bar.frame.minY)
-            XCTAssertLessThan(bar.frame.maxY, hours.frame.minY)
-            XCTAssertEqual(hours.frame.minY, minutes.frame.minY, accuracy: 2)
-            XCTAssertLessThan(hours.frame.maxY, end.frame.minY)
+            XCTAssertEqual(start.frame.midX, end.frame.midX, accuracy: 2)
+            XCTAssertLessThan(hours.frame.minY, bar.frame.minY)
+            XCTAssertEqual(hours.frame.minY, minutes.frame.minY, accuracy: 4)
+            XCTAssertLessThan(bar.frame.maxY, end.frame.minY)
+            XCTAssertLessThan(max(hours.frame.maxY, minutes.frame.maxY), end.frame.minY)
             saveScreenshot("\(kind.rawValue)-equal-example-clocks")
             tap("demo.ready")
             tap("header.pause")

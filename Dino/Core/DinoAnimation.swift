@@ -1,6 +1,6 @@
 import Foundation
 
-/// One visible pose at a time: smooth motion without fading different faces together.
+/// Shared pose timing, with a fixed head during applause and smooth hand transitions.
 enum DinoAnimation {
     enum Clip: String { case idle, thumbsUp, wrongAnswer, backflip, pirouette, worldJump }
     struct Pose {
@@ -17,6 +17,8 @@ enum DinoAnimation {
         var height = 0.0
         var scaleX = 1.0
         var scaleY = 1.0
+        var previousPose: Pose? = nil
+        var poseBlend = 1.0
     }
 
     static let correctAnswerDelay = duration(.thumbsUp) + 0.12
@@ -24,8 +26,13 @@ enum DinoAnimation {
     static let correctAnswerAssets = (1...8).map { String(format: "dino_applaus_frame_%02d", $0) }
     // Two claps, followed by the supplied recovery pose before returning to idle.
     // Keep every drawing visible at both 30 and 60 Hz without delaying the next question.
-    static let correctAnswerFrameStarts = [0.0, 0.06, 0.16, 0.26, 0.36, 0.46, 0.56, 0.66]
+    static let correctAnswerFrameStarts = [0.0, 0.06, 0.14, 0.22, 0.30, 0.38, 0.46, 0.54]
     static let correctAnswerStillAsset = correctAnswerAssets[5]
+    // The new drawings change facial proportions as well as head position. Keep
+    // the idle head fixed and animate only the supplied hands, torso and accents.
+    static let correctAnswerPoses = correctAnswerAssets.enumerated().map { index, asset in
+        Pose(asset: asset, offsetY: index == 0 || index == 7 ? 0 : -0.025)
+    }
     static let answerGestureStart = 0.08
     static let answerGestureEnd = 0.66
     struct TimedPose {
@@ -88,7 +95,7 @@ enum DinoAnimation {
     static func duration(_ clip: Clip) -> Double {
         switch clip {
         case .idle: 0
-        case .thumbsUp: 0.78
+        case .thumbsUp: 0.70
         case .wrongAnswer: 0.80
         case .backflip, .worldJump: 1.62
         case .pirouette: leadIn(clip) + pirouetteFrames.last!.start
@@ -107,12 +114,14 @@ enum DinoAnimation {
         case .idle:
             return Sample(pose: Pose(asset: "dino-idle"))
         case .thumbsUp:
-            guard !reducedMotion else { return Sample(pose: Pose(asset: correctAnswerStillAsset)) }
+            guard !reducedMotion else { return Sample(pose: correctAnswerPoses[5]) }
             guard t < duration(.thumbsUp) else { return sample(.idle, elapsed: 0) }
             let index = correctAnswerFrameStarts.lastIndex { t >= $0 } ?? 0
-            // The artwork supplies the hand movement; keep the portrait camera
-            // and body still instead of adding the former cheering bounce.
-            return Sample(pose: Pose(asset: correctAnswerAssets[index]))
+            // Blend only the moving hands for two refreshes; the head never
+            // fades or changes shape. Every authored pose still has a clear hold.
+            return Sample(pose: correctAnswerPoses[index],
+                          previousPose: index > 0 ? correctAnswerPoses[index - 1] : nil,
+                          poseBlend: smooth((t - correctAnswerFrameStarts[index]) / 0.035))
         case .wrongAnswer:
             return wrongAnswerSample(elapsed: t, reducedMotion: reducedMotion)
         case .pirouette:
