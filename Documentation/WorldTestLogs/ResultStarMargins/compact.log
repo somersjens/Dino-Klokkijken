@@ -1,0 +1,110 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun /tmp/dino-theme-details-build/Build/Products/DinoStarMargins.xctestrun -destination "platform=iOS Simulator,id=2C036F1B-5C26-478F-AE6F-E1D205DB94D9" -resultBundlePath /tmp/dino-star-margins-compact.xcresult -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testAllWorldResultScenery"
+
+Writing result bundle at path:
+	/tmp/dino-star-margins-compact.xcresult
+
+2026-10-26 16:14:27.270308+0100 DinoUITests-Runner[23052:1634227] [Default] Running tests...
+objc[23052]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x106a70310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1069d0398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-26 16:14:29.875.
+Test Suite 'DinoUITests.xctest' started at 2026-10-26 16:14:29.876.
+Test Suite 'DinoUITests' started at 2026-10-26 16:14:29.876.
+Test Case '-[DinoUITests.DinoUITests testAllWorldResultScenery]' started.
+    t =     0.00s Start Test at 2026-10-26 16:14:29.878
+    t =     0.16s Set Up
+    t =     0.16s     Setting device orientation to Portrait
+    t =     0.16s         Device orientation changed to Portrait
+    t =     0.18s         Wait for com.apple.springboard to idle
+    t =     0.23s     Open Hakketjak.Dino-Klokkijken
+    t =     0.23s         Launch Hakketjak.Dino-Klokkijken
+2026-10-26 16:14:30.171 xcodebuild[22829:1631476] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 16:14:30.171 xcodebuild[22829:1631476] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.13s             Setting up automation session
+    t =     2.03s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.71s Terminate Hakketjak.Dino-Klokkijken:23095
+    t =     4.72s Open Hakketjak.Dino-Klokkijken
+    t =     4.72s     Launch Hakketjak.Dino-Klokkijken
+2026-10-26 16:14:34.595 xcodebuild[22829:1631476] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 16:14:34.595 xcodebuild[22829:1631476] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     4.93s         Setting up automation session
+    t =     5.85s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     8.45s Waiting 8.0s for "result.map" Button to exist
+    t =     9.49s     Checking `Expect predicate `existsNoRetry == 1` for object "result.map" Button`
+    t =     9.50s         Checking existence of `"result.map" Button`
+    t =    13.58s Find the "result.stars" Any
+    t =    13.60s Checking existence of `"5/5" StaticText`
+    t =    13.63s Find the "result.next" Button
+    t =    13.67s Find the "result.next" Button
+    t =    13.69s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.71s Find the "result.next" Button
+    t =    13.73s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.75s Find the "result.next" Button
+    t =    13.77s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.79s Find the "result.retry" Button
+    t =    13.82s Find the "result.retry" Button
+    t =    13.85s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.86s Find the "result.retry" Button
+    t =    13.89s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.90s Find the "result.retry" Button
+    t =    13.93s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.94s Find the "result.map" Button
+    t =    13.97s Find the "result.map" Button
+    t =    14.00s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.02s Find the "result.map" Button
+    t =    14.05s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.06s Find the "result.map" Button
+    t =    14.09s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.18s Added attachment named 'result-biome-world-6'
+    t =    14.18s Terminate Hakketjak.Dino-Klokkijken:23121
+    t =    15.26s Open Hakketjak.Dino-Klokkijken
+    t =    15.26s     Launch Hakketjak.Dino-Klokkijken
+2026-10-26 16:14:45.136 xcodebuild[22829:1631476] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-26 16:14:45.136 xcodebuild[22829:1631476] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    15.47s         Setting up automation session
+    t =    16.18s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.05s Waiting 8.0s for "result.map" Button to exist
+    t =    19.09s     Checking `Expect predicate `existsNoRetry == 1` for object "result.map" Button`
+    t =    19.09s         Checking existence of `"result.map" Button`
+    t =    23.02s Find the "result.stars" Any
+    t =    23.05s Checking existence of `"5/5" StaticText`
+    t =    23.07s Find the "result.next" Button
+    t =    23.11s Find the "result.next" Button
+    t =    23.14s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.15s Find the "result.next" Button
+    t =    23.18s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.20s Find the "result.next" Button
+    t =    23.23s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.24s Find the "result.retry" Button
+    t =    23.28s Find the "result.retry" Button
+    t =    23.31s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.32s Find the "result.retry" Button
+    t =    23.35s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.36s Find the "result.retry" Button
+    t =    23.39s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.40s Find the "result.map" Button
+    t =    23.44s Find the "result.map" Button
+    t =    23.47s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.49s Find the "result.map" Button
+    t =    23.51s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.53s Find the "result.map" Button
+    t =    23.56s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.63s Added attachment named 'result-biome-world-9'
+    t =    23.64s Tear Down
+Test Case '-[DinoUITests.DinoUITests testAllWorldResultScenery]' passed (23.873 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-26 16:14:53.751.
+	 Executed 1 test, with 0 failures (0 unexpected) in 23.873 (23.875) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-26 16:14:53.752.
+	 Executed 1 test, with 0 failures (0 unexpected) in 23.873 (23.875) seconds
+Test Suite 'Selected tests' passed at 2026-10-26 16:14:53.752.
+	 Executed 1 test, with 0 failures (0 unexpected) in 23.873 (23.876) seconds
+2026-10-26 16:14:54.075 xcodebuild[22829:1631476] [MT] IDETestOperationsObserverDebug: 41.459 elapsed -- Testing started completed.
+2026-10-26 16:14:54.075 xcodebuild[22829:1631476] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-26 16:14:54.075 xcodebuild[22829:1631476] [MT] IDETestOperationsObserverDebug: 41.459 sec, +41.459 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-star-margins-compact.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

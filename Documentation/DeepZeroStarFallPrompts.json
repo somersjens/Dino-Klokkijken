@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-26",
+  "mode": "built-in image_gen",
+  "sources": [
+    {
+      "original": "ChatGPT-afbeelding 26 okt 2026, 15_20_13-1.png",
+      "asset": "dino-stumble-deep-01",
+      "sha256": "6d51f58a0598cd1d70a31f987a0a9aa4379edd5b9e822a2985c69d86c63d86df"
+    },
+    {
+      "original": "ChatGPT-afbeelding 26 okt 2026, 15_20_14-2.png",
+      "asset": "dino-stumble-deep-02",
+      "sha256": "333c5cf8f8797344635a45d8112222a8a53f94a16235e58f89c9009aa7340b88"
+    },
+    {
+      "original": "ChatGPT-afbeelding 26 okt 2026, 15_20_15-3.png",
+      "asset": "dino-stumble-deep-03",
+      "sha256": "13be6fdcb846793ba936009786e9d2585516b6c897e99dca9fdb973d2a7378d9"
+    },
+    {
+      "original": "ChatGPT-afbeelding 26 okt 2026, 15_20_16-4.png",
+      "asset": "dino-stumble-deep-04",
+      "sha256": "956bc42e701d87a7eeb2f2abc133f062323a2f70609c12327e757c9bb4b8991a"
+    },
+    {
+      "original": "ChatGPT-afbeelding 26 okt 2026, 15_20_16-5.png",
+      "asset": "dino-stumble-deep-05",
+      "sha256": "1cc21ee423876465eba867f252e4d8a994d48daef6cb6a34ab9a5cfbe6a1ccc4"
+    },
+    {
+      "original": "ChatGPT-afbeelding 26 okt 2026, 15_20_17-6.png",
+      "asset": "dino-stumble-deep-06",
+      "sha256": "860c09f43997b12fb336b7a68133b60a543773c1f06f27688ea83b6b64fb25a9"
+    },
+    {
+      "original": "ChatGPT-afbeelding 26 okt 2026, 15_20_18-7.png",
+      "asset": "dino-stumble-deep-07",
+      "sha256": "74c0affe70d22a1f8c59a5b52733d457a0f853355e2a27cbe7effa4af336e706"
+    },
+    {
+      "original": "ChatGPT-afbeelding 26 okt 2026, 15_20_19-8.png",
+      "asset": "dino-stumble-deep-08",
+      "sha256": "ecdb13506dcac13b4802494c813ab506e502f2f19d9ac799d30efeadab0decaa"
+    }
+  ],
+  "generated": [
+    {
+      "key": "deepFallContact",
+      "prompt": "Use case: identity-preserve. Asset type: one transparent animation sprite for an existing children's iOS game, not a sprite sheet.\nImage 1 is the airborne pose before impact. Image 2 is the exact final face-to-ground landing pose. Create exactly ONE in-between pose 60 percent from image 1 to image 2: BOTH open palms have JUST touched an invisible horizontal ground plane, elbows slightly flexed, large worried face and snout still about 100 source pixels ABOVE the palms, body tipping forward, one hind foot beginning to lift behind him, tail raised. His face has not hit the floor yet. This drawing will immediately precede image 2.\nPreserve this exact dinosaur's identity, 3D rendered illustration style, head and eye size, brown pupils, cream cheeks/belly/claws, green skin and dark green spikes, red bandana with exact white text \"12:34\". Keep the same three-quarter front view facing right, canvas framing and character scale as the two references. Lowest palm/claw contact is near y=1120 of a 1254 square canvas, matching image 2. Keep all body parts inside the image with transparent margins. Single fully opaque character on genuinely transparent background. No ground, rock, shadow, extra stars, motion streaks, duplicates, ghosting, or UI. Clear clean anatomy, two arms and two hind legs. Do not reproduce the fully planted head from image 2: this is the preceding first-palm-contact drawing.",
+      "asset": "dino-stumble-deep-03a",
+      "referenceAssets": [
+        "dino-stumble-deep-03",
+        "dino-stumble-deep-04"
+      ]
+    },
+    {
+      "key": "deepFallRise",
+      "prompt": "Use case: identity-preserve. Asset type: one transparent animation sprite for an existing children's iOS game, not a sprite sheet.\nImage 1 is pushing up on all fours after a fall. Image 2 is the recovered standing pose. Create exactly ONE natural midpoint between these poses: feet flat on the same invisible floor line as image 2, knees still bent in a squat, torso half raised and turning upright, BOTH hands have JUST released the ground and hang low in front of the belly. Hands open and relaxed, not already raised in victory. Head halfway between the reference head positions and orientation; expression has a small relieved smile with almost closed mouth, transitioning naturally from the gritted effort of image 1 to the happy smile of image 2.\nPreserve this exact dinosaur's identity, 3D rendered illustration style, head and eye size, brown pupils, cream cheeks/belly/claws, green skin and dark green spikes, red bandana with exact white text \"12:34\". Keep the same three-quarter front view facing right, canvas framing, body proportions and character scale as the references. Lowest sole/claw contact is near y=1205 of a 1254 square canvas. Keep all body parts inside the image with transparent margins. Single fully opaque character on genuinely transparent background. No ground, rock, shadow, extra stars, motion streaks, duplicates, ghosting, UI, or extra fingers. Two arms and two hind legs.",
+      "asset": "dino-stumble-deep-06a",
+      "referenceAssets": [
+        "dino-stumble-deep-06",
+        "dino-stumble-deep-08"
+      ]
+    }
+  ]
+}

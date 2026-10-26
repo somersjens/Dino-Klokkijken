@@ -1,0 +1,1 @@
+tests/DinoCoreTests.swift:9: Fatal error: FAILED: dino-stumble-01 matches idle spikes shadows, base color and highlights: [0.10392156862745097, 0.19960474308300394, 0.4143426294820718] vs [0.09803921568627451, 0.19607843137254902, 0.36470588235294116]

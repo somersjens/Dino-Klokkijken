@@ -1,0 +1,14 @@
+PASS: shared initial time, forward motion, 24-second revolution, correct 12:1 gearing and day wrap
+320pt: 88 plots, foundations clear
+375pt: 75 plots, foundations clear
+393pt: 73 plots, foundations clear
+393pt: foreground building 40260 at y=1758.0 naturally in front of tunnel houses [1711.2082463191107, 1724.3082463191106]
+402pt: 74 plots, foundations clear
+402pt: foreground building 40260 at y=1758.0 naturally in front of tunnel houses [1712.8271259014423, 1726.2271259014424]
+430pt: 70 plots, foundations clear
+600pt: 88 plots, foundations clear
+744pt: 130 plots, foundations clear
+834pt: 156 plots, foundations clear
+1024pt: 202 plots, foundations clear
+1194pt: 240 plots, foundations clear
+PASS: all city foundations clear at 10 widths
