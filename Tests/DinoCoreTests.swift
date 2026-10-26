@@ -38,6 +38,13 @@ struct DinoCoreTests {
             print("PASS: \(checks) question variation checks.")
             return
         }
+        if CommandLine.arguments.contains("--answer-inputs") {
+            testAnswerInputRequirements()
+            testRepeatedAnswerControls()
+            testPractice()
+            print("PASS: \(checks) answer input and practice checks.")
+            return
+        }
         testLevelCurriculum()
         testAdaptiveDifficulty()
         testQuestionVariation()
@@ -54,6 +61,7 @@ struct DinoCoreTests {
         testMapAnimationViewport()
         testAttempt()
         testRepeatedAnswerControls()
+        testAnswerInputRequirements()
         testAnswerRetries()
         testTiming()
         testPractice()
@@ -1163,7 +1171,16 @@ struct DinoCoreTests {
 
     static func wrongAnswer(for q: ClockQuestion) -> ClockAnswer {
         switch q.expectedAnswer {
-        case .time(let time): return .time(time.adding(minutes: 60))
+        case .time(let time):
+            var wrong = time.adding(minutes: 60)
+            if [.setAnalog, .setDigital, .advanceAnalog].contains(q.kind) {
+                let initial = q.kind == .advanceAnalog ? q.relatedTimes[0]
+                    : ClockTime(hour: q.target.hour % 12 == 0 ? 1 : 12)
+                if wrong.hour % 12 == initial.hour % 12 && wrong.minute == initial.minute {
+                    wrong = wrong.adding(minutes: 60)
+                }
+            }
+            return .time(wrong)
         case .duration(let minutes): return .duration(minutes + 1)
         case .truth(let truth): return .truth(!truth)
         case .dayPart(let part): return .dayPart(DinoDayPart.allCases.first { $0 != part }!)
@@ -2087,22 +2104,142 @@ struct DinoCoreTests {
             }
         }
         let normal = DinoLevelCatalog.level(1)!
-        for (correct, clip) in [(2, DinoAnimation.Clip.idle), (3, .idle), (4, .pirouette), (5, .backflip)] {
+        for (correct, clip) in [(0, DinoAnimation.Clip.stumble), (1, .stumble), (2, .stumble), (3, .openingJump), (4, .pirouette), (5, .backflip)] {
             let result = DinoLevelResult(level: normal, correct: correct, stars: StarCalculator.stars(correct: correct), victory: .none)
-            expect(result.animationClip == clip, "only two stars select the pirouette; a perfect score retains the backflip")
+            expect(result.animationClip == clip, "one star jumps, two stars pirouette and a perfect score backflips")
         }
         let boss = DinoLevelCatalog.level(10)!
-        for (correct, stars, clip) in [(4, 0, DinoAnimation.Clip.idle), (6, 1, .idle), (8, 2, .pirouette), (9, 2, .pirouette), (10, 3, .backflip)] {
+        for (correct, stars, clip) in [(4, 0, DinoAnimation.Clip.stumble), (6, 1, .openingJump), (8, 2, .pirouette), (9, 2, .pirouette), (10, 3, .backflip)] {
             let result = DinoLevelResult(level: boss, correct: correct,
                                          stars: StarCalculator.stars(correct: correct, questionCount: 10), victory: .none)
             expect(result.stars == stars && result.animationClip == clip, "boss stars use the same reward animations")
         }
+        let stumbleLeadIn = DinoAnimation.leadIn(.stumble)
+        let stumbleLanding = DinoAnimation.travelDuration(.stumble)
+        for step in 0..<36 {
+            let waiting = DinoAnimation.sample(.stumble, elapsed: Double(step) / 100)
+            expect(waiting.pose.asset == "dino-idle" && waiting.pose.offsetX == 0 && waiting.pose.offsetY == 0
+                   && waiting.angle == 0 && waiting.scaleX == 1 && waiting.scaleY == 1 && waiting.previousPose == nil,
+                   "the face, colors and portrait camera remain exactly idle until the fall actually starts")
+        }
+        expect((0.40...0.46).contains(DinoAnimation.duration(.stumble) - stumbleLanding),
+               "hand contact, full collapse and recovery form one short continuous movement")
+        let motionFrames = DinoAnimation.stumbleFrames
+        let recovery = motionFrames.filter { $0.start >= DinoAnimation.stumbleLowest }
+        expect(recovery.count == 5 && recovery[3].start - recovery[0].start <= 0.24,
+               "the full low pose leads into a brisk push-up before the short settling motion")
+        let palms = DinoStumbleMotion.sample(at: DinoAnimation.stumbleLanding)!
+        let face = DinoStumbleMotion.sample(at: DinoAnimation.stumbleFaceContact)!
+        let low = DinoStumbleMotion.sample(at: DinoAnimation.stumbleLowest)!
+        expect(face.from.asset == "dino-stumble-deep-04" && low.from.asset == "dino-stumble-deep-05"
+               && face.points[2].y > 0.89 && face.points[4].y > 0.94
+               && face.points[0].y > palms.points[0].y + 0.06,
+               "after the palms land the muzzle and chin visibly sink down to the stone")
+        expect(low.points[7].y > face.points[7].y + 0.08,
+               "the hips collapse fully instead of stopping in the old push-up pose")
+        for (frame, next) in zip(motionFrames, motionFrames.dropFirst()) {
+            let early = DinoStumbleMotion.sample(at: frame.start + (next.start - frame.start) * 0.2)!
+            let late = DinoStumbleMotion.sample(at: frame.start + (next.start - frame.start) * 0.8)!
+            expect(zip(early.points, late.points).contains { hypot($0.x - $1.x, $0.y - $1.y) > 0.002 },
+                   "each painted interval contains real movement rather than a held frame")
+            expect(early.opacity == 0 && late.opacity == 1,
+                   "the body moves between poses while only one opaque painting supplies the face")
+            for (vertex, source) in zip(early.fromVertices, DinoStumbleMotion.grid) {
+                expect(vertex.x.isFinite && vertex.y.isFinite && source.x.isFinite,
+                       "all interpolated mesh coordinates remain finite")
+            }
+        }
+        for frame in motionFrames.dropFirst().dropLast() {
+            let epsilon = 0.00001
+            let before = DinoStumbleMotion.sample(at: frame.start - epsilon)!.points
+            let at = DinoStumbleMotion.sample(at: frame.start)!.points
+            let after = DinoStumbleMotion.sample(at: frame.start + epsilon)!.points
+            for index in at.indices {
+                let incoming = CGPoint(x: (at[index].x - before[index].x) / epsilon,
+                                       y: (at[index].y - before[index].y) / epsilon)
+                let outgoing = CGPoint(x: (after[index].x - at[index].x) / epsilon,
+                                       y: (after[index].y - at[index].y) / epsilon)
+                expect(hypot(incoming.x - outgoing.x, incoming.y - outgoing.y) < 0.02,
+                       "body landmarks keep continuous speed across painted poses")
+            }
+        }
+        expect(stumbleLanding == stumbleLeadIn + DinoAnimation.stumbleLanding
+               && DinoAnimation.travelDelay(.stumble) == stumbleLeadIn + DinoAnimation.stumbleTakeoff,
+               "the fall starts in the portrait and contacts the stone on the same clock as the painted hands")
+        let contact = DinoAnimation.sample(.stumble, elapsed: stumbleLanding)
+        expect(contact.pose.asset == "dino-stumble-deep-03a" && contact.previousPose == nil && contact.height == 0 && contact.angle == 0,
+               "the hands catch the fall at contact without an airborne planted pose or a ghost of the standing figure")
+        for frame in DinoAnimation.stumbleFrames {
+            expect(abs(opaqueFootline(frame.pose.asset) + frame.pose.offsetY - idleFootline) < 1.0 / 1254,
+                   "every fall and push-up drawing shares the same opaque contact line on the stone")
+        }
+        for fps in [30.0, 60.0] {
+            for phase in [0.0, 0.25, 0.5, 0.75] {
+                var seen = [String]()
+                for step in 0...Int((DinoAnimation.duration(.stumble) + 0.3) * fps) {
+                    let time = (Double(step) + phase) / fps
+                    let sample = DinoAnimation.sample(.stumble, elapsed: time)
+                    if seen.last != sample.pose.asset { seen.append(sample.pose.asset) }
+                    expect(sample.height == 0 && sample.yaw == 0 && abs(sample.angle) <= 3
+                           && (0...1).contains(sample.poseBlend),
+                           "the fall descends without a celebratory jump, spin or invalid blend")
+                    if let morph = sample.morph {
+                        expect((0...1).contains(morph.opacity), "texture opacity remains valid")
+                        for vertices in [morph.opacity < 0.99 ? morph.fromVertices : [],
+                                         morph.opacity > 0.01 ? morph.toVertices : []] where !vertices.isEmpty {
+                            for triangle in DinoStumbleMotion.triangles {
+                                let a = vertices[triangle.0], b = vertices[triangle.1], c = vertices[triangle.2]
+                                expect((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x) > 0,
+                                       "visible body interpolation never folds or inverts a mesh triangle")
+                            }
+                        }
+                        expect(morph.points.suffix(5).allSatisfy { abs($0.y - idleFootline) < 1e-8 },
+                               "the continuous recovery keeps its ground controls planted")
+                    }
+                    if time >= stumbleLanding {
+                        expect(sample.angle == 0, "Dino pushes up with his contact line fixed after landing")
+                    }
+                }
+                expect(seen == motionFrames.map { $0.pose.asset },
+                       "the exact idle face leads into the continuous recovery at both refresh rates")
+            }
+        }
+        expect(DinoAnimation.stumbleAssets.allSatisfy { DinoAnimation.spriteAssets.contains($0) },
+               "all fall drawings prepare the player's chosen colors before the animation")
+        let jumpLeadIn = DinoAnimation.leadIn(.openingJump)
+        expect(DinoAnimation.travelDelay(.openingJump) == jumpLeadIn + DinoOpeningJump.takeoff
+               && DinoAnimation.travelDuration(.openingJump) == jumpLeadIn + DinoOpeningJump.landing
+               && DinoAnimation.duration(.openingJump) == jumpLeadIn + DinoOpeningJump.duration,
+               "one-star travel, poses and recovery share the opening jump's timing")
+        for (time, asset) in zip(DinoOpeningJump.poseStarts, DinoOpeningJump.assets) {
+            let sample = DinoAnimation.sample(.openingJump, elapsed: jumpLeadIn + time)
+            expect(sample.pose.asset == asset && DinoAnimation.spriteAssets.contains(asset),
+                   "one star reuses every original jump pose at its exact boundary and prepares its chosen colors")
+        }
+        let jumpLanding = DinoAnimation.sample(.openingJump, elapsed: DinoAnimation.travelDuration(.openingJump))
+        expect(jumpLanding.pose.asset == "dino-opening-jump-07" && jumpLanding.height == 0,
+               "one-star contact pose is planted exactly when the companion reaches the stone")
+        for fps in [30.0, 60.0] {
+            for phase in [0.0, 0.25, 0.5, 0.75] {
+                var seen = [String]()
+                for step in 0...Int((DinoAnimation.duration(.openingJump) + 0.1) * fps) {
+                    let sample = DinoAnimation.sample(.openingJump, elapsed: (Double(step) + phase) / fps)
+                    expect((-0.280001...0).contains(sample.height) && abs(sample.angle) <= 5 && sample.yaw == 0,
+                           "the portrait jump stays in a modest arc without a flip or turn")
+                    if seen.last != sample.pose.asset { seen.append(sample.pose.asset) }
+                }
+                expect(seen == DinoOpeningJump.assets + ["dino-idle"],
+                       "one-star playback shows all eight opening poses once and settles into idle at 30 and 60 fps")
+            }
+        }
         for (clip, asset) in [(DinoAnimation.Clip.backflip, "dino-backflip-08"), (.pirouette, "dino-pirouette-14"),
+                               (.stumble, "dino-stumble-deep-08"),
+                               (.openingJump, "dino-idle"),
                                (.thumbsUp, DinoAnimation.correctAnswerStillAsset), (.wrongAnswer, DinoAnimation.wrongAnswerAssets[0])] {
             for step in 0...180 {
                 let reduced = DinoAnimation.sample(clip, elapsed: Double(step) / 120, reducedMotion: true)
                 expect(reduced.height == 0 && reduced.angle == 0 && reduced.yaw == 0 && reduced.scaleX == 1
-                       && reduced.scaleY == 1 && reduced.pose.asset == asset,
+                       && reduced.scaleY == 1 && reduced.pose.asset == asset && reduced.headAngle == 0 && reduced.headHeight == 0,
                        "reduced motion holds the same clear expression completely still")
             }
         }
@@ -2128,6 +2265,29 @@ struct DinoCoreTests {
                 expect(DinoAnimation.sample(.thumbsUp, elapsed: start - 0.000001).pose.asset == applauseAssets[index - 1],
                        "applause never skips a drawing at a frame boundary")
             }
+        }
+        var headPeaks = 0
+        var beforeHead = DinoAnimation.sample(.thumbsUp, elapsed: 0)
+        var previousHead = beforeHead
+        for step in 1...Int(ceil((DinoAnimation.duration(.thumbsUp) + 0.1) * 600)) {
+            let current = DinoAnimation.sample(.thumbsUp, elapsed: Double(step) / 600)
+            expect((0...1.80001).contains(current.headAngle) && (0...0.006001).contains(current.headHeight),
+                   "applause keeps the head motion small inside the anchored portrait")
+            expect(abs(current.headAngle - previousHead.headAngle) < 0.035
+                   && abs(current.headHeight - previousHead.headHeight) < 0.00012,
+                   "head motion remains continuous across every clap drawing and the return to idle")
+            if previousHead.headAngle > beforeHead.headAngle && previousHead.headAngle > current.headAngle { headPeaks += 1 }
+            beforeHead = previousHead; previousHead = current
+        }
+        expect(headPeaks == 2, "applause makes exactly two distinct head nods before settling")
+        for (contact, asset) in zip(DinoAnimation.correctAnswerClapContacts, [applauseAssets[2], applauseAssets[5]]) {
+            let sample = DinoAnimation.sample(.thumbsUp, elapsed: contact)
+            expect(sample.pose.asset == asset && sample.poseBlend > 0.999 && sample.headAngle > 1.79,
+                   "each nod peaks when the supplied palms have fully met")
+        }
+        for time in [0.0, DinoAnimation.duration(.thumbsUp), DinoAnimation.correctAnswerDelay] {
+            let sample = DinoAnimation.sample(.thumbsUp, elapsed: time)
+            expect(sample.headAngle == 0 && sample.headHeight == 0, "applause starts and finishes at the exact resting head position")
         }
         for asset in applauseAssets {
             expect(DinoAnimation.spriteAssets.contains(asset)
@@ -2196,8 +2356,8 @@ struct DinoCoreTests {
                    && DinoAvatarMask.spriteRegions(for: asset) != nil,
                    "the selected supplied artwork retains its personal-color mask")
         }
-        expect(DinoAnimation.duration(.thumbsUp) < DinoAnimation.correctAnswerDelay && DinoAnimation.correctAnswerDelay < 1,
-               "complete applause before the quick advance to the next question")
+        expect(DinoAnimation.duration(.thumbsUp) < DinoAnimation.correctAnswerDelay && DinoAnimation.correctAnswerDelay <= 1.25,
+               "both readable claps finish before advancing to the next question")
     }
 
     static func testPlausibleChoices() {
@@ -2493,6 +2653,82 @@ struct DinoCoreTests {
             let question = mixed.next(index: index)
             expect(mixed.upcomingKind(after: index) != nil, "every mixed question knows which buttons come next")
             _ = question
+        }
+    }
+
+    static func testAnswerInputRequirements() {
+        for family in DinoPracticeTime.allCases {
+            for kind in [DinoPracticeQuestion.setAnalog, .setDigital, .advanceAnalog] {
+                let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+                let config = DinoPracticeConfiguration(time: family, order: .specific(kind))
+                var feedbackCount = 0
+                let session = DinoSession(level: config.level, player: player, practice: config,
+                                          answerFeedback: { _ in feedbackCount += 1 })
+                for _ in 0..<5 {
+                    let initial = session.inputTime
+                    expect(initial.hourAngle != session.question.target.hourAngle || initial.minuteAngle != session.question.target.minuteAngle,
+                           "every editable clock starts away from its target, including after advancing")
+                    expect(session.answerCheck?.enabled == true && session.answerCheck?.requirement == .changeTime,
+                           "an untouched clock keeps a tappable confirmation with an input reminder")
+                    let record = player.practiceRecord(time: family, order: config.order)
+                    let answered = session.practiceAnswered
+                    let questionID = session.question.id
+                    let previousFeedback = feedbackCount
+                    for _ in 0..<3 { session.submit(session.answerCheck!.answer); session.advance() }
+                    expect(!session.hasFeedback && session.attempt.answers.isEmpty && session.question.id == questionID,
+                           "repeated confirmation taps cannot submit or skip an untouched clock")
+                    expect(session.practiceAnswered == answered && feedbackCount == previousFeedback
+                           && player.practiceRecord(time: family, order: config.order) == record,
+                           "blocked clock submissions preserve records and do not play wrong-answer feedback")
+                    if family.minuteStep < 60 {
+                        session.adjustInputMinutes(by: family.minuteStep)
+                        expect(session.answerCheck?.requirement == nil, "a minute-only change is enough to submit")
+                        session.setInputTime(initial)
+                        expect(session.answerCheck?.requirement == .changeTime, "returning to the starting time requires another change")
+                    }
+                    session.inputHour = ClockTime.shiftedHour(initial.hour, by: 1)
+                    expect(session.answerCheck?.requirement == nil, "hour buttons and hand changes satisfy the clock requirement")
+                    session.setInputTime(session.question.target)
+                    session.submit(session.answerCheck!.answer)
+                    expect(session.correctFeedback && session.practiceAnswered == answered + 1 && feedbackCount == previousFeedback + 1,
+                           "a changed clock still scores exactly once")
+                    session.advance()
+                }
+            }
+            for code in ["nl", "en"] {
+                let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+                let config = DinoPracticeConfiguration(time: family, order: .specific(.sayTime))
+                let session = DinoSession(level: config.level, player: player, practice: config, language: code)
+                expect(session.answerCheck?.requirement == .chooseTile, "spoken questions require a selected tile in both languages")
+                for _ in 0..<3 { session.submit(session.answerCheck!.answer); session.advance() }
+                expect(!session.hasFeedback && session.question.id == 0 && session.practiceAnswered == 0 && player.practiceRecords.isEmpty,
+                       "empty spoken answers cannot advance or affect progress")
+                let prompt = session.question.spokenPrompt!
+                let first = prompt.slots[0].choices[0]
+                session.chooseSpoken(slot: 0, choiceID: first.id)
+                expect(session.answerCheck?.requirement == nil, "one selected tile is enough; a complete sentence is not required")
+                session.chooseSpoken(slot: 0, choiceID: first.id)
+                expect(session.answerCheck?.requirement == .chooseTile, "deselecting the final tile restores the requirement")
+                session.submit(.spoken(.init(choiceIDs: Array(repeating: "unknown", count: prompt.slots.count))))
+                expect(!session.hasFeedback, "invalid tile IDs cannot bypass the selection requirement")
+                session.chooseSpoken(slot: 0, choiceID: first.id)
+                session.submit(session.answerCheck!.answer)
+                expect(session.hasFeedback && session.practiceAnswered == 1, "a partial answer with one real tile can be checked")
+                session.advance()
+                expect(session.spokenChoices.isEmpty && session.answerCheck?.requirement == .chooseTile,
+                       "the selection requirement resets for the next question")
+            }
+        }
+        // The hands must differ even when a twelve-hour target is represented as 00:00 or 24:00.
+        for hour in 0..<24 {
+            for kind in [DinoPracticeQuestion.setAnalog, .setDigital] {
+                let config = DinoPracticeConfiguration(time: .whole, order: .specific(kind))
+                let target = ClockTime(hour: hour)
+                let example = ClockQuestion(id: 0, kind: kind.recipe.kind, target: target, options: [], activity: nil, companionClocks: [])
+                let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+                let session = DinoSession(level: config.level, player: player, practice: config, example: example)
+                expect(session.inputTime.hourAngle != target.hourAngle, "no hour representation starts on the target clock face")
+            }
         }
     }
 
@@ -3065,7 +3301,9 @@ struct DinoCoreTests {
                    "the large opening retains all source pixels after personalization")
             expect(compact.width == 768, "ordinary companions keep their compact rendering budget")
         }
-        let size = 384
+        // Exercise the actual 768-pixel display raster as well as the old
+        // thumbnail check: its spike highlights have a different distribution.
+        for size in [384, 768] {
         func pixels(_ image: CGImage) -> [UInt8] {
             var bytes = [UInt8](repeating: 0, count: size * size * 4)
             bytes.withUnsafeMutableBytes { buffer in
@@ -3093,7 +3331,9 @@ struct DinoCoreTests {
         for appearance in appearances {
             var idleLightness = [DinoAppearance.Part: [Double]]()
             var idleSaturation = [DinoAppearance.Part: Double]()
-            for asset in DinoAnimation.spriteAssets + DinoOpeningJump.assets {
+            var idleHue = [DinoAppearance.Part: Double]()
+            let assets = size == 384 ? DinoAnimation.spriteAssets : ["dino-idle"] + DinoAnimation.stumbleAssets
+            for asset in assets {
                 let url = URL(fileURLWithPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
                 let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
                 let original = pixels(source)
@@ -3103,6 +3343,7 @@ struct DinoCoreTests {
                 context.draw(source, in: CGRect(x: 0, y: 0, width: size, height: size))
                 let output = pixels(DinoSpriteColorRenderer.recolored(context.makeImage()!, appearance: appearance, asset: asset)!)
                 var lightness = [DinoAppearance.Part: [Double]](), saturation = [DinoAppearance.Part: [Double]]()
+                var hues = [DinoAppearance.Part: [Double]]()
                 var alphaPreserved = true, facePreserved = true
                 let regions = DinoAvatarMask.spriteRegions(for: asset)
                 for y in 0..<size {
@@ -3115,6 +3356,7 @@ struct DinoCoreTests {
                                                          x: Double(x) / Double(size), y: Double(y) / Double(size), regions: regions) {
                             lightness[part, default: []].append(after.l)
                             saturation[part, default: []].append(after.s)
+                            hues[part, default: []].append(after.h > 0.8 ? after.h - 1 : after.h)
                         } else {
                             facePreserved = facePreserved && (0..<3).allSatisfy { abs(Int(original[index + $0]) - Int(output[index + $0])) <= 1 }
                         }
@@ -3127,14 +3369,21 @@ struct DinoCoreTests {
                     let quantiles = [0.1, 0.5, 0.9].map { l[Int(Double(l.count - 1) * $0)] }
                     if asset == "dino-idle" {
                         idleLightness[part] = quantiles; idleSaturation[part] = s[s.count / 2]
+                        let h = hues[part]!.sorted(); idleHue[part] = h[h.count / 2]
                     } else {
                         expect(zip(quantiles, idleLightness[part]!).allSatisfy { abs($0 - $1) < 0.015 },
                                "\(asset) matches idle \(part) shadows, base color and highlights: \(quantiles) vs \(idleLightness[part]!)")
                         expect(abs(s[s.count / 2] - idleSaturation[part]!) < 0.025,
                                "\(asset) keeps idle \(part) saturation instead of becoming pastel: \(s[s.count / 2]) vs \(idleSaturation[part]!)")
+                        if asset.hasPrefix("dino-stumble-") {
+                            let h = hues[part]!.sorted()
+                            expect(abs(h[h.count / 2] - idleHue[part]!) < 0.004,
+                                   "\(asset) keeps the same \(part) hue as idle at \(size) pixels, including the standard palette")
+                        }
                     }
                 }
             }
+        }
         }
     }
 
@@ -3148,6 +3397,16 @@ struct DinoCoreTests {
             ("dino-backflip-03", CGRect(x: 326, y: 131, width: 210, height: 160)),
             ("dino-backflip-07", CGRect(x: 638, y: 233, width: 256, height: 106)),
             ("dino-backflip-08", CGRect(x: 520, y: 102, width: 237, height: 109)),
+            ("dino-stumble-01", CGRect(x: 545, y: 90, width: 280, height: 140)),
+            ("dino-stumble-02", CGRect(x: 701, y: 169, width: 287, height: 128)),
+            ("dino-stumble-03", CGRect(x: 714, y: 309, width: 290, height: 130)),
+            ("dino-stumble-04", CGRect(x: 829, y: 485, width: 277, height: 126)),
+            ("dino-stumble-05", CGRect(x: 779, y: 411, width: 285, height: 136)),
+            ("dino-stumble-06", CGRect(x: 740, y: 272, width: 285, height: 115)),
+            ("dino-stumble-06a", CGRect(x: 750, y: 245, width: 270, height: 118)),
+            ("dino-stumble-06b", CGRect(x: 655, y: 143, width: 274, height: 126)),
+            ("dino-stumble-07", CGRect(x: 545, y: 90, width: 280, height: 140)),
+            ("dino-stumble-08", CGRect(x: 545, y: 90, width: 280, height: 140)),
             ("dino-pirouette-01", CGRect(x: 580, y: 150, width: 252, height: 105)),
             ("dino-pirouette-04", CGRect(x: 700, y: 135, width: 195, height: 100)),
             ("dino-pirouette-10", CGRect(x: 390, y: 120, width: 195, height: 117)),
@@ -3160,7 +3419,7 @@ struct DinoCoreTests {
             ("dino-pirouette-03", CGRect(x: 681, y: 157, width: 220, height: 104)),
             ("dino-pirouette-12", CGRect(x: 568, y: 161, width: 245, height: 83)),
             ("dino-pirouette-13", CGRect(x: 559, y: 112, width: 236, height: 104))
-        ] + DinoSpriteColorRenderer.answerLetteringBounds.map { ($0.key, $0.value) }
+        ] + (DinoSpriteColorRenderer.answerLetteringBounds.merging(DinoSpriteColorRenderer.deepFallLetteringBounds) { first, _ in first }).map { ($0.key, $0.value) }
         expect(DinoAppearance.standard.bandanaLetteringHex == 0xFFFFFF,
                "the original red bandana retains white lettering")
         for color: UInt32 in [0xFFFFFF, 0xFFF4CE] {
@@ -3199,29 +3458,19 @@ struct DinoCoreTests {
         expect(DinoTimeWords.promptTime(ClockTime(hour: 3), language: "en") == "three o’clock",
                "a morning hour stays a short phrase")
 
-        let formats = [
-            "dino.question.chooseClock.format": ("Which of the %@ clocks matches %@?", "Welke van de %@ klokken hoort bij %@?"),
-            "dino.question.chooseClock.short": ("Which clock matches %@?", "Welke klok hoort bij %@?"),
-            "dino.question.spokenClock.format": ("Which of the %@ clocks shows %@?", "Welke van de %@ klokken laat %@ zien?"),
-            "dino.question.spokenTime.format": ("Which clock shows %@?", "Welke klok laat %@ zien?"),
-            "dino.question.trueFalse.format": ("It is now %@.", "Het is nu %@."),
-            "dino.question.advanceAnalog.format": ("Move the hands of the clock %@ %@", "Zet de wijzers van de klok %@ %@"),
-            "dino.question.addTime.format": ("What time is %@ %@ than %@?", "Hoe laat is het %@ %@ dan %@?"),
-            "dino.question.subtractTime.format": ("What time was %@ %@ than %@?", "Hoe laat was het %@ %@ dan %@?"),
-            "dino.question.minutesBetween.format": ("How many minutes are there between %@ and %@?", "Hoeveel minuten zitten er tussen %@ en %@?"),
-            "dino.question.timeSequence.format": ("Looking at the sequence below, what time comes after %@?",
-                                                 "Kijk naar de reeks hieronder. Welke tijd komt er na %@?"),
-            "dino.question.flightArrival.format": ("The plane leaves at %@. What time does it arrive?",
-                                                   "Het vliegtuig vertrekt om %@. Hoe laat komt het aan?"),
-            "dino.question.timeZone.ahead.format": ("It is %@ in %@. %@ is %@ %@, what time is it in %@?",
-                                                   "Het is %@ in %@. %@ is %@ %@, hoe laat is het in %@?"),
-            "dino.question.timeZone.behind.format": ("It is %@ in %@. %@ is %@ %@, what time is it in %@?",
-                                                    "Het is %@ in %@. %@ is %@ %@, hoe laat is het in %@?"),
-            "dino.question.timeZone.same.format": ("It is %@ in %@. What time is it in %@?", "Het is %@ in %@. Hoe laat is het in %@?")
-        ]
+        // Exercise the shipped translations, including static instructions, rather than copies of the formats.
+        let catalogURL = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Localizable.xcstrings")
+        let catalog = try! JSONSerialization.jsonObject(with: Data(contentsOf: catalogURL)) as! [String: Any]
+        let strings = catalog["strings"] as! [String: [String: Any]]
+        func localized(_ key: String, _ language: String) -> String {
+            let localizations = strings[key]?["localizations"] as? [String: [String: Any]]
+            let unit = localizations?[language]?["stringUnit"] as? [String: String]
+            guard let value = unit?["value"], !value.isEmpty else { fatalError("Missing \(language) question text: \(key)") }
+            return value
+        }
         func sentence(_ prompt: DinoQuestionPrompt, _ language: String) -> String {
-            guard let key = prompt.formatKey, let pair = formats[key] else { return prompt.plainKey }
-            return DinoQuestionPrompt.apply(language == "nl" ? pair.1 : pair.0, arguments: prompt.arguments)
+            prompt.spoken { localized($0, language) }
         }
         func prompt(_ question: ClockQuestion, _ language: String) -> DinoQuestionPrompt {
             DinoQuestionPrompt.make(question: question, language: language, instructionKey: question.kind.instructionKey)
@@ -3243,18 +3492,18 @@ struct DinoCoreTests {
         let four = (1...4).map { ClockTime(hour: $0) }
         let matching = question(kind: .chooseAnalog, target: ClockTime(hour: 3), options: four)
         let englishMatch = prompt(matching, "en")
-        expect(sentence(englishMatch, "en") == "Which of the four clocks matches three o’clock?", "question 1 names the clock time")
+        expect(sentence(englishMatch, "en") == "Which of the four clocks shows three o’clock?", "question 1 names the clock time")
         expect(englishMatch.arguments.allSatisfy { $0.emphasis == .plain }, "clock times use the title's base color")
-        expect(sentence(prompt(matching, "nl"), "nl") == "Welke van de vier klokken hoort bij drie uur?", "Dutch question 1 names the time")
+        expect(sentence(prompt(matching, "nl"), "nl") == "Welke van de vier klokken geeft drie uur aan?", "Dutch question 1 names the time")
         let two = question(kind: .chooseAnalog, target: ClockTime(hour: 3), options: Array(four.prefix(2)))
-        expect(sentence(prompt(two, "en"), "en") == "Which of the two clocks matches three o’clock?", "two choices are counted honestly")
+        expect(sentence(prompt(two, "en"), "en") == "Which of the two clocks shows three o’clock?", "two choices are counted honestly")
         let single = question(kind: .chooseAnalog, target: ClockTime(hour: 3))
-        expect(sentence(prompt(single, "nl"), "nl") == "Welke klok hoort bij drie uur?", "an example without choices does not invent a count")
+        expect(sentence(prompt(single, "nl"), "nl") == "Welke klok geeft drie uur aan?", "an example without choices does not invent a count")
 
         let spoken = question(kind: .spokenTime, target: ClockTime(hour: 3), options: four)
         expect(sentence(prompt(spoken, "en"), "en") == "Which of the four clocks shows three o’clock?", "a spoken time still asks which clock")
         let claim = question(kind: .trueFalse, target: ClockTime(hour: 4), statement: ClockTime(hour: 3))
-        expect(sentence(prompt(claim, "nl"), "nl") == "Het is nu drie uur.", "a true-or-false title is the claim, not the verdict")
+        expect(sentence(prompt(claim, "nl"), "nl") == "De klok geeft drie uur aan. Klopt dat?", "a true-or-false title is the claim, not the verdict")
         expect(prompt(claim, "nl").arguments.map(\.emphasis) == [.plain], "the claimed time uses the title's base color")
 
         for kind in [ClockQuestionKind.chooseDigital, .readDigital, .sayTime, .setAnalog, .setDigital, .read24Hour, .dayPart, .match, .sortTimes] {
@@ -3265,22 +3514,22 @@ struct DinoCoreTests {
 
         let forward = question(kind: .advanceAnalog, target: ClockTime(hour: 4), related: [ClockTime(hour: 3)], duration: 60)
         let forwardTitle = prompt(forward, "en")
-        expect(sentence(forwardTitle, "en") == "Move the hands of the clock 1 hour forward", "moving the hands names the step")
-        expect(sentence(prompt(forward, "nl"), "nl") == "Zet de wijzers van de klok 1 uur vooruit", "Dutch hands move forward in words")
-        expect(forwardTitle.arguments.map(\.emphasis) == [.forward, .forward], "the step and the word forward are both green")
+        expect(sentence(forwardTitle, "en") == "Move the clock hands 1 hour forward.", "moving the hands names the step")
+        expect(sentence(prompt(forward, "nl"), "nl") == "Zet de wijzers 1 uur vooruit.", "Dutch hands move forward in words")
+        expect(forwardTitle.arguments.map(\.emphasis) == [.plain, .forward], "only the word forward is green")
         expect(!sentence(forwardTitle, "en").contains("four"), "the resulting time stays off the title")
 
         let added = question(kind: .addTime, target: ClockTime(hour: 16), related: [ClockTime(hour: 15)], duration: 90)
         let addedTitle = prompt(added, "nl")
-        expect(sentence(addedTitle, "nl") == "Hoe laat is het 1 uur en 30 minuten later dan drie uur ’s middags?",
+        expect(sentence(addedTitle, "nl") == "Het is drie uur. Hoe laat is het 1 uur en 30 minuten later?",
                "adding time repeats the start and the step")
-        expect(addedTitle.arguments.map(\.emphasis) == [.forward, .forward, .plain], "later is green with the added amount")
+        expect(addedTitle.arguments.map(\.emphasis) == [.plain, .plain, .forward], "only later is green; the time and duration stay plain")
         expect(!sentence(addedTitle, "nl").contains("vier"), "the later time is not spoken")
 
         let earlier = question(kind: .subtractTime, target: ClockTime(hour: 2), related: [ClockTime(hour: 4)], duration: 120)
         let earlierTitle = prompt(earlier, "en")
-        expect(sentence(earlierTitle, "en") == "What time was 2 hours earlier than four o’clock?", "going back names the step")
-        expect(earlierTitle.arguments.map(\.emphasis) == [.backward, .backward, .plain], "earlier is red with the step")
+        expect(sentence(earlierTitle, "en") == "It is four o’clock. What time was it 2 hours earlier?", "going back names the step")
+        expect(earlierTitle.arguments.map(\.emphasis) == [.plain, .plain, .backward], "only earlier is red; the time and duration stay plain")
         expect(!sentence(earlierTitle, "en").contains("two"), "the earlier result is not spoken")
 
         let between = question(kind: .minutesBetween, target: ClockTime(hour: 4),
@@ -3293,7 +3542,7 @@ struct DinoCoreTests {
 
         let sequence = question(kind: .timeSequence, target: ClockTime(hour: 5),
                                 related: [ClockTime(hour: 2), ClockTime(hour: 3), ClockTime(hour: 4)], duration: 60)
-        expect(sentence(prompt(sequence, "nl"), "nl") == "Kijk naar de reeks hieronder. Welke tijd komt er na vier uur?",
+        expect(sentence(prompt(sequence, "nl"), "nl") == "Kijk naar de reeks. Welke tijd komt na vier uur?",
                "the sequence names the last clock without the step")
         expect(prompt(sequence, "en").arguments.map(\.emphasis) == [.plain], "the sequence uses the title's base color")
         expect(!sentence(prompt(sequence, "en"), "en").contains("hour"), "the sequence step stays off the title")
@@ -3313,14 +3562,14 @@ struct DinoCoreTests {
         expect(toParis.offsetMinutes > 0, "Paris is ahead of London in this check")
         let parisShift = DinoTimeWords.spokenDuration(toParis.offsetMinutes, language: "en")
         expect(sentence(prompt(parisQuestion, "en"), "en")
-               == "It is three o’clock in London. Paris is \(parisShift) ahead, what time is it in Paris?",
+               == "It is three o’clock in London. Paris is \(parisShift) ahead. What time is it there?",
                "a later city names the difference")
-        expect(prompt(parisQuestion, "en").arguments.map(\.emphasis) == [.plain, .plain, .plain, .forward, .forward, .plain],
-               "ahead is green with the hour difference")
+        expect(prompt(parisQuestion, "en").arguments.map(\.emphasis) == [.plain, .plain, .plain, .plain, .forward],
+               "only ahead is green; the hour difference stays plain")
         let toWashington = DinoTimeZoneJourney(origin: london, destination: washington)
         let washingtonQuestion = question(kind: .timeZone, target: ClockTime(hour: 10), related: [ClockTime(hour: 15)], journey: toWashington)
         expect(toWashington.offsetMinutes < 0, "Washington is behind London in this check")
-        expect(prompt(washingtonQuestion, "nl").arguments.dropLast().last?.emphasis == .backward, "a city behind is red")
+        expect(prompt(washingtonQuestion, "nl").arguments.last?.emphasis == .backward, "a city behind is red")
         expect(!sentence(prompt(washingtonQuestion, "en"), "en").contains("ten"), "the destination time is not spoken")
 
         let flight = question(kind: .flightArrival, target: ClockTime(hour: 6), related: [ClockTime(hour: 3)], duration: 120, offset: 1)
@@ -3339,7 +3588,7 @@ struct DinoCoreTests {
         expect(!sentence(prompt(flight, "en"), "en").contains("six"), "the arrival time is not spoken")
 
         for language in ["nl", "en"] {
-            for hour in [0, 12, 15, 20, 23] {
+            for hour in 0..<24 {
                 let start = ClockTime(hour: hour, minute: 45)
                 let end = start.adding(minutes: 30)
                 let shortTime = DinoTimeWords.time(start, language: language)
@@ -3358,18 +3607,58 @@ struct DinoCoreTests {
                 expect(prompt(series, language).arguments.map(\.text) == [shortTime],
                        "the sequence's visible clocks provide the 24-hour context")
             }
-            let afternoon = ClockTime(hour: 15)
-            let fullTime = DinoTimeWords.promptTime(afternoon, language: language)
-            for kind in [ClockQuestionKind.addTime, .subtractTime] {
-                let arithmetic = question(kind: kind, target: ClockTime(hour: 16), related: [afternoon], duration: 60)
-                expect(prompt(arithmetic, language).arguments.last?.text == fullTime,
-                       "an absolute 24-hour calculation keeps the starting day part")
+            for hour in 0..<24 {
+                let start = ClockTime(hour: hour, minute: 45)
+                let shortTime = DinoTimeWords.time(start, language: language)
+                for kind in [ClockQuestionKind.addTime, .subtractTime, .timeZone, .flightArrival] {
+                    let calculation = question(kind: kind, target: start.adding(minutes: 90), related: [start],
+                                               duration: 90, journey: toParis)
+                    expect(prompt(calculation, language).arguments.first?.text == shortTime,
+                           "\(kind) uses the visible digital reference for AM/PM at \(start.digitalText)")
+                }
+                for notation in [DigitalHourNotation.twelve, .twentyFour] {
+                    let reading = start.digitalReading(notation: notation, languageCode: language)
+                    expect((reading.period != nil) == (notation == .twelve), "the reference clock preserves the selected notation")
+                    if notation == .twelve {
+                        expect(reading.period == (hour < 12 ? "AM" : "PM"), "midnight is AM and noon is PM in both languages")
+                    } else {
+                        expect(reading.text == start.digitalText, "24-hour references keep the full hour")
+                    }
+                }
             }
-            let zone = question(kind: .timeZone, target: ClockTime(hour: 16), related: [afternoon], journey: toParis)
-            let afternoonFlight = question(kind: .flightArrival, target: ClockTime(hour: 17), related: [afternoon], duration: 120)
-            expect(prompt(zone, language).arguments.first?.text == fullTime &&
-                   prompt(afternoonFlight, language).arguments.first?.text == fullTime,
-                   "time zones and flights retain the day part needed for their 24-hour answer")
+            for kind in ClockQuestionKind.allCases {
+                for hour in 0..<24 {
+                    for minute in [0, 1, 15, 30, 45, 59] {
+                        let time = ClockTime(hour: hour, minute: minute)
+                        let asked = question(kind: kind, target: time.adding(minutes: 90), options: four,
+                                             related: [time, time.adding(minutes: 30)], duration: 90,
+                                             statement: time, schedule: schedule, journey: toParis)
+                        let title = prompt(asked, language)
+                        let text = sentence(title, language)
+                        let format = localized(title.formatKey ?? title.plainKey, language)
+                        expect(format.components(separatedBy: "%@").count - 1 == title.arguments.count,
+                               "\(kind) has the exact number of arguments required by its \(language) translation")
+                        expect(!text.isEmpty && !text.contains("%@") && !text.contains("dino."), "every question has a complete localized title")
+                        expect(!text.contains(DinoTimeWords.dayPartSuffix(time, language: language)), "titles omit redundant day-part suffixes")
+                        for argument in title.arguments where argument.emphasis != .plain {
+                            let allowed = language == "nl" ? ["vooruit", "later", "eerder", "voor", "achter"]
+                                : ["forward", "later", "earlier", "ahead", "behind"]
+                            expect(allowed.contains(argument.text), "only a direction word can be colored")
+                        }
+                    }
+                }
+            }
+            for type in DinoPracticeQuestion.allCases {
+                expect(!localized(type.titleKey, language).isEmpty, "every practice type has a name in both languages")
+            }
+            let noon = question(kind: .chooseAnalog, target: ClockTime(hour: 12), options: Array(four.prefix(2)))
+            expect(sentence(prompt(noon, language), language) == (language == "nl"
+                ? "Welke van de twee klokken geeft twaalf uur aan?" : "Which of the two clocks shows twelve o’clock?"),
+                   "the attached example uses natural clock wording")
+            expect(DinoTimeWords.time(ClockTime(hour: 3), language: language, dayPart: true)
+                   != DinoTimeWords.time(ClockTime(hour: 15), language: language, dayPart: true),
+                   "day-part answer choices still distinguish AM and PM")
+
         }
     }
 

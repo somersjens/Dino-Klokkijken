@@ -183,8 +183,10 @@ struct QuestionRenderer: View {
     }
 }
 
-/// Keep the explanation's space reserved while a choice is still unanswered.
+/// Keep one copy of the answer in place, with a reserved footer for its time.
 struct AnswerTimeExplanation<Content: View>: View {
+    @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let time: ClockTime
     let theme: ClockTheme
     let visible: Bool
@@ -193,13 +195,21 @@ struct AnswerTimeExplanation<Content: View>: View {
     let content: Content
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 8) {
-                content
+        VStack(spacing: 0) {
+            content
+            VStack(spacing: 3) {
+                Rectangle()
+                    .fill(DinoStyle.ink.opacity(highContrast ? 0.45 : 0.12))
+                    .frame(height: 1)
+                    .padding(.horizontal, 8)
                 DigitalClock(time: time, theme: theme, fontSize: fontSize, notation: notation)
+                    .offset(y: visible || reduceMotion ? 0 : 4)
             }
+            .padding(.top, 4)
+            .frame(maxWidth: .infinity)
             .opacity(visible ? 1 : 0)
-            if !visible { content }
+            .accessibilityHidden(!visible)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.22), value: visible)
         }
     }
 }
@@ -273,6 +283,13 @@ struct DinoAnalogClockControls: View {
                     if selected {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(isEnabled ? DinoStyle.ink : DinoStyle.disabledSelection)
+                            .overlay {
+                                if !isEnabled {
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .strokeBorder(highContrast ? DinoStyle.disabledInk(true) : DinoStyle.disabledBorder,
+                                                      lineWidth: highContrast ? 2 : 1)
+                                }
+                            }
                             .matchedGeometryEffect(id: "selectedHand", in: handSelection)
                     }
                 }

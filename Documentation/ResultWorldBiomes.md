@@ -1,5 +1,7 @@
 # Landschappen op de eindschermen — 20 oktober 2026
 
+De gerichte afwerking van 26 oktober verplaatst mos en versiering, herstelt de ronde woestijnsteen in een doorlopende zandduin en geeft Tijdpiraten een houten kist. De sterren passen binnen de grote voorvlakken. [Actuele uitvoering en controle van alle tien thema’s](ResultThemeDetails.md).
+
 De eindschermen gebruikten, behalve de woestijn, dezelfde heuvels, palmen, grasmat en brede junglebladeren met een ander kleurpalet. Het terrein volgt nu het landschap van de wereld. De bestaande jungle en de eigen woestijntekening blijven behouden.
 
 | Wereld | Achtergrond en terrein | Podium en details eromheen |

@@ -1749,6 +1749,7 @@ struct LevelStartOverlay: View {
     var start: () -> Void
     var close: () -> Void
     var openPractice: (DinoPracticeConfiguration) -> Void
+    @EnvironmentObject private var player: DinoPlayer
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var dragOffset: CGFloat = 0
 
@@ -1780,6 +1781,9 @@ struct LevelStartOverlay: View {
                 .offset(y: dragOffset)
                 .transition(reduceMotion ? .opacity : .scale(scale: 0.95, anchor: .top).combined(with: .opacity))
             }
+        }
+        .task(id: player.profile.dinoAppearance ?? .standard) {
+            _ = await DinoSpriteLoader.shared.answerImages(for: player.profile.dinoAppearance ?? .standard)
         }
     }
 }

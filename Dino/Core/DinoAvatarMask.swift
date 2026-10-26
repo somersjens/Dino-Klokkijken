@@ -87,8 +87,88 @@ enum DinoAvatarMask {
     }
 
     static func spriteRegions(for asset: String) -> SpriteRegions? {
-        applausePoses[asset] ?? answerPoses[asset] ?? openingPoses[asset] ?? poses[asset]
+        deepFallPoses[asset] ?? stumblePoses[asset] ?? applausePoses[asset] ?? answerPoses[asset] ?? openingPoses[asset] ?? poses[asset]
     }
+
+    /// The face moves down toward the hands; protect its eyes and tongue in
+    /// every drawing instead of applying the standing portrait's cloth mask.
+    private static let stumblePoses: [String: SpriteRegions] = {
+        let eyes: [[(Double, Double, Double, Double)]] = [
+            [(532, 286, 138, 138), (752, 243, 110, 124)],
+            [(696, 391, 148, 142), (929, 366, 110, 136)],
+            [(695, 505, 150, 143), (936, 451, 116, 141)],
+            [(714, 640, 162, 169), (965, 694, 134, 159)],
+            [(750, 583, 142, 142), (973, 531, 116, 137)],
+            [(698, 441, 142, 138), (923, 407, 114, 132)],
+            [(532, 286, 138, 138), (752, 243, 110, 124)],
+            [(532, 286, 138, 138), (752, 243, 110, 124)]
+        ]
+        let mouths: [(Double, Double, Double, Double)] = [
+            (594, 455, 250, 171), (699, 607, 246, 137), (661, 702, 251, 154),
+            (677, 819, 219, 161), (732, 746, 260, 130), (744, 589, 233, 152),
+            (594, 455, 250, 171), (594, 455, 250, 171)
+        ]
+        let spikeBounds: [(Double, Double, Double, Double)] = [
+            (406, 12, 252, 223), (553, 53, 260, 250), (578, 181, 252, 220),
+            (681, 323, 331, 149), (655, 273, 296, 197), (587, 127, 268, 211),
+            (406, 12, 252, 223), (406, 12, 252, 223)
+        ]
+        let cloth = [0.35, 0.43, 0.52, 0.55, 0.56, 0.41, 0.35, 0.35]
+        var poses = Dictionary(uniqueKeysWithValues: (0..<8).map { index in
+            (String(format: "dino-stumble-%02d", index + 1),
+             SpriteRegions(bandanaBottom: cloth[index], tailRight: 0.52,
+                           tailBottom: cloth[index] + 0.015,
+                           upperSpikes: eyeContours([spikeBounds[index]]),
+                           eyes: eyeContours(eyes[index]), mouth: eyeContours([mouths[index]]),
+                           protectsFaceBeforeCloth: true))
+        })
+        poses["dino-stumble-06a"] = SpriteRegions(bandanaBottom: 0.40, tailRight: 0.52, tailBottom: 0.41,
+            upperSpikes: eyeContours([(587, 107, 283, 225)]),
+            eyes: eyeContours([(715, 430, 140, 140), (947, 393, 110, 137)]),
+            mouth: eyeContours([(766, 571, 232, 151)]), protectsFaceBeforeCloth: true)
+        poses["dino-stumble-06b"] = SpriteRegions(bandanaBottom: 0.35, tailRight: 0.44, tailBottom: 0.39,
+            upperSpikes: eyeContours([(486, 43, 288, 222)]),
+            eyes: eyeContours([(642, 328, 142, 140), (870, 283, 114, 137)]),
+            mouth: eyeContours([(708, 491, 226, 136)]), protectsFaceBeforeCloth: true)
+        return poses
+    }()
+
+    /// The deeper fall reaches the muzzle and belly. Its head, mouth and
+    /// cloth travel much farther than the old hand-supported landing.
+    private static let deepFallPoses: [String: SpriteRegions] = {
+        let names = ["01", "02", "03", "03a", "04", "05", "06", "06a", "07", "08"]
+        let eyes: [[(Double, Double, Double, Double)]] = [
+            [(527,280,145,145),(750,238,115,128)],
+            [(666,367,155,175),(908,388,120,171)],
+            [(681,413,171,172),(932,427,126,172)],
+            [(764,688,174,181),(1012,724,130,177)],
+            [(722,767,165,178),(956,804,123,172)],
+            [(741,730,170,149),(999,786,116,159)],
+            [(674,431,177,160),(940,421,170,181)],
+            [(638,389,167,150),(890,348,133,172)],
+            [(528,277,145,142),(749,236,116,128)],
+            [(526,280,145,142),(748,237,116,129)]
+        ]
+        let mouths: [(Double, Double, Double, Double)] = [
+            (594,455,250,160),(646,572,230,170),(676,611,254,190),
+            (732,854,265,205),(680,950,212,145),(746,955,250,184),
+            (693,580,326,217),(680,560,325,150),(590,450,260,155),(590,450,260,160)
+        ]
+        let spikes: [(Double, Double, Double, Double)] = [
+            (407,15,270,220),(575,65,300,220),(610,108,300,225),
+            (680,325,350,245),(681,411,330,218),(730,403,350,207),
+            (577,33,330,239),(500,40,350,230),(408,8,275,225),(406,14,275,225)
+        ]
+        let cloth = [0.35,0.36,0.40,0.57,0.63,0.62,0.41,0.40,0.35,0.35]
+        let stars = eyeContours([(645,285,560,260)])
+        return Dictionary(uniqueKeysWithValues: names.indices.map { i in
+            ("dino-stumble-deep-" + names[i],
+             SpriteRegions(bandanaBottom: cloth[i], tailRight: 0.60, tailBottom: cloth[i] + 0.04,
+                           upperSpikes: eyeContours([spikes[i]]), eyes: eyeContours(eyes[i]),
+                           mouth: eyeContours([mouths[i]]), protectsFaceBeforeCloth: true,
+                           decorations: names[i] == "05" ? stars : nil))
+        })
+    }()
 
     /// Keep the clapping accents gold and protect the eyes and mouth in all eight drawings.
     private static let applausePoses: [String: SpriteRegions] = {
@@ -546,7 +626,7 @@ enum DinoSpriteColorRenderer {
         let unchanged = DinoAppearance.Part.allCases.map { appearance[$0] == DinoAppearance.standard[$0] }
         let regions = DinoAvatarMask.spriteRegions(for: asset)
         let sourcePalette = answerPalettes[asset] ?? palettes[asset] ?? idlePalette
-        let letteringBounds = appearance.usesBlackBandanaLettering ? (answerLetteringBounds[asset] ?? bandanaLetteringBounds[asset]) : nil
+        let letteringBounds = appearance.usesBlackBandanaLettering ? (deepFallLetteringBounds[asset] ?? answerLetteringBounds[asset] ?? bandanaLetteringBounds[asset]) : nil
         let letteringInk = HSL(hex: appearance.bandanaLetteringHex).rgb
         let success = pixels.withUnsafeMutableBytes { buffer -> Bool in
             guard let context = CGContext(data: buffer.baseAddress, width: width, height: height,
@@ -555,6 +635,10 @@ enum DinoSpriteColorRenderer {
             context.interpolationQuality = .high
             context.draw(source, in: CGRect(x: 0, y: 0, width: width, height: height))
             let bytes = buffer.bindMemory(to: UInt8.self)
+            // Calibrate the actual display raster, not a smaller test thumbnail.
+            // The fall drawings differ in hue as well as exposure and saturation.
+            let fallPalette = asset.hasPrefix("dino-stumble-")
+                ? measuredFallPalette(bytes, width: width, height: height, asset: asset, regions: regions) : nil
             for y in 0..<height {
                 if Task.isCancelled { return false }
                 for x in 0..<width {
@@ -595,13 +679,17 @@ enum DinoSpriteColorRenderer {
                     case .belly: partIndex = 3
                     }
                     let reference = references[partIndex], target = targets[partIndex]
-                    let sourceTone = sourcePalette[partIndex], idleTone = idlePalette[partIndex]
+                    let sourceTone = fallPalette?.tones[partIndex] ?? sourcePalette[partIndex]
+                    let idleTone = fallPalette != nil && width > 384 ? idleDisplayPalette[partIndex] : idlePalette[partIndex]
                     let normalizedLightness = sourceTone.matchLightness(pixel.lightness, to: idleTone)
                     let normalizedSaturation = min(1, pixel.saturation * idleTone.saturation / sourceTone.saturation)
                     let replacement: (Double, Double, Double)
                     if unchanged[partIndex] {
-                        // Even unchanged colors use the idle artwork's lighting.
-                        replacement = HSL(hue: pixel.hue, saturation: normalizedSaturation,
+                        // Preserve the source's shading variation while matching
+                        // the ordinary Dino's actual hue, including default colors.
+                        let shift = fallPalette.map { idleDisplayHues[partIndex] - $0.hues[partIndex] } ?? 0
+                        let hue = pixel.hue + shift
+                        replacement = HSL(hue: hue - floor(hue), saturation: normalizedSaturation,
                                           lightness: normalizedLightness).rgb
                     } else {
                         // Apply the chosen color only after removing the pose's
@@ -654,7 +742,27 @@ enum DinoSpriteColorRenderer {
         return answers.merging(Dictionary(uniqueKeysWithValues: applause)) { existing, _ in existing }
     }()
 
+    static let deepFallLetteringBounds: [String: CGRect] = {
+        let names = ["01", "02", "03", "03a", "04", "05", "06", "06a", "07", "08"]
+        let bounds = [CGRect(x:545,y:90,width:285,height:150), CGRect(x:736,y:194,width:280,height:124),
+                      CGRect(x:761,y:241,width:285,height:130), CGRect(x:855,y:512,width:290,height:142),
+                      CGRect(x:794,y:600,width:292,height:135), CGRect(x:876,y:552,width:275,height:155),
+                      CGRect(x:748,y:239,width:330,height:138), CGRect(x:685,y:198,width:300,height:146),
+                      CGRect(x:545,y:87,width:290,height:150), CGRect(x:545,y:90,width:285,height:150)]
+        return Dictionary(uniqueKeysWithValues: zip(names.map { "dino-stumble-deep-" + $0 }, bounds))
+    }()
+
     private static let bandanaLetteringBounds: [String: CGRect] = [
+        "dino-stumble-01": CGRect(x: 545, y: 90, width: 280, height: 140),
+        "dino-stumble-02": CGRect(x: 701, y: 169, width: 287, height: 128),
+        "dino-stumble-03": CGRect(x: 714, y: 309, width: 290, height: 130),
+        "dino-stumble-04": CGRect(x: 829, y: 485, width: 277, height: 126),
+        "dino-stumble-05": CGRect(x: 779, y: 411, width: 285, height: 136),
+        "dino-stumble-06": CGRect(x: 740, y: 272, width: 285, height: 115),
+        "dino-stumble-06a": CGRect(x: 750, y: 245, width: 270, height: 118),
+        "dino-stumble-06b": CGRect(x: 655, y: 143, width: 274, height: 126),
+        "dino-stumble-07": CGRect(x: 545, y: 90, width: 280, height: 140),
+        "dino-stumble-08": CGRect(x: 545, y: 90, width: 280, height: 140),
         "dino-opening-jump-01": CGRect(x: 545, y: 90, width: 275, height: 135),
         "dino-opening-jump-02": CGRect(x: 688, y: 292, width: 290, height: 128),
         "dino-opening-jump-03": CGRect(x: 528, y: 74, width: 280, height: 134),
@@ -764,6 +872,57 @@ enum DinoSpriteColorRenderer {
         Tone(0.26275, 0.48039, 0.59020, 0.86486), Tone(0.09804, 0.19608, 0.36471, 0.54348),
         Tone(0.23333, 0.37255, 0.50980, 0.67539), Tone(0.55098, 0.79020, 0.88431, 0.71429)
     ]
+    private static let idleDisplayPalette = [
+        Tone(0.26471, 0.48039, 0.59216, 0.86441), Tone(0.09804, 0.19412, 0.34706, 0.54167),
+        Tone(0.23333, 0.37451, 0.51176, 0.67593), Tone(0.55294, 0.79020, 0.88431, 0.71429)
+    ]
+    private static let idleDisplayHues = [0.00109, 0.36232, 0.24105, 0.10859]
+
+    private final class FallPalette: NSObject {
+        let tones: [Tone]
+        let hues: [Double]
+        init(tones: [Tone], hues: [Double]) { self.tones = tones; self.hues = hues }
+    }
+    private static let fallPaletteCache = NSCache<NSString, FallPalette>()
+
+    private static func measuredFallPalette(_ pixels: UnsafeMutableBufferPointer<UInt8>, width: Int, height: Int,
+                                            asset: String, regions: DinoAvatarMask.SpriteRegions?) -> FallPalette {
+        let key = "\(asset)-\(width)-\(height)" as NSString
+        if let cached = fallPaletteCache.object(forKey: key) { return cached }
+        var lightness = [[Double]](repeating: [], count: 4)
+        var saturation = lightness, hues = lightness
+        // At most 384² samples; cache independently of the player's colors.
+        let step = max(1, width / 384)
+        for y in stride(from: 0, to: height, by: step) {
+            for x in stride(from: 0, to: width, by: step) {
+                let index = (y * width + x) * 4
+                guard pixels[index + 3] > 250 else { continue }
+                let alpha = Double(pixels[index + 3]) / 255
+                let pixel = HSL(red: min(1, Double(pixels[index]) / 255 / alpha),
+                                green: min(1, Double(pixels[index + 1]) / 255 / alpha),
+                                blue: min(1, Double(pixels[index + 2]) / 255 / alpha))
+                guard let part = DinoAvatarMask.part(hue: pixel.hue, saturation: pixel.saturation, lightness: pixel.lightness,
+                    x: Double(x) / Double(width), y: Double(y) / Double(height), regions: regions),
+                      let partIndex = DinoAppearance.Part.allCases.firstIndex(of: part) else { continue }
+                lightness[partIndex].append(pixel.lightness)
+                saturation[partIndex].append(pixel.saturation)
+                hues[partIndex].append(pixel.hue > 0.8 ? pixel.hue - 1 : pixel.hue)
+            }
+        }
+        var tones = [Tone](), medians = [Double]()
+        for part in 0..<4 {
+            let lights = lightness[part].sorted(), sats = saturation[part].sorted(), hue = hues[part].sorted()
+            guard !lights.isEmpty else {
+                tones.append(idlePalette[part]); medians.append(idleDisplayHues[part]); continue
+            }
+            func quantile(_ p: Double) -> Double { lights[Int(Double(lights.count - 1) * p)] }
+            tones.append(Tone(quantile(0.1), quantile(0.5), quantile(0.9), sats[sats.count / 2]))
+            medians.append(hue[hue.count / 2])
+        }
+        let palette = FallPalette(tones: tones, hues: medians)
+        fallPaletteCache.setObject(palette, forKey: key)
+        return palette
+    }
     private static let answerPalettes: [String: [Tone]] = [
         "ChatGPT-afbeelding 24 okt 2026, 21_14_27-1": [Tone(0.32016, 0.52372, 0.57087, 0.95726), Tone(0.10474, 0.19565, 0.38538, 0.55556), Tone(0.26087, 0.42292, 0.54941, 0.62281), Tone(0.60784, 0.82609, 0.90711, 0.72414)],
         "ChatGPT-afbeelding 24 okt 2026, 21_14_28-2": [Tone(0.31028, 0.51581, 0.56917, 0.93043), Tone(0.10870, 0.19763, 0.36561, 0.47264), Tone(0.25889, 0.41700, 0.54941, 0.59184), Tone(0.60672, 0.81225, 0.89921, 0.69565)],

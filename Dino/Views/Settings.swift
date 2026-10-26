@@ -412,7 +412,7 @@ struct DinoDayPartScheduleEditor: View {
         .lineLimit(1)
         .minimumScaleFactor(0.7)
         .frame(minHeight: 48)
-        .background(Color(dinoHex: 0xE6EDF2), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(Color(dinoHex: 0xCBD1D6), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .accessibilityIdentifier("settings.dayParts.columns")
     }
 
@@ -430,7 +430,7 @@ struct DinoDayPartScheduleEditor: View {
                 .frame(width: timeWidth)
         }
         .frame(minHeight: spacious ? 76 : 68)
-        .background(part.fill.opacity(highContrast ? 1 : 0.96), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(part.lineGradient, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
             .stroke(highContrast ? DinoStyle.ink : .white.opacity(0.7), lineWidth: highContrast ? 2 : 1))
     }
@@ -482,16 +482,5 @@ struct DinoDayPartScheduleEditor: View {
     private func boundaryText(_ hour: Int, ending: Bool) -> String {
         if ending && hour == 0 { return "24:00" }
         return String(format: "%02d:00", hour)
-    }
-}
-
-private extension DinoDayPart {
-    var fill: Color {
-        switch self {
-        case .night: return Color(dinoHex: 0xD9EEFB)
-        case .morning: return Color(dinoHex: 0xFFF3C9)
-        case .afternoon: return Color(dinoHex: 0xE7F6C8)
-        case .evening: return Color(dinoHex: 0xFDE4D6)
-        }
     }
 }

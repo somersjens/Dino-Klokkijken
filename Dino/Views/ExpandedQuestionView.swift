@@ -447,7 +447,7 @@ struct DinoExpandedQuestionView: View {
         let slot = max(0, (width - advanceClockGap - 12) / 2)
         return min(1, slot / (playFace + 8))
     }
-    private var advanceClockGap: CGFloat { 104 }
+    private var advanceClockGap: CGFloat { 20 }
     private var advanceResultOffset: CGFloat {
         ((playFace + 8) * advanceComparisonScale + advanceClockGap) / 2
     }
@@ -536,7 +536,8 @@ struct DinoAdvanceDifference: View {
         .padding(.vertical, 2)
         .background {
             DinoAdvanceArrow(horizontalOffset: resultOffset, extraHeight: resultTopInset)
-                .stroke(ink, style: StrokeStyle(lineWidth: 2.25, lineCap: .round, lineJoin: .round))
+                .stroke(highContrast ? ink : DinoStyle.green,
+                        style: StrokeStyle(lineWidth: 2.25, lineCap: .round, lineJoin: .round))
                 .accessibilityHidden(true)
             DinoAdvanceArrow(horizontalOffset: -resultOffset, extraHeight: resultTopInset)
                 .stroke(DinoStyle.wrong(highContrast), style: StrokeStyle(lineWidth: 2.25, lineCap: .round, lineJoin: .round))
@@ -1264,12 +1265,7 @@ struct DinoDayPartLine: View {
                 bar.padding(.top, showsSelection ? 13 : 0)
                 if showsSelection {
                     DinoDayPartMarker()
-                        .fill(.white)
-                        .background {
-                            DinoDayPartMarker()
-                                .stroke(DinoStyle.ink.opacity(highContrast ? 0.75 : 0.28),
-                                        style: StrokeStyle(lineWidth: 2, lineJoin: .round))
-                        }
+                        .fill(DinoStyle.ink)
                         .frame(width: 14, height: barHeight + 8)
                         .offset(x: timePosition(fraction) - 7, y: 1)
                         .accessibilityHidden(true)
@@ -1319,8 +1315,7 @@ struct DinoDayPartLine: View {
     private var bar: some View {
         HStack(spacing: 0) {
             ForEach(Array(segments.enumerated()), id: \.offset) { index, segment in
-                let colors = segment.part.lineColors
-                LinearGradient(colors: [colors.top, colors.bottom], startPoint: .top, endPoint: .bottom)
+                segment.part.lineGradient
                     .frame(width: width * CGFloat(segment.end - segment.start) / 24)
                     .overlay(alignment: .trailing) {
                         if index < segments.count - 1 {
@@ -1451,16 +1446,22 @@ private struct DinoDayPartMarker: Shape {
     }
 }
 
-private extension DinoDayPart {
-    var lineColors: (top: Color, bottom: Color) {
+extension DinoDayPart {
+    /// Shared by the timeline and the corresponding settings rows.
+    var lineGradient: LinearGradient {
+        let colors = lineColors
+        return LinearGradient(colors: [colors.top, colors.bottom], startPoint: .top, endPoint: .bottom)
+    }
+
+    private var lineColors: (top: Color, bottom: Color) {
         switch self {
-        case .night: return (Color(dinoHex: 0x35597C), Color(dinoHex: 0x1C3654))
+        case .night: return (Color(dinoHex: 0x9AB6DA), Color(dinoHex: 0x83A5CE))
         case .morning: return (Color(dinoHex: 0xFFE7B0), Color(dinoHex: 0xF5C15A))
         case .afternoon: return (Color(dinoHex: 0xC8EE8C), Color(dinoHex: 0x74C83E))
         case .evening: return (Color(dinoHex: 0xFFC98A), Color(dinoHex: 0xF08A2C))
         }
     }
-    var symbolInk: Color {
+    fileprivate var symbolInk: Color {
         switch self {
         case .night: return Color(dinoHex: 0x1C3654)
         case .morning: return Color(dinoHex: 0xC47A12)

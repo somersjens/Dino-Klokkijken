@@ -1,8 +1,9 @@
 import Foundation
+import CoreGraphics
 
-/// Shared pose timing, with a fixed head during applause and smooth hand transitions.
+/// Shared pose timing, with two readable claps and continuous, subtle head motion.
 enum DinoAnimation {
-    enum Clip: String { case idle, thumbsUp, wrongAnswer, backflip, pirouette, worldJump }
+    enum Clip: String { case idle, thumbsUp, wrongAnswer, stumble, openingJump, backflip, pirouette, worldJump }
     struct Pose {
         let asset: String
         var paintedAngle = 0.0
@@ -19,17 +20,22 @@ enum DinoAnimation {
         var scaleY = 1.0
         var previousPose: Pose? = nil
         var poseBlend = 1.0
+        var headAngle = 0.0
+        var headHeight = 0.0
+        var morph: DinoStumbleMotion.Blend? = nil
     }
 
     static let correctAnswerDelay = duration(.thumbsUp) + 0.12
     static let wrongAnswerAssets = [DinoAnswerArtwork.wrongAssets[1]]
     static let correctAnswerAssets = (1...8).map { String(format: "dino_applaus_frame_%02d", $0) }
     // Two claps, followed by the supplied recovery pose before returning to idle.
-    // Keep every drawing visible at both 30 and 60 Hz without delaying the next question.
-    static let correctAnswerFrameStarts = [0.0, 0.06, 0.14, 0.22, 0.30, 0.38, 0.46, 0.54]
+    // Give each contact and reopening time to read as a separate clap.
+    static let correctAnswerFrameStarts = [0.0, 0.12, 0.24, 0.36, 0.52, 0.64, 0.76, 0.92]
+    static let correctAnswerBlendDuration = 0.055
+    static let correctAnswerClapContacts = [2, 5].map { correctAnswerFrameStarts[$0] + correctAnswerBlendDuration }
     static let correctAnswerStillAsset = correctAnswerAssets[5]
     // The new drawings change facial proportions as well as head position. Keep
-    // the idle head fixed and animate only the supplied hands, torso and accents.
+    // one consistent head drawing and move it continuously around the neck.
     static let correctAnswerPoses = correctAnswerAssets.enumerated().map { index, asset in
         Pose(asset: asset, offsetY: index == 0 || index == 7 ? 0 : -0.025)
     }
@@ -39,6 +45,17 @@ enum DinoAnimation {
         let start: Double
         let pose: Pose
     }
+
+    // Lose balance in the portrait, fall onto both hands, then push back up.
+    // Register the actual opaque soles/palms to idle's foot line (1211/1254).
+    static let stumbleTakeoff = 0.12
+    static let stumbleLanding = 0.64
+    static let stumbleFaceContact = 0.72
+    static let stumbleLowest = 0.80
+    static let stumbleRecoveryDuration = 0.44
+    static let stumbleFrames = DinoStumbleMotion.frames
+    static let stumbleAssets = ["01", "02", "03", "03a", "04", "05", "06", "06a", "07", "08"]
+        .map { "dino-stumble-deep-" + $0 }
 
     // Seconds after the result fade: read the crouch, launch quickly, let every
     // turn drawing register at a brisk pace, then let the planted recovery breathe.
@@ -69,15 +86,19 @@ enum DinoAnimation {
     static let spriteAssets = ["dino-idle"] + correctAnswerAssets + wrongAnswerAssets
         + ["dino-thumbs-up-08", "dino-wrong-answer-04",
                                "dino-backflip-01", "dino-backflip-03", "dino-backflip-07", "dino-backflip-08"]
-        + pirouetteAssets
+        + pirouetteAssets + DinoOpeningJump.assets + stumbleAssets
     static let worldJumpAssets = [1, 2, 3, 6, 7].map { String(format: "dino-world-jump-%02d", $0) }
 
     /// The short lead-in matches the result screen's fade.
-    static func leadIn(_ clip: Clip) -> Double { clip == .pirouette ? 0.24 : 0 }
+    static func leadIn(_ clip: Clip) -> Double {
+        clip == .pirouette || clip == .openingJump || clip == .stumble ? 0.24 : 0
+    }
 
     /// Show the anticipation in the portrait before Dino leaves the circle.
     static func travelDelay(_ clip: Clip) -> Double {
         switch clip {
+        case .stumble: leadIn(clip) + stumbleTakeoff
+        case .openingJump: leadIn(clip) + DinoOpeningJump.takeoff
         case .pirouette: leadIn(clip) + pirouetteTakeoff
         case .backflip, .worldJump: 0.18
         default: 0
@@ -87,6 +108,8 @@ enum DinoAnimation {
     /// The shared companion reaches the rock before the reward stars appear.
     static func travelDuration(_ clip: Clip) -> Double {
         switch clip {
+        case .stumble: leadIn(clip) + stumbleLanding
+        case .openingJump: leadIn(clip) + DinoOpeningJump.landing
         case .backflip, .worldJump: 1.22
         case .pirouette: leadIn(clip) + pirouetteLanding
         default: 0.42
@@ -95,8 +118,10 @@ enum DinoAnimation {
     static func duration(_ clip: Clip) -> Double {
         switch clip {
         case .idle: 0
-        case .thumbsUp: 0.70
+        case .thumbsUp: 1.04
         case .wrongAnswer: 0.80
+        case .stumble: travelDuration(clip) + stumbleRecoveryDuration
+        case .openingJump: leadIn(clip) + DinoOpeningJump.duration
         case .backflip, .worldJump: 1.62
         case .pirouette: leadIn(clip) + pirouetteFrames.last!.start
         }
@@ -117,13 +142,34 @@ enum DinoAnimation {
             guard !reducedMotion else { return Sample(pose: correctAnswerPoses[5]) }
             guard t < duration(.thumbsUp) else { return sample(.idle, elapsed: 0) }
             let index = correctAnswerFrameStarts.lastIndex { t >= $0 } ?? 0
-            // Blend only the moving hands for two refreshes; the head never
-            // fades or changes shape. Every authored pose still has a clear hold.
+            // One soft nod per palm contact, with zero speed at both ends.
+            // The portrait and torso stay anchored while only the head responds.
+            let nod = correctAnswerClapContacts.reduce(0.0) { total, contact in
+                let distance = abs(t - contact) / 0.17
+                return total + (distance < 1 ? (1 + cos(.pi * distance)) / 2 : 0)
+            }
             return Sample(pose: correctAnswerPoses[index],
                           previousPose: index > 0 ? correctAnswerPoses[index - 1] : nil,
-                          poseBlend: smooth((t - correctAnswerFrameStarts[index]) / 0.035))
+                          poseBlend: smooth((t - correctAnswerFrameStarts[index]) / correctAnswerBlendDuration),
+                          headAngle: 1.8 * nod, headHeight: 0.006 * nod)
         case .wrongAnswer:
             return wrongAnswerSample(elapsed: t, reducedMotion: reducedMotion)
+        case .stumble:
+            guard !reducedMotion else { return Sample(pose: stumbleFrames.last!.pose) }
+            // Keep the exact portrait bitmap and registration until he actually
+            // leaves the circle. The almost-idle fall drawing has a different face.
+            guard elapsed >= travelDelay(.stumble) else { return sample(.idle, elapsed: 0) }
+            let morph = DinoStumbleMotion.sample(at: t)
+            let pose = morph?.from ?? stumbleFrames.last!.pose
+            let fall = min(1, max(0, (t - stumbleTakeoff) / (stumbleLanding - stumbleTakeoff)))
+            return Sample(pose: pose, angle: elapsed > travelDelay(.stumble) && elapsed < travelDuration(.stumble) ? 3 * sin(.pi * fall) : 0, morph: morph)
+
+        case .openingJump:
+            var sample = DinoOpeningJump.sample(elapsed: elapsed, reducedMotion: reducedMotion, leadIn: leadIn(clip))
+            // Reuse the logo's complete choreography with a smaller arc: the
+            // result journey starts near the top edge in the player's portrait.
+            sample.height *= 0.28
+            return sample
         case .pirouette:
             let finalPose = pirouetteFrames.last!.pose
             guard !reducedMotion else {
@@ -257,20 +303,23 @@ enum DinoOpeningJump {
         // launch float away and put the brakes on before the feet hit the rock.
         flightProgress(elapsed: elapsed)
     }
-    static func sample(elapsed: Double, reducedMotion: Bool = false) -> DinoAnimation.Sample {
+    static func sample(elapsed: Double, reducedMotion: Bool = false, leadIn: Double = 0) -> DinoAnimation.Sample {
         guard !reducedMotion else { return DinoAnimation.sample(.idle, elapsed: 0) }
-        guard elapsed < duration else { return DinoAnimation.sample(.idle, elapsed: 0) }
-        let index = poseStarts.lastIndex(where: { elapsed >= $0 }) ?? 0
+        guard elapsed < leadIn + duration else { return DinoAnimation.sample(.idle, elapsed: 0) }
+        // Compare absolute boundaries so result-screen lead-in rounding cannot
+        // postpone the contact drawing until after the journey reaches the rock.
+        let index = poseStarts.lastIndex(where: { elapsed >= leadIn + $0 }) ?? 0
+        let t = max(0, elapsed - leadIn)
         // Register planted and reaching feet. The bent airborne feet remain
         // free to rise instead of being dragged down to the ground.
         let registration = [-1.0, 3.0, 0.0, 0.0, 0.0, 46.0, 9.0, -2.0][index] / 1254
-        let t = flightProgress(elapsed: elapsed)
-        let recovery = min(1, max(0, (elapsed - landing) / (duration - landing)))
+        let flight = flightProgress(elapsed: t)
+        let recovery = min(1, max(0, (t - landing) / (duration - landing)))
         // The drawings supply the big crouch. A brief, damped compression gives
         // the contact weight without holding Dino in a slow landing pose.
-        let settle = elapsed >= landing ? 0.05 * sin(recovery * .pi) * (1 - recovery) : 0
+        let settle = elapsed >= leadIn + landing ? 0.05 * sin(recovery * .pi) * (1 - recovery) : 0
         return DinoAnimation.Sample(pose: .init(asset: assets[index], offsetY: registration),
-            angle: -5 * sin(.pi * t), height: -4 * t * (1 - t),
+            angle: -5 * sin(.pi * flight), height: -4 * flight * (1 - flight),
             scaleX: 1 + settle * 0.4, scaleY: 1 - settle)
     }
 }
@@ -333,5 +382,166 @@ struct CrystalMinerPatrol: Identifiable {
             t -= 2
         }
         return Pose(y: stops[0], walking: true)
+    }
+}
+
+
+/// Corresponding anatomical points keep the painted poses registered while
+/// the drawing moves between them. Geometry runs continuously at display rate.
+enum DinoStumbleMotion {
+    struct Blend {
+        let fromIndex: Int
+        let toIndex: Int
+        let amount: Double
+        let points: [CGPoint]
+        var from: DinoAnimation.Pose { frames[fromIndex].pose }
+        var to: DinoAnimation.Pose { frames[toIndex].pose }
+        // Geometry carries the movement. Change the painting during its fastest
+        // part so a second translucent face never appears over the first one.
+        var opacity: Double { amount < 0.5 ? 0 : 1 }
+        var fromVertices: [CGPoint] { vertices(for: fromIndex, points: points) }
+        var toVertices: [CGPoint] { vertices(for: toIndex, points: points) }
+    }
+
+    static let frames: [DinoAnimation.TimedPose] = {
+        let names = ["dino-idle"] + ["02", "03", "03a", "04", "05", "06", "06a", "07", "08"]
+            .map { "dino-stumble-deep-" + $0 }
+        // The palms land first; the arms then give way and the muzzle reaches
+        // the stone. Only after the full collapse does the brisk push-up begin.
+        let times = [DinoAnimation.stumbleTakeoff, 0.26, 0.46, DinoAnimation.stumbleLanding,
+                     DinoAnimation.stumbleFaceContact, DinoAnimation.stumbleLowest, 0.875, 0.945, 1.025, 1.08]
+        let offsets = [0.0, 15, 45, 48, 112, 81, 38, 9, -4, -2]
+        return names.indices.map {
+            DinoAnimation.TimedPose(start: times[$0], pose: .init(asset: names[$0], offsetY: offsets[$0] / 1254))
+        }
+    }()
+
+    // The source canvases frame the crouching head more tightly. Register its
+    // physical size before interpolation so pushing up does not shrink the face.
+    private static let artworkScale = [1.0, 0.94, 0.94, 0.90, 0.90, 0.95, 0.84, 0.90, 0.98, 1.0]
+
+    private static func registered(_ point: CGPoint, pose: Int) -> CGPoint {
+        let ground = 1211.0 / 1254, scale = artworkScale[pose]
+        return CGPoint(x: 0.5 + (point.x - 0.5) * scale,
+                       y: ground + (point.y + frames[pose].pose.offsetY - ground) * scale)
+    }
+
+    // Face, neck, torso, hips, rear foot, tail, cloth and head contour. Hands
+    // change depth order, so only their common ground line constrains the mesh.
+    private static let anchors: [[CGPoint]] = {
+        let standing = [(600,350), (800,300), (770,435), (725,530), (700,590), (640,630),
+                        (720,820), (660,1000), (470,1175), (190,695), (490,920), (550,50),
+                        (430,260), (670,150), (450,395), (915,420)]
+        let source = [
+            standing,
+            [(744,455),(968,473),(902,594),(754,655),(824,714),(700,735),(715,855),(535,855),
+             (310,962),(215,385),(485,770),(745,92),(590,310),(840,252),(585,500),(1070,600)],
+            [(767,500),(996,513),(970,630),(797,705),(850,785),(730,790),(720,900),(520,880),
+             (260,1000),(200,350),(490,780),(800,135),(610,350),(890,300),(620,560),(1110,680)],
+            [(852,778),(1077,812),(1030,920),(858,965),(915,1040),(740,930),(660,965),(520,730),
+             (230,900),(210,140),(530,680),(850,365),(700,560),(990,580),(700,850),(1160,940)],
+            [(805,856),(1018,890),(970,1005),(775,1010),(900,1075),(710,990),(650,950),(480,720),
+             (210,870),(200,190),(500,650),(880,450),(650,675),(930,660),(660,890),(1120,1000)],
+            [(826,804),(1057,865),(1010,995),(840,1030),(950,1090),(700,990),(570,990),(420,935),
+             (150,1020),(165,550),(430,875),(950,435),(740,640),(1000,635),(690,875),(1150,1015)],
+            [(763,511),(1042,513),(1000,630),(850,680),(930,780),(760,820),(740,940),(480,990),
+             (210,1050),(175,470),(470,900),(805,90),(600,350),(905,300),(610,580),(1140,630)],
+            [(721,464),(964,436),(950,565),(870,635),(885,710),(740,730),(730,880),(650,1000),
+             (440,1150),(225,590),(480,960),(775,90),(540,360),(825,270),(580,520),(1080,590)],
+            standing, standing
+        ]
+        let boundary = [CGPoint(x: 0, y: 0), CGPoint(x: 0.5, y: 0), CGPoint(x: 1, y: 0),
+                        CGPoint(x: 0, y: 0.5), CGPoint(x: 1, y: 0.5),
+                        CGPoint(x: 0, y: 1), CGPoint(x: 0.5, y: 1), CGPoint(x: 1, y: 1)]
+        return source.enumerated().map { index, points in
+            points.map { registered(CGPoint(x: Double($0.0) / 1254, y: Double($0.1) / 1254), pose: index) }
+                + boundary + [0.1, 0.3, 0.5, 0.7, 0.9].map { CGPoint(x: $0, y: 1211.0 / 1254) }
+        }
+    }()
+
+    static let columns = 14, rows = 16
+    static let grid = (0...rows).flatMap { y in
+        (0...columns).map { x in CGPoint(x: Double(x) / Double(columns), y: Double(y) / Double(rows)) }
+    }
+    static let triangles: [(Int, Int, Int)] = (0..<rows).flatMap { y in
+        (0..<columns).flatMap { x -> [(Int, Int, Int)] in
+            let a = y * (columns + 1) + x, b = a + 1, c = a + columns + 1, d = c + 1
+            return [(a, b, d), (a, d, c)]
+        }
+    }
+
+    // Moving least squares reproduces translation, scale and rotation exactly.
+    // Its coefficients depend only on the source, so the per-frame work is small.
+    private static let influences: [[[Double]]] = anchors.indices.map { pose in
+        grid.map { vertex in
+            let point = registered(vertex, pose: pose)
+            let source = anchors[pose]
+            let distances = source.map { pow($0.x - point.x, 2) + pow($0.y - point.y, 2) }
+            if let exact = distances.firstIndex(where: { $0 < 0.00000001 }) {
+                return source.indices.map { $0 == exact ? 1 : 0 }
+            }
+            let weights = distances.map { 1 / max(0.0001, $0) }
+            let total = weights.reduce(0, +)
+            let center = source.indices.reduce(CGPoint.zero) { p, i in
+                CGPoint(x: p.x + source[i].x * weights[i] / total, y: p.y + source[i].y * weights[i] / total)
+            }
+            var a = 0.0, b = 0.0, d = 0.0
+            for i in source.indices {
+                let x = source[i].x - center.x, y = source[i].y - center.y
+                a += weights[i] * x * x; b += weights[i] * x * y; d += weights[i] * y * y
+            }
+            let determinant = max(0.00000001, a * d - b * b)
+            let vx = point.x - center.x, vy = point.y - center.y
+            let mx = (vx * d - vy * b) / determinant, my = (vy * a - vx * b) / determinant
+            return source.indices.map {
+                weights[$0] / total + weights[$0] * (mx * (source[$0].x - center.x) + my * (source[$0].y - center.y))
+            }
+        }
+    }
+
+    static func vertices(for pose: Int, points: [CGPoint]) -> [CGPoint] {
+        influences[pose].map { weights in
+            points.indices.reduce(CGPoint.zero) { value, i in
+                CGPoint(x: value.x + weights[i] * points[i].x, y: value.y + weights[i] * points[i].y)
+            }
+        }
+    }
+
+    static func sample(at time: Double) -> Blend? {
+        guard time + 1e-9 >= frames[0].start, time < frames.last!.start - 1e-9 else { return nil }
+        let index = frames.lastIndex { time + 1e-9 >= $0.start } ?? 0
+        let span = frames[index + 1].start - frames[index].start
+        let p = min(1, max(0, (time - frames[index].start) / span))
+        func speed(_ frame: Int, _ point: Int, _ axis: KeyPath<CGPoint, CGFloat>) -> Double {
+            guard frame > 0, frame < frames.count - 1 else { return 0 }
+            let before = (anchors[frame][point][keyPath: axis] - anchors[frame - 1][point][keyPath: axis])
+                / (frames[frame].start - frames[frame - 1].start)
+            let after = (anchors[frame + 1][point][keyPath: axis] - anchors[frame][point][keyPath: axis])
+                / (frames[frame + 1].start - frames[frame].start)
+            return before * after > 0 ? 2 * before * after / (before + after) : 0
+        }
+        let p2 = p * p, p3 = p2 * p
+        let points = anchors[index].indices.map { point -> CGPoint in
+            func coordinate(_ axis: KeyPath<CGPoint, CGFloat>) -> Double {
+                (2 * p3 - 3 * p2 + 1) * anchors[index][point][keyPath: axis]
+                    + (p3 - 2 * p2 + p) * span * speed(index, point, axis)
+                    + (-2 * p3 + 3 * p2) * anchors[index + 1][point][keyPath: axis]
+                    + (p3 - p2) * span * speed(index + 1, point, axis)
+            }
+            return CGPoint(x: coordinate(\.x), y: coordinate(\.y))
+        }
+        return Blend(fromIndex: index, toIndex: index + 1, amount: p, points: points)
+    }
+
+    static func transform(_ triangle: (Int, Int, Int), vertices: [CGPoint], size: CGSize) -> CGAffineTransform {
+        func pixel(_ p: CGPoint) -> CGPoint { CGPoint(x: p.x * size.width, y: p.y * size.height) }
+        let a = pixel(grid[triangle.0]), b = pixel(grid[triangle.1]), c = pixel(grid[triangle.2])
+        let p = pixel(vertices[triangle.0]), q = pixel(vertices[triangle.1]), r = pixel(vertices[triangle.2])
+        let sx = b.x - a.x, sy = b.y - a.y, tx = c.x - a.x, ty = c.y - a.y
+        let dx = q.x - p.x, dy = q.y - p.y, ex = r.x - p.x, ey = r.y - p.y
+        let determinant = sx * ty - sy * tx
+        let aa = (dx * ty - ex * sy) / determinant, cc = (ex * sx - dx * tx) / determinant
+        let bb = (dy * ty - ey * sy) / determinant, dd = (ey * sx - dy * tx) / determinant
+        return CGAffineTransform(a: aa, b: bb, c: cc, d: dd, tx: p.x - aa * a.x - cc * a.y, ty: p.y - bb * a.x - dd * a.y)
     }
 }

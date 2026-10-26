@@ -171,3 +171,23 @@ De bestaande schermtest `testTimeDescriptionsAndArithmeticExampleSizes` slaagt o
 Deze gerichte controle slaagt op iPhone 18 Pro en iPad (A16), beide met iOS 27. De schermbeelden bevestigen twee evenwichtige regels op iPhone en één regel op iPad. De analoge klokken van type 1 zijn vervolgens iets verkleind om de uitleg binnen de bestaande antwoordruimte te houden; `testAnalogWrongClockChoicesKeepTheQuestionVisible` slaagt op iPhone en bevestigt dat de titel en alle vier de antwoordstenen boven de onderknop passen. De laatste simulatorbuild en whitespacecontrole slagen.
 
 Beelden: [type 4 op iPhone](Screenshots/QuestionFeedback/wrong-time-readDigital-iphone.png), [type 4 op iPad](Screenshots/QuestionFeedback/wrong-time-readDigital-ipad.png), [type 9 op iPhone](Screenshots/QuestionFeedback/wrong-time-read24Hour-iphone.png), [type 9 op iPad](Screenshots/QuestionFeedback/wrong-time-read24Hour-ipad.png), [type 5](Screenshots/QuestionFeedback/wrong-time-spokenTime-iphone.png) en [type 1 met passende klokken](Screenshots/QuestionFeedback/wrong-time-chooseAnalog-iphone.png).
+
+## Vaste antwoordinhoud en rustige digitale uitleg — 26 oktober 2026
+
+De digitale tijd bij een fout gekozen antwoord heeft een vaste plaats onder de inhoud, met een dun scheidingslijntje. De analoge klok of tijdomschrijving blijft op dezelfde positie als vóór het antwoorden. De gedeelde component tekent de inhoud eenmaal; de eerdere wissel tussen een gecentreerde inhoud en een tweede versie boven het klokje is vervallen. Dit geldt voor typen 1 en 9 en voor dezelfde uitleg bij typen 4 en 5.
+
+Het klokje verschijnt in 0,22 seconde met een korte beweging van vier punten. De ruimte blijft vooraf gereserveerd en de persoonlijke klokstijl en verplichte 24-uursnotatie van type 9 blijven behouden. **Minder beweging** schakelt de overgang uit; **Hoog contrast** versterkt het scheidingslijntje.
+
+## Grotere vergelijkingsklokken en zachtere inactieve bediening — 26 oktober 2026
+
+Bij type 13 gebruikt de pijl naar het goede antwoord hetzelfde lichte groen als de antwoordrand. De tekst in het tijdlabel blijft donkergroen; **Hoog contrast** behoudt ook de donkere pijl. De tussenruimte tussen de twee antwoordklokken is teruggebracht van 104 naar 20 punten. Daardoor krijgen beide klokken op iPhone ongeveer een derde meer breedte, binnen dezelfde vooraf gereserveerde hoogte.
+
+De inactieve klokbediening gebruikt een zachte salietint met gedempte groene tekst. De laatst gekozen helft van Uren/Minuten krijgt een licht vlak met een dunne omlijning. De gedeelde kleuren gelden ook voor de overige analoge instelvragen, draaiknoppen en digitale pijltjes.
+
+De simulatorbuild en `testClockAnswerFeedbackKeepsItsStageAndTargetInPlace` slagen op iPhone 17 en iPad Pro 11-inch (M5), beide met iOS 26.5. De test doorloopt digitaal instellen, analoog instellen en vooruitzetten en controleert behoud van titelpositie, beginklok en ingediende tijd. De screenshots van type 13 zijn visueel gecontroleerd; beide grotere klokken, labels, pijlen en bediening passen volledig in beeld. De whitespacecontrole slaagt.
+
+Beelden: [type 13 op iPhone](Screenshots/AnalogFeedbackRefinement/feedback-advanceAnalog-after-iphone.png), [type 13 op iPad](Screenshots/AnalogFeedbackRefinement/feedback-advanceAnalog-after-ipad.png), [analoge bediening](Screenshots/AnalogFeedbackRefinement/feedback-setAnalog-after-iphone.png) en [digitale pijltjes](Screenshots/AnalogFeedbackRefinement/feedback-setDigital-after-iphone.png).
+
+Op iPhone 17 en iPad Pro 11-inch (M5), beide met iOS 26.5, slagen `testAnalogWrongClockChoicesKeepTheQuestionVisible` en `testWrongClockChoicesExplainTheirOwnTime`: vier geslaagde uitvoeringen zonder fouten. Dit controleert de zichtbaarheid van titel en alle antwoordvakken, de eigen tijd van iedere afgewezen keuze, vaste antwoordposities bij de tekstvragen en herstel bij de volgende vraag. De beelden van alle vier gedeelde vraagtypen op iPhone en typen 1 en 9 op iPad zijn visueel bekeken, met zowel de standaardklok als een gele segmentenklok. De simulatorbuild compileert en de whitespacecontrole slaagt.
+
+Beelden: [type 1 met standaardklok](Screenshots/AnswerTimeFooter/chooseAnalog-default-iphone.png), [type 1 met persoonlijke klok](Screenshots/AnswerTimeFooter/chooseAnalog-custom-iphone.png), [type 9 op iPhone](Screenshots/AnswerTimeFooter/read24Hour-iphone.png) en [type 9 op iPad](Screenshots/AnswerTimeFooter/read24Hour-ipad.png).

@@ -397,12 +397,12 @@ enum DinoStyle {
     static let warning = Color(dinoHex: 0x8F2435)
     static let orange = Color(dinoHex: 0xF59A32)
     static let deepOrange = Color(dinoHex: 0xC45E00)
-    static let disabledBackground = Color(uiColor: .systemGray5)
-    static let disabledSelection = Color(uiColor: .systemGray4)
-    static let disabledBorder = Color(uiColor: .systemGray3)
+    static let disabledBackground = Color(dinoHex: 0xEDF2E7)
+    static let disabledSelection = Color(dinoHex: 0xFAFCF7)
+    static let disabledBorder = Color(dinoHex: 0xC3CEBA)
 
     static func disabledInk(_ highContrast: Bool) -> Color {
-        Color(dinoHex: highContrast ? 0x3A3A3C : 0x636366)
+        Color(dinoHex: highContrast ? 0x3F5138 : 0x6C7965)
     }
 
     static func wrong(_ highContrast: Bool) -> Color {

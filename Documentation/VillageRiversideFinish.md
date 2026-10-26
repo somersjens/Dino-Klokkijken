@@ -11,3 +11,9 @@ De geometriecontrole slaagt met 12.613 controles op tien breedtes van 320 tot 11
 De definitieve iOS-simulatorbuild slaagt voor arm64 en x86_64.
 
 [Telefoon: rivieruitgang](Screenshots/VillageRiversideFinish/exit-393.png) · [Tablet: rivieruitgang](Screenshots/VillageRiversideFinish/exit-834.png) · [Geometriecontrole](WorldTestLogs/VillageRiversideFinish/geometry.log) · [iOS-build](WorldTestLogs/VillageRiversideFinish/ios-final-build.log).
+
+26 oktober 2026: het aantal bankjes is teruggebracht naar vijf, verspreid over de route. Drie appelbomen vullen vrije plekken op de buitenoevers. De nieuwe boom heeft een hogere, onregelmatige kroon, rode appels en enkele gevallen appels op het gras. Hij krijgt een eigen droge standplaats zonder bestrating. Bij het zoeken naar een plek krijgen volledig vrije boomkruinen voorrang; de kleinere dorpsdecoraties houden daarna rekening met de nieuwe boomplaatsen.
+
+Op tien breedtes van 320 tot 1194 punten staan precies vijf bankjes en drie appelbomen. Alle dertig boomvoeten zijn op 21 hoogtes gecontroleerd: ze staan volledig op de buitenoevers, vrij van water en kade. [Telefoonkaart](Screenshots/VillageOrchardFinish/village-393.png) · [Tabletkaart](Screenshots/VillageOrchardFinish/village-834.png) · [Nieuwe appelboom](Screenshots/VillageOrchardFinish/apple-tree.png) · [Plaatsingscontrole](WorldTestLogs/VillageOrchardFinish/geometry.log).
+
+De definitieve iOS-simulatorbuild slaagt opnieuw voor arm64 en x86_64. [Buildlog](WorldTestLogs/VillageOrchardFinish/ios-build.log).

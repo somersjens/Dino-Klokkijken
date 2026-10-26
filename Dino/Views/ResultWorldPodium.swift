@@ -21,7 +21,7 @@ struct ResultPodiumPalette {
         case 6: (light, face, shade, edge, accent, glow) = (0xD9EEEB, 0x80AFBC, 0x456D85, 0x304E66, 0xB5E9DC, 0xD0F3EA)
         case 7: (light, face, shade, edge, accent, glow) = (0xFFE5AF, 0xD2AC74, 0xA37B51, 0x815D40, 0x8FAD79, 0xFFE9AE)
         case 8: (light, face, shade, edge, accent, glow) = (0xFFE6AE, 0xC5A06A, 0x846951, 0x505666, 0x9DDFDC, 0xBDF3EA)
-        case 9: (light, face, shade, edge, accent, glow) = (0xF7E4BC, 0xCBB085, 0x9B815E, 0x76644E, 0x7EBAB6, 0xDAF2D8)
+        case 9: (light, face, shade, edge, accent, glow) = (0xF2D09A, 0xC69A60, 0x8E633D, 0x62432C, 0xBFA269, 0xF3DEAA)
         case 10: (light, face, shade, edge, accent, glow) = (0xF1EBD7, 0xC6C9BA, 0x8C9BA2, 0x61768B, 0xD4B676, 0xE4EEFF)
         default: (light, face, shade, edge, accent, glow) = (0xEEE6C5, 0xBAB894, 0x7C8966, 0x526344, 0x8FC348, 0xFFF6B9)
         }
@@ -32,8 +32,36 @@ struct ResultPodiumPalette {
 enum ResultPodiumGeometry {
     static let width: CGFloat = 1000
     static let height: CGFloat = 455
-    static let rewardY: CGFloat = 292
-    static let starWidth: CGFloat = 0.235
+    static func rewardY(worldID: Int) -> CGFloat {
+        switch DinoWorldCatalog.world(worldID)?.themeID {
+        case 4: return 285
+        case 6: return 294
+        case 8: return 272
+        case 9: return 308
+        default: return 292
+        }
+    }
+
+    static func starWidth(worldID: Int) -> CGFloat {
+        switch DinoWorldCatalog.world(worldID)?.themeID {
+        case 4: return 0.22
+        // Keep the reward's glow and shadow clear of the metal foot and crate rail.
+        case 6, 8, 9: return 0.19
+        default: return 0.235
+        }
+    }
+
+    static func groundFrontY(themeID: Int) -> CGFloat {
+        switch themeID {
+        case 3: return 447
+        case 4, 10: return 445
+        case 5: return 472
+        case 7: return 478
+        case 9: return 455
+        case 6, 8: return 453.5
+        default: return 476
+        }
+    }
 }
 
 struct ResultWorldPodium: View {
@@ -108,46 +136,144 @@ private struct ResultPodiumPainter {
         }
     }
 
+    /// The same open crown is used by both the cap and the rock silhouette.
+    /// In particular, neither shoulder can expose the dark body under a smaller oval cap.
+    private var rockCrown: Path {
+        Path { path in
+            path.move(to: p(98, 130))
+            path.addCurve(to: p(152, 66), control1: p(106, 105), control2: p(130, 80))
+            path.addCurve(to: p(842, 61), control1: p(302, 1), control2: p(706, 0))
+            path.addCurve(to: p(910, 132), control1: p(881, 77), control2: p(898, 108))
+        }
+    }
+
+    private func appendRockFoot(to path: inout Path) {
+        path.addCurve(to: p(947, 471), control1: p(1012, 470), control2: p(995, 471))
+        path.addCurve(to: p(69, 474), control1: p(742, 480), control2: p(227, 479))
+        path.addCurve(to: p(-3, 465), control1: p(18, 475), control2: p(-13, 475))
+    }
+
+    private var machineBodyY: CGFloat { theme == 6 ? 378 : 336 }
+    private var machineStepY: CGFloat { theme == 6 ? 386 : 363 }
+    private var machineBaseY: CGFloat { theme == 6 ? 426 : 411 }
+    private var machineBaseControlY: CGFloat { theme == 6 ? 481 : 496 }
+
     private var outline: Path {
         switch theme {
         case 3: return polygon([(146, 78), (304, 32), (690, 25), (856, 71), (926, 158), (955, 278), (983, 345), (938, 417), (747, 447), (221, 444), (62, 412), (22, 334), (74, 178)])
-        case 5: return polygon([(156, 70), (298, 24), (616, 19), (827, 53), (893, 111), (981, 256), (949, 369), (828, 432), (559, 451), (226, 438), (79, 392), (24, 288), (83, 153)])
+        case 5: return polygon([(156, 70), (298, 24), (616, 19), (827, 53), (893, 111), (981, 256), (965, 382), (1002, 450), (844, 469), (559, 472), (208, 469), (27, 452), (62, 391), (24, 288), (83, 153)])
         case 6, 8:
             return Path { path in
                 path.move(to: p(150, 64)); path.addQuadCurve(to: p(850, 64), control: p(500, -21))
-                path.addLine(to: p(923, 116)); path.addLine(to: p(923, 336)); path.addLine(to: p(970, 363))
-                path.addLine(to: p(970, 411)); path.addQuadCurve(to: p(30, 411), control: p(500, 496))
-                path.addLine(to: p(30, 363)); path.addLine(to: p(77, 336)); path.addLine(to: p(77, 116)); path.closeSubpath()
+                path.addLine(to: p(923, 116)); path.addLine(to: p(923, machineBodyY)); path.addLine(to: p(970, machineStepY))
+                path.addLine(to: p(970, machineBaseY)); path.addQuadCurve(to: p(30, machineBaseY), control: p(500, machineBaseControlY))
+                path.addLine(to: p(30, machineStepY)); path.addLine(to: p(77, machineBodyY)); path.addLine(to: p(77, 116)); path.closeSubpath()
             }
-        case 4, 10:
+        case 4:
+            return polygon([(142, 70), (310, 27), (694, 23), (858, 65), (922, 119), (912, 388), (962, 405), (953, 418), (807, 445), (192, 445), (45, 416), (37, 405), (88, 388), (78, 125)])
+        case 7:
+            var path = rockCrown
+            path.addCurve(to: p(978, 298), control1: p(936, 195), control2: p(959, 245))
+            path.addQuadCurve(to: p(922, 405), control: p(1012, 353))
+            path.addCurve(to: p(100, 419), control1: p(823, 474), control2: p(214, 464))
+            path.addQuadCurve(to: p(25, 301), control: p(5, 390))
+            path.addQuadCurve(to: p(98, 130), control: p(47, 194))
+            path.closeSubpath()
+            return path
+        case 9:
+            return polygon([(148, 72), (310, 27), (692, 25), (852, 65), (922, 123), (922, 426), (866, 455), (134, 455), (78, 426), (78, 125)])
+        case 10:
             return polygon([(142, 70), (310, 27), (694, 23), (858, 65), (922, 119), (912, 340), (962, 371), (953, 418), (807, 445), (192, 445), (45, 416), (37, 371), (88, 339), (78, 125)])
         default:
+            var path = rockCrown
+            path.addCurve(to: p(963, 339), control1: p(938, 206), control2: p(943, 289))
+            // The sides broaden into a load-bearing foot instead of curling
+            // back underneath the stone and exposing air above the terrain.
+            path.addCurve(to: p(1008, 460), control1: p(976, 390), control2: p(1007, 437))
+            appendRockFoot(to: &path)
+            path.addCurve(to: p(32, 355), control1: p(2, 446), control2: p(16, 400))
+            path.addCurve(to: p(98, 130), control1: p(49, 273), control2: p(69, 172))
+            path.closeSubpath()
+            return path
+        }
+    }
+
+    /// This is the actual lower contour, not an ellipse beneath the centre.
+    /// Its shadow therefore reaches the feet at both sides as well as the front.
+    private var groundEdge: Path {
+        switch theme {
+        case 3: return curve([(938, 417), (747, 447), (221, 444), (62, 412)])
+        case 5: return curve([(1002, 450), (844, 469), (559, 472), (208, 469), (27, 452)])
+        case 4, 10: return curve([(953, 418), (807, 445), (192, 445), (45, 416)])
+        case 7:
             return Path { path in
-                path.move(to: p(154, 70)); path.addCurve(to: p(837, 59), control1: p(284, 0), control2: p(724, 0))
-                path.addCurve(to: p(978, 298), control1: p(902, 83), control2: p(957, 205))
-                path.addQuadCurve(to: p(922, 405), control: p(1012, 353))
+                path.move(to: p(922, 405))
                 path.addCurve(to: p(100, 419), control1: p(823, 474), control2: p(214, 464))
-                path.addQuadCurve(to: p(25, 301), control: p(5, 390))
-                path.addQuadCurve(to: p(154, 70), control: p(45, 166)); path.closeSubpath()
             }
+        case 9: return curve([(922, 426), (866, 455), (134, 455), (78, 426)])
+        case 6, 8:
+            return Path { path in
+                path.move(to: p(970, machineBaseY))
+                path.addQuadCurve(to: p(30, machineBaseY), control: p(500, machineBaseControlY))
+            }
+        default:
+            var path = Path(); path.move(to: p(1008, 460))
+            appendRockFoot(to: &path)
+            return path
         }
     }
 
     private var top: Path {
-        Path { path in
-            path.move(to: p(151, 72)); path.addCurve(to: p(839, 62), control1: p(302, 6), control2: p(700, 4))
-            path.addQuadCurve(to: p(882, 101), control: p(885, 81))
-            path.addCurve(to: p(187, 108), control1: p(732, 127), control2: p(341, 130))
-            path.addQuadCurve(to: p(151, 72), control: p(129, 96)); path.closeSubpath()
+        // The cap shares the body's back and shoulder edges. A generic oval leaves
+        // exposed wedges on angular stone and disconnected ledges on built podiums.
+        switch theme {
+        case 3:
+            return polygon([(146, 78), (304, 32), (690, 25), (856, 71), (911, 139),
+                            (741, 151), (312, 143), (116.48, 119)])
+        case 5:
+            return polygon([(156, 70), (298, 24), (616, 19), (827, 53), (893, 111),
+                            (733, 143), (276, 132), (121.7, 109)])
+        case 4, 10:
+            return polygon([(142, 70), (310, 27), (694, 23), (858, 65), (922, 119),
+                            (809, 133), (192, 133), (78, 125)])
+        case 6, 8:
+            return Path { path in
+                path.move(to: p(150, 64)); path.addQuadCurve(to: p(850, 64), control: p(500, -21))
+                path.addLine(to: p(923, 116))
+                path.addQuadCurve(to: p(77, 116), control: p(500, 182))
+                path.closeSubpath()
+            }
+        case 9:
+            return polygon([(148, 72), (310, 27), (692, 25), (852, 65), (922, 123), (866, 146), (134, 146), (78, 125)])
+        default:
+            var path = rockCrown
+            path.addCurve(to: p(98, 130), control1: p(735, 153), control2: p(285, 157))
+            path.closeSubpath()
+            return path
+        }
+    }
+
+    private var topRim: Path {
+        switch theme {
+        case 3: return curve([(116.48, 119), (312, 143), (741, 151), (911, 139)])
+        case 5: return curve([(121.7, 109), (276, 132), (733, 143), (893, 111)])
+        case 4, 10: return curve([(78, 125), (192, 133), (809, 133), (922, 119)])
+        case 6, 8:
+            return Path { path in
+                path.move(to: p(77, 116)); path.addQuadCurve(to: p(923, 116), control: p(500, 182))
+            }
+        case 9: return curve([(78, 125), (134, 146), (866, 146), (922, 123)])
+        default:
+            return Path { path in
+                path.move(to: p(98, 130))
+                path.addCurve(to: p(910, 132), control1: p(285, 157), control2: p(735, 153))
+            }
         }
     }
 
     func draw() {
-        // Each material is drawn across the complete object. Stars share its real surface.
-        context.drawLayer { shadow in
-            shadow.addFilter(.shadow(color: c(palette.edge).opacity(0.22), radius: 10, y: 10))
-            shadow.fill(outline, with: .color(c(palette.shade)))
-        }
+        // The shadow follows the entire ground edge, including the side feet.
+        groundShadow()
         context.drawLayer { clipped in
             clipped.clip(to: outline)
             ResultPodiumPainter(context: clipped, palette: palette).body()
@@ -155,7 +281,7 @@ private struct ResultPodiumPainter {
         context.drawLayer { ornaments in
             let painter = ResultPodiumPainter(context: ornaments, palette: palette)
             if [1, 2, 4].contains(theme) { painter.moss() }
-            if theme == 9 { painter.coastalRope() }
+            if theme == 9 { painter.crateHandles() }
             if theme == 10 { painter.royalDrapes() }
         }
     }
@@ -163,18 +289,31 @@ private struct ResultPodiumPainter {
     private func body() {
         fill(outline, palette.face, palette.shade)
         materialDetails()
-        grain()
+        if theme != 9 { grain() }
         // Broad reflected light softens the facets without blurring their material edges.
         context.fill(outline, with: .radialGradient(Gradient(colors: [c(palette.light).opacity(0.18), .clear]),
             center: p(338, 151), startRadius: 0, endRadius: 640))
         fill(top, palette.light, mix(palette.light, palette.face, 0.42))
         surfaceDetails()
         // Reflected light along the rim connects the top plane to the body.
-        var rim = Path(); rim.move(to: p(171, 100))
-        rim.addCurve(to: p(862, 104), control1: p(356, 134), control2: p(702, 128))
-        stroke(rim, palette.light, 3, opacity: 0.7)
-        context.fill(outline, with: .linearGradient(Gradient(colors: [.clear, c(palette.edge).opacity(0.17)]),
-            startPoint: p(500, 320), endPoint: p(500, 465)))
+        stroke(topRim, palette.light, 3, opacity: 0.7)
+        context.fill(outline, with: .linearGradient(Gradient(colors: [.clear, c(palette.edge).opacity(0.12)]),
+            startPoint: p(500, 320), endPoint: p(500, 470)))
+        if theme == 7 {
+            // Wind deposits sand directly into the rock's lowest layers. This
+            // belongs to the same silhouette; no separate mound hides a gap.
+            let sand: UInt32 = 0xE8C58D
+            context.fill(outline, with: .linearGradient(Gradient(colors: [.clear, c(sand).opacity(0.78)]),
+                startPoint: p(500, 432), endPoint: p(500, 478)))
+        }
+    }
+
+    private func groundShadow() {
+        context.drawLayer { ground in
+            ground.addFilter(.blur(radius: 4))
+            ground.stroke(groundEdge.offsetBy(dx: 0, dy: 2), with: .color(c(palette.edge).opacity(0.28)),
+                          style: StrokeStyle(lineWidth: 9, lineCap: .round, lineJoin: .round))
+        }
     }
 
     private func materialDetails() {
@@ -184,19 +323,20 @@ private struct ResultPodiumPainter {
         case 4, 10: masonry()
         case 5: quartz()
         case 6, 8: machinery()
-        case 7, 9: sandstone()
+        case 7: sandstone()
+        case 9: woodenCrate()
         default: break
         }
     }
 
     private func naturalStone() {
         let facets: [[(CGFloat, CGFloat)]] = [
-            [(14, 299), (153, 74), (239, 125), (176, 274), (89, 413)],
+            [(-60, 520), (-60, 299), (153, 74), (239, 125), (176, 274), (117, 471)],
             [(153, 74), (460, 100), (386, 191), (176, 274), (239, 125)],
-            [(176, 274), (386, 191), (430, 440), (89, 413)],
-            [(460, 100), (684, 112), (738, 245), (597, 454), (430, 440), (386, 191)],
+            [(176, 274), (386, 191), (430, 520), (117, 471), (-60, 520)],
+            [(460, 100), (684, 112), (738, 245), (597, 520), (430, 520), (386, 191)],
             [(684, 112), (848, 78), (919, 209), (738, 245)],
-            [(738, 245), (919, 209), (988, 323), (904, 420), (597, 454)]
+            [(738, 245), (919, 209), (1070, 323), (1070, 520), (597, 520)]
         ]
         for (i, points) in facets.enumerated() {
             let shape = polygon(points), rect = shape.boundingRect
@@ -213,37 +353,32 @@ private struct ResultPodiumPainter {
             line(points, palette.edge, 2, opacity: 0.21)
             line(points.map { ($0.0 + 2, $0.1) }, palette.light, 2, opacity: 0.26)
         }
-        if theme == 2 {
-            // Tiny carved constellations stay on the shoulders, away from the stars.
-            for right in [false, true] {
-                let x: CGFloat = right ? 895 : 105
-                line([(x - 15, 210), (x + 10, 237), (x - 5, 270), (x + 13, 295)], palette.accent, 2, opacity: 0.65)
-                for (dx, y) in [(-15.0, 210.0), (10, 237), (-5, 270), (13, 295)] { oval(x + dx, y, 6, 6, 0xE0F3D8, opacity: 0.8) }
-            }
-        }
     }
 
     private func sandstone() {
-        for i in 0..<7 {
+        // Every stratum crosses the whole boulder. Adjacent bands use the
+        // same boundary, so no base-colour wedges show between the layers.
+        for i in 0..<8 {
             let y = CGFloat(104 + i * 48)
-            var layer = Path(); layer.move(to: p(0, y))
-            layer.addCurve(to: p(1000, y + 3), control1: p(280, y + 31), control2: p(723, y - 22))
-            layer.addLine(to: p(1000, y + 52)); layer.addCurve(to: p(0, y + 51), control1: p(712, y + 30), control2: p(309, y + 86)); layer.closeSubpath()
-            fill(layer, mix(palette.light, palette.face, i.isMultiple(of: 2) ? 0.28 : 0.61), mix(palette.face, palette.shade, 0.22))
-            var seam = Path(); seam.move(to: p(8, y + 4)); seam.addCurve(to: p(992, y + 8), control1: p(283, y + 35), control2: p(718, y - 17))
+            var layer = Path(); layer.move(to: p(-120, y))
+            layer.addCurve(to: p(1120, y + 3), control1: p(280, y + 31), control2: p(723, y - 22))
+            layer.addLine(to: p(1120, y + 51))
+            layer.addCurve(to: p(-120, y + 48), control1: p(723, y + 26), control2: p(280, y + 79))
+            layer.closeSubpath()
+            fill(layer, mix(palette.light, palette.face, i.isMultiple(of: 2) ? 0.28 : 0.61), mix(palette.face, palette.shade, 0.18))
+            var seam = Path(); seam.move(to: p(-120, y))
+            seam.addCurve(to: p(1120, y + 3), control1: p(280, y + 31), control2: p(723, y - 22))
             stroke(seam, palette.light, 2, opacity: 0.48)
         }
         if theme == 7 {
             // Wind-cut shelves and an ammonite embedded in the exposed sandstone.
-            line([(96, 168), (145, 180), (173, 172)], palette.shade, 3, opacity: 0.35)
+            line([(107, 178), (151, 188), (182, 178)], palette.shade, 3, opacity: 0.28)
             fossil(x: 133, y: 278, radius: 37)
             fossil(x: 870, y: 205, radius: 25)
-        }
-        if theme == 9 {
-            for (x, y) in [(93.0, 294.0), (915, 260), (866, 378), (140, 366)] {
-                oval(x, y, 14, 9, palette.shade, opacity: 0.35)
-                oval(x, y - 2, 10, 4, palette.light, opacity: 0.5)
-            }
+            // Short erosion seams turn outwards with the solid foot instead
+            // of outlining separate rocks behind the podium.
+            line([(43, 389), (28, 418), (5, 447)], palette.shade, 2, opacity: 0.22)
+            line([(952, 389), (974, 425), (997, 446)], palette.shade, 2, opacity: 0.24)
         }
     }
 
@@ -256,6 +391,72 @@ private struct ResultPodiumPainter {
         }
         stroke(spiral.offsetBy(dx: 1, dy: 2), palette.light, 4, opacity: 0.6)
         stroke(spiral, palette.shade, 3, opacity: 0.5)
+    }
+
+    private func woodenCrate() {
+        // The lid, side panels and framed front form one timber box.
+        fill(polygon([(78, 125), (134, 146), (134, 455), (78, 426)]), 0xC29760, 0x8B603B)
+        fill(polygon([(866, 146), (922, 123), (922, 426), (866, 455)]), 0xB88C55, 0x795133)
+        fill(polygon([(134, 146), (866, 146), (866, 455), (134, 455)]), 0xD3AB73, 0x9A6B40)
+        context.drawLayer { front in
+            front.clip(to: Path(CGRect(x: 159, y: 168, width: 682, height: 262)))
+            let painter = ResultPodiumPainter(context: front, palette: palette)
+            for board in 0..<7 {
+                let x = CGFloat(159 + board * 98)
+                let rect = CGRect(x: x + 1, y: 168, width: 96, height: 262)
+                painter.fill(Path(rect), mix(0xE8C18A, palette.face, 0.20 + Double(board % 3) * 0.12),
+                             mix(palette.face, palette.shade, 0.26 + Double(board % 2) * 0.08))
+                painter.line([(x + 1, 168), (x + 1, 430)], 0x795333, 2, opacity: 0.65)
+                painter.line([(x + 4, 169), (x + 4, 430)], 0xF2D39F, 2, opacity: 0.45)
+                painter.woodGrain(in: rect.insetBy(dx: 8, dy: 0), seed: board)
+            }
+        }
+        // Narrow braces stay on the side panels, outside the reward face.
+        for right in [false, true] {
+            var side = context
+            if right { side.translateBy(x: 1000, y: 0); side.scaleBy(x: -1, y: 1) }
+            let painter = ResultPodiumPainter(context: side, palette: palette)
+            painter.fill(polygon([(84, 159), (96, 164), (128, 397), (116, 390)]), 0xDAB17A, 0x8D603A)
+            painter.fill(polygon([(78, 400), (134, 430), (134, 455), (78, 426)]), 0xC99D66, 0x825735)
+            for y in [CGFloat(202), 291, 380] {
+                painter.line([(81, y), (132, y + 17)], 0x6D4B30, 2, opacity: 0.45)
+            }
+        }
+        for x in [CGFloat(134), 841] {
+            let beam = CGRect(x: x, y: 146, width: 25, height: 309)
+            fill(Path(beam), 0xE4BC83, 0x9C6D41)
+            line([(x + 3, 150), (x + 3, 452)], 0xF8DCAA, 2, opacity: 0.65)
+            line([(x + 24, 169), (x + 24, 430)], 0x6D492F, 2, opacity: 0.6)
+        }
+        for y in [CGFloat(146), 430] {
+            fill(Path(CGRect(x: 134, y: y, width: 732, height: y == 146 ? 23 : 25)), 0xE3BA80, 0xAF7D49)
+            line([(138, y + 2), (862, y + 2)], 0xF7D8A3, 2, opacity: 0.75)
+            line([(159, y + 22), (841, y + 22)], 0x785031, 2, opacity: 0.45)
+        }
+        for x in [CGFloat(147), 853] {
+            for y in [CGFloat(183), 414] {
+                let bracket = Path(roundedRect: CGRect(x: x - 7, y: y, width: 14, height: 22), cornerRadius: 3)
+                fill(bracket, 0xDDC489, 0x987744)
+                rivet(x, y + 10, radius: 3)
+            }
+        }
+    }
+
+    private func woodGrain(in rect: CGRect, seed: Int) {
+        for i in 0..<6 {
+            let x = rect.minX + CGFloat(i + 1) * rect.width / 7
+            var grain = Path(); grain.move(to: p(x, rect.minY - 5))
+            grain.addCurve(to: p(x + CGFloat((i + seed) % 3 - 1) * 5, rect.maxY + 5),
+                           control1: p(x - 8 + CGFloat(seed % 3) * 3, rect.minY + 75),
+                           control2: p(x + 9, rect.maxY - 75))
+            stroke(grain, i.isMultiple(of: 2) ? 0x815533 : 0xF3D29A, i.isMultiple(of: 3) ? 1.8 : 1, opacity: 0.24)
+        }
+        if seed.isMultiple(of: 2) {
+            let x = rect.midX + CGFloat(seed % 3 - 1) * 8
+            let y = rect.minY + CGFloat(71 + (seed * 31) % 139)
+            stroke(Path(ellipseIn: CGRect(x: x - 5, y: y - 12, width: 10, height: 24)), 0x865837, 1.5, opacity: 0.45)
+            stroke(Path(ellipseIn: CGRect(x: x - 9, y: y - 18, width: 18, height: 36)), 0xEFCB93, 1, opacity: 0.4)
+        }
     }
 
     private func volcanicStone() {
@@ -278,18 +479,18 @@ private struct ResultPodiumPainter {
 
     private func quartz() {
         let faces: [[(CGFloat, CGFloat)]] = [
-            [(25, 288), (157, 71), (276, 121), (209, 313), (79, 392)],
+            [(-40, 520), (-20, 288), (157, 71), (276, 121), (209, 313), (137, 472)],
             [(157, 71), (480, 41), (407, 179), (276, 121)],
-            [(276, 121), (407, 179), (385, 432), (209, 313)],
-            [(480, 41), (724, 93), (671, 254), (529, 451), (385, 432), (407, 179)],
+            [(276, 121), (407, 179), (385, 520), (137, 472), (209, 313)],
+            [(480, 41), (724, 93), (671, 254), (529, 520), (385, 520), (407, 179)],
             [(724, 93), (831, 54), (981, 256), (831, 302), (671, 254)],
-            [(831, 302), (981, 256), (949, 369), (828, 432), (529, 451), (671, 254)]
+            [(831, 302), (981, 256), (1050, 382), (1050, 520), (529, 520), (671, 254)]
         ]
         for (i, points) in faces.enumerated() {
             let tint = i == 2 || i == 4 ? palette.accent : palette.light
             fill(polygon(points), mix(tint, palette.face, 0.22 + Double(i % 3) * 0.18), mix(palette.face, palette.shade, 0.40))
         }
-        let veins: [[(CGFloat, CGFloat)]] = [[(157, 71), (276, 121), (209, 313), (158, 409)], [(831, 54), (724, 93), (831, 302), (828, 432)]]
+        let veins: [[(CGFloat, CGFloat)]] = [[(157, 71), (276, 121), (209, 313), (137, 472)], [(831, 54), (724, 93), (831, 302), (874, 466)]]
         for points in veins {
             line(points, 0xD7FFF4, 3.2, opacity: 0.8)
         }
@@ -309,9 +510,23 @@ private struct ResultPodiumPainter {
                 line([(rect.minX + 10, rect.minY + 3), (rect.maxX - 11, rect.minY + 3)], palette.light, 2, opacity: 0.6)
             }
         }
-        let step = polygon([(30, 416), (165, 431), (826, 431), (969, 416), (965, 437), (819, 450), (181, 450), (30, 437)])
+        // Both bevels follow the complete stepped silhouette, including its
+        // shoulders. No untextured corner triangles remain beside the blocks.
+        let bodyY: CGFloat = theme == 4 ? 388 : 340
+        let bevelY: CGFloat = theme == 4 ? 414 : 365
+        let stepY: CGFloat = theme == 4 ? 405 : 371
+        let frontY: CGFloat = theme == 4 ? 426 : 398
+        let bevel = polygon([(88, bodyY), (192, bevelY), (807, bevelY), (912, bodyY),
+                             (962, stepY), (812, frontY), (187, frontY), (37, stepY)])
+        fill(bevel, mix(palette.light, palette.face, 0.28), palette.face)
+        line([(37, stepY), (187, frontY), (812, frontY), (962, stepY)], palette.light, 3, opacity: 0.7)
+        let step = polygon([(37, stepY), (187, frontY), (812, frontY), (962, stepY),
+                            (953, 418), (807, 445), (192, 445), (45, 416)])
         fill(step, palette.light, palette.shade)
-        line([(48, 428), (189, 441), (814, 441), (950, 428)], theme == 10 ? palette.accent : palette.light, 4, opacity: 0.9)
+        for x in [CGFloat(192), 396, 604, 807] {
+            line([(x, frontY + 5), (x, 444)], palette.edge, 1.5, opacity: 0.22)
+        }
+        line([(49, 413), (194, 440), (805, 440), (949, 415)], theme == 10 ? palette.accent : palette.light, 3, opacity: 0.75)
         // A dressed cornice and its shadow make this a built plinth, rather than a tinted boulder.
         fill(polygon([(81, 100), (198, 112), (809, 112), (922, 100), (924, 122), (811, 133), (192, 133), (78, 122)]), palette.light, palette.face)
         line([(94, 126), (205, 137), (801, 137), (910, 126)], palette.edge, 4, opacity: 0.25)
@@ -319,7 +534,14 @@ private struct ResultPodiumPainter {
 
     private func machinery() {
         // Stepped footing, curved front, inset service panels and machined edge bands.
-        fill(polygon([(79, 116), (193, 143), (808, 143), (922, 116), (922, 346), (808, 380), (192, 380), (79, 346)]), palette.face, palette.shade)
+        let footing = Path { path in
+            path.move(to: p(77, machineBodyY))
+            path.addQuadCurve(to: p(923, machineBodyY), control: p(500, machineBodyY + 66))
+            path.addLine(to: p(970, machineStepY)); path.addLine(to: p(970, machineBaseY))
+            path.addQuadCurve(to: p(30, machineBaseY), control: p(500, machineBaseControlY))
+            path.addLine(to: p(30, machineStepY)); path.closeSubpath()
+        }
+        fill(footing, mix(palette.light, palette.face, 0.34), palette.shade)
         for x in [CGFloat(66), 874] {
             let path = Path(roundedRect: CGRect(x: x, y: 164, width: 60, height: 176), cornerRadius: 17)
             fill(path, palette.shade, palette.edge)
@@ -327,17 +549,11 @@ private struct ResultPodiumPainter {
             if theme == 6 {
                 for i in 0..<6 { line([(x + 13, CGFloat(196 + i * 23)), (x + 47, CGFloat(196 + i * 23))], palette.face, 5, opacity: 0.85) }
             } else {
-                gauge(x + 30, 219, radius: 22)
                 for i in 0..<3 { oval(x + CGFloat(16 + i * 14), 295, 5, 5, palette.accent, opacity: 0.9) }
             }
         }
-        for y in [CGFloat(111), 440] {
-            var band = Path(); band.move(to: p(40, y - 24)); band.addQuadCurve(to: p(960, y - 24), control: p(500, y + 46))
-            stroke(band, palette.edge, 13, opacity: 0.7)
-            stroke(band.offsetBy(dx: 0, dy: -4), palette.light, 7, opacity: 0.9)
-            if theme == 8 { stroke(band.offsetBy(dx: 0, dy: 5), palette.accent, 2.5, opacity: 0.75) }
-        }
-        for x in [CGFloat(111), 218, 782, 889] { for y in [CGFloat(153), 352] { rivet(x, y, radius: 6) } }
+        if theme == 6 { machineBands() }
+        for x in [CGFloat(111), 218, 782, 889] { for y in [CGFloat(153), machineBodyY + 16] { rivet(x, y, radius: 6) } }
         if theme == 8 {
             for x in [CGFloat(260), 740] { line([(x, 163), (x, 192)], palette.light, 3, opacity: 0.6) }
         } else {
@@ -349,6 +565,19 @@ private struct ResultPodiumPainter {
         }
     }
 
+    private func machineBands() {
+        var footRim = Path(); footRim.move(to: p(30, machineStepY))
+        footRim.addQuadCurve(to: p(970, machineStepY), control: p(500, machineStepY + 85))
+        for band in [topRim.offsetBy(dx: 0, dy: 5), footRim] {
+            stroke(band, palette.edge, 11, opacity: 0.6)
+            stroke(band.offsetBy(dx: 0, dy: -3), palette.light, 6, opacity: 0.85)
+            if theme == 8 { stroke(band.offsetBy(dx: 0, dy: 4), palette.accent, 2.5, opacity: 0.75) }
+        }
+        var lowerRim = Path(); lowerRim.move(to: p(36, machineBaseY - 4))
+        lowerRim.addQuadCurve(to: p(964, machineBaseY - 4), control: p(500, machineBaseControlY - 5))
+        stroke(lowerRim, palette.light, 3, opacity: 0.55)
+    }
+
     private func surfaceDetails() {
         context.drawLayer { layer in
             layer.clip(to: top)
@@ -356,19 +585,19 @@ private struct ResultPodiumPainter {
             switch theme {
             case 6, 8:
                 // Elliptical calibration ring follows the standing plane's perspective.
-                let ring = Path(ellipseIn: CGRect(x: 174, y: 27, width: 664, height: 90))
+                let ring = Path(ellipseIn: CGRect(x: 174, y: 30, width: 652, height: 99))
                 painter.stroke(ring, palette.shade, 2, opacity: 0.48)
                 for i in 0..<25 {
                     let a = CGFloat(i) / 24 * .pi
-                    let x = 504 + cos(a) * 317, y = 71 + sin(a) * 39
+                    let x = 500 + cos(a) * 311, y = 79 + sin(a) * 43
                     painter.line([(x, y), (x - cos(a) * 12, y - sin(a) * 3)], palette.edge, i.isMultiple(of: 4) ? 3 : 1.5, opacity: 0.55)
                 }
             case 9:
-                painter.fill(top, 0xE6C58B, 0xAE8858)
+                painter.fill(top, 0xEFD09A, 0xC3975F)
                 for i in 0..<9 {
                     let x = CGFloat(155 + i * 86)
-                    painter.line([(x, 10), (x - 21, 134)], 0x8D704E, 3, opacity: 0.55)
-                    painter.line([(x + 4, 10), (x - 17, 134)], 0xFFE7B0, 2, opacity: 0.55)
+                    painter.line([(x, 10), (x - 21, 160)], 0x8D704E, 3, opacity: 0.55)
+                    painter.line([(x + 4, 10), (x - 17, 160)], 0xFFE7B0, 2, opacity: 0.55)
                     painter.line([(x + 20, 56), (x + 15, 99)], 0x9B7D54, 1, opacity: 0.4)
                     painter.rivet(x + 37, 103, radius: 3)
                 }
@@ -398,7 +627,7 @@ private struct ResultPodiumPainter {
 
     private func grain() {
         for i in 0..<160 {
-            let x = CGFloat((i * 173 + 51) % 997), y = CGFloat(119 + (i * 83) % 322)
+            let x = CGFloat((i * 173 + 51) % 997), y = CGFloat(119 + (i * 83) % 359)
             oval(x, y, CGFloat(1 + i % 4), CGFloat(1 + i % 2), i.isMultiple(of: 3) ? palette.light : palette.edge, opacity: 0.12)
         }
     }
@@ -434,10 +663,16 @@ private struct ResultPodiumPainter {
         for right in [false, true] {
             var art = context
             if right { art.translateBy(x: 1000, y: 0); art.scaleBy(x: -1, y: 1) }
-            // Thin colonies follow the rim, with a different footprint on each shoulder.
-            // Village stone has sparse growth; the valley has a lower, cooler cushion.
-            art.translateBy(x: right ? 12 : 0, y: theme == 4 ? 27 : (theme == 2 ? 19 : 7))
-            art.scaleBy(x: right ? 0.88 : 1, y: theme == 4 ? 0.58 : (theme == 2 ? 0.76 : 1))
+            if theme == 4 {
+                art.translateBy(x: right ? 12 : 0, y: 27)
+                art.scaleBy(x: right ? 0.88 : 1, y: 0.58)
+            } else {
+                // Wrap growth down the outer shoulder, leaving the standing
+                // plane open beside Dino's feet. Both texture and tips follow it.
+                art.concatenate(CGAffineTransform(a: right ? 0.69 : 0.72, b: -0.25,
+                    c: 0, d: theme == 2 ? 0.90 : 1.08, tx: right ? 20 : 12,
+                    ty: theme == 2 ? 121 : 102))
+            }
             var cap = Path(); cap.move(to: p(126, 98))
             cap.addCurve(to: p(167, 73), control1: p(130, 84), control2: p(149, 72))
             cap.addCurve(to: p(211, 69), control1: p(180, 64), control2: p(196, 65))
@@ -545,33 +780,50 @@ private struct ResultPodiumPainter {
                    style: StrokeStyle(lineWidth: max(0.7, length * 0.008), lineCap: .round))
     }
 
-    private func coastalRope() {
+    private func crateHandles() {
         for right in [false, true] {
-            let x: CGFloat = right ? 896 : 104
-            line([(x, 129), (x, 246)], 0x806649, 19, opacity: 0.3)
-            line([(x, 124), (x, 242)], 0xE7D5A4, 13)
-            for i in 0..<13 { line([(x - 5, CGFloat(132 + i * 8)), (x + 5, CGFloat(126 + i * 8))], 0xA99064, 2) }
-            oval(x, 142, 30, 28, 0xC5AD7B)
-            for dx in [CGFloat(-7), 4] { line([(x + dx, 132), (x + dx + 4, 151)], 0xF6E5B8, 4) }
+            let x: CGFloat = right ? 895 : 105
+            var handle = Path(); handle.move(to: p(x, 220))
+            handle.addCurve(to: p(x, 291), control1: p(x + (right ? 19 : -19), 226), control2: p(x + (right ? 19 : -19), 282))
+            stroke(handle.offsetBy(dx: 1, dy: 3), 0x68492F, 10, opacity: 0.45)
+            stroke(handle, 0xDCC28D, 8)
+            stroke(handle.offsetBy(dx: right ? 1 : -1, dy: -1), 0xF7DFAB, 2, opacity: 0.7)
+            for y in [CGFloat(220), 291] {
+                oval(x, y, 16, 12, 0x725034)
+                oval(x, y - 1, 10, 7, 0xD1AE6D)
+            }
         }
-        var rope = Path(); rope.move(to: p(109, 111)); rope.addQuadCurve(to: p(891, 111), control: p(500, 133))
-        stroke(rope.offsetBy(dx: 0, dy: 4), 0x7B674D, 9, opacity: 0.25)
-        stroke(rope, 0xE5D3A3, 9); stroke(rope.offsetBy(dx: 0, dy: -2), 0xFFF0C2, 2, opacity: 0.75)
     }
 
     private func royalDrapes() {
         for right in [false, true] {
-            let x: CGFloat = right ? 902 : 98
-            let flag = polygon([(x - 18, 133), (x + 18, 137), (x + 18, 278), (x, 264), (x - 18, 281)])
+            let x: CGFloat = right ? 888 : 112
+            let flag = polygon([(x - 27, 136), (x + 27, 140), (x + 27, 322), (x, 301), (x - 27, 325)])
             fill(flag, 0x8EAED3, 0x385C90)
-            line([(x - 14, 142), (x - 14, 270), (x, 256), (x + 14, 269), (x + 14, 145)], 0xE1C17D, 1.5)
-            fill(polygon([(x - 10, 201), (x - 12, 184), (x - 4, 190), (x, 180), (x + 4, 190), (x + 12, 184), (x + 10, 201)]), 0xFFE4A0, 0xC49A52)
-            line([(x - 20, 133), (x + 20, 137)], palette.accent, 5)
+            line([(x - 21, 147), (x - 21, 312), (x, 291), (x + 21, 311), (x + 21, 150)], 0xE1C17D, 2)
+            line([(x + 10, 149), (x + 10, 303)], 0xD4E0E7, 5, opacity: 0.14)
+            fill(polygon([(x - 15, 240), (x - 18, 215), (x - 6, 224), (x, 209),
+                          (x + 6, 224), (x + 18, 215), (x + 15, 240)]), 0xFFE4A0, 0xC49A52)
+            line([(x - 31, 136), (x + 31, 140)], palette.accent, 5)
         }
     }
 
     func surround(foreground: Bool) {
-        if foreground { groundFinish(); return }
+        if foreground {
+            if theme == 5 || theme == 8 {
+                if theme == 8 { machineBands() }
+                for right in [false, true] {
+                    var art = context
+                    if right { art.translateBy(x: 1000, y: 0); art.scaleBy(x: -1, y: 1) }
+                    ResultPodiumPainter(context: art, palette: palette).shoulder(right: right)
+                }
+            }
+            if theme == 7 { desertSand(foreground: true) }
+            groundFinish()
+            return
+        }
+        if theme == 7 { desertSand(foreground: false) }
+        if theme == 5 || theme == 8 { return }
         for right in [false, true] {
             var art = context
             if right { art.translateBy(x: 1000, y: 0); art.scaleBy(x: -1, y: 1) }
@@ -584,9 +836,8 @@ private struct ResultPodiumPainter {
         switch theme {
         case 1: break
         case 2:
-            for i in 0..<4 { leaf(x: CGFloat(58 + i * 13), y: 412, length: CGFloat(83 + i * 23), angle: Double(-48 + i * 29)) }
-            mushroom(74, 408, height: right ? 79 : 104)
-            mushroom(20, 430, height: 53)
+            mushroom(44, 466, height: right ? 128 : 154)
+            mushroom(14, 471, height: 82)
         case 3:
             column(48, 413, width: 100, height: right ? 246 : 216)
             column(-15, 440, width: 76, height: 131)
@@ -595,29 +846,75 @@ private struct ResultPodiumPainter {
             planter(48, 408, width: 132)
             if !right { lantern(58, 278, height: 148, metal: false) }
         case 5:
-            crystal(44, 432, height: right ? 226 : 192, purple: right)
-            crystal(-14, 444, height: 119, purple: !right)
+            crystal(64, 474, height: right ? 226 : 192, purple: right)
+            crystal(6, 479, height: 119, purple: !right)
         case 6:
             lantern(52, 422, height: right ? 231 : 252, metal: true)
             fill(polygon([(-8, 429), (23, 407), (82, 407), (112, 429), (100, 446), (2, 446)]), palette.light, palette.shade)
         case 7:
-            fill(polygon([(-30, 426), (1, 344), (67, 318), (116, 385), (111, 427)]), 0xF4D499, 0xB58D58)
-            desertSprig(42, 359, height: right ? 104 : 139)
+            desertSprig(-38, 436, height: right ? 87 : 105)
         case 8:
             pipe([(22, 422), (22, 284), (83, 260), (83, 159)])
             gear(52, 351, radius: right ? 69 : 83)
             gauge(79, 194, radius: 36)
             glow(84, 151, 28, palette.accent, opacity: 0.23)
         case 9:
-            line([(44, 425), (44, 255)], 0x6A6552, 33)
-            line([(37, 420), (37, 256)], 0xBB9D6A, 23)
-            for y in [CGFloat(272), 284, 299] { line([(24, y), (58, y + 5)], 0xE3D1A3, 7) }
-            oval(44, 253, 38, 14, 0xDCC18D)
-            shell(5, 429, radius: 36)
-        case 10:
-            royalStandard(44, 411, height: right ? 230 : 253)
-            fill(polygon([(-13, 417), (19, 391), (77, 391), (104, 417), (99, 439), (-9, 439)]), palette.light, palette.shade)
+            // Mooring posts stand outside the solid foot, so their shafts and
+            // roots do not disappear halfway through a widening stone wall.
+            line([(-18, 469), (-18, 255)], 0x6A6552, 33)
+            line([(-25, 466), (-25, 256)], 0xBB9D6A, 23)
+            for y in [CGFloat(272), 284, 299] { line([(-38, y), (-4, y + 5)], 0xE3D1A3, 7) }
+            oval(-18, 253, 38, 14, 0xDCC18D)
+            shell(-35, 473, radius: 29)
+        case 10: break
         default: break
+        }
+    }
+
+    private func desertSand(foreground: Bool) {
+        // One continuous dune surrounds the round boulder. Its rear shoulders
+        // support the curved sides, while the front buries the lowest stone edge.
+        var dune = Path()
+        if foreground {
+            dune.move(to: p(-95, 487))
+            dune.addCurve(to: p(104, 395), control1: p(-15, 453), control2: p(39, 396))
+            dune.addCurve(to: p(500, 443), control1: p(193, 414), control2: p(347, 448))
+            dune.addCurve(to: p(920, 391), control1: p(674, 448), control2: p(829, 413))
+            dune.addCurve(to: p(1090, 485), control1: p(989, 396), control2: p(1031, 462))
+        } else {
+            dune.move(to: p(-95, 487))
+            dune.addCurve(to: p(25, 356), control1: p(-60, 428), control2: p(-12, 366))
+            dune.addCurve(to: p(500, 428), control1: p(215, 354), control2: p(245, 414))
+            dune.addCurve(to: p(978, 359), control1: p(750, 424), control2: p(850, 360))
+            dune.addCurve(to: p(1090, 485), control1: p(1032, 377), control2: p(1073, 451))
+        }
+        dune.addCurve(to: p(-95, 487), control1: p(817, 516), control2: p(209, 518))
+        dune.closeSubpath()
+        context.fill(dune, with: .linearGradient(Gradient(stops: [
+            .init(color: c(foreground ? 0xF2D59F : 0xE8C78C), location: 0),
+            .init(color: c(0xEFD29D).opacity(0.95), location: 0.52),
+            .init(color: c(0xEFD29D).opacity(0.5), location: 0.83),
+            .init(color: .clear, location: 1)
+        ]), startPoint: p(500, foreground ? 395 : 356), endPoint: p(500, 510)))
+        if foreground {
+            var ridge = Path(); ridge.move(to: p(-41, 461))
+            ridge.addCurve(to: p(103, 402), control1: p(21, 435), control2: p(54, 401))
+            ridge.addCurve(to: p(368, 448), control1: p(175, 425), control2: p(270, 445))
+            stroke(ridge, 0xFFE7B5, 2, opacity: 0.6)
+            var rightRidge = Path(); rightRidge.move(to: p(696, 445))
+            rightRidge.addCurve(to: p(922, 399), control1: p(799, 436), control2: p(862, 409))
+            rightRidge.addCurve(to: p(1036, 461), control1: p(969, 414), control2: p(1009, 447))
+            stroke(rightRidge, 0xFFE7B5, 2, opacity: 0.5)
+            context.drawLayer { sand in
+                sand.clip(to: dune)
+                let painter = ResultPodiumPainter(context: sand, palette: palette)
+                for i in 0..<110 {
+                    let x = CGFloat((i * 173 + 21) % 1080) - 40
+                    let y = CGFloat(434 + (i * 29) % 64)
+                    painter.oval(x, y, CGFloat(1 + i % 3), 1.2, i.isMultiple(of: 3) ? 0xFFF0C3 : 0xB99765,
+                                 opacity: Double(510 - y) / 450)
+                }
+            }
         }
     }
 
@@ -629,17 +926,17 @@ private struct ResultPodiumPainter {
             let painter = ResultPodiumPainter(context: art, palette: palette)
             art.drawLayer { shadow in
                 shadow.addFilter(.blur(radius: 8))
-                shadow.fill(Path(ellipseIn: CGRect(x: -2, y: 436, width: 191, height: 22)),
+                let y: CGFloat = [1, 2, 5, 7, 9].contains(theme) ? 466 : 436
+                shadow.fill(Path(ellipseIn: CGRect(x: -2, y: y, width: 191, height: 22)),
                             with: .color(c(palette.edge).opacity(0.10)))
             }
             switch theme {
             case 1:
                 // The jungle's foreground already supplies the detailed, rooted leaf clusters.
-                painter.pebble(206, 444, width: 33)
+                painter.pebble(206, 479, width: 33)
             case 2:
-                painter.leaf(x: 65, y: 440, length: 124, angle: -21)
-                painter.leaf(x: 68, y: 439, length: 139, angle: 10)
-                painter.mushroom(79, 447, height: 55); painter.mushroom(125, 455, height: 35)
+                painter.mushroom(60, 478, height: right ? 112 : 128)
+                painter.mushroom(125, 482, height: 68)
                 for i in 0..<4 { painter.glow(CGFloat(26 + i * 40), CGFloat(377 + (i * 29) % 65), 6, 0xDCF3B5, opacity: 0.8) }
             case 3:
                 painter.column(110, 452, width: 72, height: 68); painter.pebble(190, 451, width: 39)
@@ -647,18 +944,18 @@ private struct ResultPodiumPainter {
                 painter.flower(63, 450, height: 45, pink: true); painter.flower(105, 458, height: 37, pink: false)
                 painter.pebble(185, 452, width: 33)
             case 5:
-                painter.crystal(93, 457, height: 67, purple: !right)
-                painter.pebble(172, 456, width: 38)
+                painter.crystal(93, 478, height: 67, purple: !right)
+                painter.pebble(172, 479, width: 38)
             case 6:
                 for i in 0..<3 {
                     painter.fill(Path(roundedRect: CGRect(x: CGFloat(58 + i * 37), y: CGFloat(445 + i * 3), width: 28, height: 9), cornerRadius: 3), palette.light, palette.face)
                 }
             case 7:
-                painter.desertSprig(109, 454, height: 47); painter.pebble(177, 456, width: 42)
+                painter.desertSprig(98, 474, height: 47); painter.pebble(185, 479, width: 42)
             case 8:
                 painter.gear(104, 451, radius: 34); painter.rivet(178, 459, radius: 7)
             case 9:
-                painter.shell(98, 454, radius: 28); painter.shell(173, 462, radius: 18)
+                painter.shell(98, 474, radius: 28); painter.shell(173, 482, radius: 18)
             case 10:
                 painter.pebble(109, 453, width: 51)
                 painter.fill(Path(roundedRect: CGRect(x: 158, y: 433, width: 43, height: 24), cornerRadius: 4), palette.light, palette.shade)
@@ -766,15 +1063,6 @@ private struct ResultPodiumPainter {
             let a = -.pi + CGFloat(i) * .pi / 6
             line([(x, y - 2), (x + cos(a) * radius * 0.87, y - radius * 0.43 + sin(a) * radius * 0.70)], 0xB99E84, 1.8, opacity: 0.6)
         }
-    }
-
-    private func royalStandard(_ x: CGFloat, _ y: CGFloat, height: CGFloat) {
-        line([(x, y), (x, y - height)], 0x9C875E, 6)
-        oval(x, y - height - 6, 16, 19, 0xE8CA85)
-        let cloth = polygon([(x + 3, y - height + 13), (x + 72, y - height + 22), (x + 72, y - height + 135), (x + 38, y - height + 116), (x + 3, y - height + 142)])
-        fill(cloth, 0x92B0D4, 0x3C6095)
-        line([(x + 10, y - height + 24), (x + 10, y - height + 124), (x + 38, y - height + 105), (x + 65, y - height + 122), (x + 65, y - height + 30)], 0xE4C88B, 2.5)
-        sparkle(x + 38, y - height + 68, 17, 0xF2D793)
     }
 
     private func sparkle(_ x: CGFloat, _ y: CGFloat, _ radius: CGFloat, _ hex: UInt32) {

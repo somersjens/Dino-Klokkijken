@@ -15,7 +15,7 @@ struct DinoResultView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let layout = ResultLayout(size: geometry.size, needsMessage: !succeeded)
+            let layout = ResultLayout(size: geometry.size, needsMessage: !succeeded, worldID: result.level.worldID)
             ZStack {
                 VStack(spacing: 0) {
                     DinoResultLevelSign(levelID: result.level.id, worldID: result.level.worldID)
@@ -88,7 +88,7 @@ struct DinoResultView: View {
             return
         }
         let clip = result.animationClip
-        let landing = clip == .backflip || clip == .pirouette
+        let landing = clip == .backflip || clip == .pirouette || clip == .openingJump
             ? DinoAnimation.travelDuration(clip) + 0.04 : (succeeded ? 0.4 : 0.15)
         try? await Task.sleep(for: .seconds(landing))
         guard !Task.isCancelled else { return }
@@ -164,7 +164,9 @@ struct DinoResultView: View {
             } else {
                 DinoCharacter(state: succeeded ? .celebrating : .thinking, size: size,
                               performsBackflip: result.animationClip == .backflip,
-                              performsPirouette: result.animationClip == .pirouette)
+                              performsPirouette: result.animationClip == .pirouette,
+                              performsStumble: result.animationClip == .stumble,
+                              performsOpeningJump: result.animationClip == .openingJump)
             }
         }
     }
@@ -231,6 +233,7 @@ private struct ResultPodiumBoundsKey: PreferenceKey {
 private struct ResultLayout {
     let size: CGSize
     let needsMessage: Bool
+    let worldID: Int
     var topInset: CGFloat { size.height < 650 ? 0 : 8 }
     var signWidth: CGFloat { min(size.width * 0.96, size.height * 0.56, 500) }
     var signHeight: CGFloat { signWidth * 0.36 }
@@ -245,8 +248,8 @@ private struct ResultLayout {
     var stageHeight: CGFloat { min(availableHeight, dinoSize + podiumHeight * 0.85 + 20) }
     var contactY: CGFloat { stageHeight - podiumHeight * 0.82 + podiumLift }
     var dinoCenterY: CGFloat { contactY - dinoSize * 0.44 }
-    var starSize: CGFloat { podiumWidth * ResultPodiumGeometry.starWidth }
-    var rewardCenterY: CGFloat { stageHeight - podiumHeight + podiumLift + podiumHeight * ResultPodiumGeometry.rewardY / ResultPodiumGeometry.height }
+    var starSize: CGFloat { podiumWidth * ResultPodiumGeometry.starWidth(worldID: worldID) }
+    var rewardCenterY: CGFloat { stageHeight - podiumHeight + podiumLift + podiumHeight * ResultPodiumGeometry.rewardY(worldID: worldID) / ResultPodiumGeometry.height }
 
 }
 
@@ -582,7 +585,7 @@ private struct ResultLandscapePainter {
             var art = context
             if right { art.translateBy(x: 1000, y: 0); art.scaleBy(x: -1, y: 1) }
             let garden = ResultLandscapePainter(context: art, size: size, palette: palette)
-            let root = CGPoint(x: 22, y: right ? 435 : 426)
+            let root = CGPoint(x: 22, y: right ? 458 : 453)
             for (i, angle) in [-37.0, -4, 24].enumerated() {
                 let length = CGFloat([220, 260, 210][i])
                 garden.leaf(at: root, length: length, width: length * 0.40,
@@ -597,7 +600,7 @@ private struct ResultLandscapePainter {
             var art = context
             if right { art.translateBy(x: 1000, y: 0); art.scaleBy(x: -1, y: 1) }
             let garden = ResultLandscapePainter(context: art, size: size, palette: palette)
-            let root = CGPoint(x: 63, y: right ? 446 : 440)
+            let root = CGPoint(x: 63, y: right ? 475 : 470)
             for (i, angle) in [-37.0, -10, 14].enumerated() {
                 let length = CGFloat([125, 172, 156][i])
                 garden.leaf(at: root, length: length, width: length * (i == 0 ? 0.46 : 0.38),
@@ -606,13 +609,15 @@ private struct ResultLandscapePainter {
             garden.trailingSprig(root: CGPoint(x: right ? 149 : 151, y: right ? 123 : 126),
                                  tip: CGPoint(x: right ? 133 : 111, y: right ? 204 : 226),
                                  bend: right ? -18 : -29, seed: right ? 5 : 2)
-            garden.flower(at: CGPoint(x: 59, y: 429), radius: 5)
-            garden.flower(at: CGPoint(x: 88, y: 448), radius: 3.5)
+            garden.flower(at: CGPoint(x: 59, y: 464), radius: 5)
+            garden.flower(at: CGPoint(x: 88, y: 478), radius: 3.5)
         }
         // Individual irregular tufts join the stone to the meadow without a separate grass mat.
         for i in 0..<50 {
             let x = 8 + noise(i, seed: 9821) * 984
-            let y = 444 + noise(i, seed: 2731) * 24
+            let side = abs(x - 500) / 500
+            let y = ResultPodiumGeometry.groundFrontY(themeID: 1) - 16 * pow(side, 8)
+                + noise(i, seed: 2731) * 10
             grass(at: CGPoint(x: x, y: y), scale: 0.7 + noise(i, seed: 1913) * 0.65,
                   light: i % 3 != 0, opacity: 0.9)
         }

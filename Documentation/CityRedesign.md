@@ -4,7 +4,7 @@ Alle gebouwtypen hebben een analoge gevelklok. Winkels, herenhuizen, serres, gal
 
 De overgang vanaf Crystal Cave ligt ongeveer 125 punten hoger, achter het wereldembleem. Een aaneengesloten rij gevelhuizen loopt over de volledige schermbreedte, met verschillende dakhoogten en warme en blauwe daken. De centrale gevels staan achter het wereldbord. De laatste grotstenen worden binnen deze gevelrij afgewerkt, zodat geen blauwe uitloper over de stadsbestrating ligt.
 
-Linksonder blijft de metro geleidelijk afdalen. Twee lage winkels staan vóór de tunnelmond; hun gevels en daken bedekken de donkere opening. De metro verdwijnt achter deze huizen en rijdt onder de wijk door. De rechter tunnelmond en de volledige klim liggen buiten beeld. Een ruime bocht brengt het spoor van buiten het scherm terug naar de rechter stadsroute, met een verticale raaklijn voor een vloeiende aansluiting.
+Linksonder blijft de metro geleidelijk afdalen. Een laag gevelhuis en een slanke klokkentoren staan op verspringende funderingen vóór de tunnelmond. De metro verdwijnt achter deze gebouwen en rijdt onder de wijk door. De rechter tunnelmond en de volledige klim liggen buiten beeld. De rechter stadsroute loopt langer door en maakt een ruimere boog tot voorbij de schermrand. De laatste verfijning, beelden en controles staan in [CityFlowRefinement.md](CityFlowRefinement.md).
 
 De retourbocht gebruikt de werkelijke schermbreedte. Daardoor ligt de verborgen klim ook op een brede iPad buiten beeld, terwijl de speelroute haar bestaande breedte behoudt. Dezelfde geometrie stuurt de rails, wagonrotatie, helling, ondergrondse uitsnede en plaatsing van de bebouwing.
 

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct DinoGameView: View {
     @Environment(\.dinoHighContrast) private var highContrast
@@ -14,6 +15,8 @@ struct DinoGameView: View {
     @State private var showsDayPartSettings = false
     @State private var hudHeight: CGFloat = 128
     @State private var answerFrame: CGRect?
+    @State private var answerReminder: DinoAnswerRequirement?
+    @State private var reminderAttempt = 0
 
     var body: some View {
         GeometryReader { g in
@@ -44,11 +47,9 @@ struct DinoGameView: View {
                         ScrollView {
                             VStack(spacing: short ? 10 : 18) {
                                 if session.level.isBoss { crystals }
-                                DinoQuestionTitle(question: session.question, instructionKey: session.instructionKey,
-                                                  announces: session.demonstration == nil && !confirmExit)
+                                questionTitle
                                     .frame(maxWidth: min(680, width))
                                     .frame(maxWidth: .infinity)
-                                    .accessibilityIdentifier("question.title")
                                     .id("question.top")
                                 QuestionRenderer(session: session, theme: player.profile.clockTheme, width: width, clockSize: clockSize, wideLayout: wide, compactLayout: short, answerClockSize: answerClockSize)
                                     .id(session.question.id)
@@ -139,6 +140,15 @@ struct DinoGameView: View {
             .onValueChange(of: session.result != nil) { hasResult in
                 if hasResult, let result = session.result { onResult(result) }
             }
+            .onValueChange(of: session.answerCheck?.requirement) { requirement in
+                if requirement == nil { dismissAnswerReminder() }
+            }
+            .onValueChange(of: session.question.id) { _ in dismissAnswerReminder() }
+            .task(id: reminderAttempt) {
+                guard answerReminder != nil else { return }
+                do { try await Task.sleep(for: .seconds(5)) } catch { return }
+                dismissAnswerReminder()
+            }
             .animation(.easeOut(duration: 0.18), value: confirmExit)
             .sheet(isPresented: $showsDayPartSettings) {
                 DinoDayPartScheduleEditor(schedule: settings.dayPartSchedule, returnsToGame: true) { schedule in
@@ -148,6 +158,18 @@ struct DinoGameView: View {
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
             }
+    }
+
+    @ViewBuilder private var questionTitle: some View {
+        let announces = session.demonstration == nil && !confirmExit
+        if session.question.kind == .trueFalse {
+            DinoTrueFalseQuestionTitle(question: session.question, showsCorrection: session.missedFirstAnswer,
+                                       announces: announces)
+                .id(session.question.id)
+        } else {
+            DinoQuestionTitle(question: session.question, instructionKey: session.instructionKey, announces: announces)
+                .accessibilityIdentifier("question.title")
+        }
     }
 
     private func answerFooter(height: CGFloat, width: CGFloat) -> some View {
@@ -180,7 +202,17 @@ struct DinoGameView: View {
                         .frame(width: min(420, width))
                         .accessibilityIdentifier(session.canRetry ? "question.showAnswer" : "question.next")
                     } else if let check {
-                        Button { session.submit(check.answer) } label: {
+                        Button {
+                            if let requirement = check.requirement {
+                                withAnimation(reduceMotion ? .easeOut(duration: 0.18) : .spring(response: 0.36, dampingFraction: 0.8)) {
+                                    answerReminder = requirement
+                                }
+                                reminderAttempt += 1
+                                UIAccessibility.post(notification: .announcement, argument: L(key: requirement.rawValue))
+                            } else {
+                                session.submit(check.answer)
+                            }
+                        } label: {
                             Label(LocalizedStringKey(check.titleKey), systemImage: "checkmark")
                                 .lineLimit(1).minimumScaleFactor(0.7)
                         }
@@ -203,6 +235,22 @@ struct DinoGameView: View {
                     Rectangle().fill(.ultraThinMaterial).ignoresSafeArea(edges: .bottom)
                 }
             }
+            .overlay(alignment: .bottom) {
+                if let answerReminder {
+                    DinoAnswerReminder(requirement: answerReminder, attempt: reminderAttempt)
+                        .frame(maxWidth: min(420, width))
+                        .padding(.horizontal, 18)
+                        .padding(.bottom, height + 10)
+                        .transition(reduceMotion ? .opacity : .asymmetric(
+                            insertion: .move(edge: .bottom).combined(with: .scale(scale: 0.96, anchor: .bottom)).combined(with: .opacity),
+                            removal: .opacity))
+                }
+            }
+            .zIndex(1)
+    }
+
+    private func dismissAnswerReminder() {
+        withAnimation(.easeOut(duration: 0.18)) { answerReminder = nil }
     }
 
     private func exitCard(compact: Bool) -> some View {
@@ -247,6 +295,53 @@ struct DinoGameView: View {
     }
 
 
+}
+
+private struct DinoAnswerReminder: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoHighContrast) private var highContrast
+    let requirement: DinoAnswerRequirement
+    let attempt: Int
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: requirement == .chooseTile ? "hand.tap.fill" : "clock.arrow.circlepath")
+                .font(.system(size: 21, weight: .semibold))
+                .foregroundStyle(DinoStyle.deepGreen)
+                .frame(width: 40, height: 40)
+                .background(DinoStyle.green.opacity(0.18), in: RoundedRectangle(cornerRadius: 13))
+                .accessibilityHidden(true)
+            Text(LocalizedStringKey(requirement.rawValue))
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundStyle(DinoStyle.ink)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(12)
+        .background(Color(dinoHex: 0xFFF9E9), in: RoundedRectangle(cornerRadius: 22))
+        .overlay {
+            RoundedRectangle(cornerRadius: 22)
+                .strokeBorder(highContrast ? DinoStyle.ink : Color(dinoHex: 0xD9B768), lineWidth: highContrast ? 2 : 1)
+        }
+        .shadow(color: DinoStyle.ink.opacity(0.12), radius: 12, y: 5)
+        .modifier(DinoReminderNudge(progress: reduceMotion ? 0 : CGFloat(attempt)))
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.42), value: attempt)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("question.inputReminder")
+        .allowsHitTesting(false)
+    }
+}
+
+private struct DinoReminderNudge: GeometryEffect {
+    var progress: CGFloat
+    var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        ProjectionTransform(CGAffineTransform(translationX: sin(progress * .pi * 4) * 5, y: 0))
+    }
 }
 
 private struct DinoDayPartSettingsButtonStyle: ButtonStyle {
@@ -616,6 +711,84 @@ struct DinoAnalogAdvanceDemonstration: View {
                 try await Task.sleep(for: .seconds(0.12))
             }
         } catch { /* Dismissal and another example cancel the previous script. */ }
+    }
+}
+
+/// Reserve the correction before answering so the clock and choices stay in place.
+private struct DinoTrueFalseQuestionTitle: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoHighContrast) private var highContrast
+    @ObservedObject private var language = LanguageManager.shared
+    let question: ClockQuestion
+    let showsCorrection: Bool
+    let announces: Bool
+    @State private var strikeProgress: CGFloat = 0
+    @State private var correctionVisible = false
+
+    private func statement(corrected: Bool) -> String {
+        if corrected {
+            return String(format: L(key: "dino.question.trueFalse.correction"),
+                          DinoTimeWords.time(question.target, language: language.effective.code))
+        }
+        return DinoQuestionPrompt.make(question: question, language: language.effective.code,
+                                       instructionKey: question.kind.instructionKey).spoken { L(key: $0) }
+    }
+
+    var body: some View {
+        VStack(spacing: 10) {
+            DinoQuestionTitle(question: question, announces: announces)
+                .opacity(showsCorrection ? (highContrast ? 0.75 : 0.55) : 1)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: showsCorrection)
+                .overlay {
+                    // Matching Text draws a separate strike on each wrapped line.
+                    // Only the strikes are visible; the original title remains one AX element.
+                    Text(verbatim: statement(corrected: false))
+                        .font(.system(size: 21, weight: .heavy, design: .rounded))
+                        .foregroundColor(.clear)
+                        .strikethrough(true, color: DinoStyle.wrong(highContrast))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .mask(alignment: .leading) {
+                            Rectangle().scaleEffect(x: strikeProgress, y: 1, anchor: .leading)
+                        }
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
+                .accessibilityIdentifier("question.title")
+
+            Label {
+                Text(verbatim: statement(corrected: true))
+                    .fixedSize(horizontal: false, vertical: true)
+            } icon: {
+                Image(systemName: "checkmark.circle.fill")
+            }
+            .font(.system(size: 21, weight: .heavy, design: .rounded))
+            .foregroundStyle(DinoStyle.deepGreen)
+            .multilineTextAlignment(.center)
+            .opacity(correctionVisible ? 1 : 0)
+            .offset(y: correctionVisible || reduceMotion ? 0 : 7)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(statement(corrected: true))
+            .accessibilityIdentifier("question.correctStatement")
+            .accessibilityHidden(!correctionVisible)
+        }
+        .task(id: "\(showsCorrection)-\(reduceMotion)") {
+            strikeProgress = 0
+            correctionVisible = false
+            guard showsCorrection else { return }
+            if reduceMotion {
+                strikeProgress = 1
+                correctionVisible = true
+            } else {
+                withAnimation(.easeInOut(duration: 0.4)) { strikeProgress = 1 }
+                do { try await Task.sleep(for: .seconds(0.4)) } catch { return }
+                guard !Task.isCancelled else { return }
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.86)) { correctionVisible = true }
+            }
+            if UIAccessibility.isVoiceOverRunning {
+                UIAccessibility.post(notification: .announcement, argument: statement(corrected: true))
+            }
+        }
     }
 }
 

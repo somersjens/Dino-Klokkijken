@@ -241,10 +241,16 @@ final class DinoPlayer: ObservableObject {
     }
 }
 
+enum DinoAnswerRequirement: String {
+    case chooseTile = "dino.answer.chooseTile"
+    case changeTime = "dino.answer.changeTime"
+}
+
 struct DinoAnswerCheck: Equatable {
     let titleKey: String
     let enabled: Bool
     let answer: ClockAnswer
+    var requirement: DinoAnswerRequirement? = nil
 }
 
 private struct DayPartScoreSnapshot {
@@ -261,7 +267,8 @@ struct DinoLevelResult {
     var animationClip: DinoAnimation.Clip {
         if correct == level.questionCount { return .backflip }
         if stars == 2 { return .pirouette }
-        return .idle
+        if stars == 1 { return .openingJump }
+        return .stumble
     }
 }
 
@@ -312,6 +319,7 @@ final class DinoSession: ObservableObject, Identifiable {
     private var dayPartScoreSnapshot: DayPartScoreSnapshot?
     /// A timetable can turn that answer correct after Next is already on screen, so it waits for a tap.
     private var manualAdvanceAfterRejudge = false
+    private var initialInputTime = ClockTime(hour: 12)
 
     init(level: LevelConfiguration, player: DinoPlayer, practice: DinoPracticeConfiguration? = nil, example: ClockQuestion? = nil, exampleMinuteStep: Int? = nil, language: String = "nl", dayPartSchedule: DinoDayPartSchedule = .standard, now: @escaping () -> TimeInterval = DinoQuestionTiming.now, answerFeedback: ((Bool) -> Void)? = nil) {
         self.now = now
@@ -399,7 +407,9 @@ final class DinoSession: ObservableObject, Identifiable {
         guard !hidesAnswerControls else { return nil }
         switch question.kind {
         case .setAnalog, .setDigital, .advanceAnalog:
-            return DinoAnswerCheck(titleKey: "dino.clock.check", enabled: true, answer: .time(inputTime))
+            let answer = ClockAnswer.time(inputTime)
+            return DinoAnswerCheck(titleKey: "dino.clock.check", enabled: true, answer: answer,
+                                   requirement: submissionRequirement(for: answer))
         case .match:
             let pairs = question.relatedTimes.indices.compactMap { pairSelections[$0] }
             return DinoAnswerCheck(titleKey: "dino.check.connections", enabled: pairs.count == question.relatedTimes.count, answer: .pairs(pairs))
@@ -411,7 +421,29 @@ final class DinoSession: ObservableObject, Identifiable {
                 guard spokenChoices.indices.contains(index) else { return SpokenTimeChoice.emptyID }
                 return spokenChoices[index] ?? SpokenTimeChoice.emptyID
             }
-            return DinoAnswerCheck(titleKey: "dino.check.answer", enabled: true, answer: .spoken(SpokenTimeAnswer(choiceIDs: ids)))
+            let answer = ClockAnswer.spoken(SpokenTimeAnswer(choiceIDs: ids))
+            return DinoAnswerCheck(titleKey: "dino.check.answer", enabled: true, answer: answer,
+                                   requirement: submissionRequirement(for: answer))
+        default:
+            return nil
+        }
+    }
+
+    /// An untouched answer is a reminder, never an incorrect attempt or a saved score.
+    private func submissionRequirement(for answer: ClockAnswer) -> DinoAnswerRequirement? {
+        switch question.kind {
+        case .setAnalog, .setDigital, .advanceAnalog:
+            guard case .time(let time) = answer else { return .changeTime }
+            let unchanged = time.hour % 12 == initialInputTime.hour % 12 && time.minute == initialInputTime.minute
+            return unchanged ? .changeTime : nil
+        case .sayTime:
+            guard case .spoken(let spoken) = answer, let prompt = question.spokenPrompt else { return .chooseTile }
+            let hasTile = prompt.slots.enumerated().contains { index, slot in
+                spoken.choiceIDs.indices.contains(index) && slot.choices.contains {
+                    $0.id != SpokenTimeChoice.emptyID && $0.id == spoken.choiceIDs[index]
+                }
+            }
+            return hasTile ? nil : .chooseTile
         default:
             return nil
         }
@@ -422,6 +454,7 @@ final class DinoSession: ObservableObject, Identifiable {
     }
     func submit(_ answer: ClockAnswer) {
         guard demonstration == nil else { return }
+        guard hasFeedback || submissionRequirement(for: answer) == nil else { return }
         if hasFeedback {
             guard canRetry, question.responses.contains(answer), !rejectedResponses.contains(answer) else { return }
             let correct = AnswerValidator.isCorrect(answer, for: question)
@@ -553,9 +586,10 @@ final class DinoSession: ObservableObject, Identifiable {
             inputHour = start.hour % 12 == 0 ? 12 : start.hour % 12
             inputMinute = start.minute
         } else {
-            inputHour = question.target.hour == 12 ? 1 : 12
+            inputHour = question.target.hour % 12 == 0 ? 1 : 12
             inputMinute = 0
         }
+        initialInputTime = inputTime
         selectedOrder = []; pairSelections = [:]; spokenChoices = []
     }
 

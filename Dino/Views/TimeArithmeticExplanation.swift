@@ -135,7 +135,11 @@ struct DinoTimeArithmeticExplanation: View {
         HStack(spacing: 8) {
             Image(systemName: subtracting ? "minus.circle.fill" : "plus.circle.fill")
                 .font(.system(size: 19 * layoutScale, weight: .bold))
-            Text(verbatim: "\(DinoTimeWords.duration(work.differenceHours * 60 + work.differenceMinutes, language: language)) \(L(key: subtracting ? "dino.expanded.earlier" : "dino.expanded.later"))")
+            (Text(verbatim: DinoTimeWords.duration(work.differenceHours * 60 + work.differenceMinutes, language: language))
+                .foregroundColor(DinoStyle.ink)
+             + Text(verbatim: " ")
+             + Text(verbatim: L(key: subtracting ? "dino.expanded.earlier" : "dino.expanded.later"))
+                .foregroundColor(operationInk))
                 .font(.system(size: 19 * layoutScale, weight: .bold, design: .rounded))
                 .lineLimit(2)
                 .minimumScaleFactor(0.8)

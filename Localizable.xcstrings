@@ -696,6 +696,40 @@
         }
       }
     },
+    "dino.answer.changeTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change the time to continue"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verander de tijd om verder te gaan"
+          }
+        }
+      }
+    },
+    "dino.answer.chooseTile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press at least 1 tile to continue"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies minstens 1 steen om verder te gaan"
+          }
+        }
+      }
+    },
     "dino.check.answer" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4816,13 +4850,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Match a time to an activity"
+            "value" : "Choose the clock for the activity"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tijd bij een activiteit kiezen"
+            "value" : "Kies de klok bij de activiteit"
           }
         }
       }
@@ -4856,7 +4890,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Draai de klok vooruit"
+            "value" : "Zet de klok vooruit"
           }
         }
       }
@@ -4935,7 +4969,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choose the part of day"
+            "value" : "Choose the part of the day"
           }
         },
         "nl" : {
@@ -5003,13 +5037,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "When does the flight arrive?"
+            "value" : "What time does the plane arrive?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wanneer komt de vlucht aan?"
+            "value" : "Hoe laat komt het vliegtuig aan?"
           }
         }
       }
@@ -5054,7 +5088,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Read 24-hour time"
+            "value" : "Read the 24-hour clock"
           }
         },
         "nl" : {
@@ -5071,13 +5105,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Digital time in words"
+            "value" : "Read the digital time in words"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Digitale tijd in woorden"
+            "value" : "Lees de digitale tijd in woorden"
           }
         }
       }
@@ -5088,13 +5122,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Say the time"
+            "value" : "Complete the time sentence"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zeg de tijd"
+            "value" : "Maak de tijdzin af"
           }
         }
       }
@@ -5105,13 +5139,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Set the analog hands"
+            "value" : "Set the analog clock"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Analoge wijzers instellen"
+            "value" : "Stel de analoge klok in"
           }
         }
       }
@@ -5128,7 +5162,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Digitale klok instellen"
+            "value" : "Stel de digitale klok in"
           }
         }
       }
@@ -5139,13 +5173,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Put times in order"
+            "value" : "Put the times in order"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zet tijden op volgorde"
+            "value" : "Zet de tijden op volgorde"
           }
         }
       }
@@ -5156,13 +5190,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Words to an analog clock"
+            "value" : "Words to a clock"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Woorden naar een analoge klok"
+            "value" : "Van woorden naar een klok"
           }
         }
       }
@@ -5207,7 +5241,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Calculate time in another zone"
+            "value" : "Calculate the time in another time zone"
           }
         },
         "nl" : {
@@ -5292,13 +5326,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Set the right time"
+            "value" : "Set the digital clock to the same time"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stel de juiste tijd in"
+            "value" : "Zet de digitale klok op dezelfde tijd"
           }
         }
       }
@@ -5513,13 +5547,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Which clock matches?"
+            "value" : "Which clock shows this time?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Welke klok hoort erbij?"
+            "value" : "Welke klok geeft deze tijd aan?"
           }
         }
       }
@@ -5530,13 +5564,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "What time will it be later?"
+            "value" : "What time will it be?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hoe laat is het straks?"
+            "value" : "Hoe laat is het daarna?"
           }
         }
       }
@@ -5547,13 +5581,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "What time is %@ %@ than %@?"
+            "value" : "It is %@. What time will it be %@ %@?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hoe laat is het %@ %@ dan %@?"
+            "value" : "Het is %@. Hoe laat is het %@ %@?"
           }
         }
       }
@@ -5581,13 +5615,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Move the hands of the clock %@ %@"
+            "value" : "Move the clock hands %@ %@."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zet de wijzers van de klok %@ %@"
+            "value" : "Zet de wijzers %@ %@."
           }
         }
       }
@@ -5598,13 +5632,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Which clock matches?"
+            "value" : "Which clock shows this time?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Welke klok hoort erbij?"
+            "value" : "Welke klok geeft deze tijd aan?"
           }
         }
       }
@@ -5615,13 +5649,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Which of the %@ clocks matches %@?"
+            "value" : "Which of the %@ clocks shows %@?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Welke van de %@ klokken hoort bij %@?"
+            "value" : "Welke van de %@ klokken geeft %@ aan?"
           }
         }
       }
@@ -5632,13 +5666,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Which clock matches %@?"
+            "value" : "Which clock shows %@?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Welke klok hoort bij %@?"
+            "value" : "Welke klok geeft %@ aan?"
           }
         }
       }
@@ -5666,13 +5700,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Which part of the day is this?"
+            "value" : "Which part of the day does this time fall in?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Welk dagdeel hoort bij deze tijd?"
+            "value" : "Bij welk dagdeel hoort deze tijd?"
           }
         }
       }
@@ -5683,13 +5717,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Checking the schedule below, what time do you arrive?"
+            "value" : "Look at the schedule. What time does the train arrive?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kijk naar het schema hieronder. Hoe laat kom je aan?"
+            "value" : "Bekijk het reisschema. Hoe laat komt de trein aan?"
           }
         }
       }
@@ -5768,13 +5802,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "How many minutes are there in between?"
+            "value" : "How many minutes are there between the two times?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hoeveel minuten zitten ertussen?"
+            "value" : "Hoeveel minuten zitten er tussen de twee tijden?"
           }
         }
       }
@@ -5802,7 +5836,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Read the time and the part of day"
+            "value" : "Read the time and the part of the day"
           }
         },
         "nl" : {
@@ -5836,13 +5870,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "How do you say this time?"
+            "value" : "Complete the time sentence for the clock"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hoe zeg je deze tijd?"
+            "value" : "Maak de tijdzin bij de klok af"
           }
         }
       }
@@ -5870,13 +5904,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Set the correct time"
+            "value" : "Set the digital clock to the same time"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Stel de juiste tijd in"
+            "value" : "Zet de digitale klok op dezelfde tijd"
           }
         }
       }
@@ -5910,7 +5944,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Welke van de %@ klokken laat %@ zien?"
+            "value" : "Welke van de %@ klokken geeft %@ aan?"
           }
         }
       }
@@ -5927,7 +5961,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Welke klok laat deze tijd zien?"
+            "value" : "Welke klok geeft deze tijd aan?"
           }
         }
       }
@@ -5944,7 +5978,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Welke klok laat %@ zien?"
+            "value" : "Welke klok geeft %@ aan?"
           }
         }
       }
@@ -5972,13 +6006,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "What time was %@ %@ than %@?"
+            "value" : "It is %@. What time was it %@ %@?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hoe laat was het %@ %@ dan %@?"
+            "value" : "Het is %@. Hoe laat was het %@ %@?"
           }
         }
       }
@@ -5989,13 +6023,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Which time comes next?"
+            "value" : "What time completes the pattern?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Welke tijd komt hierna?"
+            "value" : "Welke tijd maakt de reeks af?"
           }
         }
       }
@@ -6006,13 +6040,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Looking at the sequence below, what time comes after %@?"
+            "value" : "Look at the pattern. What time comes after %@?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kijk naar de reeks hieronder. Welke tijd komt er na %@?"
+            "value" : "Kijk naar de reeks. Welke tijd komt na %@?"
           }
         }
       }
@@ -6023,13 +6057,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "What time is it in city B?"
+            "value" : "What time is it in the other city?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hoe laat is het in stad B?"
+            "value" : "Hoe laat is het in de andere stad?"
           }
         }
       }
@@ -6040,13 +6074,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "It is %@ in %@. %@ is %@ %@, what time is it in %@?"
+            "value" : "It is %@ in %@. %@ is %@ %@. What time is it there?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Het is %@ in %@. %@ is %@ %@, hoe laat is het in %@?"
+            "value" : "Het is %@ in %@. De klok in %@ loopt %@ %@. Hoe laat is het daar?"
           }
         }
       }
@@ -6057,13 +6091,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "It is %@ in %@. %@ is %@ %@, what time is it in %@?"
+            "value" : "It is %@ in %@. %@ is %@ %@. What time is it there?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Het is %@ in %@. %@ is %@ %@, hoe laat is het in %@?"
+            "value" : "Het is %@ in %@. De klok in %@ loopt %@ %@. Hoe laat is het daar?"
           }
         }
       }
@@ -6108,13 +6142,30 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Does the clock match the sentence?"
+            "value" : "Does the time match the clock?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Past de zin bij de klok?"
+            "value" : "Klopt de tijd bij de klok?"
+          }
+        }
+      }
+    },
+    "dino.question.trueFalse.correction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is %@."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het is %@."
           }
         }
       }
@@ -6125,13 +6176,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "It is now %@."
+            "value" : "The clock shows %@. Is that correct?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Het is nu %@."
+            "value" : "De klok geeft %@ aan. Klopt dat?"
           }
         }
       }

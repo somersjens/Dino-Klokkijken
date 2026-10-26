@@ -483,7 +483,8 @@ struct ResultBiomePainter {
         case 10: palette = (0xC9D0C1, 0x8B9FA6, 0xECE9D2)
         default: palette = (0xB2D458, 0x65913B, 0xD6E887)
         }
-        let base = CGPoint(x: frame.midX, y: frame.maxY - frame.height * 0.03)
+        let base = CGPoint(x: frame.midX, y: frame.minY + frame.height
+            * ResultPodiumGeometry.groundFrontY(themeID: theme) / ResultPodiumGeometry.height)
         let radius = frame.width * 0.71
         // Scale a unit radial gradient, so every edge of the footprint becomes transparent.
         // A wide radial gradient clipped to a shallow oval leaves a visible horizontal band.

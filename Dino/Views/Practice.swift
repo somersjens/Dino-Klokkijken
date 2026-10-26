@@ -77,6 +77,9 @@ struct DinoPracticeView: View {
                     await Task.yield()
                     proxy.scrollTo("practice.type.\(initialQuestion.rawValue)", anchor: .center)
                 }
+                .task(id: player.profile.dinoAppearance ?? .standard) {
+                    _ = await DinoSpriteLoader.shared.answerImages(for: player.profile.dinoAppearance ?? .standard)
+                }
         }
     }
 

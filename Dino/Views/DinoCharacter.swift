@@ -6,6 +6,8 @@ struct DinoCharacter: View {
     var size: CGFloat = 150
     var performsBackflip = false
     var performsPirouette = false
+    var performsStumble = false
+    var performsOpeningJump = false
     var givesThumbsUp = false
     var exposesAnimationIdentifier = true
     var preparesReactions = true
@@ -21,7 +23,8 @@ struct DinoCharacter: View {
     private var appearance: DinoAppearance { player.profile.dinoAppearance ?? .standard }
 
     private var clip: DinoAnimation.Clip {
-        performsBackflip ? .backflip : performsPirouette ? .pirouette : givesThumbsUp ? .thumbsUp : state == .sad ? .wrongAnswer : .idle
+        performsBackflip ? .backflip : performsPirouette ? .pirouette : performsStumble ? .stumble : performsOpeningJump ? .openingJump
+            : givesThumbsUp ? .thumbsUp : state == .sad ? .wrongAnswer : .idle
     }
 
     private var animationIdentifier: String {
@@ -29,6 +32,8 @@ struct DinoCharacter: View {
         case .idle: "dino.character"
         case .thumbsUp: "dino.thumbsUp"
         case .wrongAnswer: "dino.wrongAnswer"
+        case .stumble: "dino.stumble"
+        case .openingJump: "dino.openingJump"
         case .backflip: "dino.backflip"
         case .pirouette: "dino.pirouette"
         case .worldJump: "dino.worldJump"
@@ -67,6 +72,9 @@ struct DinoCharacter: View {
             // Prepare every pose between reactions, so a short animation never
             // flashes back to green while its next frame is being recolored.
             do { try await Task.sleep(for: .milliseconds(35)) } catch { return }
+            let answers = await DinoSpriteLoader.shared.answerImages(for: colors)
+            guard !Task.isCancelled, !answers.isEmpty else { return }
+            prepared = (colors, answers)
             let images = await DinoSpriteLoader.shared.images(for: colors)
             guard !Task.isCancelled, !images.isEmpty else { return }
             prepared = (colors, images)
@@ -82,6 +90,10 @@ struct DinoCharacter: View {
     @ViewBuilder private func characterDrawing(_ sample: DinoAnimation.Sample) -> some View {
         if clip == .thumbsUp {
             ZStack {
+                // Bridge the moving jaw to the torso behind the clapping hands.
+                // The original fists stay outside this narrow neck patch.
+                sprite(.init(asset: "dino-idle"), angle: 0, yaw: 0)
+                    .mask(DinoApplauseNeckMask())
                 ZStack {
                     if let previous = sample.previousPose, sample.poseBlend < 1 {
                         applauseBody(previous).opacity(1 - sample.poseBlend)
@@ -89,13 +101,38 @@ struct DinoCharacter: View {
                     applauseBody(sample.pose).opacity(sample.previousPose == nil ? 1 : sample.poseBlend)
                         .blendMode(.plusLighter)
                 }.compositingGroup()
-                // This is the same cached bitmap, camera and mask on every frame.
+                // Keep the face consistent, then nod around the neck in time
+                // with both claps. Move the mask with the head to preserve the jaw.
                 sprite(.init(asset: "dino-idle"), angle: 0, yaw: 0)
                     .mask(DinoApplauseHeadMask().fill(style: FillStyle(eoFill: true)))
+                    .rotationEffect(.degrees(sample.headAngle), anchor: UnitPoint(x: 0.56, y: 0.445))
+                    .offset(y: size * sample.headHeight)
             }
+        } else if let morph = sample.morph,
+                  let from = morphImage(morph.from.asset), let to = morphImage(morph.to.asset) {
+            ZStack {
+                if morph.opacity < 1 {
+                    DinoMorphSprite(image: Image(uiImage: from), vertices: morph.fromVertices)
+                        .opacity(1 - morph.opacity)
+                }
+                if morph.opacity > 0 {
+                    DinoMorphSprite(image: Image(uiImage: to), vertices: morph.toVertices)
+                        .opacity(morph.opacity)
+                        .blendMode(.plusLighter)
+                }
+            }
+            .compositingGroup()
+            .rotationEffect(.degrees(sample.angle), anchor: .bottom)
         } else {
             sprite(sample.pose, angle: sample.angle, yaw: sample.yaw)
         }
+    }
+
+    private func morphImage(_ asset: String) -> UIImage? {
+        if let prepared, prepared.appearance == appearance, let image = prepared.images[asset] { return image }
+        return DinoAvatarRenderer.cached(appearance: appearance, portrait: false, asset: asset)
+            ?? DinoAvatarRenderer.render(original: UIImage(named: asset)?.cgImage,
+                                         appearance: appearance, portrait: false, asset: asset)
     }
 
     @ViewBuilder private func applauseBody(_ pose: DinoAnimation.Pose) -> some View {
@@ -130,11 +167,48 @@ struct DinoCharacter: View {
     }
 }
 
+/// Move the selected painting along a continuous body trajectory. A single
+/// opaque drawing keeps the face and hands crisp while its geometry changes.
+struct DinoMorphSprite: View {
+    let image: Image
+    let vertices: [CGPoint]
+
+    var body: some View {
+        Canvas { context, size in
+            let bitmap = context.resolve(image)
+            for triangle in DinoStumbleMotion.triangles {
+                var piece = context
+                var clip = Path()
+                let points = [triangle.0, triangle.1, triangle.2].map {
+                    CGPoint(x: vertices[$0].x * size.width, y: vertices[$0].y * size.height)
+                }
+                clip.addLines(points); clip.closeSubpath()
+                piece.clip(to: clip, style: FillStyle(antialiased: false))
+                piece.concatenate(DinoStumbleMotion.transform(triangle, vertices: vertices, size: size))
+                piece.draw(bitmap, in: CGRect(origin: .zero, size: size))
+            }
+        }
+        .accessibilityHidden(true)
+    }
+}
+
 private struct DinoApplauseHeadMask: Shape {
     var inverted = false
     func path(in rect: CGRect) -> Path {
         var path = inverted ? Path(rect) : Path()
         path.addPath(Path(DinoAvatarMask.standingHead).applying(CGAffineTransform(scaleX: rect.width, y: rect.height)))
+        return path
+    }
+}
+
+private struct DinoApplauseNeckMask: Shape {
+    func path(in rect: CGRect) -> Path {
+        let points = [CGPoint(x: 0.48, y: 0.43), CGPoint(x: 0.64, y: 0.43),
+                      CGPoint(x: 0.71, y: 0.64), CGPoint(x: 0.54, y: 0.64),
+                      CGPoint(x: 0.50, y: 0.55)]
+        var path = Path()
+        path.addLines(points.map { CGPoint(x: $0.x * rect.width, y: $0.y * rect.height) })
+        path.closeSubpath()
         return path
     }
 }
@@ -181,6 +255,8 @@ struct DinoCompanionLayer: View {
                 ZStack {
                     DinoCharacter(state: presentedClip == .wrongAnswer ? .sad : .idle, size: 210,
                                   performsBackflip: presentedClip == .backflip, performsPirouette: presentedClip == .pirouette,
+                                  performsStumble: presentedClip == .stumble,
+                                  performsOpeningJump: presentedClip == .openingJump,
                                   givesThumbsUp: presentedClip == .thumbsUp, exposesAnimationIdentifier: false,
                                   companionPresentation: DinoCompanionPresentation(portraitAmount: portraitAmount,
                                       palette: HUDPalette(worldID: worldID), rimRatio: 4 / (compactPortrait ? 52 : 78)))
@@ -224,9 +300,21 @@ struct DinoCompanionLayer: View {
                             // Unfold the bust into a full character as he leaves the circle.
                             // Keep the same sprite and finish on the existing rock anchor.
                             withAnimation(.easeOut(duration: 0.24).delay(delay)) { portraitAmount = 0 }
-                            let journey: Animation = clip == .pirouette
-                                ? .timingCurve(0.20, 0.65, 0.35, 1, duration: travel)
-                                : .easeInOut(duration: travel)
+                            let journey: Animation
+                            switch clip {
+                            case .stumble:
+                                // Accelerate down from the portrait; the contact
+                                // drawing and compression catch the fall on the rock.
+                                journey = .timingCurve(0.42, 0, 0.88, 0.55, duration: travel)
+                            case .openingJump:
+                                // Keep the opening jump's momentum through the
+                                // diagonal flight; its poses supply the landing.
+                                journey = .linear(duration: travel)
+                            case .pirouette:
+                                journey = .timingCurve(0.20, 0.65, 0.35, 1, duration: travel)
+                            default:
+                                journey = .easeInOut(duration: travel)
+                            }
                             withAnimation(journey.delay(delay)) { placement = target }
                         } else {
                             // Track the portrait or result anchor immediately on layout changes.

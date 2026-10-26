@@ -69,7 +69,7 @@ enum DinoSpeechVoicePicker {
 }
 
 /// The question title repeats the sum only when hearing it does not already give the answer.
-/// Only movement gets a color: forward is green and backward is red.
+/// Only the direction word gets a color; clock times and durations keep the base color.
 struct DinoQuestionPrompt: Equatable, Sendable {
     struct Argument: Equatable, Sendable {
         var text: String
@@ -115,22 +115,22 @@ struct DinoQuestionPrompt: Equatable, Sendable {
         case .advanceAnalog:
             guard question.durationMinutes > 0 else { return unchanged }
             return formatted("dino.question.advanceAnalog.format",
-                             [forward(question.durationMinutes, language: code),
+                             [duration(question.durationMinutes, language: code),
                               word(code == "nl" ? "vooruit" : "forward", .forward)],
                              plainKey: instructionKey)
         case .addTime:
             guard let start = question.relatedTimes.first, question.durationMinutes > 0 else { return unchanged }
             return formatted("dino.question.addTime.format",
-                             [forward(question.durationMinutes, language: code),
-                              word("later", .forward),
-                              clock(start, language: code, needsDayPart: true)],
+                             [clock(start, language: code),
+                              duration(question.durationMinutes, language: code),
+                              word("later", .forward)],
                              plainKey: instructionKey)
         case .subtractTime:
             guard let start = question.relatedTimes.first, question.durationMinutes > 0 else { return unchanged }
             return formatted("dino.question.subtractTime.format",
-                             [backward(question.durationMinutes, language: code),
-                              word(code == "nl" ? "eerder" : "earlier", .backward),
-                              clock(start, language: code, needsDayPart: true)],
+                             [clock(start, language: code),
+                              duration(question.durationMinutes, language: code),
+                              word(code == "nl" ? "eerder" : "earlier", .backward)],
                              plainKey: instructionKey)
         case .minutesBetween:
             guard question.relatedTimes.count == 2 else { return unchanged }
@@ -149,20 +149,20 @@ struct DinoQuestionPrompt: Equatable, Sendable {
             let minutes = journey.offsetMinutes
             if minutes == 0 {
                 return formatted("dino.question.timeZone.same.format",
-                                 [clock(reference, language: code, needsDayPart: true), plain(origin), plain(destination)],
+                                 [clock(reference, language: code), plain(origin), plain(destination)],
                                  plainKey: instructionKey)
             }
             let ahead = minutes > 0
-            let shift = ahead ? forward(abs(minutes), language: code) : backward(abs(minutes), language: code)
-            let direction = word(code == "nl" ? (ahead ? "vooruit" : "achter") : (ahead ? "ahead" : "behind"),
+            let shift = duration(abs(minutes), language: code)
+            let direction = word(code == "nl" ? (ahead ? "voor" : "achter") : (ahead ? "ahead" : "behind"),
                                  ahead ? .forward : .backward)
             return formatted(ahead ? "dino.question.timeZone.ahead.format" : "dino.question.timeZone.behind.format", [
-                clock(reference, language: code, needsDayPart: true), plain(origin), plain(destination), shift, direction, plain(destination)
+                clock(reference, language: code), plain(origin), plain(destination), shift, direction
             ], plainKey: instructionKey)
         case .flightArrival:
             guard let departure = question.relatedTimes.first, question.durationMinutes > 0 else { return unchanged }
             return formatted("dino.question.flightArrival.format",
-                             [clock(departure, language: code, needsDayPart: true)], plainKey: instructionKey)
+                             [clock(departure, language: code)], plainKey: instructionKey)
         case .chooseDigital, .readDigital, .sayTime, .setAnalog, .setDigital, .read24Hour, .dayPart, .match, .sortTimes, .daySchedule:
             // Reading these aloud would say the answer, or would list every choice.
             return unchanged
@@ -200,18 +200,13 @@ struct DinoQuestionPrompt: Equatable, Sendable {
         Argument(text: text, emphasis: emphasis)
     }
 
-    private static func clock(_ time: ClockTime, language: String, needsDayPart: Bool = false) -> Argument {
-        // Analog faces, short intervals and the visible sequence do not need a day part.
-        // Keep it when the starting time determines an absolute 24-hour answer.
-        plain(needsDayPart ? DinoTimeWords.promptTime(time, language: language)
-              : DinoTimeWords.time(time, language: language))
+    private static func clock(_ time: ClockTime, language: String) -> Argument {
+        // Analog faces have no day part. Arithmetic, journeys and sequences show
+        // their reference digitally, including AM/PM or 24-hour context.
+        plain(DinoTimeWords.time(time, language: language))
     }
 
-    private static func forward(_ minutes: Int, language: String) -> Argument {
-        Argument(text: DinoTimeWords.spokenDuration(minutes, language: language), emphasis: .forward)
-    }
-
-    private static func backward(_ minutes: Int, language: String) -> Argument {
-        Argument(text: DinoTimeWords.spokenDuration(minutes, language: language), emphasis: .backward)
+    private static func duration(_ minutes: Int, language: String) -> Argument {
+        plain(DinoTimeWords.spokenDuration(minutes, language: language))
     }
 }

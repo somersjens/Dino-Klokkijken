@@ -73,6 +73,8 @@ actor DinoSpriteLoader {
     static let shared = DinoSpriteLoader()
     private var appearance: DinoAppearance?
     private var job: Task<[String: UIImage], Never>?
+    private var answerAppearance: DinoAppearance?
+    private var answerJob: Task<[String: UIImage], Never>?
 
     /// The map only needs the standing pose. Keep its first recolor off the
     /// main thread without decoding twenty unused celebration frames at launch.
@@ -87,15 +89,39 @@ actor DinoSpriteLoader {
         return await withTaskCancellationHandler { await preparation.value } onCancel: { preparation.cancel() }
     }
 
-    func images(for colors: DinoAppearance) async -> [String: UIImage] {
+    /// Publish and retain the short answer set before preparing result animations.
+    /// Otherwise the bitmap cache can evict early clap frames while the full set
+    /// is still loading, forcing a synchronous recolor during the first answer.
+    func answerImages(for colors: DinoAppearance) async -> [String: UIImage] {
         guard !Task.isCancelled else { return [:] }
-        if appearance != colors || job == nil {
+        if answerAppearance != colors || answerJob == nil || answerJob?.isCancelled == true {
+            answerJob?.cancel()
+            if appearance != colors { job?.cancel() }
+            answerAppearance = colors
+            answerJob = Task.detached(priority: .userInitiated) {
+                var images: [String: UIImage] = [:]
+                for asset in ["dino-idle"] + DinoAnimation.correctAnswerAssets + DinoAnimation.wrongAnswerAssets {
+                    guard !Task.isCancelled else { return [:] }
+                    images[asset] = DinoAvatarRenderer.render(original: UIImage(named: asset)?.cgImage,
+                                                            appearance: colors, portrait: false, asset: asset)
+                }
+                return images
+            }
+        }
+        return await answerJob!.value
+    }
+
+    func images(for colors: DinoAppearance) async -> [String: UIImage] {
+        let answers = await answerImages(for: colors)
+        guard !Task.isCancelled else { return [:] }
+        if appearance != colors || job == nil || job?.isCancelled == true {
             job?.cancel()
             appearance = colors
             job = Task.detached(priority: .userInitiated) {
-                var images: [String: UIImage] = [:]
+                var images = answers
                 for asset in DinoAnimation.spriteAssets {
                     guard !Task.isCancelled else { return [:] }
+                    if images[asset] != nil { continue }
                     if let cached = DinoAvatarRenderer.cached(appearance: colors, portrait: false, asset: asset) {
                         images[asset] = cached
                     } else {
@@ -122,8 +148,8 @@ actor DinoSpriteLoader {
         return await withTaskCancellationHandler { await preparation.value } onCancel: { preparation.cancel() }
     }
 
-    /// Two background workers prepare the opening's original-size poses. Keep
-    /// these out of the ordinary reaction set and release them after landing.
+    /// Two background workers prepare the opening's original-size poses. These
+    /// copies stay separate from the compact result sprites and are released after landing.
     func openingJumpImages(for colors: DinoAppearance) async -> [String: UIImage] {
         await withTaskGroup(of: (String, UIImage?).self) { group in
             var next = DinoOpeningJump.assets.makeIterator()
