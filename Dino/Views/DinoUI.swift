@@ -724,11 +724,11 @@ struct DinoRewardStar: View {
     var body: some View {
         ZStack {
             if earned && glowing {
-                Image("result-star").resizable().scaledToFit()
+                Image("reward-star").resizable().scaledToFit()
                     .blur(radius: size * 0.13).opacity(0.65)
                     .scaleEffect(1.12)
             }
-            Image("result-star").resizable().scaledToFit()
+            Image("reward-star").resizable().scaledToFit()
                 .saturation(earned ? 1 : 0)
                 .brightness(earned ? 0 : -0.12)
                 .shadow(color: Color(dinoHex: 0x653809).opacity(earned ? 0.35 : 0.18),

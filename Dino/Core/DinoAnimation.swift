@@ -26,8 +26,8 @@ enum DinoAnimation {
     }
 
     static let correctAnswerDelay = duration(.thumbsUp) + 0.12
-    static let wrongAnswerAssets = [DinoAnswerArtwork.wrongAssets[1]]
-    static let correctAnswerAssets = (1...8).map { String(format: "dino_applaus_frame_%02d", $0) }
+    static let wrongAnswerAssets = [DinoAnswerArtwork.wrongAsset]
+    static let correctAnswerAssets = DinoAnswerArtwork.clapAssets + [DinoAnswerArtwork.clapAssets[0]]
     // Two claps, followed by the supplied recovery pose before returning to idle.
     // Give each contact and reopening time to read as a separate clap.
     static let correctAnswerFrameStarts = [0.0, 0.12, 0.24, 0.36, 0.52, 0.64, 0.76, 0.92]
@@ -57,40 +57,38 @@ enum DinoAnimation {
     static let stumbleBraceEnd = 1.19
     static let stumbleHandRelease = 1.38
     static let stumbleFrames = DinoStumbleMotion.frames
-    static let stumbleAssets = ["01", "02", "03", "03a", "04", "05", "06", "06a", "07", "08"]
-        .map { "dino-stumble-deep-" + $0 }
+    static let stumbleAssets = (2...10).map { String(format: "dino-result-fall-%02d", $0) }
 
     // Seconds after the result fade: read the crouch, launch quickly, let every
     // turn drawing register at a brisk pace, then let the planted recovery breathe.
     static let pirouetteTakeoff = 0.30
     static let pirouetteLanding = 0.965
     static let pirouetteFrames: [TimedPose] = [
-        TimedPose(start: 0, pose: Pose(asset: "dino-pirouette-01", offsetX: -0.017, offsetY: -0.017)),
-        TimedPose(start: 0.08, pose: Pose(asset: "dino-pirouette-02", offsetX: -0.036, offsetY: -0.018)),
-        TimedPose(start: 0.22, pose: Pose(asset: "dino-pirouette-03", paintedYaw: 15, offsetX: -0.023, offsetY: -0.034)),
-        TimedPose(start: pirouetteTakeoff, pose: Pose(asset: "dino-pirouette-04", paintedYaw: 30, offsetX: -0.033, offsetY: 0.018)),
-        TimedPose(start: 0.36, pose: Pose(asset: "dino-pirouette-05", paintedYaw: 65, offsetX: -0.030, offsetY: 0.019)),
-        TimedPose(start: 0.425, pose: Pose(asset: "dino-pirouette-06", paintedYaw: 100, offsetX: -0.051, offsetY: 0.012)),
-        TimedPose(start: 0.50, pose: Pose(asset: "dino-pirouette-06a", paintedYaw: 140, offsetX: -0.090, offsetY: 0.006)),
-        TimedPose(start: 0.575, pose: Pose(asset: "dino-pirouette-07", paintedYaw: 180, offsetX: -0.029)),
-        TimedPose(start: 0.64, pose: Pose(asset: "dino-pirouette-07a", paintedYaw: 202.5, offsetX: -0.053, offsetY: -0.001)),
-        TimedPose(start: 0.69, pose: Pose(asset: "dino-pirouette-08", paintedYaw: 225, offsetX: -0.046)),
-        TimedPose(start: 0.74, pose: Pose(asset: "dino-pirouette-08a", paintedYaw: 247.5, offsetX: -0.021, offsetY: 0.009)),
-        TimedPose(start: 0.79, pose: Pose(asset: "dino-pirouette-09", paintedYaw: 270, offsetX: -0.007, offsetY: 0.017)),
-        TimedPose(start: 0.86, pose: Pose(asset: "dino-pirouette-10", paintedYaw: 310, offsetX: 0, offsetY: 0.004)),
-        TimedPose(start: 0.915, pose: Pose(asset: "dino-pirouette-10a", paintedYaw: 325, offsetX: -0.041, offsetY: -0.014)),
-        TimedPose(start: pirouetteLanding, pose: Pose(asset: "dino-pirouette-11", paintedYaw: 340, offsetX: -0.031, offsetY: -0.012)),
-        TimedPose(start: pirouetteLanding + 0.13, pose: Pose(asset: "dino-pirouette-12", paintedYaw: 350, offsetX: -0.019, offsetY: -0.022)),
-        TimedPose(start: pirouetteLanding + 0.28, pose: Pose(asset: "dino-pirouette-13", paintedYaw: 360, offsetX: -0.012, offsetY: -0.031)),
-        TimedPose(start: pirouetteLanding + 0.45, pose: Pose(asset: "dino-pirouette-14", paintedYaw: 360, offsetX: -0.012, offsetY: -0.029))
+        TimedPose(start: 0, pose: Pose(asset: "dino-result-pirouette-01", offsetX: -0.017, offsetY: -0.017)),
+        TimedPose(start: 0.08, pose: Pose(asset: "dino-result-pirouette-02", offsetX: -0.036, offsetY: -0.018)),
+        TimedPose(start: 0.22, pose: Pose(asset: "dino-result-pirouette-03", paintedYaw: 15, offsetX: -0.023, offsetY: -0.034)),
+        TimedPose(start: pirouetteTakeoff, pose: Pose(asset: "dino-result-pirouette-04", paintedYaw: 30, offsetX: -0.033, offsetY: 0.018)),
+        TimedPose(start: 0.36, pose: Pose(asset: "dino-result-pirouette-05", paintedYaw: 65, offsetX: -0.030, offsetY: 0.019)),
+        TimedPose(start: 0.425, pose: Pose(asset: "dino-result-pirouette-06", paintedYaw: 100, offsetX: -0.051, offsetY: 0.012)),
+        TimedPose(start: 0.50, pose: Pose(asset: "dino-result-pirouette-07", paintedYaw: 140, offsetX: -0.090, offsetY: 0.006)),
+        TimedPose(start: 0.575, pose: Pose(asset: "dino-result-pirouette-08", paintedYaw: 180, offsetX: -0.029)),
+        TimedPose(start: 0.64, pose: Pose(asset: "dino-result-pirouette-09", paintedYaw: 202.5, offsetX: -0.053, offsetY: -0.001)),
+        TimedPose(start: 0.69, pose: Pose(asset: "dino-result-pirouette-10", paintedYaw: 225, offsetX: -0.046)),
+        TimedPose(start: 0.74, pose: Pose(asset: "dino-result-pirouette-11", paintedYaw: 247.5, offsetX: -0.021, offsetY: 0.009)),
+        TimedPose(start: 0.79, pose: Pose(asset: "dino-result-pirouette-12", paintedYaw: 270, offsetX: -0.007, offsetY: 0.017)),
+        TimedPose(start: 0.86, pose: Pose(asset: "dino-result-pirouette-13", paintedYaw: 310, offsetX: 0, offsetY: 0.004)),
+        TimedPose(start: 0.915, pose: Pose(asset: "dino-result-pirouette-14", paintedYaw: 325, offsetX: -0.041, offsetY: -0.014)),
+        TimedPose(start: pirouetteLanding, pose: Pose(asset: "dino-result-pirouette-15", paintedYaw: 340, offsetX: -0.031, offsetY: -0.012)),
+        TimedPose(start: pirouetteLanding + 0.13, pose: Pose(asset: "dino-result-pirouette-16", paintedYaw: 350, offsetX: -0.019, offsetY: -0.022)),
+        TimedPose(start: pirouetteLanding + 0.28, pose: Pose(asset: "dino-result-pirouette-17", paintedYaw: 360, offsetX: -0.012, offsetY: -0.031)),
+        TimedPose(start: pirouetteLanding + 0.45, pose: Pose(asset: "dino-result-pirouette-18", paintedYaw: 360, offsetX: -0.012, offsetY: -0.029))
     ]
     static let pirouetteAssets = pirouetteFrames.map { $0.pose.asset }
     // Prepare answer reactions first so even a quick first answer finds warm bitmaps.
     static let spriteAssets = ["dino-idle"] + correctAnswerAssets + wrongAnswerAssets
-        + ["dino-thumbs-up-08", "dino-wrong-answer-04",
-                               "dino-backflip-01", "dino-backflip-03", "dino-backflip-07", "dino-backflip-08"]
+        + ["dino-result-backflip-crouch", "dino-result-backflip-airborne", "dino-result-backflip-landing", "dino-result-backflip-recover"]
         + pirouetteAssets + DinoOpeningJump.assets + stumbleAssets
-    static let worldJumpAssets = [1, 2, 3, 6, 7].map { String(format: "dino-world-jump-%02d", $0) }
+    static let worldJumpAssets = ["crouch", "takeoff", "airborne", "landing", "recover"].map { "dino-world-jump-" + $0 }
 
     /// The short lead-in matches the result screen's fade.
     static func leadIn(_ clip: Clip) -> Double {
@@ -198,18 +196,18 @@ enum DinoAnimation {
             // Match the opaque foot line of each supplied drawing to idle (y = 1211).
             // The landing and recovery must stay planted while the poses change.
             if t < 0.08 {
-                pose = Pose(asset: "dino-world-jump-01", offsetY: -2.0 / 1254)
+                pose = Pose(asset: "dino-world-jump-crouch", offsetY: -2.0 / 1254)
             } else if t < 0.20 {
-                pose = Pose(asset: "dino-world-jump-02", offsetY: 22.0 / 1254)
+                pose = Pose(asset: "dino-world-jump-takeoff", offsetY: 22.0 / 1254)
             } else if t < 1.10 {
                 // One tucked drawing carries the complete continuous rotation.
-                pose = Pose(asset: "dino-world-jump-03", offsetY: 0.045)
+                pose = Pose(asset: "dino-world-jump-airborne", offsetY: 0.045)
             } else if t < 1.22 {
-                pose = Pose(asset: "dino-world-jump-06", offsetY: 70.0 / 1254)
+                pose = Pose(asset: "dino-world-jump-landing", offsetY: 70.0 / 1254)
             } else if t < 1.44 {
-                pose = Pose(asset: "dino-world-jump-07", offsetY: 64.0 / 1254)
+                pose = Pose(asset: "dino-world-jump-recover", offsetY: 64.0 / 1254)
             } else if t < duration(.worldJump) {
-                pose = Pose(asset: "dino-world-jump-01", offsetY: -2.0 / 1254)
+                pose = Pose(asset: "dino-world-jump-crouch", offsetY: -2.0 / 1254)
             } else {
                 pose = Pose(asset: "dino-idle")
             }
@@ -219,16 +217,16 @@ enum DinoAnimation {
             let squash = 0.07 * pulse(t, start: 0.02, end: 0.20) + 0.10 * pulse(t, start: 1.22, end: 1.44)
             return Sample(pose: pose, angle: angle, height: height, scaleX: 1 + squash * 0.4, scaleY: 1 - squash)
         case .backflip:
-            let finalPose = Pose(asset: "dino-backflip-08", offsetX: -0.013, offsetY: -0.009)
+            let finalPose = Pose(asset: "dino-result-backflip-recover", offsetX: -0.013, offsetY: -0.009)
             guard !reducedMotion else { return Sample(pose: finalPose) }
             let pose: Pose
             if t < 0.20 {
-                pose = Pose(asset: "dino-backflip-01", offsetX: -0.024, offsetY: 0.016)
+                pose = Pose(asset: "dino-result-backflip-crouch", offsetX: -0.024, offsetY: 0.016)
             } else if t < 1.22 {
                 // Keep a single tucked pose for the entire rotation: no airborne sprite changes.
-                pose = Pose(asset: "dino-backflip-03", paintedAngle: -45, offsetX: -0.017, offsetY: 0.069)
+                pose = Pose(asset: "dino-result-backflip-airborne", paintedAngle: -45, offsetX: -0.017, offsetY: 0.069)
             } else if t < 1.44 {
-                pose = Pose(asset: "dino-backflip-07", offsetX: -0.015, offsetY: 0.023)
+                pose = Pose(asset: "dino-result-backflip-landing", offsetX: -0.015, offsetY: 0.023)
             } else {
                 pose = finalPose
             }
@@ -417,8 +415,7 @@ enum DinoStumbleMotion {
 
     private static let artworkForKey = [0, 1, 2, 3, 4, 5, 5, 6, 6, 7, 8, 9]
     static let frames: [DinoAnimation.TimedPose] = {
-        let names = ["dino-idle"] + ["02", "03", "03a", "04", "05", "06", "06a", "07", "08"]
-            .map { "dino-stumble-deep-" + $0 }
+        let names = ["dino-idle"] + (2...10).map { String(format: "dino-result-fall-%02d", $0) }
         let offsets = [0.0, 15, 45, 48, 112, 81, 38, 9, -4, -2]
         let times = [DinoAnimation.stumbleTakeoff, 0.26, 0.46, DinoAnimation.stumbleLanding,
                      DinoAnimation.stumbleFaceContact, DinoAnimation.stumbleLowest,

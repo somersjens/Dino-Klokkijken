@@ -151,9 +151,9 @@ private enum WorldBossArtwork {
     }
 
     private static let assets = [
-        "boss-jungle-01", "boss-sleep-valley-02", "boss-volcano-03",
-        "boss-clock-village-04", "boss-crystal-cave-05", "boss-clock-city-06",
-        "boss-desert-07", "boss-time-machine-08", "boss-pirates-09", "boss-castle-10"
+        "boss-jungle", "boss-sleep-valley", "boss-volcano",
+        "boss-clock-village", "boss-crystal-cave", "boss-clock-city",
+        "boss-desert", "boss-time-machine", "boss-pirates", "boss-castle"
     ]
     final class Sprite: NSObject {
         let image: UIImage
@@ -214,7 +214,10 @@ private enum WorldBossArtwork {
             return (original, mask)
         }
         guard let (image, mask) = result else { return nil }
-        let bounds = crop.applying(CGAffineTransform(scaleX: 1 / scale, y: 1 / scale))
+        // Clock centers remain in the original 1254-point drawing space even
+        // though the bundled artwork is already reduced to its 640-pixel raster.
+        let drawingScale = 1254 / CGFloat(width)
+        let bounds = crop.applying(CGAffineTransform(scaleX: drawingScale, y: drawingScale))
         let sprite = Sprite(image: image, clockMask: mask, sourceBounds: bounds)
         cache.setObject(sprite, forKey: name as NSString, cost: (image.bytesPerRow + mask.bytesPerRow) * image.height)
         return sprite

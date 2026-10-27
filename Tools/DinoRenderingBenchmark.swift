@@ -6,7 +6,7 @@ import CryptoKit
 @main
 struct RenderBenchmark {
     static func main() throws {
-        let assets = ["dino-idle", "dino-thumbs-up-08", "dino-wrong-answer-04", "dino-backflip-01", "dino-backflip-03", "dino-backflip-07", "dino-backflip-08"]
+        let assets = ["dino-idle", "dino-result-backflip-crouch", "dino-result-backflip-airborne", "dino-result-backflip-landing", "dino-result-backflip-recover"]
         let appearances = [DinoAppearance.standard, DinoAppearance(bandana: 0x459CDF, spikes: 0xA77BE0, body: 0xF48EB6, belly: 0xF59A32)]
         for appearance in appearances {
             var elapsed: Double = 0

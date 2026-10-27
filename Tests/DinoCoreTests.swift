@@ -57,6 +57,7 @@ struct DinoCoreTests {
         testBossClockMotion()
         testHandSelection()
         testHandHintClearance()
+        testAssetCatalog()
         testAnimation()
         testCrystalMinerPatrols()
         testQuestions()
@@ -1973,7 +1974,7 @@ struct DinoCoreTests {
             expect(progress >= previousProgress && progress <= 1 && progress - previousProgress < 0.02,
                    "the camera and map character move with continuous matching progress")
             if (0.20..<1.10).contains(elapsed) {
-                expect(sample.pose.asset == "dino-world-jump-03", "one airborne illustration prevents flickering during the world salto")
+                expect(sample.pose.asset == "dino-world-jump-airborne", "one airborne illustration prevents flickering during the world salto")
             }
             let reduced = DinoAnimation.sample(.worldJump, elapsed: elapsed, reducedMotion: true)
             expect(reduced.pose.asset == "dino-idle" && reduced.angle == 0 && reduced.height == 0,
@@ -2047,7 +2048,8 @@ struct DinoCoreTests {
         }
         for elapsed in [0.0, 0.1, 1.2, 1.3, 1.5, 1.8] {
             let pose = DinoAnimation.sample(.worldJump, elapsed: elapsed).pose
-            expect(abs(opaqueFootline(pose.asset) + pose.offsetY - idleFootline) < 1.0 / 1254,
+            // Ground contact stays within one pixel of the bundled 768-pixel raster.
+            expect(abs(opaqueFootline(pose.asset) + pose.offsetY - idleFootline) < 1.0 / 768,
                    "the actual sprite pixels share idle's foot line through takeoff, landing and recovery")
         }
         // Sparse image transitions cannot interrupt the complete turn or ground contact.
@@ -2059,7 +2061,7 @@ struct DinoCoreTests {
             expect(abs(sample.height - previous.height) < 0.02, "continuous jump arc")
             expect(sample.height <= 0.00001, "bounded animation")
             if (0.20..<1.22).contains(Double(step) / 120) {
-                expect(sample.pose.asset == "dino-backflip-03", "one stable airborne pose throughout the turn")
+                expect(sample.pose.asset == "dino-result-backflip-airborne", "one stable airborne pose throughout the turn")
             }
             previous = sample
         }
@@ -2081,33 +2083,31 @@ struct DinoCoreTests {
             if turnAssets.last != sample.pose.asset { turnAssets.append(sample.pose.asset) }
             previousTurn = sample
         }
-        let expectedTurns = ["01", "02", "03", "04", "05", "06", "06a", "07", "07a",
-                             "08", "08a", "09", "10", "10a", "11", "12", "13", "14"]
-            .map { "dino-pirouette-" + $0 }
+        let expectedTurns = (1...18).map { String(format: "dino-result-pirouette-%02d", $0) }
         expect(turnAssets == expectedTurns && DinoAnimation.pirouetteAssets == expectedTurns,
                "all eighteen poses play once and are preloaded, including the four generated in-betweens")
-        expect(previousTurn.yaw == 360 && abs(previousTurn.height) < 0.00001 && previousTurn.pose.asset == "dino-pirouette-14",
+        expect(previousTurn.yaw == 360 && abs(previousTurn.height) < 0.00001 && previousTurn.pose.asset == "dino-result-pirouette-18",
                "pirouette lands in its stable final pose")
         expect(previousTurn.pose.offsetX == -0.012 && previousTurn.pose.offsetY == -0.029,
                "the revised pirouette preserves the exact previous final registration on the stone")
         let landing = DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.travelDuration(.pirouette))
-        expect(abs(landing.height) < 0.00001 && landing.pose.asset == "dino-pirouette-11",
+        expect(abs(landing.height) < 0.00001 && landing.pose.asset == "dino-result-pirouette-15",
                "the planted contact drawing begins exactly when the shared character reaches the stone")
         let beforeLanding = DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.travelDuration(.pirouette) - 1.0 / 60)
-        expect(beforeLanding.pose.asset == "dino-pirouette-10a" && beforeLanding.height < 0,
+        expect(beforeLanding.pose.asset == "dino-result-pirouette-14" && beforeLanding.height < 0,
                "the airborne reaching pose carries the descent until contact, without holding planted feet in the air")
         let preparation = [(0.0, "01"), (0.15, "02"), (0.26, "03")]
         for (time, pose) in preparation {
             let sample = DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.leadIn(.pirouette) + time)
-            expect(sample.height == 0 && sample.pose.asset == "dino-pirouette-\(pose)"
+            expect(sample.height == 0 && sample.pose.asset == "dino-result-pirouette-\(pose)"
                    && DinoAnimation.leadIn(.pirouette) + time < DinoAnimation.travelDelay(.pirouette),
                    "each preparation pose is visible before the journey leaves the HUD portrait")
         }
         expect(DinoAnimation.travelDelay(.backflip) == 0.18 && DinoAnimation.travelDelay(.idle) == 0,
                "the backflip prepares in the portrait until takeoff while idle has no travel delay")
-        expect(DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.travelDuration(.pirouette) + 0.35).pose.asset == "dino-pirouette-13",
+        expect(DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.travelDuration(.pirouette) + 0.35).pose.asset == "dino-result-pirouette-17",
                "the arms lift through an intermediate pose before the unchanged celebration")
-        expect(DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.leadIn(.pirouette) - 0.01).pose.asset == "dino-pirouette-01",
+        expect(DinoAnimation.sample(.pirouette, elapsed: DinoAnimation.leadIn(.pirouette) - 0.01).pose.asset == "dino-result-pirouette-01",
                "the result transition gets a standing lead-in before the short preparation poses")
         for (frame, next) in zip(DinoAnimation.pirouetteFrames, DinoAnimation.pirouetteFrames.dropFirst()) {
             let hold = next.start - frame.start
@@ -2163,7 +2163,7 @@ struct DinoCoreTests {
         let resting = DinoStumbleMotion.sample(at: DinoAnimation.stumbleLowest)!
         for step in 0...29 {
             let still = DinoStumbleMotion.sample(at: DinoAnimation.stumbleLowest + Double(step) / 100)!
-            expect(still.drawing.asset == "dino-stumble-deep-05" && still.points == resting.points
+            expect(still.drawing.asset == "dino-result-fall-06" && still.points == resting.points
                    && still.drawingVertices == resting.drawingVertices,
                    "the entire collapsed figure really stops, including its face, hands and tail")
         }
@@ -2173,7 +2173,7 @@ struct DinoCoreTests {
             let progress = Double(step) / 40
             let push = DinoStumbleMotion.sample(at: DinoAnimation.stumbleBraceEnd
                 + progress * (DinoAnimation.stumbleHandRelease - DinoAnimation.stumbleBraceEnd))!
-            expect(push.supportsWeight && push.drawing.asset == "dino-stumble-deep-06" && push.palms == braced.palms,
+            expect(push.supportsWeight && push.drawing.asset == "dino-result-fall-07" && push.palms == braced.palms,
                    "one painting and exactly planted palms carry the whole weight-bearing push")
         }
         expect(pushed.points[0].y < braced.points[0].y - 0.08 && pushed.points[5].y < braced.points[5].y - 0.04,
@@ -2183,7 +2183,7 @@ struct DinoCoreTests {
         let palms = DinoStumbleMotion.sample(at: DinoAnimation.stumbleLanding)!
         let face = DinoStumbleMotion.sample(at: DinoAnimation.stumbleFaceContact)!
         let low = DinoStumbleMotion.sample(at: DinoAnimation.stumbleLowest)!
-        expect(face.from.asset == "dino-stumble-deep-04" && low.from.asset == "dino-stumble-deep-05"
+        expect(face.from.asset == "dino-result-fall-05" && low.from.asset == "dino-result-fall-06"
                && face.points[2].y > 0.89 && face.points[4].y > 0.94
                && face.points[0].y > palms.points[0].y + 0.06,
                "after the palms land the muzzle and chin visibly sink down to the stone")
@@ -2221,10 +2221,10 @@ struct DinoCoreTests {
                && DinoAnimation.travelDelay(.stumble) == stumbleLeadIn + DinoAnimation.stumbleTakeoff,
                "the fall starts in the portrait and contacts the stone on the same clock as the painted hands")
         let contact = DinoAnimation.sample(.stumble, elapsed: stumbleLanding)
-        expect(contact.pose.asset == "dino-stumble-deep-03a" && contact.previousPose == nil && contact.height == 0 && contact.angle == 0,
+        expect(contact.pose.asset == "dino-result-fall-04" && contact.previousPose == nil && contact.height == 0 && contact.angle == 0,
                "the hands catch the fall at contact without an airborne planted pose or a ghost of the standing figure")
         for frame in DinoAnimation.stumbleFrames {
-            expect(abs(opaqueFootline(frame.pose.asset) + frame.pose.offsetY - idleFootline) < 1.0 / 1254,
+            expect(abs(opaqueFootline(frame.pose.asset) + frame.pose.offsetY - idleFootline) < 1.0 / 768,
                    "every fall and push-up drawing shares the same opaque contact line on the stone")
         }
         for fps in [30.0, 60.0] {
@@ -2286,8 +2286,8 @@ struct DinoCoreTests {
                        "one-star playback shows all eight opening poses once and settles into idle at 30 and 60 fps")
             }
         }
-        for (clip, asset) in [(DinoAnimation.Clip.backflip, "dino-backflip-08"), (.pirouette, "dino-pirouette-14"),
-                               (.stumble, "dino-stumble-deep-08"),
+        for (clip, asset) in [(DinoAnimation.Clip.backflip, "dino-result-backflip-recover"), (.pirouette, "dino-result-pirouette-18"),
+                               (.stumble, "dino-result-fall-10"),
                                (.openingJump, "dino-idle"),
                                (.thumbsUp, DinoAnimation.correctAnswerStillAsset), (.wrongAnswer, DinoAnimation.wrongAnswerAssets[0])] {
             for step in 0...180 {
@@ -2297,8 +2297,8 @@ struct DinoCoreTests {
                        "reduced motion holds the same clear expression completely still")
             }
         }
-        let applauseAssets = (1...8).map { String(format: "dino_applaus_frame_%02d", $0) }
-        expect(DinoAnimation.correctAnswerAssets == applauseAssets, "correct answers use the eight supplied applause drawings")
+        let applauseAssets = ["dino-idle"] + (1...6).map { String(format: "dino-answer-clap-%02d", $0) } + ["dino-idle"]
+        expect(DinoAnimation.correctAnswerAssets == applauseAssets, "correct answers share idle at both ends of the six clap drawings")
         for fps in [30.0, 60.0] {
             for phase in [0.0, 0.25, 0.5, 0.75] {
                 var seen = [String]()
@@ -2308,7 +2308,7 @@ struct DinoCoreTests {
                     expect(reaction.angle == 0 && reaction.height == 0 && reaction.scaleX == 1 && reaction.scaleY == 1,
                            "the drawings carry the claps without the former cheering bounce")
                 }
-                expect(seen == applauseAssets + ["dino-idle"],
+                expect(seen == applauseAssets,
                        "every clap drawing plays in order at 30 and 60 fps, then returns to idle")
             }
         }
@@ -2346,7 +2346,7 @@ struct DinoCoreTests {
         for asset in applauseAssets {
             expect(DinoAnimation.spriteAssets.contains(asset)
                    && FileManager.default.fileExists(atPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
-                   && DinoAvatarMask.spriteRegions(for: asset) != nil,
+                   && (asset == "dino-idle" || DinoAvatarMask.spriteRegions(for: asset) != nil),
                    "every applause drawing is available, preloaded and supports personal colors")
         }
         for asset in applauseAssets.dropFirst().dropLast() {
@@ -3313,6 +3313,48 @@ struct DinoCoreTests {
         expect(DinoPlayer(store: store).profile.dinoAppearance == .standard, "restore original colors persists")
     }
 
+    static func testAssetCatalog() {
+        // Include names assembled by animation code, not just string literals.
+        var sprites = Set(["dino-idle"] + DinoOpeningJump.assets)
+        for clip: DinoAnimation.Clip in [.idle, .thumbsUp, .wrongAnswer, .stumble, .openingJump, .backflip, .pirouette, .worldJump] {
+            for reducedMotion in [false, true] {
+                for tick in 0...400 {
+                    let sample = DinoAnimation.sample(clip, elapsed: Double(tick) / 120, reducedMotion: reducedMotion)
+                    sprites.insert(sample.pose.asset)
+                    if let previous = sample.previousPose { sprites.insert(previous.asset) }
+                }
+            }
+        }
+        let preloaded = Set(DinoAnimation.spriteAssets + DinoAnimation.worldJumpAssets)
+        expect(preloaded.isSubset(of: sprites), "every preloaded sprite is actually displayed by an animation")
+        let bossSource = try! String(contentsOfFile: "Dino/Views/WorldBossArt.swift", encoding: .utf8)
+        let pattern = try! NSRegularExpression(pattern: #""boss-[a-z-]+""#)
+        let bosses = Set(pattern.matches(in: bossSource, range: NSRange(bossSource.startIndex..., in: bossSource)).map {
+            String(bossSource[Range($0.range, in: bossSource)!].dropFirst().dropLast())
+        })
+        expect(bosses.count == 10, "all ten world boss illustrations are accounted for")
+        let expected = sprites.union(bosses).union(["reward-star"])
+        let root = URL(fileURLWithPath: "Assets.xcassets")
+        let actual = Set(try! FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "imageset" }.map { $0.deletingPathExtension().lastPathComponent })
+        expect(actual == expected, "catalog has all displayed assets and no unused image sets: \(actual.symmetricDifference(expected).sorted())")
+        for asset in expected {
+            let url = root.appendingPathComponent("\(asset).imageset/\(asset).png")
+            guard let data = CGImageSourceCreateWithURL(url as CFURL, nil),
+                  let image = CGImageSourceCreateImageAtIndex(data, 0, nil) else {
+                fatalError("Missing or invalid asset: \(asset)")
+            }
+            let side = asset == "dino-idle" || asset.hasPrefix("dino-opening-jump-") ? 1254
+                : bosses.contains(asset) ? 640 : asset == "reward-star" ? 384 : 768
+            expect(image.width == side && image.height == side, "\(asset) retains its intended iPad raster budget")
+            let contents = try! Data(contentsOf: url.deletingLastPathComponent().appendingPathComponent("Contents.json"))
+            let manifest = try! JSONSerialization.jsonObject(with: contents) as! [String: Any]
+            let images = manifest["images"] as! [[String: Any]]
+            expect(images.compactMap { $0["filename"] as? String } == [url.lastPathComponent],
+                   "\(asset) catalog entry points to its renamed PNG")
+        }
+    }
+
     static func testDinoAvatarMask() {
         // Coordinates and colors come from the original illustration's problem areas.
         for (x, y) in [(595.0, 48.0), (615.0, 61.0)] {
@@ -3355,9 +3397,11 @@ struct DinoCoreTests {
                    "the large opening retains all source pixels after personalization")
             expect(compact.width == 768, "ordinary companions keep their compact rendering budget")
         }
-        // Exercise the actual 768-pixel display raster as well as the old
-        // thumbnail check: its spike highlights have a different distribution.
+        // Exercise the actual 768-pixel display raster as well as a thumbnail.
+        // Resampling an already reduced source to 384 pixels can shift a tone
+        // quantile by one 8-bit step; the display-raster limit stays unchanged.
         for size in [384, 768] {
+        let toneTolerance = 0.015 + (size == 384 ? 1.0 / 255 : 0)
         func pixels(_ image: CGImage) -> [UInt8] {
             var bytes = [UInt8](repeating: 0, count: size * size * 4)
             bytes.withUnsafeMutableBytes { buffer in
@@ -3425,11 +3469,11 @@ struct DinoCoreTests {
                         idleLightness[part] = quantiles; idleSaturation[part] = s[s.count / 2]
                         let h = hues[part]!.sorted(); idleHue[part] = h[h.count / 2]
                     } else {
-                        expect(zip(quantiles, idleLightness[part]!).allSatisfy { abs($0 - $1) < 0.015 },
+                        expect(zip(quantiles, idleLightness[part]!).allSatisfy { abs($0 - $1) < toneTolerance },
                                "\(asset) matches idle \(part) shadows, base color and highlights: \(quantiles) vs \(idleLightness[part]!)")
                         expect(abs(s[s.count / 2] - idleSaturation[part]!) < 0.025,
                                "\(asset) keeps idle \(part) saturation instead of becoming pastel: \(s[s.count / 2]) vs \(idleSaturation[part]!)")
-                        if asset.hasPrefix("dino-stumble-") {
+                        if asset.hasPrefix("dino-result-fall-") {
                             let h = hues[part]!.sorted()
                             expect(abs(h[h.count / 2] - idleHue[part]!) < 0.004,
                                    "\(asset) keeps the same \(part) hue as idle at \(size) pixels, including the standard palette")
@@ -3445,34 +3489,22 @@ struct DinoCoreTests {
         // Pose-specific print regions also keep the eye and mouth out of this check.
         let regions: [(String, CGRect)] = [
             ("dino-idle", CGRect(x: 550, y: 90, width: 238, height: 106)),
-            ("dino-thumbs-up-08", CGRect(x: 525, y: 85, width: 250, height: 117)),
-            ("dino-wrong-answer-04", CGRect(x: 526, y: 89, width: 252, height: 137)),
-            ("dino-backflip-01", CGRect(x: 702, y: 205, width: 258, height: 98)),
-            ("dino-backflip-03", CGRect(x: 326, y: 131, width: 210, height: 160)),
-            ("dino-backflip-07", CGRect(x: 638, y: 233, width: 256, height: 106)),
-            ("dino-backflip-08", CGRect(x: 520, y: 102, width: 237, height: 109)),
-            ("dino-stumble-01", CGRect(x: 545, y: 90, width: 280, height: 140)),
-            ("dino-stumble-02", CGRect(x: 701, y: 169, width: 287, height: 128)),
-            ("dino-stumble-03", CGRect(x: 714, y: 309, width: 290, height: 130)),
-            ("dino-stumble-04", CGRect(x: 829, y: 485, width: 277, height: 126)),
-            ("dino-stumble-05", CGRect(x: 779, y: 411, width: 285, height: 136)),
-            ("dino-stumble-06", CGRect(x: 740, y: 272, width: 285, height: 115)),
-            ("dino-stumble-06a", CGRect(x: 750, y: 245, width: 270, height: 118)),
-            ("dino-stumble-06b", CGRect(x: 655, y: 143, width: 274, height: 126)),
-            ("dino-stumble-07", CGRect(x: 545, y: 90, width: 280, height: 140)),
-            ("dino-stumble-08", CGRect(x: 545, y: 90, width: 280, height: 140)),
-            ("dino-pirouette-01", CGRect(x: 580, y: 150, width: 252, height: 105)),
-            ("dino-pirouette-04", CGRect(x: 700, y: 135, width: 195, height: 100)),
-            ("dino-pirouette-10", CGRect(x: 390, y: 120, width: 195, height: 117)),
-            ("dino-pirouette-08a", CGRect(x: 392, y: 165, width: 60, height: 62)),
-            ("dino-pirouette-10a", CGRect(x: 439, y: 203, width: 231, height: 120)),
-            ("dino-pirouette-09", CGRect(x: 350, y: 139, width: 155, height: 94)),
-            ("dino-pirouette-14", CGRect(x: 560, y: 118, width: 246, height: 110)),
-            ("dino-pirouette-11", CGRect(x: 433, y: 208, width: 246, height: 109)),
-            ("dino-pirouette-02", CGRect(x: 696, y: 207, width: 243, height: 90)),
-            ("dino-pirouette-03", CGRect(x: 681, y: 157, width: 220, height: 104)),
-            ("dino-pirouette-12", CGRect(x: 568, y: 161, width: 245, height: 83)),
-            ("dino-pirouette-13", CGRect(x: 559, y: 112, width: 236, height: 104))
+            ("dino-result-backflip-crouch", CGRect(x: 702, y: 205, width: 258, height: 98)),
+            ("dino-result-backflip-airborne", CGRect(x: 326, y: 131, width: 210, height: 160)),
+            ("dino-result-backflip-landing", CGRect(x: 638, y: 233, width: 256, height: 106)),
+            ("dino-result-backflip-recover", CGRect(x: 520, y: 102, width: 237, height: 109)),
+            ("dino-result-pirouette-01", CGRect(x: 580, y: 150, width: 252, height: 105)),
+            ("dino-result-pirouette-04", CGRect(x: 700, y: 135, width: 195, height: 100)),
+            ("dino-result-pirouette-13", CGRect(x: 390, y: 120, width: 195, height: 117)),
+            ("dino-result-pirouette-11", CGRect(x: 392, y: 165, width: 60, height: 62)),
+            ("dino-result-pirouette-14", CGRect(x: 439, y: 203, width: 231, height: 120)),
+            ("dino-result-pirouette-12", CGRect(x: 350, y: 139, width: 155, height: 94)),
+            ("dino-result-pirouette-18", CGRect(x: 560, y: 118, width: 246, height: 110)),
+            ("dino-result-pirouette-15", CGRect(x: 433, y: 208, width: 246, height: 109)),
+            ("dino-result-pirouette-02", CGRect(x: 696, y: 207, width: 243, height: 90)),
+            ("dino-result-pirouette-03", CGRect(x: 681, y: 157, width: 220, height: 104)),
+            ("dino-result-pirouette-16", CGRect(x: 568, y: 161, width: 245, height: 83)),
+            ("dino-result-pirouette-17", CGRect(x: 559, y: 112, width: 236, height: 104))
         ] + (DinoSpriteColorRenderer.answerLetteringBounds.merging(DinoSpriteColorRenderer.deepFallLetteringBounds) { first, _ in first }).map { ($0.key, $0.value) }
         expect(DinoAppearance.standard.bandanaLetteringHex == 0xFFFFFF,
                "the original red bandana retains white lettering")
