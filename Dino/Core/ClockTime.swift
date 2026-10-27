@@ -1,5 +1,29 @@
 import Foundation
 
+/// Scenery clocks share one speed contract; boss hands run twice as fast.
+enum WorldClockMotion {
+    static let cityMinuteRevolution: TimeInterval = 24
+    static let bossMinuteRevolution: TimeInterval = cityMinuteRevolution / 2
+
+    struct Phase {
+        let initial: ClockTime
+        let elapsed: TimeInterval
+        let minuteRevolution: TimeInterval
+
+        private var minutes: Double {
+            let cycle = minuteRevolution * 24
+            return Double(initial.minutesOfDay)
+                + max(0, elapsed).truncatingRemainder(dividingBy: cycle) * 60 / minuteRevolution
+        }
+        var minuteAngle: Double { (minutes * 6).truncatingRemainder(dividingBy: 360) }
+        var hourAngle: Double { (minutes * 0.5).truncatingRemainder(dividingBy: 360) }
+        var reading: ClockTime {
+            let minute = Int(minutes) % 1440
+            return .init(hour: minute / 60, minute: minute % 60)
+        }
+    }
+}
+
 /// Shared clock mathematics. Rendering, questions and validation all use this value.
 struct ClockTime: Codable, Equatable, Hashable, Sendable {
     let hour: Int

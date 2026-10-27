@@ -45,10 +45,16 @@ struct DinoCoreTests {
             print("PASS: \(checks) answer input and practice checks.")
             return
         }
+        if CommandLine.arguments.contains("--boss-clocks") {
+            testBossClockMotion()
+            print("PASS: \(checks) boss clock motion checks.")
+            return
+        }
         testLevelCurriculum()
         testAdaptiveDifficulty()
         testQuestionVariation()
         testClocks()
+        testBossClockMotion()
         testHandSelection()
         testHandHintClearance()
         testAnimation()
@@ -724,6 +730,31 @@ struct DinoCoreTests {
         expect(restarted.practiceRecords.isEmpty && store.loadPracticeRecords().isEmpty, "progress reset removes practice records")
         nearThousand.resetAllData()
         expect(nearThousand.practiceRecords.isEmpty && store.loadPracticeRecords().isEmpty, "full reset removes practice records")
+    }
+
+    static func testBossClockMotion() {
+        let start = ClockTime(hour: 11, minute: 50)
+        func phase(_ elapsed: TimeInterval, boss: Bool = true) -> WorldClockMotion.Phase {
+            .init(initial: start, elapsed: elapsed, minuteRevolution: boss
+                ? WorldClockMotion.bossMinuteRevolution : WorldClockMotion.cityMinuteRevolution)
+        }
+        expect(WorldClockMotion.bossMinuteRevolution == 12, "boss minute hand takes twelve seconds per revolution")
+        expect(phase(0).minuteAngle == start.minuteAngle && phase(0).hourAngle == start.hourAngle,
+               "animated clocks start at their specified time")
+        for elapsed in stride(from: 0.0, through: 288.0, by: 0.125) {
+            expect(abs(phase(elapsed).minuteAngle - phase(elapsed * 2, boss: false).minuteAngle) < 0.000001,
+                   "boss minute hand runs at exactly twice the city speed")
+            expect(abs(phase(elapsed).hourAngle - phase(elapsed * 2, boss: false).hourAngle) < 0.000001,
+                   "boss hour hand follows the same speed ratio")
+        }
+        expect(phase(2).reading == ClockTime(hour: 12), "clock carries minutes across twelve")
+        expect(abs(phase(3).minuteAngle - 30) < 0.000001 && abs(phase(3).hourAngle - 2.5) < 0.000001,
+               "hour hand advances smoothly by one twelfth of the minute movement")
+        expect(phase(12).minuteAngle == phase(0).minuteAngle, "minute hand closes one full revolution")
+        expect(phase(144).hourAngle == phase(0).hourAngle, "hour hand closes one full revolution")
+        expect(phase(288).reading == start && phase(288.125).minuteAngle == phase(0.125).minuteAngle,
+               "whole-day wrapping is continuous")
+        expect(phase(-1).minuteAngle == phase(0).minuteAngle, "a future animation epoch stays at its initial time")
     }
 
     static func testClocks() {
@@ -2122,12 +2153,33 @@ struct DinoCoreTests {
                    && waiting.angle == 0 && waiting.scaleX == 1 && waiting.scaleY == 1 && waiting.previousPose == nil,
                    "the face, colors and portrait camera remain exactly idle until the fall actually starts")
         }
-        expect((0.40...0.46).contains(DinoAnimation.duration(.stumble) - stumbleLanding),
-               "hand contact, full collapse and recovery form one short continuous movement")
+        expect((0.28...0.34).contains(DinoAnimation.stumblePushStart - DinoAnimation.stumbleLowest),
+               "Dino is visibly motionless on the stone before attempting to rise")
+        expect((0.17...0.22).contains(DinoAnimation.stumbleHandRelease - DinoAnimation.stumbleBraceEnd),
+               "the arms carry a brisk supported push without a slow-motion hold")
         let motionFrames = DinoAnimation.stumbleFrames
-        let recovery = motionFrames.filter { $0.start >= DinoAnimation.stumbleLowest }
-        expect(recovery.count == 5 && recovery[3].start - recovery[0].start <= 0.24,
-               "the full low pose leads into a brisk push-up before the short settling motion")
+        expect((0.45...0.55).contains(motionFrames.last!.start - DinoAnimation.stumblePushStart),
+               "the complete rise takes about half a second after the motionless rest")
+        let resting = DinoStumbleMotion.sample(at: DinoAnimation.stumbleLowest)!
+        for step in 0...29 {
+            let still = DinoStumbleMotion.sample(at: DinoAnimation.stumbleLowest + Double(step) / 100)!
+            expect(still.drawing.asset == "dino-stumble-deep-05" && still.points == resting.points
+                   && still.drawingVertices == resting.drawingVertices,
+                   "the entire collapsed figure really stops, including its face, hands and tail")
+        }
+        let braced = DinoStumbleMotion.sample(at: DinoAnimation.stumbleBraceEnd)!
+        let pushed = DinoStumbleMotion.sample(at: DinoAnimation.stumbleHandRelease)!
+        for step in 0...40 {
+            let progress = Double(step) / 40
+            let push = DinoStumbleMotion.sample(at: DinoAnimation.stumbleBraceEnd
+                + progress * (DinoAnimation.stumbleHandRelease - DinoAnimation.stumbleBraceEnd))!
+            expect(push.supportsWeight && push.drawing.asset == "dino-stumble-deep-06" && push.palms == braced.palms,
+                   "one painting and exactly planted palms carry the whole weight-bearing push")
+        }
+        expect(pushed.points[0].y < braced.points[0].y - 0.08 && pushed.points[5].y < braced.points[5].y - 0.04,
+               "the head and shoulders rise substantially above the fixed hands")
+        expect(DinoAnimation.duration(.stumble) == stumbleLeadIn + motionFrames.last!.start,
+               "playback includes the complete supported push, hand release and standing recovery")
         let palms = DinoStumbleMotion.sample(at: DinoAnimation.stumbleLanding)!
         let face = DinoStumbleMotion.sample(at: DinoAnimation.stumbleFaceContact)!
         let low = DinoStumbleMotion.sample(at: DinoAnimation.stumbleLowest)!
@@ -2140,11 +2192,13 @@ struct DinoCoreTests {
         for (frame, next) in zip(motionFrames, motionFrames.dropFirst()) {
             let early = DinoStumbleMotion.sample(at: frame.start + (next.start - frame.start) * 0.2)!
             let late = DinoStumbleMotion.sample(at: frame.start + (next.start - frame.start) * 0.8)!
-            expect(zip(early.points, late.points).contains { hypot($0.x - $1.x, $0.y - $1.y) > 0.002 },
-                   "each painted interval contains real movement rather than a held frame")
-            expect(early.opacity == 0 && late.opacity == 1,
-                   "the body moves between poses while only one opaque painting supplies the face")
-            for (vertex, source) in zip(early.fromVertices, DinoStumbleMotion.grid) {
+            if frame.start == DinoAnimation.stumbleLowest {
+                expect(early.points == late.points, "the intentional rest is an actual held body")
+            } else {
+                expect(zip(early.points, late.points).contains { hypot($0.x - $1.x, $0.y - $1.y) > 0.002 },
+                       "active intervals contain continuous body movement")
+            }
+            for (vertex, source) in zip(early.drawingVertices, DinoStumbleMotion.grid) {
                 expect(vertex.x.isFinite && vertex.y.isFinite && source.x.isFinite,
                        "all interpolated mesh coordinates remain finite")
             }
@@ -2184,14 +2238,11 @@ struct DinoCoreTests {
                            && (0...1).contains(sample.poseBlend),
                            "the fall descends without a celebratory jump, spin or invalid blend")
                     if let morph = sample.morph {
-                        expect((0...1).contains(morph.opacity), "texture opacity remains valid")
-                        for vertices in [morph.opacity < 0.99 ? morph.fromVertices : [],
-                                         morph.opacity > 0.01 ? morph.toVertices : []] where !vertices.isEmpty {
-                            for triangle in DinoStumbleMotion.triangles {
-                                let a = vertices[triangle.0], b = vertices[triangle.1], c = vertices[triangle.2]
-                                expect((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x) > 0,
-                                       "visible body interpolation never folds or inverts a mesh triangle")
-                            }
+                        let vertices = morph.drawingVertices
+                        for triangle in DinoStumbleMotion.triangles {
+                            let a = vertices[triangle.0], b = vertices[triangle.1], c = vertices[triangle.2]
+                            expect((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x) > 0,
+                                   "visible body interpolation never folds or inverts a mesh triangle")
                         }
                         expect(morph.points.suffix(5).allSatisfy { abs($0.y - idleFootline) < 1e-8 },
                                "the continuous recovery keeps its ground controls planted")
@@ -2200,7 +2251,10 @@ struct DinoCoreTests {
                         expect(sample.angle == 0, "Dino pushes up with his contact line fixed after landing")
                     }
                 }
-                expect(seen == motionFrames.map { $0.pose.asset },
+                let expected = motionFrames.map { $0.pose.asset }.reduce(into: [String]()) { assets, asset in
+                    if assets.last != asset { assets.append(asset) }
+                }
+                expect(seen == expected,
                        "the exact idle face leads into the continuous recovery at both refresh rates")
             }
         }

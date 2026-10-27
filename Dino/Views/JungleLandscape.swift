@@ -1902,6 +1902,9 @@ struct WorldMapLandscape: View, Equatable {
                 }
             }.clipped()
         }
+        .overlay {
+            WorldBossMapClocks(world: DinoWorldCatalog.world(1)!, routeOffset: routeOffset, viewportHeight: viewportHeight)
+        }
         .allowsHitTesting(false).accessibilityHidden(true)
     }
 
@@ -6430,6 +6433,10 @@ private enum VillagePlan {
                         let b = local.applying(rotation)
                         let minY = y + b.minY * size, maxY = y + b.maxY * size
                         guard minY > -55, maxY < 1540 else { continue }
+                        // Keep seating away from a bridge's crossing line on either bank.
+                        if kind == .bench, bridges.contains(where: {
+                            $0.point.y >= minY - 36 * scale && $0.point.y <= maxY + 36 * scale
+                        }) { continue }
                         let first = max(0, Int(floor((minY - startY) / 4)))
                         let last = min(rows.count - 1, Int(ceil((maxY - startY) / 4)))
                         for outer in (kind == .bench ? [false] : [true]) {
@@ -6527,8 +6534,8 @@ private enum VillagePlan {
             place(id: 70 + index, kind: index == 1 ? .fountain : .market,
                   y: 320 + CGFloat(index) * 340, right: index.isMultiple(of: 2), outer: true, maximum: 0.94, minimum: 0.68)
         }
-        // Quiet seating on the inner quays leaves the bridge keepers room to work.
-        for index in [0, 2, 5, 7, 9] {
+        // Use the alternate seating spots between crossings, away from the bridges.
+        for index in [1, 3, 4, 6, 8] {
             place(id: 100 + index, kind: .bench, y: 100 + CGFloat(index) * 148,
                   right: index.isMultiple(of: 2), outer: false, maximum: 0.80, minimum: 0.55)
         }
@@ -9253,19 +9260,14 @@ private struct CityBossCourt {
 /// One clockwise phase for every city clock: 150 simulated seconds per second.
 /// A minute-hand revolution takes 24 real seconds (world eight takes 0.5 seconds).
 private struct CityClockPhase {
-    static let revolutionDuration: TimeInterval = 24
+    static let revolutionDuration = WorldClockMotion.cityMinuteRevolution
     let elapsed: TimeInterval
-    private var minutes: Double {
-        let initial = WorldBossClock.time(in: 6)
-        let cycle = Self.revolutionDuration * 24
-        return Double(initial.minutesOfDay) + max(0, elapsed).truncatingRemainder(dividingBy: cycle) * 60 / Self.revolutionDuration
+    private var phase: WorldClockMotion.Phase {
+        .init(initial: WorldBossClock.time(in: 6), elapsed: elapsed, minuteRevolution: Self.revolutionDuration)
     }
-    var minuteAngle: Double { (minutes * 6).truncatingRemainder(dividingBy: 360) }
-    var hourAngle: Double { (minutes * 0.5).truncatingRemainder(dividingBy: 360) }
-    var reading: ClockTime {
-        let minute = Int(minutes) % 1440
-        return .init(hour: minute / 60, minute: minute % 60)
-    }
+    var minuteAngle: Double { phase.minuteAngle }
+    var hourAngle: Double { phase.hourAngle }
+    var reading: ClockTime { phase.reading }
 }
 
 private struct CityClockFace {
@@ -9758,6 +9760,17 @@ private struct CityMetroForeground: View {
                 CityWorldPainter(context: c).metroForeground(layout: layout)
             }.frame(width: frame.width, height: frame.height)
                 .position(x: frame.midX, y: frame.midY).zIndex(Double(court.point.y))
+            // The carried clocks share the boss's ground depth, so nearer
+            // buildings cover them just as they cover the dinosaur's wings.
+            let clockPoint = CGPoint(x: court.bossPoint.x, y: layout.routeOffset + court.bossPoint.y)
+            let clockFrame = WorldBossPainter.bounds(worldID: 6, at: clockPoint, size: s * 0.80)
+            if alwaysVisible || clockFrame.intersects(viewport) {
+                Canvas { context, _ in
+                    var c = context; c.translateBy(x: -clockFrame.minX, y: -clockFrame.minY)
+                    WorldBossPainter(context: c).drawClocks(worldID: 6, at: clockPoint, size: s * 0.80, elapsed: clockTime)
+                }.frame(width: clockFrame.width, height: clockFrame.height)
+                    .position(x: clockFrame.midX, y: clockFrame.midY).zIndex(Double(court.point.y) + 0.001)
+            }
         }.frame(width: layout.width, height: layout.height, alignment: .topLeading)
     }
 }
@@ -17408,7 +17421,7 @@ private struct CastleWorldPainter {
     }
 }
 
-/// All scenery is native Canvas geometry. Generated concepts are documentation only.
+/// Native Canvas scenery with shared image assets for the world bosses.
 struct ThemedWorldLandscape: View, Equatable {
     let world: DinoWorld
     var routeOffset: CGFloat = 180
@@ -17621,6 +17634,11 @@ struct ThemedWorldLandscape: View, Equatable {
                 }.modifier(MapAnimationVisibility(viewportHeight: viewportHeight))
                     .environment(\.dinoMapDefersAnimations, cachesTerrain)
             }
+            .overlay {
+                if world.themeID != 6 {
+                    WorldBossMapClocks(world: world, routeOffset: routeOffset, viewportHeight: viewportHeight)
+                }
+            }
             .overlay(alignment: .bottom) {
                 if world.id == 2 {
                     DesertVolcanoTransition(routeOffset: routeOffset, viewportHeight: viewportHeight)
@@ -17631,9 +17649,44 @@ struct ThemedWorldLandscape: View, Equatable {
     }
 }
 
-/// Shape-only art for the boss start card and the next-world reward.
+/// Only the clock cutouts animate; the body and world remain in their depth layers.
+private struct WorldBossMapClocks: View {
+    let world: DinoWorld
+    let routeOffset: CGFloat
+    let viewportHeight: CGFloat
+
+    var body: some View {
+        GeometryReader { geometry in
+            let layout = WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset)
+            let jungle = world.themeID == 1
+            let scale = jungle ? min(1.35, max(0.82, geometry.size.width / 390)) : layout.scale
+            let scene = jungle ? JungleMapLayout(width: geometry.size.width).scene() : nil
+            let origin = scene?.bossPoint ?? CGPoint(x: layout.width - 79 * scale, y: 1675)
+            let artScale = scale * 0.88
+            let point = CGPoint(x: origin.x, y: routeOffset + origin.y)
+            let frame = WorldBossPainter.bounds(worldID: world.themeID, at: point, size: artScale)
+            WorldBossClockSurface(themeID: world.themeID, point: point, scale: artScale, viewportHeight: viewportHeight)
+                .mask {
+                    if let scene {
+                        JungleDepthOcclusion(scene: scene, frame: frame.offsetBy(dx: 0, dy: -routeOffset), behindY: origin.y)
+                    } else { Rectangle().fill(.white) }
+                }
+                .position(x: frame.midX, y: frame.midY)
+        }.allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+/// Preview scenery and dinosaur bodies stay static while only the clocks tick.
 struct WorldThemePreview: View {
     let world: DinoWorld
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var epoch = Date()
+
+    private func scale(_ size: CGSize) -> CGFloat {
+        min(size.height / ([8, 10].contains(world.id) ? 218 : 195), size.width / 290)
+    }
+
     var body: some View {
         Canvas { context, size in
             let colors = WorldThemeColors(world)
@@ -17642,13 +17695,20 @@ struct WorldThemePreview: View {
                 Gradient(colors: [.white.opacity(0.25), Color(dinoHex: colors.shade).opacity(0.08)]),
                 startPoint: .zero, endPoint: CGPoint(x: size.width, y: size.height)))
             let p = ThemePainter(context: context, colors: colors)
-            let theme = world.themeID
-            let heightUnits: CGFloat = [8, 10].contains(world.id) ? 218 : 195
-            let scale = min(size.height / heightUnits, size.width / 290)
+            let theme = world.themeID, scale = scale(size)
             p.scene(worldID: theme, at: CGPoint(x: size.width * 0.21, y: size.height * 0.87),
                     size: scale * 1.12, variation: 0)
             p.bossClearing(worldID: theme, at: CGPoint(x: size.width * 0.71, y: size.height * 0.92), size: scale)
             p.boss(worldID: theme, at: CGPoint(x: size.width * 0.70, y: size.height * 0.94), size: scale)
+        }
+        .overlay {
+            TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion || scenePhase != .active)) { timeline in
+                Canvas { context, size in
+                    WorldBossPainter(context: context).drawClocks(worldID: world.themeID,
+                        at: CGPoint(x: size.width * 0.70, y: size.height * 0.94), size: scale(size),
+                        elapsed: reduceMotion ? 0 : timeline.date.timeIntervalSince(epoch))
+                }
+            }
         }.allowsHitTesting(false)
     }
 }
@@ -18487,8 +18547,8 @@ private struct ThemePainter {
         }
     }
 
-    func boss(worldID: Int, at point: CGPoint, size: CGFloat) {
-        WorldBossPainter(context: context).draw(worldID: worldID, at: point, size: size)
+    func boss(worldID: Int, at point: CGPoint, size: CGFloat, elapsed: TimeInterval = 0) {
+        WorldBossPainter(context: context).draw(worldID: worldID, at: point, size: size, elapsed: elapsed)
     }
 }
 

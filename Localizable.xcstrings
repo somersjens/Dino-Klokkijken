@@ -5105,13 +5105,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Read the digital time in words"
+            "value" : "Read the digital clock"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lees de digitale tijd in woorden"
+            "value" : "Lees de digitale klok af"
           }
         }
       }
@@ -5122,13 +5122,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Complete the time sentence"
+            "value" : "Build the time in words"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Maak de tijdzin af"
+            "value" : "Stel de tijd in woorden samen"
           }
         }
       }
@@ -5190,13 +5190,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Words to a clock"
+            "value" : "Choose the clock for the time in words"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Van woorden naar een klok"
+            "value" : "Kies de klok bij de tijd in woorden"
           }
         }
       }
@@ -5258,13 +5258,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "True or false?"
+            "value" : "Does the time match the clock?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Goed of fout?"
+            "value" : "Klopt de tijd bij de klok?"
           }
         }
       }

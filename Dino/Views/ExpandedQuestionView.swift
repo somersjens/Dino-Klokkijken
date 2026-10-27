@@ -1254,6 +1254,8 @@ struct DinoDayPartLine: View {
     private var segments: [DinoDayPartSchedule.Segment] { schedule.timeline() }
     private var fraction: CGFloat { CGFloat(time.minutesOfDay) / (24 * 60) }
     private var barHeight: CGFloat { 36 }
+    private var markerHeadroom: CGFloat { 12 }
+    private var markerFootroom: CGFloat { 2 }
     private var edgeInset: CGFloat { barHeight / 2 }
     private var nameGap: CGFloat { 4 }
 
@@ -1262,12 +1264,15 @@ struct DinoDayPartLine: View {
         VStack(spacing: 5) {
             names
             ZStack(alignment: .topLeading) {
-                bar.padding(.top, showsSelection ? 13 : 0)
+                bar
+                    .padding(.top, showsSelection ? markerHeadroom : 0)
+                    .padding(.bottom, showsSelection ? markerFootroom : 0)
                 if showsSelection {
                     DinoDayPartMarker()
                         .fill(DinoStyle.ink)
-                        .frame(width: 14, height: barHeight + 8)
-                        .offset(x: timePosition(fraction) - 7, y: 1)
+                        .frame(width: 16, height: markerHeadroom + barHeight + markerFootroom)
+                        .shadow(color: DinoStyle.ink.opacity(0.18), radius: 1, y: 1)
+                        .offset(x: timePosition(fraction) - 8)
                         .accessibilityHidden(true)
                 }
             }
@@ -1428,19 +1433,30 @@ struct DinoDayPartLine: View {
     private func hourText(_ hour: Int) -> String { String(format: "%02d", hour) }
 }
 
-/// A single silhouette joins the pointer above the ruler to the exact time inside it.
+/// A soft pointer cap joins a rounded stem that passes through the full ruler.
 private struct DinoDayPartMarker: Shape {
     func path(in rect: CGRect) -> Path {
         let center = rect.midX
-        let halfStem: CGFloat = 1.5
+        let halfStem: CGFloat = 2
         return Path { path in
-            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
-            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-            path.addLine(to: CGPoint(x: center + halfStem, y: rect.minY + 10))
+            path.move(to: CGPoint(x: rect.minX + 3, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX - 3, y: rect.minY))
+            path.addQuadCurve(to: CGPoint(x: rect.maxX - 0.5, y: rect.minY + 4),
+                              control: CGPoint(x: rect.maxX + 1, y: rect.minY))
+            path.addLine(to: CGPoint(x: center + halfStem + 1, y: rect.minY + 10))
+            path.addQuadCurve(to: CGPoint(x: center + halfStem, y: rect.minY + 13),
+                              control: CGPoint(x: center + halfStem, y: rect.minY + 11.5))
             path.addLine(to: CGPoint(x: center + halfStem, y: rect.maxY - halfStem))
+            path.addQuadCurve(to: CGPoint(x: center, y: rect.maxY),
+                              control: CGPoint(x: center + halfStem, y: rect.maxY))
             path.addQuadCurve(to: CGPoint(x: center - halfStem, y: rect.maxY - halfStem),
-                              control: CGPoint(x: center, y: rect.maxY + halfStem))
-            path.addLine(to: CGPoint(x: center - halfStem, y: rect.minY + 10))
+                              control: CGPoint(x: center - halfStem, y: rect.maxY))
+            path.addLine(to: CGPoint(x: center - halfStem, y: rect.minY + 13))
+            path.addQuadCurve(to: CGPoint(x: center - halfStem - 1, y: rect.minY + 10),
+                              control: CGPoint(x: center - halfStem, y: rect.minY + 11.5))
+            path.addLine(to: CGPoint(x: rect.minX + 0.5, y: rect.minY + 4))
+            path.addQuadCurve(to: CGPoint(x: rect.minX + 3, y: rect.minY),
+                              control: CGPoint(x: rect.minX - 1, y: rect.minY))
             path.closeSubpath()
         }
     }

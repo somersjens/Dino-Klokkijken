@@ -17,22 +17,26 @@ De oorspronkelijke namen, SHA-256-controles en volledige prompts staan in [DeepZ
 
 De tekening blijft exact `dino-idle` tot het vertrek. De bijna gelijke nieuwe rustpose `01` wordt niet vooraf in het portret verwisseld. Dat bewaart het bestaande gezicht en de gekozen kleuren tijdens de schermovergang.
 
-| Houding | Tijd na de schermfade |
+| Fase | Tijd na de schermfade |
 | --- | ---: |
-| Exact rustbeeld; vertrek | 0,120 s |
-| Evenwicht verliezen (`02`) | 0,260 s |
-| Naar voren vallen (`03`) | 0,460 s |
-| Eerste handcontact (`03a`) | 0,640 s |
-| Armen geven mee; snuit bij de steen (`04`) | 0,720 s |
-| Ook het achterlijf komt laag (`05`) | 0,800 s |
-| Opdrukken (`06`) | 0,875 s |
-| Handen los (`06a`) | 0,945 s |
-| Vrijwel rechtop (`07`) | 1,025 s |
-| Eindhouding (`08`) | 1,080 s |
+| Vertrek uit het exacte rustbeeld | 0,120 s |
+| Evenwicht verliezen | 0,260 s |
+| Naar voren vallen | 0,460 s |
+| Eerste handcontact | 0,640 s |
+| Snuit raakt de steen | 0,720 s |
+| Volledig neergevallen | 0,820 s |
+| Einde van 0,30 seconde volledige stilstand | 1,120 s |
+| Handen opnieuw geplaatst; armen nemen het gewicht over | 1,190 s |
+| Armen gestrekt; handen mogen loskomen | 1,380 s |
+| Handen los, knieën nog gebogen | 1,480 s |
+| Vrijwel rechtop | 1,560 s |
+| Eindhouding | 1,620 s |
 
-De schermfade duurt 0,24 seconde. De gedeelde verplaatsing stopt bij het eerste handcontact, op 0,88 seconde vanaf het begin. Het lichaam beweegt daarna verder naar beneden op de steen. Zo is het diepste punt een echte fase na de landing en blijft het niet bij een hangende opdrukpose. Vanaf de volledig lage houding staat Dino in 0,225 seconde vrijwel rechtop; 55 ms brengt hem rustig naar de eindhouding. De hele clip duurt 1,32 seconde.
+De schermfade duurt 0,24 seconde. De hele clip duurt **1,86 seconde**. De gedeelde verplaatsing stopt bij het eerste handcontact. Hoofd en achterlijf zakken daarna verder tot de lage houding. Van 0,82 tot 1,12 seconde zijn de tekening én alle vervormingspunten exact gelijk: Dino ligt echt stil.
 
-Een mesh volgt overeenkomstige punten van gezicht, nek, romp, heupen, achterpoot, staart en bandana met doorlopende kubische banen. Vijf vaste grondpunten houden de contactlijn op de steen. De verschillende uitsneden van de bronbeelden zijn vooraf in schaal geregistreerd: vooral de lage opdrukpose zou anders een veel groter hoofd hebben. De tekeningen worden tijdens de beweging scherp afgewisseld; er staat steeds één volledig dekkend beeld op het scherm. Er zijn geen lange doorschijnende overgangen met dubbele gezichten of handen.
+Het volledige opstaan na de rust duurt **0,50 seconde**, teruggebracht van 0,88 seconde. Alleen deze opwaartse fase is versneld; de val en de volledige stilstand behouden hun timing. Na die rust verplaatst hij zijn handen en bereidt hij het opdrukken voor. Tijdens de daaropvolgende **0,19 seconde** gebruikt de beweging één opdruktekening. De schouders en het hoofd bewegen doorlopend omhoog terwijl beide palmen exact dezelfde positie houden. De palmen worden als afzonderlijke delen uit hetzelfde gekleurde bronbeeld getekend; hun vingers rekken daardoor niet mee met het lichaam. Het lichaam wordt achter de handen vervormd en overlapt bij de polsen. Pas na deze steunfase komen de handen los en volgt het verder oprichten.
+
+De sleuteltijden voor de gewrichten staan los van de keuze van de tekening. Daardoor vraagt een nieuw punt in de bewegingsbaan geen nieuwe PNG midden in het gewicht dragende deel. Vrij bewegende handen sturen de benen niet mee; dat voorkomt uitgerekte voeten tijdens de overgang naar staan. De laatste overgangen gebruiken nog de bestaande geschilderde houdingen. De aangeleverde PNG’s hebben verschillende gezichtsverhoudingen en perspectief; de mesh en registratie beperken die verschillen, maar vervangen geen volledig opnieuw opgebouwde karakterrig.
 
 ## Kleuren en toegankelijkheid
 
@@ -42,10 +46,10 @@ Bij **Minder beweging** verschijnt direct de stilstaande eindpose `dino-stumble-
 
 ## Controle
 
-De gerichte animatiecontroles bewaken het exacte portret vóór vertrek, het verdere zakken van snuit en heupen ná handcontact, het vlotte herstel, doorlopende banen en snelheid, alle houdingen op 30 en 60 Hz, vaste grondpunten, scherpe beeldwissels, niet-omgeklapte zichtbare meshvlakken en Minder beweging. De volledige kernsuite controleert daarnaast kleuren en transparantie op 384 en 768 pixels en leesbare opdruk op lichte bandana’s.
+De gerichte animatiecontroles vergelijken de volledige stilstaande houding, bewaken dat de palmen tijdens het dragen van het gewicht niet verschuiven, controleren dat het hoofd en de schouders boven die handen omhoogkomen en dat dezelfde tekening de hele steunfase draagt. Ook de doorlopende banen, vaste grondpunten, contactlijn, niet-omgeklapte meshvlakken op 30 en 60 Hz, alle overige cliptypes en Minder beweging worden gecontroleerd.
 
-De native UI-controle speelt echte levels uit met de gewone groene Dino en een gepersonaliseerde roze Dino, en controleert één figuur, nul sterren, de eindpositie en opnieuw spelen.
+De native UI-controle speelt echte levels uit met de gewone groene Dino en een gepersonaliseerde roze Dino, en controleert één figuur, nul sterren, de eindpositie en opnieuw spelen. De wachttijd in de UI-test omvat de volledige nieuwe clip.
 
-De volledige kernsuite slaagt met **1.043.487 controles**; de gerichte animatierun met **167.010 controles**. De simulatorbuild en beide iPhone-routes slagen. De echte opname is rond handcontact, het diepe doorzakken en het herstel per 1/30 seconde gecontroleerd. De snuit komt bij het oppervlak van de steen, het achterlijf zakt daarna verder, het herstel blijft kort en er staan geen doorschijnende dubbele figuren over elkaar.
+Na de timingwijziging slaagt de gerichte suite met **255.261 animatiecontroles**. De simulatorbuild en de echte nulsterrenroute met de groene Dino op iPhone 18 Pro met iOS 27.0 slagen. De nieuwe opname controleert de val, de volledige rust en het kortere opstaan. De eindpositie en opnieuw spelen worden via de native UI-test gecontroleerd.
 
-[Nieuwste opname](Animations/zero-star-deep-fall-iphone.mp4) · [Beeldreeks](Screenshots/ZeroStarFall/sequence-deep.png) · [Diepste hand-/snuitcontact](Screenshots/ZeroStarFall/deep-impact.png) · [Groene Dino](Screenshots/ZeroStarFall/iphone-deep-standard.png) · [Eigen kleuren](Screenshots/ZeroStarFall/iphone-deep-custom.png). Bouw- en testlogs: `Documentation/ZeroStarFallTestLogs/*-deep.log`.
+[Nieuwste opname met sneller opstaan](Animations/zero-star-rise-halfsecond-iphone.mp4) · [Beeldreeks](Screenshots/ZeroStarFall/sequence-halfsecond.png). Logs: `Documentation/ZeroStarFallTestLogs/*-brisk.log`. De [eerdere opname](Animations/zero-star-supported-rise-iphone.mp4) toont dezelfde val met het langzamere opstaan.

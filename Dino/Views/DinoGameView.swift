@@ -235,14 +235,13 @@ struct DinoGameView: View {
                     Rectangle().fill(.ultraThinMaterial).ignoresSafeArea(edges: .bottom)
                 }
             }
-            .overlay(alignment: .bottom) {
+            .overlay {
                 if let answerReminder {
-                    DinoAnswerReminder(requirement: answerReminder, attempt: reminderAttempt)
-                        .frame(maxWidth: min(420, width))
-                        .padding(.horizontal, 18)
-                        .padding(.bottom, height + 10)
+                    DinoAnswerReminder(requirement: answerReminder, attempt: reminderAttempt, worldID: session.level.worldID)
+                        // Include the button's one-point outer stroke so none of its green rim peeks through.
+                        .frame(width: min(420, width) + 2, height: 60)
                         .transition(reduceMotion ? .opacity : .asymmetric(
-                            insertion: .move(edge: .bottom).combined(with: .scale(scale: 0.96, anchor: .bottom)).combined(with: .opacity),
+                            insertion: .scale(scale: 0.94).combined(with: .opacity),
                             removal: .opacity))
                 }
             }
@@ -302,30 +301,47 @@ private struct DinoAnswerReminder: View {
     @Environment(\.dinoHighContrast) private var highContrast
     let requirement: DinoAnswerRequirement
     let attempt: Int
+    let worldID: Int
+    private var palette: HUDPalette { HUDPalette(worldID: worldID) }
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Image(systemName: requirement == .chooseTile ? "hand.tap.fill" : "clock.arrow.circlepath")
-                .font(.system(size: 21, weight: .semibold))
-                .foregroundStyle(DinoStyle.deepGreen)
-                .frame(width: 40, height: 40)
-                .background(DinoStyle.green.opacity(0.18), in: RoundedRectangle(cornerRadius: 13))
+                .font(.system(size: 19, weight: .bold))
+                .frame(width: 34, height: 34)
+                .background {
+                    Circle().fill(LinearGradient(colors: [palette.portraitLight, palette.paperTop],
+                                                 startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .overlay(Circle().strokeBorder(palette.borderLight, lineWidth: 1.5))
+                        .overlay(Circle().strokeBorder(.white.opacity(0.75), lineWidth: 1).padding(2.5))
+                }
+                .modifier(DinoReminderNudge(progress: reduceMotion ? 0 : CGFloat(attempt)))
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.42), value: attempt)
                 .accessibilityHidden(true)
             Text(LocalizedStringKey(requirement.rawValue))
-                .font(.system(size: 16, weight: .bold, design: .rounded))
-                .foregroundStyle(DinoStyle.ink)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .font(.system(size: 17, weight: .heavy, design: .rounded))
+                .multilineTextAlignment(.center)
+                .lineLimit(2).minimumScaleFactor(0.9)
+                .frame(maxWidth: .infinity)
         }
-        .padding(12)
-        .background(Color(dinoHex: 0xFFF9E9), in: RoundedRectangle(cornerRadius: 22))
-        .overlay {
-            RoundedRectangle(cornerRadius: 22)
-                .strokeBorder(highContrast ? DinoStyle.ink : Color(dinoHex: 0xD9B768), lineWidth: highContrast ? 2 : 1)
+        .foregroundStyle(highContrast ? palette.contrastInk : palette.ink)
+        .padding(.horizontal, 16).padding(.vertical, 6)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            RoundedRectangle(cornerRadius: 20)
+                .fill(LinearGradient(colors: [palette.borderLight, palette.accent, palette.outline],
+                                     startPoint: .top, endPoint: .bottom))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 17)
+                        .fill(LinearGradient(colors: [palette.paperTop, palette.paperBottom],
+                                             startPoint: .top, endPoint: .bottom))
+                        .overlay(RoundedRectangle(cornerRadius: 17).strokeBorder(.white.opacity(0.9), lineWidth: 1.5))
+                        .padding(3)
+                }
+                .overlay(RoundedRectangle(cornerRadius: 20)
+                    .strokeBorder(highContrast ? palette.strongOutline : palette.outline, lineWidth: highContrast ? 3 : 1))
+                .shadow(color: palette.outline.opacity(0.4), radius: 0, y: 5)
         }
-        .shadow(color: DinoStyle.ink.opacity(0.12), radius: 12, y: 5)
-        .modifier(DinoReminderNudge(progress: reduceMotion ? 0 : CGFloat(attempt)))
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.42), value: attempt)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("question.inputReminder")
         .allowsHitTesting(false)

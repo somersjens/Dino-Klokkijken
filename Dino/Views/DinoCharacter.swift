@@ -108,20 +108,12 @@ struct DinoCharacter: View {
                     .rotationEffect(.degrees(sample.headAngle), anchor: UnitPoint(x: 0.56, y: 0.445))
                     .offset(y: size * sample.headHeight)
             }
-        } else if let morph = sample.morph,
-                  let from = morphImage(morph.from.asset), let to = morphImage(morph.to.asset) {
+        } else if let morph = sample.morph, let drawing = morphImage(morph.drawing.asset) {
             ZStack {
-                if morph.opacity < 1 {
-                    DinoMorphSprite(image: Image(uiImage: from), vertices: morph.fromVertices)
-                        .opacity(1 - morph.opacity)
-                }
-                if morph.opacity > 0 {
-                    DinoMorphSprite(image: Image(uiImage: to), vertices: morph.toVertices)
-                        .opacity(morph.opacity)
-                        .blendMode(.plusLighter)
-                }
+                DinoMorphSprite(image: Image(uiImage: drawing), vertices: morph.drawingVertices,
+                                removesPalms: morph.supportsWeight)
+                if morph.supportsWeight { DinoPlantedPalms(image: Image(uiImage: drawing)) }
             }
-            .compositingGroup()
             .rotationEffect(.degrees(sample.angle), anchor: .bottom)
         } else {
             sprite(sample.pose, angle: sample.angle, yaw: sample.yaw)
@@ -172,10 +164,13 @@ struct DinoCharacter: View {
 struct DinoMorphSprite: View {
     let image: Image
     let vertices: [CGPoint]
+    var removesPalms = false
 
     var body: some View {
         Canvas { context, size in
             let bitmap = context.resolve(image)
+            var bodyMask = Path(CGRect(origin: .zero, size: size))
+            bodyMask.addPath(Path(DinoStumbleMotion.palmMask(in: size)))
             for triangle in DinoStumbleMotion.triangles {
                 var piece = context
                 var clip = Path()
@@ -185,8 +180,24 @@ struct DinoMorphSprite: View {
                 clip.addLines(points); clip.closeSubpath()
                 piece.clip(to: clip, style: FillStyle(antialiased: false))
                 piece.concatenate(DinoStumbleMotion.transform(triangle, vertices: vertices, size: size))
+                if removesPalms { piece.clip(to: bodyMask, style: FillStyle(eoFill: true)) }
                 piece.draw(bitmap, in: CGRect(origin: .zero, size: size))
             }
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// Palms keep the exact same pixels, scale and contact position while the
+/// shoulders rise above them. The forearms deform behind this shared layer.
+struct DinoPlantedPalms: View {
+    let image: Image
+    var body: some View {
+        Canvas { context, size in
+            let bitmap = context.resolve(image)
+            context.concatenate(DinoStumbleMotion.plantedRegistration(size: size))
+            context.clip(to: Path(DinoStumbleMotion.palmMask(in: size, overlap: true)))
+            context.draw(bitmap, in: CGRect(origin: .zero, size: size))
         }
         .accessibilityHidden(true)
     }

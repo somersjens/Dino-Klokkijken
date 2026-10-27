@@ -51,8 +51,11 @@ enum DinoAnimation {
     static let stumbleTakeoff = 0.12
     static let stumbleLanding = 0.64
     static let stumbleFaceContact = 0.72
-    static let stumbleLowest = 0.80
-    static let stumbleRecoveryDuration = 0.44
+    static let stumbleLowest = 0.82
+    static let stumblePushStart = 1.12
+    // Keep the impact and rest intact, then rise in one brisk half-second effort.
+    static let stumbleBraceEnd = 1.19
+    static let stumbleHandRelease = 1.38
     static let stumbleFrames = DinoStumbleMotion.frames
     static let stumbleAssets = ["01", "02", "03", "03a", "04", "05", "06", "06a", "07", "08"]
         .map { "dino-stumble-deep-" + $0 }
@@ -120,7 +123,7 @@ enum DinoAnimation {
         case .idle: 0
         case .thumbsUp: 1.04
         case .wrongAnswer: 0.80
-        case .stumble: travelDuration(clip) + stumbleRecoveryDuration
+        case .stumble: leadIn(clip) + stumbleFrames.last!.start
         case .openingJump: leadIn(clip) + DinoOpeningJump.duration
         case .backflip, .worldJump: 1.62
         case .pirouette: leadIn(clip) + pirouetteFrames.last!.start
@@ -160,7 +163,7 @@ enum DinoAnimation {
             // leaves the circle. The almost-idle fall drawing has a different face.
             guard elapsed >= travelDelay(.stumble) else { return sample(.idle, elapsed: 0) }
             let morph = DinoStumbleMotion.sample(at: t)
-            let pose = morph?.from ?? stumbleFrames.last!.pose
+            let pose = morph?.drawing ?? stumbleFrames.last!.pose
             let fall = min(1, max(0, (t - stumbleTakeoff) / (stumbleLanding - stumbleTakeoff)))
             return Sample(pose: pose, angle: elapsed > travelDelay(.stumble) && elapsed < travelDuration(.stumble) ? 3 * sin(.pi * fall) : 0, morph: morph)
 
@@ -394,25 +397,35 @@ enum DinoStumbleMotion {
         let toIndex: Int
         let amount: Double
         let points: [CGPoint]
+        let time: Double
         var from: DinoAnimation.Pose { frames[fromIndex].pose }
         var to: DinoAnimation.Pose { frames[toIndex].pose }
-        // Geometry carries the movement. Change the painting during its fastest
-        // part so a second translucent face never appears over the first one.
-        var opacity: Double { amount < 0.5 ? 0 : 1 }
-        var fromVertices: [CGPoint] { vertices(for: fromIndex, points: points) }
-        var toVertices: [CGPoint] { vertices(for: toIndex, points: points) }
+        var drawingIndex: Int {
+            // Bracing retains the low painting; one push-up painting then
+            // carries the entire load-bearing part, independently of joint keys.
+            if (DinoAnimation.stumblePushStart..<DinoAnimation.stumbleBraceEnd).contains(time) { return 5 }
+            if supportsWeight { return 8 }
+            return amount < 0.5 ? fromIndex : toIndex
+        }
+        var supportsWeight: Bool {
+            time + 1e-9 >= DinoAnimation.stumbleBraceEnd && time <= DinoAnimation.stumbleHandRelease + 1e-9
+        }
+        var palms: [CGPoint] { palmIndices.map { points[$0] } }
+        var drawing: DinoAnimation.Pose { frames[drawingIndex].pose }
+        var drawingVertices: [CGPoint] { vertices(for: drawingIndex, points: points) }
     }
 
+    private static let artworkForKey = [0, 1, 2, 3, 4, 5, 5, 6, 6, 7, 8, 9]
     static let frames: [DinoAnimation.TimedPose] = {
         let names = ["dino-idle"] + ["02", "03", "03a", "04", "05", "06", "06a", "07", "08"]
             .map { "dino-stumble-deep-" + $0 }
-        // The palms land first; the arms then give way and the muzzle reaches
-        // the stone. Only after the full collapse does the brisk push-up begin.
-        let times = [DinoAnimation.stumbleTakeoff, 0.26, 0.46, DinoAnimation.stumbleLanding,
-                     DinoAnimation.stumbleFaceContact, DinoAnimation.stumbleLowest, 0.875, 0.945, 1.025, 1.08]
         let offsets = [0.0, 15, 45, 48, 112, 81, 38, 9, -4, -2]
-        return names.indices.map {
-            DinoAnimation.TimedPose(start: times[$0], pose: .init(asset: names[$0], offsetY: offsets[$0] / 1254))
+        let times = [DinoAnimation.stumbleTakeoff, 0.26, 0.46, DinoAnimation.stumbleLanding,
+                     DinoAnimation.stumbleFaceContact, DinoAnimation.stumbleLowest,
+                     DinoAnimation.stumblePushStart, DinoAnimation.stumbleBraceEnd, DinoAnimation.stumbleHandRelease, 1.48, 1.56, 1.62]
+        return artworkForKey.indices.map { key in
+            let art = artworkForKey[key]
+            return DinoAnimation.TimedPose(start: times[key], pose: .init(asset: names[art], offsetY: offsets[art] / 1254))
         }
     }()
 
@@ -421,14 +434,30 @@ enum DinoStumbleMotion {
     private static let artworkScale = [1.0, 0.94, 0.94, 0.90, 0.90, 0.95, 0.84, 0.90, 0.98, 1.0]
 
     private static func registered(_ point: CGPoint, pose: Int) -> CGPoint {
-        let ground = 1211.0 / 1254, scale = artworkScale[pose]
+        let ground = 1211.0 / 1254, scale = artworkScale[artworkForKey[pose]]
         return CGPoint(x: 0.5 + (point.x - 0.5) * scale,
                        y: ground + (point.y + frames[pose].pose.offsetY - ground) * scale)
     }
 
+    static func plantedRegistration(size: CGSize) -> CGAffineTransform {
+        let origin = registered(.zero, pose: 8), scale = artworkScale[artworkForKey[8]]
+        return CGAffineTransform(a: scale, b: 0, c: 0, d: scale,
+                                 tx: origin.x * size.width, ty: origin.y * size.height)
+    }
+
+    static func palmMask(in size: CGSize, overlap: Bool = false) -> CGPath {
+        let path = CGMutablePath(), pad = overlap ? 14.0 : 0
+        for rect in [CGRect(x: 350, y: 1020, width: 340, height: 168),
+                     CGRect(x: 938, y: 1000, width: 315, height: 165)] {
+            path.addEllipse(in: rect.insetBy(dx: -pad, dy: -pad)
+                .applying(CGAffineTransform(scaleX: size.width / 1254, y: size.height / 1254)))
+        }
+        return path
+    }
+
     // Face, neck, torso, hips, rear foot, tail, cloth and head contour. Hands
     // change depth order, so only their common ground line constrains the mesh.
-    private static let anchors: [[CGPoint]] = {
+    private static let sourceAnchors: [[CGPoint]] = {
         let standing = [(600,350), (800,300), (770,435), (725,530), (700,590), (640,630),
                         (720,820), (660,1000), (470,1175), (190,695), (490,920), (550,50),
                         (430,260), (670,150), (450,395), (915,420)]
@@ -453,10 +482,30 @@ enum DinoStumbleMotion {
         let boundary = [CGPoint(x: 0, y: 0), CGPoint(x: 0.5, y: 0), CGPoint(x: 1, y: 0),
                         CGPoint(x: 0, y: 0.5), CGPoint(x: 1, y: 0.5),
                         CGPoint(x: 0, y: 1), CGPoint(x: 0.5, y: 1), CGPoint(x: 1, y: 1)]
-        return source.enumerated().map { index, points in
-            points.map { registered(CGPoint(x: Double($0.0) / 1254, y: Double($0.1) / 1254), pose: index) }
+        // Palm centres, in the same source coordinates as the body landmarks.
+        let palms = [[(555,715),(960,640)], [(640,790),(1110,820)], [(710,820),(1140,820)],
+                     [(650,1115),(1100,1110)], [(550,1060),(1180,1040)], [(560,1095),(1150,1090)],
+                     [(500,1138),(1110,1110)], [(690,995),(1025,985)], [(550,660),(960,560)], [(550,670),(950,590)]]
+        return artworkForKey.indices.map { key in
+            let art = artworkForKey[key]
+            let anatomy = source[art] + palms[art]
+            return anatomy.map { registered(CGPoint(x: Double($0.0) / 1254, y: Double($0.1) / 1254), pose: key) }
                 + boundary + [0.1, 0.3, 0.5, 0.7, 0.9].map { CGPoint(x: $0, y: 1211.0 / 1254) }
         }
+    }()
+
+    static let palmIndices = [16, 17]
+    private static let anchors: [[CGPoint]] = {
+        var targets = sourceAnchors
+        // First wake and brace from the flat pose; then extend the arms. The
+        // drawing and joint targets are separate so the same bitmap can deform.
+        targets[7] = zip(sourceAnchors[6], sourceAnchors[8]).map {
+            CGPoint(x: $0.x + ($1.x - $0.x) * 0.40, y: $0.y + ($1.y - $0.y) * 0.40)
+        }
+        for key in 7...8 {
+            for palm in palmIndices { targets[key][palm] = sourceAnchors[8][palm] }
+        }
+        return targets
     }()
 
     static let columns = 14, rows = 16
@@ -472,15 +521,19 @@ enum DinoStumbleMotion {
 
     // Moving least squares reproduces translation, scale and rotation exactly.
     // Its coefficients depend only on the source, so the per-frame work is small.
-    private static let influences: [[[Double]]] = anchors.indices.map { pose in
+    private static let influences: [[[Double]]] = sourceAnchors.indices.map { pose in
         grid.map { vertex in
             let point = registered(vertex, pose: pose)
-            let source = anchors[pose]
+            let source = sourceAnchors[pose]
             let distances = source.map { pow($0.x - point.x, 2) + pow($0.y - point.y, 2) }
             if let exact = distances.firstIndex(where: { $0 < 0.00000001 }) {
                 return source.indices.map { $0 == exact ? 1 : 0 }
             }
-            let weights = distances.map { 1 / max(0.0001, $0) }
+            let weights = distances.enumerated().map { i, distance in
+                // Only the load-bearing painting uses wrist constraints. Free
+                // hands must not drag the legs as they change depth order.
+                palmIndices.contains(i) && artworkForKey[pose] != 6 ? 0 : 1 / max(0.0001, distance)
+            }
             let total = weights.reduce(0, +)
             let center = source.indices.reduce(CGPoint.zero) { p, i in
                 CGPoint(x: p.x + source[i].x * weights[i] / total, y: p.y + source[i].y * weights[i] / total)
@@ -512,6 +565,9 @@ enum DinoStumbleMotion {
         let index = frames.lastIndex { time + 1e-9 >= $0.start } ?? 0
         let span = frames[index + 1].start - frames[index].start
         let p = min(1, max(0, (time - frames[index].start) / span))
+        if anchors[index] == anchors[index + 1] {
+            return Blend(fromIndex: index, toIndex: index + 1, amount: p, points: anchors[index], time: time)
+        }
         func speed(_ frame: Int, _ point: Int, _ axis: KeyPath<CGPoint, CGFloat>) -> Double {
             guard frame > 0, frame < frames.count - 1 else { return 0 }
             let before = (anchors[frame][point][keyPath: axis] - anchors[frame - 1][point][keyPath: axis])
@@ -521,7 +577,7 @@ enum DinoStumbleMotion {
             return before * after > 0 ? 2 * before * after / (before + after) : 0
         }
         let p2 = p * p, p3 = p2 * p
-        let points = anchors[index].indices.map { point -> CGPoint in
+        var points = anchors[index].indices.map { point -> CGPoint in
             func coordinate(_ axis: KeyPath<CGPoint, CGFloat>) -> Double {
                 (2 * p3 - 3 * p2 + 1) * anchors[index][point][keyPath: axis]
                     + (p3 - 2 * p2 + p) * span * speed(index, point, axis)
@@ -530,7 +586,10 @@ enum DinoStumbleMotion {
             }
             return CGPoint(x: coordinate(\.x), y: coordinate(\.y))
         }
-        return Blend(fromIndex: index, toIndex: index + 1, amount: p, points: points)
+        if time + 1e-9 >= DinoAnimation.stumbleBraceEnd && time <= DinoAnimation.stumbleHandRelease + 1e-9 {
+            for palm in palmIndices { points[palm] = anchors[8][palm] }
+        }
+        return Blend(fromIndex: index, toIndex: index + 1, amount: p, points: points, time: time)
     }
 
     static func transform(_ triangle: (Int, Int, Int), vertices: [CGPoint], size: CGSize) -> CGAffineTransform {
