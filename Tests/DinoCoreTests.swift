@@ -548,6 +548,21 @@ struct DinoCoreTests {
                     abs($0.point.x - rear.x) < 8 && abs($0.point.y - rear.y) < 1 },
                        "a foreground shrub hides the far end of every log")
             }
+            let bossStage = WorldBossStage(worldID: 1, width: width)
+            expect(scene.bossPoint == bossStage.point, "jungle body and clocks share the reserved clearing")
+            for placement in scene.placements {
+                for band in layout.footprint(of: placement.item) {
+                    expect(!band.offsetBy(dx: placement.point.x, dy: placement.point.y).intersects(bossStage.clearance),
+                           "jungle foliage and wildlife keep the entire boss visible at width \(width)")
+                }
+            }
+            for world in [1, 3, 4, 5, 6, 8, 10] {
+                let stage = WorldBossStage(worldID: world, width: width)
+                expect(stage.ground.maxX < width && stage.ground.minX > width / 2,
+                       "boss has a complete floor beside the road at width \(width)")
+                expect(stage.clearance.contains(stage.ground), "scenery reservation includes the complete floor")
+                expect(stage.point.x - width / 2 <= 168, "tablet bosses stay connected to the final level stone")
+            }
             expect(scene === layout.scene(), "unchanged viewport reuses resolved jungle coordinates")
             expect(scene.sceneryTiles.flatMap(\.placements).allSatisfy { !$0.item.kind.animated },
                    "static scenery shares a depth layer while animation stays independent")
@@ -559,6 +574,12 @@ struct DinoCoreTests {
                        "complete jungle roots and leaves stay above the desert edge at width \(width)")
             }
             let trailWidth = min(width, 600) - 36
+            let lastY = JungleMapLayout.firstNodeY + 9 * JungleMapLayout.levelSpacing
+            expect(abs(layout.centerX(at: lastY) - width/2) < 0.01, "jungle boss stone is centered")
+            expect(layout.centerX(at: lastY - JungleMapLayout.levelSpacing) < width/2 - 40,
+                   "the stone before the jungle boss stays in the preceding left bend")
+            expect(JungleMapLayout.levelPositions == JungleMapLayout.chapterPositions,
+                   "jungle and later worlds share the same trail rhythm")
             for (index, fraction) in JungleMapLayout.levelPositions.enumerated() {
                 let y = JungleMapLayout.firstNodeY + CGFloat(index) * JungleMapLayout.levelSpacing
                 let expected = (width - trailWidth) / 2 + trailWidth * fraction

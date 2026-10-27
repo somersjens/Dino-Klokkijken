@@ -545,9 +545,19 @@ final class DinoUITests: XCTestCase {
             app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = String(world * 10 - 1)
             app.launch()
             XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 8))
+            waitForMapOpeningToFinish()
             let boss = revealMapNode(world * 10)
+            let ready = NSPredicate { _, _ in boss.exists && boss.isEnabled }
+            expectation(for: ready, evaluatedWith: nil)
+            waitForExpectations(timeout: 15)
             XCTAssertTrue(boss.isEnabled)
             XCTAssertGreaterThanOrEqual(boss.frame.width, 44)
+            if world == 1 {
+                XCTAssertEqual(boss.frame.midX, app.frame.midX, accuracy: 2,
+                               "The jungle boss stone shares the centered chapter exit")
+                XCTAssertLessThan(app.buttons["map.level.9"].frame.midX, boss.frame.midX - 40,
+                                  "The preceding stone keeps its own left-hand bend")
+            }
             saveScreenshot("scenery-depth-world-\(world)")
             boss.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
             XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5),

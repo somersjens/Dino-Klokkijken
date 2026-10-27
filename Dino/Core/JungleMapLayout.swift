@@ -32,6 +32,26 @@ enum WorldMapChapterSpacing {
     }
 }
 
+/// A destination beside the final stone, measured from the route instead of
+/// the screen edge. Its full silhouette is also reserved by scenery planners.
+struct WorldBossStage {
+    let worldID: Int
+    let width: CGFloat
+    var scale: CGFloat { min(worldID == 1 ? 1.35 : 1.30, max(0.82, width / 390)) }
+    var point: CGPoint {
+        let offset: CGFloat = [4, 6, 10].contains(worldID) ? 116 : worldID == 8 ? 120 : 124
+        return CGPoint(x: width / 2 + offset * scale, y: worldID == 1 ? 1665 : 1690)
+    }
+    var clearance: CGRect {
+        CGRect(x: point.x - 80 * scale, y: point.y - 190 * scale,
+               width: 160 * scale, height: 230 * scale)
+    }
+    var ground: CGRect {
+        CGRect(x: point.x - 61 * scale, y: point.y - 9 * scale,
+               width: 122 * scale, height: 39 * scale)
+    }
+}
+
 enum DinoMapViewport {
     /// Prepare actors before they enter view; keep them a little longer on exit
     /// so small back-and-forth drags do not recreate their static masks.
@@ -63,8 +83,9 @@ struct JungleMapLayout {
     static let levelSpacing: CGFloat = 175
     static let firstNodeY: CGFloat = 70
     static let chapterPositions: [CGFloat] = [0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5]
-    /// Level 1 occupies the old entrance. The boss steps left, then the road returns to centre.
-    static let levelPositions: [CGFloat] = [0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28]
+    /// Use the chapter rhythm throughout: the ninth stone is left of the
+    /// central boss stone, with a vertical tangent into the next world.
+    static let levelPositions = chapterPositions
     /// Vertical room under the boss before the next world's banner. Matches WorldRouteTrail.chapterTail.
     static func bossReturnSpan(for width: CGFloat) -> CGFloat {
         let inner = min(width, 600) - 36
@@ -147,7 +168,18 @@ struct JungleMapLayout {
         init(layout: JungleMapLayout) {
             width = layout.width
             let placed = layout.items.enumerated().map { index, item in
-                let point = layout.position(of: item)
+                var point = layout.position(of: item)
+                let stage = WorldBossStage(worldID: 1, width: layout.width)
+                for band in layout.footprint(of: item) {
+                    let occupied = band.offsetBy(dx: point.x, dy: point.y)
+                    if occupied.intersects(stage.clearance) {
+                        if item.preferred.x > layout.width / 2 {
+                            point.x += stage.clearance.maxX - occupied.minX + 8 * stage.scale
+                        } else {
+                            point.x += stage.clearance.minX - occupied.maxX - 8 * stage.scale
+                        }
+                    }
+                }
                 let bounds = layout.footprint(of: item).reduce(CGRect.null) { $0.union($1) }
                     .offsetBy(dx: point.x, dy: point.y)
                 return Placement(id: index, item: item, point: point, bounds: bounds)
@@ -157,8 +189,7 @@ struct JungleMapLayout {
             snakes = placed.filter { $0.item.kind == .snake }
             leaves = placed.filter { $0.item.kind == .fallingLeaves }
             let scale = layout.artScale
-            bossPoint = layout.position(preferred: CGPoint(x: layout.width - 60 * scale, y: 1665),
-                footprint: [CGRect(x: -88 * scale, y: -170 * scale, width: 176 * scale, height: 200 * scale)])
+            bossPoint = WorldBossStage(worldID: 1, width: layout.width).point
             let staticItems = placed.filter { !$0.item.kind.animated }
             let bossBounds = CGRect(x: bossPoint.x - 130 * scale, y: bossPoint.y - 270 * scale,
                                     width: 260 * scale, height: 320 * scale)
@@ -222,7 +253,7 @@ struct JungleMapLayout {
             item(.palm, 0.08, 1515, 0.73, mirror: true),
             item(.shrub, 0.09, 1485, 0.55), item(.flowers, 0.19, 1500, 0.69),
             item(.plant, 0.13, 1550, 0.68, mirror: true),
-            item(.tree, 0.94, 1760, 0.82),
+            item(.tree, 0.94, 1470, 0.72),
             item(.rocks, 0.91, 1585, 0.68), item(.shrub, 0.88, 1608, 0.48),
             item(.flowers, 0.83, 1620, 0.63),
             item(.plant, 0.10, 1680, 0.76, mirror: true),
@@ -301,7 +332,10 @@ struct JungleMapLayout {
         let fractions = Self.levelPositions
         let bossY = Self.firstNodeY + CGFloat(fractions.count - 1) * Self.levelSpacing
         if y >= bossY { return bossReturnX(at: y, bossY: bossY, from: fractions[fractions.count - 1]) }
-        guard y > Self.firstNodeY else { return width / 2 }
+        guard y > Self.firstNodeY else {
+            let trailWidth = min(width, 600) - 36
+            return (width - trailWidth) / 2 + trailWidth * fractions[0]
+        }
         let index = min(fractions.count - 2, Int((y - Self.firstNodeY) / Self.levelSpacing))
         let startY = Self.firstNodeY + CGFloat(index) * Self.levelSpacing
         var lower: CGFloat = 0, upper: CGFloat = 1

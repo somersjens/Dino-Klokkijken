@@ -265,7 +265,7 @@ struct WorldSceneryLayout {
     }
 
     func villageCanalPath(right: Bool, inset: CGFloat = 34) -> Path {
-        passageBankPath(right: right, inset: inset, opensAtStart: true, opensAtEnd: true)
+        passageBankPath(right: right, inset: inset, opensAtStart: true, opensAtEnd: true, endMouthY: right ? 1640 : nil)
     }
 
     func villageQuayPoint(at y: CGFloat, right: Bool, outer: Bool) -> CGPoint {
@@ -282,7 +282,7 @@ struct WorldSceneryLayout {
                 let entry = passageEntry(right: right, inset: inset, city: city)
                 a = entry.start; b = entry.c1; c = entry.c2; d = entry.end
             } else if sampleY > exitY {
-                let mouthY = city ? cityCanalMouthY : height - routeOffset - 8
+                let mouthY = city ? cityCanalMouthY : (right ? 1640 : height - routeOffset - 8)
                 let x = centerX(at: exitY) + sign * (165 - inset) * scale
                 a = CGPoint(x: x, y: exitY)
                 b = CGPoint(x: x, y: exitY + (mouthY - exitY) * 0.48)
@@ -1943,7 +1943,7 @@ private struct JungleSceneryTile: View, Equatable {
                 let scale = min(1.35, max(0.82, tile.bounds.width / 390))
                 let boss = ThemePainter(context: c, colors: WorldThemeColors(DinoWorldCatalog.world(1)!))
                 depth.add(at: scene.bossPoint.y) {
-                    boss.bossClearing(worldID: 1, at: scene.bossPoint, size: scale)
+                    boss.bossClearing(worldID: 1, at: scene.bossPoint, size: scale, integrated: true)
                     boss.boss(worldID: 1, at: scene.bossPoint, size: scale * 0.88)
                 }
             }
@@ -4730,7 +4730,7 @@ private enum VolcanoWorldLayout {
                 let edge = bankPoint(layout: layout, right: right, y: y).x
                 return right ? frame.minX > edge + 5 * s : frame.maxX < edge - 5 * s
             }
-            guard fits, !result.contains(where: {
+            guard fits, !WorldBossStage(worldID: 3, width: w).clearance.intersects(frame), !result.contains(where: {
                 let overlap = $0.bounds.intersection(frame)
                 return !overlap.isNull && overlap.width * overlap.height > min(frame.width * frame.height,
                     $0.bounds.width * $0.bounds.height) * 0.48
@@ -4961,7 +4961,7 @@ private enum VolcanoWorldLayout {
         let guardianY = 20 - WorldRouteTrail.chapterTail(topClearance: clearance) - layout.routeOffset
         exclusions.append(CGRect(x: layout.width - 238 * s, y: guardianY - 240 * s,
                                  width: 250 * s, height: 270 * s))
-        exclusions.append(CGRect(x: layout.width - 174 * s, y: 1490, width: 190 * s, height: 225))
+        exclusions.append(WorldBossStage(worldID: 3, width: layout.width).clearance)
         // A fixed sequence gives a natural distribution which stays put while scrolling.
         var state: UInt32 = 0xB45A17
         func random() -> CGFloat {
@@ -5050,7 +5050,7 @@ private enum VolcanoWorldLayout {
             if index == 0 { road.move(to: point) } else { road.addLine(to: point) }
         }
         reserve(road, margin: 55 * s)
-        let boss = CGRect(x: w - 155 * s, y: 1675 - 150 * s, width: 172 * s, height: 178 * s)
+        let boss = WorldBossStage(worldID: 3, width: w).clearance
         // On a broad bank the final cone sits higher, leaving room for its
         // tributary to descend before the boss clearing instead of running flat.
         let finalBendY: CGFloat = w >= 600 ? 1380 : 1428
@@ -5133,11 +5133,11 @@ private enum VolcanoWorldLayout {
     /// animated lava follow these same curves all the way out of view.
     static func outletStart(layout: WorldSceneryLayout, right: Bool) -> CGFloat {
         let lastBend = WorldRouteTrail.chapterFirstNodeY + 8 * WorldRouteTrail.levelSpacing
-        return layout.routeOffset + lastBend + (right ? 115 : 85)
+        return layout.routeOffset + lastBend + (right ? 0 : 85)
     }
 
     static func outletEnd(layout: WorldSceneryLayout, right: Bool) -> CGFloat {
-        layout.height - (right ? 12 : 38)
+        right ? layout.routeOffset + 1640 : layout.height - 38
     }
 
     static func channelPoint(layout: WorldSceneryLayout, right: Bool, y: CGFloat) -> CGPoint {
@@ -5308,7 +5308,7 @@ private struct VolcanoDepthOcclusion: View {
             c.blendMode = .destinationOut
             let scene = WorldSceneryDepth(minimumDepth: depth, visibleBounds: frame)
             VolcanoWorldPainter(context: c, depth: scene, depthOffset: layout.routeOffset).appendScenery(layout: layout)
-            let bossPoint = CGPoint(x: layout.width - 79 * layout.scale, y: 1675)
+            let bossPoint = WorldBossStage(worldID: 3, width: layout.width).point
             if bossPoint.y + layout.routeOffset > depth {
                 WorldBossPainter(context: c).draw(worldID: 3, at: bossPoint, size: layout.scale * 0.88)
             }
@@ -6405,8 +6405,7 @@ private enum VillagePlan {
                        leftMargin: 33 * scale * sqrt(1 + leftSlope * leftSlope),
                        rightMargin: 33 * scale * sqrt(1 + rightSlope * rightSlope))
         }
-        let boss = CGRect(x: layout.width - 158 * scale, y: 1510,
-                          width: 176 * scale, height: 205 * scale)
+        let boss = WorldBossStage(worldID: 4, width: layout.width).clearance
         let bridges = VillageRiverTrafficLayout.bridges(layout: layout)
         let reserved = bridges.flatMap { bridge -> [CGRect] in
             let x = bridge.point.x + (bridge.right ? 27 : -65) * scale
@@ -7827,9 +7826,7 @@ private enum CrystalCaveLifeLayout {
         let taper = 1 - 0.56 * departureProgress(at: y, right: right, layout: layout)
         let size = layout.scale * (0.48 + CGFloat(i%4)*0.12) * taper
         var point = clearTimber(CGPoint(x:x,y:y),radius:66*size,rise:136*size,drop:28*size,right:right,layout:layout)
-        let boss = CGRect(x: layout.width - 169 * layout.scale,
-                          y: layout.routeOffset + 1675 - 240 * layout.scale,
-                          width: 180 * layout.scale, height: 300 * layout.scale)
+        let boss = WorldBossStage(worldID: 5, width: layout.width).clearance.offsetBy(dx: 0, dy: layout.routeOffset)
         let mineral = CGRect(x: point.x - 66 * size, y: point.y - 136 * size,
                              width: 132 * size, height: 164 * size)
         if right && mineral.intersects(boss) { point.x = max(point.x, boss.maxX + 66 * size) }
@@ -7864,7 +7861,8 @@ private enum CrystalCaveLifeLayout {
         let edgeAmount = smooth(y / 160) * smooth((layout.height - y) / 160)
         let bend = layout.width / 2 + (layout.centerX(at: y - layout.routeOffset) - layout.width / 2) * smooth(y / 80)
         let relief = (sin(y / 89 + (right ? 0.9 : 0)) * 11 + sin(y / 43) * 4) * scale * edgeAmount
-        let wall = bend + sign * (distance * scale + relief)
+        let recess = right ? 112 * scale * smooth((y - layout.routeOffset - 1400) / (255 * scale)) : 0
+        let wall = bend + sign * (distance * scale + relief + recess)
         // The village lawn enters the cave first. Its walls rise only after
         // both outgoing waterways have disappeared beyond the screen edges.
         let entered = smooth((y - entranceStart(layout)) / (150 * scale))
@@ -8477,14 +8475,14 @@ private struct CrystalCavePainter {
             }
         }
         let boss = ThemePainter(context: c, colors: WorldThemeColors(DinoWorldCatalog.world(5)!))
-        let bossPoint = CGPoint(x: w - 79 * scale, y: 1675)
+        let bossPoint = WorldBossStage(worldID: 5, width: w).point
         scene.add(at: routeOffset + bossPoint.y,
                   bounds: CGRect(x: bossPoint.x - 90 * scale, y: routeOffset + bossPoint.y - 240 * scale,
                                  width: 180 * scale, height: 300 * scale)) {
-            boss.bossClearing(worldID: 5, at: bossPoint, size: scale)
+            boss.bossClearing(worldID: 5, at: bossPoint, size: scale, integrated: true)
             boss.boss(worldID: 5, at: bossPoint, size: scale * 0.88)
         }
-        let archY: CGFloat = 1650
+        let archY: CGFloat = 1460
         scene.add(at: routeOffset + archY + 14 * scale * 0.98,
                   bounds: CGRect(x: w - 160 * scale, y: routeOffset + archY - 190 * scale,
                                  width: 160 * scale, height: 220 * scale)) {
@@ -9239,21 +9237,24 @@ private struct CityMetroTunnel {
 private struct CityBossCourt {
     let point: CGPoint
     let scale: CGFloat
-    var bossPoint: CGPoint { .init(x:point.x,y:point.y-12) }
-    var groundBounds: CGRect { .init(x:point.x-33*scale,y:point.y-19*scale,width:66*scale,height:37*scale) }
+    var bossPoint: CGPoint { .init(x: point.x, y: point.y - 10 * scale) }
+    var groundBounds: CGRect { .init(x: point.x - 50 * scale, y: point.y - 18 * scale, width: 100 * scale, height: 47 * scale) }
+    var artScale: CGFloat { scale * 0.88 }
+    var clearance: CGRect { .init(x: point.x - 82 * scale, y: bossPoint.y - 190 * scale, width: 164 * scale, height: 230 * scale) }
     init(layout: WorldSceneryLayout, line: CityMetroLine) {
         let s = layout.scale
-        var chosen = CGPoint(x:layout.width-49*s,y:1687)
-        // A little extra paving below the bend keeps the robot beside level
-        // 60, before considering a move into an earlier city block.
-        let shifts = Array(stride(from:CGFloat(0),through:40,by:8)) +
-            Array(stride(from:CGFloat(-8),through:-184,by:-8))
-        for shift in shifts {
-            let candidate = CGPoint(x:layout.width-49*s,y:1687+shift)
-            let floor = CGRect(x:candidate.x-33*s,y:candidate.y-19*s,width:66*s,height:37*s)
-            if line.groundIsClear(floor,scale:s) { chosen=candidate;break }
+        let stage = WorldBossStage(worldID: 6, width: layout.width)
+        var chosen = CGPoint(x: stage.point.x, y: stage.point.y + 10 * s)
+        search: for shift in stride(from: CGFloat(0), through: 88, by: 8) {
+            for offset: CGFloat in [0, -8, 8, -16, 16] {
+                let candidate = CGPoint(x: stage.point.x + offset * s, y: stage.point.y + 10 * s + shift)
+                let floor = CGRect(x: candidate.x - 50 * s, y: candidate.y - 18 * s, width: 100 * s, height: 47 * s)
+                if floor.minX > layout.width / 2 + 46, floor.maxX < layout.width - 2,
+                   floor.maxY < layout.height - layout.routeOffset - 8,
+                   line.groundIsClear(floor, scale: s) { chosen = candidate; break search }
+            }
         }
-        point=chosen;scale=s
+        point = chosen; scale = s
     }
 }
 
@@ -9369,7 +9370,7 @@ private enum CityUrbanLayout {
         let street = CityGroundLayout.streetSurface(in: CGSize(width:layout.width,height:layout.height))
         let tunnel = CityMetroTunnel(line:metro,scale:s)
         let approaches = tunnel.approachClearances
-        let court = CityBossCourt(layout: layout, line: metro).groundBounds.insetBy(dx: -12*s, dy: -15*s)
+        let court = CityBossCourt(layout: layout, line: metro).clearance
         let platforms = metro.stationDistances.map {
             metro.ribbon(from: $0-111*s, to: $0+111*s, inner: 18*s, outer: 91*s)
                 .boundingRect.insetBy(dx: -8*s, dy: -15*s)
@@ -9419,7 +9420,7 @@ private enum CityUrbanLayout {
                   onStreet,
                   b.maxY+layout.routeOffset < layout.height-20*s,
                   !approaches.contains(where: { $0.intersects(b) }),
-                  !site.groundBounds.intersects(court),
+                  !site.contentBounds.intersects(court),
                   !platforms.contains(where: { $0.intersects(site.groundBounds) }),
                   metro.groundIsClear(site.groundBounds.insetBy(dx: -5*s,dy: -3*s),scale:s)
             else { return false }
@@ -9754,7 +9755,7 @@ private struct CityMetroForeground: View {
                 .frame(width: tunnelFrame.width, height: tunnelFrame.height)
                 .position(x: tunnelFrame.midX, y: tunnelFrame.midY).zIndex(Double(tunnelFrame.maxY-layout.routeOffset))
             let court = CityBossCourt(layout: layout, line: line)
-            let frame = CGRect(x: layout.width-189*s, y: layout.routeOffset+court.bossPoint.y-185*s, width: 220*s, height: 230*s)
+            let frame = court.clearance.offsetBy(dx: 0, dy: layout.routeOffset)
             Canvas { context, _ in
                 var c = context; c.translateBy(x: -frame.minX, y: layout.routeOffset-frame.minY)
                 CityWorldPainter(context: c).metroForeground(layout: layout)
@@ -9763,11 +9764,11 @@ private struct CityMetroForeground: View {
             // The carried clocks share the boss's ground depth, so nearer
             // buildings cover them just as they cover the dinosaur's wings.
             let clockPoint = CGPoint(x: court.bossPoint.x, y: layout.routeOffset + court.bossPoint.y)
-            let clockFrame = WorldBossPainter.bounds(worldID: 6, at: clockPoint, size: s * 0.80)
+            let clockFrame = WorldBossPainter.bounds(worldID: 6, at: clockPoint, size: court.artScale)
             if alwaysVisible || clockFrame.intersects(viewport) {
                 Canvas { context, _ in
                     var c = context; c.translateBy(x: -clockFrame.minX, y: -clockFrame.minY)
-                    WorldBossPainter(context: c).drawClocks(worldID: 6, at: clockPoint, size: s * 0.80, elapsed: clockTime)
+                    WorldBossPainter(context: c).drawClocks(worldID: 6, at: clockPoint, size: court.artScale, elapsed: clockTime)
                 }.frame(width: clockFrame.width, height: clockFrame.height)
                     .position(x: clockFrame.midX, y: clockFrame.midY).zIndex(Double(court.point.y) + 0.001)
             }
@@ -10005,7 +10006,6 @@ private struct CityWorldPainter {
         p.metroViaduct(line: metro, scale: scale)
         p.metroMouths(CityMetroTunnel(line:metro,scale:scale))
         p.streetLife(layout: layout, depth: depth)
-        p.bossPlaza(width: w, scale: scale, layout: layout)
         var arrival = context; arrival.translateBy(x: 0,y: h)
         SleepValleyPainter(context: arrival).cityPark(in: WorldMapChapterSpacing.sceneSize(width: w))
     }
@@ -10480,20 +10480,13 @@ private struct CityWorldPainter {
     }
 
     func metroForeground(layout: WorldSceneryLayout) {
-        bossPlaza(width: layout.width, scale: layout.scale, layout: layout)
         let court = CityBossCourt(layout:layout,line:CityMetroLine(layout:layout))
-        WorldBossPainter(context: context).draw(worldID:6,at:court.bossPoint,size:layout.scale*0.80)
-    }
-
-    private func bossPlaza(width: CGFloat, scale s: CGFloat, layout: WorldSceneryLayout) {
-        let point = CityBossCourt(layout:layout,line:CityMetroLine(layout:layout)).point
-        // A narrow court beside the loop keeps the robot's feet and steps off the rails.
-        rounded(CGRect(x:point.x-33*s,y:point.y-19*s,width:66*s,height:37*s),radius:9*s,colors:CityMaterials.teal)
-        for i in 0..<3 {
-            rounded(CGRect(x:point.x-26*s,y:point.y+CGFloat(i)*4*s,width:52*s,height:4.5*s),radius:s,colors:CityMaterials.frame)
-        }
-        planter(at:.init(x:point.x+21*s,y:point.y-1*s),size:s*0.26)
-        flowers(at:.init(x:point.x+20*s,y:point.y-7*s),size:s*0.35)
+        let shadow = CGRect(x: court.bossPoint.x - 43*layout.scale, y: court.bossPoint.y + 3*layout.scale,
+                            width: 86*layout.scale, height: 13*layout.scale)
+        context.fill(Path(ellipseIn: shadow), with: .radialGradient(
+            Gradient(colors: [Color(dinoHex: 0x47666A).opacity(0.24), .clear]),
+            center: .init(x: shadow.midX, y: shadow.midY), startRadius: 0, endRadius: shadow.width/2))
+        WorldBossPainter(context: context).draw(worldID:6,at:court.bossPoint,size:court.artScale)
     }
 
     private func metroViaduct(line metro:CityMetroLine,scale s:CGFloat) {
@@ -11735,11 +11728,6 @@ private enum TimeMachineLayout {
             }
             add(item.point, item.size, item.point.y, parts)
         }
-        // Pendel's three hat clocks belong to this world, too.
-        add(.init(x: layout.width - 79 * layout.scale, y: 1675), layout.scale * 0.88, 1675.5,
-            [.fullClock(.init(x: 10, y: -158), 11, .init(hour: 6, minute: 25)),
-             .fullClock(.init(x: -7, y: -174), 8, .init(hour: 10, minute: 10)),
-             .fullClock(.init(x: -9, y: -190), 5.5, .init(hour: 3))])
         assemblyFields.setObject(AssemblyField(result), forKey: key)
         return result
     }
@@ -11824,7 +11812,7 @@ private enum TimeMachineLayout {
 
     static func sites(layout: WorldSceneryLayout) -> [Site] {
         (0..<9).map { index in
-            let right = index % 4 == 0 || index % 4 == 3
+            let right = index != 8 && (index % 4 == 0 || index % 4 == 3)
             let size = layout.scale * 0.94
             // Extend the first inventions upward while keeping the last one's
             // footing at its established place beside the final clock tower.
@@ -11883,8 +11871,7 @@ private enum TimeMachineLayout {
                    width: 152 * site.size, height: 26 * site.size),
             site.discharge.bounds
         ] }
-        let boss = CGRect(x: layout.width - 165 * scale, y: 1675 - 158 * scale,
-                          width: 180 * scale, height: 195 * scale)
+        let boss = WorldBossStage(worldID: 8, width: layout.width).clearance
         var result: [Furnishing] = []
         let stepX = 27 * scale, stepY = 43 * scale
         for row in 0..<Int(ceil((layout.height - 160) / stepY)) {
@@ -12059,12 +12046,14 @@ private enum TimeMachineLayout {
             let point = CGPoint(x: bridge.point.x + (bridge.right ? 22 : -22) * bridge.size, y: bridge.point.y - 8 * bridge.size)
             result.append(place(point, size: bridge.size * 0.73, right: bridge.right))
         }
-        return result
+        return result.filter { !WorldBossStage(worldID: 8, width: layout.width).clearance.intersects($0.bounds) }
     }
     static func quarters(layout: WorldSceneryLayout) -> [Quarter] {
-        let s = layout.scale, start = firstTerrace(layout), end = quay(layout) - 74 * s
-        let count = max(2, Int((end - start) / (205 * s)) + 1)
-        return [false, true].flatMap { right in (0..<count).map { row in
+        let s = layout.scale, start = firstTerrace(layout)
+        return [false, true].flatMap { right -> [Quarter] in
+          let end = right ? 1690 - 280 * s : quay(layout) - 74 * s
+          let count = max(2, Int((end - start) / (205 * s)) + 1)
+          return (0..<count).map { row in
             let y = start + CGFloat(row) * (end - start) / CGFloat(count - 1)
             let limits = (0...12).map { i -> CGFloat in
                 let x = layout.centerX(at: y - 240 * s + CGFloat(i) * 20 * s)
@@ -12088,7 +12077,7 @@ private enum TimeMachineLayout {
     }
     static func bridges(layout: WorldSceneryLayout, quarters: [Quarter]) -> [Bridge] {
         let sites = sites(layout: layout)
-        let keepouts = quarters.flatMap(\.clockFaces) + furnishings(layout: layout).map(\.bounds)
+        let keepouts = [WorldBossStage(worldID: 8, width: layout.width).clearance] + quarters.flatMap(\.clockFaces) + furnishings(layout: layout).map(\.bounds)
             + sites.flatMap { site in [
                 CGRect(x: site.point.x - 54 * site.size, y: site.point.y - 181 * site.size,
                        width: 108 * site.size, height: 195 * site.size), site.discharge.bounds
@@ -12131,8 +12120,28 @@ private enum TimeMachineLayout {
     }
 
     static func waterPoint(layout: WorldSceneryLayout, right: Bool, y: CGFloat) -> CGPoint {
-        let distance = (88 + sin((y + 35) / 133) * 9) * layout.scale
-        return CGPoint(x: layout.centerX(at: y) + (right ? distance : -distance), y: y)
+        let s = layout.scale
+        let wave = sin((y + 35) / 133) * 9
+        guard right else {
+            return CGPoint(x: layout.centerX(at: y) - (88 + wave)*s, y: y)
+        }
+        // Leave the road at the penultimate vertical tangent. Continuing
+        // through its last left bend would create an artificial detour around
+        // the boss. The broad outer course ends vertically above its real drain.
+        let start: CGFloat = 1305, end: CGFloat = 1670
+        func smooth(_ value: CGFloat) -> CGFloat {
+            let t = min(1, max(0, value))
+            return t*t*t*(t*(6*t - 15) + 10)
+        }
+        if y < start {
+            let fade = 1 - smooth((y - start + 100) / 100)
+            return CGPoint(x: layout.centerX(at: y) + (88 + wave*fade)*s, y: y)
+        }
+        let inner = layout.centerX(at: start) + 88*s
+        let outer = layout.width > 650
+            ? WorldBossStage(worldID: 8, width: layout.width).point.x + 126*s
+            : layout.width + 54*s
+        return CGPoint(x: inner + (outer-inner)*smooth((y-start)/(end-start)), y: y)
     }
 
     static func watercourse(layout: WorldSceneryLayout, right: Bool, from start: CGFloat, to end: CGFloat) -> Path {
@@ -12296,8 +12305,9 @@ private struct TimeMachinePartsSurface: View {
                 for item in TimeMachineLayout.furnishings(layout: layout) where item.point.y > assembly.depth && item.bounds.intersects(bounds) { p.furnishing(item) }
                 let foreground = WorldSceneryDepth(minimumDepth: assembly.depth + 0.01, visibleBounds: bounds)
                 p.appendKingdomDetails(layout: layout, depth: foreground); foreground.draw()
-                if assembly.depth < 1675 && bounds.maxY > 1675 - 210 * layout.scale {
-                    WorldBossPainter(context: c).draw(worldID: 8, at: .init(x: layout.width - 79 * layout.scale, y: 1675), size: layout.scale * 0.88)
+                let stage = WorldBossStage(worldID: 8, width: layout.width)
+                if assembly.depth < stage.point.y && bounds.intersects(stage.clearance) {
+                    WorldBossPainter(context: c).draw(worldID: 8, at: stage.point, size: layout.scale * 0.88)
                 }
                 if protectsRoute { c.fill(TimeMachineLayout.waterField(layout: layout).protectedRoute, with: .color(.white)) }
             }
@@ -12335,9 +12345,8 @@ private struct TimeMachineMechanismMask: View {
             let foreground = WorldSceneryDepth(minimumDepth: site.point.y, visibleBounds: site.bounds)
             TimeMachinePainter(context: c).appendKingdomDetails(layout: layout, depth: foreground)
             foreground.draw()
-            let boss = CGPoint(x: layout.width - 79 * layout.scale, y: 1675)
-            let bossFrame = CGRect(x: boss.x - 85 * layout.scale, y: boss.y - 150 * layout.scale,
-                                   width: 170 * layout.scale, height: 178 * layout.scale)
+            let boss = WorldBossStage(worldID: 8, width: layout.width).point
+            let bossFrame = WorldBossPainter.bounds(worldID: 8, at: boss, size: layout.scale * 0.88)
             if bossFrame.intersects(site.bounds) {
                 WorldBossPainter(context: c).draw(worldID: 8, at: boss, size: layout.scale * 0.88)
             }
@@ -12369,9 +12378,8 @@ private struct TimeMachineWaterMask: View {
             let foreground = WorldSceneryDepth(visibleBounds: visible)
             painter.appendKingdomDetails(layout: layout, depth: foreground)
             foreground.draw()
-            let boss = CGPoint(x: layout.width - 79 * layout.scale, y: 1675)
-            if visible.intersects(CGRect(x: boss.x - 95 * layout.scale, y: boss.y - 180 * layout.scale,
-                                        width: 190 * layout.scale, height: 225 * layout.scale)) {
+            let boss = WorldBossStage(worldID: 8, width: layout.width).point
+            if visible.intersects(WorldBossPainter.bounds(worldID: 8, at: boss, size: layout.scale * 0.88)) {
                 WorldBossPainter(context: c).draw(worldID: 8, at: boss, size: layout.scale * 0.88)
             }
             c.fill(TimeMachineLayout.waterField(layout: layout).protectedRoute, with: .color(.white))
@@ -15959,8 +15967,8 @@ private struct CastleKingdomLayout {
             return curve(.init(x: outside, y: entryY), .init(x: x + sign * 95 * scale, y: entryY),
                          .init(x: x, y: joinedY - 105), .init(x: x, y: joinedY))
         }
-        let exitY = scenery.height - scenery.routeOffset - 28
-        let leavingY = min(1655, exitY - 180)
+        let exitY = right ? CGFloat(1640) : scenery.height - scenery.routeOffset - 28
+        let leavingY = right ? CGFloat(1480) : min(1655, exitY - 180)
         if y <= leavingY { return CGPoint(x: inner(y), y: y) }
         if y < exitY {
             let x = inner(leavingY), slope = (inner(leavingY + 1) - inner(leavingY - 1)) / 2
@@ -16082,8 +16090,9 @@ private struct CastleWaterOcclusion: View {
                     layout: layout, crossings: plan.crossings.filter { $0.outer.y + 42 * $0.scale <= cutoff }, depth: bridges)
                 bridges.draw()
             }
-            if 1675 > cutoff {
-                WorldBossPainter(context: c).draw(worldID: 10, at: .init(x: layout.scenery.width - 79 * layout.scale, y: 1675), size: layout.scale * 0.88)
+            let boss = WorldBossStage(worldID: 10, width: layout.scenery.width).point
+            if boss.y > cutoff {
+                WorldBossPainter(context: c).draw(worldID: 10, at: boss, size: layout.scale * 0.88)
             }
         }
     }
@@ -17465,10 +17474,9 @@ struct ThemedWorldLandscape: View, Equatable {
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
-                let right = size.width
-                let point = CGPoint(x: right - 79 * scale, y: 1675)
+                let point = WorldBossStage(worldID: 3, width: size.width).point
                 depth.add(at: routeOffset + point.y) {
-                    boss.bossClearing(worldID: 3, at: point, size: scale)
+                    boss.bossClearing(worldID: 3, at: point, size: scale, integrated: true)
                     boss.boss(worldID: 3, at: point, size: scale * 0.88)
                 }
                 depth.draw()
@@ -17480,10 +17488,9 @@ struct ThemedWorldLandscape: View, Equatable {
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
-                let right = size.width
-                let point = CGPoint(x: right - 79 * scale, y: 1675)
+                let point = WorldBossStage(worldID: 4, width: size.width).point
                 depth.add(at: routeOffset + point.y) {
-                    boss.bossClearing(worldID: 4, at: point, size: scale)
+                    boss.bossClearing(worldID: 4, at: point, size: scale, integrated: true)
                     boss.boss(worldID: 4, at: point, size: scale * 0.88)
                 }
                 depth.draw()
@@ -17527,9 +17534,9 @@ struct ThemedWorldLandscape: View, Equatable {
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
-                let point = CGPoint(x: size.width - 79 * scale, y: 1675)
+                let point = WorldBossStage(worldID: 8, width: size.width).point
                 depth.add(at: routeOffset + point.y) {
-                    boss.bossClearing(worldID: 8, at: point, size: scale)
+                    boss.bossClearing(worldID: 8, at: point, size: scale, integrated: true)
                     boss.boss(worldID: 8, at: point, size: scale * 0.88)
                 }
                 depth.draw()
@@ -17555,9 +17562,9 @@ struct ThemedWorldLandscape: View, Equatable {
                 routeContext.translateBy(x: 0, y: routeOffset)
                 let boss = ThemePainter(context: routeContext, colors: WorldThemeColors(world))
                 let scale = min(1.30, max(0.82, size.width / 390))
-                let point = CGPoint(x: size.width - 79 * scale, y: 1675)
+                let point = WorldBossStage(worldID: 10, width: size.width).point
                 depth.add(at: routeOffset + point.y) {
-                    boss.bossClearing(worldID: 10, at: point, size: scale)
+                    boss.bossClearing(worldID: 10, at: point, size: scale, integrated: true)
                     boss.boss(worldID: 10, at: point, size: scale * 0.88)
                 }
                 depth.draw()
@@ -17661,7 +17668,9 @@ private struct WorldBossMapClocks: View {
             let jungle = world.themeID == 1
             let scale = jungle ? min(1.35, max(0.82, geometry.size.width / 390)) : layout.scale
             let scene = jungle ? JungleMapLayout(width: geometry.size.width).scene() : nil
-            let origin = scene?.bossPoint ?? CGPoint(x: layout.width - 79 * scale, y: 1675)
+            let origin = scene?.bossPoint ?? ([3, 4, 5, 8, 10].contains(world.id)
+                ? WorldBossStage(worldID: world.id, width: layout.width).point
+                : CGPoint(x: layout.width - 79 * scale, y: 1675))
             let artScale = scale * 0.88
             let point = CGPoint(x: origin.x, y: routeOffset + origin.y)
             let frame = WorldBossPainter.bounds(worldID: world.themeID, at: point, size: artScale)
@@ -17956,9 +17965,57 @@ private struct ThemePainter {
         }
     }
 
-    func bossClearing(worldID: Int, at point: CGPoint, size: CGFloat) {
-        if worldID == 8 {
-            at(point, size: size) { $0.shadow(width: 110) }
+    func bossClearing(worldID: Int, at point: CGPoint, size: CGFloat, integrated: Bool = false) {
+        if integrated {
+            at(point, size: size) { p in
+                let shadow = CGRect(x: -42, y: 3, width: 84, height: 13)
+                p.context.fill(Path(ellipseIn: shadow), with: .radialGradient(
+                    Gradient(colors: [Color(dinoHex: p.colors.shade).opacity(0.20), .clear]),
+                    center: .init(x: 0, y: 9.5), startRadius: 0, endRadius: 43))
+            }
+            return
+        }
+        if [1, 3, 4, 5, 8, 10].contains(worldID) {
+            at(point, size: size) { p in
+                let built = [4, 8, 10].contains(worldID)
+                let face: UInt32 = worldID == 1 ? 0xCDD6A1 : worldID == 3 ? 0xBEAE95 : worldID == 5 ? 0xA9C9CE : worldID == 8 ? 0xC4BEC5 : worldID == 10 ? 0xE3D8B7 : 0xDED5B7
+                let edge: UInt32 = worldID == 3 ? 0x817F80 : worldID == 5 ? 0x7896A8 : worldID == 8 ? 0x78839C : worldID == 10 ? 0xB3A984 : 0x9EAD82
+                let rect = CGRect(x: -66, y: -13, width: 132, height: 44)
+                let floor = built ? Path(roundedRect: rect, cornerRadius: 10) : Path { path in
+                    path.move(to: .init(x: -70, y: 9))
+                    path.addCurve(to: .init(x: -20, y: -16), control1: .init(x: -73, y: -11), control2: .init(x: -42, y: -20))
+                    path.addCurve(to: .init(x: 65, y: -2), control1: .init(x: 12, y: -11), control2: .init(x: 59, y: -17))
+                    path.addCurve(to: .init(x: 49, y: 29), control1: .init(x: 78, y: 12), control2: .init(x: 66, y: 26))
+                    path.addCurve(to: .init(x: -70, y: 9), control1: .init(x: -4, y: 37), control2: .init(x: -67, y: 30))
+                    path.closeSubpath()
+                }
+                if built { p.context.fill(floor.offsetBy(dx: 1, dy: 4), with: .color(Color(dinoHex: edge))) }
+                p.context.fill(floor, with: .linearGradient(Gradient(colors: [p.tint(face, toward: 0xFFFFFF, amount: 0.17), Color(dinoHex: face)]),
+                                                         startPoint: .init(x: 0, y: -13), endPoint: .init(x: 0, y: 31)))
+                if built {
+                    for i in -2...2 {
+                        let x = CGFloat(i)*24
+                        p.line([.init(x:x,y:-9),.init(x:x,y:26)],color:edge,width:0.7)
+                    }
+                    p.line([.init(x:-60,y:17),.init(x:60,y:17)],color:edge,width:0.7)
+                    if worldID == 8 {
+                        p.context.stroke(Path(ellipseIn: .init(x:-49,y:-7,width:98,height:31)),with:.color(Color(dinoHex:0xE7C880)),lineWidth:2)
+                        for x:CGFloat in [-56,56] { p.ellipse(.init(x:x-2,y:12,width:4,height:4),0xF6D98E) }
+                    }
+                } else {
+                    for i in 0..<7 {
+                        let x = -55 + CGFloat(i)*17
+                        p.line([.init(x:x,y:22+CGFloat(i%2)*3),.init(x:x+7,y:23+CGFloat(i%2)*3)],color:edge,width:1)
+                    }
+                }
+                p.ellipse(.init(x:-40,y:4,width:81,height:12),p.colors.shade,opacity:0.14)
+                if worldID == 1 || worldID == 4 || worldID == 10 {
+                    p.sprig(at:.init(x:59,y:24),size:0.33,color:0x8DAE75)
+                    p.blossoms(at:.init(x:-57,y:22),size:0.24,color:0xE7A3AA)
+                } else if worldID == 5 {
+                    p.crystals(at:.init(x:59,y:25),size:0.16)
+                }
+            }
             return
         }
         if worldID == 7 {

@@ -26,7 +26,7 @@ struct WorldBossPainter {
     static func bounds(worldID: Int, at point: CGPoint, size: CGFloat) -> CGRect {
         guard let sprite = WorldBossArtwork.sprite(themeID: worldID) else { return .zero }
         let tall = worldID == 8 || worldID == 10
-        let maximumWidth: CGFloat = worldID == 1 ? 132 : worldID == 6 ? 118 : 176
+        let maximumWidth: CGFloat = worldID == 1 ? 132 : 176
         let scale = min((tall ? 200 : 178) / sprite.sourceBounds.height,
                         maximumWidth / sprite.sourceBounds.width) * size
         let width = sprite.sourceBounds.width * scale, height = sprite.sourceBounds.height * scale
