@@ -45,6 +45,11 @@ struct DinoCoreTests {
             print("PASS: \(checks) answer input and practice checks.")
             return
         }
+        if CommandLine.arguments.contains("--jungle-scenery") {
+            testJungleSceneryClearance()
+            print("PASS: \(checks) jungle route and scenery checks.")
+            return
+        }
         if CommandLine.arguments.contains("--boss-clocks") {
             testBossClockMotion()
             print("PASS: \(checks) boss clock motion checks.")
@@ -548,6 +553,21 @@ struct DinoCoreTests {
                     abs($0.point.x - rear.x) < 8 && abs($0.point.y - rear.y) < 1 },
                        "a foreground shrub hides the far end of every log")
             }
+            // A clearance solver can pass while pushing every crown offscreen.
+            // Require substantial visible tree canopy on both banks, including
+            // the final grove immediately before the boss.
+            for right in [false, true] {
+                let visibleTrees = scene.placements.filter { placement in
+                    guard placement.item.kind == .tree, (placement.point.x > width / 2) == right else { return false }
+                    let crown = layout.footprint(of: placement.item)[0]
+                        .offsetBy(dx: placement.point.x, dy: placement.point.y)
+                    let visible = crown.intersection(CGRect(x: 0, y: 0, width: width, height: 1800))
+                    return !visible.isNull && visible.width >= crown.width * 0.35
+                }
+                expect(visibleTrees.count >= 3, "both jungle banks retain visible trees at width \(width)")
+                expect(visibleTrees.contains { (1200...1720).contains($0.point.y) },
+                       "the final jungle bends have visible tree canopy on both banks")
+            }
             let bossStage = WorldBossStage(worldID: 1, width: width)
             expect(scene.bossPoint == bossStage.point, "jungle body and clocks share the reserved clearing")
             for placement in scene.placements {
@@ -578,8 +598,18 @@ struct DinoCoreTests {
             expect(abs(layout.centerX(at: lastY) - width/2) < 0.01, "jungle boss stone is centered")
             expect(layout.centerX(at: lastY - JungleMapLayout.levelSpacing) < width/2 - 40,
                    "the stone before the jungle boss stays in the preceding left bend")
-            expect(JungleMapLayout.levelPositions == JungleMapLayout.chapterPositions,
-                   "jungle and later worlds share the same trail rhythm")
+            expect(abs(layout.centerX(at: JungleMapLayout.firstNodeY) - width / 2) < 0.01,
+                   "the first jungle stone is centered as well as the boss stone")
+            expect(JungleMapLayout.levelPositions.filter { $0 <= 0.30 }.count >= 2 &&
+                   JungleMapLayout.levelPositions.filter { $0 >= 0.70 }.count >= 2,
+                   "the jungle keeps broad alternating bends between its central endpoints")
+            expect(scene.placements.contains { placement in
+                let bounds = placement.bounds
+                let visible = bounds.intersection(CGRect(x: 0, y: 0, width: width, height: chapterEnd))
+                return placement.item.kind == .ruins && placement.point.x > width / 2 &&
+                    placement.point.y > 1400 && bounds.maxY < bossStage.clearance.minY &&
+                    !visible.isNull && visible.width > bounds.width * 0.75
+            }, "a visible, low ruin fills the final right-bank pocket above the jungle boss")
             for (index, fraction) in JungleMapLayout.levelPositions.enumerated() {
                 let y = JungleMapLayout.firstNodeY + CGFloat(index) * JungleMapLayout.levelSpacing
                 let expected = (width - trailWidth) / 2 + trailWidth * fraction
@@ -617,8 +647,10 @@ struct DinoCoreTests {
         let phone = JungleMapLayout(width: 402)
         let oldTree = JungleMapLayout.Item(kind: .tree, preferred: CGPoint(x: 110, y: 1250), size: 1.02)
         let moved = phone.position(of: oldTree)
-        expect(moved.x < oldTree.preferred.x - 100,
-               "the former tree crossing a higher bend is relocated using its crown, not only its trunk")
+        let crown = phone.footprint(of: oldTree)[0].offsetBy(dx: moved.x, dy: moved.y)
+        expect(stride(from: crown.minY, through: crown.maxY, by: 1).allSatisfy {
+            crown.maxX < phone.centerX(at: $0) - phone.clearance(at: $0)
+        }, "an oversized crown clears the complete higher bend of the new jungle route")
     }
 
     static func testPracticeRecords() {
@@ -2377,18 +2409,29 @@ struct DinoCoreTests {
             let body = DinoSpriteColorRenderer.applauseBody(colored, original: source, asset: asset)!
             let before = [UInt8](colored.dataProvider!.data! as Data)
             let after = [UInt8](body.dataProvider!.data! as Data)
-            var headRemoved = true, bodyPreserved = true, fingertips = 0
+            let accents = DinoAvatarMask.spriteRegions(for: asset)?.decorations
+            var headRemoved = true, bodyPreserved = true, fingertips = 0, removedAccents = 0
             for y in 0..<body.height {
                 for x in 0..<body.width {
                     let i = y * body.bytesPerRow + x * 4
-                    let py = Double(y) / Double(body.height)
+                    let px = Double(x) / Double(body.width), py = Double(y) / Double(body.height)
+                    let inAccent = accents?.contains(CGPoint(x: px, y: py)) == true
                     if py < 0.35 { headRemoved = headRemoved && after[i + 3] == 0 }
-                    if py > 0.55 { bodyPreserved = bodyPreserved && (0...3).allSatisfy { before[i + $0] == after[i + $0] } }
+                    if py > 0.55 && !inAccent {
+                        bodyPreserved = bodyPreserved && (0...3).allSatisfy { before[i + $0] == after[i + $0] }
+                    }
+                    if inAccent, before[i + 3] > 50,
+                       Double(before[i]) > Double(before[i + 1]) * 0.92,
+                       Double(before[i + 1]) > Double(before[i + 2]) * 1.15 {
+                        expect(after[i + 3] == 0, "\(asset) removes the painted yellow clap marks, including their soft edges")
+                        removedAccents += 1
+                    }
                     if (0.44..<0.51).contains(py), after[i + 3] > 220 { fingertips += 1 }
                 }
             }
             expect(headRemoved, "\(asset) cannot expose a shifting second head behind the fixed idle head")
             expect(bodyPreserved && fingertips > 100, "\(asset) keeps the supplied hands, complete fingertips and personalized torso")
+            expect(removedAccents > 100, "\(asset) replaces the baked-in clap accents with animated ripples")
         }
         let recovered = DinoAnimation.sample(.thumbsUp, elapsed: DinoAnimation.duration(.thumbsUp))
         expect(recovered.pose.asset == "dino-idle" && recovered.pose.offsetX == 0 && recovered.pose.offsetY == 0,

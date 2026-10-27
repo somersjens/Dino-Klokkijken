@@ -356,7 +356,7 @@ struct CrystalMinerPatrol: Identifiable {
 
     static let routes = [
         CrystalMinerPatrol(id: 0, right: false, stops: [180, 465, 860, 1440], speed: 19, phaseOffset: 0),
-        CrystalMinerPatrol(id: 1, right: true, stops: [200, 505, 980, 1480], speed: 18, phaseOffset: 59),
+        CrystalMinerPatrol(id: 1, right: true, stops: [200, 505, 980, 1375], speed: 18, phaseOffset: 59),
         CrystalMinerPatrol(id: 2, right: false, stops: [725, 835], speed: 15, phaseOffset: 11),
         CrystalMinerPatrol(id: 3, right: true, stops: [1060, 1210], speed: 15, phaseOffset: 27)
     ]

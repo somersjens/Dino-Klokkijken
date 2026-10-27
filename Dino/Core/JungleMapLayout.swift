@@ -43,8 +43,9 @@ struct WorldBossStage {
         return CGPoint(x: width / 2 + offset * scale, y: worldID == 1 ? 1665 : 1690)
     }
     var clearance: CGRect {
-        CGRect(x: point.x - 80 * scale, y: point.y - 190 * scale,
-               width: 160 * scale, height: 230 * scale)
+        let rise: CGFloat = worldID == 1 ? 160 : 190
+        return CGRect(x: point.x - 80 * scale, y: point.y - rise * scale,
+                      width: 160 * scale, height: (rise + 40) * scale)
     }
     var ground: CGRect {
         CGRect(x: point.x - 61 * scale, y: point.y - 9 * scale,
@@ -83,9 +84,9 @@ struct JungleMapLayout {
     static let levelSpacing: CGFloat = 175
     static let firstNodeY: CGFloat = 70
     static let chapterPositions: [CGFloat] = [0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5]
-    /// Use the chapter rhythm throughout: the ninth stone is left of the
-    /// central boss stone, with a vertical tangent into the next world.
-    static let levelPositions = chapterPositions
+    /// Two broad waves start and finish centrally. The penultimate stone
+    /// still belongs to the left bend before the central boss stone.
+    static let levelPositions: [CGFloat] = [0.5, 0.72, 0.58, 0.30, 0.36, 0.64, 0.70, 0.42, 0.28, 0.5]
     /// Vertical room under the boss before the next world's banner. Matches WorldRouteTrail.chapterTail.
     static func bossReturnSpan(for width: CGFloat) -> CGFloat {
         let inner = min(width, 600) - 36
@@ -97,7 +98,7 @@ struct JungleMapLayout {
 
     enum Kind {
         case tree, palm, waterfall, shrub, rocks, fern, flowers, plant, grass
-        case mushrooms, log, snake, fallingLeaves
+        case mushrooms, log, ruins, snake, fallingLeaves
 
         var animated: Bool { self == .snake || self == .fallingLeaves }
         var occludesWildlife: Bool { !animated && self != .waterfall && self != .mushrooms && self != .log }
@@ -125,6 +126,7 @@ struct JungleMapLayout {
             case .grass: return [CGRect(x: -12, y: -17, width: 25, height: 21)]
             case .mushrooms: return [CGRect(x: -40, y: -48, width: 88, height: 66)]
             case .log: return [CGRect(x: -64, y: -42, width: 132, height: 74)]
+            case .ruins: return [CGRect(x: -72, y: -122, width: 144, height: 148)]
             case .snake: return [CGRect(x: -70, y: -24, width: 140, height: 66)]
             case .fallingLeaves: return [CGRect(x: -44, y: -18, width: 88, height: 192)]
             }
@@ -220,40 +222,39 @@ struct JungleMapLayout {
     /// Deliberate groves and bank gardens, with a waterfall clearing left of level 4.
     var items: [Item] {
         func item(_ kind: Kind, _ x: CGFloat, _ y: CGFloat, _ size: CGFloat,
-                  mirror: Bool = false, foreground: Bool = false) -> Item {
+                  mirror: Bool = false, foreground: Bool = false, height: CGFloat = 1) -> Item {
             let groveWidth = min(width, 720)
             return Item(kind: kind, preferred: CGPoint(x: (width - groveWidth) / 2 + groveWidth * x, y: y), size: size * artScale,
-                 mirrored: mirror, foreground: foreground)
+                 mirrored: mirror, foreground: foreground, heightScale: height)
         }
         var result: [Item] = [
-            item(.tree, 0.08, 220, 1.02, mirror: true, foreground: true),
-            item(.tree, 0.94, 235, 1.10, foreground: true),
+            item(.tree, 0.08, 320, 0.53, mirror: true, foreground: true, height: 1.08),
+            item(.tree, 0.91, 260, 0.49, foreground: true, height: 1.18),
             item(.plant, 0.15, 112, 0.57, mirror: true),
             item(.shrub, 0.18, 155, 0.38),
             item(.fern, 0.89, 118, 0.55), item(.flowers, 0.83, 170, 0.60),
             item(.shrub, 0.10, 269, 0.50), item(.flowers, 0.12, 285, 0.63),
             item(.rocks, 0.94, 300, 0.62), item(.fern, 0.94, 310, 0.63),
             item(.shrub, 0.08, 345, 0.42),
-            item(.palm, 0.94, 605, 0.79),
+            item(.palm, 0.93, 605, 0.46, height: 1.12),
             item(.fern, 0.94, 465, 0.64), item(.plant, 0.88, 530, 0.72),
             waterfall,
             item(.rocks, 0.93, 660, 0.70), item(.flowers, 0.86, 676, 0.70),
             item(.shrub, 0.89, 692, 0.48),
-            item(.tree, 0.08, 980, 0.82, mirror: true),
+            item(.tree, 0.09, 1060, 0.51, mirror: true, height: 1.08),
             item(.shrub, 0.09, 785, 0.57), item(.flowers, 0.18, 800, 0.68),
             item(.plant, 0.07, 838, 0.72, mirror: true),
             item(.shrub, 0.88, 835, 0.48), item(.plant, 0.92, 890, 0.68),
             item(.rocks, 0.10, 1000, 0.60), item(.fern, 0.16, 1035, 0.67),
             item(.flowers, 0.12, 1070, 0.68),
-            item(.tree, 0.93, 1330, 0.86),
+            item(.tree, 0.91, 1310, 0.47, height: 1.16),
             item(.shrub, 0.90, 1140, 0.52), item(.flowers, 0.81, 1155, 0.67),
             item(.plant, 0.94, 1205, 0.70),
             item(.shrub, 0.11, 1240, 0.62), item(.rocks, 0.16, 1270, 0.66),
             item(.fern, 0.12, 1320, 0.77),
-            item(.palm, 0.08, 1515, 0.73, mirror: true),
+            item(.palm, 0.08, 1515, 0.43, mirror: true, height: 0.95),
             item(.shrub, 0.09, 1485, 0.55), item(.flowers, 0.19, 1500, 0.69),
             item(.plant, 0.13, 1550, 0.68, mirror: true),
-            item(.tree, 0.94, 1470, 0.72),
             item(.rocks, 0.91, 1585, 0.68), item(.shrub, 0.88, 1608, 0.48),
             item(.flowers, 0.83, 1620, 0.63),
             item(.plant, 0.10, 1680, 0.76, mirror: true),
@@ -279,6 +280,19 @@ struct JungleMapLayout {
             item(.snake, 0.83, 1515, 0.67),
             item(.mushrooms, 0.91, 1740, 0.62), item(.flowers, 0.83, 1790, 0.55),
             item(.shrub, 0.10, 1640, 0.39), item(.plant, 0.87, 1865, 0.46)
+        ]
+        // Alternate tall crowns, low palms and mossy ruins rather than
+        // packing several full trees into the same vertical grove.
+        let pocketY = min(CGFloat(1470), WorldBossStage(worldID: 1, width: width).clearance.minY - 32 * artScale)
+        result += [
+            item(.tree, 0.10, 805, 0.44, mirror: true, height: 1.12),
+            item(.tree, 0.92, 945, 0.48, height: 0.95),
+            item(.tree, 0.09, 1715, 0.43, mirror: true, height: 0.94),
+            item(.ruins, 0.87, pocketY, 0.69),
+            item(.ruins, 0.12, 1265, 0.47, mirror: true),
+            item(.plant, 0.73, pocketY + 27, 0.48),
+            item(.flowers, 0.83, pocketY + 24, 0.64),
+            item(.fern, 0.89, pocketY - 32, 0.53)
         ]
         // The single pale cut faces the road. The far bark end disappears into
         // a shrub tied to the resolved log position, including on wide tablets.

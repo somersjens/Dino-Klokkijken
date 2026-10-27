@@ -47,7 +47,7 @@ struct DinoCharacter: View {
             // schedule to the new jump before the playback task starts.
             let elapsed = playbackClip != clip ? 0 : finished ? DinoAnimation.duration(clip) : context.date.timeIntervalSince(start)
             let sample = DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reduceMotion)
-            let drawing = characterDrawing(sample)
+            let drawing = characterDrawing(sample, elapsed: elapsed)
                 .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
                 .offset(y: size * sample.height)
                 // Only the pose bypasses answer-card animations. The portrait
@@ -87,7 +87,7 @@ struct DinoCharacter: View {
         }
     }
 
-    @ViewBuilder private func characterDrawing(_ sample: DinoAnimation.Sample) -> some View {
+    @ViewBuilder private func characterDrawing(_ sample: DinoAnimation.Sample, elapsed: Double) -> some View {
         if clip == .thumbsUp {
             ZStack {
                 // Bridge the moving jaw to the torso behind the clapping hands.
@@ -107,6 +107,9 @@ struct DinoCharacter: View {
                     .mask(DinoApplauseHeadMask().fill(style: FillStyle(eoFill: true)))
                     .rotationEffect(.degrees(sample.headAngle), anchor: UnitPoint(x: 0.56, y: 0.445))
                     .offset(y: size * sample.headHeight)
+                if !reduceMotion {
+                    DinoClapEffect(elapsed: elapsed)
+                }
             }
         } else if let morph = sample.morph, let drawing = morphImage(morph.drawing.asset) {
             ZStack {
@@ -156,6 +159,45 @@ struct DinoCharacter: View {
         } else {
             image
         }
+    }
+}
+
+/// Two small air ripples follow the palm contacts on the character's own clock.
+/// Rounded strokes expand and dissolve instead of flashing between painted marks.
+private struct DinoClapEffect: View {
+    let elapsed: Double
+
+    var body: some View {
+        Canvas { context, size in
+            let unit = size.width
+            let center = CGPoint(x: unit * 0.60, y: size.height * 0.475)
+            for contact in DinoAnimation.correctAnswerClapContacts {
+                for echo in 0..<2 {
+                    let age = elapsed - contact - Double(echo) * 0.035
+                    let progress = age / 0.24
+                    guard progress > 0, progress < 1 else { continue }
+                    let travel = 1 - pow(1 - progress, 3)
+                    let opacity = sin(min(1, progress / 0.16) * .pi / 2) * pow(1 - progress, 1.5)
+                        * (echo == 0 ? 0.90 : 0.55)
+                    let radius = unit * (0.075 + 0.065 * travel + Double(echo) * 0.018)
+                    for side in [0.0, Double.pi] {
+                        var arc = Path()
+                        for step in 0...16 {
+                            let angle = side + (-0.42 + Double(step) / 16 * 0.84)
+                            let point = CGPoint(x: center.x + cos(angle) * radius,
+                                                y: center.y + sin(angle) * radius * 0.72)
+                            if step == 0 { arc.move(to: point) } else { arc.addLine(to: point) }
+                        }
+                        let stroke = StrokeStyle(lineWidth: unit * 0.009 * (1 - progress * 0.35), lineCap: .round)
+                        context.stroke(arc, with: .color(Color(red: 0.20, green: 0.49, blue: 0.35).opacity(opacity * 0.22)),
+                                       style: StrokeStyle(lineWidth: stroke.lineWidth + unit * 0.005, lineCap: .round))
+                        context.stroke(arc, with: .color(Color(red: 0.94, green: 1, blue: 0.92).opacity(opacity)), style: stroke)
+                    }
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 

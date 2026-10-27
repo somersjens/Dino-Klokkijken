@@ -127,7 +127,7 @@ enum DinoAvatarMask {
         })
     }()
 
-    /// Keep the six clapping drawings' accents gold and protect their eyes and mouths.
+    /// Locate the painted clap accents for removal and protect eyes and mouths.
     private static let applausePoses: [String: SpriteRegions] = {
         let accents: [[CGRect]] = [
             [],
@@ -479,6 +479,7 @@ enum DinoSpriteColorRenderer {
 
     /// The supplied head moves independently of the hands. Remove that head
     /// before caching the moving layer; DinoCharacter draws the exact idle head above it.
+    /// Clear the painted gold accents too, so the view can animate its own soft ripples.
     static func applauseBody(_ colored: CGImage, original: CGImage, asset: String) -> CGImage? {
         guard asset.hasPrefix("dino-answer-clap-") else { return colored }
         let width = colored.width, height = colored.height
@@ -498,11 +499,15 @@ enum DinoSpriteColorRenderer {
                 let i = (y * width + x) * 4
                 let px = Double(x) / Double(width), py = Double(y) / Double(height)
                 let r = Double(source[i]), g = Double(source[i + 1]), b = Double(source[i + 2])
+                // Classify the source rather than the personalized pixels: a
+                // yellow Dino must keep its hands, including beside an accent.
+                let paintedAccent = accents?.contains(CGPoint(x: px, y: py)) == true
+                    && r > g * 0.92 && g > b * 1.15
                 // Keep complete fingertips above the chin without retaining the
                 // cream jaw or red mouth. Classify original green before recoloring.
                 let fingers = py >= 550.0 / 1254 && (550.0 / 1254...950.0 / 1254).contains(px)
                     && g > r * 1.03 && g > b * 1.1
-                if py >= 650.0 / 1254 || fingers || accents?.contains(CGPoint(x: px, y: py)) == true { continue }
+                if !paintedAccent && (py >= 650.0 / 1254 || fingers) { continue }
                 pixels[i] = 0; pixels[i + 1] = 0; pixels[i + 2] = 0; pixels[i + 3] = 0
             }
         }

@@ -60,3 +60,13 @@ De levelkaart en oefenkeuze bereiden de antwoordbeelden al voor in de gekozen di
 De Debug-build slaagt. `Tools/test-dino.sh` slaagt met **862.121 controles**, waaronder precies twee hoofdknikken, synchronisatie met beide handcontacten, continuïteit op 600 tijdstappen per seconde en volledig herstel naar rust. De twee gerichte schermtests slagen op iPhone 18 Pro met iOS 27: drie opeenvolgende goede oefenantwoorden en een volledig level met vijf goede antwoorden en gekozen dinokleuren. De opname is beeld voor beeld gecontroleerd: twee losse klappen, een kleine hoofdbeweging bij elk contact en een rustige stop.
 
 [Nieuw voorbeeld: twee klappen met hoofdbeweging](Screenshots/Applause/applause-two-claps-final-iphone.mp4).
+
+## Zachte klapaccenten · 27 oktober 2026
+
+De gele driehoekjes worden uit de bewegende bitmaplaag verwijderd, inclusief hun zachte randen. De selectie gebruikt de oorspronkelijke kleuren en accentlocaties, zodat gepersonaliseerde handen behouden blijven. De originele PNG's blijven bewaard.
+
+Elke handklap krijgt twee korte, afgeronde luchtboogjes aan weerszijden van de handen. Ze waaieren gedurende 0,24 seconde naar buiten uit en vervagen; de tweede boog volgt 35 ms later. Lichtgroene, bijna witte lijnen met een zachte groene contour passen bij het portret. Ze delen de bestaande animatieklok en beide handcontacten. Minder beweging laat de boogjes weg.
+
+`Tools/test-dino.sh` slaagt met **1.176.993 controles**, inclusief pixelcontroles voor het verwijderen van de oude accenten en behoud van handen en romp. De Debug-build en `testConsecutiveCorrectPracticeAnswersKeepCompanionInPortrait` slagen op iPhone 18 Pro, iOS 27: drie opeenvolgende goede antwoorden eindigen steeds in de oorspronkelijke rusthouding. De simulatoropname is per 0,05 seconde bekeken op plaatsing, beide pulsen en ontbrekende gele accenten.
+
+[Voorbeeld van de zachte klapaccenten](Screenshots/Applause/clap-soft-ripples-iphone.mp4) · [Beelden per 0,05 seconde](Screenshots/Applause/clap-soft-ripples-frames.png).

@@ -536,6 +536,24 @@ final class DinoUITests: XCTestCase {
         }
     }
 
+    func testJungleRouteStartsAndEndsInCenter() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.jungle-central-endpoints.\(UUID().uuidString)"
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "0"
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launch()
+        waitForMapOpeningToFinish()
+        let first = app.buttons["map.level.1"]
+        XCTAssertTrue(first.waitForExistence(timeout: 8))
+        XCTAssertTrue(first.isHittable)
+        XCTAssertEqual(first.frame.midX, app.frame.midX, accuracy: 2)
+        saveScreenshot("jungle-central-start")
+        let boss = revealMapNode(10)
+        XCTAssertEqual(boss.frame.midX, app.frame.midX, accuracy: 2)
+        XCTAssertLessThan(app.buttons["map.level.9"].frame.midX, boss.frame.midX - 40)
+        saveScreenshot("jungle-central-finish")
+    }
+
     func testWorldBossSceneryRemainsPlayable() {
         let requested = ProcessInfo.processInfo.environment["DINO_TEST_WORLD_IDS"]?
             .split(separator: ",").compactMap { Int($0) }.filter { (1...10).contains($0) } ?? []

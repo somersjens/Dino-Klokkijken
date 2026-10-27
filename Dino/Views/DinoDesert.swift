@@ -232,7 +232,7 @@ struct DinoDesertPainter {
             depth.add(at: point.y + routeOffset, bounds: CGRect(x: point.x - 101 * s * factor, y: point.y + routeOffset - 155 * s * factor, width: 202 * s * factor, height: 216 * s * factor)) { p.scene(at: point, size: s * factor, variation: variation) }
         }
         for i in 0..<22 {
-            let y = CGFloat(i) * 79 + 50, right = i % 4 < 2
+            let y = CGFloat(i) * 79 + 50, right = i % 4 < 2 && i < 20
             let factor = (0.53 + CGFloat((i * 7) % 5) * 0.09) * s
             let point = layout.position(CGPoint(x: right ? w - 10 * s : 10 * s, y: y), radius: 24 * factor, rise: 90 * factor)
             depth.add(at: point.y + routeOffset, bounds: CGRect(x: point.x - 62 * factor, y: point.y + routeOffset - 128 * factor, width: 124 * factor, height: 172 * factor)) {
@@ -244,12 +244,26 @@ struct DinoDesertPainter {
                 }
             }
         }
+        // The last sandstone outcrops sit on separate left-bank parcels,
+        // leaving ordinary sand beneath the boss instead of a ring of mesas.
+        for (y, factor, variation): (CGFloat, CGFloat, Int) in [(1540, 0.63, 2)] {
+            let point = layout.position(CGPoint(x: 34 * s, y: y), radius: 55 * s * factor, rise: 115 * s * factor)
+            depth.add(at: point.y + routeOffset,
+                      bounds: CGRect(x: point.x - 62 * s * factor, y: point.y + routeOffset - 128 * s * factor,
+                                     width: 124 * s * factor, height: 165 * s * factor)) {
+                p.at(point, size: s * factor) { edge in
+                    edge.mesa(variation: variation)
+                    edge.at(CGPoint(x: -28, y: 12), size: 0.45) { $0.dryShrub(variation: 2) }
+                }
+            }
+        }
         // On wide screens the canyon continues beyond the central play column.
         // These outer shelves stay outside the complete route's occupied bounds.
         if w > 660 {
             for side in [false, true] {
                 for i in 0..<5 {
-                    let point = CGPoint(x: side ? w - 35 * s : 35 * s, y: 190 + CGFloat(i) * 340 + (side ? 57 : 0))
+                    let y = 190 + CGFloat(i) * 340 + (side ? 57 : 0)
+                    let point = CGPoint(x: side ? w - 35 * s : 35 * s, y: side && i == 4 ? 1450 : y)
                     depth.add(at: point.y + routeOffset, bounds: CGRect(x: point.x - 145 * s, y: point.y + routeOffset - 180 * s, width: 290 * s, height: 245 * s)) {
                         p.at(point, size: s * (0.95 + CGFloat(i % 2) * 0.17), mirror: side) { edge in
                             edge.mesa(variation: i)
@@ -310,14 +324,13 @@ struct DinoDesertPainter {
 
     func clearing(at point: CGPoint, size: CGFloat) {
         at(point, size: size) { p in
-            p.shadow(width: 165, height: 37)
-            p.oval(CGRect(x: -70, y: -3, width: 140, height: 23), [0xFBE4B3, 0xD5A56A, 0xB5814D])
-            for i in 0..<7 {
-                let a = Double(i) * .pi / 6
-                p.at(CGPoint(x: CGFloat(cos(a)) * 62, y: CGFloat(sin(a)) * 11 + 10), size: 0.42) { $0.mesa(variation: i) }
-            }
-            p.at(CGPoint(x: -55, y: 10), size: 0.61) { $0.dryShrub(variation: 3) }
-            p.at(CGPoint(x: 60, y: 0), size: 0.47) { $0.cactus(variation: 2) }
+            // Wind-smoothed sand, with a low contact shadow and no raised rocks.
+            var shade = p.context
+            shade.translateBy(x: 0, y: 8)
+            shade.scaleBy(x: 70, y: 13)
+            shade.fill(Path(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2)),
+                       with: .radialGradient(Gradient(colors: [Color(dinoHex: 0x976B43).opacity(0.28), .clear]),
+                                             center: .zero, startRadius: 0, endRadius: 1))
         }
     }
 
