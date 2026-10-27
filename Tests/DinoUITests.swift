@@ -434,6 +434,7 @@ final class DinoUITests: XCTestCase {
             app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = String(completed)
             app.launch()
             XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 8))
+            waitForMapOpeningToFinish()
             let first = completed * 10 + 1
             let node = revealMapNode(first)
             XCTAssertTrue(node.isEnabled)
@@ -550,7 +551,7 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("jungle-central-start")
         let boss = revealMapNode(10)
         XCTAssertEqual(boss.frame.midX, app.frame.midX, accuracy: 2)
-        XCTAssertLessThan(app.buttons["map.level.9"].frame.midX, boss.frame.midX - 40)
+        XCTAssertLessThan(app.buttons["map.level.9"].frame.midX, boss.frame.midX - 30)
         saveScreenshot("jungle-central-finish")
     }
 
@@ -573,7 +574,7 @@ final class DinoUITests: XCTestCase {
             if world == 1 {
                 XCTAssertEqual(boss.frame.midX, app.frame.midX, accuracy: 2,
                                "The jungle boss stone shares the centered chapter exit")
-                XCTAssertLessThan(app.buttons["map.level.9"].frame.midX, boss.frame.midX - 40,
+                XCTAssertLessThan(app.buttons["map.level.9"].frame.midX, boss.frame.midX - 30,
                                   "The preceding stone keeps its own left-hand bend")
             }
             saveScreenshot("scenery-depth-world-\(world)")
@@ -619,6 +620,7 @@ final class DinoUITests: XCTestCase {
         app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "10"
         app.launch()
         XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 8))
+        waitForMapOpeningToFinish()
         let boss = revealMapNode(100)
         XCTAssertTrue(boss.isEnabled)
         XCTAssertFalse(app.buttons["map.level.101"].exists)

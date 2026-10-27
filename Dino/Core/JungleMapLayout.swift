@@ -84,9 +84,22 @@ struct JungleMapLayout {
     static let levelSpacing: CGFloat = 175
     static let firstNodeY: CGFloat = 70
     static let chapterPositions: [CGFloat] = [0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5]
-    /// Two broad waves start and finish centrally. The penultimate stone
-    /// still belongs to the left bend before the central boss stone.
-    static let levelPositions: [CGFloat] = [0.5, 0.72, 0.58, 0.30, 0.36, 0.64, 0.70, 0.42, 0.28, 0.5]
+    /// A broad right bend opens into a longer left sweep, then returns to centre.
+    static let levelPositions: [CGFloat] = [0.5, 0.67, 0.72, 0.59, 0.38, 0.27, 0.29, 0.34, 0.38, 0.5]
+
+    /// Shared by the drawn trail and scenery clearance. Carry the direction
+    /// through each stone; only actual bends and the two endpoints turn vertical.
+    /// Harmonic tangents keep each segment within its two level positions.
+    static func routeControlOffsets(forSegment index: Int, width: CGFloat) -> (outgoing: CGFloat, incoming: CGFloat) {
+        func tangent(at node: Int) -> CGFloat {
+            guard node > 0, node < levelPositions.count - 1 else { return 0 }
+            let before = levelPositions[node] - levelPositions[node - 1]
+            let after = levelPositions[node + 1] - levelPositions[node]
+            guard before * after > 0 else { return 0 }
+            return 2 * before * after / (before + after)
+        }
+        return (tangent(at: index) * width / 3, tangent(at: index + 1) * width / 3)
+    }
     /// Vertical room under the boss before the next world's banner. Matches WorldRouteTrail.chapterTail.
     static func bossReturnSpan(for width: CGFloat) -> CGFloat {
         let inner = min(width, 600) - 36
@@ -228,8 +241,8 @@ struct JungleMapLayout {
                  mirrored: mirror, foreground: foreground, heightScale: height)
         }
         var result: [Item] = [
-            item(.tree, 0.08, 320, 0.53, mirror: true, foreground: true, height: 1.08),
-            item(.tree, 0.91, 260, 0.49, foreground: true, height: 1.18),
+            item(.tree, 0.08, 220, 1.02, mirror: true, foreground: true),
+            item(.tree, 0.94, 235, 1.10, foreground: true),
             item(.plant, 0.15, 112, 0.57, mirror: true),
             item(.shrub, 0.18, 155, 0.38),
             item(.fern, 0.89, 118, 0.55), item(.flowers, 0.83, 170, 0.60),
@@ -352,16 +365,12 @@ struct JungleMapLayout {
         }
         let index = min(fractions.count - 2, Int((y - Self.firstNodeY) / Self.levelSpacing))
         let startY = Self.firstNodeY + CGFloat(index) * Self.levelSpacing
-        var lower: CGFloat = 0, upper: CGFloat = 1
-        for _ in 0..<16 {
-            let t = (lower + upper) / 2
-            if cubic(startY, startY + 88, startY + 87, startY + Self.levelSpacing, t) < y { lower = t }
-            else { upper = t }
-        }
         let trailWidth = min(width, 600) - 36
         let startX = (width - trailWidth) / 2 + trailWidth * fractions[index]
         let endX = (width - trailWidth) / 2 + trailWidth * fractions[index + 1]
-        return cubic(startX, startX, endX, endX, (lower + upper) / 2)
+        let controls = Self.routeControlOffsets(forSegment: index, width: trailWidth)
+        return cubic(startX, startX + controls.outgoing, endX - controls.incoming, endX,
+                     (y - startY) / Self.levelSpacing)
     }
 
     /// The same vertical-tangent bend the jungle trail draws from the boss back to the centre.

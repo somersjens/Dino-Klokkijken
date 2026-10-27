@@ -555,13 +555,14 @@ struct DinoCoreTests {
             }
             // A clearance solver can pass while pushing every crown offscreen.
             // Require substantial visible tree canopy on both banks, including
-            // the final grove immediately before the boss.
+            // the final grove and entrance crowns above the route's first row.
+            let entranceRise = WorldMapChapterSpacing.sceneOffset(width: width)
             for right in [false, true] {
                 let visibleTrees = scene.placements.filter { placement in
                     guard placement.item.kind == .tree, (placement.point.x > width / 2) == right else { return false }
                     let crown = layout.footprint(of: placement.item)[0]
                         .offsetBy(dx: placement.point.x, dy: placement.point.y)
-                    let visible = crown.intersection(CGRect(x: 0, y: 0, width: width, height: 1800))
+                    let visible = crown.intersection(CGRect(x: 0, y: -entranceRise, width: width, height: 1800 + entranceRise))
                     return !visible.isNull && visible.width >= crown.width * 0.35
                 }
                 expect(visibleTrees.count >= 3, "both jungle banks retain visible trees at width \(width)")
@@ -596,12 +597,12 @@ struct DinoCoreTests {
             let trailWidth = min(width, 600) - 36
             let lastY = JungleMapLayout.firstNodeY + 9 * JungleMapLayout.levelSpacing
             expect(abs(layout.centerX(at: lastY) - width/2) < 0.01, "jungle boss stone is centered")
-            expect(layout.centerX(at: lastY - JungleMapLayout.levelSpacing) < width/2 - 40,
+            expect(layout.centerX(at: lastY - JungleMapLayout.levelSpacing) < width/2 - 30,
                    "the stone before the jungle boss stays in the preceding left bend")
             expect(abs(layout.centerX(at: JungleMapLayout.firstNodeY) - width / 2) < 0.01,
                    "the first jungle stone is centered as well as the boss stone")
-            expect(JungleMapLayout.levelPositions.filter { $0 <= 0.30 }.count >= 2 &&
-                   JungleMapLayout.levelPositions.filter { $0 >= 0.70 }.count >= 2,
+            expect(JungleMapLayout.levelPositions.min()! < 0.30 &&
+                   JungleMapLayout.levelPositions.max()! > 0.70,
                    "the jungle keeps broad alternating bends between its central endpoints")
             expect(scene.placements.contains { placement in
                 let bounds = placement.bounds
@@ -614,6 +615,9 @@ struct DinoCoreTests {
                 let y = JungleMapLayout.firstNodeY + CGFloat(index) * JungleMapLayout.levelSpacing
                 let expected = (width - trailWidth) / 2 + trailWidth * fraction
                 expect(abs(layout.centerX(at: y) - expected) < 0.01, "jungle placement follows each real level centre")
+                let incoming = (layout.centerX(at: y) - layout.centerX(at: y - 0.01)) / 0.01
+                let outgoing = (layout.centerX(at: y + 0.01) - layout.centerX(at: y)) / 0.01
+                expect(abs(incoming - outgoing) < 0.001, "jungle bends pass smoothly through every level stone")
             }
             for item in layout.items {
                 let point = layout.position(of: item)

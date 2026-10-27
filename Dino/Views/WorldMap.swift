@@ -411,7 +411,8 @@ struct WorldMap: View {
             let topClearance = max(0, dinoSize - 82)
             let points = JungleMapLayout.levelPositions.indices.map { routePoint($0, width: g.size.width, topClearance: topClearance) }
             ZStack(alignment: .topLeading) {
-                WorldRouteTrail(points: points, exitY: g.size.height, exitX: g.size.width / 2).equatable()
+                WorldRouteTrail(points: points, exitY: g.size.height, exitX: g.size.width / 2,
+                                jungleRouteWidth: g.size.width).equatable()
                 // Real rows provide accurate scroll anchors; positioned artwork alone does not.
                 VStack(spacing: 0) {
                     ForEach(1...10, id: \.self) { id in
