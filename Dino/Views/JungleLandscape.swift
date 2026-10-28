@@ -7685,7 +7685,8 @@ private struct VillageRiverTraffic: View {
         }
         .readGeometry(for: CGRect.self) { proxy in
             let bounds = proxy.frame(in: .named("adventure.map.viewport"))
-            return DinoMapViewport.preparedAnimationBounds(frame: bounds, viewportHeight: viewportHeight)
+            return DinoMapViewport.preparedAnimationBounds(frame: bounds, viewportHeight: viewportHeight,
+                                                           scale: bounds.width / max(1, proxy.size.width))
         } action: { viewport = $0 }
         .clipped().allowsHitTesting(false).accessibilityHidden(true)
     }
@@ -7800,7 +7801,8 @@ private struct CrystalCaveLife: View {
             }
             .readGeometry(for: CGRect.self) { proxy in
                 let frame = proxy.frame(in: .named("adventure.map.viewport"))
-                return DinoMapViewport.preparedAnimationBounds(frame: frame, viewportHeight: viewportHeight)
+                return DinoMapViewport.preparedAnimationBounds(frame: frame, viewportHeight: viewportHeight,
+                                                               scale: frame.width / max(1, proxy.size.width))
             } action: { viewport = $0 }
         }
         .clipped().allowsHitTesting(false).accessibilityHidden(true)
@@ -9860,7 +9862,9 @@ private struct CityWorldLife: View {
             }
         }
         .readGeometry(for: CGRect.self) { geometry in
-            DinoMapViewport.preparedAnimationBounds(frame: geometry.frame(in: .named("adventure.map.viewport")), viewportHeight: viewportHeight)
+            let frame = geometry.frame(in: .named("adventure.map.viewport"))
+            return DinoMapViewport.preparedAnimationBounds(frame: frame, viewportHeight: viewportHeight,
+                                                           scale: frame.width / max(1, geometry.size.width))
         } action: { viewport = $0 }
         .clipped().allowsHitTesting(false).accessibilityHidden(true)
     }
@@ -15866,7 +15870,9 @@ struct PirateCoastFlights: View {
                 } catch { /* Leaving the map or resizing cancels obsolete preparation. */ }
             }
             .readGeometry(for: CGRect.self) { proxy in
-                DinoMapViewport.preparedAnimationBounds(frame: proxy.frame(in: .named("adventure.map.viewport")), viewportHeight: viewportHeight)
+                let frame = proxy.frame(in: .named("adventure.map.viewport"))
+                return DinoMapViewport.preparedAnimationBounds(frame: frame, viewportHeight: viewportHeight,
+                                                               scale: frame.width / max(1, proxy.size.width))
             } action: { viewport = $0 }
         }.clipped().allowsHitTesting(false).accessibilityHidden(true)
     }

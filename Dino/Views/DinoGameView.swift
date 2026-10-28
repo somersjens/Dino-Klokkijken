@@ -20,20 +20,28 @@ struct DinoGameView: View {
 
     var body: some View {
         GeometryReader { g in
-            let short = g.size.height < 700
             let tablet = g.size.width >= 600
             let wide = g.size.width >= 900 && g.size.width > g.size.height
-            let width = min(tablet ? 900 : 520, max(240, g.size.width - (tablet ? 64 : 36)))
+            let contentLimit: CGFloat = wide
+                ? 900 : session.question.kind == .timeZone ? 760 : tablet ? 680 : 520
+            let width = min(contentLimit, max(240, g.size.width - (tablet ? 64 : 36)))
             let footerHeight: CGFloat = session.question.kind == .dayPart ? 146 : 80
             let questionViewport = max(0, g.size.height - hudHeight - footerHeight)
-            let clockSize = min(tablet ? 260 : 210, width * 0.54, max(160, g.size.height * 0.28))
-            let answerClockSize = tablet ? 210 : max(88, (g.size.height - hudHeight - footerHeight - (short ? 198 : 250)) / 2)
+            let playHeight = max(0, questionViewport - (session.level.isBoss ? 40 : 0))
+            let short = tablet ? questionViewport < 560 : g.size.height < 700
+            let interactiveClock = wide && [.setAnalog, .advanceAnalog].contains(session.question.kind)
+            let clockSize = min(tablet ? 240 : 210, width * 0.54,
+                                max(tablet ? 136 : 160, tablet ? playHeight * (interactiveClock ? 0.42 : 0.33) : g.size.height * 0.28))
+            let answerClockSize = tablet
+                ? min(184, max(96, wide ? (width - 84) / 4 : (playHeight - 210) / 2 - 48))
+                : max(88, (questionViewport - (short ? 198 : 250)) / 2)
             ZStack {
                 JungleBackground(quiet: true)
                 VStack(spacing: 0) {
                     AdventureHeader(personalizerChanged: { personalizing = $0 }, sharedCompanion: true, level: session.level.id,
                                         stars: player.profile.totalStars, worldID: session.level.worldID,
-                                        compact: g.size.height < 430, viewportHeight: g.size.height,
+                                        compact: g.size.height < 430, viewportHeight: g.size.height, viewportWidth: g.size.width,
+                                        maximumScale: tablet ? 1.45 : 1.9,
                                         questionCounter: session.practice == nil
                                             ? "\(min(session.attempt.index + 1, session.level.questionCount))/\(session.level.questionCount)"
                                             : DinoPracticeCounter(value: session.practiceQuestionNumber).digits,
@@ -51,7 +59,9 @@ struct DinoGameView: View {
                                     .frame(maxWidth: min(680, width))
                                     .frame(maxWidth: .infinity)
                                     .id("question.top")
-                                QuestionRenderer(session: session, theme: player.profile.clockTheme, width: width, clockSize: clockSize, wideLayout: wide, compactLayout: short, answerClockSize: answerClockSize)
+                                QuestionRenderer(session: session, theme: player.profile.clockTheme, width: width, clockSize: clockSize, wideLayout: wide, compactLayout: short, answerClockSize: answerClockSize,
+                                                 availableHeight: max(180, questionViewport - (session.level.isBoss ? 140 : 100)),
+                                                 horizontalSequence: tablet && g.size.width > g.size.height)
                                     .id(session.question.id)
                             }.padding(.vertical, short ? 12 : 20).frame(width: width)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -60,6 +70,9 @@ struct DinoGameView: View {
                                 .contentShape(Rectangle())
                         }
                         .centersShortContent()
+                        // SwiftUI can draw overflowing fixed-size children beyond a scroll view's bounds.
+                        // Keep every answer, outline and feedback animation above the reserved action row.
+                        .clipped()
                         .coordinateSpace(name: "game.questionViewport")
                         .onPreferenceChange(QuestionAnswerFrameKey.self) { answerFrame = $0 }
                         .accessibilityIdentifier("game.questions")
@@ -92,6 +105,7 @@ struct DinoGameView: View {
                         }
                     }
                     answerFooter(height: footerHeight, width: width)
+                        .fixedSize(horizontal: false, vertical: true)
                 }.disabled(confirmExit || session.demonstration != nil).accessibilityHidden(confirmExit || session.demonstration != nil)
                 if let kind = session.demonstration {
                     Color.black.opacity(0.28).ignoresSafeArea()
@@ -226,13 +240,13 @@ struct DinoGameView: View {
                 .frame(maxWidth: dayPart ? .infinity : nil)
                 .background {
                     if dayPart && (showsNext || check != nil) {
-                        Rectangle().fill(.ultraThinMaterial).ignoresSafeArea(edges: .bottom)
+                        DinoLightMaterial().ignoresSafeArea(edges: .bottom)
                     }
                 }
             }
             .background {
                 if !dayPart && (showsNext || check != nil) {
-                    Rectangle().fill(.ultraThinMaterial).ignoresSafeArea(edges: .bottom)
+                    DinoLightMaterial().ignoresSafeArea(edges: .bottom)
                 }
             }
             .overlay {

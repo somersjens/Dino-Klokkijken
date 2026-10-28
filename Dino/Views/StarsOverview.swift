@@ -42,7 +42,7 @@ struct DinoStarsOverview: View {
                     .accessibilityIdentifier("stars.close")
             }
             .padding(16).frame(maxWidth: 520).frame(maxWidth: .infinity)
-            .background(.ultraThinMaterial)
+            .background(DinoLightMaterial())
         }
         .foregroundStyle(DinoStyle.ink)
     }

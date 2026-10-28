@@ -8,29 +8,38 @@ struct SpokenTimeQuestion: View {
     let width: CGFloat
     var isDemonstration = false
     var compact = false
+    var wideLayout = false
 
     private var prompt: SpokenTimePrompt? { session.question.spokenPrompt }
     private var prefix: String { isDemonstration ? "demo" : "question" }
+    private var wordBankWidth: CGFloat { width }
+    private var tablet: Bool { width >= 600 }
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: tablet ? 6 : 10) {
             if let prompt {
                 clock
                 sentence(prompt)
-                VStack(spacing: 8) {
-                    let fontSize = optionFontSize(for: prompt)
-                    ForEach(Array(prompt.slots.enumerated()), id: \.element.id) { index, slot in
-                        slotRow(slot, index: index, prompt: prompt, fontSize: fontSize)
-                    }
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.white, in: RoundedRectangle(cornerRadius: 22))
-                .overlay(RoundedRectangle(cornerRadius: 22).stroke(highContrast ? DinoStyle.ink.opacity(0.7) : DinoStyle.ink.opacity(0.08), lineWidth: highContrast ? 2 : 1.5))
+                wordBank(prompt)
             }
         }
+        .fixedSize(horizontal: false, vertical: true)
         .id(isDemonstration ? "demo.spoken" : "question.answers")
+    }
+
+    private func wordBank(_ prompt: SpokenTimePrompt) -> some View {
+        VStack(spacing: tablet ? 6 : 8) {
+            let fontSize = optionFontSize(for: prompt)
+            ForEach(Array(prompt.slots.enumerated()), id: \.element.id) { index, slot in
+                slotRow(slot, index: index, prompt: prompt, fontSize: fontSize)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, tablet ? 8 : 10)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.white, in: RoundedRectangle(cornerRadius: 22))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(highContrast ? DinoStyle.ink.opacity(0.7) : DinoStyle.ink.opacity(0.08), lineWidth: highContrast ? 2 : 1.5))
     }
 
     /// The hint stays until a word is chosen. From then on this line is the sentence so far.
@@ -55,12 +64,12 @@ struct SpokenTimeQuestion: View {
         .multilineTextAlignment(.center)
         .lineLimit(2)
         .minimumScaleFactor(0.75)
-        .frame(maxWidth: .infinity, minHeight: 56, maxHeight: 56)
+        .frame(maxWidth: .infinity, minHeight: tablet ? 36 : 56, maxHeight: tablet ? 36 : 56)
         .questionAnswerFocus()
     }
 
     private var clock: some View {
-        DigitalClock(time: session.question.target, theme: theme, fontSize: min(compact ? 36 : 46, width * 0.13))
+        DigitalClock(time: session.question.target, theme: theme, fontSize: min(wideLayout ? 28 : tablet ? 38 : compact ? 36 : 46, width * 0.13))
             .frame(maxWidth: .infinity)
             .accessibilityIdentifier("\(prefix).targetClock")
     }
@@ -70,7 +79,7 @@ struct SpokenTimeQuestion: View {
         let titles = prompt.slots.flatMap(\.choices).map(buttonTitle)
         let longest = titles.max { Self.textWidth($0, size: 100) < Self.textWidth($1, size: 100) } ?? ""
         let columns = max(1, prompt.slots.map(\.choices.count).max() ?? 1)
-        let buttonWidth = (width - 24 - 64 - 8 - CGFloat(columns - 1) * 6) / CGFloat(columns)
+        let buttonWidth = (wordBankWidth - 24 - 64 - 8 - CGFloat(columns - 1) * 6) / CGFloat(columns)
         let available = max(20, buttonWidth - 8 - 18)
         var size: CGFloat = 16
         while size > 10, Self.textWidth(longest, size: size) > available { size -= 0.5 }
@@ -128,7 +137,8 @@ struct SpokenTimeQuestion: View {
             .font(.system(size: fontSize, weight: .bold, design: .rounded))
             .foregroundStyle(DinoStyle.ink)
             .padding(.horizontal, 4)
-            .frame(maxWidth: .infinity, minHeight: 40)
+            .frame(maxWidth: .infinity)
+            .frame(height: 40)
             .background(chipFill(selected: selected, correct: showCorrect, wrong: showWrong), in: RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(chipStroke(selected: selected, correct: showCorrect, wrong: showWrong),
                                                               lineWidth: selected || showCorrect || showWrong ? 2.5 : highContrast ? 2 : 1.5))

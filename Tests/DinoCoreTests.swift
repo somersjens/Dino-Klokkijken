@@ -528,6 +528,13 @@ struct DinoCoreTests {
         expect(bounds == DinoMapViewport.animationBounds(frame: frame.offsetBy(dx: 0, dy: -1), viewportHeight: 800),
                "one scroll pixel does not rebuild moving map scenery")
         expect(bounds.height < 800 + 512, "animation preparation stays within two small extra bands")
+        for scale: CGFloat in [1.2, 1.45, 1.55] {
+            let magnified = frame.applying(CGAffineTransform(scaleX: scale, y: scale))
+            let local = DinoMapViewport.animationBounds(frame: magnified, viewportHeight: 800 * scale, scale: scale)
+            expect(local == bounds, "zoomed map animations retain the same local visible bands")
+            expect(!DinoMapViewport.preparedAnimationBounds(frame: magnified, viewportHeight: 800 * scale, scale: scale).isEmpty,
+                   "zoomed visible map actors stay prepared")
+        }
         for y: CGFloat in [-2200, -3000, 800, 1200] {
             expect(DinoMapViewport.animationBounds(frame: CGRect(x: 0, y: y, width: 390, height: 2200), viewportHeight: 800).isEmpty,
                    "fully offscreen animation stops")

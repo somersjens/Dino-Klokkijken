@@ -25,6 +25,7 @@ struct AdventureHeader: View {
     var compact = false
     var viewportHeight: CGFloat = 900
     var viewportWidth: CGFloat? = nil
+    var maximumScale: CGFloat = 1.9
     var control: Control = .pause
     var questionCounter: String?
     var practiceStreak: Int?
@@ -130,7 +131,7 @@ struct AdventureHeader: View {
     private func headerScale(width: CGFloat) -> CGFloat {
         guard !compact else { return 1 }
         // Preserve phone tap targets; shorter tablet windows reserve room for play.
-        return min(1.9, max(1, width / 390), max(1, viewportHeight / 480))
+        return min(maximumScale, max(1, width / 390), max(1, viewportHeight / 480))
     }
 
     private func portrait(_ metrics: HUDMetrics) -> some View {

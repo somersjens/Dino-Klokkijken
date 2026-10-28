@@ -153,6 +153,6 @@ private struct DinoPracticeGame: View {
                                        compactPortrait: geometry.size.height < 430,
                                        reactionID: session.rejectedResponses.count)
                 }.allowsHitTesting(false)
-            }.preferredColorScheme(.light)
+            }.lightPalette()
     }
 }

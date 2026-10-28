@@ -1057,7 +1057,8 @@ struct DinoDesertFlights: View {
             }
             .readGeometry(for: CGRect.self) { proxy in
                 let frame = proxy.frame(in: .named("adventure.map.viewport"))
-                return DinoMapViewport.preparedAnimationBounds(frame: frame, viewportHeight: viewportHeight)
+                return DinoMapViewport.preparedAnimationBounds(frame: frame, viewportHeight: viewportHeight,
+                                                               scale: frame.width / max(1, proxy.size.width))
             } action: { viewport = $0 }
         }.clipped().allowsHitTesting(false).accessibilityHidden(true)
     }

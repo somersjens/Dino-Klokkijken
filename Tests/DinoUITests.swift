@@ -187,8 +187,14 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(first.waitForExistence(timeout: 5))
         XCTAssertFalse(app.descendants(matching: .any)["map.start"].exists)
         XCTAssertTrue(app.descendants(matching: .any)["map.dino.1"].exists)
-        XCTAssertGreaterThan(world.frame.minY, -20, "a fresh map stays scrolled to the top")
-        XCTAssertLessThan(world.frame.minY, app.frame.height * 0.45)
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            let dino = app.descendants(matching: .any)["map.dino.1"]
+            XCTAssertGreaterThan(dino.frame.minY, app.buttons["header.settings"].frame.maxY,
+                                 "The magnified map opens with Dino and the first level in focus")
+        } else {
+            XCTAssertGreaterThan(world.frame.minY, -20, "a fresh phone map stays scrolled to the top")
+            XCTAssertLessThan(world.frame.minY, app.frame.height * 0.45)
+        }
         XCTAssertGreaterThan(first.frame.minY, app.buttons["header.settings"].frame.maxY)
         saveScreenshot("map-first-level-pointer")
         if UIDevice.current.userInterfaceIdiom == .pad {
@@ -204,6 +210,10 @@ final class DinoUITests: XCTestCase {
         app.terminate(); app.launch()
         XCTAssertTrue(pointer.waitForExistence(timeout: 6))
         // The directly accessible boss counts too, without playing or finishing it.
+        for _ in 0..<6 {
+            if app.buttons["map.bossShortcut"].isHittable { break }
+            app.scrollViews["map.route"].swipeDown()
+        }
         tap("map.bossShortcut")
         XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5))
         app.buttons["Levelkaart"].tap()
@@ -923,13 +933,19 @@ final class DinoUITests: XCTestCase {
             XCTAssertTrue(correct.waitForExistence(timeout: 5))
             XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 5))
             XCTAssertEqual(title.frame.minY, titleFrame.minY, accuracy: 1, "Feedback must not recenter the question")
-            XCTAssertEqual(target.frame.minY, targetFrame.minY, accuracy: 1)
-            XCTAssertEqual(target.frame.width, targetFrame.width, accuracy: 1, "The prompt clock keeps its size")
+            if app.frame.width < 664 {
+                XCTAssertEqual(target.frame.minY, targetFrame.minY, accuracy: 1)
+                XCTAssertEqual(target.frame.width, targetFrame.width, accuracy: 1, "The prompt clock keeps its size")
+            }
             XCTAssertEqual(control.label, submittedValue, "The submitted clock keeps its value")
             XCTAssertEqual(app.descendants(matching: .any).matching(identifier: controlID).count, 1)
             XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "question.correctClock").count, 1)
             XCTAssertFalse(app.buttons["question.confirm"].exists)
-            if kind == .advanceAnalog {
+            if app.frame.width >= 664 {
+                XCTAssertLessThan(correct.frame.midX, control.frame.midX)
+                XCTAssertEqual(correct.frame.midX, targetFrame.midX, accuracy: 1)
+                XCTAssertEqual(control.frame.midX, controlFrame.midX, accuracy: 1)
+            } else if kind == .advanceAnalog {
                 XCTAssertLessThan(control.frame.midX, correct.frame.midX)
                 XCTAssertEqual(control.frame.midY, correct.frame.midY, accuracy: 8)
                 let entered = app.descendants(matching: .any)["question.advance.entered"]
@@ -1102,8 +1118,12 @@ final class DinoUITests: XCTestCase {
             XCTAssertEqual(control.label, initial, "Feedback preserves the submitted time")
             XCTAssertGreaterThan(answer.frame.width, answer.frame.height * 1.9,
                                  "The complete answer display stays on one line")
-            XCTAssertLessThan(control.frame.maxX, answer.frame.minX,
-                              "Both outlined displays fit beside one another")
+            if app.frame.width >= 664 {
+                XCTAssertLessThan(answer.frame.maxX, control.frame.minX)
+            } else {
+                XCTAssertLessThan(control.frame.maxX, answer.frame.minX,
+                                  "Both outlined displays fit beside one another")
+            }
             XCTAssertGreaterThanOrEqual(control.frame.minX, app.frame.minX)
             XCTAssertLessThanOrEqual(answer.frame.maxX, app.frame.maxX)
             XCTAssertEqual(answer.label.contains("AM") || answer.label.contains("PM"), !force24Hour)
@@ -2263,10 +2283,16 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(start.waitForExistence(timeout: 5))
         XCTAssertEqual(difference.label, duration)
         XCTAssertLessThan(start.frame.maxY, difference.frame.minY)
-        XCTAssertLessThan(difference.frame.maxY, control.frame.minY)
-        XCTAssertEqual(start.frame.midX, control.frame.midX, accuracy: 8)
-        XCTAssertEqual(start.frame.width * 2, control.frame.width - 8, accuracy: 1,
-                       "The start clock is half the clock the player turns")
+        if app.frame.width >= 664 {
+            XCTAssertLessThan(start.frame.maxX, control.frame.minX)
+            XCTAssertEqual(start.frame.midY, control.frame.midY, accuracy: 1)
+            XCTAssertEqual(start.frame.width, control.frame.width - 20, accuracy: 1)
+        } else {
+            XCTAssertLessThan(difference.frame.maxY, control.frame.minY)
+            XCTAssertEqual(start.frame.midX, control.frame.midX, accuracy: 8)
+            XCTAssertEqual(start.frame.width * 2, control.frame.width - 8, accuracy: 1,
+                           "The start clock is half the clock the player turns")
+        }
         tap("question.example")
         let example = DinoDemonstrationExamples.question(kind: .advanceAnalog, minutes: DinoPracticeTime.fiveMinutes.minutes,
                                                          minuteStep: 5, index: 0, previousTarget: nil)
@@ -2534,6 +2560,10 @@ final class DinoUITests: XCTestCase {
         let question = generator.next(index: 0)
         let clocks = (0..<3).map { app.buttons["question.match.clock.\($0)"] }
         let times = (0..<3).map { app.buttons["question.match.time.\($0)"] }
+        for index in 0..<3 {
+            XCTAssertTrue(clocks[index].label.contains(question.relatedTimes[index].digitalText), "Clock fixture: \(clocks[index].label)")
+            XCTAssertTrue(times[index].label.contains(question.options[index].digitalText), "Time fixture: \(times[index].label)")
+        }
         func drag(_ source: XCUIElement, to destination: XCUIElement, targetY: CGFloat = 0.5) {
             let viewport = app.scrollViews["game.questions"]
             for _ in 0..<8 {
@@ -2575,6 +2605,12 @@ final class DinoUITests: XCTestCase {
         tap("question.match.time.\(question.options.firstIndex(of: question.relatedTimes[2])!)")
         tap("question.match.clock.2")
         XCTAssertTrue(app.buttons["question.confirm"].isEnabled)
+        for index in 0..<3 {
+            let target = question.options.firstIndex(of: question.relatedTimes[index])!
+            let line = app.descendants(matching: .any)["question.match.line.\(index)"]
+            XCTAssertEqual(line.frame.midY, (clocks[index].frame.midY + times[target].frame.midY) / 2,
+                           accuracy: 2, "The drag connects clock \(index) to its intended time")
+        }
         saveScreenshot("matching-drag-and-tap-ready")
         tap("question.confirm")
         XCTAssertTrue(app.staticTexts.matching(identifier: "practice.questionNumber").matching(NSPredicate(format: "label == %@", "2")).firstMatch.waitForExistence(timeout: 5))
@@ -4136,6 +4172,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["theme.numerals.rounded"].isHittable)
         capture("adaptive-welcome-digital")
         activate("onboarding.customClock")
+        waitForMapOpeningToFinish()
         activate("header.practice")
         let options = app.scrollViews["practice.options"]
         XCTAssertTrue(options.waitForExistence(timeout: 5))
@@ -4404,6 +4441,229 @@ final class DinoUITests: XCTestCase {
         XCTAssertLessThanOrEqual(app.scrollViews["game.questions"].frame.maxY, button.frame.minY)
     }
 
+    func testAllQuestionTypesFitTabletViewport() {
+        let requested = ProcessInfo.processInfo.environment["DINO_LAYOUT_TYPES"]?.split(separator: ",").map(String.init)
+        let types = DinoPracticeQuestion.allCases.filter { requested == nil || requested!.contains($0.rawValue) }
+        for type in types {
+            app.terminate()
+            XCUIDevice.shared.orientation = .portrait
+            app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.ipad-layout.\(UUID().uuidString)"
+            app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+            app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = type.rawValue
+            app.launchEnvironment["DINO_TEST_PRACTICE_CHALLENGE"] = "1"
+            app.launch()
+            XCTAssertTrue(app.staticTexts["question.title"].waitForExistence(timeout: 10))
+            checkQuestionFits(type, name: "portrait")
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                XCUIDevice.shared.orientation = .landscapeLeft
+                let rotated = NSPredicate { _, _ in self.app.frame.width > self.app.frame.height }
+                expectation(for: rotated, evaluatedWith: nil)
+                waitForExpectations(timeout: 8)
+                checkQuestionFits(type, name: "landscape")
+            }
+        }
+    }
+
+    func testSequenceTurnsItsArrowsWithLandscape() {
+        guard UIDevice.current.userInterfaceIdiom == .pad else { return }
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.sequence-orientation.\(UUID().uuidString)"
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "timeSequence"
+        app.launchEnvironment["DINO_TEST_PRACTICE_CHALLENGE"] = "1"
+        app.launch()
+        XCTAssertTrue(app.staticTexts["question.title"].waitForExistence(timeout: 10))
+        func checkSequence(horizontal: Bool, correction: Bool) {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.6))
+            let clocks = (0..<3).map { app.descendants(matching: .any)["question.sequence.clock.\($0)"].frame }
+            for index in 0..<2 {
+                let arrow = app.descendants(matching: .any)["question.sequence.arrow.\(index)"].frame
+                if horizontal {
+                    XCTAssertLessThan(clocks[index].maxX, arrow.midX)
+                    XCTAssertLessThan(arrow.midX, clocks[index + 1].minX)
+                    XCTAssertEqual(clocks[index].midY, clocks[index + 1].midY, accuracy: 1)
+                } else {
+                    XCTAssertLessThan(clocks[index].maxY, arrow.midY)
+                    XCTAssertLessThan(arrow.midY, clocks[index + 1].minY)
+                }
+                if correction {
+                    let step = app.descendants(matching: .any)["question.sequence.step.\(index)"]
+                    XCTAssertTrue(step.waitForExistence(timeout: 4))
+                    if horizontal {
+                        XCTAssertLessThan(step.frame.maxY, clocks[index].minY)
+                        XCTAssertGreaterThan(step.frame.midX, clocks[index].midX)
+                        XCTAssertLessThan(step.frame.midX, clocks[index + 1].midX)
+                    } else { XCTAssertGreaterThan(step.frame.minX, clocks[index].maxX) }
+                }
+            }
+            let unknown = app.staticTexts["question.sequence.unknown"].frame
+            if horizontal { XCTAssertEqual(unknown.midY, clocks[0].midY, accuracy: 1) }
+        }
+        checkSequence(horizontal: false, correction: false)
+        XCUIDevice.shared.orientation = .landscapeLeft
+        let landscape = NSPredicate { _, _ in self.app.frame.width > self.app.frame.height }
+        expectation(for: landscape, evaluatedWith: nil); waitForExpectations(timeout: 8)
+        checkSequence(horizontal: true, correction: false)
+        saveScreenshot("sequence-horizontal-before-answer")
+        var generator = DinoPracticeGenerator(configuration: .init(time: .minutes, order: .specific(.timeSequence)), seed: seed)
+        let question = generator.next(index: 3, difficultyForKind: { _ in .challenge })
+        tap("question.option.\(question.responses.firstIndex { $0 != question.expectedAnswer }!)")
+        if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 5))
+        checkSequence(horizontal: true, correction: true)
+        saveScreenshot("sequence-horizontal-difference-arrows")
+        XCUIDevice.shared.orientation = .landscapeRight
+        RunLoop.current.run(until: Date().addingTimeInterval(0.6))
+        checkSequence(horizontal: true, correction: true)
+        XCUIDevice.shared.orientation = .portrait
+        let portrait = NSPredicate { _, _ in self.app.frame.width < self.app.frame.height }
+        expectation(for: portrait, evaluatedWith: nil); waitForExpectations(timeout: 8)
+        checkSequence(horizontal: false, correction: true)
+        saveScreenshot("sequence-portrait-difference-arrows")
+    }
+
+    func testTabletAnswerFeedbackStaysAboveFooter() {
+        for type in [DinoPracticeQuestion.chooseAnalog, .spokenTime, .read24Hour, .timeZone, .dayPart, .setDigital, .setAnalog, .advanceAnalog] {
+            app.terminate()
+            app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.ipad-feedback.\(UUID().uuidString)"
+            app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+            app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = type.rawValue
+            app.launchEnvironment["DINO_TEST_PRACTICE_CHALLENGE"] = "1"
+            app.launch()
+            XCTAssertTrue(app.staticTexts["question.title"].waitForExistence(timeout: 10))
+            var generator = DinoPracticeGenerator(configuration: .init(time: .minutes, order: .specific(type)), seed: seed)
+            let question = generator.next(index: 3, difficultyForKind: { _ in .challenge })
+            if type == .setDigital {
+                tap("clock.hour.more")
+                tap("question.confirm")
+            } else if [.setAnalog, .advanceAnalog].contains(type) {
+                tap("question.analog.more")
+                tap("question.confirm")
+            } else {
+                let wrong = question.responses.firstIndex { $0 != question.expectedAnswer }!
+                tap("question.option.\(wrong)")
+            }
+            if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+            let next = app.buttons["question.next"]
+            XCTAssertTrue(next.waitForExistence(timeout: 5))
+            let orientations: [UIDeviceOrientation] = UIDevice.current.userInterfaceIdiom == .pad ? [.portrait, .landscapeLeft] : [.portrait]
+            for orientation in orientations {
+                XCUIDevice.shared.orientation = orientation
+                let rotated = NSPredicate { _, _ in
+                    orientation == .portrait ? self.app.frame.width < self.app.frame.height : self.app.frame.width > self.app.frame.height
+                }
+                expectation(for: rotated, evaluatedWith: nil)
+                waitForExpectations(timeout: 8)
+                RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+                assertStickyAnswerButton(next)
+                let viewport = app.scrollViews["game.questions"].frame
+                for option in app.buttons.allElementsBoundByIndex.filter({ $0.identifier.hasPrefix("question.option.") }) {
+                    XCTAssertLessThanOrEqual(option.frame.maxY, viewport.maxY + 1, "\(type): feedback stays above Continue")
+                }
+                for identifier in ["question.analogControl", "question.correctClock"] {
+                    let clock = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+                    if clock.exists { XCTAssertLessThanOrEqual(clock.frame.maxY, viewport.maxY + 1) }
+                }
+                if [.setDigital, .setAnalog, .advanceAnalog].contains(type), self.app.frame.width >= 664 {
+                    let correct = app.descendants(matching: .any)["question.correctClock"]
+                    let input = app.descendants(matching: .any)[type == .setDigital ? "question.digitalControl" : "question.analogControl"]
+                    XCTAssertLessThan(correct.frame.maxX, input.frame.minX, "The comparison stays left of the editable clock")
+                }
+                saveScreenshot("ipad-feedback-\(type.rawValue)-\(orientation.rawValue)")
+            }
+        }
+    }
+
+    func testTabletMapZoomKeepsCurrentLevelInFocus() {
+        guard UIDevice.current.userInterfaceIdiom == .pad else { return }
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.ipad-map.\(UUID().uuidString)"
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "34"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.level"].waitForExistence(timeout: 10))
+        waitForMapOpeningToFinish()
+        for orientation in [UIDeviceOrientation.portrait, .landscapeLeft, .landscapeRight] {
+            XCUIDevice.shared.orientation = orientation
+            let rotated = NSPredicate { _, _ in
+                orientation == .portrait ? self.app.frame.width < self.app.frame.height : self.app.frame.width > self.app.frame.height
+            }
+            expectation(for: rotated, evaluatedWith: nil)
+            waitForExpectations(timeout: 8)
+            tap("header.level")
+            RunLoop.current.run(until: Date().addingTimeInterval(1))
+            let node = app.buttons["map.level.35"]
+            let dino = app.descendants(matching: .any)["map.dino.35"]
+            XCTAssertTrue(node.isHittable)
+            XCTAssertGreaterThanOrEqual(node.frame.width, 85)
+            XCTAssertGreaterThanOrEqual(dino.frame.width, 230)
+            XCTAssertGreaterThan(dino.frame.minY, app.buttons["header.level"].frame.maxY)
+            XCTAssertLessThan(dino.frame.maxY, app.frame.maxY)
+            let scroll = app.scrollViews["map.route"]
+            XCTAssertEqual(scroll.frame.minX, app.frame.minX, accuracy: 1)
+            XCTAssertEqual(scroll.frame.maxX, app.frame.maxX, accuracy: 1)
+            saveScreenshot("ipad-map-focus-\(orientation.rawValue)")
+        }
+    }
+
+    private func checkQuestionFits(_ type: DinoPracticeQuestion, name: String) {
+        RunLoop.current.run(until: Date().addingTimeInterval(0.8))
+        let viewport = app.scrollViews["game.questions"].frame.insetBy(dx: -1, dy: -1)
+        let title = app.staticTexts["question.title"]
+        XCTAssertTrue(viewport.contains(title.frame), "\(type): title stays below the HUD")
+        let answers = app.buttons.allElementsBoundByIndex.filter {
+            $0.identifier.hasPrefix("question.option.") || $0.identifier.hasPrefix("question.sort.")
+                || $0.identifier.hasPrefix("question.match.clock.") || $0.identifier.hasPrefix("question.match.time.")
+                || $0.identifier.hasPrefix("question.spoken.") || $0.identifier.hasPrefix("question.analog.")
+        }
+        XCTAssertFalse(answers.isEmpty && ![.setDigital, .advanceAnalog].contains(type))
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            if type == .sayTime {
+                for answer in answers {
+                    // Accessibility includes the selected stone's outline as well as its 40-point content.
+                    XCTAssertLessThanOrEqual(answer.frame.height, 44, "Word stones never stretch vertically")
+                }
+            }
+            if type == .match {
+                let clock = app.buttons["question.match.clock.0"].frame
+                let time = app.buttons["question.match.time.0"].frame
+                XCTAssertLessThanOrEqual(clock.height, 157)
+                XCTAssertLessThanOrEqual(time.height, 90, "Digital cards use their own compact height")
+                XCTAssertEqual(clock.midY, time.midY, accuracy: 1)
+                XCTAssertLessThanOrEqual(app.buttons["question.match.clock.1"].frame.minY - clock.maxY, 13)
+            }
+            for answer in answers {
+                XCTAssertTrue(viewport.contains(answer.frame), "\(type) \(name): \(answer.identifier) \(answer.frame) exceeds \(viewport)")
+                XCTAssertTrue(answer.isHittable, "\(type): every answer is accessible without scrolling")
+            }
+            for identifier in ["question.analogControl", "question.digitalControl", "question.flight.ticket", "question.schedule.card", "question.minutesBetween.card"] {
+                let display = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+                if display.exists {
+                    XCTAssertTrue(viewport.contains(display.frame), "\(type): \(identifier) also fits above the action row")
+                }
+            }
+            if [.setDigital, .setAnalog, .advanceAnalog].contains(type) {
+                let reference = app.descendants(matching: .any)[type == .advanceAnalog ? "question.startClock" : "question.targetClock"]
+                let input = app.descendants(matching: .any)[type == .setDigital ? "question.digitalControl" : "question.analogControl"]
+                XCTAssertLessThan(reference.frame.maxX, input.frame.minX)
+                XCTAssertEqual(reference.frame.midY, input.frame.midY, accuracy: 1)
+                let control = app.buttons[type == .setDigital ? "clock.hour.more" : "question.analog.more"]
+                XCTAssertGreaterThanOrEqual(control.frame.minY, input.frame.maxY)
+            } else if app.frame.width > app.frame.height {
+                let options = answers.filter { $0.identifier.hasPrefix("question.option.") }
+                if options.count == 4 {
+                    for option in options { XCTAssertEqual(option.frame.midY, options[0].frame.midY, accuracy: 1) }
+                    for identifier in ["question.flight.ticket", "question.schedule.card", "question.minutesBetween.card", "question.targetClock", "question.sequence.unknown"] {
+                        let context = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+                        if context.exists { XCTAssertLessThanOrEqual(context.frame.maxY, options[0].frame.minY) }
+                    }
+                }
+            }
+        }
+        let confirm = app.buttons["question.confirm"]
+        if confirm.exists { assertStickyAnswerButton(confirm) }
+        saveScreenshot("ipad-fit-\(type.rawValue)-\(name)")
+    }
+
     func testResponsiveOrientationsAndProportionalHUD() {
         onboard()
         let tablet = UIDevice.current.userInterfaceIdiom == .pad
@@ -4498,8 +4758,13 @@ final class DinoUITests: XCTestCase {
             let right = app.buttons["question.match.time.0"]
             XCTAssertTrue(first.waitForExistence(timeout: 5))
             XCTAssertEqual(first.frame.width, right.frame.width, accuracy: 1)
-            XCTAssertEqual(first.frame.height, right.frame.height, accuracy: 1)
-            XCTAssertGreaterThanOrEqual(first.frame.height, tablet ? 170 : 108, "Practice clocks grow with the available width")
+            XCTAssertLessThanOrEqual(right.frame.height, 90)
+            XCTAssertEqual(first.frame.midY, right.frame.midY, accuracy: 1)
+            XCTAssertGreaterThanOrEqual(first.frame.height, tablet ? 104 : 108, "Practice clocks fit the available height")
+            if tablet {
+                XCTAssertLessThanOrEqual(app.buttons["question.match.clock.2"].frame.maxY,
+                                         app.scrollViews["game.questions"].frame.maxY)
+            }
             XCTAssertEqual((first.frame.minX + right.frame.maxX) / 2, app.frame.midX, accuracy: 1)
             XCTAssertFalse(app.staticTexts["question.match.hint"].exists, "Matching instructions belong in the example")
             XCTAssertEqual(app.staticTexts["question.title"].frame.midX, app.frame.midX, accuracy: 1)
@@ -4917,7 +5182,9 @@ final class DinoUITests: XCTestCase {
             let stone = app.buttons["map.level.\(world * 10 + 1)"]
             XCTAssertTrue(stone.isHittable)
             XCTAssertEqual(marker.frame.midX, stone.frame.midX, accuracy: 2)
-            XCTAssertEqual(marker.frame.maxY, stone.frame.midY + 12, accuracy: 2)
+            // Tablet map actors have a 200-point source frame; AX stones also include their stars.
+            let mapScale = UIDevice.current.userInterfaceIdiom == .pad ? marker.frame.width / 200 : 1
+            XCTAssertEqual(marker.frame.maxY, stone.frame.midY + 12 * mapScale, accuracy: 2)
             XCTAssertGreaterThan(marker.frame.minY, app.descendants(matching: .any)["header.settings"].frame.maxY)
             saveScreenshot("world-\(world)-salto-landed")
         }

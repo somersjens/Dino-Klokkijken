@@ -364,6 +364,34 @@ struct DinoContrastEnvironment: ViewModifier {
     }
 }
 
+/// Frosted bars keep the light-mode blur when the device is in Dark Mode.
+struct DinoLightMaterial: UIViewRepresentable {
+    enum Style { case ultraThin, regular }
+    var style: Style = .ultraThin
+
+    func makeUIView(context: Context) -> UIVisualEffectView {
+        let view = UIVisualEffectView(effect: UIBlurEffect(style: blur))
+        view.isUserInteractionEnabled = false
+        view.backgroundColor = .clear
+        return view
+    }
+
+    func updateUIView(_ view: UIVisualEffectView, context: Context) {
+        view.effect = UIBlurEffect(style: blur)
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: UIVisualEffectView, context: Context) -> CGSize? {
+        proposal.replacingUnspecifiedDimensions()
+    }
+
+    private var blur: UIBlurEffect.Style {
+        switch style {
+        case .ultraThin: return .systemUltraThinMaterialLight
+        case .regular: return .systemMaterialLight
+        }
+    }
+}
+
 extension Color {
     init(dinoHex: UInt32) {
         self.init(red: Double((dinoHex >> 16) & 255) / 255,

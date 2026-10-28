@@ -113,10 +113,16 @@ private struct GameEnvironment: ViewModifier {
     @ObservedObject private var language = LanguageManager.shared
     func body(content: Content) -> some View {
         content.environment(\.locale, language.locale).environment(\.layoutDirection, .leftToRight)
+            .lightPalette()
     }
 }
 extension View {
     func gameEnvironment() -> some View { modifier(GameEnvironment()) }
+
+    /// Sheets and covers do not inherit the window palette, so each presentation sets it again.
+    func lightPalette() -> some View {
+        preferredColorScheme(.light).toolbarColorScheme(.light, for: .navigationBar)
+    }
 }
 
 /// A searchable language list, ready for the full set of translations.
@@ -181,6 +187,7 @@ struct LanguagePicker: View {
                     }
                 }
         }.foregroundStyle(DinoStyle.ink)
+            .lightPalette()
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
     }

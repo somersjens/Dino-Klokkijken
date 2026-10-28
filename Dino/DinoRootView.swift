@@ -39,7 +39,6 @@ struct DinoRootView: View {
                                    compactPortrait: geometry.size.height < 430, reactionID: gameCompanionReactionID)
             }.allowsHitTesting(false)
         }
-        .preferredColorScheme(.light)
             .sheet(isPresented: $showsFriends) {
                 DinoFriendsView().environmentObject(friends).gameEnvironment()
             }
@@ -60,6 +59,20 @@ struct DinoRootView: View {
 #if DEBUG
             .task {
                 let environment = ProcessInfo.processInfo.environment
+                if environment["DINO_TEST_SUITE"] != nil,
+                   let raw = environment["DINO_TEST_PRACTICE_TYPE"],
+                   let type = DinoPracticeQuestion(rawValue: raw) {
+                    let configuration = DinoPracticeConfiguration(time: .minutes, order: .specific(type))
+                    let seed = environment["DINO_TEST_SEED"].flatMap(UInt64.init) ?? 42
+                    var generator = DinoPracticeGenerator(configuration: configuration, seed: seed,
+                                                           language: LanguageManager.shared.effective.code)
+                    let question = environment["DINO_TEST_PRACTICE_CHALLENGE"] == "1"
+                        ? generator.next(index: 3, difficultyForKind: { _ in .challenge }) : nil
+                    session = DinoSession(level: configuration.level, player: player, practice: configuration,
+                                          example: question,
+                                          language: LanguageManager.shared.effective.code,
+                                          dayPartSchedule: settings.dayPartSchedule)
+                }
                 if environment["DINO_TEST_SUITE"] != nil,
                    let raw = environment["DINO_TEST_RESULT_LEVEL"], let id = Int(raw),
                    let level = DinoLevelCatalog.level(id),

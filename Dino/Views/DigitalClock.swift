@@ -294,13 +294,40 @@ struct DigitalClockControl: View {
     /// False keeps the arrows visible in their disabled colors after checking an answer.
     var controlsEnabled = true
     var notation: DigitalHourNotation? = nil
+    var controlsBelow = false
+    var displayHeight: CGFloat? = nil
     private var time: ClockTime { ClockTime(hour: hour, minute: minute) }
     private var reading: DigitalClockReading {
         time.digitalReading(notation: notation ?? theme.resolvedHourNotation(device: deviceHourFormat.notation),
                             languageCode: language.effective.code)
     }
 
-    var body: some View {
+    @ViewBuilder var body: some View {
+        if controlsBelow {
+            VStack(spacing: 12) {
+                DigitalClock(time: time, theme: theme, fontSize: fontSize,
+                             notation: notation, feedbackCorrect: feedbackCorrect)
+                    .frame(height: displayHeight)
+                    .accessibilityIdentifier(valueIdentifier)
+                HStack(spacing: 16) {
+                    ForEach(DigitalClockField.allCases, id: \.self) { field in
+                        VStack(spacing: 4) {
+                            Text(LocalizedStringKey(field == .hours ? "dino.hours" : "dino.minutes"))
+                                .font(.system(size: 14, weight: .bold, design: .rounded))
+                            HStack(spacing: 4) {
+                                arrow(field: field, direction: -1)
+                                arrow(field: field, direction: 1)
+                            }
+                        }
+                    }
+                }
+                .disabled(!controlsEnabled || feedbackCorrect != nil)
+            }
+            .environment(\.layoutDirection, .leftToRight)
+        } else { legacyControl }
+    }
+
+    private var legacyControl: some View {
         DigitalClock(time: time, theme: theme, fontSize: fontSize, exposesControlFields: true,
                      notation: notation, feedbackCorrect: feedbackCorrect)
             .accessibilityHidden(true)

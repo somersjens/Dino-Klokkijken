@@ -89,22 +89,25 @@ struct WorldMap: View {
         GeometryReader { geometry in
             let landscape = geometry.size.width > geometry.size.height
             let compact = verticalSizeClass == .compact
+            let mapScale = geometry.size.width >= 600 ? min(1.55, max(1.2, geometry.size.width / 700)) : 1
+            let sceneWidth = geometry.size.width / mapScale
             // Use the actual first layout, including iPad scale. Measuring an
             // initial 128pt placeholder used to shift the whole scroll content.
             let floatingHUDHeight = (compact ? 82.0 : 128.0) * (compact ? 1 : min(1.9, max(1, geometry.size.width / 390), max(1, geometry.size.height / 480)))
-            let viewportObserver = MapViewportObserver(centersLevel: standingLevel > 1,
+            let viewportObserver = MapViewportObserver(centersLevel: standingLevel > 1 || mapScale > 1,
                 restoresPosition: !initialPositionReady,
                 topClearance: floatingHUDHeight + geometry.safeAreaInsets.top,
                 focusRequest: focusRequest, reduceMotion: reduceMotion,
                 artworkReady: readyWorlds.contains((standingLevel - 1) / 10 + 1),
                 ready: { initialPositionReady = true },
                 focused: { arrivedFocusRequest = $0 })
-            let routeTopClearance = max(0, min(200, (min(600, geometry.size.width) - 36) * 0.37) - 82)
+            let routeTopClearance = max(0, min(200, (min(600, sceneWidth) - 36) * 0.37) - 82)
             ZStack {
                 Color(dinoHex: DinoWorldCatalog.worlds.last!.ground).ignoresSafeArea()
                 if initialArtworkReady {
                     VStack(spacing: 0) {
                         ScrollView {
+                            MapSceneLayout(width: sceneWidth, scale: mapScale) {
                             VStack(spacing: 0) {
                                 VStack(spacing: 0) {
                                     VStack(spacing: 8) {
@@ -119,10 +122,10 @@ struct WorldMap: View {
                                         .frame(maxWidth: 600).frame(maxWidth: .infinity)
                                         .readGeometry(for: CGFloat.self) { $0.size.height } action: { landscapeRouteOffset = $0 }
                                     mapRoute(topClearance: routeTopClearance, viewportObserver: viewportObserver)
-                                }.padding(.top, floatingHUDHeight + geometry.safeAreaInsets.top)
+                                }.padding(.top, (floatingHUDHeight + geometry.safeAreaInsets.top) / mapScale)
                                     .background {
                                         MapScenery(worldID: 1, viewportHeight: geometry.size.height) {
-                                            WorldMapLandscape(routeOffset: landscapeRouteOffset + floatingHUDHeight + geometry.safeAreaInsets.top + routeTopClearance,
+                                            WorldMapLandscape(routeOffset: landscapeRouteOffset + (floatingHUDHeight + geometry.safeAreaInsets.top) / mapScale + routeTopClearance,
                                                               viewportHeight: geometry.size.height, cachesTerrain: true)
                                                 .equatable()
                                         }
@@ -143,6 +146,8 @@ struct WorldMap: View {
                                         } action: { updateVisibleWorld(world.id, aboveHUD: $0) }
                                 }
                                 comingSoon(bottomInset: geometry.safeAreaInsets.bottom)
+                            }
+                            .scaleEffect(mapScale, anchor: .topLeading)
                             }
 
                         }
@@ -463,6 +468,22 @@ struct WorldMap: View {
                 y: topClearance + JungleMapLayout.firstNodeY + CGFloat(index) * WorldRouteTrail.levelSpacing)
     }
 
+}
+
+/// Lay out one narrower scene, then reserve its magnified height in the real scroll view.
+/// Artwork, route, actors and UIKit scroll probes share the same transform and anchors.
+private struct MapSceneLayout: Layout {
+    let width: CGFloat
+    let scale: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let height = subviews.first?.sizeThatFits(.init(width: width, height: nil)).height ?? 0
+        return CGSize(width: width * scale, height: height * scale)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        subviews.first?.place(at: bounds.origin, anchor: .topLeading, proposal: .init(width: width, height: nil))
+    }
 }
 
 private struct MapDinoAnchorKey: PreferenceKey {

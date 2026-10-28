@@ -464,6 +464,7 @@ private final class GameCenterAnchorController: UIViewController {
     weak var manager: FriendsManager?
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        DinoInterface.lockLight()
         manager?.presentAuthenticationIfPossible()
     }
 }

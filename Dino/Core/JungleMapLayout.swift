@@ -62,19 +62,22 @@ enum DinoMapViewport {
             frame.maxY > -margin && frame.minY < viewportHeight + margin
     }
 
-    static func preparedAnimationBounds(frame: CGRect, viewportHeight: CGFloat) -> CGRect {
-        animationBounds(frame: frame.offsetBy(dx: 0, dy: 256), viewportHeight: viewportHeight + 512)
+    static func preparedAnimationBounds(frame: CGRect, viewportHeight: CGFloat, scale: CGFloat = 1) -> CGRect {
+        animationBounds(frame: frame.offsetBy(dx: 0, dy: 256), viewportHeight: viewportHeight + 512, scale: scale)
     }
     /// Round outwards to small bands: moving boats/workers remain visible,
     /// while their SwiftUI subtree no longer rebuilds for every scroll pixel.
-    static func animationBounds(frame: CGRect, viewportHeight: CGFloat) -> CGRect {
-        let top = max(0, -frame.minY)
-        let bottom = min(frame.height, viewportHeight - frame.minY)
+    static func animationBounds(frame: CGRect, viewportHeight: CGFloat, scale: CGFloat = 1) -> CGRect {
+        // Visibility is measured in the screen, while cached actors use the scene's local coordinates.
+        let scale = max(0.01, scale)
+        let height = frame.height / scale
+        let top = max(0, -frame.minY / scale)
+        let bottom = min(height, (viewportHeight - frame.minY) / scale)
         guard bottom > top, frame.width > 0 else { return .zero }
         let band: CGFloat = 256
         let start = floor(top / band) * band
-        let end = min(frame.height, ceil(bottom / band) * band)
-        return CGRect(x: 0, y: start, width: frame.width, height: end - start)
+        let end = min(height, ceil(bottom / band) * band)
+        return CGRect(x: 0, y: start, width: frame.width / scale, height: end - start)
     }
 }
 

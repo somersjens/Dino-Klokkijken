@@ -382,6 +382,7 @@ struct DinoDayPartScheduleEditor: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .foregroundStyle(DinoStyle.ink)
+        .lightPalette()
         .onDisappear(perform: commit)
     }
 

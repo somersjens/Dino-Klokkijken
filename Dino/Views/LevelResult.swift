@@ -72,7 +72,9 @@ struct DinoResultView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
+        .background {
+            DinoLightMaterial(style: .regular).clipShape(RoundedRectangle(cornerRadius: 18))
+        }
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(.white.opacity(0.65), lineWidth: 1))
         .accessibilityIdentifier("result.score")
     }

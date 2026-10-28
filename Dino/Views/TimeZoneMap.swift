@@ -211,11 +211,13 @@ struct DinoTimeZoneLesson: View {
             DinoTimeZoneMap(journey: journey, referenceTime: referenceTime,
                             answer: answer, showsAnswer: mapShowsAnswer,
                             isDemonstration: isDemonstration, compactLayout: compactLayout, theme: theme)
-            walk
+            if playsWalk {
+                walk
                 .scaleEffect(playsWalk || reduceMotion ? 1 : 0.96)
                 .opacity(playsWalk ? 1 : 0)
                 .accessibilityHidden(!playsWalk)
                 .animation(reduceMotion ? nil : .easeOut(duration: 0.24), value: playsWalk)
+            }
         }
         .task(id: stepIdentity) { await play() }
     }
