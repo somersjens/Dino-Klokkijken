@@ -1586,13 +1586,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Read the hours before the colon and the minutes after it. Then say the time in words."
+            "value" : "Read the hands and say the time in words. The colors group phrases that use the same wording."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lees de uren vóór de dubbele punt en de minuten erna. Zeg de tijd daarna in woorden."
+            "value" : "Lees de wijzers en zeg de tijd in woorden. De kleuren groeperen tijden die je op dezelfde manier zegt."
           }
         }
       }
@@ -4952,13 +4952,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Read the analog clock"
+            "value" : "Choose the digital clock"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lees de analoge klok af"
+            "value" : "Kies de digitale klok"
           }
         }
       }
@@ -5105,13 +5105,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Read the digital clock"
+            "value" : "How do you say this time?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lees de digitale klok af"
+            "value" : "Hoe zeg je deze tijd?"
           }
         }
       }

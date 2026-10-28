@@ -1,5 +1,41 @@
 import Foundation
 
+/// The teaching clock groups minutes by the construction used in that language.
+enum DinoTimeReading {
+    enum Region: String, CaseIterable, Sendable {
+        case whole, past, beforeHalf, half, afterHalf, to
+    }
+
+    static func region(minute: Int, language: String) -> Region {
+        precondition((0..<60).contains(minute))
+        if minute == 0 { return .whole }
+        if language != "nl" { return minute <= 30 ? .past : .to }
+        switch minute {
+        case 1...15: return .past
+        case 16...29: return .beforeHalf
+        case 30: return .half
+        case 31...44: return .afterHalf
+        default: return .to
+        }
+    }
+
+    /// Alternatives stay between this hour and the next. Early lessons also
+    /// include quarters so four whole-hour answers never require other hours.
+    static func distractors<R: RandomNumberGenerator>(target: ClockTime, minuteStep: Int,
+                                                       using rng: inout R) -> [ClockTime] {
+        let minutes = stride(from: 0, to: 60, by: min(15, max(1, minuteStep)))
+        var chosen: [Int] = []
+        for minute in minutes.shuffled(using: &rng) {
+            let clear = ([target.minute] + chosen).allSatisfy {
+                let difference = abs($0 - minute)
+                return min(difference, 60 - difference) >= 5
+            }
+            if clear { chosen.append(minute) }
+        }
+        return chosen.map { ClockTime(hour: target.hour, minute: $0) }
+    }
+}
+
 /// One tappable word. "-" means the player leaves that part of the sentence empty.
 struct SpokenTimeChoice: Equatable, Hashable, Sendable {
     static let emptyID = "-"

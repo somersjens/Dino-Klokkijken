@@ -119,6 +119,9 @@ struct AnalogClock: View {
                     .position(x: size / 2 + CGFloat(sin(radians)) * size * 0.34,
                               y: size / 2 - CGFloat(cos(radians)) * size * 0.34)
             }
+            if showHandHints {
+                ClockHourReturnGuide(time: time, theme: theme, size: size)
+            }
             hand(length: size * 0.23, width: hourWidth, color: Color(dinoHex: theme.hourHex), angle: displayedHourAngle ?? time.hourAngle)
             hand(length: size * 0.34, width: minuteWidth, color: Color(dinoHex: theme.minuteHex), angle: displayedMinuteAngle ?? time.minuteAngle)
             Circle().fill(Color(dinoHex: theme.rimHex)).frame(width: size * 0.085)
@@ -162,12 +165,13 @@ struct AnalogClock: View {
         .accessibilityLabel(time.digitalText)
         .overlay {
             if showHandHints {
-                let pointers = ClockHandHintGeometry.pointers(time: time, hourWidth: hourWidth / size, minuteWidth: minuteWidth / size)
-                ClockHandHint(number: 1, pointer: pointers[0], ink: theme.hourHex, size: size)
-                ClockHandHint(number: 2, pointer: pointers[1], ink: theme.minuteHex, size: size)
+                let pointers = ClockHandHintGeometry.pointers(time: time, shape: theme.analogShape)
+                ClockMinuteReadingScale(shape: theme.analogShape, size: size)
+                ClockHandHint(number: 1, pointer: pointers[0], ink: theme.hourHex, size: size, shape: theme.analogShape)
+                ClockHandHint(number: 2, pointer: pointers[1], ink: theme.minuteHex, size: size, shape: theme.analogShape)
             }
         }
-        .padding(showHandHints ? size * 0.24 : 0)
+        .padding(showHandHints ? size * (ClockHandHintGeometry.extent(shape: theme.analogShape) - 0.5) : 0)
     }
 
     private var hourWidth: CGFloat { size * 0.038 }
@@ -211,13 +215,80 @@ private struct ClockHandHint: View {
     let pointer: ClockHandHintGeometry.Pointer
     let ink: UInt32
     let size: CGFloat
+    let shape: AnalogClockShape
     private func point(_ point: CGPoint) -> CGPoint {
-        CGPoint(x: size * (0.74 + point.x), y: size * (0.74 + point.y))
+        let extent = ClockHandHintGeometry.extent(shape: shape)
+        return CGPoint(x: size * (extent + point.x), y: size * (extent + point.y))
     }
 
     var body: some View {
         ClockHintBadgeArrow(number: number, badge: point(pointer.badge), tip: point(pointer.tip),
                            wings: pointer.arrowWings.map(point), ink: ink,
-                           bounds: CGSize(width: size * 1.48, height: size * 1.48))
+                           bounds: CGSize(width: size * ClockHandHintGeometry.extent(shape: shape) * 2,
+                                          height: size * ClockHandHintGeometry.extent(shape: shape) * 2))
+    }
+}
+
+private struct ClockMinuteReadingScale: View {
+    let shape: AnalogClockShape
+    let size: CGFloat
+
+    var body: some View {
+        Canvas { context, _ in
+            let extent = ClockHandHintGeometry.extent(shape: shape)
+            func positioned(_ point: CGPoint) -> CGPoint {
+                CGPoint(x: size * (extent + point.x), y: size * (extent + point.y))
+            }
+            for mark in ClockHandHintGeometry.minuteMarks(shape: shape) {
+                var tick = Path()
+                tick.move(to: positioned(mark.tickStart))
+                tick.addLine(to: positioned(mark.tickEnd))
+                context.stroke(tick, with: .color(DinoStyle.ink), style: StrokeStyle(lineWidth: 1, lineCap: .round))
+                let label = Text(verbatim: String(mark.minute))
+                    .font(.system(size: size * 0.064, weight: .bold, design: .rounded)).canvasInk(DinoStyle.ink)
+                context.draw(label, at: positioned(mark.label))
+            }
+        }
+        .frame(width: size * ClockHandHintGeometry.extent(shape: shape) * 2,
+               height: size * ClockHandHintGeometry.extent(shape: shape) * 2)
+        .allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+/// One quiet backwards arc links the moving hour hand to the completed hour.
+private struct ClockHourReturnGuide: View {
+    let time: ClockTime
+    let theme: ClockTheme
+    let size: CGFloat
+
+    var body: some View {
+        Canvas { context, _ in
+            guard time.minute > 0 else { return }
+            let hour = Double(time.hour % 12) * 30
+            let radius = 0.275
+            func positioned(_ angle: Double, radius: Double = 0.275) -> CGPoint {
+                let point = ClockHandHintGeometry.point(radius: radius, angle: angle)
+                return CGPoint(x: size * (0.5 + point.x), y: size * (0.5 + point.y))
+            }
+            var arc = Path()
+            let steps = max(2, time.minute)
+            for step in 0...steps {
+                let angle = time.hourAngle - Double(step) / Double(steps) * Double(time.minute) * 0.5
+                if step == 0 { arc.move(to: positioned(angle)) }
+                else { arc.addLine(to: positioned(angle)) }
+            }
+            let tip = positioned(hour)
+            let wing = min(0.026, Double(time.minute) * .pi / 360 * radius * 0.6) * size
+            let radians = hour * .pi / 180
+            for offset in [-Double.pi / 5, Double.pi / 5] {
+                arc.move(to: tip)
+                arc.addLine(to: CGPoint(x: tip.x + cos(radians + offset) * wing,
+                                       y: tip.y + sin(radians + offset) * wing))
+            }
+            let ink = Color(dinoHex: ClockColorContrast.hourGuideHex(hand: theme.hourHex, face: theme.faceHex))
+            context.stroke(arc, with: .color(ink), style: StrokeStyle(lineWidth: size * 0.015, lineCap: .round, lineJoin: .round))
+        }
+        .frame(width: size, height: size)
+        .allowsHitTesting(false).accessibilityHidden(true)
     }
 }

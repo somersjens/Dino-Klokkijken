@@ -320,8 +320,10 @@ enum DinoExpandedQuestions {
         case .timeSequence: operation = duration
         default: operation = shift
         }
-        let other = DinoQuestionTeaching.distractors(pool: pool, target: target, kind: kind, difficulty: difficulty,
-                                                     minuteStep: step, operation: operation, using: &rng)
+        let other = kind == .readDigital
+            ? DinoTimeReading.distractors(target: target, minuteStep: step, using: &rng)
+            : DinoQuestionTeaching.distractors(pool: pool, target: target, kind: kind, difficulty: difficulty,
+                                               minuteStep: step, operation: operation, using: &rng)
         let count = difficulty.optionCount
         var choices = Array(other.prefix(count - 1))
         choices.insert(target, at: Int.random(in: 0..<count, using: &rng))
@@ -628,7 +630,9 @@ enum DinoTimeWords {
             case 45: text = "kwart voor \(next)"
             case 50: text = "tien voor \(next)"
             case 55: text = "vijf voor \(next)"
-            case 1..<30: text = "\(minutes(time.minute, language: language)) over \(hour)"
+            case 1..<15: text = "\(minutes(time.minute, language: language)) over \(hour)"
+            case 16..<30: text = "\(minutes(30 - time.minute, language: language)) voor half \(next)"
+            case 31..<45: text = "\(minutes(time.minute - 30, language: language)) over half \(next)"
             default: text = "\(minutes(60 - time.minute, language: language)) voor \(next)"
             }
         } else {

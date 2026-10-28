@@ -50,8 +50,9 @@ struct QuestionRenderer: View {
                 }
             case .match:
                 ClockMatchingBoard(times: question.relatedTimes, options: question.options,
-                                   selections: $session.pairSelections, theme: theme, width: min(680, width),
-                                   hasFeedback: session.hasFeedback, availableHeight: availableHeight)
+                                   selections: $session.pairSelections, theme: theme, width: min(wideLayout ? 900 : 680, width),
+                                   hasFeedback: session.hasFeedback, availableHeight: availableHeight,
+                                   horizontalLayout: wideLayout)
                     .id("question.answers")
                     .questionAnswerFocus()
             default:
@@ -266,6 +267,7 @@ struct AnswerTimeExplanation<Content: View>: View {
     let visible: Bool
     var fontSize: CGFloat = 24
     var notation: DigitalHourNotation? = nil
+    var explanationText: String? = nil
     let content: Content
 
     var body: some View {
@@ -276,8 +278,18 @@ struct AnswerTimeExplanation<Content: View>: View {
                     .fill(DinoStyle.ink.opacity(highContrast ? 0.45 : 0.12))
                     .frame(height: 1)
                     .padding(.horizontal, 8)
-                DigitalClock(time: time, theme: theme, fontSize: fontSize, notation: notation)
-                    .offset(y: visible || reduceMotion ? 0 : 4)
+                Group {
+                    if let explanationText {
+                        Text(verbatim: explanationText)
+                            .font(.system(size: fontSize, weight: .bold, design: .rounded))
+                            .foregroundStyle(DinoStyle.ink)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        DigitalClock(time: time, theme: theme, fontSize: fontSize, notation: notation)
+                    }
+                }
+                .offset(y: visible || reduceMotion ? 0 : 4)
             }
             .padding(.top, 4)
             .frame(maxWidth: .infinity)
@@ -506,6 +518,7 @@ struct ClockMatchingBoard: View {
     var hasFeedback = false
     var isDemonstration = false
     var availableHeight: CGFloat? = nil
+    var horizontalLayout = false
     @State private var pending: Endpoint?
     @GestureState private var drag: ConnectionDrag?
     @State private var demonstrationStep = -1
@@ -519,19 +532,29 @@ struct ClockMatchingBoard: View {
         let location: CGPoint
     }
     private var prefix: String { isDemonstration ? "demo.match" : "question.match" }
-    private var leftWidth: CGFloat { width * 0.42 }
+    private var leftWidth: CGFloat {
+        horizontalLayout ? min(240, width / CGFloat(max(1, times.count)) - 24) : width * 0.42
+    }
     private var rightWidth: CGFloat { leftWidth }
     private var faceSize: CGFloat {
-        let preferred = width >= 600 ? min(132, width * 0.24) : 104
-        let fitted = availableHeight.map {
-            ($0 - CGFloat(max(0, times.count - 1)) * spacing) / CGFloat(max(1, times.count)) - 24
+        let preferred = horizontalLayout ? 184 : width >= 600 ? min(164, width * 0.25) : 104
+        let fitted = availableHeight.map { height in
+            horizontalLayout ? height - connectionGap - (digitalFont * 1.7 + 20) - 24
+                : (height - CGFloat(max(0, times.count - 1)) * spacing) / CGFloat(max(1, times.count)) - 24
         } ?? preferred
         return min(preferred, width >= 600 ? max(80, fitted) : preferred, leftWidth - 18)
     }
     private var rowHeight: CGFloat { faceSize + 24 }
     private var spacing: CGFloat { width >= 600 ? 12 : 16 }
-    private var digitalFont: CGFloat { min(width >= 600 ? 36 : 26, width * 0.067) }
-    private var timeCardHeight: CGFloat { min(rowHeight, digitalFont * 1.7 + 20) }
+    private var digitalFont: CGFloat { min(width >= 600 ? 40 : 26, width * 0.067) }
+    private var timeCardHeight: CGFloat {
+        horizontalLayout ? digitalFont * 1.7 + 20 : min(rowHeight, digitalFont * 1.7 + 20)
+    }
+    private var connectionGap: CGFloat { min(96, max(64, (availableHeight ?? 480) * 0.2)) }
+    private var boardHeight: CGFloat {
+        horizontalLayout ? rowHeight + connectionGap + timeCardHeight
+            : CGFloat(times.count) * rowHeight + CGFloat(max(0, times.count - 1)) * spacing
+    }
 
     var body: some View {
         VStack(spacing: 14) {
@@ -570,24 +593,24 @@ struct ClockMatchingBoard: View {
                         context.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: 3, lineCap: .round))
                     }
                 }.allowsHitTesting(false).accessibilityHidden(true)
-                VStack(spacing: spacing) {
-                    ForEach(times.indices, id: \.self) { index in
-                        HStack(spacing: 0) {
-                            clockButton(index)
-                            Spacer(minLength: 0)
-                            timeButton(index)
-                        }.frame(height: rowHeight)
-                    }
+                ForEach(times.indices, id: \.self) { index in
+                    let frame = cardFrame(.clock(index))
+                    clockButton(index).position(x: frame.midX, y: frame.midY)
+                }
+                ForEach(options.indices, id: \.self) { index in
+                    let frame = cardFrame(.time(index))
+                    timeButton(index).position(x: frame.midX, y: frame.midY)
                 }
                 ForEach(times.indices, id: \.self) { index in
                     if let time = selections[index], let option = options.firstIndex(of: time) {
+                        let start = connectionPoint(for: .clock(index))
+                        let end = connectionPoint(for: .time(option))
                         Color.clear.frame(width: 4, height: 4)
-                            .position(x: (leftWidth + width - rightWidth) / 2,
-                                      y: (rowY(index) + rowY(option)) / 2)
+                            .position(x: (start.x + end.x) / 2, y: (start.y + end.y) / 2)
                             .accessibilityIdentifier("\(prefix).line.\(index)")
                     }
                 }.allowsHitTesting(false)
-            }.frame(width: width, height: CGFloat(times.count) * rowHeight + CGFloat(max(0, times.count - 1)) * spacing)
+            }.frame(width: width, height: boardHeight)
                 .coordinateSpace(name: "clockMatchingBoard")
         }.environment(\.layoutDirection, .leftToRight)
             .task {
@@ -620,7 +643,10 @@ struct ClockMatchingBoard: View {
                 .background(.white, in: RoundedRectangle(cornerRadius: 20))
                 .overlay(RoundedRectangle(cornerRadius: 20).stroke(isSelected(.clock(index)) ? DinoStyle.ink : color,
                                                                                 lineWidth: isSelected(.clock(index)) || selected != nil ? 3 : highContrast ? 2 : 0))
-                .overlay(alignment: .trailing) { connectionDot(selected == nil ? DinoStyle.muted : color).offset(x: 4) }
+                .overlay(alignment: horizontalLayout ? .bottom : .trailing) {
+                    connectionDot(selected == nil ? DinoStyle.muted : color)
+                        .offset(x: horizontalLayout ? 0 : 4, y: horizontalLayout ? 4 : 0)
+                }
                 .overlay(alignment: .topTrailing) {
                     if isDemonstration, demonstrationStep == index * 2 { tapCue(1) }
                 }
@@ -638,7 +664,9 @@ struct ClockMatchingBoard: View {
                 .background(.white, in: RoundedRectangle(cornerRadius: 18))
                 .overlay(RoundedRectangle(cornerRadius: 18).stroke(isSelected(.time(index)) ? DinoStyle.ink : color,
                                                                                 lineWidth: isSelected(.time(index)) || owner != nil ? 3 : highContrast ? 2 : 0))
-                .overlay(alignment: .leading) { connectionDot(color).offset(x: -4) }
+                .overlay(alignment: horizontalLayout ? .top : .leading) {
+                    connectionDot(color).offset(x: horizontalLayout ? 0 : -4, y: horizontalLayout ? -4 : 0)
+                }
                 .overlay(alignment: .topTrailing) {
                     if isDemonstration, demonstrationStep >= 0, !demonstrationStep.isMultiple(of: 2),
                        demonstrationStep / 2 < times.count, options[index] == times[demonstrationStep / 2] { tapCue(2) }
@@ -664,22 +692,37 @@ struct ClockMatchingBoard: View {
     }
     private func rowY(_ index: Int) -> CGFloat { rowHeight / 2 + CGFloat(index) * (rowHeight + spacing) }
     private func isSelected(_ endpoint: Endpoint) -> Bool { pending == endpoint || drag?.source == endpoint }
-    private func connectionPoint(for endpoint: Endpoint) -> CGPoint {
+    private func cardFrame(_ endpoint: Endpoint) -> CGRect {
+        let index: Int
+        let clock: Bool
         switch endpoint {
-        case .clock(let index): return CGPoint(x: leftWidth, y: rowY(index))
-        case .time(let index): return CGPoint(x: width - rightWidth, y: rowY(index))
+        case .clock(let value): index = value; clock = true
+        case .time(let value): index = value; clock = false
+        }
+        let height = clock ? rowHeight : timeCardHeight
+        if horizontalLayout {
+            let centerX = width * (CGFloat(index) + 0.5) / CGFloat(max(1, times.count))
+            return CGRect(x: centerX - leftWidth / 2, y: clock ? 0 : rowHeight + connectionGap,
+                          width: leftWidth, height: height)
+        }
+        return CGRect(x: clock ? 0 : width - rightWidth, y: rowY(index) - height / 2,
+                      width: leftWidth, height: height)
+    }
+    private func connectionPoint(for endpoint: Endpoint) -> CGPoint {
+        let frame = cardFrame(endpoint)
+        switch endpoint {
+        case .clock: return horizontalLayout ? CGPoint(x: frame.midX, y: frame.maxY) : CGPoint(x: frame.maxX, y: frame.midY)
+        case .time: return horizontalLayout ? CGPoint(x: frame.midX, y: frame.minY) : CGPoint(x: frame.minX, y: frame.midY)
         }
     }
     private func endpoint(at point: CGPoint) -> Endpoint? {
         for index in times.indices {
-            let centerY = rowY(index)
-            if CGRect(x: 0, y: centerY - rowHeight / 2, width: leftWidth, height: rowHeight).contains(point) {
+            if cardFrame(.clock(index)).contains(point) {
                 return .clock(index)
             }
         }
         for index in options.indices {
-            let height = timeCardHeight
-            if CGRect(x: width - rightWidth, y: rowY(index) - height / 2, width: rightWidth, height: height).contains(point) {
+            if cardFrame(.time(index)).contains(point) {
                 return .time(index)
             }
         }
@@ -711,8 +754,8 @@ struct ClockMatchingBoard: View {
     }
     private func line(from clock: Int, to time: Int) -> Path {
         Path { path in
-            path.move(to: CGPoint(x: leftWidth, y: rowY(clock)))
-            path.addLine(to: CGPoint(x: width - rightWidth, y: rowY(time)))
+            path.move(to: connectionPoint(for: .clock(clock)))
+            path.addLine(to: connectionPoint(for: .time(time)))
         }
     }
     private func tapped(_ endpoint: Endpoint) {

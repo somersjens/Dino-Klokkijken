@@ -27,7 +27,7 @@ struct DinoExpandedQuestionView: View {
     private var q: ClockQuestion { session.question }
     private var code: String { language.effective.code }
     private var duration: String { DinoTimeWords.duration(q.durationMinutes, language: code) }
-    private var lessonWidth: CGFloat { q.kind == .timeSequence && horizontalSequence ? min(840, width) : wideLayout ? min(540, width) : width }
+    private var lessonWidth: CGFloat { q.kind == .timeSequence && horizontalSequence ? width : wideLayout ? min(540, width) : width }
     private var contextWidth: CGFloat {
         q.kind == .timeSequence && horizontalSequence ? lessonWidth : min(q.kind == .timeZone ? 760 : 600, lessonWidth)
     }
@@ -46,8 +46,8 @@ struct DinoExpandedQuestionView: View {
 
     var body: some View {
         let _ = deviceHourFormat.notation
-        VStack(spacing: wideLayout || (q.kind == .timeZone && compactLayout) ? 12 : 18) {
-            if ![.advanceAnalog, .sayTime, .spokenTime].contains(q.kind), q.kind != .sortTimes || isDemonstration {
+        VStack(spacing: q.kind == .timeSequence && width >= 600 ? 24 : wideLayout || (q.kind == .timeZone && compactLayout) ? 12 : 18) {
+            if ![.advanceAnalog, .sayTime, .spokenTime, .readDigital].contains(q.kind), q.kind != .sortTimes || isDemonstration {
                 DinoQuestionContext(maxHeight: wideLayout && !isDemonstration ? max(160, availableHeight - 88) : nil) {
                     context.frame(width: contextWidth)
                 }
@@ -55,6 +55,14 @@ struct DinoExpandedQuestionView: View {
                     .frame(maxWidth: .infinity)
             }
             switch q.kind {
+            case .readDigital:
+                DinoTimeReadingClock(time: q.target, theme: theme, width: min(isDemonstration ? 440 : 420, width),
+                                     faceSize: min(clockSize, width - 52), language: code,
+                                     showsGuide: isDemonstration,
+                                     rejectedTimes: session.rejectedResponses.compactMap {
+                                         if case .time(let time) = $0 { return time }; return nil
+                                     })
+                if !isDemonstration { responses }
             case .sortTimes: sorting
             case .sayTime:
                 SpokenTimeQuestion(session: session, theme: theme, width: width,
@@ -94,7 +102,7 @@ struct DinoExpandedQuestionView: View {
 
     @ViewBuilder private var context: some View {
         switch q.kind {
-        case .readDigital, .read24Hour, .dayPart:
+        case .read24Hour, .dayPart:
             DigitalClock(time: q.target, theme: theme, fontSize: 38, notation: q.kind == .read24Hour ? .twentyFour : nil)
                 .accessibilityIdentifier(isDemonstration ? "demo.targetClock" : "question.targetClock")
         case .spokenTime:
@@ -163,8 +171,8 @@ struct DinoExpandedQuestionView: View {
 
     private var timeSequence: some View {
         let horizontal = horizontalSequence && width >= 600
-        let layout = horizontal ? AnyLayout(HStackLayout(spacing: 10)) : AnyLayout(VStackLayout(spacing: isDemonstration ? 6 : 4))
-        let cellWidth = (contextWidth - CGFloat(q.relatedTimes.count) * 38) / CGFloat(q.relatedTimes.count + 1)
+        let layout = horizontal ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: isDemonstration ? 6 : 4))
+        let cellWidth = (contextWidth - CGFloat(q.relatedTimes.count) * 48) / CGFloat(q.relatedTimes.count + 1)
         return layout {
             ForEach(Array(q.relatedTimes.enumerated()), id: \.offset) { index, time in
                 DigitalClock(time: time, theme: theme, fontSize: sequenceClockFont)
@@ -172,9 +180,9 @@ struct DinoExpandedQuestionView: View {
                     .frame(width: horizontal ? cellWidth : nil)
                     .accessibilityIdentifier("\(sequencePrefix).sequence.clock.\(index)")
                 Image(systemName: horizontal ? "arrow.right" : "arrow.down")
-                    .font(.system(size: isDemonstration ? 17 : 15, weight: .bold))
+                    .font(.system(size: horizontal ? 22 : isDemonstration ? 17 : 15, weight: .bold))
                     .foregroundStyle(DinoStyle.deepGreen)
-                    .frame(width: horizontal ? 18 : nil)
+                    .frame(width: horizontal ? 24 : nil)
                     .accessibilityIdentifier("\(sequencePrefix).sequence.arrow.\(index)")
             }
             Group {
@@ -206,8 +214,8 @@ struct DinoExpandedQuestionView: View {
     private var sequencePrefix: String { isDemonstration ? "demo" : "question" }
     private var sequenceClockFont: CGFloat {
         if horizontalSequence && width >= 600 {
-            let cell = (contextWidth - CGFloat(q.relatedTimes.count) * 38) / CGFloat(q.relatedTimes.count + 1)
-            return min(34, cell / 4.8)
+            let cell = (contextWidth - CGFloat(q.relatedTimes.count) * 48) / CGFloat(q.relatedTimes.count + 1)
+            return min(48, cell / 4)
         }
         return isDemonstration ? 32 : min(compactLayout ? 28 : width >= 600 ? 42 : 36, lessonWidth * 0.10)
     }
@@ -251,7 +259,9 @@ struct DinoExpandedQuestionView: View {
     private var responses: some View {
         let columns = wideLayout && q.responses.count == 4 ? 4 : 2
         let cellWidth = (responseWidth - CGFloat(columns - 1) * 12) / CGFloat(columns)
-        let layout = DinoAnswerTextLayout(titles: q.responses.map(responseTitle), width: cellWidth - 24)
+        let sequence = q.kind == .timeSequence && width >= 600
+        let layout = DinoAnswerTextLayout(titles: q.responses.map(responseTitle), width: cellWidth - 24,
+                                         fontSize: sequence ? 24 : 17)
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 12) {
             ForEach(Array(q.responses.enumerated()), id: \.offset) { index, response in
                 let correct = session.showsCorrectResponse && response == q.expectedAnswer
@@ -260,12 +270,13 @@ struct DinoExpandedQuestionView: View {
                     Group {
                         if q.kind == .spokenTime, case .time(let time) = response {
                             AnswerTimeExplanation(time: time, theme: theme, visible: wrong,
-                                                  fontSize: min(24, width * 0.065),
+                                                  fontSize: 17,
+                                                  explanationText: DinoTimeWords.time(time, language: code),
                                                   content: AnalogClock(time: time, theme: theme,
                                                       size: min(answerClockSize ?? (width >= 600 ? 184 : 125), cellWidth - 24))
                                                     .allowsHitTesting(false))
                                 .accessibilityElement(children: .ignore)
-                                .accessibilityLabel(Text(verbatim: shownDigital(time)))
+                                .accessibilityLabel(Text(verbatim: wrong ? DinoTimeWords.time(time, language: code) : shownDigital(time)))
                         } else if [.readDigital, .read24Hour].contains(q.kind), case .time(let time) = response {
                             timeReadingResponse(time, wrong: wrong, title: layout.titles[index], fontSize: layout.fontSize)
                         } else {
@@ -274,7 +285,7 @@ struct DinoExpandedQuestionView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                                 .accessibilityLabel(Text(verbatim: responseText(response)))
                         }
-                    }.padding(12).frame(maxWidth: .infinity, minHeight: [.minutesBetween, .timeZone].contains(q.kind) && compactLayout ? 62 : 74)
+                    }.padding(12).frame(maxWidth: .infinity, minHeight: sequence ? 88 : [.minutesBetween, .timeZone].contains(q.kind) && compactLayout ? 62 : 74)
                         .modifier(ClockAnswerOutline(visible: correct || wrong, correct: correct))
                         .background(.white, in: RoundedRectangle(cornerRadius: 22))
                         .overlay(alignment: .topTrailing) {
@@ -297,7 +308,7 @@ struct DinoExpandedQuestionView: View {
         return responseText(response)
     }
 
-    private func timeReadingResponse(_ time: ClockTime, wrong: Bool, title: String, fontSize: CGFloat) -> some View {
+    @ViewBuilder private func timeReadingResponse(_ time: ClockTime, wrong: Bool, title: String, fontSize: CGFloat) -> some View {
         let description = responseText(.time(time))
         let content = VStack(spacing: 9) {
             Text(verbatim: title)
@@ -307,13 +318,19 @@ struct DinoExpandedQuestionView: View {
                 .frame(height: 54)
             if q.kind == .read24Hour { dayPartDescription(time) }
         }
-        return AnswerTimeExplanation(time: time, theme: theme, visible: wrong,
+        if q.kind == .readDigital {
+            content.foregroundStyle(DinoStyle.ink)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(verbatim: description))
+        } else {
+            AnswerTimeExplanation(time: time, theme: theme, visible: wrong,
                                      fontSize: min(24, width * 0.065),
                                      notation: q.kind == .read24Hour ? .twentyFour : nil,
                                      content: content)
             .foregroundStyle(DinoStyle.ink)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text(verbatim: wrong ? "\(description), \(shownDigital(time))" : description))
+            .accessibilityLabel(Text(verbatim: wrong && q.kind == .read24Hour ? "\(description), \(shownDigital(time))" : description))
+        }
     }
 
     private func dayPartDescription(_ time: ClockTime) -> some View {
@@ -749,7 +766,7 @@ private struct SequencePatternArcs: View {
                 }.fill(DinoStyle.deepGreen)
             }
             Text(verbatim: label)
-                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                .font(.system(size: 15, weight: .heavy, design: .rounded))
                 .foregroundStyle(DinoStyle.deepGreen)
                 .lineLimit(1)
                 .padding(.horizontal, 7).padding(.vertical, 3)

@@ -13,6 +13,11 @@ private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
 @MainActor
 struct DinoCoreTests {
     static func main() async {
+        if CommandLine.arguments.contains("--time-reading") {
+            testTimeReadingClock()
+            print("PASS: \(checks) time-reading checks.")
+            return
+        }
         if CommandLine.arguments.contains("--curriculum") {
             for level in DinoLevelCatalog.levels {
                 for (index, recipe) in level.recipes.enumerated() {
@@ -79,6 +84,7 @@ struct DinoCoreTests {
         testPractice()
         testPracticeRecords()
         testExpandedQuestions()
+        testTimeReadingClock()
         testPlausibleChoices()
         testSpokenTime()
         testFlightArrivals()
@@ -247,7 +253,10 @@ struct DinoCoreTests {
                     expect(q.id == index && q.target != previous, "adaptive questions retain IDs and avoid consecutive duplicate targets")
                     previous = q.target
                     expect(category.time.minutes.contains(q.target.minute), "teaching steps stay in the selected time family")
-                    expect((q.options + q.relatedTimes + q.companionClocks).allSatisfy { category.time.minutes.contains($0.minute) },
+                    let optionMinutes = q.kind == .readDigital
+                        ? Array(stride(from: 0, to: 60, by: min(15, category.time.minuteStep))) : category.time.minutes
+                    expect(q.options.allSatisfy { optionMinutes.contains($0.minute) }
+                           && (q.relatedTimes + (q.kind == .readDigital ? [] : q.companionClocks)).allSatisfy { category.time.minutes.contains($0.minute) },
                            "options and arithmetic context remain on the selected grid")
                     expect(AnswerValidator.isCorrect(q.expectedAnswer, for: q) && !AnswerValidator.isCorrect(wrongAnswer(for: q), for: q),
                            "every teaching step has a valid, discriminating answer")
@@ -258,6 +267,11 @@ struct DinoCoreTests {
                         expect(q.responses.count == count, "introduction reduces answer load without changing binary or day-part exercises")
                     }
                     switch q.kind {
+                    case .read24Hour:
+                        let correctTime = DinoTimeWords.time(q.target, language: language)
+                        expect(q.options.filter { $0 != q.target }.allSatisfy {
+                            DinoTimeWords.time($0, language: language) != correctTime
+                        }, "24-hour distractors differ in time words even without the day part")
                     case .addTime, .advanceAnalog:
                         expect(q.relatedTimes[0].adding(minutes: q.durationMinutes) == q.target, "all tiers preserve addition")
                     case .subtractTime:
@@ -915,42 +929,59 @@ struct DinoCoreTests {
         expect(ClockHandHintGeometry.segmentDistance(CGPoint(x: -1, y: 0), CGPoint(x: 1, y: 0),
                                                     CGPoint(x: 0, y: -1), CGPoint(x: 0, y: 1)) == 0,
                "crossing pointer segments still have zero clearance")
-        for widths in [(0.038, 0.024), (0.055, 0.036)] {
+        for shape in AnalogClockShape.allCases {
+            let marks = ClockHandHintGeometry.minuteMarks(shape: shape)
+            expect(marks.map(\.minute) == Array(stride(from: 0, to: 60, by: 5)),
+                   "minute scale starts with zero and counts by five")
+            for mark in marks {
+                let edge = ClockHandHintGeometry.outerRadius(angle: Double(mark.minute) * 6, shape: shape)
+                expect(hypot(mark.tickStart.x, mark.tickStart.y) > edge
+                       && hypot(mark.label.x, mark.label.y) > hypot(mark.tickEnd.x, mark.tickEnd.y),
+                       "minute ticks and labels sit outside every clock shape")
+            }
             for hour in 1...12 {
                 for minute in 0..<60 {
                     let time = ClockTime(hour: hour, minute: minute)
-                    let pointers = ClockHandHintGeometry.pointers(time: time, hourWidth: widths.0, minuteWidth: widths.1)
-                    let hands = [(time.hourAngle, 0.23, widths.0), (time.minuteAngle, 0.34, widths.1)]
-                    let difference = abs((time.hourAngle - time.minuteAngle + 540).truncatingRemainder(dividingBy: 360) - 180)
-                    for (index, pointer) in pointers.enumerated() {
-                        let direction = ClockHandHintGeometry.point(radius: 1, angle: hands[index].0)
-                        let alignment = [pointer.start, pointer.tip, pointer.badge].map {
-                            abs($0.x * direction.y - $0.y * direction.x)
-                        }
-                        if difference >= 22 {
-                            expect(alignment.allSatisfy { $0 < 0.000_001 },
-                                   "arrows and number badges follow their hand at \(time.digitalText)")
-                            let arrow = CGPoint(x: pointer.tip.x - pointer.start.x, y: pointer.tip.y - pointer.start.y)
-                            expect(arrow.x * direction.x + arrow.y * direction.y < 0,
-                                   "aligned arrows point inward toward their hand at \(time.digitalText)")
-                        } else {
-                            expect(alignment.contains { $0 > 0.01 },
-                                   "nearby hands retain the side pointers at \(time.digitalText)")
-                        }
-                    }
+                    let pointers = ClockHandHintGeometry.pointers(time: time, shape: shape)
+                    let expectedHour = ClockHandHintGeometry.point(radius: 0.412, angle: Double(hour % 12) * 30)
+                    expect(hypot(pointers[0].tip.x - expectedHour.x, pointers[0].tip.y - expectedHour.y) < 0.000_001,
+                           "hour pointer targets the completed digital hour at \(time.digitalText)")
+                    let minuteDirection = ClockHandHintGeometry.point(radius: 1, angle: time.minuteAngle)
+                    let minuteTip = pointers[1].tip
+                    expect(abs(minuteTip.x * minuteDirection.y - minuteTip.y * minuteDirection.x) < 0.000_001,
+                           "minute pointer follows the exact minute, without rounding to a five")
+                    let edge = ClockHandHintGeometry.outerRadius(angle: time.minuteAngle, shape: shape)
+                    expect(hypot(minuteTip.x, minuteTip.y) > edge + 0.12,
+                           "minute pointer leaves breathing room beyond the outside scale")
                     for pointer in pointers {
-                        for hand in hands {
+                        for hand in [(time.hourAngle, 0.23, 0.038), (time.minuteAngle, 0.34, 0.024)] {
                             let start = ClockHandHintGeometry.point(radius: -0.035, angle: hand.0)
                             let end = ClockHandHintGeometry.point(radius: hand.1, angle: hand.0)
-                            for edge in [pointer.start] + pointer.arrowWings {
-                                let clearance = ClockHandHintGeometry.segmentDistance(edge, pointer.tip, start, end) - hand.2 / 2
-                                expect(clearance > 0.015, "arrows stay clear of both hands at \(time.digitalText), including their heads")
+                            for arrowEdge in [pointer.start] + pointer.arrowWings {
+                                let clearance = ClockHandHintGeometry.segmentDistance(arrowEdge, pointer.tip, start, end) - hand.2 / 2
+                                expect(clearance > 0.015, "reading arrows stay clear of both hands at \(time.digitalText)")
                             }
+                        }
+                        expect(max(abs(pointer.badge.x), abs(pointer.badge.y)) + 0.09 <= ClockHandHintGeometry.extent(shape: shape),
+                               "number badges fit inside the reserved example space")
+                    }
+                    for mark in marks {
+                        for arrowEdge in [pointers[0].start] + pointers[0].arrowWings {
+                            expect(ClockHandHintGeometry.segmentDistance(arrowEdge, pointers[0].tip, mark.label, mark.label) > 0.055,
+                                   "hour arrow passes between the outside minute labels at \(time.digitalText)")
                         }
                     }
                     expect(hypot(pointers[0].badge.x - pointers[1].badge.x, pointers[0].badge.y - pointers[1].badge.y) > 0.2,
                            "number badges remain separate at \(time.digitalText)")
                 }
+            }
+        }
+        for hand in ClockInk.allCases.map(\.hex) + [0x000000, 0xFFFFFF, 0xFFFF00] {
+            for face in ClockFace.allCases.map(\.hex) {
+                let guide = ClockColorContrast.hourGuideHex(hand: hand, face: face)
+                expect(ClockColorContrast.ratio(guide, face) >= 3,
+                       "hour return cue remains visible on light, colored and black faces")
+                expect(guide != hand, "hour return cue differs from the real hand")
             }
         }
     }
@@ -1198,7 +1229,9 @@ struct DinoCoreTests {
                         }
                     }
                     expect(Set(question.options).count == question.options.count, "unique practice distractors")
-                    expect(question.options.allSatisfy { time.minutes.contains($0.minute) }, "practice options use the selected time family")
+                    let optionMinutes = question.kind == .readDigital
+                        ? Array(stride(from: 0, to: 60, by: min(15, time.minuteStep))) : time.minutes
+                    expect(question.options.allSatisfy { optionMinutes.contains($0.minute) }, "practice options use the selected time family or time-reading quarter-hour alternatives")
                     if question.kind.usesOptions {
                         expect(question.responses.filter { $0 == question.expectedAnswer }.count == 1, "exactly one correct response")
                         expect(Set(question.responses).count == question.responses.count, "unique response choices")
@@ -1440,6 +1473,34 @@ struct DinoCoreTests {
     }
 
     static func testUnambiguousQuestionTimes() {
+        var rng = SeededGenerator(seed: 20261028)
+        var hasSameDayPart = false
+        for time in DinoPracticeTime.allCases {
+            for difficulty in DinoQuestionDifficulty.allCases {
+                for hour in 0..<24 {
+                    for minute in time.minutes {
+                        let target = ClockTime(hour: hour, minute: minute)
+                        let question = DinoExpandedQuestions.generate(kind: .read24Hour, minutes: time.minutes,
+                            minuteStep: time.minuteStep, index: 0, previousTarget: nil, preferredTarget: target,
+                            difficulty: difficulty, using: &rng)
+                        expect(question.target == target && question.options.count == difficulty.optionCount,
+                               "24-hour choices retain the requested time and the full answer grid")
+                        expect(question.options.filter { $0 == target }.count == 1,
+                               "24-hour choices keep exactly one correct answer")
+                        let wrong = question.options.filter { $0 != target }
+                        for language in ["nl", "en"] {
+                            let correctTime = DinoTimeWords.time(target, language: language)
+                            expect(wrong.allSatisfy { DinoTimeWords.time($0, language: language) != correctTime },
+                                   "24-hour alternatives to \(target.digitalText) have different time words in \(language)")
+                        }
+                        hasSameDayPart = hasSameDayPart || wrong.contains {
+                            DinoDayPart(hour: $0.hour) == DinoDayPart(hour: target.hour)
+                        }
+                    }
+                }
+            }
+        }
+        expect(hasSameDayPart, "24-hour alternatives may still share the correct answer's day part")
         for time in DinoPracticeTime.allCases {
             var dayParts = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.dayPart)), seed: 20261015)
             var sorting = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.sortTimes)), seed: 20261015)
@@ -1883,6 +1944,61 @@ struct DinoCoreTests {
         question.spokenPrompt = prompt
         question.answer = .spoken(prompt.correct)
         return question
+    }
+
+    static func testTimeReadingClock() {
+        for language in ["nl", "en"] {
+            for family in DinoPracticeTime.allCases {
+                for difficulty in DinoQuestionDifficulty.allCases {
+                    var rng = SeededGenerator(seed: 20261028)
+                    for hour in [1, 4, 11, 12] {
+                        for minute in family.minutes {
+                            let target = ClockTime(hour: hour, minute: minute)
+                            let question = DinoExpandedQuestions.generate(kind: .readDigital, minutes: family.minutes,
+                                minuteStep: family.minuteStep, index: 0, previousTarget: nil,
+                                preferredTarget: target, language: language, difficulty: difficulty, using: &rng)
+                            expect(question.target == target, "time-reading targets keep the selected teaching grid")
+                            expect(question.options.count == difficulty.optionCount && Set(question.options).count == question.options.count,
+                                   "time reading has the required number of unique choices")
+                            expect(question.options.allSatisfy { $0.hour == target.hour }, "every time-reading answer belongs to the displayed hour")
+                            for (index, option) in question.options.enumerated() {
+                                expect(question.options.dropFirst(index + 1).allSatisfy {
+                                    let difference = abs($0.minute - option.minute)
+                                    return min(difference, 60 - difference) >= 5
+                                }, "wrong-answer markers have room to stay individually visible")
+                            }
+                            expect(question.options.filter { AnswerValidator.isCorrect($0, for: question) } == [target],
+                                   "the analog time has exactly one correct description")
+                            if family == .whole && difficulty != .introduction {
+                                expect(Set(question.options.map(\.minute)) == [0, 15, 30, 45],
+                                       "whole hours use quarter past, half past and quarter to as alternatives")
+                            }
+                            let phrase = DinoTimeWords.time(target, language: language)
+                            expect(!phrase.contains(":"), "the teaching clock explains times entirely in words")
+                        }
+                    }
+                }
+            }
+        }
+        let dutch: [DinoTimeReading.Region] = [.whole, .past, .past, .past, .beforeHalf, .beforeHalf,
+                                               .half, .afterHalf, .afterHalf, .to, .to, .to]
+        let english: [DinoTimeReading.Region] = [.whole, .past, .past, .past, .past, .past,
+                                                 .past, .to, .to, .to, .to, .to]
+        for (language, expected) in [("nl", dutch), ("en", english)] {
+            expect(stride(from: 0, to: 60, by: 5).map { DinoTimeReading.region(minute: $0, language: language) } == expected,
+                   "the full example groups all twelve positions by the language's actual phrasing")
+        }
+        for (minute, region, phrase) in [
+            (14, DinoTimeReading.Region.past, "14 minuten over twaalf"),
+            (16, .beforeHalf, "14 minuten voor half een"), (29, .beforeHalf, "1 minuut voor half een"),
+            (30, .half, "half een"), (31, .afterHalf, "1 minuut over half een"),
+            (44, .afterHalf, "14 minuten over half een"), (46, .to, "14 minuten voor een")
+        ] {
+            expect(DinoTimeReading.region(minute: minute, language: "nl") == region,
+                   "Dutch color boundaries also handle individual minutes")
+            expect(DinoTimeWords.time(.init(hour: 12, minute: minute), language: "nl") == phrase,
+                   "Dutch individual-minute wording follows the half-hour groups across twelve")
+        }
     }
 
     static func testExpandedQuestions() {

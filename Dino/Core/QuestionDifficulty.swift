@@ -147,7 +147,11 @@ enum DinoQuestionTeaching {
                                                        minuteStep: Int = 60,
                                                        operation: Int = 0,
                                                        using rng: inout R) -> [ClockTime] {
-        let allowed = Set(pool)
+        var allowed = Set(pool)
+        if kind == .read24Hour {
+            // Twelve hours apart gives the same time words; the day part alone must not make an answer wrong.
+            allowed.remove(target.adding(minutes: 12 * 60))
+        }
         let twelveHour = !allowed.contains { $0.hour == 0 || $0.hour > 12 }
         let step = max(1, minuteStep)
         let bands = mistakeBands(target: target, kind: kind, step: step, operation: operation, twelveHour: twelveHour)
@@ -212,8 +216,7 @@ enum DinoQuestionTeaching {
             }
             return (phrases, neighbors + swapped)
         case .read24Hour:
-            let twin = hour(12, sameMinute)
-            return ([twin], [hour(11, sameMinute), hour(13, sameMinute)] + phrases + neighbors)
+            return (neighbors, [hour(11, sameMinute), hour(13, sameMinute)] + phrases)
         case .sortTimes:
             return (neighbors, [hour(-2, sameMinute), hour(2, sameMinute)] + phrases)
         default:

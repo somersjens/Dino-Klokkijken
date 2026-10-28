@@ -324,13 +324,48 @@ struct DinoDesertPainter {
 
     func clearing(at point: CGPoint, size: CGFloat) {
         at(point, size: size) { p in
-            // Wind-smoothed sand, with a low contact shadow and no raised rocks.
+            let patch = CGRect(x: -65, y: -8, width: 130, height: 38)
+            func fade(in context: GraphicsContext, color: Color) {
+                var c = context
+                c.translateBy(x: patch.midX, y: patch.midY)
+                c.scaleBy(x: patch.width / 2, y: patch.height / 2)
+                c.fill(Path(ellipseIn: .init(x: -1, y: -1, width: 2, height: 2)), with: .radialGradient(
+                    Gradient(colors: [color, color.opacity(0.65), .clear]),
+                    center: .zero, startRadius: 0, endRadius: 1))
+            }
+            // Wind texture belongs to the surrounding sand, without a cut edge.
+            fade(in: p.context, color: Color(dinoHex: 0xD7BC8C).opacity(0.24))
+            var surface = p.context
+            surface.clipToLayer { mask in fade(in: mask, color: .white) }
+            for i in 0..<3 {
+                let y = CGFloat(i) * 10 - 1
+                var ripple = Path(); ripple.move(to: .init(x: -62, y: y))
+                ripple.addCurve(to: .init(x: 61, y: y + 4), control1: .init(x: -26, y: y - 10), control2: .init(x: 32, y: y + 13))
+                surface.stroke(ripple, with: .color(Color(dinoHex: 0xB99870).opacity(0.21)), lineWidth: 0.65)
+                surface.stroke(ripple.offsetBy(dx: 0, dy: -0.8), with: .color(Color(dinoHex: 0xF4DDB0).opacity(0.3)), lineWidth: 0.6)
+            }
+            for i in 0..<23 {
+                let x = CGFloat((i * 31) % 119) - 59, y = CGFloat((i * 13) % 32) - 4
+                surface.fill(Path(ellipseIn: .init(x: x, y: y, width: i.isMultiple(of: 5) ? 1.5 : 0.7, height: 0.6)),
+                             with: .color(Color(dinoHex: 0xAD8558).opacity(0.18)))
+            }
             var shade = p.context
-            shade.translateBy(x: 0, y: 8)
-            shade.scaleBy(x: 70, y: 13)
+            shade.translateBy(x: 0, y: 7)
+            shade.scaleBy(x: 49, y: 8)
             shade.fill(Path(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2)),
-                       with: .radialGradient(Gradient(colors: [Color(dinoHex: 0x976B43).opacity(0.28), .clear]),
+                       with: .radialGradient(Gradient(colors: [Color(dinoHex: 0x976B43).opacity(0.23), .clear]),
                                              center: .zero, startRadius: 0, endRadius: 1))
+        }
+    }
+
+    func clearingForeground(at point: CGPoint, size: CGFloat) {
+        at(point, size: size) { original in
+            var c = original.context; c.opacity *= 0.55
+            let p = DinoDesertPainter(context: c)
+            p.at(.init(x: -45, y: 23), size: 0.23) { $0.dryShrub(variation: 2) }
+            p.at(.init(x: 45, y: 20), size: 0.20) { $0.dryShrub(variation: 4) }
+            p.polygon([.init(x: 19, y: 23), .init(x: 24, y: 18), .init(x: 32, y: 20), .init(x: 29, y: 25)], [0xEBC792, 0xBB9567])
+            p.oval(.init(x: -31, y: 23, width: 6, height: 2.5), [0xF7DAA8, 0xC59A67])
         }
     }
 

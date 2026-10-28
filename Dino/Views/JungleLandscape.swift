@@ -1968,8 +1968,9 @@ private struct JungleSceneryTile: View, Equatable {
                 let scale = min(1.35, max(0.82, tile.bounds.width / 390))
                 let boss = ThemePainter(context: c, colors: WorldThemeColors(DinoWorldCatalog.world(1)!))
                 depth.add(at: scene.bossPoint.y) {
-                    boss.bossClearing(worldID: 1, at: scene.bossPoint, size: scale, integrated: true)
+                    boss.bossClearing(worldID: 1, at: scene.bossPoint, size: scale)
                     boss.boss(worldID: 1, at: scene.bossPoint, size: scale * 0.88)
+                    boss.bossClearingForeground(worldID: 1, at: scene.bossPoint, size: scale)
                 }
             }
             depth.draw()
@@ -8632,8 +8633,9 @@ private struct CrystalCavePainter {
         scene.add(at: routeOffset + bossPoint.y,
                   bounds: CGRect(x: bossPoint.x - 90 * scale, y: routeOffset + bossPoint.y - 240 * scale,
                                  width: 180 * scale, height: 300 * scale)) {
-            boss.bossClearing(worldID: 5, at: bossPoint, size: scale, integrated: true)
+            boss.bossClearing(worldID: 5, at: bossPoint, size: scale)
             boss.boss(worldID: 5, at: bossPoint, size: scale * 0.88)
+            boss.bossClearingForeground(worldID: 5, at: bossPoint, size: scale)
         }
 
     }
@@ -10668,12 +10670,10 @@ private struct CityWorldPainter {
 
     func metroForeground(layout: WorldSceneryLayout) {
         let court = CityBossCourt(layout:layout,line:CityMetroLine(layout:layout))
-        let shadow = CGRect(x: court.bossPoint.x - 43*layout.scale, y: court.bossPoint.y + 3*layout.scale,
-                            width: 86*layout.scale, height: 13*layout.scale)
-        context.fill(Path(ellipseIn: shadow), with: .radialGradient(
-            Gradient(colors: [Color(dinoHex: 0x47666A).opacity(0.24), .clear]),
-            center: .init(x: shadow.midX, y: shadow.midY), startRadius: 0, endRadius: shadow.width/2))
-        WorldBossPainter(context: context).draw(worldID:6,at:court.bossPoint,size:court.artScale)
+        let p = ThemePainter(context: context, colors: WorldThemeColors(DinoWorldCatalog.world(6)!))
+        p.bossClearing(worldID: 6, at: court.bossPoint, size: layout.scale)
+        p.boss(worldID: 6, at: court.bossPoint, size: court.artScale)
+        p.bossClearingForeground(worldID: 6, at: court.bossPoint, size: layout.scale)
     }
 
     private func metroViaduct(line metro:CityMetroLine,scale s:CGFloat) {
@@ -17873,6 +17873,7 @@ struct ThemedWorldLandscape: View, Equatable {
                 depth.add(at: routeOffset + point.y) {
                     boss.bossClearing(worldID: 2, at: point, size: scale)
                     boss.boss(worldID: 2, at: point, size: scale * 0.88)
+                    boss.bossClearingForeground(worldID: 2, at: point, size: scale)
                 }
                 depth.draw()
                 return
@@ -17885,8 +17886,9 @@ struct ThemedWorldLandscape: View, Equatable {
                 let scale = min(1.30, max(0.82, size.width / 390))
                 let point = WorldBossStage(worldID: 3, width: size.width).point
                 depth.add(at: routeOffset + point.y) {
-                    boss.bossClearing(worldID: 3, at: point, size: scale, integrated: true)
+                    boss.bossClearing(worldID: 3, at: point, size: scale)
                     boss.boss(worldID: 3, at: point, size: scale * 0.88)
+                    boss.bossClearingForeground(worldID: 3, at: point, size: scale)
                 }
                 depth.draw()
                 return
@@ -17899,8 +17901,9 @@ struct ThemedWorldLandscape: View, Equatable {
                 let scale = min(1.30, max(0.82, size.width / 390))
                 let point = WorldBossStage(worldID: 4, width: size.width).point
                 depth.add(at: routeOffset + point.y) {
-                    boss.bossClearing(worldID: 4, at: point, size: scale, integrated: true)
+                    boss.bossClearing(worldID: 4, at: point, size: scale)
                     boss.boss(worldID: 4, at: point, size: scale * 0.88)
+                    boss.bossClearingForeground(worldID: 4, at: point, size: scale)
                 }
                 depth.draw()
                 return
@@ -17933,6 +17936,7 @@ struct ThemedWorldLandscape: View, Equatable {
                 depth.add(at: routeOffset + point.y) {
                     boss.bossClearing(worldID: 7, at: point, size: scale)
                     boss.boss(worldID: 7, at: point, size: scale * 0.88)
+                    boss.bossClearingForeground(worldID: 7, at: point, size: scale)
                 }
                 depth.draw()
                 return
@@ -17945,8 +17949,9 @@ struct ThemedWorldLandscape: View, Equatable {
                 let scale = min(1.30, max(0.82, size.width / 390))
                 let point = WorldBossStage(worldID: 8, width: size.width).point
                 depth.add(at: routeOffset + point.y) {
-                    boss.bossClearing(worldID: 8, at: point, size: scale, integrated: true)
+                    boss.bossClearing(worldID: 8, at: point, size: scale)
                     boss.boss(worldID: 8, at: point, size: scale * 0.88)
+                    boss.bossClearingForeground(worldID: 8, at: point, size: scale)
                 }
                 depth.draw()
                 return
@@ -17973,8 +17978,9 @@ struct ThemedWorldLandscape: View, Equatable {
                 let scale = min(1.30, max(0.82, size.width / 390))
                 let point = WorldBossStage(worldID: 10, width: size.width).point
                 depth.add(at: routeOffset + point.y) {
-                    boss.bossClearing(worldID: 10, at: point, size: scale, integrated: true)
+                    boss.bossClearing(worldID: 10, at: point, size: scale)
                     boss.boss(worldID: 10, at: point, size: scale * 0.88)
+                    boss.bossClearingForeground(worldID: 10, at: point, size: scale)
                 }
                 depth.draw()
                 return
@@ -18031,6 +18037,7 @@ struct ThemedWorldLandscape: View, Equatable {
             let bossPoint = CGPoint(x: right - 79 * scale, y: 1675)
             p.bossClearing(worldID: world.id, at: bossPoint, size: scale)
             p.boss(worldID: world.id, at: bossPoint, size: scale * 0.88)
+            p.bossClearingForeground(worldID: world.id, at: bossPoint, size: scale)
         }
     }
 
@@ -18116,8 +18123,11 @@ struct WorldThemePreview: View {
             let theme = world.themeID, scale = scale(size)
             p.scene(worldID: theme, at: CGPoint(x: size.width * 0.21, y: size.height * 0.87),
                     size: scale * 1.12, variation: 0)
-            p.bossClearing(worldID: theme, at: CGPoint(x: size.width * 0.71, y: size.height * 0.92), size: scale)
-            p.boss(worldID: theme, at: CGPoint(x: size.width * 0.70, y: size.height * 0.94), size: scale)
+            let bossPoint = CGPoint(x: size.width * 0.70, y: size.height * 0.94)
+            let footing = [2, 9].contains(theme) ? CGPoint(x: size.width * 0.71, y: size.height * 0.92) : bossPoint
+            p.bossClearing(worldID: theme, at: footing, size: scale)
+            p.boss(worldID: theme, at: bossPoint, size: scale)
+            p.bossClearingForeground(worldID: theme, at: footing, size: scale)
         }
         .overlay {
             TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion || scenePhase != .active)) { timeline in
@@ -18374,77 +18384,9 @@ private struct ThemePainter {
         }
     }
 
-    func bossClearing(worldID: Int, at point: CGPoint, size: CGFloat, integrated: Bool = false) {
-        if integrated {
-            at(point, size: size) { p in
-                func softEllipse(_ rect: CGRect, color: UInt32, opacity: Double) {
-                    var c = p.context
-                    c.translateBy(x: rect.midX, y: rect.midY)
-                    c.scaleBy(x: rect.width / 2, y: rect.height / 2)
-                    c.fill(Path(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2)),
-                           with: .radialGradient(Gradient(stops: [
-                            .init(color: Color(dinoHex: color).opacity(opacity), location: 0),
-                            .init(color: Color(dinoHex: color).opacity(opacity * 0.7), location: 0.58),
-                            .init(color: .clear, location: 1)
-                           ]), center: .zero, startRadius: 0, endRadius: 1))
-                }
-                if worldID == 5 || worldID == 8 {
-                    // Broad reflected light belongs to the surrounding floor;
-                    // the smaller shadow pins the feet to that same surface.
-                    softEllipse(CGRect(x: -74, y: -17, width: 148, height: 48),
-                                color: worldID == 5 ? 0xB9DEDE : 0xDEC0F1, opacity: 0.48)
-                    softEllipse(CGRect(x: -58, y: -1, width: 116, height: 24),
-                                color: worldID == 5 ? 0x344F68 : 0x674783, opacity: 0.40)
-                    softEllipse(CGRect(x: -39, y: 1, width: 78, height: 11),
-                                color: worldID == 5 ? 0x263E57 : 0x53336B, opacity: 0.31)
-                } else {
-                    softEllipse(CGRect(x: -42, y: 3, width: 84, height: 13),
-                                color: p.colors.shade, opacity: 0.20)
-                }
-            }
-            return
-        }
-        if [1, 3, 4, 5, 8, 10].contains(worldID) {
-            at(point, size: size) { p in
-                let built = [4, 8, 10].contains(worldID)
-                let face: UInt32 = worldID == 1 ? 0xCDD6A1 : worldID == 3 ? 0xBEAE95 : worldID == 5 ? 0xA9C9CE : worldID == 8 ? 0xC4BEC5 : worldID == 10 ? 0xE3D8B7 : 0xDED5B7
-                let edge: UInt32 = worldID == 3 ? 0x817F80 : worldID == 5 ? 0x7896A8 : worldID == 8 ? 0x78839C : worldID == 10 ? 0xB3A984 : 0x9EAD82
-                let rect = CGRect(x: -66, y: -13, width: 132, height: 44)
-                let floor = built ? Path(roundedRect: rect, cornerRadius: 10) : Path { path in
-                    path.move(to: .init(x: -70, y: 9))
-                    path.addCurve(to: .init(x: -20, y: -16), control1: .init(x: -73, y: -11), control2: .init(x: -42, y: -20))
-                    path.addCurve(to: .init(x: 65, y: -2), control1: .init(x: 12, y: -11), control2: .init(x: 59, y: -17))
-                    path.addCurve(to: .init(x: 49, y: 29), control1: .init(x: 78, y: 12), control2: .init(x: 66, y: 26))
-                    path.addCurve(to: .init(x: -70, y: 9), control1: .init(x: -4, y: 37), control2: .init(x: -67, y: 30))
-                    path.closeSubpath()
-                }
-                if built { p.context.fill(floor.offsetBy(dx: 1, dy: 4), with: .color(Color(dinoHex: edge))) }
-                p.context.fill(floor, with: .linearGradient(Gradient(colors: [p.tint(face, toward: 0xFFFFFF, amount: 0.17), Color(dinoHex: face)]),
-                                                         startPoint: .init(x: 0, y: -13), endPoint: .init(x: 0, y: 31)))
-                if built {
-                    for i in -2...2 {
-                        let x = CGFloat(i)*24
-                        p.line([.init(x:x,y:-9),.init(x:x,y:26)],color:edge,width:0.7)
-                    }
-                    p.line([.init(x:-60,y:17),.init(x:60,y:17)],color:edge,width:0.7)
-                    if worldID == 8 {
-                        p.context.stroke(Path(ellipseIn: .init(x:-49,y:-7,width:98,height:31)),with:.color(Color(dinoHex:0xE7C880)),lineWidth:2)
-                        for x:CGFloat in [-56,56] { p.ellipse(.init(x:x-2,y:12,width:4,height:4),0xF6D98E) }
-                    }
-                } else {
-                    for i in 0..<7 {
-                        let x = -55 + CGFloat(i)*17
-                        p.line([.init(x:x,y:22+CGFloat(i%2)*3),.init(x:x+7,y:23+CGFloat(i%2)*3)],color:edge,width:1)
-                    }
-                }
-                p.ellipse(.init(x:-40,y:4,width:81,height:12),p.colors.shade,opacity:0.14)
-                if worldID == 1 || worldID == 4 || worldID == 10 {
-                    p.sprig(at:.init(x:59,y:24),size:0.33,color:0x8DAE75)
-                    p.blossoms(at:.init(x:-57,y:22),size:0.24,color:0xE7A3AA)
-                } else if worldID == 5 {
-                    p.crystals(at:.init(x:59,y:25),size:0.16)
-                }
-            }
+    func bossClearing(worldID: Int, at point: CGPoint, size: CGFloat) {
+        if [1, 3, 4, 5, 6, 8, 10].contains(worldID) {
+            at(point, size: size) { $0.bossFloor(worldID: worldID) }
             return
         }
         if worldID == 7 {
@@ -18452,12 +18394,13 @@ private struct ThemePainter {
             return
         }
         at(point, size: size) { p in
-            p.gardenPatch(at: CGPoint(x: 0, y: 7), width: 135, color: p.colors.accent)
+            p.gardenPatch(at: CGPoint(x: 0, y: 7), width: 135, color: p.colors.accent,
+                          castsShadow: worldID != 2)
             for i in 0..<5 {
                 p.rounded(CGRect(x: -48 + CGFloat(i) * 22, y: 11 + CGFloat(i % 2) * 4, width: 14, height: 5),
                           radius: 2, color: [3, 5].contains(worldID) ? 0xA5ADB1 : 0xE0D6B7)
             }
-            if [1, 2, 4, 7, 10].contains(worldID) {
+            if [1, 4, 7, 10].contains(worldID) {
                 p.sprig(at: CGPoint(x: 44, y: 12), size: 0.60, color: worldID == 7 ? 0x8595AC : 0x9DBE91)
                 p.blossoms(at: CGPoint(x: -41, y: 15), size: 0.50, color: worldID == 2 ? 0xDDD0EF : 0xECA6AF)
             } else if worldID == 5 {
@@ -18467,15 +18410,140 @@ private struct ThemePainter {
         }
     }
 
+    /// Texture fades into the existing terrain; there is no raised face or rim.
+    private func bossFloor(worldID: Int) {
+        let halfWidth: CGFloat = worldID == 6 ? 49 : 64
+        let soil: UInt32, detail: UInt32
+        switch worldID {
+        case 1: (soil, detail) = (0xB4C68A, 0x7D9D67)
+        case 3: (soil, detail) = (0xC0AA93, 0x877E79)
+        case 4: (soil, detail) = (0xCFD3AA, 0x9FAC8D)
+        case 5: (soil, detail) = (0x91ADB9, 0x7C95A7)
+        case 6: (soil, detail) = (0xB8C7B8, 0x92AAA6)
+        case 8: (soil, detail) = (0xB89FCE, 0x9B87B7)
+        default: (soil, detail) = (0xE7D5AA, 0xC8B594)
+        }
+        func softPatch(in context: GraphicsContext, rect: CGRect, color: Color) {
+            var c = context
+            c.translateBy(x: rect.midX, y: rect.midY)
+            c.scaleBy(x: rect.width / 2, y: rect.height / 2)
+            c.fill(Path(ellipseIn: .init(x: -1, y: -1, width: 2, height: 2)), with: .radialGradient(
+                Gradient(stops: [.init(color: color, location: 0),
+                                 .init(color: color.opacity(0.65), location: 0.5),
+                                 .init(color: .clear, location: 1)]),
+                center: .zero, startRadius: 0, endRadius: 1))
+        }
+        let patch = CGRect(x: -halfWidth, y: -8, width: halfWidth * 2, height: 38)
+        softPatch(in: context, rect: patch, color: Color(dinoHex: soil).opacity(0.26))
+        var surface = context
+        surface.clipToLayer { mask in softPatch(in: mask, rect: patch, color: .white) }
+        surface.opacity *= 0.34
+        let p = ThemePainter(context: surface, colors: colors)
+        switch worldID {
+        case 1:
+            for (x, y, w): (CGFloat, CGFloat, CGFloat) in [(-38, 6, 33), (24, -1, 37), (15, 21, 28)] {
+                softPatch(in: surface, rect: .init(x: x - w / 2, y: y - 5, width: w, height: 12),
+                          color: Color(dinoHex: 0x8FA968).opacity(0.55))
+            }
+            for side: CGFloat in [-1, 1] {
+                var root = Path(); root.move(to: .init(x: side * 51, y: 12))
+                root.addCurve(to: .init(x: side * 20, y: 24), control1: .init(x: side * 39, y: 12), control2: .init(x: side * 35, y: 22))
+                p.context.stroke(root, with: .color(Color(dinoHex: detail)), style: .init(lineWidth: 1.1, lineCap: .round))
+            }
+        case 3, 5:
+            let veins: [[CGPoint]] = [[.init(x: -51, y: 12), .init(x: -29, y: 10), .init(x: -16, y: 17), .init(x: -4, y: 15)],
+                                     [.init(x: 9, y: 25), .init(x: 20, y: 18), .init(x: 39, y: 17), .init(x: 51, y: 9)]]
+            for vein in veins {
+                p.line(vein, color: detail, width: 0.8)
+                if worldID == 5 {
+                    var path = Path(); path.addLines(vein)
+                    p.context.stroke(path.offsetBy(dx: 0, dy: 0.7), with: .color(Color(dinoHex: 0xD3E6E1).opacity(0.55)), lineWidth: 0.5)
+                }
+            }
+        case 8:
+            // Worn fragments of inlay continue the surrounding workshop floor.
+            for side: CGFloat in [-1, 1] {
+                var inlay = Path(); inlay.move(to: .init(x: side * 13, y: 22))
+                inlay.addQuadCurve(to: .init(x: side * 40, y: 11), control: .init(x: side * 34, y: 22))
+                p.context.stroke(inlay, with: .color(Color(dinoHex: 0xC7B99D)), lineWidth: 0.8)
+                p.line([.init(x: side * 40, y: 11), .init(x: side * 49, y: 11)], color: detail, width: 0.7)
+            }
+        default:
+            let tile: CGFloat = worldID == 6 ? 18 : worldID == 10 ? 24 : 21
+            for row in 0..<3 {
+                let y = CGFloat(row) * 10 - 2
+                p.line([.init(x: -halfWidth, y: y), .init(x: halfWidth, y: y)], color: detail, width: 0.65)
+                for col in -3...3 {
+                    let x = CGFloat(col) * tile + (row.isMultiple(of: 2) ? 0 : tile / 2)
+                    p.line([.init(x: x, y: y), .init(x: x, y: y + 10)], color: detail, width: 0.55)
+                }
+            }
+        }
+        for i in 0..<23 {
+            let x = CGFloat((i * 37 + 9) % Int(halfWidth * 2 - 8)) - halfWidth + 4
+            let y = CGFloat((i * 13) % 32) - 5
+            p.ellipse(.init(x: x, y: y, width: i.isMultiple(of: 4) ? 2 : 0.8, height: 0.6), detail, opacity: 0.6)
+        }
+        softPatch(in: context, rect: .init(x: -42, y: 0, width: 88, height: 16),
+                  color: Color(dinoHex: colors.shade).opacity(0.22))
+    }
+
+    func bossClearingForeground(worldID: Int, at point: CGPoint, size: CGFloat) {
+        if worldID == 7 {
+            DinoDesertPainter(context: context).clearingForeground(at: point, size: size)
+            return
+        }
+        at(point, size: size) { original in
+            var foreground = original.context
+            foreground.opacity *= worldID == 2 ? 1 : 0.60
+            let p = ThemePainter(context: foreground, colors: original.colors)
+            switch worldID {
+            case 1:
+                let jungle = JunglePainter(context: p.context)
+                jungle.fern(at: .init(x: -44, y: 21), size: 0.30, flipped: false)
+                jungle.fern(at: .init(x: 45, y: 20), size: 0.27, flipped: true)
+                p.blossoms(at: .init(x: -28, y: 26), size: 0.21, color: 0xE5B59C)
+            case 2:
+                p.sprig(at: .init(x: 44, y: 12), size: 0.60, color: 0x9DBE91)
+                p.blossoms(at: .init(x: -41, y: 15), size: 0.50, color: 0xDDD0EF)
+            case 3:
+                p.rock(at: .init(x: -43, y: 22), size: 0.18, color: 0x697681)
+                p.rock(at: .init(x: 44, y: 19), size: 0.13, color: 0x8A8D88)
+                p.polygon([.init(x: 29, y: 24), .init(x: 36, y: 18), .init(x: 42, y: 25)], color: 0x5B6872)
+            case 4:
+                p.sprig(at: .init(x: 46, y: 23), size: 0.34, color: 0x87AB75)
+                p.blossoms(at: .init(x: -43, y: 22), size: 0.27, color: 0xE5A798)
+            case 5:
+                p.crystals(at: .init(x: -45, y: 21), size: 0.22)
+                p.crystals(at: .init(x: 45, y: 20), size: 0.17)
+                p.volume(.init(x: 19, y: 22, width: 7, height: 3), color: 0xD4E9E1)
+            case 6:
+                p.rounded(.init(x: -36, y: 20, width: 24, height: 4), radius: 1, color: 0x6D9298)
+                for x: CGFloat in [-32, -27, -22, -17] { p.line([.init(x: x, y: 21), .init(x: x, y: 23)], color: 0xCDDFD8, width: 0.8) }
+                p.sprig(at: .init(x: 35, y: 24), size: 0.26, color: 0x74A79A)
+            case 8:
+                p.line([.init(x: -43, y: 19), .init(x: -41, y: 23), .init(x: -33, y: 23)], color: 0xA993B7, width: 0.9)
+                p.line([.init(x: 29, y: 23), .init(x: 37, y: 23), .init(x: 41, y: 18)], color: 0xA993B7, width: 1.1)
+                p.ellipse(.init(x: 39, y: 17, width: 3, height: 2), 0xC8B89D)
+            case 10:
+                p.sprig(at: .init(x: 44, y: 22), size: 0.33, color: 0x91AD82)
+                p.blossoms(at: .init(x: -43, y: 23), size: 0.28, color: 0xB9B6DD)
+            default: break
+            }
+        }
+    }
+
     private func glow(at point: CGPoint, radius: CGFloat, color: UInt32, opacity: Double) {
         context.fill(Path(ellipseIn: CGRect(x: point.x - radius, y: point.y - radius, width: radius * 2, height: radius * 2)),
                      with: .radialGradient(Gradient(colors: [Color(dinoHex: color).opacity(opacity), Color(dinoHex: color).opacity(0)]),
                                            center: point, startRadius: 0, endRadius: radius))
     }
-    private func gardenPatch(at point: CGPoint, width: CGFloat, color: UInt32) {
+    private func gardenPatch(at point: CGPoint, width: CGFloat, color: UInt32, castsShadow: Bool = true) {
         JunglePainter(context: context).hill(x: point.x - width / 2, y: point.y - 20, width: width, height: 45,
                                             color: tint(color, toward: colors.ground, amount: 0.65).opacity(0.68))
-        ellipse(CGRect(x: point.x - width * 0.34, y: point.y - 1, width: width * 0.79, height: 14), colors.shade, opacity: 0.09)
+        if castsShadow {
+            ellipse(CGRect(x: point.x - width * 0.34, y: point.y - 1, width: width * 0.79, height: 14), colors.shade, opacity: 0.09)
+        }
     }
     private func sprig(at point: CGPoint, size: CGFloat, color: UInt32) {
         at(point, size: size) { p in
@@ -19034,6 +19102,29 @@ private struct ThemePainter {
     }
 
     func boss(worldID: Int, at point: CGPoint, size: CGFloat, elapsed: TimeInterval = 0) {
+        if worldID == 2 {
+            at(point, size: size) { p in
+                func contact(_ rect: CGRect, opacity: Double) {
+                    var c = p.context
+                    c.translateBy(x: rect.midX, y: rect.midY)
+                    c.scaleBy(x: rect.width / 2, y: rect.height / 2)
+                    c.fill(Path(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2)),
+                           with: .radialGradient(Gradient(stops: [
+                            .init(color: Color(dinoHex: p.colors.shade).opacity(opacity), location: 0),
+                            .init(color: Color(dinoHex: p.colors.shade).opacity(opacity * 0.65), location: 0.5),
+                            .init(color: .clear, location: 1)
+                           ]), center: .zero, startRadius: 0, endRadius: 1))
+                }
+                // Match the four staggered foot contacts in the cropped artwork.
+                contact(CGRect(x: -52, y: -1, width: 108, height: 20), opacity: 0.20)
+                for rect in [CGRect(x: -49, y: 3, width: 26, height: 6),
+                             CGRect(x: -22, y: 7, width: 29, height: 6),
+                             CGRect(x: 6, y: 1, width: 21, height: 6),
+                             CGRect(x: 26, y: 5, width: 28, height: 6)] {
+                    contact(rect, opacity: 0.24)
+                }
+            }
+        }
         WorldBossPainter(context: context).draw(worldID: worldID, at: point, size: size, elapsed: elapsed)
     }
 }

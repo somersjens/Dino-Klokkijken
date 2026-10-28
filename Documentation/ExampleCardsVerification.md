@@ -1,6 +1,8 @@
 # Voorbeeldkaarten
 
-De analoge klok reserveert ruimte rondom de wijzerplaat voor twee genummerde aanwijspijlen. **1** wijst naar de korte urenwijzer en **2** naar de lange minutenwijzer. De pijlen gebruiken de actuele wijzerkleur uit de gekozen klokstijl. De cijfers **1** en **2** in de hulpbolletjes blijven zwart op wit, onafhankelijk van de klok- en wijzerkleuren. Bolletje en pijl vormen één aansluitend geheel met dezelfde zwarte rand en witte buitenrand voor contrast op donkere wijzerplaten. De pijlen en nummers staan in het verlengde van hun wijzer en draaien mee met de kloktijd. Alleen als de wijzers minder dan 22 graden uit elkaar staan, behouden ze de schuine plaatsing naast de wijzers zodat de nummers elkaar niet overlappen. De aanwijslijnen zijn recht, zonder bocht of knik. Dezelfde zwarte nummers en verbonden pijlen staan boven de digitale klok: **1** boven de eerste twee cijfers en **2** boven de laatste twee cijfers. De extra legenda en uitlegtekst onder de klokken zijn verwijderd.
+De analoge voorbeeldklok toont buiten de rand **0, 5, 10 … 55**, elk met een kort streepje. Deze schaal volgt de gekozen ronde, vierkante of achthoekige klokvorm. **2** wijst met tussenruimte naar de minutenschaal, in de exacte richting van de lange wijzer. **1** wijst naar het cijfer van het verstreken uur: bij **04:45** naar **4**, terwijl de echte korte wijzer gewoon tussen vier en vijf blijft staan. Een kleine boog wijst vanaf de stand van de korte wijzer terug naar dat uur. De boog gebruikt bij voorkeur een lichtere tint van de urenwijzer; de kleur houdt minimaal 3:1 contrast met de wijzerplaat, ook bij zwarte en witte wijzers of een zwarte klok.
+
+De rechte, genummerde pijlen gebruiken de gekozen wijzerkleuren. De uurpijl loopt tussen de buitenste minutencijfers door; als de hulpbolletjes dicht bij elkaar komen, schuiven ze opzij. De cijfers **1** en **2** blijven zwart op wit. Bolletje en pijl delen hun zwarte rand en witte buitenrand. De digitale klok behoudt dezelfde koppeling: **1** boven de uren en **2** boven de minuten.
 
 Onder **Ik ben er klaar voor** staat **Een ander voorbeeld laten zien**, met een blauwe omlijning en een witte vulling. De kaart blijft open en krijgt een nieuwe doeltijd binnen de gekozen tijdsoort.
 
@@ -26,6 +28,8 @@ Een nieuw uitgebreid voorbeeld krijgt een eigen, verse sessie. Vorige antwoorden
 
 ## Verificatie
 
+De leesuitleg is op 28 oktober 2026 aangepast. `testHandHintClearance` controleert voor alle 720 klokstanden en alle drie de klokvormen het verstreken uur, de exacte minuutrichting, vrije ruimte rond wijzers en minutencijfers en gescheiden hulpnummers. De laatste geometrie- en kleurcontrole slaagt met **116.761 controles**. De volledige kernsuite slaagt met **1.251.868 controles**; na de laatste kleine afstandsaanpassing is de gerichte klokcontrole opnieuw uitgevoerd. Native SwiftUI-beelden zijn gecontroleerd voor 04:45 met een lichte klok, een zwarte klok met witte wijzers en een vierkante klok, plus 12:00, 03:15 en 11:59. De gerichte schermtest `testExampleReadingScaleAndCompletedHour` slaagt op **iPhone 17 Pro** en **iPad Pro 11-inch (M5)** met iOS 26.5: doorlopen tot 04:45, dezelfde tijd op beide klokken, gecentreerde uitlijning en behoud van vraag 1 na sluiten. De zwarte uitvoering met witte wijzers is daarnaast visueel gecontroleerd op iPhone. De bredere bestaande voorbeeldtests veronderstellen nog de oude tijdsoortreeksen en de kleurkiezerhelpers zijn niet betrouwbaar op alle simulatorversies; die instellingenstromen vallen buiten deze gerichte klokcontrole.
+
 De twee nieuwe UI-tests voor vraagtype 9 slagen op **iPhone 17 Pro** en **iPad Pro 11-inch (M5)** met iOS 26.5. Hele uren en minuten worden automatisch ingesteld en bevestigd; vernieuwen begint tegenover een nieuwe doeltijd en zelf bedienen onderbreekt de animatie. Ook de bestaande iPhone-tests voor slepen en voor het meenemen van uren bij minuutovergangen slagen. De vernieuwde kaarten en de volledig zichtbare bevestigingsknop zijn visueel gecontroleerd.
 
 De Debug-build en `Tools/test-dino.sh` slagen. De kernsuite bevat **805.872 controles**, waaronder de nieuwe voorbeeldreeksen en alle bestaande spel-, opslag- en sociale controles. De pijlen zijn bij alle 720 wijzerstanden gecontroleerd op uitlijning, richting, afstand tot de wijzers en afzonderlijke nummerposities, voor beide geteste wijzerdiktes. De bestaande voorbeeldtests voor hele uren en oefentijdsoorten slagen op iPhone 17 Pro / iOS 26.5; de beelden van 03:00, 03:15 en 12:00 zijn opnieuw visueel gecontroleerd.
@@ -45,6 +49,10 @@ De vereenvoudigde kaarten zijn gecontroleerd op **iPhone 17 Pro / iOS 26.5**: al
 De controle met witte wijzers en vaste zwarte hulpnummers is op iPhone 17 (iOS 26.5) en iPad (A16, iOS 27) geslaagd. Ook de oorspronkelijke wijzerkleuren zijn opnieuw visueel gecontroleerd.
 
 ## Beelden
+
+- [Nieuwe minutenschaal en uurverwijzing bij 04:45 — iPhone](Screenshots/Examples/example-reading-four-forty-five-iphone.png)
+- [Dezelfde uitleg met een zwarte klok en witte wijzers — iPhone](Screenshots/Examples/example-reading-four-forty-five-black-iphone.png)
+- [Nieuwe minutenschaal en uurverwijzing bij 04:45 — iPad](Screenshots/Examples/example-reading-four-forty-five-ipad.png)
 
 - [Vraagtype 9 met de vernieuwde bediening — iPhone](Screenshots/Examples/analog-setting-question-iphone.png)
 - [Vraagtype 9 met het ingestelde voorbeeld — iPhone](Screenshots/Examples/analog-setting-example-iphone.png)

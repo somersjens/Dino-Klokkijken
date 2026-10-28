@@ -109,14 +109,39 @@ enum AnalogNumerals: String, Codable, CaseIterable, Sendable {
 }
 
 enum ClockColorContrast {
-    static func markingHex(on background: UInt32) -> UInt32 {
+    private static func luminance(_ background: UInt32) -> Double {
         func linear(_ shift: UInt32) -> Double {
             let channel = Double((background >> shift) & 0xFF) / 255
             return channel <= 0.04045 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
         }
-        let luminance = 0.2126 * linear(16) + 0.7152 * linear(8) + 0.0722 * linear(0)
+        return 0.2126 * linear(16) + 0.7152 * linear(8) + 0.0722 * linear(0)
+    }
+
+    static func ratio(_ first: UInt32, _ second: UInt32) -> Double {
+        let a = luminance(first), b = luminance(second)
+        return (max(a, b) + 0.05) / (min(a, b) + 0.05)
+    }
+
+    static func markingHex(on background: UInt32) -> UInt32 {
         // Choose whichever of black and white has the greater contrast.
-        return luminance < 0.179 ? 0xFFFFFF : 0x000000
+        return luminance(background) < 0.179 ? 0xFFFFFF : 0x000000
+    }
+
+    /// Prefer a light tint of the hour hand, with a darker shade for very light hands.
+    static func hourGuideHex(hand: UInt32, face: UInt32) -> UInt32 {
+        func mixed(with target: UInt32, amount: Double) -> UInt32 {
+            [UInt32(16), 8, 0].reduce(UInt32(0)) { result, shift in
+                let source = Double((hand >> shift) & 0xFF)
+                let destination = Double((target >> shift) & 0xFF)
+                return result | (UInt32((source + (destination - source) * amount).rounded()) << shift)
+            }
+        }
+        for (target, amount): (UInt32, Double) in [(0xFFFFFF, 0.48), (0xFFFFFF, 0.34), (0xFFFFFF, 0.20),
+                                                   (0x000000, 0.25), (0x000000, 0.45), (0x000000, 0.65)] {
+            let candidate = mixed(with: target, amount: amount)
+            if ratio(candidate, face) >= 3 && ratio(candidate, hand) >= 1.5 { return candidate }
+        }
+        return markingHex(on: face)
     }
 }
 

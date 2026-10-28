@@ -135,6 +135,42 @@ enum ClockHandSelection {
 
 /// Coordinates are relative to the centre of a face with diameter 1.
 enum ClockHandHintGeometry {
+    struct MinuteMark {
+        let minute: Int
+        let tickStart: CGPoint
+        let tickEnd: CGPoint
+        let label: CGPoint
+    }
+
+    static func outerRadius(angle: Double, shape: AnalogClockShape) -> Double {
+        let radians = angle * .pi / 180
+        let x = abs(sin(radians)), y = abs(cos(radians))
+        switch shape {
+        case .circle: return 0.5
+        case .square: return 0.5 / max(x, y)
+        case .octagon: return 0.5 / max(x, y, (x + y) / sqrt(2))
+        }
+    }
+
+    static func extent(shape: AnalogClockShape) -> Double {
+        switch shape {
+        case .circle: return 0.88
+        case .octagon: return 0.90
+        case .square: return 0.94
+        }
+    }
+
+    static func minuteMarks(shape: AnalogClockShape) -> [MinuteMark] {
+        stride(from: 0, to: 60, by: 5).map { minute in
+            let angle = Double(minute) * 6
+            let edge = outerRadius(angle: angle, shape: shape)
+            return MinuteMark(minute: minute,
+                              tickStart: point(radius: edge + 0.006, angle: angle),
+                              tickEnd: point(radius: edge + 0.020, angle: angle),
+                              label: point(radius: edge + 0.062, angle: angle))
+        }
+    }
+
     struct Pointer {
         let start: CGPoint
         let tip: CGPoint
@@ -148,48 +184,32 @@ enum ClockHandHintGeometry {
         }
     }
 
-    static func pointers(time: ClockTime, hourWidth: Double, minuteWidth: Double) -> [Pointer] {
-        let angles = [time.hourAngle, time.minuteAngle]
-        let lengths = [0.23, 0.34]
-        let widths = [hourWidth, minuteWidth]
-        let difference = (time.hourAngle - time.minuteAngle + 540).truncatingRemainder(dividingBy: 360) - 180
-        // Follow the hands unless the number badges would sit almost on top of each other.
-        if abs(difference) >= 22 {
-            return (0..<2).map { index in
-                Pointer(start: point(radius: 0.57, angle: angles[index]),
-                        tip: point(radius: lengths[index] + widths[index] / 2 + 0.04, angle: angles[index]),
-                        badge: point(radius: 0.66, angle: angles[index]))
-            }
+    static func pointers(time: ClockTime, shape: AnalogClockShape = .circle) -> [Pointer] {
+        // The hour refers to the completed hour, even when its hand is almost at the next one.
+        let hourAngle = Double(time.hour % 12) * 30
+        let hourTip = point(radius: 0.412, angle: hourAngle)
+        let minuteTip = point(radius: outerRadius(angle: time.minuteAngle, shape: shape) + 0.150,
+                              angle: time.minuteAngle)
+        func pointer(tip: CGPoint, angle: Double) -> Pointer {
+            let badge = point(radius: outerRadius(angle: angle, shape: shape) + 0.280, angle: angle)
+            let distance = hypot(badge.x - tip.x, badge.y - tip.y)
+            return Pointer(start: CGPoint(x: badge.x + (tip.x - badge.x) * 0.09 / distance,
+                                          y: badge.y + (tip.y - badge.y) * 0.09 / distance),
+                           tip: tip, badge: badge)
         }
-        let candidates = (0..<2).map { index in
-            [-1.0, 1.0].flatMap { side in
-                [35.0, 55.0, 75.0].map { spread in
-                    let radians = angles[index] * .pi / 180
-                    let handPoint = point(radius: lengths[index] * 0.83, angle: angles[index])
-                    let gap = widths[index] / 2 + 0.04
-                    let tip = CGPoint(x: handPoint.x + cos(radians) * gap * side,
-                                      y: handPoint.y + sin(radians) * gap * side)
-                    let badge = point(radius: 0.66, angle: angles[index] + spread * side)
-                    let distance = hypot(badge.x - tip.x, badge.y - tip.y)
-                    let start = CGPoint(x: badge.x + (tip.x - badge.x) * 0.09 / distance,
-                                        y: badge.y + (tip.y - badge.y) * 0.09 / distance)
-                    return Pointer(start: start, tip: tip, badge: badge)
-                }
-            }
-        }
-        var best = [candidates[0][0], candidates[1][0]]
+        // Route the hour arrow between the outside minute labels. The minute arrow
+        // stays radial unless its badge needs to move aside for the hour badge.
+        let hours = [-25.0, 25, -35, 35, -45, 45, -55, 55].map { pointer(tip: hourTip, angle: hourAngle + $0) }
+        let minutes = [0.0, -20, 20, -35, 35].map { pointer(tip: minuteTip, angle: time.minuteAngle + $0) }
+        let marks = minuteMarks(shape: shape)
+        var best = [hours[0], minutes[0]]
         var bestScore = -Double.infinity
-        for hour in candidates[0] {
-            for minute in candidates[1] {
-                let pointers = [hour, minute]
-                var clearance = Double.infinity
-                for pointer in pointers {
-                    for index in 0..<2 {
-                        let handStart = point(radius: -0.035, angle: angles[index])
-                        let handEnd = point(radius: lengths[index], angle: angles[index])
-                        for start in [pointer.start] + pointer.arrowWings {
-                            clearance = min(clearance, segmentDistance(start, pointer.tip, handStart, handEnd) - widths[index] / 2)
-                        }
+        for hour in hours {
+            for (minuteIndex, minute) in minutes.enumerated() {
+                var labelClearance = Double.infinity
+                for mark in marks {
+                    for edge in [hour.start] + hour.arrowWings {
+                        labelClearance = min(labelClearance, segmentDistance(edge, hour.tip, mark.label, mark.label) - 0.046)
                     }
                 }
                 let separation = hypot(hour.badge.x - minute.badge.x, hour.badge.y - minute.badge.y)
@@ -199,8 +219,9 @@ enum ClockHandHintGeometry {
                         routeSeparation = min(routeSeparation, segmentDistance(hourStart, hour.tip, minuteStart, minute.tip))
                     }
                 }
-                let score = clearance - max(0, 0.23 - separation) - max(0, 0.04 - routeSeparation)
-                if score > bestScore { bestScore = score; best = pointers }
+                let score = min(labelClearance, 0.025) - max(0, 0.235 - separation) * 3
+                    - max(0, 0.035 - routeSeparation) * 3 - Double(minuteIndex) * 0.001
+                if score > bestScore { bestScore = score; best = [hour, minute] }
             }
         }
         return best
@@ -223,6 +244,7 @@ enum ClockHandHintGeometry {
         if oppositeSides(cross(a, b, c), cross(a, b, d)) && oppositeSides(cross(c, d, a), cross(c, d, b)) { return 0 }
         func distance(_ p: CGPoint, _ a: CGPoint, _ b: CGPoint) -> Double {
             let dx = b.x - a.x, dy = b.y - a.y
+            guard dx != 0 || dy != 0 else { return hypot(p.x - a.x, p.y - a.y) }
             let t = min(1, max(0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy)))
             return hypot(p.x - a.x - t * dx, p.y - a.y - t * dy)
         }
