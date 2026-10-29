@@ -44,3 +44,23 @@ Lokale beelden staan onder `Documentation/Screenshots/StartScreen`; de opnames e
 De eerste opname van de snellere sprong liet tijdens de kaartonthulling nog twee korte stilstaande vluchtbeelden zien. Na het verplaatsen van de volledige choreografie naar Core Animation toont de gecontroleerde reeks op 20 beelden per seconde voortgaande beweging in ieder vluchtbeeld. De korte stilstand tijdens de geplante afzet en na contact blijft bewust behouden. De definitieve iPad-test voor landschapstand, opgeslagen level 4 en terugkeer uit een level en de iPhone-test voor koude herstarts bij levels 1, 4 en 91 zijn opnieuw geslaagd.
 
 De definitieve preview staat in `Documentation/Screenshots/StartScreen/startscreen-smooth-native-jump.mov` en behoudt de oorspronkelijke videoresolutie.
+
+## Kortere hurkpose, 28 oktober 2026
+
+Het experiment met extra tussenbeelden en aangepaste snelheidsopbouw is na visuele feedback teruggedraaid. De huidige versie gebruikt weer de acht oorspronkelijke beelden, een vlucht met constante voortgang en de oorspronkelijke totale duur van 0,94 seconde. Alleen de diepe hurkpose is verkort van 105 naar 50 milliseconden. Zie [timing en controle](WelcomeJumpSmoothness.md).
+
+## Analyse van de vluchtbeelden, 28 oktober 2026
+
+De grote opening gebruikt nu vijf van de acht oorspronkelijke tekeningen: staan, hurken, één vaste vliegpose, contact en herstel. De wissels naar vliegbeelden 04, 05 en 06 zijn alleen voor de grote opening verwijderd; de éénstersprong blijft de volledige reeks gebruiken. De onderliggende kaart staat vóór vertrek al zichtbaar onder de ondoorzichtige opening en de decorvervaging wordt vooraf ingepland. Daardoor hoeft de kaart niet tijdens de vlucht naar zichtbaar om te schakelen. De native verplaatsingsanimatie vraagt expliciet 60 fps aan. Zie [metingen en beperkingen van de simulatoropname](WelcomeJumpSmoothness.md).
+
+Op 29 oktober is ook de decorvervaging van SwiftUI naar native Core Animation verplaatst. De achterste compositie en de voorste titel vervagen op dezelfde klok als de Dino; de titel blijft op zijn plaats staan. De decorlagen dekken de veilige schermranden mee af. Hiermee vervalt de in de laatste opname zichtbare half-doorzichtige stilstand van het decor. De klok behoudt zijn schaal tijdens de vervaging.
+
+## Gevolgde hoofdbeweging bij vertrek, 29 oktober 2026
+
+De bijna gelijke sprongtekening 01 vervalt uit de opening. De exacte rustafbeelding begint een doorlopende bukbeweging van 0,22 seconde, gevolgd door 0,24 seconde opveren. Ogen en neus zijn gemeten en geregistreerd, zodat de twee beeldwissels de hoofdpositie niet meer laten verspringen. De totale welkomsprong duurt nu 1,26 seconde; de eerder verbeterde vlucht en decorvervaging blijven behouden. Zie [registratie, timing en controles](WelcomeHeadTracking.md).
+
+De buk is daarna op verzoek verdiept: het oogmiddelpunt zakt van bronhoogte 470 naar 550, vrijwel de diepte van de oorspronkelijke buktekening. De kin bereikt daarmee weer de bovenrand van het bord. De neerwaartse beweging duurt nu 0,28 seconde en het opveren 0,34 seconde, zodat de grotere afstand de vloeiende hoofdbeweging behoudt. De totale duur is 1,42 seconde. De build en 273.792 gerichte timing- en assetcontroles slagen; de diepere buk is ook in een nieuwe native iPhone-opname gecontroleerd.
+
+De resterende knik bij het opveren is vervolgens aangepakt door niet alleen de gezichtspunten, maar ook hun werkelijke snelheid in schermcoördinaten te laten aansluiten op de vlucht. Deze aansluiting loopt tot 0,10 seconde na de afzet en compenseert ook schaal en draaiing van de vlieglaag. De diepe buk en de totale duur blijven gelijk. De kaart wordt tijdens de rustfase alvast mee gecomposeerd en alle spronglagen vragen dezelfde 60 fps aan. De build, 274.405 gerichte controles en de bestaande openingstest op iPhone en iPad-landschap slagen. Zie [hoofdtracking en snelheidsaansluiting](WelcomeHeadTracking.md).
+
+Na goedkeuring van de vloeiendheid is de afzet iets feller gemaakt: de opvering vóór vertrek duurt 0,28 in plaats van 0,34 seconde. De neerwaartse buk, diepte en snelheidsaansluiting blijven gelijk. De totale welkomsprong duurt daarmee 1,36 seconde. De build en 274.366 gerichte controles slagen.

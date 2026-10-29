@@ -1,5 +1,13 @@
 import SwiftUI
 
+private struct ClockReadingAssistanceKey: EnvironmentKey { static let defaultValue = false }
+extension EnvironmentValues {
+    var dinoClockReadingAssistance: Bool {
+        get { self[ClockReadingAssistanceKey.self] }
+        set { self[ClockReadingAssistanceKey.self] = newValue }
+    }
+}
+
 struct AnalogClockOutline: InsettableShape {
     var shape: AnalogClockShape
     var insetAmount: CGFloat = 0
@@ -89,6 +97,7 @@ struct PracticeClockPreview: View {
 
 struct AnalogClock: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.dinoClockReadingAssistance) private var readingAssistance
     @GestureState private var touchingClock = false
     @State private var draggingMinutes: Bool?
     let time: ClockTime
@@ -96,6 +105,12 @@ struct AnalogClock: View {
     var size: CGFloat = 230
     var onHourChange: ((Int) -> Void)? = nil
     var showHandHints = false
+    /// The surrounding question can offer spare width without adding vertical whitespace.
+    var readingHintWidth: CGFloat? = nil
+    /// A separate, unnumbered guide for speaking a time. Size includes its outer scale.
+    var spokenHintLanguage: String? = nil
+    /// Answer clocks keep a tighter guide without a circle around the minute count.
+    var compactSpokenHint = false
     var onMinuteChange: ((ClockTime) -> Void)? = nil
     var minuteStep = 1
     var adjustingMinutes = false
@@ -103,7 +118,27 @@ struct AnalogClock: View {
     /// Unwrapped demonstration angles preserve the direction when passing twelve.
     var displayedHourAngle: Double? = nil
     var displayedMinuteAngle: Double? = nil
+    private var displaysHandHints: Bool { spokenHintLanguage == nil && (showHandHints || readingAssistance) }
+    private var drawingSize: CGFloat {
+        if spokenHintLanguage != nil { return size / (SpokenClockGuideLayout.extent(shape: theme.analogShape, compact: compactSpokenHint) * 2) }
+        if readingAssistance && !showHandHints {
+            // The old square reserved the worst-case arrow reach on all four sides.
+            // Fit the actual artwork instead, keeping the clock larger after a miss.
+            let bounds = ClockHandHintGeometry.bounds(time: time, shape: theme.analogShape, faceSize: 150)
+            return min((readingHintWidth ?? size) / bounds.width, size / bounds.height)
+        }
+        return size
+    }
+    private var spokenVerticalBounds: ClosedRange<Double>? {
+        spokenHintLanguage.map {
+            SpokenClockGuideLayout.verticalBounds(minute: time.minute, language: $0,
+                                                 shape: theme.analogShape, faceSize: drawingSize, compact: compactSpokenHint)
+        }
+    }
     var body: some View {
+        let size = drawingSize
+        let handHintBounds = displaysHandHints
+            ? ClockHandHintGeometry.bounds(time: time, shape: theme.analogShape, faceSize: size) : nil
         ZStack {
             AnalogClockOutline(shape: theme.analogShape).fill(Color(dinoHex: theme.rimHex))
                 .shadow(color: Color(dinoHex: theme.rimHex).opacity(0.2), radius: 8, y: 5)
@@ -119,7 +154,7 @@ struct AnalogClock: View {
                     .position(x: size / 2 + CGFloat(sin(radians)) * size * 0.34,
                               y: size / 2 - CGFloat(cos(radians)) * size * 0.34)
             }
-            if showHandHints {
+            if displaysHandHints {
                 ClockHourReturnGuide(time: time, theme: theme, size: size)
             }
             hand(length: size * 0.23, width: hourWidth, color: Color(dinoHex: theme.hourHex), angle: displayedHourAngle ?? time.hourAngle)
@@ -161,27 +196,156 @@ struct AnalogClock: View {
         .onValueChange(of: touchingClock) { active in
             if !active { draggingMinutes = nil }
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(time.digitalText)
         .overlay {
-            if showHandHints {
+            if let language = spokenHintLanguage {
+                ClockSpokenReadingScale(time: time, language: language, shape: theme.analogShape, size: size, compact: compactSpokenHint)
+            } else if let handHintBounds {
                 let pointers = ClockHandHintGeometry.pointers(time: time, shape: theme.analogShape)
-                ClockMinuteReadingScale(shape: theme.analogShape, size: size)
-                ClockHandHint(number: 1, pointer: pointers[0], ink: theme.hourHex, size: size, shape: theme.analogShape)
-                ClockHandHint(number: 2, pointer: pointers[1], ink: theme.minuteHex, size: size, shape: theme.analogShape)
+                ClockMinuteReadingScale(shape: theme.analogShape, size: size, bounds: handHintBounds)
+                ClockHandHint(number: 1, pointer: pointers[0], ink: theme.hourHex, size: size, bounds: handHintBounds)
+                ClockHandHint(number: 2, pointer: pointers[1], ink: theme.minuteHex, size: size, bounds: handHintBounds)
             }
         }
-        .padding(showHandHints ? size * (ClockHandHintGeometry.extent(shape: theme.analogShape) - 0.5) : 0)
+        .padding(.leading, spokenHintLanguage != nil ? size * (SpokenClockGuideLayout.extent(shape: theme.analogShape, compact: compactSpokenHint) - 0.5)
+                 : handHintBounds.map { size * (-$0.minX - 0.5) } ?? 0)
+        .padding(.trailing, spokenHintLanguage != nil ? size * (SpokenClockGuideLayout.extent(shape: theme.analogShape, compact: compactSpokenHint) - 0.5)
+                 : handHintBounds.map { size * ($0.maxX - 0.5) } ?? 0)
+        .padding(.top, spokenVerticalBounds.map { size * (-$0.lowerBound - 0.5) }
+                 ?? handHintBounds.map { size * (-$0.minY - 0.5) } ?? 0)
+        .padding(.bottom, spokenVerticalBounds.map { size * ($0.upperBound - 0.5) }
+                 ?? handHintBounds.map { size * ($0.maxY - 0.5) } ?? 0)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(time.digitalText)
+        .accessibilityValue(Text(verbatim: spokenHintLanguage.map { DinoTimeWords.time(time, language: $0) } ?? ""))
     }
 
-    private var hourWidth: CGFloat { size * 0.038 }
-    private var minuteWidth: CGFloat { size * 0.024 }
+    private var hourWidth: CGFloat { drawingSize * 0.038 }
+    private var minuteWidth: CGFloat { drawingSize * 0.024 }
     private func hand(length: CGFloat, width: CGFloat, color: Color, angle: Double) -> some View {
         RoundedRectangle(cornerRadius: theme.hands == .straight ? 1 : width / 2)
             .fill(color)
             .frame(width: width, height: length + size * 0.035)
             .offset(y: -(length - size * 0.035) / 2)
             .rotationEffect(.degrees(angle))
+    }
+}
+
+/// The active count connects to its actual minute, at either end of the reading arc.
+private struct ClockSpokenReadingScale: View {
+    let time: ClockTime
+    let language: String
+    let shape: AnalogClockShape
+    let size: CGFloat
+    let compact: Bool
+
+    private struct ScaleMark {
+        let minute: Int
+        let tickStart: CGPoint
+        let tickEnd: CGPoint
+        let center: CGPoint
+        let text: GraphicsContext.ResolvedText
+        let outline: CGSize?
+    }
+
+    var body: some View {
+        let extent = SpokenClockGuideLayout.extent(shape: shape, compact: compact)
+        Canvas { context, _ in
+            let hint = SpokenClockReadingHint(minute: time.minute, language: language)
+            func positioned(_ p: CGPoint) -> CGPoint {
+                CGPoint(x: size * (extent + p.x), y: size * (extent + p.y))
+            }
+            func point(_ minute: Double, offset: Double = 0.005) -> CGPoint {
+                let angle = minute * 6
+                let radius = ClockHandHintGeometry.outerRadius(angle: angle, shape: shape) + offset
+                return positioned(ClockHandHintGeometry.point(radius: radius, angle: angle))
+            }
+            let marks: [ScaleMark] = hint.scaleMinutes.map { minute in
+                let selected = minute == time.minute
+                let label = SpokenClockReadingHint(minute: minute, language: language).scaleLabel
+                let text = context.resolve(Text(verbatim: label)
+                    .font(.system(size: SpokenClockGuideLayout.scaleFontSize(faceSize: size),
+                                  weight: selected ? .heavy : .bold, design: .rounded))
+                    .monospacedDigit().canvasInk(DinoStyle.ink))
+                let measured = text.measure(in: CGSize(width: size * 2, height: size))
+                let padding = max(2, size * 0.014)
+                let numeric = label.allSatisfy(\.isNumber)
+                let side = max(measured.width, measured.height) + padding * 2
+                let outline: CGSize? = selected && !compact
+                    ? CGSize(width: numeric ? side : measured.width + padding * 2,
+                             height: numeric ? side : measured.height + padding * 2) : nil
+                let dimensions = outline ?? measured
+                let mark = ClockHandHintGeometry.minuteMark(minute: minute, shape: shape,
+                    labelSize: CGSize(width: dimensions.width / size, height: dimensions.height / size),
+                    gap: max(2 / size, 0.018))
+                return ScaleMark(minute: minute, tickStart: positioned(mark.tickStart), tickEnd: positioned(mark.tickEnd),
+                                 center: positioned(mark.label), text: text, outline: outline)
+            }
+            var arrow = Path()
+            if hint.startMinute != hint.endMinute {
+                let steps = max(2, (hint.endMinute - hint.startMinute) * 3)
+                for step in 0...steps {
+                    let minute = Double(hint.startMinute) + Double(hint.endMinute - hint.startMinute) * Double(step) / Double(steps)
+                    let position = point(minute)
+                    if step == 0 { arrow.move(to: position) } else { arrow.addLine(to: position) }
+                }
+                let tip = point(Double(hint.endMinute))
+                let previous = point(Double(hint.endMinute) - 0.2)
+                let direction = atan2(tip.y - previous.y, tip.x - previous.x)
+                let wing = max(compact ? 4 : 5, size * (compact ? 0.04 : 0.048))
+                for side in [-1.0, 1.0] {
+                    arrow.move(to: tip)
+                    arrow.addLine(to: CGPoint(x: tip.x - cos(direction + side * .pi / 5) * wing,
+                                             y: tip.y - sin(direction + side * .pi / 5) * wing))
+                }
+            }
+            context.stroke(arrow, with: .color(.white), style: StrokeStyle(lineWidth: compact ? 4 : 5, lineCap: .round, lineJoin: .round))
+            context.stroke(arrow, with: .color(DinoStyle.ink), style: StrokeStyle(lineWidth: compact ? 2 : 2.5, lineCap: .round, lineJoin: .round))
+
+            var leaders = Path()
+            // The minute hand determines this connection, rather than the arrow's departure.
+            if let selected = marks.first(where: { $0.minute == time.minute }), let outline = selected.outline {
+                let attachment = point(Double(time.minute))
+                let dx = attachment.x - selected.center.x, dy = attachment.y - selected.center.y
+                let distance = max(0.001, hypot(dx, dy))
+                let unit = CGPoint(x: dx / distance, y: dy / distance)
+                let radius = 1 / sqrt(pow(unit.x / (outline.width / 2), 2) + pow(unit.y / (outline.height / 2), 2))
+                leaders.move(to: CGPoint(x: selected.center.x + unit.x * radius, y: selected.center.y + unit.y * radius))
+                leaders.addLine(to: attachment)
+            }
+            if !hint.relation.isEmpty {
+                let minute = hint.relationLeaderMinute
+                let attachment = min(Double(hint.endMinute), max(Double(hint.startMinute), minute))
+                let bend = point(minute, offset: 0.035)
+                let outside = point(minute, offset: 0.23)
+                let direction: CGFloat = sin(minute * .pi / 30) >= 0 ? 1 : -1
+                let end = CGPoint(x: outside.x + direction * max(3, size * 0.025), y: outside.y)
+                leaders.move(to: point(attachment))
+                leaders.addLine(to: bend)
+                leaders.addLine(to: outside)
+                leaders.addLine(to: end)
+                let text = context.resolve(Text(verbatim: hint.relation)
+                    .font(.system(size: max(7.5, size * 0.064), weight: .bold, design: .rounded)).canvasInk(DinoStyle.ink))
+                let measured = text.measure(in: CGSize(width: size * 2, height: size))
+                let center = ClockHandHintGeometry.labelCenter(from: end, toward: CGPoint(x: direction, y: 0),
+                                                              labelSize: measured, gap: 2)
+                context.draw(text, at: center)
+            }
+            context.stroke(leaders, with: .color(DinoStyle.ink), style: StrokeStyle(lineWidth: 1.2, lineCap: .round, lineJoin: .round))
+            for mark in marks {
+                var tick = Path()
+                tick.move(to: mark.tickStart); tick.addLine(to: mark.tickEnd)
+                context.stroke(tick, with: .color(DinoStyle.ink), style: StrokeStyle(lineWidth: 1, lineCap: .round))
+                if let outline = mark.outline {
+                    let ring = Path(ellipseIn: CGRect(x: mark.center.x - outline.width / 2, y: mark.center.y - outline.height / 2,
+                                                     width: outline.width, height: outline.height))
+                    context.fill(ring, with: .color(.white))
+                    context.stroke(ring, with: .color(DinoStyle.ink), lineWidth: 1.4)
+                }
+                context.draw(mark.text, at: mark.center)
+            }
+        }
+        .frame(width: size * extent * 2, height: size * extent * 2)
+        .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
 
@@ -215,42 +379,56 @@ private struct ClockHandHint: View {
     let pointer: ClockHandHintGeometry.Pointer
     let ink: UInt32
     let size: CGFloat
-    let shape: AnalogClockShape
+    let bounds: CGRect
     private func point(_ point: CGPoint) -> CGPoint {
-        let extent = ClockHandHintGeometry.extent(shape: shape)
-        return CGPoint(x: size * (extent + point.x), y: size * (extent + point.y))
+        CGPoint(x: size * (point.x - bounds.minX), y: size * (point.y - bounds.minY))
     }
 
     var body: some View {
-        ClockHintBadgeArrow(number: number, badge: point(pointer.badge), tip: point(pointer.tip),
-                           wings: pointer.arrowWings.map(point), ink: ink,
-                           bounds: CGSize(width: size * ClockHandHintGeometry.extent(shape: shape) * 2,
-                                          height: size * ClockHandHintGeometry.extent(shape: shape) * 2))
+        let scale = min(1, size / 150)
+        let width = size * bounds.width
+        let height = size * bounds.height
+        let scaled: (CGPoint) -> CGPoint = { value in
+            let positioned = point(value)
+            return CGPoint(x: positioned.x / scale, y: positioned.y / scale)
+        }
+        ClockHintBadgeArrow(number: number, badge: scaled(pointer.badge), tip: scaled(pointer.tip),
+                           wings: pointer.arrowWings.map(scaled), ink: ink,
+                           bounds: CGSize(width: width / scale, height: height / scale))
+            .scaleEffect(scale)
+            .frame(width: width, height: height)
+            .offset(x: size * bounds.midX, y: size * bounds.midY)
     }
 }
 
 private struct ClockMinuteReadingScale: View {
     let shape: AnalogClockShape
     let size: CGFloat
+    let bounds: CGRect
 
     var body: some View {
         Canvas { context, _ in
-            let extent = ClockHandHintGeometry.extent(shape: shape)
             func positioned(_ point: CGPoint) -> CGPoint {
-                CGPoint(x: size * (extent + point.x), y: size * (extent + point.y))
+                CGPoint(x: size * (point.x - bounds.minX), y: size * (point.y - bounds.minY))
             }
-            for mark in ClockHandHintGeometry.minuteMarks(shape: shape) {
+            for minute in stride(from: 0, to: 60, by: 5) {
+                let label = Text(verbatim: String(minute))
+                    .font(.system(size: size * 0.064, weight: .bold, design: .rounded))
+                    .monospacedDigit().canvasInk(DinoStyle.ink)
+                let resolved = context.resolve(label)
+                let measured = resolved.measure(in: CGSize(width: size * 2, height: size))
+                let mark = ClockHandHintGeometry.minuteMark(minute: minute, shape: shape,
+                    labelSize: CGSize(width: measured.width / size, height: measured.height / size), gap: max(2 / size, 0.018))
                 var tick = Path()
                 tick.move(to: positioned(mark.tickStart))
                 tick.addLine(to: positioned(mark.tickEnd))
                 context.stroke(tick, with: .color(DinoStyle.ink), style: StrokeStyle(lineWidth: 1, lineCap: .round))
-                let label = Text(verbatim: String(mark.minute))
-                    .font(.system(size: size * 0.064, weight: .bold, design: .rounded)).canvasInk(DinoStyle.ink)
-                context.draw(label, at: positioned(mark.label))
+                let center = positioned(mark.label)
+                context.draw(resolved, at: center)
             }
         }
-        .frame(width: size * ClockHandHintGeometry.extent(shape: shape) * 2,
-               height: size * ClockHandHintGeometry.extent(shape: shape) * 2)
+        .frame(width: size * bounds.width, height: size * bounds.height)
+        .offset(x: size * bounds.midX, y: size * bounds.midY)
         .allowsHitTesting(false).accessibilityHidden(true)
     }
 }

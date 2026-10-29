@@ -1,10 +1,21 @@
 import Foundation
 
+enum DinoClockHelpStyle: Equatable, Sendable {
+    case none, numberedHands, spokenTime
+}
+
 enum ClockQuestionKind: String, Codable, CaseIterable, Sendable {
     case chooseAnalog, chooseDigital, activity, setAnalog, setDigital, match
     case readDigital, spokenTime, trueFalse, dayPart, read24Hour, sortTimes, sayTime, timeSequence
     case addTime, advanceAnalog, subtractTime, flightArrival, timeZone, daySchedule, minutesBetween
     var instructionKey: String { "dino.question.\(rawValue)" }
+    var clockHelpStyle: DinoClockHelpStyle {
+        switch self {
+        case .chooseAnalog, .chooseDigital, .setDigital, .setAnalog: return .numberedHands
+        case .trueFalse, .readDigital, .spokenTime: return .spokenTime
+        default: return .none
+        }
+    }
     var symbol: String {
         switch self {
         case .chooseAnalog: return "clock.fill"

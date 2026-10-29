@@ -7,15 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		DA202026BD03000000000002 /* Dino/Views/ResultWorldPodium.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA202026BD03000000000001 /* Dino/Views/ResultWorldPodium.swift */; };
-		DA202026BD02000000000002 /* Dino/Views/ResultWorldScenery.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA202026BD02000000000001 /* Dino/Views/ResultWorldScenery.swift */; };
-		1E59EAAA6E25430E8B2E6841 /* Dino/Views/ResultLevelSign.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BC06D8CEF6D4051A1A0BD11 /* Dino/Views/ResultLevelSign.swift */; };
-		DB202026BD01000000000001 /* Dino/Views/DinoDesert.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA202026BD01000000000001 /* Dino/Views/DinoDesert.swift */; };
 		00BF1DDD8A1DDC39990EF9D2 /* Dino/Core/ProgressSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ED274EAFF7B807862126964 /* Dino/Core/ProgressSyncService.swift */; };
 		0E03B85644DFB788EEC72EB8 /* Dino/Views/LevelResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7BF4989C8E56DBDD0035B47 /* Dino/Views/LevelResult.swift */; };
 		113D4C997110CB7A3F76A105 /* Dino/Core/PlayerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56A2803CE327ECBD272C7D1 /* Dino/Core/PlayerProfile.swift */; };
 		17F3D50BFC83FB20302FE95E /* Dino/Core/KeyValueStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F902DD15DBC1EC0D309AA1E /* Dino/Core/KeyValueStore.swift */; };
 		1853284F4CC0ACD94CA0AA66 /* Dino/Core/SeededGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E650307BE03500FF04C4 /* Dino/Core/SeededGenerator.swift */; };
+		1E59EAAA6E25430E8B2E6841 /* Dino/Views/ResultLevelSign.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BC06D8CEF6D4051A1A0BD11 /* Dino/Views/ResultLevelSign.swift */; };
 		25664453B43D58747D2F6A9F /* Dino/Core/ProgressManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0EF4D0B58F41DAEDFA25C60 /* Dino/Core/ProgressManager.swift */; };
 		32DE52ED6A9A0D73B817A387 /* Dino/Core/NameValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2373432652E69FC550C1E670 /* Dino/Core/NameValidator.swift */; };
 		3B04AE1E8CC46A033D379434 /* Dino/Views/DinoUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5887DAD74B3F2A6183A38A01 /* Dino/Views/DinoUI.swift */; };
@@ -47,6 +44,8 @@
 		CF7F3ACA697DBE04D5B1165A /* Dino/Views/Friends.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA69CB435385B9A4C726D862 /* Dino/Views/Friends.swift */; };
 		DA1A20261011000000000002 /* Dino/Views/JungleLandscape.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1A20261011000000000001 /* Dino/Views/JungleLandscape.swift */; };
 		DA1A20261011000000000004 /* Dino/Views/AdventureHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1A20261011000000000003 /* Dino/Views/AdventureHeader.swift */; };
+		DA202026BD02000000000002 /* Dino/Views/ResultWorldScenery.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA202026BD02000000000001 /* Dino/Views/ResultWorldScenery.swift */; };
+		DA202026BD03000000000002 /* Dino/Views/ResultWorldPodium.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA202026BD03000000000001 /* Dino/Views/ResultWorldPodium.swift */; };
 		DB121026AB12000000000001 /* Dino/Core/DinoAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AB12000000000001 /* Dino/Core/DinoAppearance.swift */; };
 		DB121026AB12000000000002 /* Dino/Views/DinoAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AB12000000000002 /* Dino/Views/DinoAvatar.swift */; };
 		DB121026AB12000000000003 /* Dino/Views/DinoPersonalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AB12000000000003 /* Dino/Views/DinoPersonalizer.swift */; };
@@ -56,9 +55,9 @@
 		DB121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift */; };
 		DB121026AC02000000000002 /* Dino/Views/ExpandedQuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AC02000000000002 /* Dino/Views/ExpandedQuestionView.swift */; };
 		DB1220261012000000000001 /* Dino/Core/DinoSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1220261012000000000001 /* Dino/Core/DinoSettings.swift */; };
-		DB1220261022000000000001 /* Dino/Core/QuestionSpeech.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1220261022000000000001 /* Dino/Core/QuestionSpeech.swift */; };
 		DB1220261012000000000002 /* Dino/Core/CloudProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1220261012000000000002 /* Dino/Core/CloudProgress.swift */; };
 		DB1220261012000000000003 /* Dino/AnswerFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1220261012000000000003 /* Dino/AnswerFeedback.swift */; };
+		DB1220261022000000000001 /* Dino/Core/QuestionSpeech.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1220261022000000000001 /* Dino/Core/QuestionSpeech.swift */; };
 		DB132026BD01000000000001 /* Dino/Views/WorldBossArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA132026BD01000000000001 /* Dino/Views/WorldBossArt.swift */; };
 		DB152026BD03000000000001 /* Dino/Core/JungleMapLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA152026BD03000000000001 /* Dino/Core/JungleMapLayout.swift */; };
 		DB162026BD01000000000001 /* Dino/Views/StarsOverview.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA162026BD01000000000001 /* Dino/Views/StarsOverview.swift */; };
@@ -68,8 +67,10 @@
 		DB192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift */; };
 		DB192026BD01000000000002 /* Dino/Views/TimeZoneMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000002 /* Dino/Views/TimeZoneMap.swift */; };
 		DB192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json in Resources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json */; };
+		DB202026BD01000000000001 /* Dino/Views/DinoDesert.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA202026BD01000000000001 /* Dino/Views/DinoDesert.swift */; };
 		DB212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift */; };
 		DB212026BD01000000000002 /* Dino/Views/TimeArithmeticExplanation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA212026BD01000000000002 /* Dino/Views/TimeArithmeticExplanation.swift */; };
+		DB232026BD01000000000001 /* Dino/Views/MapOpeningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA232026BD01000000000001 /* Dino/Views/MapOpeningView.swift */; };
 		DC121026AB12000000000001 /* Dino/Core/DinoAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AB12000000000001 /* Dino/Core/DinoAppearance.swift */; };
 		DC121026AB13000000000001 /* Dino/Core/DinoAvatarMask.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AB13000000000001 /* Dino/Core/DinoAvatarMask.swift */; };
 		DC121026AC01000000000001 /* Dino/Core/PracticeConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA121026AC01000000000001 /* Dino/Core/PracticeConfiguration.swift */; };
@@ -88,7 +89,6 @@
 		F951E834307BE03500FF04C4 /* DinoTimeAdventureApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E652307BE03500FF04C4 /* DinoTimeAdventureApp.swift */; };
 		F951E835307BE03500FF04C4 /* Dino/Core/SeededGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E650307BE03500FF04C4 /* Dino/Core/SeededGenerator.swift */; };
 		F951E836307BE03500FF04C4 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E65D307BE03500FF04C4 /* Localization.swift */; };
-		DB232026BD01000000000001 /* Dino/Views/MapOpeningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA232026BD01000000000001 /* Dino/Views/MapOpeningView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -102,12 +102,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		DA202026BD03000000000001 /* Dino/Views/ResultWorldPodium.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/ResultWorldPodium.swift; sourceTree = SOURCE_ROOT; };
-		DA202026BD02000000000001 /* Dino/Views/ResultWorldScenery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/ResultWorldScenery.swift; sourceTree = SOURCE_ROOT; };
-		1BC06D8CEF6D4051A1A0BD11 /* Dino/Views/ResultLevelSign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/ResultLevelSign.swift; sourceTree = SOURCE_ROOT; };
-		DA202026BD01000000000001 /* Dino/Views/DinoDesert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/DinoDesert.swift; sourceTree = SOURCE_ROOT; };
 		01881B3B65886D0F9D53F6C8 /* Dino/Core/SocialProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/SocialProgress.swift; sourceTree = SOURCE_ROOT; };
 		0B80587E32D18C0831D8ACC9 /* Dino/Views/OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/OnboardingFlow.swift; sourceTree = SOURCE_ROOT; };
+		1BC06D8CEF6D4051A1A0BD11 /* Dino/Views/ResultLevelSign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/ResultLevelSign.swift; sourceTree = SOURCE_ROOT; };
 		2373432652E69FC550C1E670 /* Dino/Core/NameValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/NameValidator.swift; sourceTree = SOURCE_ROOT; };
 		23C747A1E72C8680BB9E684A /* Dino/Core/ClockTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/ClockTime.swift; sourceTree = SOURCE_ROOT; };
 		272CEF06B9056BD6417F2390 /* Tools/test-dino.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "Tools/test-dino.sh"; sourceTree = SOURCE_ROOT; };
@@ -146,9 +143,9 @@
 		DA121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/ExpandedQuestions.swift; sourceTree = SOURCE_ROOT; };
 		DA121026AC02000000000002 /* Dino/Views/ExpandedQuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/ExpandedQuestionView.swift; sourceTree = SOURCE_ROOT; };
 		DA1220261012000000000001 /* Dino/Core/DinoSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/DinoSettings.swift; sourceTree = SOURCE_ROOT; };
-		DA1220261022000000000001 /* Dino/Core/QuestionSpeech.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/QuestionSpeech.swift; sourceTree = SOURCE_ROOT; };
 		DA1220261012000000000002 /* Dino/Core/CloudProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/CloudProgress.swift; sourceTree = SOURCE_ROOT; };
 		DA1220261012000000000003 /* Dino/AnswerFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/AnswerFeedback.swift; sourceTree = SOURCE_ROOT; };
+		DA1220261022000000000001 /* Dino/Core/QuestionSpeech.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/QuestionSpeech.swift; sourceTree = SOURCE_ROOT; };
 		DA132026BD01000000000001 /* Dino/Views/WorldBossArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/WorldBossArt.swift; sourceTree = SOURCE_ROOT; };
 		DA152026BD03000000000001 /* Dino/Core/JungleMapLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/JungleMapLayout.swift; sourceTree = SOURCE_ROOT; };
 		DA162026BD01000000000001 /* Dino/Views/StarsOverview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/StarsOverview.swift; sourceTree = SOURCE_ROOT; };
@@ -160,8 +157,12 @@
 		DA192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Dino/Resources/TimeZoneMap.json; sourceTree = SOURCE_ROOT; };
 		DA1A20261011000000000001 /* Dino/Views/JungleLandscape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/JungleLandscape.swift; sourceTree = SOURCE_ROOT; };
 		DA1A20261011000000000003 /* Dino/Views/AdventureHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/AdventureHeader.swift; sourceTree = SOURCE_ROOT; };
+		DA202026BD01000000000001 /* Dino/Views/DinoDesert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/DinoDesert.swift; sourceTree = SOURCE_ROOT; };
+		DA202026BD02000000000001 /* Dino/Views/ResultWorldScenery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/ResultWorldScenery.swift; sourceTree = SOURCE_ROOT; };
+		DA202026BD03000000000001 /* Dino/Views/ResultWorldPodium.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/ResultWorldPodium.swift; sourceTree = SOURCE_ROOT; };
 		DA212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/MinutesBetweenQuestion.swift; sourceTree = SOURCE_ROOT; };
 		DA212026BD01000000000002 /* Dino/Views/TimeArithmeticExplanation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/TimeArithmeticExplanation.swift; sourceTree = SOURCE_ROOT; };
+		DA232026BD01000000000001 /* Dino/Views/MapOpeningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/MapOpeningView.swift; sourceTree = SOURCE_ROOT; };
 		DCDF56484DA8108CF908CF1F /* DinoInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = DinoInfo.plist; sourceTree = SOURCE_ROOT; };
 		E0EF4D0B58F41DAEDFA25C60 /* Dino/Core/ProgressManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/ProgressManager.swift; sourceTree = SOURCE_ROOT; };
 		EA69CB435385B9A4C726D862 /* Dino/Views/Friends.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/Friends.swift; sourceTree = SOURCE_ROOT; };
@@ -173,7 +174,6 @@
 		F951E65C307BE03500FF04C4 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		F951E65D307BE03500FF04C4 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		FF502E855D8132CA2685C1B5 /* Dino/Social/FriendsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Social/FriendsManager.swift; sourceTree = SOURCE_ROOT; };
-		DA232026BD01000000000001 /* Dino/Views/MapOpeningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/MapOpeningView.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -704,6 +704,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
@@ -759,6 +760,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";

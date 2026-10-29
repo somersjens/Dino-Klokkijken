@@ -294,8 +294,9 @@ enum DinoOpeningJump {
     static let takeoff = 0.14
     static let landing = 0.76
     static let duration = 0.94
-    static let poseStarts = [0, 0.035, takeoff, 0.23, 0.40, 0.56, landing, 0.86]
-
+    // Hold the finished logo pose a little longer, then spend only 50 ms
+    // in the deep crouch so the launch does not pause at its lowest point.
+    static let poseStarts = [0, 0.09, takeoff, 0.23, 0.40, 0.56, landing, 0.86]
     static func flightProgress(elapsed: Double) -> Double {
         min(1, max(0, (elapsed - takeoff) / (landing - takeoff)))
     }
@@ -322,6 +323,191 @@ enum DinoOpeningJump {
         return DinoAnimation.Sample(pose: .init(asset: assets[index], offsetY: registration),
             angle: -5 * sin(.pi * flight), height: -4 * flight * (1 - flight),
             scaleX: 1 + settle * 0.4, scaleY: 1 - settle)
+    }
+}
+
+/// Track the painted face through a readable bend and push-off. Source drawings
+/// register to the same eyes and nostrils before changing; no duplicate idle
+/// drawing or extra generated frame interrupts the movement.
+enum DinoWelcomeJump {
+    static let crouchBottom = 0.28
+    // A slightly shorter push-off adds snap; the screen-space velocity match
+    // below still carries that impulse smoothly into the unchanged flight.
+    static let takeoff = 0.56
+    static let flightHandoff = takeoff + 0.10
+    static let landing = takeoff + DinoOpeningJump.landing - DinoOpeningJump.takeoff
+    static let duration = landing + DinoOpeningJump.duration - DinoOpeningJump.landing
+    static let poseStarts = [0, crouchBottom / 2, (crouchBottom + takeoff) / 2, landing, landing + 0.10]
+    static let assets = ["dino-idle", "dino-opening-jump-02", "dino-opening-jump-03",
+                         "dino-opening-jump-07", "dino-opening-jump-08"]
+
+    struct Head {
+        let leftEye: CGPoint
+        let rightEye: CGPoint
+        let nose: CGPoint
+        var center: CGPoint { CGPoint(x: (leftEye.x + rightEye.x) / 2, y: (leftEye.y + rightEye.y) / 2) }
+
+        init(_ left: CGPoint, _ right: CGPoint, _ nose: CGPoint) {
+            leftEye = left; rightEye = right; self.nose = nose
+        }
+
+        init(pixels left: (Double, Double), _ right: (Double, Double), _ nose: (Double, Double)) {
+            self.init(CGPoint(x: left.0 / 1254, y: left.1 / 1254),
+                      CGPoint(x: right.0 / 1254, y: right.1 / 1254),
+                      CGPoint(x: nose.0 / 1254, y: nose.1 / 1254))
+        }
+
+        func applying(_ transform: CGAffineTransform) -> Head {
+            Head(leftEye.applying(transform), rightEye.applying(transform), nose.applying(transform))
+        }
+    }
+
+    struct Tracking {
+        let pose: DinoAnimation.Pose
+        let head: Head
+        var position: CGPoint { head.center }
+        var transform: CGAffineTransform { DinoWelcomeJump.transform(from: idleHead, to: head) }
+    }
+
+    // Measured iris centroids and the midpoint between both nostrils, in the
+    // original 1254-pixel paintings. Recoloring preserves these facial pixels.
+    static let idleHead = Head(pixels: (605.76, 355.11), (800.74, 308.01), (803.62, 397.21))
+    static func sourceHead(for asset: String) -> Head {
+        switch asset {
+        case "dino-opening-jump-02": Head(pixels: (731.46, 556.91), (935.30, 538.88), (917.29, 629.87))
+        case "dino-opening-jump-03": Head(pixels: (592.44, 336.82), (776.99, 272.03), (778.07, 356.65))
+        case "dino-opening-jump-07": Head(pixels: (629.80, 478.09), (835.98, 438.09), (830.02, 531.83))
+        case "dino-opening-jump-08": Head(pixels: (601.05, 365.43), (795.27, 320.09), (794.49, 406.66))
+        default: idleHead
+        }
+    }
+
+    private static let lowHead: Head = {
+        let center = idleHead.center
+        let tilt = CGAffineTransform(rotationAngle: 8 * .pi / 180)
+        func moved(_ point: CGPoint) -> CGPoint {
+            let relative = CGPoint(x: point.x - center.x, y: point.y - center.y).applying(tilt)
+            // Keep the original crouch's depth: the chin reaches the board's
+            // upper edge, while the tracked face avoids its sideways lurch.
+            return CGPoint(x: 728.0 / 1254 + relative.x, y: 550.0 / 1254 + relative.y)
+        }
+        return Head(moved(idleHead.leftEye), moved(idleHead.rightEye), moved(idleHead.nose))
+    }()
+
+    static func pose(elapsed: Double) -> DinoAnimation.Pose {
+        guard elapsed < duration else { return .init(asset: "dino-idle") }
+        let index = poseStarts.lastIndex { elapsed >= $0 } ?? 0
+        let offsets = [0.0, 3.0, 0.0, 9.0, -2.0]
+        return .init(asset: assets[index], offsetY: offsets[index] / 1254)
+    }
+
+    static func tracking(elapsed: Double, flight: DinoWelcomeFlight) -> Tracking {
+        let pose = pose(elapsed: elapsed)
+        let target: Head
+        if elapsed < crouchBottom {
+            let t = min(1, max(0, elapsed / crouchBottom))
+            target = interpolate(idleHead, lowHead, t * t * (3 - 2 * t))
+        } else if elapsed < flightHandoff {
+            // Match the actual screen-space velocity of the flying painting,
+            // including the arc, shrinking and rotation. Merely meeting its
+            // local eye position made the two motions change speed at takeoff.
+            let span = flightHandoff - crouchBottom
+            let t = (elapsed - crouchBottom) / span
+            let start = lowHead.applying(flight.worldTransform(elapsed: crouchBottom))
+            let end = flight.paintedHead(elapsed: flightHandoff)
+            let epsilon = 0.0001
+            let before = flight.paintedHead(elapsed: flightHandoff - epsilon)
+            let after = flight.paintedHead(elapsed: flightHandoff + epsilon)
+            func point(_ a: CGPoint, _ b: CGPoint, _ previous: CGPoint, _ next: CGPoint) -> CGPoint {
+                let h = t * t * (3 - 2 * t), tangent = t * t * (t - 1) * span / (2 * epsilon)
+                return CGPoint(x: a.x + (b.x - a.x) * h + (next.x - previous.x) * tangent,
+                               y: a.y + (b.y - a.y) * h + (next.y - previous.y) * tangent)
+            }
+            let screenHead = Head(point(start.leftEye, end.leftEye, before.leftEye, after.leftEye),
+                                  point(start.rightEye, end.rightEye, before.rightEye, after.rightEye),
+                                  point(start.nose, end.nose, before.nose, after.nose))
+            // The parent flight layer starts moving before this handoff ends.
+            // Compensate its transform so the visible face follows one curve.
+            target = screenHead.applying(flight.worldTransform(elapsed: elapsed).inverted())
+        } else {
+            target = sourceHead(for: pose.asset).applying(CGAffineTransform(translationX: pose.offsetX, y: pose.offsetY))
+        }
+        return Tracking(pose: pose, head: target)
+    }
+
+    static func sourceCorrection(for asset: String) -> CGAffineTransform {
+        transform(from: sourceHead(for: asset), to: idleHead)
+    }
+
+    static func motion(elapsed: Double) -> DinoAnimation.Sample {
+        DinoOpeningJump.sample(elapsed: max(0, elapsed - takeoff + DinoOpeningJump.takeoff))
+    }
+
+    static func travelProgress(elapsed: Double) -> Double {
+        min(1, max(0, (elapsed - takeoff) / (landing - takeoff)))
+    }
+
+    private static func interpolate(_ a: Head, _ b: Head, _ t: Double) -> Head {
+        func point(_ a: CGPoint, _ b: CGPoint) -> CGPoint {
+            CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t)
+        }
+        return Head(point(a.leftEye, b.leftEye), point(a.rightEye, b.rightEye), point(a.nose, b.nose))
+    }
+
+    /// Linear part of the affine registration around the eye midpoint. The
+    /// third landmark preserves the muzzle placement as the head tilts.
+    private static func transform(from source: Head, to target: Head) -> CGAffineTransform {
+        let sx = source.rightEye.x - source.leftEye.x, sy = source.rightEye.y - source.leftEye.y
+        let tx = source.nose.x - source.center.x, ty = source.nose.y - source.center.y
+        let dx = target.rightEye.x - target.leftEye.x, dy = target.rightEye.y - target.leftEye.y
+        let ex = target.nose.x - target.center.x, ey = target.nose.y - target.center.y
+        let determinant = sx * ty - sy * tx
+        return CGAffineTransform(a: (dx * ty - ex * sy) / determinant,
+                                 b: (dy * ty - ey * sy) / determinant,
+                                 c: (ex * sx - dx * tx) / determinant,
+                                 d: (ey * sx - dy * tx) / determinant, tx: 0, ty: 0)
+    }
+}
+
+/// Shared, testable geometry for the welcome's native layers. The world matrix
+/// maps normalized painting coordinates to screen points around the painted feet.
+struct DinoWelcomeFlight {
+    static let footline = CGFloat(1211.0 / 1254)
+    let source: CGPoint
+    let sourceSide: CGFloat
+    let destination: CGRect
+
+    func position(elapsed: Double) -> CGPoint {
+        let t = CGFloat(DinoWelcomeJump.travelProgress(elapsed: elapsed))
+        let side = sourceSide + (destination.width - sourceSide) * t
+        let desiredArc = sourceSide * 0.48 + max(0, destination.midY - source.y) * 0.2
+        let clearance = max(24, source.y - sourceSide / 2 - 16)
+        let arc = -CGFloat(DinoWelcomeJump.motion(elapsed: elapsed).height) * min(250, desiredArc, clearance)
+        return CGPoint(x: source.x + (destination.midX - source.x) * t,
+                       y: source.y + (destination.midY - source.y) * t + (Self.footline - 0.5) * side - arc)
+    }
+
+    func transform(elapsed: Double) -> CGAffineTransform {
+        let t = CGFloat(DinoWelcomeJump.travelProgress(elapsed: elapsed))
+        let scale = 1 + (destination.width / sourceSide - 1) * t
+        let sample = DinoWelcomeJump.motion(elapsed: elapsed)
+        return CGAffineTransform(rotationAngle: sample.angle * .pi / 180)
+            .scaledBy(x: scale * sample.scaleX, y: scale * sample.scaleY)
+    }
+
+    func worldTransform(elapsed: Double) -> CGAffineTransform {
+        let linear = transform(elapsed: elapsed), origin = position(elapsed: elapsed)
+        let anchor = CGPoint(x: sourceSide / 2, y: Self.footline * sourceSide).applying(linear)
+        return CGAffineTransform(a: linear.a * sourceSide, b: linear.b * sourceSide,
+                                 c: linear.c * sourceSide, d: linear.d * sourceSide,
+                                 tx: origin.x - anchor.x, ty: origin.y - anchor.y)
+    }
+
+    func paintedHead(elapsed: Double) -> DinoWelcomeJump.Head {
+        let pose = DinoWelcomeJump.pose(elapsed: elapsed)
+        return DinoWelcomeJump.sourceHead(for: pose.asset)
+            .applying(CGAffineTransform(translationX: pose.offsetX, y: pose.offsetY))
+            .applying(worldTransform(elapsed: elapsed))
     }
 }
 

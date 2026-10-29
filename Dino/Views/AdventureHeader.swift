@@ -451,6 +451,7 @@ private struct HUDMetrics {
     var mapIcon: CGFloat { icon * 0.9 }
 
     init(width: CGFloat, compact: Bool, level: Int, stars: Int, questionCounter: String?, titles: [String]) {
+        let width = width.isFinite ? max(0, width) : 0
         spacious = width >= 600 && !compact
         avatar = compact ? 52 : spacious ? 104 : 78
         portraitFootprint = compact ? 68 : spacious ? 132 : 100
@@ -462,8 +463,9 @@ private struct HUDMetrics {
         gap = spacious ? 8 : 3
         labelGap = compact ? 2 : 4
 
-        cellWidth = (width - leadingMargin - trailingMargin - portraitSlot - gap * 7
-                     - 6 - (spacious ? 18 : 8)) / 4
+        // SwiftUI can measure the header at zero width while changing screens.
+        cellWidth = max(0, (width - leadingMargin - trailingMargin - portraitSlot - gap * 7
+                           - 6 - (spacious ? 18 : 8)) / 4)
         let availableWidth = max(20, cellWidth - 6)
         let nominalLabel: CGFloat = spacious ? 16 : compact ? 10 : 11
         let labelBase = UIFont.systemFont(ofSize: nominalLabel, weight: .heavy).fontDescriptor
@@ -568,7 +570,7 @@ private struct HUDLevelGrid: View {
         GeometryReader { geometry in
             // Align straight edges and spacing to physical pixels at every size.
             let gap = (1.4 * displayScale).rounded() / displayScale
-            let side = ((geometry.size.width - gap) * displayScale / 2).rounded(.down) / displayScale
+            let side = (max(0, geometry.size.width - gap) * displayScale / 2).rounded(.down) / displayScale
             VStack(spacing: gap) {
                 HStack(spacing: gap) { tile(bright: true, side: side); tile(bright: false, side: side) }
                 HStack(spacing: gap) { tile(bright: false, side: side); tile(bright: true, side: side) }

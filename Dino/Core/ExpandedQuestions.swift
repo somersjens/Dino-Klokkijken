@@ -217,6 +217,14 @@ struct DinoDaySchedule: Equatable, Sendable {
     var secondStart: ClockTime { firstEnd.adding(minutes: breakMinutes) }
     var end: ClockTime { secondStart.adding(minutes: secondMinutes) }
     var durations: [Int] { [firstMinutes, breakMinutes, secondMinutes] }
+    var writtenDuration: (hours: Int, minutes: Int) {
+        (durations.reduce(0) { $0 + $1 / 60 }, durations.reduce(0) { $0 + $1 % 60 })
+    }
+
+    /// Add the units as written on each leg before carrying sixty minutes into an hour.
+    func summedDurationText(language: String) -> String {
+        DinoTimeWords.compactDuration(hours: writtenDuration.hours, minutes: writtenDuration.minutes, language: language)
+    }
 }
 
 enum DinoExpandedQuestions {
@@ -669,6 +677,18 @@ enum DinoTimeWords {
         return m == 0 ? "\(h) \(language == "nl" ? "uur" : "h")" : "\(h) \(language == "nl" ? "uur" : "h") \(m) min"
     }
 
+    /// Elapsed hours and minutes; independent of the clock's 12/24-hour notation.
+    static func digitalDuration(_ minutes: Int) -> String {
+        String(format: "%02d:%02d", minutes / 60, minutes % 60)
+    }
+
+    /// Short units also support a written sum whose minutes have not been carried yet.
+    static func compactDuration(hours: Int, minutes: Int, language: String) -> String {
+        guard hours > 0 else { return "\(minutes) min" }
+        let hoursText = language == "nl" ? "\(hours) uur" : "\(hours)h"
+        return minutes == 0 ? hoursText : "\(hoursText) \(minutes) min"
+    }
+
     /// A clock time for a spoken title. Afternoon and night stay distinct from the morning hour.
     static func promptTime(_ time: ClockTime, language: String) -> String {
         Self.time(time, language: language, dayPart: time.hour == 0 || time.hour > 12)
@@ -741,22 +761,9 @@ struct DinoFlightArrivalWork: Equatable {
         return "\(departure.digitalText) + \(shift) = \(arrival.digitalText)"
     }
 
-    /// Whole hours first, then the leftover minutes in the question's own minute steps.
-    func walkMinutes(step: Int) -> [Int] {
-        let magnitude = abs(combinedMinutes)
-        guard magnitude > 0 else { return [] }
-        let sign = combinedMinutes > 0 ? 1 : -1
-        let hours = magnitude / 60
-        let minutes = magnitude % 60
-        let minuteStep = max(1, step)
-        var steps: [Int] = []
-        if hours > 0 { steps.append(contentsOf: (1...hours).map { sign * $0 * 60 }) }
-        var covered = 0
-        while covered < minutes {
-            covered = min(minutes, covered + minuteStep)
-            steps.append(sign * (hours * 60 + covered))
-        }
-        return steps
+    /// Match the train and time-zone examples: whole hours, then one short minute correction.
+    func walkMinutes() -> [Int] {
+        DinoTimeZoneStep.steps(from: departure, offsetMinutes: combinedMinutes).map(\.addedMinutes)
     }
 }
 

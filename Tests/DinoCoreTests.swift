@@ -13,8 +13,50 @@ private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
 @MainActor
 struct DinoCoreTests {
     static func main() async {
+        if CommandLine.arguments.contains("--flight-arrivals") {
+            testFlightArrivals()
+            testCapitalTimeZones()
+            print("PASS: \(checks) flight and shared time-route checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--time-zones") {
+            testCapitalTimeZones()
+            print("PASS: \(checks) time-zone calculation, animation and layout checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--clock-reading-hints") {
+            testHandHintClearance()
+            testClockReadingAssistance()
+            testSpokenClockReadingHints()
+            testHandSelection()
+            print("PASS: \(checks) clock reading assistance checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--spoken-clock-guides") {
+            testClockReadingAssistance()
+            testSpokenClockReadingHints()
+            print("PASS: \(checks) spoken clock guide checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--animation-timing") {
+            testAssetCatalog()
+            testAnimation()
+            print("PASS: \(checks) animation timing and asset checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--animation") {
+            testAssetCatalog()
+            testAnimation()
+            testDinoAvatarMask()
+            testDinoSpriteColors()
+            testPaleBandanaLettering()
+            print("PASS: \(checks) animation, asset and color checks.")
+            return
+        }
         if CommandLine.arguments.contains("--time-reading") {
             testTimeReadingClock()
+            testTimeReadingReview()
+            testAnswerRetries()
             print("PASS: \(checks) time-reading checks.")
             return
         }
@@ -50,6 +92,11 @@ struct DinoCoreTests {
             print("PASS: \(checks) answer input and practice checks.")
             return
         }
+        if CommandLine.arguments.contains("--train-durations") {
+            testDaySchedules()
+            print("PASS: \(checks) train duration checks.")
+            return
+        }
         if CommandLine.arguments.contains("--jungle-scenery") {
             testJungleSceneryClearance()
             print("PASS: \(checks) jungle route and scenery checks.")
@@ -67,6 +114,8 @@ struct DinoCoreTests {
         testBossClockMotion()
         testHandSelection()
         testHandHintClearance()
+        testClockReadingAssistance()
+        testSpokenClockReadingHints()
         testAssetCatalog()
         testAnimation()
         testCrystalMinerPatrols()
@@ -85,6 +134,7 @@ struct DinoCoreTests {
         testPracticeRecords()
         testExpandedQuestions()
         testTimeReadingClock()
+        testTimeReadingReview()
         testPlausibleChoices()
         testSpokenTime()
         testFlightArrivals()
@@ -943,16 +993,40 @@ struct DinoCoreTests {
                 for minute in 0..<60 {
                     let time = ClockTime(hour: hour, minute: minute)
                     let pointers = ClockHandHintGeometry.pointers(time: time, shape: shape)
-                    let expectedHour = ClockHandHintGeometry.point(radius: 0.412, angle: Double(hour % 12) * 30)
-                    expect(hypot(pointers[0].tip.x - expectedHour.x, pointers[0].tip.y - expectedHour.y) < 0.000_001,
-                           "hour pointer targets the completed digital hour at \(time.digitalText)")
+                    let hourAngle = Double(hour % 12) * 30
+                    let hourTip = pointers[0].tip
+                    let numeral = ClockHandHintGeometry.point(radius: 0.34, angle: hourAngle)
+                    let hourPointer = pointers[0]
+                    let route = CGPoint(x: hourTip.x - hourPointer.badge.x, y: hourTip.y - hourPointer.badge.y)
+                    let target = CGPoint(x: numeral.x - hourPointer.badge.x, y: numeral.y - hourPointer.badge.y)
+                    expect(abs(route.x * target.y - route.y * target.x) < 0.000_001
+                           && route.x * target.x + route.y * target.y > 0,
+                           "hour pointer aims at the numeral centre, including its side route at \(time.digitalText)")
+                    for pointer in pointers {
+                        let angle = atan2(pointer.tip.x, -pointer.tip.y) * 180 / .pi
+                        expect(abs(hypot(pointer.tip.x, pointer.tip.y)
+                                   - ClockHandHintGeometry.outerRadius(angle: angle, shape: shape) - 0.165) < 0.000_001,
+                               "both arrow tips keep the same distance beyond the clock rim")
+                        expect(hypot(pointer.badge.x - pointer.tip.x, pointer.badge.y - pointer.tip.y) >= 0.179_999,
+                               "both arrows have a visible shaft beyond their badge and arrowhead")
+                    }
                     let minuteDirection = ClockHandHintGeometry.point(radius: 1, angle: time.minuteAngle)
                     let minuteTip = pointers[1].tip
                     expect(abs(minuteTip.x * minuteDirection.y - minuteTip.y * minuteDirection.x) < 0.000_001,
                            "minute pointer follows the exact minute, without rounding to a five")
                     let edge = ClockHandHintGeometry.outerRadius(angle: time.minuteAngle, shape: shape)
-                    expect(hypot(minuteTip.x, minuteTip.y) > edge + 0.12,
+                    expect(hypot(minuteTip.x, minuteTip.y) > edge + 0.11,
                            "minute pointer leaves breathing room beyond the outside scale")
+                    let expectedMinuteBadge = ClockHandHintGeometry.point(radius: edge + 0.345, angle: time.minuteAngle)
+                    expect(hypot(pointers[1].badge.x - expectedMinuteBadge.x, pointers[1].badge.y - expectedMinuteBadge.y) < 0.000_001,
+                           "minute badge keeps its radial placement at every time")
+                    let expectedHourBadge = ClockHandHintGeometry.point(
+                        radius: ClockHandHintGeometry.outerRadius(angle: hourAngle, shape: shape) + 0.345, angle: hourAngle)
+                    let nearOverlap = hypot(expectedHourBadge.x - expectedMinuteBadge.x, expectedHourBadge.y - expectedMinuteBadge.y) < 0.235
+                    let bounds = ClockHandHintGeometry.bounds(time: time, shape: shape, faceSize: 120)
+                    let hourBadgeShift = hypot(pointers[0].badge.x - expectedHourBadge.x, pointers[0].badge.y - expectedHourBadge.y)
+                    expect(nearOverlap ? hourBadgeShift > 0.05 : hourBadgeShift < 0.000_001,
+                           "hour badge sits behind its minute numeral and only moves aside near the minute badge")
                     for pointer in pointers {
                         for hand in [(time.hourAngle, 0.23, 0.038), (time.minuteAngle, 0.34, 0.024)] {
                             let start = ClockHandHintGeometry.point(radius: -0.035, angle: hand.0)
@@ -962,20 +1036,45 @@ struct DinoCoreTests {
                                 expect(clearance > 0.015, "reading arrows stay clear of both hands at \(time.digitalText)")
                             }
                         }
-                        expect(max(abs(pointer.badge.x), abs(pointer.badge.y)) + 0.09 <= ClockHandHintGeometry.extent(shape: shape),
-                               "number badges fit inside the reserved example space")
+                        let radius = 14.5 / 150.0
+                        expect(bounds.minX <= pointer.badge.x - radius && bounds.maxX >= pointer.badge.x + radius
+                               && bounds.minY <= pointer.badge.y - radius && bounds.maxY >= pointer.badge.y + radius,
+                               "complete number badges fit inside the tight layout bounds")
                     }
-                    for mark in marks {
-                        for arrowEdge in [pointers[0].start] + pointers[0].arrowWings {
-                            expect(ClockHandHintGeometry.segmentDistance(arrowEdge, pointers[0].tip, mark.label, mark.label) > 0.055,
-                                   "hour arrow passes between the outside minute labels at \(time.digitalText)")
+                    if nearOverlap {
+                        for mark in marks {
+                            for arrowEdge in [pointers[0].start] + pointers[0].arrowWings {
+                                expect(ClockHandHintGeometry.segmentDistance(arrowEdge, pointers[0].tip, mark.label, mark.label) > 0.055,
+                                       "the exceptional side route keeps minute labels clear at \(time.digitalText)")
+                            }
                         }
                     }
+                    for hourStart in [pointers[0].start] + pointers[0].arrowWings {
+                        for minuteStart in [pointers[1].start] + pointers[1].arrowWings {
+                            expect(ClockHandHintGeometry.segmentDistance(hourStart, pointers[0].tip,
+                                                                        minuteStart, pointers[1].tip) > 0.025,
+                                   "both arrowheads and shafts remain separate at \(time.digitalText)")
+                        }
+                    }
+                    for pointer in pointers {
+                        for point in [pointer.badge, pointer.tip, pointer.start] + pointer.arrowWings {
+                            expect(bounds.contains(point), "tight bounds retain both complete arrows")
+                        }
+                    }
+                    expect(abs(bounds.midX) < 0.000_001,
+                           "tight hint bounds keep the clock face horizontally centred")
                     expect(hypot(pointers[0].badge.x - pointers[1].badge.x, pointers[0].badge.y - pointers[1].badge.y) > 0.2,
                            "number badges remain separate at \(time.digitalText)")
                 }
             }
         }
+        let twelve = ClockHandHintGeometry.pointers(time: .init(hour: 12, minute: 0))
+        let twelveSeparation = hypot(twelve[0].badge.x - twelve[1].badge.x, twelve[0].badge.y - twelve[1].badge.y)
+        expect(twelveSeparation > 0.2 && twelveSeparation < 0.3,
+               "at twelve the hour badge sits closer to the minute badge without touching it")
+        let horizontal = ClockHandHintGeometry.bounds(time: .init(hour: 3, minute: 45), shape: .circle, faceSize: 120)
+        expect(horizontal.height < 1.3,
+               "sideways arrows do not reserve their worst-case reach above and below the face")
         for hand in ClockInk.allCases.map(\.hex) + [0x000000, 0xFFFFFF, 0xFFFF00] {
             for face in ClockFace.allCases.map(\.hex) {
                 let guide = ClockColorContrast.hourGuideHex(hand: hand, face: face)
@@ -983,6 +1082,110 @@ struct DinoCoreTests {
                        "hour return cue remains visible on light, colored and black faces")
                 expect(guide != hand, "hour return cue differs from the real hand")
             }
+        }
+    }
+
+    static func testClockReadingAssistance() {
+        expect(DinoPracticeQuestion.allCases.filter { $0.recipe.kind.clockHelpStyle == .numberedHands }.map(\.number) == [1, 2, 7, 8],
+               "numbered hand arrows are limited to the four requested exercises")
+        expect(DinoPracticeQuestion.allCases.filter { $0.recipe.kind.clockHelpStyle == .spokenTime }.map(\.number) == [3, 4, 5],
+               "only the three spoken-time exercises use the speech scale")
+        let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+        let level = LevelConfiguration(id: 1, worldID: 1, titleKey: "dino.level.1", instructionKey: "dino.question.chooseDigital",
+            allowedHours: Array(1...12), difficulty: 1, questionCount: 5, isBoss: false,
+            recipes: [.init(kind: .chooseDigital, optionCount: 2)])
+        let session = DinoSession(level: level, player: player)
+        expect(!session.showsClockHandHints, "new level starts without reading arrows")
+        session.submit(session.question.expectedAnswer)
+        session.advance()
+        expect(!session.showsClockHandHints, "a correct answer does not enable reading arrows")
+        session.submit(wrongAnswer(for: session.question))
+        expect(session.showsClockHandHints, "the first wrong answer immediately enables reading arrows")
+        if session.canRetry { session.showAnswer() }
+        session.advance()
+        expect(!session.showsClockHandHints && !session.hasFeedback, "the next level question starts without reading arrows")
+        session.submit(session.question.expectedAnswer)
+        session.advance()
+        expect(!session.showsClockHandHints, "a later correct answer does not reactivate an earlier question's help")
+        expect(!DinoSession(level: level, player: player).showsClockHandHints, "replaying a level resets reading support")
+
+        let configuration = DinoPracticeConfiguration(time: .quarter, order: .specific(.chooseDigital))
+        let practice = DinoSession(level: configuration.level, player: player, practice: configuration)
+        practice.submit(wrongAnswer(for: practice.question))
+        if practice.canRetry { practice.showAnswer() }
+        practice.advance()
+        expect(!practice.showsClockHandHints && practice.attempt.answers.isEmpty,
+               "practice clears reading support when it replaces the current question")
+        practice.submit(wrongAnswer(for: practice.question))
+        expect(practice.showsClockHandHints, "another wrong question can activate its own reading help")
+
+        let editable = DinoPracticeConfiguration(time: .quarter, order: .specific(.setAnalog))
+        let untouched = DinoSession(level: editable.level, player: player, practice: editable)
+        untouched.submit(untouched.answerCheck!.answer)
+        expect(!untouched.showsClockHandHints && !untouched.hasFeedback,
+               "an untouched-input reminder is not a wrong answer and does not enable help")
+    }
+
+    static func testSpokenClockReadingHints() {
+        let expectedDutch = ["uur", "5", "10", "kwart", "10", "5", "half", "5", "10", "kwart", "10", "5"]
+        let expectedEnglish = ["o’clock", "5", "10", "15", "20", "25", "half", "25", "20", "15", "10", "5"]
+        for (language, expected) in [("nl", expectedDutch), ("en", expectedEnglish)] {
+            expect(stride(from: 0, to: 60, by: 5).map { SpokenClockReadingHint(minute: $0, language: language).scaleLabel } == expected,
+                   "the complete scale uses the minute counts actually named in \(language)")
+            for minute in 0..<60 {
+                let hint = SpokenClockReadingHint(minute: minute, language: language)
+                expect(hint.scaleMinutes.count == 12 && hint.scaleMinutes.filter { $0 == minute }.count == 1,
+                       "the actual minute has one scale label, including exact-minute questions")
+                expect(hint.scaleMinutes.filter { $0 != minute }.allSatisfy { $0.isMultiple(of: 5) },
+                       "the remaining scale labels keep their five-minute positions")
+                expect(hint.relationLeaderMinute.truncatingRemainder(dividingBy: 5) == 2.5,
+                       "the word leader passes between the outside scale labels")
+                expect((0...60).contains(hint.startMinute) && (0...60).contains(hint.endMinute)
+                       && hint.startMinute <= hint.endMinute && hint.endMinute - hint.startMinute <= 30,
+                       "each speech arrow follows one forward interval outside the face")
+                expect(hint.endMinute - hint.startMinute == hint.count, "the arrow length equals the spoken offset")
+                expect([hint.startMinute, hint.endMinute].contains(minute), "the arrow connects the actual minute to its spoken reference")
+                for shape in [AnalogClockShape.circle, .square, .octagon] {
+                    for face in [80.0, 150, 240] {
+                        let bounds = SpokenClockGuideLayout.verticalBounds(minute: minute, language: language, shape: shape, faceSize: face)
+                        expect(bounds.lowerBound.isFinite && bounds.upperBound.isFinite
+                               && bounds.lowerBound < -0.5 && bounds.upperBound > 0.5,
+                               "compact speech guides keep the whole face and a safety margin")
+                        expect(bounds.upperBound - bounds.lowerBound < SpokenClockGuideLayout.extent(shape: shape) * 2,
+                               "speech-guide height trims the former square's excess space")
+                        let compact = SpokenClockGuideLayout.verticalBounds(minute: minute, language: language,
+                            shape: shape, faceSize: face, compact: true)
+                        expect(compact.lowerBound <= -0.5 && compact.upperBound >= 0.5
+                               && compact.upperBound - compact.lowerBound <= bounds.upperBound - bounds.lowerBound,
+                               "answer-clock guides keep the full face with less reserved space")
+                        expect(SpokenClockGuideLayout.extent(shape: shape, compact: true) < SpokenClockGuideLayout.extent(shape: shape),
+                               "the compact answer guide gives its clock a larger share of the same width")
+                    }
+                }
+            }
+        }
+        let beforeHalf = SpokenClockReadingHint(minute: 20, language: "nl")
+        expect(beforeHalf.scaleLabel == "10" && beforeHalf.startMinute == 20 && beforeHalf.endMinute == 30
+               && beforeHalf.relation == "voor half", "Dutch twenty connects ten-before-half to half")
+        let past = SpokenClockReadingHint(minute: 20, language: "en")
+        expect(past.scaleLabel == "20" && past.startMinute == 0 && past.endMinute == 20
+               && past.relation == "past", "English twenty counts forward from the whole hour")
+        for (minute, start, end, relation) in [(25, 25, 30, "voor half"), (35, 30, 35, "over half"),
+                                              (40, 30, 40, "over half"), (45, 45, 60, "voor"), (55, 55, 60, "voor")] {
+            let hint = SpokenClockReadingHint(minute: minute, language: "nl")
+            expect(hint.startMinute == start && hint.endMinute == end && hint.relation == relation,
+                   "Dutch before/after directions match the phrase around half and whole hours")
+        }
+        let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+        for type in [DinoPracticeQuestion.trueFalse, .readDigital, .spokenTime] {
+            let config = DinoPracticeConfiguration(time: .tenMinutes, order: .specific(type))
+            var generator = DinoPracticeGenerator(configuration: config, seed: 42)
+            let question = generator.next(index: 0)
+            let session = DinoSession(level: config.level, player: player, practice: config, example: question)
+            expect(!session.showsSpokenClockHints && !session.showsClockHandHints, "speech help stays hidden before a miss")
+            session.submit(wrongAnswer(for: question))
+            expect(session.showsSpokenClockHints && !session.showsClockHandHints,
+                   "a spoken-time mistake activates its unnumbered guide and never the hand arrows")
         }
     }
 
@@ -1010,14 +1213,22 @@ struct DinoCoreTests {
         let sameZone = DinoFlightArrivalWork(departure: .init(hour: 9, minute: 30), durationMinutes: 150,
                                              offsetMinutes: 0, arrival: .init(hour: 12))
         expect(sameZone.arrivalLine(language: "nl") == "09:30 + 2 uur 30 min = 12:00", "one zone uses the duration as the only shift")
-        expect(forward.walkMinutes(step: 15) == [60, 120, 180, 240, 300, 360], "a whole-hour shift counts one hour at a time")
-        expect(sameZone.walkMinutes(step: 30) == [60, 120, 150], "half hours add the leftover thirty minutes in one step")
-        expect(sameZone.walkMinutes(step: 5) == [60, 120, 125, 130, 135, 140, 145, 150],
-               "five-minute questions add a fifteen-minute remainder in steps of five")
-        expect(sameZone.walkMinutes(step: 15) == [60, 120, 135, 150], "quarter hours add the remainder a quarter at a time")
+        expect(forward.walkMinutes() == [60, 120, 180, 240, 300, 360], "a whole-hour shift counts one hour at a time")
+        expect(sameZone.walkMinutes() == [60, 120, 150], "half hours add the leftover thirty minutes in one step")
+        for shift in [-175, -115, -35, 0, 5, 30, 35, 55, 85, 115, 145, 175] {
+            let start = ClockTime(hour: 23, minute: 40)
+            let work = DinoFlightArrivalWork(departure: start, durationMinutes: 240, offsetMinutes: shift - 240,
+                                             arrival: start.adding(minutes: shift))
+            let sharedSteps = DinoTimeZoneStep.steps(from: start, offsetMinutes: shift)
+            expect(work.walkMinutes() == sharedSteps.map(\.addedMinutes), "flights share the train and time-zone route in both directions")
+            expect(sharedSteps.last?.time == (shift == 0 ? nil : work.arrival), "the flight route ends at the exact arrival across midnight")
+        }
+        let rounded = DinoFlightArrivalWork(departure: .init(hour: 23, minute: 40), durationMinutes: 235,
+                                            offsetMinutes: -120, arrival: .init(hour: 1, minute: 35))
+        expect(rounded.walkMinutes() == [60, 120, 115], "1 hour 55 minutes adds two hours and then subtracts five minutes")
         let removed = DinoFlightArrivalWork(departure: .init(hour: 10), durationMinutes: 60,
                                             offsetMinutes: -180, arrival: .init(hour: 8))
-        expect(removed.combinedMinutes == -120 && removed.walkMinutes(step: 60) == [-60, -120], "time comes off one hour at a time")
+        expect(removed.combinedMinutes == -120 && removed.walkMinutes() == [-60, -120], "time comes off one hour at a time")
         expect(DinoExpandedQuestions.flightDurationMinutes(offsetMinutes: 240, minuteStep: 5, extraSteps: 0) == 360,
                "a four-hour zone change needs at least a six-hour flight")
         expect(DinoTimeWords.hourDifference(2, language: "nl") == "+2 uur" &&
@@ -1659,6 +1870,20 @@ struct DinoCoreTests {
     }
 
     static func testCapitalTimeZones() {
+        let animationCases: [(Int, [Int])] = [(0, []), (5, [5]), (30, [30]), (35, [60, 35]),
+                                            (55, [60, 55]), (60, [60]), (85, [60, 85]),
+                                            (90, [60, 90]), (115, [60, 120, 115]), (120, [60, 120]),
+                                            (145, [60, 120, 145]), (175, [60, 120, 180, 175])]
+        for (offset, expected) in animationCases {
+            for direction in [-1, 1] {
+                let start = ClockTime(hour: 23, minute: 40)
+                let steps = DinoTimeZoneStep.steps(from: start, offsetMinutes: direction * offset)
+                expect(steps.map(\.addedMinutes) == expected.map { $0 * direction },
+                       "time-zone animations use whole hours and one short minute correction in either direction")
+                expect(steps.allSatisfy { $0.time == start.adding(minutes: $0.addedMinutes) },
+                       "each difference updates its clock by exactly the same amount across midnight")
+            }
+        }
         let catalog = DinoTimeZoneJourney.capitals
         expect(Set(catalog.map(\.id)).count == catalog.count, "capital identifiers are unique")
         expect(catalog.allSatisfy { TimeZone(identifier: $0.timeZoneID) != nil }, "all capitals use valid IANA zones")
@@ -1741,13 +1966,14 @@ struct DinoCoreTests {
                     let labels = DinoTimeZoneLabelLayout(origin: viewport.point(reference, size: size),
                                                         destination: viewport.point(destination, size: size), size: size,
                                                         offsetMinutes: journey.offsetMinutes)
-                    let a = CGRect(x: labels.origin.x - labels.width / 2, y: labels.origin.y - 38, width: labels.width, height: 76)
-                    let b = CGRect(x: labels.destination.x - labels.width / 2, y: labels.destination.y - 38, width: labels.width, height: 76)
+                    let height = DinoTimeZoneLabelLayout.cardHeight
+                    let a = CGRect(x: labels.origin.x - labels.width / 2, y: labels.origin.y - height / 2, width: labels.width, height: height)
+                    let b = CGRect(x: labels.destination.x - labels.width / 2, y: labels.destination.y - height / 2, width: labels.width, height: height)
                     expect(!a.intersects(b), "capital labels never overlap, including narrow worked examples")
                     for capital in [reference, destination] {
                         let point = viewport.point(capital, size: size)
                         expect(!a.insetBy(dx: -12, dy: -12).contains(point) && !b.insetBy(dx: -12, dy: -12).contains(point),
-                               "city labels leave both geographic markers visible")
+                               "city labels leave both geographic markers visible: \(reference.id) / \(destination.id), \(size)")
                     }
                     expect(CGRect(origin: .zero, size: size).contains(a) && CGRect(origin: .zero, size: size).contains(b),
                            "both city labels fit fully inside each map size")
@@ -1767,6 +1993,28 @@ struct DinoCoreTests {
         expect(worked.firstEnd == ClockTime(hour: 10, minute: 25) && worked.secondStart == ClockTime(hour: 10, minute: 40),
                "the break starts after activity one and ends before activity two")
         expect(worked.end == ClockTime(hour: 11, minute: 15), "all three durations carry across the hour")
+        for (legs, dutch, english, digital) in [
+            ([40, 30, 50], "120 min", "120 min", "02:00"),
+            ([40, 30, 70], "1 uur 80 min", "1h 80 min", "02:20"),
+            ([80, 30, 95], "2 uur 85 min", "2h 85 min", "03:25"),
+            ([60, 60, 60], "3 uur", "3h", "03:00"),
+            ([60, 1, 60], "2 uur 1 min", "2h 1 min", "02:01")
+        ] {
+            let schedule = DinoDaySchedule(start: .init(hour: 8), firstActivity: .drawing,
+                                           firstMinutes: legs[0], breakMinutes: legs[1],
+                                           secondActivity: .reading, secondMinutes: legs[2])
+            expect(schedule.summedDurationText(language: "nl") == dutch, "Dutch sum keeps the hours and minutes as described on each leg")
+            expect(schedule.summedDurationText(language: "en") == english, "English sum keeps the hours and minutes as described on each leg")
+            expect(DinoTimeWords.digitalDuration(schedule.totalMinutes) == digital, "the digital total carries minutes into hours")
+        }
+        expect(DinoTimeWords.digitalDuration(10) == "00:10", "a short duration includes leading zeroes")
+        expect(DinoTimeWords.digitalDuration(70) == "01:10", "a leg over an hour uses HH:MM")
+        expect(DinoTimeWords.digitalDuration(25 * 60) == "25:00", "elapsed hours do not wrap at midnight")
+        expect(DinoTimeWords.compactDuration(hours: 2, minutes: 50, language: "en") == "2h 50 min",
+               "the train uses short hour and minute units")
+        let trainSteps = DinoTimeZoneStep.steps(from: ClockTime(hour: 14, minute: 40), offsetMinutes: 170)
+        expect(trainSteps.map(\.addedMinutes) == [60, 120, 180, 170] && trainSteps.last?.time == ClockTime(hour: 17, minute: 30),
+               "the train reuses the time-zone walk's whole hours and final minute correction")
         for time in DinoPracticeTime.allCases {
             var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.daySchedule)), seed: 20261016)
             var seenActivities = Set<DinoScheduleActivity>()
@@ -2001,6 +2249,62 @@ struct DinoCoreTests {
         }
     }
 
+    static func testTimeReadingReview() {
+        let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+        for language in ["nl", "en"] {
+            for minute in [0, 1, 14, 16, 29, 31, 44, 59] {
+                for difficulty in [DinoQuestionDifficulty.introduction, .challenge] {
+                    var rng = SeededGenerator(seed: UInt64(minute + 1))
+                    let question = DinoExpandedQuestions.generate(kind: .readDigital, minutes: Array(0..<60),
+                        minuteStep: 1, index: 0, previousTarget: nil, preferredTarget: .init(hour: 12, minute: minute),
+                        language: language, difficulty: difficulty, using: &rng)
+                    let config = DinoPracticeConfiguration(time: .minutes, order: .specific(.readDigital))
+                    func session() -> DinoSession {
+                        DinoSession(level: config.level, player: player, practice: config, example: question, language: language)
+                    }
+                    let correct = session()
+                    expect(!correct.showsTimeReadingExplanation, "speech help starts hidden")
+                    correct.submit(question.expectedAnswer)
+                    expect(!correct.showsTimeReadingExplanation && !correct.showsWorkedExplanation && correct.shouldAutoAdvance,
+                           "a first correct reading answer advances without an extra review screen")
+                    let wrong = question.options.filter { $0 != question.target }
+                    let missed = session()
+                    missed.submit(wrong[0])
+                    expect(missed.showsTimeReadingExplanation && !missed.showsWorkedExplanation,
+                           "a wrong reading answer immediately shows just the speech guide")
+                    expect(missed.showsCorrectResponse == (question.options.count == 2),
+                           "a two-choice reading miss immediately reveals the green correct answer")
+                    expect(missed.attempt.answers == [false] && !missed.shouldAutoAdvance,
+                           "a wrong answer retains its original lost point")
+                    if wrong.count > 1 {
+                        missed.submit(wrong[1])
+                        missed.submit(question.expectedAnswer)
+                        expect(missed.correctFeedback && missed.shouldAutoAdvance && !missed.showsWorkedExplanation,
+                               "a correct reading retry advances without a second explanation phase")
+                    }
+                }
+            }
+        }
+        for kind in [DinoPracticeQuestion.readDigital, .spokenTime] {
+            let fresh = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+            let config = DinoPracticeConfiguration(time: .tenMinutes, order: .specific(kind))
+            let live = DinoSession(level: config.level, player: fresh, practice: config)
+            expect(live.question.options.count == 2, "a new reading exercise begins with two options")
+            live.submit(live.question.responses.first { $0 != live.question.expectedAnswer }!)
+            if kind == .spokenTime {
+                expect(live.canRetry && live.showsSpokenClockHints && !live.showsCorrectResponse,
+                       "both spoken-clock options receive help while the correct choice stays selectable")
+                live.submit(live.question.expectedAnswer)
+                expect(live.correctFeedback && live.shouldAutoAdvance, "the correct spoken-clock retry advances normally")
+            } else {
+                expect(live.showsCorrectResponse && !live.canRetry, "two-choice text reading reveals the correct stone immediately")
+            }
+            live.advance()
+            expect(live.question.id == 1 && !live.hasFeedback && !live.showsSpokenClockHints,
+                   "one Next action starts the next question and clears its helpers")
+        }
+    }
+
     static func testExpandedQuestions() {
         expect(ClockTime(hour: 23, minute: 55).adding(minutes: 10) == ClockTime(hour: 0, minute: 5), "addition crosses midnight")
         expect(ClockTime(hour: 0, minute: 5).adding(minutes: -10) == ClockTime(hour: 23, minute: 55), "subtraction crosses midnight")
@@ -2202,9 +2506,122 @@ struct DinoCoreTests {
             if openingAssets.last != sample.pose.asset { openingAssets.append(sample.pose.asset) }
             openingProgress = progress
         }
-        expect(openingAssets == DinoOpeningJump.assets + ["dino-idle"], "all eight supplied opening poses play once in order")
+        expect(openingAssets == DinoOpeningJump.assets + ["dino-idle"], "all eight original opening poses play once in order")
         expect(DinoOpeningJump.poseStarts.map { DinoOpeningJump.sample(elapsed: $0).pose.asset } == DinoOpeningJump.assets,
                "native contents keyframes use the same pose boundaries as the flight sampler")
+        expect(DinoWelcomeJump.poseStarts.map { DinoWelcomeJump.pose(elapsed: $0).asset } == DinoWelcomeJump.assets,
+               "welcome starts in the exact idle image and uses its separate tracked preparation")
+        expect(DinoWelcomeJump.assets.first == "dino-idle" && !DinoWelcomeJump.assets.contains("dino-opening-jump-01"),
+               "the recolored near-idle illustration cannot flash between the logo and crouch")
+        let welcomeFlight = DinoWelcomeFlight(source: CGPoint(x: 201, y: 400), sourceSide: 373,
+                                             destination: CGRect(x: 132, y: 550, width: 148, height: 148))
+        func tracked(_ point: CGPoint, at time: Double) -> CGPoint {
+            let state = DinoWelcomeJump.tracking(elapsed: time, flight: welcomeFlight)
+            let source = DinoWelcomeJump.sourceHead(for: state.pose.asset)
+            let relative = CGPoint(x: point.x - source.center.x, y: point.y - source.center.y)
+                .applying(DinoWelcomeJump.sourceCorrection(for: state.pose.asset)).applying(state.transform)
+            return CGPoint(x: state.position.x + relative.x, y: state.position.y + relative.y)
+        }
+        var previousWelcomeHead = DinoWelcomeJump.tracking(elapsed: 0, flight: welcomeFlight).position
+        for step in 0...Int(ceil(DinoWelcomeJump.duration * 120)) {
+            let time = Double(step) / 120
+            let state = DinoWelcomeJump.tracking(elapsed: time, flight: welcomeFlight)
+            let source = DinoWelcomeJump.sourceHead(for: state.pose.asset)
+            for (painted, target) in [(source.leftEye, state.head.leftEye), (source.rightEye, state.head.rightEye), (source.nose, state.head.nose)] {
+                let actual = tracked(painted, at: time)
+                expect(hypot(actual.x - target.x, actual.y - target.y) < 1e-10,
+                       "both painted eyes and nostrils follow the same tracked face through drawing changes")
+            }
+            let transform = state.transform
+            expect(transform.a.isFinite && transform.b.isFinite && transform.c.isFinite && transform.d.isFinite
+                   && transform.a * transform.d - transform.b * transform.c > 0.5,
+                   "head registration remains finite and cannot mirror or collapse the face")
+            if time <= DinoWelcomeJump.takeoff {
+                expect(hypot(state.position.x - previousWelcomeHead.x, state.position.y - previousWelcomeHead.y) < 0.025,
+                       "the head bends and rises continuously instead of jumping two hundred painted pixels in one frame")
+                if time <= DinoWelcomeJump.crouchBottom {
+                    expect(state.position.y >= previousWelcomeHead.y, "the tracked bend moves down without a reversal")
+                } else {
+                    expect(state.position.y <= previousWelcomeHead.y + 0.0005, "the tracked push-off moves back up without a second dip")
+                }
+            }
+            if time >= DinoWelcomeJump.takeoff && time < DinoWelcomeJump.landing {
+                expect(state.pose.asset == "dino-opening-jump-03", "the tracked push-off leads into the same fixed flight pose")
+            }
+            previousWelcomeHead = state.position
+        }
+        for boundary in DinoWelcomeJump.poseStarts[1...2] {
+            let before = DinoWelcomeJump.tracking(elapsed: boundary - 1e-7, flight: welcomeFlight)
+            let after = DinoWelcomeJump.tracking(elapsed: boundary + 1e-7, flight: welcomeFlight)
+            expect(hypot(before.position.x - after.position.x, before.position.y - after.position.y) < 1e-6,
+                   "changing to the crouch or flight drawing cannot teleport the tracked head")
+        }
+        let welcomeLowHead = DinoWelcomeJump.tracking(elapsed: DinoWelcomeJump.crouchBottom, flight: welcomeFlight).position
+        let originalLowHead = DinoWelcomeJump.sourceHead(for: "dino-opening-jump-02").center
+        expect(abs(welcomeLowHead.y - originalLowHead.y) < 4.0 / 1254,
+               "the tracked bend retains the original deep crouch instead of stopping above the board")
+        expect(DinoWelcomeJump.takeoff >= 0.55 && DinoWelcomeJump.takeoff <= 0.70,
+               "the deeper bend and push-off retain readable movement time without adding more drawings")
+        let welcomeFlights = [welcomeFlight,
+            DinoWelcomeFlight(source: CGPoint(x: 437, y: 160), sourceSide: 230,
+                              destination: CGRect(x: 250, y: 220, width: 90, height: 90)),
+            DinoWelcomeFlight(source: CGPoint(x: 410, y: 520), sourceSide: 592,
+                              destination: CGRect(x: 450, y: 650, width: 240, height: 240)),
+            DinoWelcomeFlight(source: CGPoint(x: 590, y: 380), sourceSide: 592,
+                              destination: CGRect(x: 350, y: 480, width: 250, height: 250))]
+        for flight in welcomeFlights {
+            func worldHead(_ time: Double) -> DinoWelcomeJump.Head {
+                DinoWelcomeJump.tracking(elapsed: time, flight: flight).head
+                    .applying(flight.worldTransform(elapsed: time))
+            }
+            for key in [DinoWelcomeJump.crouchBottom, DinoWelcomeJump.takeoff, DinoWelcomeJump.flightHandoff] {
+                let epsilon = 0.000001
+                let before = worldHead(key - epsilon), on = worldHead(key), after = worldHead(key + epsilon)
+                for (a, b, c) in [(before.leftEye, on.leftEye, after.leftEye),
+                                  (before.rightEye, on.rightEye, after.rightEye), (before.nose, on.nose, after.nose)] {
+                    let velocityChange = hypot((c.x - b.x) - (b.x - a.x), (c.y - b.y) - (b.y - a.y)) / epsilon
+                    expect(velocityChange < 0.1,
+                           "the visible face keeps its velocity through the bottom, takeoff and flight handoff on phones and tablets")
+                }
+            }
+            var previous = worldHead(DinoWelcomeJump.crouchBottom).center
+            var descending = false
+            for step in 1...120 {
+                let time = DinoWelcomeJump.crouchBottom
+                    + Double(step) / 120 * (DinoWelcomeJump.flightHandoff - DinoWelcomeJump.crouchBottom)
+                let head = worldHead(time).center
+                if head.y > previous.y { descending = true }
+                else {
+                    expect(!descending,
+                           "the visible head rises once without a second dip; low landscape arcs may pass their apex during handoff")
+                }
+                if flight.sourceSide == welcomeFlight.sourceSide {
+                    expect(head.y < previous.y,
+                           "the portrait push-off keeps rising through takeoff and handoff without a pause")
+                }
+                previous = head
+            }
+            let released = worldHead(DinoWelcomeJump.flightHandoff)
+            let painted = flight.paintedHead(elapsed: DinoWelcomeJump.flightHandoff)
+            expect(hypot(released.center.x - painted.center.x, released.center.y - painted.center.y) < 1e-9,
+                   "the velocity handoff reaches the unmodified flight artwork exactly")
+        }
+        for fps in [30.0, 60.0] {
+            for phase in [0.0, 0.25, 0.5, 0.75] {
+                var seen = [String]()
+                for step in 0...Int((DinoWelcomeJump.duration + 0.1) * fps) {
+                    let asset = DinoWelcomeJump.pose(elapsed: (Double(step) + phase) / fps).asset
+                    if seen.last != asset { seen.append(asset) }
+                }
+                expect(seen == DinoWelcomeJump.assets + ["dino-idle"],
+                       "native tracked preparation, flight and recovery play in order at both refresh rates")
+            }
+        }
+        for time in [DinoWelcomeJump.landing, DinoWelcomeJump.landing + 0.13, DinoWelcomeJump.duration] {
+            let pose = DinoWelcomeJump.pose(elapsed: time)
+            expect(abs(opaqueFootline(pose.asset) + pose.offsetY - idleFootline) < 1.0 / 1254,
+                   "head tracking retains the original painted contact footline and final idle handoff")
+        }
         expect(zip(DinoOpeningJump.poseStarts, DinoOpeningJump.poseStarts.dropFirst()).allSatisfy { $0 < $1 }
                && DinoOpeningJump.poseStarts.last! < DinoOpeningJump.duration,
                "native pose key times are strictly ordered and leave time for recovery")
@@ -2221,7 +2638,10 @@ struct DinoCoreTests {
         }
         expect(DinoOpeningJump.takeoff <= 0.16 && DinoOpeningJump.duration - DinoOpeningJump.landing <= 0.20,
                "opening's anticipation and contact recovery stay brisk")
-        for elapsed in [0.0, 0.10, 0.78, 0.90] {
+        let crouchDuration = DinoOpeningJump.takeoff - DinoOpeningJump.poseStarts[1]
+        expect((0.04...0.06).contains(crouchDuration),
+               "the original deep crouch stays readable without the old 105 ms pause before takeoff")
+        for elapsed in DinoOpeningJump.poseStarts.filter({ $0 < DinoOpeningJump.takeoff || $0 >= DinoOpeningJump.landing }) {
             let pose = DinoOpeningJump.sample(elapsed: elapsed).pose
             expect(abs(opaqueFootline(pose.asset) + pose.offsetY - idleFootline) < 1.0 / 1254,
                    "opening's planted poses share the map figure's actual painted foot line")
@@ -2463,7 +2883,7 @@ struct DinoCoreTests {
                     if seen.last != sample.pose.asset { seen.append(sample.pose.asset) }
                 }
                 expect(seen == DinoOpeningJump.assets + ["dino-idle"],
-                       "one-star playback shows all eight opening poses once and settles into idle at 30 and 60 fps")
+                       "one-star playback shows all eight original opening poses once and settles into idle at 30 and 60 fps")
             }
         }
         for (clip, asset) in [(DinoAnimation.Clip.backflip, "dino-result-backflip-recover"), (.pirouette, "dino-result-pirouette-18"),
@@ -2983,6 +3403,8 @@ struct DinoCoreTests {
         let player = DinoPlayer(store: store)
         for type in DinoPracticeQuestion.allCases where type.recipe.kind.usesOptions {
             let config = DinoPracticeConfiguration(time: .minutes, order: .specific(type))
+            let explainsMiss = [DinoPracticeQuestion.dayPart, .timeSequence, .addTime, .subtractTime,
+                                .flightArrival, .timeZone, .daySchedule].contains(type)
             var generator = DinoPracticeGenerator(configuration: config, seed: 42)
             var question = generator.next(index: 0, difficultyForKind: { _ in .challenge })
             // Choose a four-option variation for the original clock questions.
@@ -2993,14 +3415,20 @@ struct DinoCoreTests {
             var now = 10.0
             let session = DinoSession(level: config.level, player: player, practice: config, example: question,
                                       now: { now }, answerFeedback: { feedback.append($0) })
+            expect(!session.shouldAutoAdvance && !session.showsWorkedExplanation,
+                   "unanswered questions wait for the player")
+            let firstCorrect = DinoSession(level: config.level, player: player, practice: config, example: question)
+            firstCorrect.submit(question.expectedAnswer)
+            expect(firstCorrect.shouldAutoAdvance && !firstCorrect.showsWorkedExplanation,
+                   "a first correct answer advances without another explanation phase")
             session.showAnswer()
             expect(!session.answerRevealed && !session.canRetry, "unanswered questions cannot reveal their answer")
             let wrong = question.responses.filter { $0 != question.expectedAnswer }
             now += 3
             session.submit(wrong[0])
-            let allowsRetry = question.responses.count > 2
+            let allowsRetry = question.responses.count > 2 || type == .spokenTime
             expect(session.canRetry == allowsRetry && session.showsCorrectResponse != allowsRetry, "only multiple choice with more than two options allows retries")
-            expect(session.missedFirstAnswer && session.showsWorkedExplanation == !allowsRetry,
+            expect(session.missedFirstAnswer && session.showsWorkedExplanation == (explainsMiss && !allowsRetry) && !session.shouldAutoAdvance,
                    "a hint may follow the first miss, and the worked method waits until the question closes")
             expect(!session.responseIsEnabled(wrong[0]), "a rejected option cannot be selected again")
             session.submit(wrong[0])
@@ -3014,8 +3442,9 @@ struct DinoCoreTests {
                 expect(session.rejectedResponses == Set(wrong.prefix(2)) && session.canRetry && !session.showsWorkedExplanation,
                        "additional wrong choices stay marked while retries remain available")
                 session.submit(question.expectedAnswer)
-                expect(session.correctFeedback && !session.canRetry && session.showsCorrectResponse && session.showsWorkedExplanation && !session.shouldAutoAdvance,
-                       "a correct retry reveals the answer and waits for Next")
+                expect(session.correctFeedback && !session.canRetry && session.showsCorrectResponse &&
+                       session.showsWorkedExplanation == explainsMiss && session.shouldAutoAdvance == !explainsMiss,
+                       "a correct retry advances unless \(type) adds a worked explanation")
                 expect(feedback == [false, false, true], "retries emit the appropriate answer reaction")
             } else {
                 session.submit(question.expectedAnswer)
@@ -3032,13 +3461,22 @@ struct DinoCoreTests {
             revealed.submit(question.expectedAnswer)
             expect(revealed.answerRevealed == allowsRetry && revealed.showsCorrectResponse && !revealed.canRetry && !revealed.correctFeedback,
                    "Show answer reveals the correct choice and closes retries without awarding points")
-            expect(revealed.showsWorkedExplanation, "a closed miss shows how the question worked")
+            expect(revealed.showsWorkedExplanation == explainsMiss && !revealed.shouldAutoAdvance,
+                   "Show answer waits for Next, with a worked explanation only when \(type) provides one")
 
             if allowsRetry {
                 let eliminated = DinoSession(level: config.level, player: player, practice: config, example: question)
                 for choice in wrong { eliminated.submit(choice) }
-                expect(eliminated.answerRevealed && eliminated.showsCorrectResponse && eliminated.showsWorkedExplanation
-                       && !eliminated.canRetry && !eliminated.correctFeedback && eliminated.attempt.answers == [false],
+                if type == .spokenTime {
+                    expect(eliminated.canRetry && !eliminated.answerRevealed && eliminated.showsSpokenClockHints,
+                           "after all wrong clock guesses the remaining clock can still be chosen with its helper")
+                    eliminated.submit(question.expectedAnswer)
+                    expect(eliminated.correctFeedback && eliminated.shouldAutoAdvance && eliminated.attempt.answers == [false],
+                           "the correct clock advances while preserving the first lost point")
+                    continue
+                }
+                expect(eliminated.answerRevealed && eliminated.showsCorrectResponse && eliminated.showsWorkedExplanation == explainsMiss
+                       && !eliminated.canRetry && !eliminated.correctFeedback && !eliminated.shouldAutoAdvance && eliminated.attempt.answers == [false],
                        "ruling out every wrong choice reveals the last answer without another tap")
                 expect(question.responses.allSatisfy { !eliminated.responseIsEnabled($0) }, "the remaining choice closes with the others")
                 eliminated.submit(question.expectedAnswer)

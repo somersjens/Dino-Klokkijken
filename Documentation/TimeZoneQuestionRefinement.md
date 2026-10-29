@@ -2,7 +2,9 @@
 
 De vraag noemt direct de gezochte hoofdstad, bijvoorbeeld **Hoe laat is het in Ankara?** De kaart toont precies twee stadsmarkeringen. Bij de groene referentiestad staat de gegeven tijd onder het punt; bij de oranje bestemming staan een vraagteken en het uurverschil. Die tijd is rood als de stad eerder is en lichtgroen — dezelfde kleur als een positief uurverschil — als de stad later is. Een goed antwoord en **Toon antwoord** tonen de bestemmingstijd. Een foute eerste poging houdt de tijd verborgen.
 
-Het voorbeeld zet twee dezelfde klokken naast elkaar, met een grijs **+0** ertussen. Dat ene verschilknopje wordt daarna **+1** of **−1**, dan **+2** of **−2**, en de rechterklok verandert mee. Een positief verschil blijft lichtgroen; elk negatief verschil, zoals **−1** of **−2**, is rood. Die kleur geldt in het voorbeeld en onder de vraag. Bij de echte nieuwe tijd stopt het, en pas dan verschijnt die tijd ook bij de bestemming op de kaart. Na een fout antwoord verschijnt diezelfde reeks onder de kaart zodra het goede antwoord volgt, of via **Toon antwoord**.
+Het voorbeeld animeert de tijd direct in het bestemmingskaartje op de wereldkaart. De bestemming begint op dezelfde tijd als de referentiestad, met nul uur verschil. Het verschil en de tijd veranderen samen tot de echte bestemmingstijd bereikt is. Rechtsboven in het bestemmingskaartje staat een replayknop om de animatie opnieuw vanaf nul af te spelen. Opnieuw tikken tijdens het afspelen vervangt de lopende animatie. Onder de kaart staan geen losse digitale klokken of verschilknopjes meer. Na een fout antwoord verschijnt dezelfde animatie in het kaartje zodra het goede antwoord volgt, of via **Toon antwoord**. Een nieuwe, onbeantwoorde vraag houdt het vraagteken en toont geen replayknop. Bij Verminder beweging verschijnt de uitkomst direct.
+
+De animatie telt in hele uren en gebruikt daarna één korte minutencorrectie. Een verschil van 1 uur en 55 minuten wordt **+1 uur, +2 uur, −5 minuten**; bij een negatief verschil worden de richtingen omgedraaid. Een verschil van precies een half uur wordt vooruit toegevoegd. De klok en het cumulatieve verschil blijven in iedere stap exact gelijk lopen, ook over middernacht.
 
 De gekozen speltaal bepaalt de referentiestad: Nederlands gebruikt Amsterdam, Engels Londen. Dit is een eenvoudige taalvoorkeur, zonder locatiegegevens. De overige steden zijn echte hoofdsteden van bekende landen. Turkije gebruikt Ankara; Istanbul is geen hoofdstad. Een paar gebruikt altijd verschillende landen én verschillende tijdzones.
 
@@ -32,6 +34,12 @@ De geografische ligging van de oorspronkelijke 21 hoofdsteden is gecontroleerd t
 De kerncontroles dekken beide talen, alle zes minutensoorten, verschillende hoofdsteden en tijdzones, vier unieke antwoordkeuzes, middernacht en de uitsnede op smalle voorbeelden, iPhone en iPad. Alle mogelijke hoofdstadlabels worden op vijf kaartformaten gecontroleerd op overlap, afsnijden en het afdekken van stadsmarkeringen.
 
 De gerichte UI-tests zijn `testTimeZoneAtlasCapitalsAndAnswerReveal`, `testTimeZoneAtlasEnglishUsesLondon` en de bestaande `testExpandedExamplesRefreshTheirQuestionAndAnswer`. Ze controleren titel, referentietijd, verborgen bestemmingstijd, voorbeeldverversing, antwoordonthulling en iPad-landschap.
+
+De controle `--time-zones` in `DinoCoreTests` dekt ook korte minutencorrecties in beide richtingen, over middernacht en bij nul verschil. Op 29 oktober 2026 slaagden **43.097** tijdzone-, animatie- en kaartindelingscontroles. `testTimeZoneCardReplayInBothLanguages` controleert het opnieuw afspelen tijdens voorbeelden en antwoorduitleg, herstarten tijdens het afspelen, de vaste referentietijd en de positie van de replayknop binnen het bestemmingskaartje.
+
+De replaytest slaagde in Nederlands en Engels op iPhone 18 Pro en iPad Pro 13-inch (iOS 27), inclusief iPad-landschap. De tikken raken het midden van de zichtbare knop: SwiftUI geeft bij gepositioneerde kaartlabels niet altijd een bruikbaar toegankelijkheidsactivatiepunt terug. Visueel gecontroleerd: [voorbeeld op iPhone](Screenshots/TimeZoneQuestions/iphone-in-card-example.png) en [antwoorduitleg op iPad](Screenshots/TimeZoneQuestions/ipad-in-card-answer.png). De losse klokkenrij ontbreekt.
+
+Ook de volledige kernsuite slaagde: **1.228.552 controles**. De bronbestanden zijn voor deze run gekopieerd naar een tijdelijke momentopname, omdat andere wijzigingen in dezelfde werkmap tijdens compilatie werden opgeslagen. De vertaalcatalogus is daarbij meegelezen; assets zijn vanuit de projectmap gecontroleerd. De simulatorbuild, de vertaalcatalogus en `git diff --check` zijn geslaagd.
 
 Op 16 oktober 2026 geslaagd:
 

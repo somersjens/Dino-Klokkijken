@@ -47,7 +47,6 @@ struct WorldMap: View {
     @State private var openingJumpImages: [String: UIImage] = [:]
     @State private var openingJumpPrepared = false
     @State private var preparedWorlds: Set<Int> = []
-    @State private var introRevealed = false
     @State private var introFinished = false
     @State private var animationEpoch = Date()
     @State private var worldJumpStartedAt: Date?
@@ -186,7 +185,10 @@ struct WorldMap: View {
                                 hudHeightChanged($0)
                             }
                     }
-                    .opacity(initialPositionReady && (introRevealed || !animatesOpening) ? 1 : 0)
+                    // The opaque opening already covers this map. Commit its
+                    // visible state before the jump, avoiding a map-wide update
+                    // and first visible render during Dino's flight.
+                    .opacity(initialPositionReady ? 1 : 0)
                     .allowsHitTesting(mapInteractive)
                     .disabled(!mapInteractive)
                     .accessibilityHidden(!mapInteractive)
@@ -212,7 +214,7 @@ struct WorldMap: View {
                     MapOpeningView(world: DinoWorldCatalog.world((player.profile.mapLevel - 1) / 10 + 1)!,
                         image: openingImage, jumpImages: openingJumpImages,
                         destination: anchor.map { geometry[$0] }, ready: openingReady,
-                        reveal: { introRevealed = true }, finished: {
+                        finished: {
                             introFinished = true
                             openingJumpImages = [:]
                             openingImage = nil

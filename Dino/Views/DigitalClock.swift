@@ -60,6 +60,7 @@ struct DigitalClockOutline: InsettableShape {
 
 struct DigitalClock: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.dinoClockReadingAssistance) private var readingAssistance
     @ObservedObject private var language = LanguageManager.shared
     @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
     let time: ClockTime
@@ -71,6 +72,8 @@ struct DigitalClock: View {
     /// Lessons that teach the 24-hour clock keep those digits even when the player prefers 12-hour time.
     var notation: DigitalHourNotation? = nil
     var feedbackCorrect: Bool? = nil
+    private var displaysHandHints: Bool { showHandHints || readingAssistance }
+    private var hintHeight: CGFloat { displaysHandHints ? 48 * min(1, fontSize / 30) : 0 }
     private var reading: DigitalClockReading {
         time.digitalReading(notation: notation ?? theme.resolvedHourNotation(device: deviceHourFormat.notation),
                             languageCode: language.effective.code)
@@ -91,7 +94,7 @@ struct DigitalClock: View {
                 display(value, fontSize: fontSize * 0.3)
             }
         }
-        .padding(.top, showHandHints ? 48 : 0)
+        .padding(.top, hintHeight)
         .environment(\.layoutDirection, .leftToRight)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(value.text)
@@ -158,12 +161,15 @@ struct DigitalClock: View {
                 exposesControlFields ? [number == 2 ? .minutes : .hours: anchor] : [:]
             }
             .overlay(alignment: .top) {
-                if showHandHints {
+                if displaysHandHints {
+                    let scale = min(1, fontSize / 30)
                     ClockHintBadgeArrow(number: number, badge: CGPoint(x: 15, y: 14.5),
                                         tip: CGPoint(x: 15, y: 43.75),
                                         wings: [CGPoint(x: 10.5, y: 38), CGPoint(x: 19.5, y: 38)],
                                         ink: ink, bounds: CGSize(width: 30, height: 48))
-                        .offset(y: -48 - fontSize * (theme.numerals == .digital ? 0.3 : 0.22))
+                        .scaleEffect(scale)
+                        .frame(width: 30 * scale, height: 48 * scale)
+                        .offset(y: -48 * scale - fontSize * (theme.numerals == .digital ? 0.3 : 0.22))
                         .accessibilityHidden(true)
                 }
             }
@@ -277,6 +283,7 @@ private struct SevenSegmentDigit: View {
 }
 
 struct DigitalClockControl: View {
+    @Environment(\.dinoClockReadingAssistance) private var readingAssistance
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.isEnabled) private var isEnabled
@@ -296,6 +303,7 @@ struct DigitalClockControl: View {
     var notation: DigitalHourNotation? = nil
     var controlsBelow = false
     var displayHeight: CGFloat? = nil
+    private var displaysHandHints: Bool { showHandHints || readingAssistance }
     private var time: ClockTime { ClockTime(hour: hour, minute: minute) }
     private var reading: DigitalClockReading {
         time.digitalReading(notation: notation ?? theme.resolvedHourNotation(device: deviceHourFormat.notation),
@@ -305,7 +313,7 @@ struct DigitalClockControl: View {
     @ViewBuilder var body: some View {
         if controlsBelow {
             VStack(spacing: 12) {
-                DigitalClock(time: time, theme: theme, fontSize: fontSize,
+                DigitalClock(time: time, theme: theme, fontSize: fontSize, showHandHints: displaysHandHints,
                              notation: notation, feedbackCorrect: feedbackCorrect)
                     .frame(height: displayHeight)
                     .accessibilityIdentifier(valueIdentifier)
@@ -328,8 +336,10 @@ struct DigitalClockControl: View {
     }
 
     private var legacyControl: some View {
-        DigitalClock(time: time, theme: theme, fontSize: fontSize, exposesControlFields: true,
+        DigitalClock(time: time, theme: theme, fontSize: fontSize,
+                     showHandHints: readingAssistance && !showHandHints, exposesControlFields: true,
                      notation: notation, feedbackCorrect: feedbackCorrect)
+            .environment(\.dinoClockReadingAssistance, false)
             .accessibilityHidden(true)
             .padding(.vertical, 48)
             .overlayPreferenceValue(DigitalClockFieldAnchors.self) { anchors in

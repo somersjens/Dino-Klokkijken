@@ -6,18 +6,16 @@ import CoreText
 struct MapOpeningView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dinoHighContrast) private var highContrast
     let world: DinoWorld
     let image: UIImage?
     let jumpImages: [String: UIImage]
     let destination: CGRect?
     let ready: Bool
-    var reveal: () -> Void
     var finished: () -> Void
     @State private var emergence: CGFloat = 0
     @State private var emerged = false
-    @State private var departing = false
     @State private var jumpStartedAt: Date?
-    @State private var sceneryOpacity = 1.0
 
     var body: some View {
         GeometryReader { geometry in
@@ -34,37 +32,46 @@ struct MapOpeningView: View {
             let boardScale = board.width / OpeningTitleGeometry.width
             let headEdge = title.headClearance * boardScale + board.minY
             let hiddenOffset = headEdge + 3 - (source.y - dinoSide / 2 + dinoSide * 0.012)
+            let insets = geometry.safeAreaInsets
+            let backdropSize = CGSize(width: geometry.size.width + insets.leading + insets.trailing,
+                                      height: geometry.size.height + insets.top + insets.bottom)
             ZStack {
-                OpeningBackdrop(tint: Color(dinoHex: world.ground))
-                    .opacity(sceneryOpacity)
-                OpeningClock(size: side * 0.83, paused: reduceMotion || scenePhase != .active)
-                    .position(x: source.x, y: origin.y + side * 0.43)
-                    .scaleEffect(departing && !reduceMotion ? 1.07 : 1)
-                    .opacity(sceneryOpacity)
-                OpeningFoliage()
-                    .frame(width: side, height: side * 1.13)
-                    .position(x: geometry.size.width / 2, y: origin.y + side * 0.565)
-                    .opacity(sceneryOpacity)
+                OpeningScenery(startedAt: jumpStartedAt, reducedMotion: reduceMotion, preparesUnderlyingContent: true) {
+                    ZStack {
+                        OpeningBackdrop(tint: Color(dinoHex: world.ground))
+                        OpeningClock(size: side * 0.83, paused: reduceMotion || scenePhase != .active)
+                            .environment(\.dinoHighContrast, highContrast)
+                            .position(x: source.x + insets.leading, y: origin.y + side * 0.43 + insets.top)
+                        OpeningFoliage()
+                            .frame(width: side, height: side * 1.13)
+                            .position(x: geometry.size.width / 2 + insets.leading, y: origin.y + side * 0.565 + insets.top)
+                    }
+                }
+                // The hosting controller has its own bounds. Include the outer
+                // safe-area strips so the map cannot peek out before departure.
+                .frame(width: backdropSize.width, height: backdropSize.height)
+                .offset(x: (insets.trailing - insets.leading) / 2, y: (insets.bottom - insets.top) / 2)
+                .frame(width: geometry.size.width, height: geometry.size.height)
                 if let image {
                     OpeningEmergingDino(image: image, jumpImages: jumpImages,
-                        flight: OpeningDinoFlight(source: source, sourceSide: dinoSide,
+                        flight: DinoWelcomeFlight(source: source, sourceSide: dinoSide,
                             destination: destination ?? CGRect(x: source.x - dinoSide / 2,
                                 y: source.y - dinoSide / 2, width: dinoSide, height: dinoSide)),
                         revealMask: OpeningDinoRevealMask(edge: title.revealEdge, board: board, release: 0),
                         hiddenOffset: hiddenOffset, revealed: emergence > 0,
                         jumpStartedAt: jumpStartedAt, reducedMotion: reduceMotion)
                         .frame(width: geometry.size.width, height: geometry.size.height)
-                        .opacity(reduceMotion ? Double(emergence) * sceneryOpacity : 1)
+                        .opacity(reduceMotion ? Double(emergence) : 1)
                         // Keep the board's occlusion through takeoff; Dino clears its
                         // top edge naturally instead of popping his feet in front.
                         .zIndex(1)
                         .accessibilityHidden(true)
                 }
-                OpeningTitleBoard(artwork: title)
+                OpeningScenery(startedAt: jumpStartedAt, reducedMotion: reduceMotion) {
+                    OpeningTitleBoard(artwork: title)
+                }
                     .frame(width: board.width, height: board.height)
                     .position(x: board.midX, y: board.midY)
-                    .offset(y: departing && !reduceMotion ? side * 0.09 : 0)
-                    .opacity(sceneryOpacity)
                     .zIndex(2)
             }
             .task(id: image != nil && scenePhase == .active) {
@@ -89,14 +96,7 @@ struct MapOpeningView: View {
                     try await Task.sleep(for: .seconds(1))
                     try Task.checkCancellation()
                     jumpStartedAt = Date()
-                    if !reduceMotion { try await Task.sleep(for: .seconds(DinoOpeningJump.takeoff)) }
-                    try Task.checkCancellation()
-                    withAnimation(.easeOut(duration: reduceMotion ? 0.25 : 0.38)) {
-                        sceneryOpacity = 0
-                        departing = true
-                        reveal()
-                    }
-                    try await Task.sleep(for: .seconds(reduceMotion ? 0.28 : DinoOpeningJump.duration - DinoOpeningJump.takeoff))
+                    try await Task.sleep(for: .seconds(reduceMotion ? 0.28 : DinoWelcomeJump.duration))
                     try Task.checkCancellation()
                     finished()
                 } catch { }
@@ -108,13 +108,73 @@ struct MapOpeningView: View {
     }
 }
 
+/// SwiftUI draws each static composition once; the render server fades its
+/// hosting layer on the same clock as the flight, without per-frame view updates.
+private struct OpeningScenery<Content: View>: UIViewControllerRepresentable {
+    let startedAt: Date?
+    let reducedMotion: Bool
+    let preparesUnderlyingContent: Bool
+    let content: Content
+    private var initialOpacity: Float { preparesUnderlyingContent ? 254.0 / 255 : 1 }
+
+    init(startedAt: Date?, reducedMotion: Bool, preparesUnderlyingContent: Bool = false, @ViewBuilder content: () -> Content) {
+        self.startedAt = startedAt
+        self.reducedMotion = reducedMotion
+        self.preparesUnderlyingContent = preparesUnderlyingContent
+        self.content = content()
+    }
+
+    final class Coordinator { var hasStarted = false }
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIViewController(context: Context) -> UIHostingController<Content> {
+        let controller = UIHostingController(rootView: content)
+        controller.view.backgroundColor = .clear
+        controller.view.isOpaque = false
+        controller.view.clipsToBounds = false
+        // An exactly opaque cover lets the compositor defer the map's first
+        // blend until takeoff. Warm that work during the standing logo instead;
+        // One alpha step survives 8-bit quantization; it changes a color
+        // channel by at most one step while keeping the map composited.
+        controller.view.layer.opacity = initialOpacity
+        if #available(iOS 16.4, *) { controller.safeAreaRegions = [] }
+        return controller
+    }
+
+    func updateUIViewController(_ controller: UIHostingController<Content>, context: Context) {
+        guard !context.coordinator.hasStarted else { return }
+        guard let startedAt else { controller.rootView = content; return }
+        context.coordinator.hasStarted = true
+        let layer = controller.view.layer
+        let duration = reducedMotion ? 0.25 : 0.38
+        let delay = reducedMotion ? 0 : DinoWelcomeJump.takeoff
+        let elapsed = max(0, Date().timeIntervalSince(startedAt))
+        let fade = CABasicAnimation(keyPath: "opacity")
+        fade.fromValue = initialOpacity
+        fade.toValue = 0
+        fade.duration = duration
+        let group = CAAnimationGroup()
+        group.animations = [fade]
+        group.duration = duration
+        group.beginTime = layer.convertTime(CACurrentMediaTime(), from: nil) - elapsed + delay
+        group.fillMode = .backwards
+        group.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        group.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 60, preferred: 60)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        layer.opacity = 0
+        if elapsed < delay + duration { layer.add(group, forKey: "opening.scenery") }
+        CATransaction.commit()
+    }
+}
+
 /// Emergence, flight, pose changes and occlusion share the render server's clock.
 /// Preparing/revealing the SwiftUI map cannot stall Dino halfway through a jump.
 private struct OpeningEmergingDino: UIViewRepresentable {
     static let duration = 0.82
     let image: UIImage
     let jumpImages: [String: UIImage]
-    let flight: OpeningDinoFlight
+    let flight: DinoWelcomeFlight
     let revealMask: OpeningDinoRevealMask
     let hiddenOffset: CGFloat
     let revealed: Bool
@@ -130,9 +190,10 @@ private struct OpeningEmergingDino: UIViewRepresentable {
 
 private final class OpeningDinoArtwork: UIView {
     private let sprite = CALayer()
+    private let headMotion = CALayer()
     private let artwork = CALayer()
     private let occlusion = CAShapeLayer()
-    private var flight: OpeningDinoFlight?
+    private var flight: DinoWelcomeFlight?
     private var revealMask: OpeningDinoRevealMask?
     private var hasEmerged = false
     private var hasJumped = false
@@ -143,13 +204,14 @@ private final class OpeningDinoArtwork: UIView {
         backgroundColor = .clear
         isUserInteractionEnabled = false
         sprite.opacity = 0
-        sprite.anchorPoint = CGPoint(x: 0.5, y: OpeningDinoFlight.footline)
+        sprite.anchorPoint = CGPoint(x: 0.5, y: DinoWelcomeFlight.footline)
         sprite.shadowColor = UIColor(red: 0.12, green: 0.28, blue: 0.15, alpha: 1).cgColor
         sprite.shadowOpacity = 0.16
         sprite.shadowRadius = 7
         sprite.shadowOffset = CGSize(width: 0, height: 5)
         artwork.contentsGravity = .resizeAspect
-        sprite.addSublayer(artwork)
+        headMotion.addSublayer(artwork)
+        sprite.addSublayer(headMotion)
         layer.addSublayer(sprite)
         occlusion.fillColor = UIColor.black.cgColor
         layer.mask = occlusion
@@ -167,7 +229,7 @@ private final class OpeningDinoArtwork: UIView {
         CATransaction.commit()
     }
 
-    func update(image: UIImage, images: [String: UIImage], flight: OpeningDinoFlight,
+    func update(image: UIImage, images: [String: UIImage], flight: DinoWelcomeFlight,
                 revealMask: OpeningDinoRevealMask, hiddenOffset: CGFloat, revealed: Bool,
                 jumpStartedAt: Date?, reducedMotion: Bool) {
         guard !hasJumped else { return }
@@ -191,30 +253,50 @@ private final class OpeningDinoArtwork: UIView {
                 sprite.add(rise, forKey: "opening.emerge")
             }
         }
-        if let jumpStartedAt, !reducedMotion {
+        if let jumpStartedAt {
             hasJumped = true
-            jump(image: image, images: images, flight: flight, mask: revealMask, startedAt: jumpStartedAt)
+            if reducedMotion {
+                let fade = CABasicAnimation(keyPath: "opacity")
+                fade.fromValue = 1
+                fade.toValue = 0
+                fade.duration = 0.25
+                fade.beginTime = sprite.convertTime(CACurrentMediaTime(), from: nil) - max(0, Date().timeIntervalSince(jumpStartedAt))
+                sprite.opacity = 0
+                sprite.add(fade, forKey: "opening.reducedFade")
+            } else {
+                jump(image: image, images: images, flight: flight, mask: revealMask, startedAt: jumpStartedAt)
+            }
         }
         CATransaction.commit()
     }
 
-    private func placeAtSource(_ flight: OpeningDinoFlight) {
+    private func placeAtSource(_ flight: DinoWelcomeFlight) {
         sprite.bounds = CGRect(x: 0, y: 0, width: flight.sourceSide, height: flight.sourceSide)
         sprite.position = flight.position(elapsed: 0)
         artwork.bounds = sprite.bounds
-        artwork.position = CGPoint(x: flight.sourceSide / 2, y: flight.sourceSide / 2)
+        artwork.anchorPoint = DinoWelcomeJump.idleHead.center
+        artwork.position = .zero
+        artwork.setAffineTransform(.identity)
+        headMotion.position = CGPoint(x: DinoWelcomeJump.idleHead.center.x * flight.sourceSide,
+                                      y: DinoWelcomeJump.idleHead.center.y * flight.sourceSide)
+        headMotion.setAffineTransform(.identity)
     }
 
-    private func jump(image: UIImage, images: [String: UIImage], flight: OpeningDinoFlight,
+    private func jump(image: UIImage, images: [String: UIImage], flight: DinoWelcomeFlight,
                       mask: OpeningDinoRevealMask, startedAt: Date) {
         guard let idle = image.cgImage else { return }
-        let duration = DinoOpeningJump.duration
+        let duration = DinoWelcomeJump.duration
         // Queue the complete choreography once. Core Animation interpolates the
         // dense geometry at display refresh rate and swaps faces discretely.
         let steps = Int(ceil(duration * 120))
-        let times = (0...steps).map { Double($0) / Double(steps) }
+        // Keep the drawing changes exactly on their keys. Very close contact
+        // keys prevent interpolation toward the landing before foot contact.
+        let landmarks = DinoWelcomeJump.poseStarts + [DinoWelcomeJump.crouchBottom, DinoWelcomeJump.takeoff, DinoWelcomeJump.flightHandoff,
+            DinoWelcomeJump.landing - 0.00001, duration - 0.00001, duration]
+        let times = Array(Set((0...steps).map { Double($0) / Double(steps) }
+            + landmarks.map { $0 / duration })).sorted()
         let positions = times.map { NSValue(cgPoint: flight.position(elapsed: $0 * duration)) }
-        let transforms = times.map { NSValue(caTransform3D: flight.transform(elapsed: $0 * duration)) }
+        let transforms = times.map { NSValue(caTransform3D: CATransform3DMakeAffineTransform(flight.transform(elapsed: $0 * duration))) }
         let keyTimes = times.map { NSNumber(value: $0) }
         let begin = sprite.convertTime(CACurrentMediaTime(), from: nil) - max(0, Date().timeIntervalSince(startedAt))
         func animation(_ key: String, values: [Any], times: [NSNumber], discrete: Bool = false) -> CAKeyframeAnimation {
@@ -223,6 +305,7 @@ private final class OpeningDinoArtwork: UIView {
             animation.keyTimes = times
             animation.calculationMode = discrete ? .discrete : .linear
             animation.duration = duration
+            animation.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 60, preferred: 60)
             return animation
         }
         let group = CAAnimationGroup()
@@ -231,27 +314,51 @@ private final class OpeningDinoArtwork: UIView {
         group.duration = duration
         group.beginTime = begin
         group.timingFunction = CAMediaTimingFunction(name: .linear)
+        group.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 60, preferred: 60)
         sprite.position = flight.position(elapsed: duration)
-        sprite.transform = flight.transform(elapsed: duration)
+        sprite.setAffineTransform(flight.transform(elapsed: duration))
         sprite.add(group, forKey: "opening.flight")
 
-        let poseTimes = (DinoOpeningJump.poseStarts + [duration]).map { NSNumber(value: $0 / duration) }
-        let poses = (DinoOpeningJump.poseStarts + [duration]).map { DinoOpeningJump.sample(elapsed: $0).pose }
+        // Move the target face continuously. The drawing changes its local
+        // anchor and correction at the same instant, leaving both eyes and
+        // nostrils on that tracked path instead of teleporting between PNGs.
+        let tracking = times.map { DinoWelcomeJump.tracking(elapsed: $0 * duration, flight: flight) }
+        let headPositions = tracking.map { NSValue(cgPoint: CGPoint(x: $0.position.x * flight.sourceSide,
+                                                                   y: $0.position.y * flight.sourceSide)) }
+        let headTransforms = tracking.map { NSValue(caTransform3D: CATransform3DMakeAffineTransform($0.transform)) }
+        let headGroup = CAAnimationGroup()
+        headGroup.animations = [animation("position", values: headPositions, times: keyTimes),
+                                animation("transform", values: headTransforms, times: keyTimes)]
+        headGroup.duration = duration
+        headGroup.beginTime = begin
+        headGroup.timingFunction = CAMediaTimingFunction(name: .linear)
+        headGroup.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 60, preferred: 60)
+        headMotion.position = headPositions.last!.cgPointValue
+        headMotion.transform = headTransforms.last!.caTransform3DValue
+        headMotion.add(headGroup, forKey: "opening.headTracking")
+
+        let poseTimes = (DinoWelcomeJump.poseStarts + [duration]).map { NSNumber(value: $0 / duration) }
+        let poses = (DinoWelcomeJump.poseStarts + [duration]).map { DinoWelcomeJump.pose(elapsed: $0) }
         let contents = poses.map { images[$0.asset]?.cgImage ?? idle }
-        let offsets = poses.map { NSValue(cgPoint: CGPoint(x: flight.sourceSide * (0.5 + $0.offsetX),
-                                                          y: flight.sourceSide * (0.5 + $0.offsetY))) }
+        let anchors = poses.map { NSValue(cgPoint: DinoWelcomeJump.sourceHead(for: $0.asset).center) }
+        let corrections = poses.map { NSValue(caTransform3D: CATransform3DMakeAffineTransform(DinoWelcomeJump.sourceCorrection(for: $0.asset))) }
         let poseGroup = CAAnimationGroup()
         poseGroup.animations = [animation("contents", values: contents, times: poseTimes, discrete: true),
-                                animation("position", values: offsets, times: poseTimes, discrete: true)]
+                                animation("anchorPoint", values: anchors, times: poseTimes, discrete: true),
+                                animation("transform", values: corrections, times: poseTimes, discrete: true)]
         poseGroup.duration = duration
         poseGroup.beginTime = begin
+        poseGroup.timingFunction = CAMediaTimingFunction(name: .linear)
+        poseGroup.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 60, preferred: 60)
         artwork.contents = image.cgImage
-        artwork.position = CGPoint(x: flight.sourceSide / 2, y: flight.sourceSide / 2)
+        artwork.anchorPoint = DinoWelcomeJump.idleHead.center
+        artwork.position = .zero
+        artwork.setAffineTransform(.identity)
         artwork.add(poseGroup, forKey: "opening.poses")
 
         let masks = times.map { time -> CGPath in
             var value = mask
-            value.release = CGFloat(DinoOpeningJump.travelProgress(elapsed: time * duration))
+            value.release = CGFloat(DinoWelcomeJump.travelProgress(elapsed: time * duration))
             return value.path(in: bounds).cgPath
         }
         let reveal = animation("path", values: masks, times: keyTimes)
@@ -283,32 +390,6 @@ private struct OpeningDinoRevealMask: Shape {
         path.addLine(to: CGPoint(x: 0, y: firstY))
         path.closeSubpath()
         return path
-    }
-}
-
-/// Geometry is sampled once for native playback, with the painted foot line as
-/// the anchor so compression and the final handoff cannot slide along the rock.
-private struct OpeningDinoFlight {
-    static let footline = CGFloat(1211.0 / 1254)
-    let source: CGPoint
-    let sourceSide: CGFloat
-    let destination: CGRect
-
-    func position(elapsed: Double) -> CGPoint {
-        let t = CGFloat(DinoOpeningJump.travelProgress(elapsed: elapsed))
-        let side = sourceSide + (destination.width - sourceSide) * t
-        let desiredArc = sourceSide * 0.48 + max(0, destination.midY - source.y) * 0.2
-        let clearance = max(24, source.y - sourceSide / 2 - 16)
-        let arc = -CGFloat(DinoOpeningJump.sample(elapsed: elapsed).height) * min(250, desiredArc, clearance)
-        return CGPoint(x: source.x + (destination.midX - source.x) * t,
-                       y: source.y + (destination.midY - source.y) * t + (Self.footline - 0.5) * side - arc)
-    }
-    func transform(elapsed: Double) -> CATransform3D {
-        let t = CGFloat(DinoOpeningJump.travelProgress(elapsed: elapsed))
-        let scale = 1 + (destination.width / sourceSide - 1) * t
-        let sample = DinoOpeningJump.sample(elapsed: elapsed)
-        let rotation = CATransform3DMakeRotation(CGFloat(sample.angle * .pi / 180), 0, 0, 1)
-        return CATransform3DScale(rotation, scale * sample.scaleX, scale * sample.scaleY, 1)
     }
 }
 

@@ -7292,6 +7292,23 @@
         }
       }
     },
+    "dino.timeZone.replay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replay the time change"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speel de tijdsprong opnieuw af"
+          }
+        }
+      }
+    },
     "dino.title" : {
       "extractionState" : "manual",
       "localizations" : {

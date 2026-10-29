@@ -20,12 +20,26 @@ struct DinoCapital: Equatable, Sendable {
     }
 }
 
-/// Whole hours and, when needed, a final half hour of the worked example.
+/// Cumulative clock changes, using whole hours followed by the shortest minute correction.
 struct DinoTimeZoneStep: Equatable, Sendable {
     let addedMinutes: Int
     let time: ClockTime
 
-    var caption: String { "\(addedMinutes > 0 ? "+" : "−")\(DinoTimeWords.zoneHours(abs(addedMinutes)))" }
+    var caption: String {
+        let amount = addedMinutes.isMultiple(of: 30)
+            ? DinoTimeWords.zoneHours(addedMinutes) : DinoTimeWords.digitalDuration(abs(addedMinutes))
+        return "\(addedMinutes >= 0 ? "+" : "−")\(amount)"
+    }
+
+    static func steps(from reference: ClockTime, offsetMinutes: Int) -> [Self] {
+        let magnitude = abs(offsetMinutes)
+        let direction = offsetMinutes >= 0 ? 1 : -1
+        // For 1:55, count to 2:00 and then go back five minutes. A half hour is a tie: add it.
+        let hours = magnitude / 60 + (magnitude % 60 > 30 ? 1 : 0)
+        var changes = stride(from: 1, through: hours, by: 1).map { direction * $0 * 60 }
+        if changes.last != offsetMinutes && offsetMinutes != 0 { changes.append(offsetMinutes) }
+        return changes.map { Self(addedMinutes: $0, time: reference.adding(minutes: $0)) }
+    }
 }
 
 enum DinoTimeZoneDifficulty: CaseIterable {
@@ -61,15 +75,9 @@ struct DinoTimeZoneJourney: Equatable, Sendable {
         return formatter.string(from: referenceDate)
     }
 
-    /// +1, then +2, through the destination, including a final half-hour step.
+    /// Whole hours, then one minute correction, updating the destination card in place.
     func steps(from reference: ClockTime) -> [DinoTimeZoneStep] {
-        let count = abs(offsetMinutes)
-        guard count > 0 else { return [] }
-        let direction = offsetMinutes > 0 ? 1 : -1
-        return stride(from: 0, to: count, by: 60).map { step in
-            let added = direction * min(step + 60, count)
-            return DinoTimeZoneStep(addedMinutes: added, time: reference.adding(minutes: added))
-        }
+        DinoTimeZoneStep.steps(from: reference, offsetMinutes: offsetMinutes)
     }
 
     static func generate<R: RandomNumberGenerator>(language: String, difficulty: DinoTimeZoneDifficulty,
@@ -183,6 +191,7 @@ struct DinoTimeZoneViewport {
 }
 
 struct DinoTimeZoneLabelLayout {
+    static let cardHeight: CGFloat = 76
     let origin: CGPoint
     let destination: CGPoint
     let width: CGFloat
@@ -192,19 +201,20 @@ struct DinoTimeZoneLabelLayout {
         self.width = width
         func clamp(_ point: CGPoint) -> CGPoint {
             CGPoint(x: min(size.width - width / 2 - 7, max(width / 2 + 7, point.x)),
-                    y: min(size.height - 43, max(43, point.y)))
+                    y: min(size.height - Self.cardHeight / 2 - 7, max(Self.cardHeight / 2 + 7, point.y)))
         }
         func rect(_ point: CGPoint) -> CGRect {
-            CGRect(x: point.x - width / 2, y: point.y - 38, width: width, height: 76)
+            CGRect(x: point.x - width / 2, y: point.y - Self.cardHeight / 2, width: width, height: Self.cardHeight)
         }
         func candidates(_ point: CGPoint, below: Bool) -> [CGPoint] {
             let direction: CGFloat = below ? 1 : -1
-            var points = [CGPoint(x: point.x, y: point.y + 55 * direction),
+            let markerClearance = Self.cardHeight / 2 + 17
+            var points = [CGPoint(x: point.x, y: point.y + markerClearance * direction),
                           CGPoint(x: point.x - width / 2 - 20, y: point.y),
                           CGPoint(x: point.x + width / 2 + 20, y: point.y),
-                          CGPoint(x: point.x, y: point.y - 55 * direction)]
+                          CGPoint(x: point.x, y: point.y - markerClearance * direction)]
             for x in [width / 2 + 7, size.width / 2, size.width - width / 2 - 7] {
-                for y in [CGFloat(43), size.height / 2, size.height - 43] {
+                for y in [Self.cardHeight / 2 + 7, size.height / 2, size.height - Self.cardHeight / 2 - 7] {
                     points.append(CGPoint(x: x, y: y))
                 }
             }

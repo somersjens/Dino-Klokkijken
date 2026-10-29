@@ -1,94 +1,81 @@
 import SwiftUI
 import UIKit
 
-/// The same minute positions explain the complete hour in the example and
-/// mark rejected answers beside the live face, without revealing digital times.
+/// Only examples show the complete phrase ring. Live questions keep their answer stones.
 struct DinoTimeReadingClock: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let time: ClockTime
     let theme: ClockTheme
     let width: CGFloat
     let faceSize: CGFloat
     let language: String
     var showsGuide = false
-    var rejectedTimes: [ClockTime] = []
+    var showsSpokenHint = false
 
     private var prefix: String { showsGuide ? "demo" : "question" }
-    private var diameter: CGFloat { showsGuide ? width * 0.46 : min(faceSize, width - 52) }
-    private var height: CGFloat { showsGuide ? width * 1.14 : diameter + 52 }
-    private var center: CGPoint { CGPoint(x: width / 2, y: showsGuide ? width * 0.59 : height / 2) }
-    private var minutes: [Int] { Array(stride(from: 0, to: 60, by: 5)) }
+    private var hasLabels: Bool { showsGuide }
+    private var diameter: CGFloat {
+        hasLabels ? width * 0.34 : showsSpokenHint ? min(width - 16, max(300, faceSize)) : min(faceSize, width - 52)
+    }
+    private var height: CGFloat {
+        if hasLabels { return width * 1.14 }
+        if showsSpokenHint {
+            let face = diameter / (SpokenClockGuideLayout.extent(shape: theme.analogShape) * 2)
+            let bounds = SpokenClockGuideLayout.verticalBounds(minute: time.minute, language: language,
+                                                               shape: theme.analogShape, faceSize: face)
+            return face * (bounds.upperBound - bounds.lowerBound) + 16
+        }
+        return diameter + 24
+    }
+    private var center: CGPoint { CGPoint(x: width / 2, y: hasLabels ? width * 0.59 : height / 2) }
+    private var labelTimes: [ClockTime] {
+        stride(from: 0, to: 60, by: 5).map { ClockTime(hour: time.hour, minute: $0) }
+    }
 
     var body: some View {
         VStack(spacing: 8) {
             ZStack(alignment: .topLeading) {
-                if showsGuide { guideLines }
-                AnalogClock(time: time, theme: theme, size: diameter)
+                if hasLabels { guideLines.transition(.opacity) }
+                AnalogClock(time: time, theme: theme, size: diameter,
+                            spokenHintLanguage: showsSpokenHint && !hasLabels ? language : nil)
                     .position(center)
                     .accessibilityIdentifier("\(prefix).targetClock")
-                if showsGuide {
-                    ForEach(minutes, id: \.self) { minute in
-                        guideLabel(minute)
-                    }
-                    if !time.minute.isMultiple(of: 5) {
-                        Circle().fill(ink(time.minute)).frame(width: 10, height: 10)
-                            .overlay(Circle().stroke(.white, lineWidth: 2))
-                            .position(mark(time.minute))
-                            .accessibilityHidden(true)
-                    }
-                } else {
-                    ForEach(rejectedTimes.sorted { $0.minute < $1.minute }, id: \.self) { rejected in
-                        Image(systemName: "xmark")
-                            .font(.system(size: 9, weight: .heavy))
-                            .foregroundStyle(.white)
-                            .frame(width: 21, height: 21)
-                            .background(Color(dinoHex: highContrast ? 0xB54708 : 0xF07818), in: Circle())
-                            .overlay(Circle().stroke(.white, lineWidth: 2))
-                            .position(mark(rejected.minute))
-                            .accessibilityLabel(Text(verbatim: "\(DinoTimeWords.time(rejected, language: language)): \(L(key: "dino.expanded.false"))"))
-                            .accessibilityIdentifier("question.timeReading.rejected.\(rejected.minute)")
+                if hasLabels {
+                    ForEach(labelTimes, id: \.self) { labelTime in
+                        guideLabel(labelTime.minute)
+                            .transition(.opacity)
                     }
                 }
             }
             .frame(width: width, height: height)
-            if showsGuide && !time.minute.isMultiple(of: 5) {
-                Text(verbatim: DinoTimeWords.time(time, language: language))
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundStyle(ink(time.minute))
-                    .multilineTextAlignment(.center)
-                    .accessibilityIdentifier("demo.answer")
-            }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("\(prefix).timeReading.clock")
-    }
-
-    private func mark(_ minute: Int) -> CGPoint {
-        let angle = Double(minute) * 6
-        let radius = ClockHandHintGeometry.outerRadius(angle: angle, shape: theme.analogShape) * diameter + (showsGuide ? 9 : 15)
-        let offset = ClockHandHintGeometry.point(radius: radius, angle: angle)
-        return CGPoint(x: center.x + offset.x, y: center.y + offset.y)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.28), value: hasLabels)
     }
 
     private func labelCenter(_ minute: Int) -> CGPoint {
         let points: [CGPoint] = [
-            .init(x: 0.50, y: 0.11), .init(x: 0.76, y: 0.25), .init(x: 0.885, y: 0.41),
-            .init(x: 0.885, y: 0.59), .init(x: 0.885, y: 0.77), .init(x: 0.76, y: 0.93),
-            .init(x: 0.50, y: 1.07), .init(x: 0.24, y: 0.93), .init(x: 0.115, y: 0.77),
-            .init(x: 0.115, y: 0.59), .init(x: 0.115, y: 0.41), .init(x: 0.24, y: 0.25)
+            .init(x: 0.50, y: 0.11), .init(x: 0.76, y: 0.25), .init(x: 0.90, y: 0.41),
+            .init(x: 0.90, y: 0.59), .init(x: 0.90, y: 0.77), .init(x: 0.76, y: 0.93),
+            .init(x: 0.50, y: 1.07), .init(x: 0.24, y: 0.93), .init(x: 0.10, y: 0.77),
+            .init(x: 0.10, y: 0.59), .init(x: 0.10, y: 0.41), .init(x: 0.24, y: 0.25)
         ]
-        let point = points[minute / 5]
+        let point = points[DinoTimeReading.labelPosition(minute: minute) / 5]
         return CGPoint(x: point.x * width, y: point.y * width)
     }
 
     private func labelWidth(_ minute: Int) -> CGFloat {
-        width * ([10, 15, 20, 40, 45, 50].contains(minute) ? 0.23 : 0.25)
+        width * ([10, 15, 20, 40, 45, 50].contains(DinoTimeReading.labelPosition(minute: minute)) ? 0.20 : 0.25)
     }
 
     private func guideLabel(_ minute: Int) -> some View {
         let phrase = DinoTimeWords.time(ClockTime(hour: time.hour, minute: minute), language: language)
         let color = ink(minute)
         let selected = time.minute == minute
+        let border = color.opacity(selected || highContrast ? 1 : 0.28)
+        let background = color.opacity(highContrast ? 0.10 : 0.08)
         return Text(verbatim: phrase)
             .font(.system(size: max(10, min(16, width * 0.037)), weight: .bold, design: .rounded))
             .foregroundStyle(color)
@@ -96,47 +83,52 @@ struct DinoTimeReadingClock: View {
             .lineLimit(3).minimumScaleFactor(0.75)
             .padding(.horizontal, 4)
             .frame(width: labelWidth(minute), height: width * 0.14)
-            .background(color.opacity(highContrast ? 0.10 : 0.08), in: RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(color.opacity(selected || highContrast ? 1 : 0.28), lineWidth: selected ? 2.5 : 1))
+            .background(background, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(border, lineWidth: selected ? 2.5 : 1))
             .position(labelCenter(minute))
-            .accessibilityIdentifier(selected ? "demo.answer" : "demo.timeReading.label.\(minute)")
+            .accessibilityIdentifier(showsGuide && selected ? "demo.answer" : "\(prefix).timeReading.label.\(minute)")
     }
 
     private var guideLines: some View {
         Canvas { context, _ in
-            // Sample each minute so the colored regions follow square and
-            // octagonal player clocks as well as round ones.
-            for minute in 0..<60 {
-                var sector = Path()
-                for step in 0...4 {
-                    let angle = (Double(minute) - 0.5 + Double(step) / 4) * 6
-                    let radius = ClockHandHintGeometry.outerRadius(angle: angle, shape: theme.analogShape) * diameter + 6
-                    let offset = ClockHandHintGeometry.point(radius: radius, angle: angle)
-                    let point = CGPoint(x: center.x + offset.x, y: center.y + offset.y)
-                    if step == 0 { sector.move(to: point) } else { sector.addLine(to: point) }
-                }
-                context.stroke(sector, with: .color(ink(minute).opacity(0.16)), lineWidth: 12)
+            func positioned(_ point: CGPoint) -> CGPoint {
+                CGPoint(x: center.x + point.x * diameter, y: center.y + point.y * diameter)
             }
-            for minute in minutes {
-                let dot = mark(minute)
-                let label = labelCenter(minute)
-                let dx = dot.x - label.x, dy = dot.y - label.y
-                // Stop at the bubble edge, keeping the connector out of the words.
-                let fraction = min((labelWidth(minute) / 2 + 1) / max(0.001, abs(dx)),
-                                   (width * 0.07 + 1) / max(0.001, abs(dy)))
-                var line = Path()
-                line.move(to: dot)
-                line.addLine(to: CGPoint(x: label.x + dx * fraction, y: label.y + dy * fraction))
-                context.stroke(line, with: .color(ink(minute).opacity(0.5)), lineWidth: 1.5)
-                let rect = CGRect(x: dot.x - 5, y: dot.y - 5, width: 10, height: 10)
-                context.fill(Path(ellipseIn: rect.insetBy(dx: -1.5, dy: -1.5)), with: .color(.white))
-                context.fill(Path(ellipseIn: rect), with: .color(ink(minute)))
+            for labelTime in labelTimes {
+                let minute = labelTime.minute
+                let count = SpokenClockReadingHint(minute: minute, language: language).scaleLabel
+                let text = Text(verbatim: count)
+                    .font(.system(size: SpokenClockGuideLayout.scaleFontSize(faceSize: diameter), weight: .bold, design: .rounded))
+                    .monospacedDigit().canvasInk(DinoStyle.ink)
+                let resolved = context.resolve(text)
+                let measured = resolved.measure(in: CGSize(width: diameter * 2, height: diameter))
+                let mark = ClockHandHintGeometry.minuteMark(minute: minute, shape: theme.analogShape,
+                    labelSize: CGSize(width: measured.width / diameter, height: measured.height / diameter), gap: max(2 / diameter, 0.018))
+                let countCenter = positioned(mark.label)
+                let phraseCenter = labelCenter(minute)
+                let direction = CGPoint(x: phraseCenter.x - countCenter.x, y: phraseCenter.y - countCenter.y)
+                // Two separate strokes leave the scale text and phrase bubble clear.
+                let start = ClockHandHintGeometry.labelCenter(from: countCenter, toward: direction, labelSize: measured, gap: 2)
+                let end = ClockHandHintGeometry.labelCenter(from: phraseCenter,
+                    toward: CGPoint(x: -direction.x, y: -direction.y),
+                    labelSize: CGSize(width: labelWidth(minute), height: width * 0.14), gap: 1)
+                var connector = Path()
+                connector.move(to: start); connector.addLine(to: end)
+                context.stroke(connector, with: .color(DinoStyle.ink.opacity(0.45)), lineWidth: 1.2)
+                var tick = Path()
+                tick.move(to: positioned(mark.tickStart)); tick.addLine(to: positioned(mark.tickEnd))
+                context.stroke(tick, with: .color(DinoStyle.ink), style: StrokeStyle(lineWidth: 1, lineCap: .round))
+                context.draw(resolved, at: countCenter)
             }
         }
         .allowsHitTesting(false).accessibilityHidden(true)
     }
 
     private func ink(_ minute: Int) -> Color {
+        return regionInk(minute)
+    }
+
+    private func regionInk(_ minute: Int) -> Color {
         let hex: UInt32
         switch DinoTimeReading.region(minute: minute, language: language) {
         case .whole: hex = 0x287A21

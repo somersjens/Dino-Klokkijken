@@ -2,18 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UIUserInterfaceStyle</key>
-	<string>Light</string>
-	<key>UILaunchScreen</key>
-	<dict>
-		<key>UIColorName</key>
-		<string>LaunchBackground</string>
-	</dict>
 	<key>DinoAppStoreURL</key>
 	<string>$(DINO_APP_STORE_URL)</string>
 	<key>DinoPrivacyPolicyURL</key>
 	<string>$(DINO_PRIVACY_POLICY_URL)</string>
 	<key>DinoSafetyContact</key>
 	<string>$(DINO_SAFETY_CONTACT)</string>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+	</dict>
 </dict>
 </plist>

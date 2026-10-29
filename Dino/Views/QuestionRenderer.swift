@@ -53,6 +53,7 @@ struct QuestionRenderer: View {
                                    selections: $session.pairSelections, theme: theme, width: min(wideLayout ? 900 : 680, width),
                                    hasFeedback: session.hasFeedback, availableHeight: availableHeight,
                                    horizontalLayout: wideLayout)
+                    .environment(\.dinoClockReadingAssistance, false)
                     .id("question.answers")
                     .questionAnswerFocus()
             default:
@@ -63,6 +64,7 @@ struct QuestionRenderer: View {
                                          horizontalSequence: horizontalSequence)
             }
         }.frame(maxWidth: .infinity)
+            .environment(\.dinoClockReadingAssistance, session.showsClockHandHints)
     }
 
     private var tabletFace: CGFloat { min(clockSize, (min(760, width) - 28) / 2 - 24) }
@@ -73,7 +75,8 @@ struct QuestionRenderer: View {
                 DigitalClock(time: question.target, theme: theme, fontSize: 38)
                     .accessibilityIdentifier("question.targetClock")
                     .opacity(comparing ? 0 : 1).accessibilityHidden(comparing)
-                AnalogClock(time: question.target, theme: theme, size: tabletFace).padding(10)
+                AnalogClock(time: question.target, theme: theme, size: tabletFace,
+                            readingHintWidth: (min(760, width) - 28) / 2 - 20).padding(10)
                     .modifier(ClockAnswerOutline(visible: true, correct: true))
                     .accessibilityIdentifier("question.correctClock")
                     .opacity(comparing ? 1 : 0).accessibilityHidden(!comparing)
@@ -101,7 +104,8 @@ struct QuestionRenderer: View {
     private var tabletDigitalSetting: some View {
         DinoClockSettingColumns(width: width, stageHeight: tabletFace + 20) {
             ZStack {
-                AnalogClock(time: question.target, theme: theme, size: tabletFace)
+                AnalogClock(time: question.target, theme: theme, size: tabletFace,
+                            readingHintWidth: (min(760, width) - 28) / 2 - 20)
                     .accessibilityIdentifier("question.targetClock")
                     .opacity(comparing ? 0 : 1).accessibilityHidden(comparing)
                 DigitalClock(time: question.target, theme: theme, fontSize: 38, feedbackCorrect: true)
@@ -161,7 +165,7 @@ struct QuestionRenderer: View {
                 AnswerVerdictMark(correct: false).frame(maxWidth: .infinity)
                 AnswerVerdictMark(correct: true).frame(maxWidth: .infinity)
             }
-            .offset(y: font * 0.9 + 22)
+            .offset(y: font * 0.9 + 22 + (session.showsClockHandHints ? 24 : 0))
             .opacity(comparing ? 1 : 0).accessibilityHidden(true)
             .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: comparing)
         }
@@ -176,7 +180,7 @@ struct QuestionRenderer: View {
                 Label(LocalizedStringKey(activity.titleKey), systemImage: activity.symbol)
                     .font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(DinoStyle.deepGreen)
             }
-            clockStage(height: compactLayout ? 50 : 64, width: question.kind == .setAnalog ? analogSettingWidth : width) {
+            clockStage(height: (compactLayout ? 50 : 64) + (session.showsClockHandHints ? 48 : 0), width: question.kind == .setAnalog ? analogSettingWidth : width) {
                 DigitalClock(time: question.target, theme: theme, fontSize: width < 350 ? 32 : 38)
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(theme.digitalReading(question.target, languageCode: language.effective.code))
@@ -187,7 +191,7 @@ struct QuestionRenderer: View {
 
     private var analogTarget: some View {
         clockStage(height: targetSize) {
-            AnalogClock(time: question.target, theme: theme, size: targetSize)
+            AnalogClock(time: question.target, theme: theme, size: targetSize, readingHintWidth: width)
                 .accessibilityIdentifier("question.targetClock")
         }
     }
@@ -245,7 +249,7 @@ struct QuestionRenderer: View {
         let correct = session.showsCorrectResponse && response == question.expectedAnswer
         let wrong = session.hasFeedback && session.rejectedResponses.contains(response)
         return Button { session.submit(option) } label: {
-            content().frame(maxWidth: .infinity)
+            content().environment(\.dinoClockReadingAssistance, false).frame(maxWidth: .infinity)
                 .background(.white, in: RoundedRectangle(cornerRadius: 22))
                 .overlay(RoundedRectangle(cornerRadius: 22).stroke(correct ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : wrong ? DinoStyle.wrong(highContrast) : DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: correct || wrong ? 4 : highContrast ? 3 : 1.5))
                 .overlay(alignment: .topTrailing) {
@@ -508,6 +512,7 @@ struct AnalogClockAnswerComparison: View {
 
 /// Connect a face and a digital time with two taps or a drag, starting on either side.
 struct ClockMatchingBoard: View {
+    @Environment(\.dinoClockReadingAssistance) private var readingAssistance
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let times: [ClockTime]
@@ -539,20 +544,20 @@ struct ClockMatchingBoard: View {
     private var faceSize: CGFloat {
         let preferred = horizontalLayout ? 184 : width >= 600 ? min(164, width * 0.25) : 104
         let fitted = availableHeight.map { height in
-            horizontalLayout ? height - connectionGap - (digitalFont * 1.7 + 20) - 24
+            horizontalLayout ? (height - connectionGap) / 2 - 24
                 : (height - CGFloat(max(0, times.count - 1)) * spacing) / CGFloat(max(1, times.count)) - 24
         } ?? preferred
         return min(preferred, width >= 600 ? max(80, fitted) : preferred, leftWidth - 18)
     }
-    private var rowHeight: CGFloat { faceSize + 24 }
+    private var rowHeight: CGFloat { max(faceSize + 24, digitalHeight) }
     private var spacing: CGFloat { width >= 600 ? 12 : 16 }
     private var digitalFont: CGFloat { min(width >= 600 ? 40 : 26, width * 0.067) }
-    private var timeCardHeight: CGFloat {
-        horizontalLayout ? digitalFont * 1.7 + 20 : min(rowHeight, digitalFont * 1.7 + 20)
+    private var digitalHeight: CGFloat {
+        digitalFont * 1.7 + 20 + (readingAssistance ? 48 * min(1, digitalFont / 30) : 0)
     }
     private var connectionGap: CGFloat { min(96, max(64, (availableHeight ?? 480) * 0.2)) }
     private var boardHeight: CGFloat {
-        horizontalLayout ? rowHeight + connectionGap + timeCardHeight
+        horizontalLayout ? rowHeight * 2 + connectionGap
             : CGFloat(times.count) * rowHeight + CGFloat(max(0, times.count - 1)) * spacing
     }
 
@@ -660,7 +665,7 @@ struct ClockMatchingBoard: View {
         let color = owner.map { hasFeedback && times[$0] != options[index] ? DinoStyle.wrong(highContrast) : linkColor($0) } ?? DinoStyle.muted
         return Button { tapped(.time(index)) } label: {
             DigitalClock(time: options[index], theme: theme, fontSize: digitalFont)
-                .frame(width: rightWidth, height: timeCardHeight)
+                .frame(width: rightWidth, height: rowHeight)
                 .background(.white, in: RoundedRectangle(cornerRadius: 18))
                 .overlay(RoundedRectangle(cornerRadius: 18).stroke(isSelected(.time(index)) ? DinoStyle.ink : color,
                                                                                 lineWidth: isSelected(.time(index)) || owner != nil ? 3 : highContrast ? 2 : 0))
@@ -699,14 +704,13 @@ struct ClockMatchingBoard: View {
         case .clock(let value): index = value; clock = true
         case .time(let value): index = value; clock = false
         }
-        let height = clock ? rowHeight : timeCardHeight
         if horizontalLayout {
             let centerX = width * (CGFloat(index) + 0.5) / CGFloat(max(1, times.count))
             return CGRect(x: centerX - leftWidth / 2, y: clock ? 0 : rowHeight + connectionGap,
-                          width: leftWidth, height: height)
+                          width: leftWidth, height: rowHeight)
         }
-        return CGRect(x: clock ? 0 : width - rightWidth, y: rowY(index) - height / 2,
-                      width: leftWidth, height: height)
+        return CGRect(x: clock ? 0 : width - rightWidth, y: rowY(index) - rowHeight / 2,
+                      width: leftWidth, height: rowHeight)
     }
     private func connectionPoint(for endpoint: Endpoint) -> CGPoint {
         let frame = cardFrame(endpoint)

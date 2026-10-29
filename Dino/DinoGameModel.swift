@@ -289,6 +289,9 @@ final class DinoSession: ObservableObject, Identifiable {
     @Published private(set) var retryAnsweredCorrectly = false
     @Published private(set) var practiceAnswered = 0
     @Published private(set) var practiceCorrect = 0
+    /// Each exercise chooses its own help; it never carries over to another question.
+    var showsClockHandHints: Bool { missedFirstAnswer && question.kind.clockHelpStyle == .numberedHands }
+    var showsSpokenClockHints: Bool { missedFirstAnswer && question.kind.clockHelpStyle == .spokenTime }
 
     /// Displayed together for the current question; answers are saved immediately.
     struct PracticeProgress: Equatable {
@@ -365,15 +368,27 @@ final class DinoSession: ObservableObject, Identifiable {
     /// Only the question on screen. Earlier correct answers stay in `attempt.answers`.
     var correctFeedback: Bool { hasFeedback && (retryAnsweredCorrectly || attempt.answers.last == true) }
     var canRetry: Bool {
-        hasFeedback && !correctFeedback && !answerRevealed && question.kind.usesOptions && question.responses.count > 2
+        hasFeedback && !correctFeedback && !answerRevealed && question.kind.usesOptions
+            && (question.responses.count > 2 || question.kind == .spokenTime)
     }
     var showsCorrectResponse: Bool { hasFeedback && !canRetry }
+    /// Speech help appears on the question clock as soon as an answer is wrong.
+    var showsTimeReadingExplanation: Bool {
+        question.kind == .readDigital && showsSpokenClockHints
+    }
     /// A hint may appear while other choices are still open.
     var missedFirstAnswer: Bool { hasFeedback && attempt.answers.last == false }
-    /// The worked method starts only after that miss, once the question is closed:
-    /// the right choice, Show answer, or every wrong choice ruled out.
-    var showsWorkedExplanation: Bool { missedFirstAnswer && !canRetry }
-    var shouldAutoAdvance: Bool { hasFeedback && attempt.answers.last == true && !manualAdvanceAfterRejudge }
+    /// Worked methods follow a closed miss. Speech helpers stay directly on the clocks.
+    var showsWorkedExplanation: Bool {
+        guard missedFirstAnswer && !canRetry else { return false }
+        switch question.kind {
+        case .dayPart, .timeSequence, .addTime, .subtractTime, .flightArrival, .timeZone, .daySchedule:
+            return true
+        default:
+            return false
+        }
+    }
+    var shouldAutoAdvance: Bool { correctFeedback && !showsWorkedExplanation && !manualAdvanceAfterRejudge }
     /// The first day-part answer was wrong and the question is closed, so its timetable can still be changed.
     var offersDayPartSettings: Bool {
         question.kind == .dayPart && hasFeedback && !canRetry && attempt.answers.last == false
@@ -461,9 +476,10 @@ final class DinoSession: ObservableObject, Identifiable {
             if correct { retryAnsweredCorrectly = true }
             else {
                 rejectedResponses.insert(answer)
-                // The last remaining choice is the answer, so it needs no extra tap.
+                // Spoken-clock choices stay open until the player chooses correctly
+                // or explicitly reveals the answer; their guides help read every face.
                 let remaining = question.responses.filter { !rejectedResponses.contains($0) }
-                if remaining.count == 1, let last = remaining.first, AnswerValidator.isCorrect(last, for: question) {
+                if question.kind != .spokenTime, remaining.count == 1, let last = remaining.first, AnswerValidator.isCorrect(last, for: question) {
                     answerRevealed = true
                 }
             }

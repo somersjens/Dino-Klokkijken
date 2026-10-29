@@ -712,7 +712,7 @@ final class DinoUITests: XCTestCase {
     func testContextualHUDAndFirstQuestionExit() {
         onboard()
         let ids = ["header.level", "header.stars", "header.practice", "header.settings"]
-        let cards = ids.map { app.descendants(matching: .any)[$0] }
+        let cards = ids.map { app.descendants(matching: .any).matching(identifier: $0).firstMatch }
         for card in cards {
             XCTAssertEqual(card.frame.height, cards[0].frame.height, accuracy: 1)
             XCTAssertEqual(card.frame.midY, cards[0].frame.midY, accuracy: 1)
@@ -1433,6 +1433,64 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("cold-sleep-valley-scroll-responsive")
     }
 
+    func testQuestionTransitionWhenAnswerChoicesIncrease() {
+        for type in [DinoPracticeQuestion.chooseAnalog, .chooseDigital, .spokenTime] {
+            verifyQuestionTransition(type: type)
+        }
+    }
+
+    func testQuestionTransitionWhenAnswerChoicesIncreaseInLandscape() throws {
+        try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .pad)
+        XCUIDevice.shared.orientation = .landscapeLeft
+        for type in [DinoPracticeQuestion.chooseAnalog, .chooseDigital, .spokenTime] {
+            verifyQuestionTransition(type: type)
+        }
+    }
+
+    private func verifyQuestionTransition(type: DinoPracticeQuestion) {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.question-transition.\(UUID().uuidString)"
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = type.rawValue
+        app.launch()
+        XCTAssertTrue(app.buttons["question.option.1"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["question.option.2"].exists)
+        let name = "question-transition-\(type.rawValue)-\(app.frame.width > app.frame.height ? "landscape" : "portrait")"
+        saveScreenshot("\(name)-two-options")
+        let configuration = DinoPracticeConfiguration(time: .minutes, order: .specific(type))
+        var generator = DinoPracticeGenerator(configuration: configuration, seed: seed)
+        let first = generator.next(index: 0)
+        let next = generator.next(index: 1, difficultyForKind: { _ in .familiar })
+        tap("question.option.\(first.responses.firstIndex(of: first.expectedAnswer)!)")
+        XCTAssertTrue(app.buttons["question.option.3"].waitForExistence(timeout: 5))
+        let title = app.staticTexts["question.title"]
+        let titleFrame = title.frame
+        let viewport = app.scrollViews["game.questions"]
+        let viewportFrame = viewport.frame
+        let optionFrames = next.responses.indices.map { app.buttons["question.option.\($0)"].frame }
+        for index in next.responses.indices {
+            let option = app.buttons["question.option.\(index)"]
+            XCTAssertTrue(option.isHittable)
+            XCTAssertGreaterThanOrEqual(option.frame.minY, viewportFrame.minY)
+            XCTAssertLessThanOrEqual(option.frame.maxY, viewportFrame.maxY)
+        }
+        RunLoop.current.run(until: Date().addingTimeInterval(0.4))
+        XCTAssertEqual(title.frame.minY, titleFrame.minY, accuracy: 1)
+        XCTAssertEqual(viewport.frame, viewportFrame)
+        for index in next.responses.indices {
+            XCTAssertEqual(app.buttons["question.option.\(index)"].frame, optionFrames[index])
+        }
+        saveScreenshot("\(name)-four-options")
+        tap("question.option.\(next.responses.firstIndex { $0 != next.expectedAnswer }!)")
+        tap("question.showAnswer")
+        tap("question.next")
+        XCTAssertFalse(app.buttons["question.option.2"].exists, "A missed question returns to two choices")
+        XCTAssertTrue(app.buttons["question.option.1"].isHittable)
+        XCTAssertGreaterThanOrEqual(title.frame.minY, viewport.frame.minY,
+                                    "The next question starts at the top of its own scroll region")
+        saveScreenshot("\(name)-back-to-two-options")
+    }
+
     func testConsecutiveCorrectPracticeAnswersKeepCompanionInPortrait() {
         openPractice()
         selectPractice("practice.type.chooseAnalog")
@@ -1780,6 +1838,183 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["1/5"].exists)
     }
 
+    func testClockReadingHelpIsLimitedToCurrentQuestionAndTarget() {
+        onboard()
+        begin(1)
+        let target = app.descendants(matching: .any)["question.targetClock"]
+        let initialHeight = target.frame.height
+        let answerFrames = (0..<2).map { app.buttons["question.option.\($0)"].frame }
+        var rng = SeededGenerator(seed: seed)
+        let question = DinoQuestionGenerator.generate(level: DinoLevelCatalog.level(1)!, using: &rng)[0]
+        let wrong = question.options.firstIndex { $0 != question.target }!
+        saveScreenshot("clock-help-before-first-miss")
+        tap("question.option.\(wrong)")
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 5))
+        XCTAssertGreaterThan(target.frame.height, initialHeight + 20, "Reading arrows reserve space above the digital target")
+        XCTAssertEqual(target.frame.midX, app.staticTexts["question.title"].frame.midX, accuracy: 1)
+        for index in 0..<2 {
+            // The verdict badge extends the accessibility bounds by 5.5 points.
+            // A reading-helper layout would enlarge the whole answer stone.
+            let frame = app.buttons["question.option.\(index)"].frame
+            XCTAssertEqual(frame.width, answerFrames[index].width, accuracy: 8,
+                           "Answer stones keep their original clock width without reading helpers")
+            XCTAssertEqual(frame.height, answerFrames[index].height, accuracy: 8,
+                           "Answer stones keep their original clock height without reading helpers")
+        }
+        saveScreenshot("clock-help-after-first-miss")
+        tap("question.next")
+        XCTAssertTrue(app.staticTexts["2/5"].waitForExistence(timeout: 5))
+        XCTAssertEqual(target.frame.height, initialHeight, accuracy: 2, "The next question starts without the previous question's helpers")
+        saveScreenshot("clock-help-next-question")
+        tap("header.pause")
+        tap("game.exit.confirm")
+        begin(1)
+        XCTAssertEqual(target.frame.height, initialHeight, accuracy: 2, "A new level attempt starts without reading arrows")
+    }
+
+    func testAnalogReadingArrowsKeepTheClockLarge() {
+        for (hour, minute) in [(1, 35), (12, 0), (1, 5)] {
+            let family: DinoPracticeTime = minute == 0 ? .whole : .fiveMinutes
+            let configuration = DinoPracticeConfiguration(time: family, order: .specific(.chooseDigital))
+            var selected: (seed: UInt64, first: ClockQuestion, question: ClockQuestion)?
+            for sampleSeed in UInt64(0)..<5_000 {
+                var generator = DinoPracticeGenerator(configuration: configuration, seed: sampleSeed)
+                let first = generator.next(index: 0)
+                let question = minute == 0 ? first : generator.next(index: 1, difficultyForKind: { _ in .familiar })
+                if question.target.hour % 12 == hour % 12 && question.target.minute == minute {
+                    selected = (sampleSeed, first, question)
+                    break
+                }
+            }
+            guard let selected else { return XCTFail("Missing arrow-layout sample") }
+            app.terminate()
+            app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.compact-arrows.\(UUID().uuidString)"
+            app.launchEnvironment["DINO_TEST_SEED"] = String(selected.seed)
+            app.launch()
+            openPractice()
+            tap("practice.time.\(family.rawValue)")
+            selectPractice("practice.type.chooseDigital")
+            tap("practice.start")
+            if minute != 0 {
+                tap("question.option.\(selected.first.options.firstIndex(of: selected.first.target)!)")
+                XCTAssertTrue(app.staticTexts.matching(identifier: "header.questions")
+                    .matching(NSPredicate(format: "label == %@", "2")).firstMatch.waitForExistence(timeout: 8))
+            }
+            let clock = app.descendants(matching: .any)["question.targetClock"]
+            XCTAssertEqual(clock.label, selected.question.target.digitalText)
+            let originalClock = clock.frame
+            let answers = selected.question.options.indices.map { app.buttons["question.option.\($0)"].frame }
+            tap("question.option.\(selected.question.options.firstIndex { $0 != selected.question.target }!)")
+            if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+            XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 5))
+            XCTAssertLessThanOrEqual(clock.frame.height, originalClock.height + 1)
+            XCTAssertGreaterThan(clock.frame.minY, app.staticTexts["question.title"].frame.maxY)
+            for index in selected.question.options.indices {
+                let option = app.buttons["question.option.\(index)"]
+                XCTAssertTrue(option.isHittable)
+                XCTAssertEqual(option.frame.minY, answers[index].minY, accuracy: 8,
+                               "Compact arrows keep the answer row in place")
+            }
+            saveScreenshot("compact-analog-arrows-\(hour)-\(minute)")
+        }
+    }
+
+    func testClockReadingHelpFitsEditableClocks() {
+        openPractice()
+        tap("practice.time.quarter")
+        for kind in [DinoPracticeQuestion.setDigital, .setAnalog] {
+            selectPractice("practice.type.\(kind.rawValue)")
+            tap("practice.start")
+            var generator = DinoPracticeGenerator(configuration: .init(time: .quarter, order: .specific(kind)), seed: seed)
+            changeClockToWrongTime(kind.recipe.kind, target: generator.next(index: 0).target)
+            tap("question.confirm")
+            let correct = app.descendants(matching: .any)["question.correctClock"]
+            XCTAssertTrue(correct.waitForExistence(timeout: 5))
+            XCTAssertTrue(app.buttons["question.next"].isHittable)
+            saveScreenshot("clock-help-\(kind.rawValue)-feedback")
+            tap("question.next")
+            XCTAssertTrue(app.buttons["question.confirm"].waitForExistence(timeout: 5))
+            let control = app.descendants(matching: .any)[kind == .setDigital ? "question.digitalControl" : "question.analogControl"]
+            XCTAssertTrue(control.isHittable)
+            tap(kind == .setDigital ? "clock.hour.more" : "question.analog.more")
+            saveScreenshot("clock-help-\(kind.rawValue)-next")
+            tap("header.pause")
+        }
+    }
+
+    func testSpokenClockGuidesDutch() { checkSpokenClockGuides(language: "nl") }
+
+    func testSpokenClockGuidesEnglish() { checkSpokenClockGuides(language: "en") }
+
+    private func checkSpokenClockGuides(language: String) {
+        app.terminate()
+        app.launchArguments = ["-settings.languageOverride", language, "-AppleICUForce24HourTime", "YES"]
+        app.launch()
+        openPractice()
+        tap("practice.time.tenMinutes")
+        for type in [DinoPracticeQuestion.trueFalse, .readDigital, .spokenTime] {
+            selectPractice("practice.type.\(type.rawValue)")
+            tap("practice.start")
+            var generator = DinoPracticeGenerator(configuration: .init(time: .tenMinutes, order: .specific(type)),
+                                                   seed: seed, language: language)
+            let question = generator.next(index: 0)
+            tap("question.option.\(question.responses.firstIndex { $0 != question.expectedAnswer }!)")
+            if type == .spokenTime {
+                XCTAssertFalse(app.descendants(matching: .any)["question.spokenClock"].exists)
+                for (index, time) in question.options.enumerated() {
+                    let option = app.buttons["question.option.\(index)"]
+                    XCTAssertTrue(option.exists, "Every answer clock stays on screen after a miss")
+                    XCTAssertTrue((option.value as? String)?.contains(DinoTimeWords.time(time, language: language)) == true,
+                                  "Each clock has a guide for its own time")
+                }
+                XCTAssertTrue(app.buttons["question.option.\(question.options.firstIndex(of: question.target)!)"].isEnabled,
+                              "The correct clock remains selectable even with just two choices")
+            } else {
+                let clock = app.descendants(matching: .any)["question.targetClock"]
+                XCTAssertTrue(clock.waitForExistence(timeout: 5))
+                XCTAssertEqual(clock.value as? String, DinoTimeWords.time(question.target, language: language))
+            }
+            if type == .readDigital {
+                XCTAssertEqual(app.buttons["question.option.\(question.options.firstIndex(of: question.target)!)"].value as? String,
+                               language == "nl" ? "Goed" : "True", "A two-choice miss immediately marks the correct answer green")
+                XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "question.timeReading.label.")).firstMatch.exists,
+                               "The complete word ring belongs only in Example")
+            }
+            XCTAssertFalse(app.staticTexts["question.spokenClock.phrase"].exists)
+            saveScreenshot("compact-spoken-\(language)-\(type.rawValue)-after-miss")
+            tap("question.example")
+            tap("demo.nextExample")
+            tap("demo.nextExample")
+            XCTAssertFalse(app.staticTexts["demo.spokenClock.phrase"].exists, "Examples do not repeat the time underneath the face")
+            if type != .readDigital {
+                let identifier = type == .spokenTime ? "demo.answer" : "demo.targetClock"
+                XCTAssertEqual(app.descendants(matching: .any)[identifier].value as? String,
+                               DinoTimeWords.time(.init(hour: 3, minute: 20), language: language))
+            }
+            saveScreenshot("compact-spoken-\(language)-\(type.rawValue)-twenty")
+            tap("demo.ready")
+            if type == .spokenTime {
+                tap("question.option.\(question.options.firstIndex(of: question.target)!)")
+            } else { tap("question.next") }
+            XCTAssertTrue(app.staticTexts.matching(identifier: "header.questions")
+                .matching(NSPredicate(format: "label == %@", "2")).firstMatch.waitForExistence(timeout: 6),
+                          "One continuation starts the next question, without another explanation screen")
+            tap("header.pause")
+        }
+        for type in [DinoPracticeQuestion.read24Hour, .dayPart] {
+            selectPractice("practice.type.\(type.rawValue)")
+            tap("practice.start")
+            var generator = DinoPracticeGenerator(configuration: .init(time: .tenMinutes, order: .specific(type)),
+                                                   seed: seed, language: language)
+            let question = generator.next(index: 0)
+            let target = app.descendants(matching: .any)["question.targetClock"]
+            let height = target.frame.height
+            tap("question.option.\(question.responses.firstIndex { $0 != question.expectedAnswer }!)")
+            XCTAssertEqual(target.frame.height, height, accuracy: 2)
+            tap("header.pause")
+        }
+    }
+
     func testExampleReadingScaleAndCompletedHour() {
         openPractice()
         selectPractice("practice.type.chooseDigital")
@@ -1818,7 +2053,7 @@ final class DinoUITests: XCTestCase {
         let digital = app.descendants(matching: .any)["demo.digital"]
         let analog = app.descendants(matching: .any).matching(identifier: "demo.analog").firstMatch
         XCTAssertEqual(digital.label, "03:00")
-        XCTAssertLessThan(app.buttons["demo.ready"].frame.maxY, app.buttons["demo.nextExample"].frame.minY)
+        XCTAssertLessThan(app.buttons["demo.nextExample"].frame.maxY, app.buttons["demo.ready"].frame.minY)
         XCTAssertEqual(analog.frame.midX, digital.frame.midX, accuracy: 1)
         XCTAssertFalse(app.staticTexts["1 · Uren"].exists)
         XCTAssertFalse(app.staticTexts["2 · Minuten"].exists)
@@ -1889,7 +2124,8 @@ final class DinoUITests: XCTestCase {
             XCTAssertFalse(app.staticTexts["24-uursklok"].exists)
             XCTAssertTrue(origin.label.contains("Amsterdam") && origin.label.contains(question.relatedTimes[0].digitalText))
             XCTAssertTrue(destination.label.contains(city) && destination.label.contains("?"))
-            XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "question.option.")).count, 4)
+            XCTAssertFalse(app.buttons["question.timeZone.replay"].exists)
+            XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "question.option.")).count, question.responses.count)
             XCTAssertGreaterThanOrEqual(origin.frame.minX, map.frame.minX)
             XCTAssertLessThanOrEqual(destination.frame.maxX, map.frame.maxX)
             saveScreenshot("time-zone-atlas-\(family.rawValue)-nl")
@@ -1899,7 +2135,7 @@ final class DinoUITests: XCTestCase {
                 XCTAssertTrue(map.isHittable)
                 let viewport = app.scrollViews["game.questions"].frame
                 XCTAssertGreaterThanOrEqual(app.staticTexts["question.title"].frame.minY, viewport.minY)
-                XCTAssertLessThanOrEqual(app.buttons["question.option.3"].frame.maxY, viewport.maxY)
+                XCTAssertLessThanOrEqual(app.buttons["question.option.\(question.responses.count - 1)"].frame.maxY, viewport.maxY)
                 saveScreenshot("time-zone-atlas-worldwide-landscape")
                 XCUIDevice.shared.orientation = .portrait
             }
@@ -1908,6 +2144,7 @@ final class DinoUITests: XCTestCase {
             let example = DinoDemonstrationExamples.question(kind: .timeZone, minutes: family.minutes,
                                                              minuteStep: family.minuteStep, index: 0, previousTarget: nil)
             waitForTimeZoneWalk(example)
+            assertTimeZoneReplay(example, prefix: "demo")
             saveScreenshot("time-zone-atlas-example-\(family.rawValue)")
             tap("demo.nextExample")
             let nextExample = DinoDemonstrationExamples.question(kind: .timeZone, minutes: family.minutes,
@@ -1918,15 +2155,17 @@ final class DinoUITests: XCTestCase {
             XCTAssertTrue(destination.label.contains("?"), "Examples preserve the unanswered live map")
             let wrongIndex = question.options.firstIndex { $0 != question.target }!
             tap("question.option.\(wrongIndex)")
-            XCTAssertTrue(destination.label.contains("?"), "A wrong first attempt does not reveal the time")
-            XCTAssertFalse(app.descendants(matching: .any)["question.timeZone.difference"].exists,
-                           "The hour walk stays hidden until the right answer follows")
-            tap("question.showAnswer")
-            XCTAssertTrue(destination.label.contains(question.target.digitalText), "Revealing the answer updates the map")
+            if question.responses.count > 2 {
+                XCTAssertTrue(destination.label.contains("?"), "An open retry does not reveal the time")
+                XCTAssertFalse(app.buttons["question.timeZone.replay"].exists,
+                               "The animation stays hidden until the right answer follows")
+                tap("question.showAnswer")
+            }
             let walked = question.timeZoneJourney!.steps(from: question.relatedTimes[0])
-            waitUntilLabel("question.timeZone.difference", equals: walked.last!.caption, timeout: Double(walked.count) + 8)
-            XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.step.0"].label, question.relatedTimes[0].digitalText)
-            XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.result"].label, question.target.digitalText)
+            waitUntilLabel("question.timeZone.targetTime", equals: question.target.digitalText, timeout: Double(walked.count) + 8)
+            XCTAssertTrue(destination.label.contains(question.target.digitalText), "Revealing the answer animates the map card")
+            assertTimeZoneReplay(question, prefix: "question")
+            saveScreenshot("time-zone-in-card-answer-\(family.rawValue)")
             tap("header.pause")
         }
     }
@@ -1951,6 +2190,55 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["question.timeZone.origin"].label.contains("London"))
         XCTAssertTrue(app.descendants(matching: .any)["question.timeZone.destination"].label.contains("?"))
         saveScreenshot("time-zone-atlas-whole-en")
+        tap("question.example")
+        let example = DinoDemonstrationExamples.question(kind: .timeZone, minutes: [0], minuteStep: 60,
+                                                         index: 0, previousTarget: nil, language: "en")
+        waitForTimeZoneWalk(example, language: "en")
+        XCTAssertEqual(app.buttons["demo.timeZone.replay"].label, "Replay the time change")
+        assertTimeZoneReplay(example, prefix: "demo", language: "en")
+        saveScreenshot("time-zone-in-card-example-en")
+    }
+
+    func testTimeZoneCardReplayInBothLanguages() {
+        let configuration = DinoPracticeConfiguration(time: .minutes, order: .specific(.timeZone))
+        for language in ["nl", "en"] {
+            var generator = DinoPracticeGenerator(configuration: configuration, seed: seed, language: language)
+            let question = generator.next(index: 3, difficultyForKind: { _ in .challenge })
+            app.terminate()
+            app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.time-zone-card.\(UUID().uuidString)"
+            app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+            app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "timeZone"
+            app.launchEnvironment["DINO_TEST_PRACTICE_CHALLENGE"] = "1"
+            app.launchArguments = ["-settings.languageOverride", language, "-AppleICUForce24HourTime", "YES"]
+            app.launch()
+            XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 8))
+            XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.targetTime"].label, "?")
+            XCTAssertFalse(app.buttons["question.timeZone.replay"].exists)
+            tap("question.example")
+            let example = DinoDemonstrationExamples.question(kind: .timeZone, minutes: configuration.time.minutes,
+                                                             minuteStep: configuration.time.minuteStep,
+                                                             index: 0, previousTarget: nil, language: language)
+            waitForTimeZoneWalk(example, language: language)
+            assertTimeZoneReplay(example, prefix: "demo", language: language)
+            saveScreenshot("time-zone-in-card-example-\(language)")
+            tap("demo.ready")
+            XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.targetTime"].label, "?")
+            tap("question.option.\(question.responses.firstIndex { $0 != question.expectedAnswer }!)")
+            if question.responses.count > 2 {
+                XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.targetTime"].label, "?")
+                tap("question.showAnswer")
+            }
+            waitUntilLabel("question.timeZone.targetTime", equals: question.target.digitalText, timeout: 16)
+            assertTimeZoneReplay(question, prefix: "question", language: language)
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                XCUIDevice.shared.orientation = .landscapeLeft
+                XCTAssertTrue(app.buttons["question.timeZone.replay"].waitForExistence(timeout: 4))
+                let viewport = app.scrollViews["game.questions"].frame
+                XCTAssertLessThanOrEqual(app.buttons["question.option.\(question.responses.count - 1)"].frame.maxY, viewport.maxY)
+            }
+            saveScreenshot("time-zone-in-card-answer-\(language)")
+            XCUIDevice.shared.orientation = .portrait
+        }
     }
 
     func testHalfHourTimeZonePreservesMapAndWorkedAnswer() {
@@ -1974,9 +2262,9 @@ final class DinoUITests: XCTestCase {
                 let wrong = question.responses.firstIndex { $0 != question.expectedAnswer }!
                 tap("question.option.\(wrong)")
                 tap("question.showAnswer")
-                let final = question.timeZoneJourney!.steps(from: question.relatedTimes[0]).last!
-                waitUntilLabel("question.timeZone.difference", equals: final.caption, timeout: 12)
-                XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.result"].label, question.target.digitalText)
+                waitUntilLabel("question.timeZone.targetTime", equals: question.target.digitalText, timeout: 12)
+                XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.difference"].label,
+                               timeZoneDifference(question.offsetMinutes))
                 XCTAssertTrue(destination.label.contains(question.target.digitalText))
                 saveScreenshot("time-zone-half-hour-worked-answer")
                 return
@@ -2022,6 +2310,83 @@ final class DinoUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["practice.questionNumber"].label, "1", "Examples do not count as practice answers")
     }
 
+    func testFlightTotalHintAndReplayInBothLanguages() {
+        let configuration = DinoPracticeConfiguration(time: .minutes, order: .specific(.flightArrival))
+        for language in ["nl", "en"] {
+            var selected: (seed: UInt64, question: ClockQuestion)?
+            for sampleSeed in UInt64(0)..<500 {
+                var generator = DinoPracticeGenerator(configuration: configuration, seed: sampleSeed, language: language)
+                let question = generator.next(index: 3, difficultyForKind: { _ in .challenge })
+                let shift = question.durationMinutes + question.offsetMinutes
+                if question.offsetMinutes < 0 && (120...180).contains(shift) && shift % 60 > 30 {
+                    selected = (sampleSeed, question)
+                    break
+                }
+            }
+            guard let selected else { XCTFail("A flight must need a short backwards correction"); return }
+            let question = selected.question
+            let start = question.relatedTimes[0]
+            let shift = question.durationMinutes + question.offsetMinutes
+            app.terminate()
+            app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.flight-hint.\(UUID().uuidString)"
+            app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+            app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "flightArrival"
+            app.launchEnvironment["DINO_TEST_PRACTICE_CHALLENGE"] = "1"
+            app.launchEnvironment["DINO_TEST_SEED"] = String(selected.seed)
+            app.launchArguments = ["-settings.languageOverride", language, "-AppleICUForce24HourTime", "YES"]
+            app.launch()
+            XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 8))
+            let total = app.descendants(matching: .any)["question.flight.total"]
+            let unknown = app.descendants(matching: .any)["question.flight.unknown"]
+            let replay = app.buttons["question.flight.replay"]
+            XCTAssertTrue(unknown.exists)
+            XCTAssertFalse(total.exists)
+            XCTAssertFalse(replay.exists)
+            tap("question.option.\(question.responses.firstIndex { $0 != question.expectedAnswer }!)")
+            XCTAssertTrue(total.waitForExistence(timeout: 5))
+            XCTAssertTrue(total.label.contains(DinoTimeWords.duration(shift, language: language)))
+            XCTAssertTrue(unknown.exists, "The first miss reveals the total but keeps the arrival hidden")
+            XCTAssertFalse(app.descendants(matching: .any)["question.flight.arrival"].exists)
+            XCTAssertFalse(replay.exists)
+            XCTAssertTrue(app.buttons["question.showAnswer"].exists)
+            saveScreenshot("flight-total-first-miss-\(language)")
+
+            tap("question.example")
+            XCTAssertTrue(app.buttons["demo.ready"].waitForExistence(timeout: 5))
+            let exampleReplay = app.buttons["demo.flight.replay"]
+            XCTAssertTrue(exampleReplay.exists)
+            exampleReplay.tap()
+            XCTAssertEqual(app.descendants(matching: .any)["demo.answer"].label,
+                           app.descendants(matching: .any)["demo.targetClock"].label)
+            tap("demo.ready")
+            XCTAssertTrue(total.waitForExistence(timeout: 5), "The total hint survives opening an example")
+            XCTAssertTrue(unknown.exists)
+
+            tap("question.showAnswer")
+            let steps = DinoTimeZoneStep.steps(from: start, offsetMinutes: shift)
+            waitUntilLabel("question.flight.arrival", equals: question.target.digitalText, timeout: Double(steps.count) + 6)
+            let difference = "+" + DinoTimeWords.duration(shift, language: language)
+            XCTAssertEqual(app.descendants(matching: .any)["question.flight.difference"].label, difference)
+            XCTAssertTrue(replay.exists && replay.isEnabled)
+            XCTAssertTrue(app.descendants(matching: .any)["question.flight.ticket"].frame.contains(replay.frame))
+            let optionFrame = app.buttons["question.option.0"].frame
+            let totalLabel = total.label
+            replay.tap()
+            XCTAssertEqual(app.descendants(matching: .any)["question.flight.arrival"].label, start.digitalText)
+            XCTAssertEqual(app.descendants(matching: .any)["question.flight.difference"].label, "+0")
+            XCTAssertEqual(total.label, totalLabel, "Replay preserves the finished total hint")
+            replay.tap()
+            waitUntilLabel("question.flight.arrival", equals: question.target.digitalText, timeout: Double(steps.count) + 6)
+            XCTAssertEqual(app.buttons["question.option.0"].frame.midY, optionFrame.midY, accuracy: 1)
+            XCTAssertTrue(app.buttons["question.next"].exists)
+            saveScreenshot("flight-logical-route-replay-\(language)")
+            tap("question.next")
+            XCTAssertTrue(unknown.waitForExistence(timeout: 5))
+            XCTAssertFalse(total.exists, "A new question hides the hint again")
+            XCTAssertFalse(replay.exists)
+        }
+    }
+
     func testDayScheduleHasTwoActivitiesAndBreak() {
         openPractice()
         tap("practice.time.quarter")
@@ -2048,14 +2413,15 @@ final class DinoUITests: XCTestCase {
         tap("question.example")
         XCTAssertTrue(app.buttons["demo.ready"].waitForExistence(timeout: 5))
         let example = DinoDemonstrationExamples.question(kind: .daySchedule, minutes: [15, 45], minuteStep: 15, index: 0, previousTarget: nil)
-        XCTAssertEqual(element("demo.answer").label, example.target.digitalText)
-        XCTAssertTrue(element("demo.schedule.total").label.contains(DinoTimeWords.duration(example.daySchedule!.totalMinutes, language: "nl")))
+        waitUntilLabel("demo.answer", equals: example.target.digitalText, timeout: 8)
+        XCTAssertTrue(element("demo.schedule.total").label.contains(example.daySchedule!.summedDurationText(language: "nl")))
+        XCTAssertTrue(element("demo.schedule.total").label.contains(DinoTimeWords.digitalDuration(example.daySchedule!.totalMinutes)))
         XCTAssertTrue(element("demo.schedule.group").frame.contains(element("demo.schedule.total").frame))
         for suffix in ["activity.1", "break", "activity.2"] { XCTAssertTrue(element("demo.schedule.\(suffix)").exists) }
         saveScreenshot("day-schedule-example")
         tap("demo.nextExample")
         let next = DinoDemonstrationExamples.question(kind: .daySchedule, minutes: [15, 45], minuteStep: 15, index: 1, previousTarget: example.target)
-        XCTAssertEqual(element("demo.answer").label, next.target.digitalText)
+        waitUntilLabel("demo.answer", equals: next.target.digitalText, timeout: 8)
         tap("demo.ready")
         XCTAssertTrue(element("question.schedule.start").label.contains(schedule.start.digitalText), "Help preserves the live question")
         XCTAssertTrue(app.staticTexts.matching(identifier: "header.questions")
@@ -2065,17 +2431,89 @@ final class DinoUITests: XCTestCase {
         tap("question.option.\(wrongIndex)")
         XCTAssertTrue(element("question.schedule.finish").label.contains("?"), "A retry keeps the end time hidden")
         XCTAssertTrue(element("question.schedule.total").waitForExistence(timeout: 5))
-        XCTAssertTrue(element("question.schedule.total").label.contains(DinoTimeWords.duration(schedule.totalMinutes, language: "nl")))
+        XCTAssertTrue(element("question.schedule.total").label.contains(schedule.summedDurationText(language: "nl")))
+        XCTAssertTrue(element("question.schedule.total").label.contains(DinoTimeWords.digitalDuration(schedule.totalMinutes)))
+        for (suffix, minutes) in [("activity.1", schedule.firstMinutes), ("break", schedule.breakMinutes), ("activity.2", schedule.secondMinutes)] {
+            XCTAssertTrue(element("question.schedule.\(suffix)").label.contains(DinoTimeWords.duration(minutes, language: "nl")))
+            XCTAssertTrue(element("question.schedule.\(suffix)").label.contains(DinoTimeWords.digitalDuration(minutes)))
+            XCTAssertEqual(element("question.schedule.\(suffix)").frame.minX,
+                           element("question.schedule.start").frame.minX, accuracy: 1,
+                           "Departure and journey icons share the same left column")
+        }
         XCTAssertTrue(element("question.schedule.group").frame.contains(element("question.schedule.total").frame))
         saveScreenshot("day-schedule-total-inside-group")
         tap("question.showAnswer")
-        XCTAssertTrue(element("question.schedule.finish").label.contains(schedule.end.digitalText))
+        waitUntilLabel("question.schedule.finish", equals: schedule.end.digitalText, timeout: 8)
         saveScreenshot("day-schedule-answer")
         tap("question.next")
         XCTAssertTrue(app.staticTexts.matching(identifier: "header.questions")
             .matching(NSPredicate(format: "label == %@", "3")).firstMatch.waitForExistence(timeout: 5))
         XCTAssertTrue(element("question.schedule.finish").label.contains("?"))
         XCTAssertFalse(element("question.schedule.total").exists)
+    }
+
+    func testTrainDurationCarryInBothLanguages() {
+        let configuration = DinoPracticeConfiguration(time: .minutes, order: .specific(.daySchedule))
+        for language in ["nl", "en"] {
+            var selected: (seed: UInt64, question: ClockQuestion)?
+            for sampleSeed in UInt64(0)..<200 {
+                var generator = DinoPracticeGenerator(configuration: configuration, seed: sampleSeed, language: language)
+                let question = generator.next(index: 3, difficultyForKind: { _ in .challenge })
+                let schedule = question.daySchedule!
+                if schedule.durations.reduce(0, { $0 + $1 / 60 }) == 1 &&
+                    schedule.durations.reduce(0, { $0 + $1 % 60 }) >= 80 {
+                    selected = (sampleSeed, question)
+                    break
+                }
+            }
+            guard let selected, let schedule = selected.question.daySchedule else {
+                XCTFail("A train example must carry the written minutes into an hour")
+                return
+            }
+            app.terminate()
+            app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.train-carry.\(UUID().uuidString)"
+            app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+            app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "daySchedule"
+            app.launchEnvironment["DINO_TEST_PRACTICE_CHALLENGE"] = "1"
+            app.launchEnvironment["DINO_TEST_SEED"] = String(selected.seed)
+            app.launchArguments = ["-settings.languageOverride", language, "-AppleICUForce24HourTime", "YES"]
+            app.launch()
+            XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 8))
+            XCTAssertFalse(app.buttons["question.schedule.replay"].exists)
+            saveScreenshot("train-duration-values-before-\(language)")
+            let wrong = selected.question.responses.firstIndex { $0 != selected.question.expectedAnswer }!
+            tap("question.option.\(wrong)")
+            let total = app.descendants(matching: .any)["question.schedule.total"]
+            XCTAssertTrue(total.waitForExistence(timeout: 5))
+            XCTAssertTrue(total.label.contains(schedule.summedDurationText(language: language)))
+            XCTAssertTrue(total.label.contains(DinoTimeWords.digitalDuration(schedule.totalMinutes)))
+            for (index, suffix) in ["activity.1", "break", "activity.2"].enumerated() {
+                let row = app.descendants(matching: .any)["question.schedule.\(suffix)"]
+                XCTAssertTrue(row.label.contains(DinoTimeWords.duration(schedule.durations[index], language: language)))
+                XCTAssertTrue(row.label.contains(DinoTimeWords.digitalDuration(schedule.durations[index])))
+            }
+            XCTAssertFalse(app.buttons["question.schedule.replay"].exists, "The retry keeps the arrival hidden")
+            tap("question.showAnswer")
+            waitUntilLabel("question.schedule.finish", equals: schedule.end.digitalText, timeout: 8)
+            let difference = "+" + DinoTimeWords.compactDuration(hours: schedule.totalMinutes / 60,
+                                                                minutes: schedule.totalMinutes % 60, language: language)
+            XCTAssertEqual(app.descendants(matching: .any)["question.schedule.added"].label, difference)
+            let replay = app.buttons["question.schedule.replay"]
+            XCTAssertTrue(replay.exists && replay.isEnabled)
+            let arrival = app.descendants(matching: .any)["question.schedule.arrival"]
+            XCTAssertTrue(arrival.frame.contains(replay.frame))
+            let optionFrame = app.buttons["question.option.0"].frame
+            replay.tap()
+            XCTAssertEqual(app.descendants(matching: .any)["question.schedule.finish"].label, schedule.start.digitalText)
+            XCTAssertEqual(app.descendants(matching: .any)["question.schedule.added"].label, "+0")
+            replay.tap()
+            waitUntilLabel("question.schedule.finish", equals: schedule.end.digitalText, timeout: 8)
+            XCTAssertEqual(app.descendants(matching: .any)["question.schedule.added"].label, difference)
+            XCTAssertEqual(app.buttons["question.option.0"].frame.midY, optionFrame.midY, accuracy: 1)
+            // Save the settled digits rather than a frame in their final numeric transition.
+            RunLoop.current.run(until: Date().addingTimeInterval(0.45))
+            saveScreenshot("train-duration-carry-\(language)")
+        }
     }
 
     func testExpandedMultipleChoiceExamplesShowOneAnswer() {
@@ -2093,9 +2531,9 @@ final class DinoUITests: XCTestCase {
             if type == .timeZone {
                 let example = DinoDemonstrationExamples.question(kind: .timeZone, minutes: [30], minuteStep: 30,
                                                                  index: 0, previousTarget: nil)
-                waitUntilLabel("demo.answer", equals: example.target.digitalText, timeout: 8)
+                waitUntilLabel("demo.timeZone.targetTime", equals: example.target.digitalText, timeout: 8)
             }
-            let answers = app.descendants(matching: .any).matching(identifier: "demo.answer")
+            let answers = app.descendants(matching: .any).matching(identifier: type == .timeZone ? "demo.timeZone.targetTime" : "demo.answer")
             XCTAssertEqual(answers.count, 1, "\(type) shows one worked answer")
             XCTAssertFalse(answers.firstMatch.label.isEmpty)
             XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "question.option.")).count, 0,
@@ -2121,21 +2559,57 @@ final class DinoUITests: XCTestCase {
     }
 
     private func waitUntilLabel(_ identifier: String, equals expected: String, timeout: TimeInterval) {
-        let element = app.descendants(matching: .any)[identifier]
-        let predicate = NSPredicate(format: "exists == 1 AND label == %@", expected)
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
-        XCTAssertEqual(XCTWaiter().wait(for: [expectation], timeout: timeout), .completed,
-                       "Expected \(identifier) to read \(expected)")
+        let element = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+        // Re-resolve a clock that replaces its question mark with animated digits.
+        let predicate = NSPredicate { _, _ in
+            let current = self.app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+            return current.exists && current.label == expected
+        }
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: nil)
+        let result = XCTWaiter().wait(for: [expectation], timeout: timeout)
+        if result != .completed { saveScreenshot("unexpected-label-\(identifier)") }
+        XCTAssertEqual(result, .completed,
+                       "Expected \(identifier) to read \(expected), found \(element.exists ? element.label : "missing")")
     }
 
-    private func waitForTimeZoneWalk(_ question: ClockQuestion) {
+    private func timeZoneDifference(_ offset: Int, language: String = "nl", later: Bool? = nil) -> String {
+        let direction = (later ?? (offset > 0)) ? "later" : (language == "nl" ? "eerder" : "earlier")
+        return "\(DinoTimeWords.zoneHours(offset)) \(language == "nl" ? "uur" : "h") \(direction)"
+    }
+
+    private func waitForTimeZoneWalk(_ question: ClockQuestion, language: String = "nl") {
         let steps = question.timeZoneJourney!.steps(from: question.relatedTimes[0])
-        waitUntilLabel("demo.answer", equals: question.target.digitalText, timeout: Double(steps.count) + 8)
-        XCTAssertEqual(app.descendants(matching: .any)["demo.timeZone.step.0"].label, question.relatedTimes[0].digitalText)
-        XCTAssertEqual(app.descendants(matching: .any)["demo.timeZone.difference"].label, steps.last!.caption)
+        waitUntilLabel("demo.timeZone.targetTime", equals: question.target.digitalText, timeout: Double(steps.count) + 8)
+        XCTAssertEqual(app.descendants(matching: .any)["demo.timeZone.referenceTime"].label, question.relatedTimes[0].digitalText)
+        XCTAssertEqual(app.descendants(matching: .any)["demo.timeZone.difference"].label, timeZoneDifference(question.offsetMinutes, language: language))
         XCTAssertTrue(app.descendants(matching: .any)["demo.timeZone.destination"].label.contains(question.target.digitalText))
-        XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "demo.answer").count, 1,
-                       "One difference chip updates the same result clock")
+        XCTAssertEqual(app.descendants(matching: .any).matching(identifier: "demo.timeZone.targetTime").count, 1,
+                       "One destination clock updates inside the map")
+        XCTAssertFalse(app.descendants(matching: .any)["demo.timeZone.steps"].exists)
+        XCTAssertFalse(app.descendants(matching: .any)["demo.answer"].exists)
+    }
+
+    private func assertTimeZoneReplay(_ question: ClockQuestion, prefix: String, language: String = "nl") {
+        let destination = app.descendants(matching: .any)["\(prefix).timeZone.destination"]
+        let button = app.buttons["\(prefix).timeZone.replay"]
+        XCTAssertTrue(button.exists && button.isEnabled, button.debugDescription)
+        XCTAssertTrue(destination.frame.contains(button.frame), "Replay stays inside the destination card")
+        XCTAssertGreaterThan(button.frame.midX, destination.frame.midX)
+        XCTAssertLessThan(button.frame.midY, destination.frame.midY)
+        // Positioned map labels may lack an AX activation point; test a finger tap on the visible button.
+        button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertEqual(app.descendants(matching: .any)["\(prefix).timeZone.targetTime"].label, question.relatedTimes[0].digitalText)
+        XCTAssertEqual(app.descendants(matching: .any)["\(prefix).timeZone.difference"].label,
+                       timeZoneDifference(0, language: language, later: question.offsetMinutes > 0))
+        // Restart again during the opening pause: only the latest run may update the card.
+        button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        let steps = question.timeZoneJourney!.steps(from: question.relatedTimes[0])
+        waitUntilLabel("\(prefix).timeZone.targetTime", equals: question.target.digitalText, timeout: Double(steps.count) + 8)
+        XCTAssertEqual(app.descendants(matching: .any)["\(prefix).timeZone.difference"].label,
+                       timeZoneDifference(question.offsetMinutes, language: language))
+        XCTAssertEqual(app.descendants(matching: .any)["\(prefix).timeZone.referenceTime"].label, question.relatedTimes[0].digitalText)
+        XCTAssertFalse(app.descendants(matching: .any)["\(prefix).timeZone.steps"].exists)
+        XCTAssertFalse(app.descendants(matching: .any)["\(prefix).timeZone.result"].exists)
     }
 
     private func chooseExampleTimeFamily(_ family: String) {
@@ -2251,6 +2725,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertFalse(app.buttons["demo.hand.minutes"].exists)
         XCTAssertLessThan(analog.frame.maxY, app.buttons["demo.analog.more"].frame.minY)
         XCTAssertTrue(app.buttons["demo.ready"].waitForExistence(timeout: 20))
+        XCTAssertLessThan(app.buttons["demo.nextExample"].frame.maxY, app.buttons["demo.ready"].frame.minY)
         XCTAssertEqual(digital.label, "03:00", "The digital target stays fixed during all demonstrated taps")
         saveScreenshot("analog-setting-example-completed-whole")
         tap("demo.nextExample")
@@ -2688,6 +3163,40 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("analog-minute-hour-carry")
     }
 
+    func testCorrectRetriesAdvanceUnlessTheyAddAnExplanation() {
+        openPractice()
+        func counter(_ identifier: String, value: Int) -> XCUIElement {
+            app.staticTexts.matching(identifier: identifier)
+                .matching(NSPredicate(format: "label == %@", String(value))).firstMatch
+        }
+        for type in [DinoPracticeQuestion.chooseAnalog, .minutesBetween, .daySchedule] {
+            selectPractice("practice.type.\(type.rawValue)")
+            tap("practice.start")
+            var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(type)), seed: seed)
+            let first = generator.next(index: 0)
+            tap("question.option.\(first.responses.firstIndex(of: first.expectedAnswer)!)")
+            XCTAssertTrue(counter("header.questions", value: 2).waitForExistence(timeout: 5))
+            let question = generator.next(index: 1, difficultyForKind: { _ in .familiar })
+            XCTAssertEqual(question.responses.count, 4)
+            tap("question.option.\(question.responses.firstIndex { $0 != question.expectedAnswer }!)")
+            XCTAssertTrue(app.buttons["question.showAnswer"].waitForExistence(timeout: 5))
+            tap("question.option.\(question.responses.firstIndex(of: question.expectedAnswer)!)")
+            if type == .daySchedule {
+                XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 5))
+                RunLoop.current.run(until: Date().addingTimeInterval(1.5))
+                XCTAssertTrue(counter("header.questions", value: 2).exists, "The train explanation waits for Next")
+                XCTAssertTrue(app.descendants(matching: .any)["question.schedule.total"].exists)
+                tap("question.next")
+            }
+            XCTAssertTrue(counter("header.questions", value: 3).waitForExistence(timeout: 5),
+                          "A correct retry without a new explanation advances automatically for \(type)")
+            XCTAssertFalse(app.buttons["question.next"].exists)
+            XCTAssertFalse(app.buttons["question.showAnswer"].exists)
+            XCTAssertTrue(counter("header.streak", value: 0).exists, "A correct retry keeps the lost point")
+            tap("header.pause")
+        }
+    }
+
     func testMultipleChoiceRetriesKeepTheLostPoint() {
         openPractice()
         selectPractice("practice.type.dayPart")
@@ -2947,7 +3456,7 @@ final class DinoUITests: XCTestCase {
     }
 
     func testWrongClockChoicesExplainTheirOwnTime() {
-        checkWrongClockChoices([.read24Hour, .spokenTime, .chooseAnalog], customStyle: true)
+        checkWrongClockChoices([.read24Hour, .chooseAnalog], customStyle: true)
     }
 
     func testTimeReadingAnalogClockDutch() { checkTimeReadingClock(language: "nl") }
@@ -2959,63 +3468,45 @@ final class DinoUITests: XCTestCase {
         app.launchArguments = ["-settings.languageOverride", language, "-AppleICUForce24HourTime", "YES"]
         app.launch()
         openPractice()
-        XCTAssertTrue(app.buttons["practice.type.chooseDigital"].label.contains(language == "nl" ? "Kies de digitale klok" : "Choose the digital clock"))
-        XCTAssertTrue(app.buttons["practice.type.readDigital"].label.contains(language == "nl" ? "Hoe zeg je deze tijd?" : "How do you say this time?"))
-        for family in [DinoPracticeTime.whole, .fiveMinutes, .minutes] {
+        let labels = app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "question.timeReading.label."))
+        func waitForQuestion(_ value: Int) {
+            XCTAssertTrue(app.staticTexts.matching(identifier: "header.questions")
+                .matching(NSPredicate(format: "label == %@", String(value))).firstMatch.waitForExistence(timeout: 6))
+        }
+        for family in [DinoPracticeTime.whole, .minutes] {
             tap("practice.time.\(family.rawValue)")
             selectPractice("practice.type.readDigital")
             tap("practice.start")
-            var generator = DinoPracticeGenerator(configuration: .init(time: family, order: .specific(.readDigital)),
-                                                   seed: seed, language: language)
+            var generator = DinoPracticeGenerator(configuration: .init(time: family, order: .specific(.readDigital)), seed: seed, language: language)
             let first = generator.next(index: 0)
-            tap("question.option.\(first.responses.firstIndex(of: first.expectedAnswer)!)")
-            XCTAssertTrue(app.buttons["question.option.3"].waitForExistence(timeout: 6))
-            let question = generator.next(index: 1, difficultyForKind: { _ in .familiar })
-            let target = app.descendants(matching: .any)["question.targetClock"]
-            XCTAssertTrue(target.exists)
-            let frame = target.frame
-            let answerOffset = target.frame.midY - app.buttons["question.option.0"].frame.midY
-            var rejected: [ClockTime] = []
-            for index in question.responses.indices where question.responses[index] != question.expectedAnswer {
-                guard case .time(let time) = question.responses[index] else { return XCTFail("Expected a spoken time choice") }
-                tap("question.option.\(index)")
-                rejected.append(time)
-                for time in rejected {
-                    XCTAssertTrue(app.descendants(matching: .any)["question.timeReading.rejected.\(time.minute)"].exists,
-                                  "Every wrong choice keeps its own orange marker")
-                }
-                XCTAssertFalse(app.buttons["question.option.\(index)"].label.contains(":"))
-                XCTAssertEqual(target.frame.size, frame.size, "Wrong-answer markers never resize the target clock")
-                XCTAssertEqual(target.frame.midY - app.buttons["question.option.0"].frame.midY, answerOffset, accuracy: 1,
-                               "Wrong-answer markers keep the clock's position relative to the answers, including when the page scrolls")
-            }
-            saveScreenshot("time-reading-\(language)-\(family.rawValue)-wrong")
+            tap("question.option.\(first.options.firstIndex { $0 != first.target }!)")
+            XCTAssertEqual(app.buttons["question.option.\(first.options.firstIndex(of: first.target)!)"].value as? String,
+                           language == "nl" ? "Goed" : "True")
+            XCTAssertEqual(labels.count, 0)
             tap("question.example")
             XCTAssertTrue(app.descendants(matching: .any)["demo.timeReading.clock"].exists)
-            let example = DinoDemonstrationExamples.question(kind: .readDigital, minutes: family.minutes,
-                minuteStep: family.minuteStep, index: 0, previousTarget: nil, language: language)
             for minute in stride(from: 0, to: 60, by: 5) {
-                let phrase = DinoTimeWords.time(.init(hour: example.target.hour, minute: minute), language: language)
-                XCTAssertTrue(app.staticTexts[phrase].exists, "The complete example includes \(phrase)")
+                XCTAssertTrue(app.staticTexts[DinoTimeWords.time(.init(hour: 3, minute: minute), language: language)].exists)
             }
-            saveScreenshot("time-reading-\(language)-\(family.rawValue)-example")
             if family == .minutes {
                 tap("demo.nextExample")
-                let refreshed = DinoDemonstrationExamples.question(kind: .readDigital, minutes: family.minutes,
-                    minuteStep: family.minuteStep, index: 1, previousTarget: example.target, language: language)
-                XCTAssertFalse(refreshed.target.minute.isMultiple(of: 5))
-                XCTAssertEqual(app.staticTexts["demo.answer"].label, DinoTimeWords.time(refreshed.target, language: language))
-                let diagram = app.descendants(matching: .any)["demo.timeReading.clock"].frame
-                for label in app.staticTexts.matching(NSPredicate(format: "identifier BEGINSWITH %@", "demo.timeReading.label.")).allElementsBoundByIndex {
-                    XCTAssertGreaterThanOrEqual(label.frame.minX, diagram.minX - 1)
-                    XCTAssertLessThanOrEqual(label.frame.maxX, diagram.maxX + 1)
-                }
-                saveScreenshot("time-reading-\(language)-exact-minute-example")
+                XCTAssertEqual(app.descendants(matching: .any)["demo.targetClock"].label, "03:01")
             }
+            saveScreenshot("compact-reading-\(language)-\(family.rawValue)-example")
             tap("demo.ready")
             tap("question.next")
-            XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "identifier BEGINSWITH %@", "question.timeReading.rejected.")).allElementsBoundByIndex.isEmpty,
-                          "A new question clears the previous wrong-answer markers")
+            waitForQuestion(2)
+            let second = generator.next(index: 1, difficultyForKind: { _ in .introduction })
+            tap("question.option.\(second.options.firstIndex(of: second.target)!)")
+            waitForQuestion(3)
+            let third = generator.next(index: 2, difficultyForKind: { _ in .familiar })
+            XCTAssertEqual(third.options.count, 4)
+            tap("question.option.\(third.options.firstIndex { $0 != third.target }!)")
+            XCTAssertEqual(labels.count, 0)
+            tap("question.option.\(third.options.firstIndex(of: third.target)!)")
+            waitForQuestion(4)
+            XCTAssertEqual(labels.count, 0)
+            XCTAssertFalse(app.buttons["question.next"].exists, "Correct answers do not introduce an extra review step")
             tap("header.pause")
         }
     }
@@ -3059,6 +3550,7 @@ final class DinoUITests: XCTestCase {
                 guard case .time(let time) = question.responses[index] else { return XCTFail("Expected clock choices") }
                 let option = app.buttons["question.option.\(index)"]
                 tap(option.identifier)
+
                 let reading = kind == .spokenTime ? DinoTimeWords.time(time, language: "en")
                     : time.digitalReading(notation: kind == .read24Hour ? .twentyFour : .twelve,
                                           languageCode: "en").text
@@ -4922,7 +5414,7 @@ final class DinoUITests: XCTestCase {
             let right = app.buttons["question.match.time.0"]
             XCTAssertTrue(first.waitForExistence(timeout: 5))
             XCTAssertEqual(first.frame.width, right.frame.width, accuracy: 1)
-            XCTAssertLessThanOrEqual(right.frame.height, 96)
+            XCTAssertEqual(first.frame.height, right.frame.height, accuracy: 1)
             let horizontal = tablet && app.frame.width > app.frame.height
             if horizontal {
                 XCTAssertEqual(first.frame.midX, right.frame.midX, accuracy: 1)

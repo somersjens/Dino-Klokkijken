@@ -152,7 +152,7 @@ actor DinoSpriteLoader {
     /// copies stay separate from the compact result sprites and are released after landing.
     func openingJumpImages(for colors: DinoAppearance) async -> [String: UIImage] {
         await withTaskGroup(of: (String, UIImage?).self) { group in
-            var next = DinoOpeningJump.assets.makeIterator()
+            var next = DinoWelcomeJump.assets.makeIterator()
             func enqueue(_ asset: String) {
                 group.addTask(priority: .userInitiated) {
                     guard !Task.isCancelled else { return (asset, nil) }
@@ -259,7 +259,7 @@ enum DinoAvatarRenderer {
     }
 
     static func releaseOpeningImages(appearance: DinoAppearance) {
-        for asset in ["dino-idle"] + DinoOpeningJump.assets {
+        for asset in DinoWelcomeJump.assets {
             cache.removeObject(forKey: cacheKey(appearance: appearance, portrait: false, asset: asset, resolution: .original))
         }
     }

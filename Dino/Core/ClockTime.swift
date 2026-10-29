@@ -1,4 +1,5 @@
 import Foundation
+import CoreGraphics
 
 /// Scenery clocks share one speed contract; boss hands run twice as fast.
 enum WorldClockMotion {
@@ -152,23 +153,34 @@ enum ClockHandHintGeometry {
         }
     }
 
-    static func extent(shape: AnalogClockShape) -> Double {
-        switch shape {
-        case .circle: return 0.88
-        case .octagon: return 0.90
-        case .square: return 0.94
+    static func minuteMarks(shape: AnalogClockShape) -> [MinuteMark] {
+        stride(from: 0, to: 60, by: 5).map { minute in
+            minuteMark(minute: minute, shape: shape,
+                       labelSize: CGSize(width: Double(String(minute).count) * 0.042, height: 0.078))
         }
     }
 
-    static func minuteMarks(shape: AnalogClockShape) -> [MinuteMark] {
-        stride(from: 0, to: 60, by: 5).map { minute in
-            let angle = Double(minute) * 6
-            let edge = outerRadius(angle: angle, shape: shape)
-            return MinuteMark(minute: minute,
-                              tickStart: point(radius: edge + 0.006, angle: angle),
-                              tickEnd: point(radius: edge + 0.020, angle: angle),
-                              label: point(radius: edge + 0.062, angle: angle))
-        }
+    /// The label sits beyond its tick by the same visible gap at every angle.
+    /// Using the measured text rectangle keeps two digits and words off the rim.
+    static func minuteMark(minute: Int, shape: AnalogClockShape, labelSize: CGSize,
+                           gap: Double = 0.018) -> MinuteMark {
+        let angle = Double(minute) * 6
+        let edge = outerRadius(angle: angle, shape: shape)
+        let start = point(radius: edge + 0.008, angle: angle)
+        let end = point(radius: edge + 0.026, angle: angle)
+        return MinuteMark(minute: minute, tickStart: start, tickEnd: end,
+                          label: labelCenter(from: end, toward: point(radius: 1, angle: angle),
+                                             labelSize: labelSize, gap: gap))
+    }
+
+    static func labelCenter(from start: CGPoint, toward direction: CGPoint, labelSize: CGSize,
+                            gap: Double) -> CGPoint {
+        let length = max(1e-12, hypot(direction.x, direction.y))
+        let unit = CGPoint(x: direction.x / length, y: direction.y / length)
+        let horizontal = abs(unit.x) < 1e-10 ? Double.infinity : (labelSize.width / 2 + gap) / abs(unit.x)
+        let vertical = abs(unit.y) < 1e-10 ? Double.infinity : (labelSize.height / 2 + gap) / abs(unit.y)
+        let distance = min(horizontal, vertical)
+        return CGPoint(x: start.x + unit.x * distance, y: start.y + unit.y * distance)
     }
 
     struct Pointer {
@@ -185,46 +197,94 @@ enum ClockHandHintGeometry {
     }
 
     static func pointers(time: ClockTime, shape: AnalogClockShape = .circle) -> [Pointer] {
-        // The hour refers to the completed hour, even when its hand is almost at the next one.
+        // Both arrows stop outside the scale; the hour still names the completed hour.
         let hourAngle = Double(time.hour % 12) * 30
-        let hourTip = point(radius: 0.412, angle: hourAngle)
-        let minuteTip = point(radius: outerRadius(angle: time.minuteAngle, shape: shape) + 0.150,
-                              angle: time.minuteAngle)
+        func tip(at angle: Double) -> CGPoint {
+            point(radius: outerRadius(angle: angle, shape: shape) + 0.165, angle: angle)
+        }
         func pointer(tip: CGPoint, angle: Double) -> Pointer {
-            let badge = point(radius: outerRadius(angle: angle, shape: shape) + 0.280, angle: angle)
+            let badge = point(radius: outerRadius(angle: angle, shape: shape) + 0.345, angle: angle)
             let distance = hypot(badge.x - tip.x, badge.y - tip.y)
             return Pointer(start: CGPoint(x: badge.x + (tip.x - badge.x) * 0.09 / distance,
                                           y: badge.y + (tip.y - badge.y) * 0.09 / distance),
                            tip: tip, badge: badge)
         }
-        // Route the hour arrow between the outside minute labels. The minute arrow
-        // stays radial unless its badge needs to move aside for the hour badge.
-        let hours = [-25.0, 25, -35, 35, -45, 45, -55, 55].map { pointer(tip: hourTip, angle: hourAngle + $0) }
-        let minutes = [0.0, -20, 20, -35, 35].map { pointer(tip: minuteTip, angle: time.minuteAngle + $0) }
+        let hourTip = tip(at: hourAngle)
+        let straightHour = pointer(tip: hourTip, angle: hourAngle)
+        let minute = pointer(tip: tip(at: time.minuteAngle), angle: time.minuteAngle)
+        let badgeSeparation = hypot(straightHour.badge.x - minute.badge.x, straightHour.badge.y - minute.badge.y)
+        if badgeSeparation >= 0.235 { return [straightHour, minute] }
+
+        // Keep the badges close while aiming the side route at the actual hour
+        // numeral. The tip stays outside the scale, on that same approach line.
+        let numeral = point(radius: 0.34, angle: hourAngle)
+        let hours = [-18.0, 18, -22, 22, -26, 26, -30, 30, -35, 35, -45, 45].map { offset in
+            let angle = hourAngle + offset
+            let badge = point(radius: outerRadius(angle: angle, shape: shape) + 0.345, angle: angle)
+            var inside = 0.0, outside = 1.0
+            for _ in 0..<30 {
+                let fraction = (inside + outside) / 2
+                let position = CGPoint(x: numeral.x + (badge.x - numeral.x) * fraction,
+                                       y: numeral.y + (badge.y - numeral.y) * fraction)
+                let direction = atan2(position.x, -position.y) * 180 / .pi
+                if hypot(position.x, position.y) < outerRadius(angle: direction, shape: shape) + 0.165 {
+                    inside = fraction
+                } else {
+                    outside = fraction
+                }
+            }
+            let tip = CGPoint(x: numeral.x + (badge.x - numeral.x) * outside,
+                              y: numeral.y + (badge.y - numeral.y) * outside)
+            return pointer(tip: tip, angle: angle)
+        }
         let marks = minuteMarks(shape: shape)
-        var best = [hours[0], minutes[0]]
+        var best = [hours[0], minute]
         var bestScore = -Double.infinity
         for hour in hours {
-            for (minuteIndex, minute) in minutes.enumerated() {
-                var labelClearance = Double.infinity
-                for mark in marks {
-                    for edge in [hour.start] + hour.arrowWings {
-                        labelClearance = min(labelClearance, segmentDistance(edge, hour.tip, mark.label, mark.label) - 0.046)
-                    }
+            var labelClearance = Double.infinity
+            for mark in marks {
+                for edge in [hour.start] + hour.arrowWings {
+                    labelClearance = min(labelClearance, segmentDistance(edge, hour.tip, mark.label, mark.label) - 0.046)
                 }
-                let separation = hypot(hour.badge.x - minute.badge.x, hour.badge.y - minute.badge.y)
-                var routeSeparation = Double.infinity
-                for hourStart in [hour.start] + hour.arrowWings {
-                    for minuteStart in [minute.start] + minute.arrowWings {
-                        routeSeparation = min(routeSeparation, segmentDistance(hourStart, hour.tip, minuteStart, minute.tip))
-                    }
-                }
-                let score = min(labelClearance, 0.025) - max(0, 0.235 - separation) * 3
-                    - max(0, 0.035 - routeSeparation) * 3 - Double(minuteIndex) * 0.001
-                if score > bestScore { bestScore = score; best = [hour, minute] }
             }
+            let separation = hypot(hour.badge.x - minute.badge.x, hour.badge.y - minute.badge.y)
+            var routeSeparation = Double.infinity
+            for hourStart in [hour.start] + hour.arrowWings {
+                for minuteStart in [minute.start] + minute.arrowWings {
+                    routeSeparation = min(routeSeparation, segmentDistance(hourStart, hour.tip, minuteStart, minute.tip))
+                }
+            }
+            let arrowLength = hypot(hour.badge.x - hour.tip.x, hour.badge.y - hour.tip.y)
+            let score = min(labelClearance, 0.025) - max(0, 0.235 - separation) * 3
+                - max(0, 0.035 - routeSeparation) * 3 - max(0, 0.18 - arrowLength) * 10
+            if score > bestScore { bestScore = score; best = [hour, minute] }
         }
         return best
+    }
+
+    /// Reserve only the scale and the two arrows present at this time.
+    /// Badge and stroke margins match the scaled artwork, including small faces.
+    static func bounds(time: ClockTime, shape: AnalogClockShape, faceSize: Double) -> CGRect {
+        let scale = max(1, faceSize)
+        let badgeRadius = 14.5 / max(150, scale) + 0.012
+        let strokeRadius = 3.75 / max(150, scale) + 0.012
+        var bounds = CGRect(x: -0.5, y: -0.5, width: 1, height: 1)
+        for mark in minuteMarks(shape: shape) {
+            let label = CGRect(x: mark.label.x - 0.052, y: mark.label.y - 0.048,
+                               width: 0.104, height: 0.096)
+            bounds = bounds.union(label)
+        }
+        for pointer in pointers(time: time, shape: shape) {
+            bounds = bounds.union(CGRect(x: pointer.badge.x - badgeRadius, y: pointer.badge.y - badgeRadius,
+                                         width: badgeRadius * 2, height: badgeRadius * 2))
+            for point in [pointer.start, pointer.tip] + pointer.arrowWings {
+                bounds = bounds.union(CGRect(x: point.x - strokeRadius, y: point.y - strokeRadius,
+                                             width: strokeRadius * 2, height: strokeRadius * 2))
+            }
+        }
+        // Keep the face horizontally centred while trimming top/bottom separately.
+        let horizontal = max(-bounds.minX, bounds.maxX)
+        return CGRect(x: -horizontal, y: bounds.minY, width: horizontal * 2, height: bounds.height)
     }
 
     static func point(radius: Double, angle: Double) -> CGPoint {

@@ -1,9 +1,105 @@
 import Foundation
 
+/// The minute count and reference point used when saying a time, rather than elapsed minutes.
+struct SpokenClockReadingHint: Equatable, Sendable {
+    let minute: Int
+    let language: String
+
+    var isDutch: Bool { language == "nl" }
+    var referenceMinute: Int {
+        if minute == 0 { return 0 }
+        if isDutch {
+            switch minute {
+            case 1...15: return 0
+            case 16...44: return 30
+            default: return 60
+            }
+        }
+        return minute <= 30 ? 0 : 60
+    }
+    var count: Int { abs(minute - referenceMinute) }
+    var startMinute: Int { min(minute, referenceMinute) }
+    var endMinute: Int { max(minute, referenceMinute) }
+    /// Keep the actual minute on the scale, including an exact-minute question.
+    var scaleMinutes: [Int] {
+        var minutes = Array(stride(from: 0, to: 60, by: 5))
+        minutes[DinoTimeReading.labelPosition(minute: minute) / 5] = minute
+        return minutes
+    }
+    /// Route the word's leader between two scale marks instead of through a number.
+    var relationLeaderMinute: Double {
+        let middle = Double(startMinute + endMinute) / 2
+        return (floor(middle / 5) + 0.5) * 5
+    }
+    var relation: String {
+        if minute == 0 || (isDutch && minute == 30) { return "" }
+        if !isDutch { return minute <= 30 ? "past" : "to" }
+        switch minute {
+        case 1...15: return "over"
+        case 16...29: return "voor half"
+        case 31...44: return "over half"
+        default: return "voor"
+        }
+    }
+    var scaleLabel: String {
+        if minute == 0 { return isDutch ? "uur" : "o’clock" }
+        if minute == 30 { return "half" }
+        if isDutch && (minute == 15 || minute == 45) { return "kwart" }
+        return String(count)
+    }
+}
+
+enum SpokenClockGuideLayout {
+    static func extent(shape: AnalogClockShape, compact: Bool = false) -> Double {
+        compact ? (shape == .square ? 1.04 : 0.98) : (shape == .square ? 1.18 : 1.12)
+    }
+
+    static func scaleFontSize(faceSize: Double) -> Double { max(7, faceSize * 0.064) }
+
+    /// Tight vertical bounds around the scale, rim arrow and relation text.
+    static func verticalBounds(minute: Int, language: String, shape: AnalogClockShape, faceSize: Double,
+                               compact: Bool = false) -> ClosedRange<Double> {
+        let face = max(1, faceSize)
+        let hint = SpokenClockReadingHint(minute: minute, language: language)
+        let labelHeight = scaleFontSize(faceSize: face) * 1.3
+        let circlePadding = compact ? 0 : 2 * max(2, face * 0.014)
+        let scaleExtent = 0.526 + max(2 / face, 0.018) + (labelHeight + circlePadding) / face
+        var lower = -scaleExtent
+        var upper = scaleExtent
+        for step in hint.startMinute...hint.endMinute {
+            let angle = Double(step) * 6
+            let radius = ClockHandHintGeometry.outerRadius(angle: angle, shape: shape) + 0.005
+            let y = ClockHandHintGeometry.point(radius: radius, angle: angle).y
+            lower = min(lower, y - 0.06); upper = max(upper, y + 0.06)
+        }
+        if !hint.relation.isEmpty {
+            let angle = hint.relationLeaderMinute * 6
+            let radius = ClockHandHintGeometry.outerRadius(angle: angle, shape: shape) + 0.23
+            let y = ClockHandHintGeometry.point(radius: radius, angle: angle).y
+            let halfHeight = max(7.5, face * 0.064) / face * 0.65 + 2 / face
+            lower = min(lower, y - halfHeight); upper = max(upper, y + halfHeight)
+        }
+        let margin = compact ? max(3 / face, 0.025) : max(5 / face, 0.035)
+        return (lower - margin)...(upper + margin)
+    }
+}
+
 /// The teaching clock groups minutes by the construction used in that language.
 enum DinoTimeReading {
     enum Region: String, CaseIterable, Sendable {
         case whole, past, beforeHalf, half, afterHalf, to
+    }
+
+    static func labelPosition(minute: Int) -> Int { ((minute + 2) / 5 * 5) % 60 }
+
+    /// Keep twelve readable bubbles. Exact-minute answers replace the nearest
+    /// five-minute description, so every chosen answer can be reviewed on the face.
+    static func explanationTimes(target: ClockTime, rejected: [ClockTime]) -> [ClockTime] {
+        var times = stride(from: 0, to: 60, by: 5).map { ClockTime(hour: target.hour, minute: $0) }
+        for time in rejected + [target] where time.hour == target.hour {
+            times[labelPosition(minute: time.minute) / 5] = time
+        }
+        return times
     }
 
     static func region(minute: Int, language: String) -> Region {
