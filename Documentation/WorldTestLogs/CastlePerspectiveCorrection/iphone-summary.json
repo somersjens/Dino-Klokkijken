@@ -1,0 +1,52 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "5D05EE64-0A19-4C93-BC2E-24546EFB6D24",
+        "deviceName" : "iPhone 18 Pro",
+        "modelName" : "iPhone 18 Pro",
+        "osBuildNumber" : "24A434",
+        "osVersion" : "27.0",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 1,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Dino Klokkijken · Built with macOS 27.0.1",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1793211503.502,
+  "passedTests" : 1,
+  "result" : "Failed",
+  "runtimeWarnings" : [
+
+  ],
+  "skippedTests" : 0,
+  "startTime" : 1793211439.421,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "Test crashed with signal kill.",
+      "targetName" : "DinoUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "DinoUITests/testNativeWorldChaptersAndMinuteQuestions()",
+      "testIdentifierURL" : "test://com.apple.xcode/Dino%20Klokkijken/DinoUITests/DinoUITests/testNativeWorldChaptersAndMinuteQuestions",
+      "testName" : "testNativeWorldChaptersAndMinuteQuestions()"
+    }
+  ],
+  "title" : "Test - Dino Klokkijken",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 2
+}

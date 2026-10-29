@@ -1,0 +1,41 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun .build/BossHabitatCheck/DerivedData/Build/Products/BossCourtClock.xctestrun -destination "platform=iOS Simulator,id=5D05EE64-0A19-4C93-BC2E-24546EFB6D24" -destination "platform=iOS Simulator,id=5440518E-88F4-41A3-B58C-9F821449BD3F" -resultBundlePath .build/BossCourtyardsCheck/clock-ui.xcresult -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testWorldBossSceneryRemainsPlayable"
+
+Writing result bundle at path:
+	/Users/jenssomers/Desktop/Dino Klokkijken/.build/BossCourtyardsCheck/clock-ui.xcresult
+
+
+Testing on multiple destinations concurrently. Note that it is not possible to run tests in parallel on individual destinations in this mode. Pass -disable-concurrent-destination-testing instead to allow tests to run in parallel on each destination, but have the destinations run serially.Maximum concurrent test device destinations is unlimited. (Adjust this with -maximum-concurrent-test-device-destinations.) Maximum concurrent test simulator destinations is set to 4. (Adjust this with -maximum-concurrent-test-simulator-destinations.)
+
+2026-10-27 13:00:07.072 xcodebuild[32517:3028467] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 13:00:07.072 xcodebuild[32517:3028467] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 13:00:07.083 xcodebuild[32517:3028467] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 13:00:07.083 xcodebuild[32517:3028467] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 13:00:11.752 xcodebuild[32517:3028467] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 13:00:11.752 xcodebuild[32517:3028467] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 13:00:11.754 xcodebuild[32517:3028467] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 13:00:11.754 xcodebuild[32517:3028467] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 13:00:30.933 xcodebuild[32517:3028467] [MT] IDETestOperationsObserverDebug: 26.575 elapsed -- Testing started completed.
+2026-10-27 13:00:30.933 xcodebuild[32517:3028467] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-27 13:00:30.933 xcodebuild[32517:3028467] [MT] IDETestOperationsObserverDebug: 26.575 sec, +26.575 sec -- end
+2026-10-27 13:00:33.023 xcodebuild[32517:3028467] [MT] IDETestOperationsObserverDebug: 28.666 elapsed -- Testing started completed.
+2026-10-27 13:00:33.023 xcodebuild[32517:3028467] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-27 13:00:33.023 xcodebuild[32517:3028467] [MT] IDETestOperationsObserverDebug: 28.666 sec, +28.666 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/jenssomers/Desktop/Dino Klokkijken/.build/BossCourtyardsCheck/clock-ui.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
+Testing started
+Test suite 'Selected tests' started on 'iPad Pro 13-inch (M5) - DinoUITests-Runner (32523)'
+Test suite 'DinoUITests.xctest' started on 'iPad Pro 13-inch (M5) - DinoUITests-Runner (32523)'
+Test suite 'Selected tests' started on 'iPhone 18 Pro - DinoUITests-Runner (32522)'
+Test suite 'DinoUITests.xctest' started on 'iPhone 18 Pro - DinoUITests-Runner (32522)'
+Test suite 'DinoUITests' started on 'iPad Pro 13-inch (M5) - DinoUITests-Runner (32523)'
+Test suite 'DinoUITests' started on 'iPhone 18 Pro - DinoUITests-Runner (32522)'
+Test case 'DinoUITests.testWorldBossSceneryRemainsPlayable()' passed on 'iPhone 18 Pro - DinoUITests-Runner (32522)' (23.462 seconds)
+Testing passed on 'iPhone 18 Pro'
+Test case 'DinoUITests.testWorldBossSceneryRemainsPlayable()' passed on 'iPad Pro 13-inch (M5) - DinoUITests-Runner (32523)' (25.723 seconds)
+Testing passed on 'iPad Pro 13-inch (M5)'

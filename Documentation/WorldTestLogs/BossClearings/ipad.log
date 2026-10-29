@@ -1,0 +1,467 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun .build/BossHabitatCheck/DerivedData/Build/Products/BossHabitats.xctestrun -destination "platform=iOS Simulator,id=5440518E-88F4-41A3-B58C-9F821449BD3F" -resultBundlePath .build/BossHabitatCheck/ipad-ready.xcresult -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testWorldBossSceneryRemainsPlayable"
+
+Writing result bundle at path:
+	/Users/jenssomers/Desktop/Dino Klokkijken/.build/BossHabitatCheck/ipad-ready.xcresult
+
+2026-10-27 09:20:49.282725+0100 DinoUITests-Runner[4944:2697428] [Default] Running tests...
+2026-10-27 09:20:49.304421+0100 DinoUITests-Runner[4944:2697428] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-10-27 09:20:50.981.
+Test Suite 'DinoUITests.xctest' started at 2026-10-27 09:20:50.982.
+Test Suite 'DinoUITests' started at 2026-10-27 09:20:50.982.
+Test Case '-[DinoUITests.DinoUITests testWorldBossSceneryRemainsPlayable]' started.
+    t =     0.00s Start Test at 2026-10-27 09:20:50.985
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.03s         Wait for com.apple.springboard to idle
+    t =     0.03s     Open Hakketjak.Dino-Klokkijken
+    t =     0.03s         Launch Hakketjak.Dino-Klokkijken
+2026-10-27 09:20:51.062 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:20:51.062 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: no debugger version
+objc[4944]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_24A434/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x106dec398) and /Library/Developer/CoreSimulator/Volumes/iOS_24A434/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 27.0.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x109e98310). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.49s             Setting up automation session
+    t =     2.06s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.47s Terminate Hakketjak.Dino-Klokkijken:4984
+    t =     4.52s Open Hakketjak.Dino-Klokkijken
+    t =     4.52s     Launch Hakketjak.Dino-Klokkijken
+2026-10-27 09:20:55.503 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:20:55.504 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     4.73s         Setting up automation session
+    t =     6.15s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     9.65s Waiting 8.0s for "header.settings" Button to exist
+    t =    10.69s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    10.69s         Checking existence of `"header.settings" Button`
+    t =    12.19s Checking existence of `"map.preparing" Any`
+    t =    12.40s Find the "header.settings" Button
+    t =    12.69s Find the "map.level.10" Button
+    t =    12.92s Checking existence of `"map.level.10" Button`
+    t =    13.13s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.26s Checking existence of `"map.level.10" Button`
+    t =    13.48s Find the "map.level.10" Button
+    t =    13.79s Find the "map.level.10" Button
+    t =    14.01s Find the "header.settings" Button
+    t =    14.23s Find the "map.level.10" Button
+    t =    14.45s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    15.63s Checking existence of `"map.level.10" Button`
+    t =    15.86s Find the "map.level.10" Button
+    t =    16.08s Find the "map.level.10" Button
+    t =    16.30s Find the "map.level.10" Button
+    t =    16.73s Added attachment named 'scenery-depth-world-1'
+    t =    16.79s Tap "map.level.10" Button[0.50, 0.50]
+    t =    16.79s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    16.79s     Find the "map.level.10" Button
+    t =    17.00s     Check for interrupting elements affecting "map.level.10" Button
+    t =    17.13s         Wait for com.apple.springboard to idle
+    t =    17.14s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =    17.14s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =    17.15s     Synthesize event
+    t =    17.15s         Find the "map.level.10" Button
+    t =    17.41s         Find the "map.level.10" Button
+    t =    17.62s         Find the "map.level.10" Button
+    t =    18.12s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.17s Waiting 5.0s for "level.play" Button to exist
+    t =    19.21s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =    19.21s         Checking existence of `"level.play" Button`
+    t =    19.23s Terminate Hakketjak.Dino-Klokkijken:5015
+    t =    20.30s Open Hakketjak.Dino-Klokkijken
+    t =    20.30s     Launch Hakketjak.Dino-Klokkijken
+2026-10-27 09:21:11.285 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:21:11.285 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    20.51s         Setting up automation session
+    t =    21.99s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    25.22s Waiting 8.0s for "header.settings" Button to exist
+    t =    26.25s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    26.25s         Checking existence of `"header.settings" Button`
+    t =    27.88s Checking existence of `"map.preparing" Any`
+    t =    28.11s Find the "header.settings" Button
+    t =    28.38s Find the "map.level.20" Button
+    t =    28.73s Checking existence of `"map.level.20" Button`
+    t =    28.96s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    29.11s Checking existence of `"map.level.20" Button`
+    t =    29.32s Find the "map.level.20" Button
+    t =    29.72s Find the "map.level.20" Button
+    t =    29.96s Find the "header.settings" Button
+    t =    30.41s Find the "map.level.20" Button
+    t =    30.67s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    31.93s Checking existence of `"map.level.20" Button`
+    t =    32.16s Find the "map.level.20" Button
+    t =    32.42s Find the "map.level.20" Button
+    t =    32.66s Find the "map.level.20" Button
+    t =    33.18s Added attachment named 'scenery-depth-world-2'
+    t =    33.20s Tap "map.level.20" Button[0.50, 0.50]
+    t =    33.20s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    33.20s     Find the "map.level.20" Button
+    t =    33.52s     Check for interrupting elements affecting "map.level.20" Button
+    t =    33.71s         Wait for com.apple.springboard to idle
+    t =    33.73s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =    33.73s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =    33.78s     Synthesize event
+    t =    33.79s         Find the "map.level.20" Button
+    t =    34.03s         Find the "map.level.20" Button
+    t =    34.32s         Find the "map.level.20" Button
+    t =    34.84s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    34.84s Waiting 5.0s for "level.play" Button to exist
+    t =    35.88s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =    35.88s         Checking existence of `"level.play" Button`
+    t =    36.02s Terminate Hakketjak.Dino-Klokkijken:5076
+    t =    37.08s Open Hakketjak.Dino-Klokkijken
+    t =    37.08s     Launch Hakketjak.Dino-Klokkijken
+2026-10-27 09:21:28.064 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:21:28.064 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    37.29s         Setting up automation session
+    t =    38.74s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    42.69s Waiting 8.0s for "header.settings" Button to exist
+    t =    43.70s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    43.70s         Checking existence of `"header.settings" Button`
+    t =    44.98s Checking existence of `"map.preparing" Any`
+    t =    45.27s Find the "header.settings" Button
+    t =    45.56s Find the "map.level.30" Button
+    t =    45.86s Checking existence of `"map.level.30" Button`
+    t =    46.11s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    46.28s Checking existence of `"map.level.30" Button`
+    t =    46.53s Find the "map.level.30" Button
+    t =    46.82s Find the "map.level.30" Button
+    t =    47.07s Find the "header.settings" Button
+    t =    47.48s Find the "map.level.30" Button
+    t =    47.90s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    49.10s Checking existence of `"map.level.30" Button`
+    t =    49.35s Find the "map.level.30" Button
+    t =    49.61s Find the "map.level.30" Button
+    t =    49.95s Find the "map.level.30" Button
+    t =    50.51s Added attachment named 'scenery-depth-world-3'
+    t =    50.53s Tap "map.level.30" Button[0.50, 0.50]
+    t =    50.53s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    50.53s     Find the "map.level.30" Button
+    t =    50.86s     Check for interrupting elements affecting "map.level.30" Button
+    t =    51.08s         Wait for com.apple.springboard to idle
+    t =    51.10s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =    51.10s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =    51.12s     Synthesize event
+    t =    51.12s         Find the "map.level.30" Button
+    t =    51.43s         Find the "map.level.30" Button
+    t =    51.76s         Find the "map.level.30" Button
+    t =    52.34s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    52.41s Waiting 5.0s for "level.play" Button to exist
+    t =    53.44s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =    53.44s         Checking existence of `"level.play" Button`
+    t =    53.52s Terminate Hakketjak.Dino-Klokkijken:5222
+    t =    54.58s Open Hakketjak.Dino-Klokkijken
+    t =    54.58s     Launch Hakketjak.Dino-Klokkijken
+2026-10-27 09:21:45.567 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:21:45.567 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    54.79s         Setting up automation session
+    t =    56.22s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    57.62s Waiting 8.0s for "header.settings" Button to exist
+    t =    58.65s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    58.65s         Checking existence of `"header.settings" Button`
+    t =    60.74s Checking existence of `"map.preparing" Any`
+    t =    61.79s Checking existence of `"map.preparing" Any`
+    t =    62.74s Checking existence of `"map.preparing" Any`
+    t =    62.97s Find the "header.settings" Button
+    t =    63.23s Find the "map.level.40" Button
+    t =    63.51s Checking existence of `"map.level.40" Button`
+    t =    63.76s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    63.92s Checking existence of `"map.level.40" Button`
+    t =    64.16s Find the "map.level.40" Button
+    t =    64.45s Find the "map.level.40" Button
+    t =    64.70s Find the "header.settings" Button
+    t =    65.13s Find the "map.level.40" Button
+    t =    65.44s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    66.63s Checking existence of `"map.level.40" Button`
+    t =    66.87s Find the "map.level.40" Button
+    t =    67.26s Find the "map.level.40" Button
+    t =    67.60s Find the "map.level.40" Button
+    t =    68.02s Added attachment named 'scenery-depth-world-4'
+    t =    68.04s Tap "map.level.40" Button[0.50, 0.50]
+    t =    68.04s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    68.04s     Find the "map.level.40" Button
+    t =    68.31s     Check for interrupting elements affecting "map.level.40" Button
+    t =    68.48s         Wait for com.apple.springboard to idle
+    t =    68.50s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =    68.50s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =    68.51s     Synthesize event
+    t =    68.51s         Find the "map.level.40" Button
+    t =    68.87s         Find the "map.level.40" Button
+    t =    69.21s         Find the "map.level.40" Button
+    t =    69.80s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    69.86s Waiting 5.0s for "level.play" Button to exist
+    t =    70.89s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =    70.89s         Checking existence of `"level.play" Button`
+    t =    70.93s Terminate Hakketjak.Dino-Klokkijken:5290
+    t =    71.99s Open Hakketjak.Dino-Klokkijken
+    t =    71.99s     Launch Hakketjak.Dino-Klokkijken
+2026-10-27 09:22:02.971 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:22:02.971 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    72.20s         Setting up automation session
+    t =    73.63s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    75.04s Waiting 8.0s for "header.settings" Button to exist
+    t =    76.06s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    76.06s         Checking existence of `"header.settings" Button`
+    t =    78.77s Checking existence of `"map.preparing" Any`
+    t =    79.79s Checking existence of `"map.preparing" Any`
+    t =    80.86s Checking existence of `"map.preparing" Any`
+    t =    81.81s Checking existence of `"map.preparing" Any`
+    t =    82.76s Checking existence of `"map.preparing" Any`
+    t =    83.93s Find the "header.settings" Button
+    t =    85.33s Find the "map.level.50" Button
+    t =    86.84s Checking existence of `"map.level.50" Button`
+    t =    87.68s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    88.46s Checking existence of `"map.level.50" Button`
+    t =    89.31s Find the "map.level.50" Button
+    t =    90.77s Find the "map.level.50" Button
+    t =    92.17s Find the "header.settings" Button
+    t =    93.50s Find the "map.level.50" Button
+    t =    94.29s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    96.10s Checking existence of `"map.level.50" Button`
+    t =    96.86s Find the "map.level.50" Button
+    t =    98.16s Find the "map.level.50" Button
+    t =    99.47s Find the "map.level.50" Button
+    t =   100.44s Added attachment named 'scenery-depth-world-5'
+    t =   100.78s Tap "map.level.50" Button[0.50, 0.50]
+    t =   100.78s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   100.78s     Find the "map.level.50" Button
+    t =   101.59s     Check for interrupting elements affecting "map.level.50" Button
+    t =   102.29s         Wait for com.apple.springboard to idle
+    t =   102.30s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =   102.30s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =   102.83s     Synthesize event
+    t =   102.83s         Find the "map.level.50" Button
+    t =   104.13s         Find the "map.level.50" Button
+    t =   105.42s         Find the "map.level.50" Button
+    t =   106.99s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   107.86s Waiting 5.0s for "level.play" Button to exist
+    t =   108.90s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =   108.90s         Checking existence of `"level.play" Button`
+    t =   108.93s Terminate Hakketjak.Dino-Klokkijken:5348
+    t =   109.99s Open Hakketjak.Dino-Klokkijken
+    t =   110.00s     Launch Hakketjak.Dino-Klokkijken
+2026-10-27 09:22:40.979 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:22:40.979 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =   110.20s         Setting up automation session
+    t =   111.65s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   112.97s Waiting 8.0s for "header.settings" Button to exist
+    t =   113.99s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =   113.99s         Checking existence of `"header.settings" Button`
+    t =   116.79s Checking existence of `"map.preparing" Any`
+    t =   117.84s Checking existence of `"map.preparing" Any`
+    t =   118.80s Checking existence of `"map.preparing" Any`
+    t =   119.79s Checking existence of `"map.preparing" Any`
+    t =   120.87s Checking existence of `"map.preparing" Any`
+    t =   121.14s Find the "header.settings" Button
+    t =   122.67s Find the "map.level.60" Button
+    t =   124.22s Checking existence of `"map.level.60" Button`
+    t =   125.19s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   126.10s Checking existence of `"map.level.60" Button`
+    t =   127.03s Find the "map.level.60" Button
+    t =   128.64s Find the "map.level.60" Button
+    t =   130.50s Find the "header.settings" Button
+    t =   132.43s Find the "map.level.60" Button
+    t =   134.00s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   136.20s Checking existence of `"map.level.60" Button`
+    t =   137.19s Find the "map.level.60" Button
+    t =   139.39s Find the "map.level.60" Button
+    t =   140.88s Find the "map.level.60" Button
+    t =   142.05s Added attachment named 'scenery-depth-world-6'
+    t =   142.49s Tap "map.level.60" Button[0.50, 0.50]
+    t =   142.49s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   142.49s     Find the "map.level.60" Button
+    t =   143.39s     Check for interrupting elements affecting "map.level.60" Button
+    t =   144.79s         Wait for com.apple.springboard to idle
+    t =   144.81s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =   144.81s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =   145.44s     Synthesize event
+    t =   146.09s         Find the "map.level.60" Button
+    t =   147.56s         Find the "map.level.60" Button
+    t =   148.97s         Find the "map.level.60" Button
+    t =   150.67s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   151.65s Waiting 5.0s for "level.play" Button to exist
+    t =   152.68s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =   152.68s         Checking existence of `"level.play" Button`
+    t =   152.96s Terminate Hakketjak.Dino-Klokkijken:5445
+    t =   154.02s Open Hakketjak.Dino-Klokkijken
+    t =   154.02s     Launch Hakketjak.Dino-Klokkijken
+2026-10-27 09:23:25.003 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:23:25.003 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =   154.23s         Setting up automation session
+    t =   155.65s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   156.99s Waiting 8.0s for "header.settings" Button to exist
+    t =   158.02s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =   158.02s         Checking existence of `"header.settings" Button`
+    t =   159.37s Checking existence of `"map.preparing" Any`
+    t =   160.36s Checking existence of `"map.preparing" Any`
+    t =   161.40s Checking existence of `"map.preparing" Any`
+    t =   161.80s Find the "header.settings" Button
+    t =   162.11s Find the "map.level.70" Button
+    t =   162.65s Checking existence of `"map.level.70" Button`
+    t =   162.97s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   163.35s Checking existence of `"map.level.70" Button`
+    t =   163.67s Find the "map.level.70" Button
+    t =   164.10s Find the "map.level.70" Button
+    t =   164.44s Find the "header.settings" Button
+    t =   164.88s Find the "map.level.70" Button
+    t =   165.21s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   166.53s Checking existence of `"map.level.70" Button`
+    t =   166.87s Find the "map.level.70" Button
+    t =   167.32s Find the "map.level.70" Button
+    t =   167.75s Find the "map.level.70" Button
+    t =   168.30s Added attachment named 'scenery-depth-world-7'
+    t =   168.32s Tap "map.level.70" Button[0.50, 0.50]
+    t =   168.32s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   168.33s     Find the "map.level.70" Button
+    t =   168.90s     Check for interrupting elements affecting "map.level.70" Button
+    t =   169.18s         Wait for com.apple.springboard to idle
+    t =   169.20s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =   169.20s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =   169.28s     Synthesize event
+    t =   169.28s         Find the "map.level.70" Button
+    t =   169.71s         Find the "map.level.70" Button
+    t =   170.13s         Find the "map.level.70" Button
+    t =   170.86s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   170.90s Waiting 5.0s for "level.play" Button to exist
+    t =   171.93s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =   171.93s         Checking existence of `"level.play" Button`
+    t =   171.99s Terminate Hakketjak.Dino-Klokkijken:5703
+    t =   173.04s Open Hakketjak.Dino-Klokkijken
+    t =   173.04s     Launch Hakketjak.Dino-Klokkijken
+2026-10-27 09:23:44.026 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:23:44.026 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =   173.25s         Setting up automation session
+    t =   174.70s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   177.86s Waiting 8.0s for "header.settings" Button to exist
+    t =   178.89s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =   178.89s         Checking existence of `"header.settings" Button`
+    t =   180.22s Checking existence of `"map.preparing" Any`
+    t =   180.50s Find the "header.settings" Button
+    t =   180.84s Find the "map.level.80" Button
+    t =   181.21s Checking existence of `"map.level.80" Button`
+    t =   181.55s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   181.80s Checking existence of `"map.level.80" Button`
+    t =   182.07s Find the "map.level.80" Button
+    t =   182.47s Find the "map.level.80" Button
+    t =   182.83s Find the "header.settings" Button
+    t =   183.23s Find the "map.level.80" Button
+    t =   183.53s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   184.94s Checking existence of `"map.level.80" Button`
+    t =   185.20s Find the "map.level.80" Button
+    t =   185.52s Find the "map.level.80" Button
+    t =   185.90s Find the "map.level.80" Button
+    t =   186.37s Added attachment named 'scenery-depth-world-8'
+    t =   186.39s Tap "map.level.80" Button[0.50, 0.50]
+    t =   186.39s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   186.39s     Find the "map.level.80" Button
+    t =   186.66s     Check for interrupting elements affecting "map.level.80" Button
+    t =   186.94s         Wait for com.apple.springboard to idle
+    t =   186.95s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =   186.95s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =   186.98s     Synthesize event
+    t =   186.98s         Find the "map.level.80" Button
+    t =   187.40s         Find the "map.level.80" Button
+    t =   187.78s         Find the "map.level.80" Button
+    t =   188.43s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   188.45s Waiting 5.0s for "level.play" Button to exist
+    t =   189.48s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =   189.48s         Checking existence of `"level.play" Button`
+    t =   189.52s Terminate Hakketjak.Dino-Klokkijken:5736
+    t =   190.58s Open Hakketjak.Dino-Klokkijken
+    t =   190.58s     Launch Hakketjak.Dino-Klokkijken
+2026-10-27 09:24:01.560 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:24:01.560 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =   190.79s         Setting up automation session
+    t =   192.30s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   193.76s Waiting 8.0s for "header.settings" Button to exist
+    t =   194.78s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =   194.78s         Checking existence of `"header.settings" Button`
+    t =   196.14s Checking existence of `"map.preparing" Any`
+    t =   197.14s Checking existence of `"map.preparing" Any`
+    t =   198.15s Checking existence of `"map.preparing" Any`
+    t =   198.43s Find the "header.settings" Button
+    t =   198.73s Find the "map.level.90" Button
+    t =   199.07s Checking existence of `"map.level.90" Button`
+    t =   199.33s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   199.58s Checking existence of `"map.level.90" Button`
+    t =   199.84s Find the "map.level.90" Button
+    t =   200.15s Find the "map.level.90" Button
+    t =   200.44s Find the "header.settings" Button
+    t =   200.82s Find the "map.level.90" Button
+    t =   201.09s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   202.34s Checking existence of `"map.level.90" Button`
+    t =   202.60s Find the "map.level.90" Button
+    t =   202.84s Find the "map.level.90" Button
+    t =   203.13s Find the "map.level.90" Button
+    t =   203.72s Added attachment named 'scenery-depth-world-9'
+    t =   203.78s Tap "map.level.90" Button[0.50, 0.50]
+    t =   203.78s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   203.79s     Find the "map.level.90" Button
+    t =   204.17s     Check for interrupting elements affecting "map.level.90" Button
+    t =   204.41s         Wait for com.apple.springboard to idle
+    t =   204.43s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =   204.43s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =   204.46s     Synthesize event
+    t =   204.53s         Find the "map.level.90" Button
+    t =   204.84s         Find the "map.level.90" Button
+    t =   205.19s         Find the "map.level.90" Button
+    t =   205.74s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   205.81s Waiting 5.0s for "level.play" Button to exist
+    t =   206.85s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =   206.85s         Checking existence of `"level.play" Button`
+    t =   206.95s Terminate Hakketjak.Dino-Klokkijken:5769
+    t =   208.01s Open Hakketjak.Dino-Klokkijken
+    t =   208.01s     Launch Hakketjak.Dino-Klokkijken
+2026-10-27 09:24:18.991 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:24:18.991 xcodebuild[4934:2697082] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =   208.22s         Setting up automation session
+    t =   209.70s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   211.16s Waiting 8.0s for "header.settings" Button to exist
+    t =   212.18s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =   212.18s         Checking existence of `"header.settings" Button`
+    t =   213.51s Checking existence of `"map.preparing" Any`
+    t =   214.53s Checking existence of `"map.preparing" Any`
+    t =   214.83s Find the "header.settings" Button
+    t =   215.09s Find the "map.level.100" Button
+    t =   215.46s Checking existence of `"map.level.100" Button`
+    t =   215.76s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   216.00s Checking existence of `"map.level.100" Button`
+    t =   216.29s Find the "map.level.100" Button
+    t =   216.61s Find the "map.level.100" Button
+    t =   216.91s Find the "header.settings" Button
+    t =   217.31s Find the "map.level.100" Button
+    t =   217.61s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =   218.90s Checking existence of `"map.level.100" Button`
+    t =   219.17s Find the "map.level.100" Button
+    t =   219.48s Find the "map.level.100" Button
+    t =   219.77s Find the "map.level.100" Button
+    t =   220.21s Added attachment named 'scenery-depth-world-10'
+    t =   220.23s Tap "map.level.100" Button[0.50, 0.50]
+    t =   220.23s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   220.23s     Find the "map.level.100" Button
+    t =   220.51s     Check for interrupting elements affecting "map.level.100" Button
+    t =   220.78s         Wait for com.apple.springboard to idle
+    t =   220.79s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =   220.79s Ignoring failure to get hierarchy for remote element in process 93349 (Error getting main window kAXErrorServerNotFound)
+    t =   220.87s     Synthesize event
+    t =   220.87s         Find the "map.level.100" Button
+    t =   221.16s         Find the "map.level.100" Button
+    t =   221.44s         Find the "map.level.100" Button
+    t =   222.09s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =   222.09s Waiting 5.0s for "level.play" Button to exist
+    t =   223.13s     Checking `Expect predicate `existsNoRetry == 1` for object "level.play" Button`
+    t =   223.13s         Checking existence of `"level.play" Button`
+    t =   223.16s Tear Down
+Test Case '-[DinoUITests.DinoUITests testWorldBossSceneryRemainsPlayable]' passed (224.662 seconds).
+Test Suite 'DinoUITests' passed at 2026-10-27 09:24:35.647.
+	 Executed 1 test, with 0 failures (0 unexpected) in 224.662 (224.665) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-10-27 09:24:35.650.
+	 Executed 1 test, with 0 failures (0 unexpected) in 224.662 (224.668) seconds
+Test Suite 'Selected tests' passed at 2026-10-27 09:24:35.650.
+	 Executed 1 test, with 0 failures (0 unexpected) in 224.662 (224.669) seconds
+2026-10-27 09:24:35.945 xcodebuild[4934:2697082] [MT] IDETestOperationsObserverDebug: 227.468 elapsed -- Testing started completed.
+2026-10-27 09:24:35.945 xcodebuild[4934:2697082] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-27 09:24:35.945 xcodebuild[4934:2697082] [MT] IDETestOperationsObserverDebug: 227.468 sec, +227.468 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/jenssomers/Desktop/Dino Klokkijken/.build/BossHabitatCheck/ipad-ready.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

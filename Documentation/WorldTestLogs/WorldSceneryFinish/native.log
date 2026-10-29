@@ -1,0 +1,26 @@
+Geometry: 134117 checks passed on twelve widths
+City infill 320: [render.(unknown context at $102afc3a4).CityUrbanLayout.Site(id: 59000, point: (302.79563549940195, 1515.0), size: 0.5579487179487179, right: true, kind: render.(unknown context at $102afc3a4).CityUrbanLayout.Kind.gabled)]
+Jungle crowns 320 false: [300.0, 1005.0, 470.0, 765.0, 1210.0, 1420.0, 1691.0518974358974]
+Jungle crowns 320 true: [220.0, 1305.0, 1420.0, 470.0, 920.0]
+City 320: (255.17948717948718, 1698.2051282051282), dry=true, buildings=0
+Rendered 320pt
+City infill 393: [render.(unknown context at $102afc3a4).CityUrbanLayout.Site(id: 59000, point: (380.2906192846353, 1515.0), size: 0.6852307692307693, right: true, kind: render.(unknown context at $102afc3a4).CityUrbanLayout.Kind.gabled)]
+Jungle crowns 393 false: [300.0, 1005.0, 470.0, 765.0, 1210.0, 1420.0, 1694.9564615384616]
+Jungle crowns 393 true: [220.0, 1305.0, 1420.0, 470.0, 920.0]
+City 393: (313.39230769230767, 1700.076923076923), dry=true, buildings=0
+Rendered 393pt
+City infill 600: [render.(unknown context at $102afc3a4).CityUrbanLayout.Site(id: 59000, point: (606.8193483313764, 1515.0), size: 0.8840000000000001, right: true, kind: render.(unknown context at $102afc3a4).CityUrbanLayout.Kind.gabled)]
+Jungle crowns 600 false: [300.0, 1005.0, 470.0, 765.0, 1210.0, 1420.0, 1705.8]
+Jungle crowns 600 true: [220.0, 1305.0, 470.0, 920.0]
+City 600: (450.8, 1703.0), dry=true, buildings=0
+Rendered 600pt
+City infill 834: [render.(unknown context at $102afc3a4).CityUrbanLayout.Site(id: 59000, point: (723.8193483313764, 1515.0), size: 0.8840000000000001, right: true, kind: render.(unknown context at $102afc3a4).CityUrbanLayout.Kind.gabled)]
+Jungle crowns 834 false: [300.0, 1005.0, 470.0, 765.0, 1210.0, 1420.0, 1705.8]
+Jungle crowns 834 true: [220.0, 1305.0, 1420.0, 470.0, 920.0]
+City 834: (567.8, 1703.0), dry=true, buildings=0
+Rendered 834pt
+City infill 1194: [render.(unknown context at $102afc3a4).CityUrbanLayout.Site(id: 59000, point: (945.4193483313762, 1515.0), size: 0.8840000000000001, right: true, kind: render.(unknown context at $102afc3a4).CityUrbanLayout.Kind.gabled)]
+Jungle crowns 1194 false: [300.0, 1005.0, 470.0, 765.0, 1210.0, 1420.0, 1705.8]
+Jungle crowns 1194 true: [220.0, 1305.0, 1420.0, 470.0, 920.0]
+City 1194: (747.8, 1703.0), dry=true, buildings=0
+Rendered 1194pt

@@ -1,0 +1,11 @@
+320pt: 5 benches, 3 apple trees; ["id=101, y=248, bridge distance=168", "id=103, y=598, bridge distance=168", "id=104, y=612, bridge distance=168", "id=106, y=970, bridge distance=160", "id=108, y=1284, bridge distance=154"]
+375pt: 5 benches, 3 apple trees; ["id=101, y=248, bridge distance=168", "id=103, y=580, bridge distance=150", "id=104, y=638, bridge distance=142", "id=106, y=988, bridge distance=142", "id=108, y=1284, bridge distance=154"]
+393pt: 5 benches, 3 apple trees; ["id=101, y=248, bridge distance=168", "id=103, y=580, bridge distance=150", "id=104, y=638, bridge distance=142", "id=106, y=988, bridge distance=142", "id=108, y=1284, bridge distance=154"]
+402pt: 5 benches, 3 apple trees; ["id=101, y=248, bridge distance=168", "id=103, y=580, bridge distance=150", "id=104, y=638, bridge distance=142", "id=106, y=988, bridge distance=142", "id=108, y=1284, bridge distance=154"]
+430pt: 5 benches, 3 apple trees; ["id=101, y=248, bridge distance=168", "id=103, y=580, bridge distance=150", "id=104, y=638, bridge distance=142", "id=106, y=988, bridge distance=142", "id=108, y=1284, bridge distance=154"]
+600pt: 5 benches, 3 apple trees; ["id=101, y=266, bridge distance=164", "id=103, y=580, bridge distance=150", "id=104, y=612, bridge distance=168", "id=106, y=970, bridge distance=160", "id=108, y=1284, bridge distance=154"]
+744pt: 5 benches, 3 apple trees; ["id=101, y=266, bridge distance=164", "id=103, y=580, bridge distance=150", "id=104, y=612, bridge distance=168", "id=106, y=970, bridge distance=160", "id=108, y=1284, bridge distance=154"]
+834pt: 5 benches, 3 apple trees; ["id=101, y=266, bridge distance=164", "id=103, y=580, bridge distance=150", "id=104, y=612, bridge distance=168", "id=106, y=970, bridge distance=160", "id=108, y=1284, bridge distance=154"]
+1024pt: 5 benches, 3 apple trees; ["id=101, y=266, bridge distance=164", "id=103, y=580, bridge distance=150", "id=104, y=612, bridge distance=168", "id=106, y=970, bridge distance=160", "id=108, y=1284, bridge distance=154"]
+1194pt: 5 benches, 3 apple trees; ["id=101, y=266, bridge distance=164", "id=103, y=580, bridge distance=150", "id=104, y=612, bridge distance=168", "id=106, y=970, bridge distance=160", "id=108, y=1284, bridge distance=154"]
+PASS: five alternate seating spots, all clear of bridge crossings on ten widths

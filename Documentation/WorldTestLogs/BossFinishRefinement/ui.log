@@ -1,0 +1,65 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -xctestrun .build/BossHabitatCheck/DerivedData/Build/Products/BossFinish.xctestrun -destination "platform=iOS Simulator,id=5D05EE64-0A19-4C93-BC2E-24546EFB6D24" -destination "platform=iOS Simulator,id=5440518E-88F4-41A3-B58C-9F821449BD3F" -resultBundlePath .build/BossFinishCheck/ui.xcresult -parallel-testing-enabled NO "-only-testing:DinoUITests/DinoUITests/testWorldBossSceneryRemainsPlayable"
+
+Writing result bundle at path:
+	/Users/jenssomers/Desktop/Dino Klokkijken/.build/BossFinishCheck/ui.xcresult
+
+
+Testing on multiple destinations concurrently. Note that it is not possible to run tests in parallel on individual destinations in this mode. Pass -disable-concurrent-destination-testing instead to allow tests to run in parallel on each destination, but have the destinations run serially.Maximum concurrent test device destinations is unlimited. (Adjust this with -maximum-concurrent-test-device-destinations.) Maximum concurrent test simulator destinations is set to 4. (Adjust this with -maximum-concurrent-test-simulator-destinations.)
+
+2026-10-27 09:38:50.424 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:38:50.424 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:38:50.433 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:38:50.433 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:38:55.125 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:38:55.125 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:38:55.135 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:38:55.135 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:39:09.737 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:39:09.737 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:39:11.619 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:39:11.619 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:39:26.694 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:39:26.694 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:39:30.180 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:39:30.180 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:39:43.913 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:39:43.913 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:39:49.025 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:39:49.025 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:40:05.093 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:40:05.093 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:40:27.868 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:40:27.868 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:40:30.538 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:40:30.538 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:40:46.707 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:40:46.708 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:41:02.814 xcodebuild[8579:2734812] [MT] IDETestOperationsObserverDebug: 135.579 elapsed -- Testing started completed.
+2026-10-27 09:41:02.814 xcodebuild[8579:2734812] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-27 09:41:02.814 xcodebuild[8579:2734812] [MT] IDETestOperationsObserverDebug: 135.579 sec, +135.579 sec -- end
+2026-10-27 09:41:16.323 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:41:16.323 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:41:33.976 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-10-27 09:41:33.976 xcodebuild[8579:2734812] [MT] IDELaunchParametersSnapshot: no debugger version
+2026-10-27 09:41:50.785 xcodebuild[8579:2734812] [MT] IDETestOperationsObserverDebug: 183.550 elapsed -- Testing started completed.
+2026-10-27 09:41:50.785 xcodebuild[8579:2734812] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-10-27 09:41:50.785 xcodebuild[8579:2734812] [MT] IDETestOperationsObserverDebug: 183.550 sec, +183.550 sec -- end
+
+Test session results, code coverage, and logs:
+	/Users/jenssomers/Desktop/Dino Klokkijken/.build/BossFinishCheck/ui.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started
+Testing started
+Test suite 'Selected tests' started on 'iPhone 18 Pro - DinoUITests-Runner (8586)'
+Test suite 'DinoUITests.xctest' started on 'iPhone 18 Pro - DinoUITests-Runner (8586)'
+Test suite 'Selected tests' started on 'iPad Pro 13-inch (M5) - DinoUITests-Runner (8587)'
+Test suite 'DinoUITests.xctest' started on 'iPad Pro 13-inch (M5) - DinoUITests-Runner (8587)'
+Test suite 'DinoUITests' started on 'iPad Pro 13-inch (M5) - DinoUITests-Runner (8587)'
+Test suite 'DinoUITests' started on 'iPhone 18 Pro - DinoUITests-Runner (8586)'
+Test case 'DinoUITests.testWorldBossSceneryRemainsPlayable()' passed on 'iPhone 18 Pro - DinoUITests-Runner (8586)' (132.161 seconds)
+Testing passed on 'iPhone 18 Pro'
+Test case 'DinoUITests.testWorldBossSceneryRemainsPlayable()' passed on 'iPad Pro 13-inch (M5) - DinoUITests-Runner (8587)' (180.149 seconds)
+Testing passed on 'iPad Pro 13-inch (M5)'

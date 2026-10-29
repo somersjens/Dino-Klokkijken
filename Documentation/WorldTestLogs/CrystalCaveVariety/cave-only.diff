@@ -1,0 +1,627 @@
+--- before-variety
++++ Dino/Views/JungleLandscape.swift
+@@ -7766,7 +7766,7 @@
+                         .frame(width: 130 * layout.scale, height: 160 * layout.scale)
+                         .position(x: lamp.pivot.x, y: lamp.pivot.y + 35 * layout.scale)
+                 }
+-                ForEach(0..<22, id: \.self) { index in
++                ForEach(0..<10, id: \.self) { index in
+                     let glint = CrystalCaveLifeLayout.glint(index: index, layout: layout)
+                     CrystalCaveGlint(index: index, point: glint.point, depth: glint.depth,
+                                      layout: layout, viewportHeight: viewportHeight, fixedTime: fixedTime, reduceMotion: reduceMotion)
+@@ -7807,6 +7807,76 @@
+     }
+ }
+ 
++/// Stable specimen geometry: changing the colour never selects a repeated bouquet.
++private enum CaveMineralFormation {
++    static func noise(_ seed: Int, _ channel: Int) -> CGFloat {
++        var value = UInt64(truncatingIfNeeded: seed &* 374_761_393 &+ channel &* 668_265_263)
++        value = (value ^ (value >> 13)) &* 1_274_126_177
++        value ^= value >> 16
++        return CGFloat(value & 0xFFFF) / 65535
++    }
++
++    struct Shard {
++        let root: CGPoint
++        let height: CGFloat
++        let width: CGFloat
++        let angle: Double
++        let cut: Int
++        let tint: Int
++        var highlight: CGPoint {
++            let radians = angle * .pi / 180
++            return CGPoint(x: root.x + sin(radians) * height * 0.63,
++                           y: root.y - cos(radians) * height * 0.63)
++        }
++    }
++
++    static func shards(_ seed: Int) -> [Shard] {
++        let kind = seed % 8
++        let count = [1, 2, 4, 3, 1, 6, 2, 3][kind]
++        let hue = Int(noise(seed, 7) * 4.99)
++        return (0..<count).map { i in
++            let n = noise(seed, 31 + i * 5), m = noise(seed, 32 + i * 5)
++            let x: CGFloat, y: CGFloat, height: CGFloat, angle: Double, width: CGFloat, cut: Int
++            switch kind {
++            case 0: // One long oblique prism, rooted in a narrow fissure.
++                x = -10; y = 5; height = 71 + n * 32; angle = Double(-36 + m * 62); width = 0.8 + n * 0.4; cut = 0
++            case 1: // Two broad, raw diamonds rather than a fan of needles.
++                x = CGFloat(i) * 31 - 16; y = CGFloat(i) * 8
++                height = 39 + n * 30; angle = Double(-28 + m * 68); width = 1.4 + m * 0.6; cut = 1
++            case 2: // A low seam of broken chips crossing the rock.
++                x = CGFloat(i) * 22 - 34; y = CGFloat(i) * -6 + 7
++                height = 18 + n * 30; angle = Double(30 + m * 44); width = 0.9 + m; cut = i % 2 + 2
++            case 3: // A rare tall outcrop, dominated by an off-centre prism.
++                x = CGFloat(i) * 25 - 23; y = m * 10
++                height = (i == 0 ? 96 : 33) + n * 20; angle = Double(-16 + CGFloat(i) * 17 + m * 12)
++                width = 0.7 + m * 0.7; cut = i == 2 ? 2 : 0
++            case 4: // A squat, wide crystal embedded halfway into the stone.
++                x = 4; y = 12; height = 55 + n * 20; angle = Double(-17 + m * 30); width = 2.1; cut = 1
++            case 5: // A druse of tiny crystals with a broken, uneven upper edge.
++                x = CGFloat(i) * 13 - 33; y = n * 17 - 2
++                height = 15 + m * 34; angle = Double(-35 + n * 86); width = 0.65 + m * 0.9; cut = i % 4
++            case 6: // Almost horizontal splinters projecting from a joint.
++                x = CGFloat(i) * 18 - 18; y = CGFloat(i) * 9
++                height = 51 + n * 24; angle = Double(48 + m * 29); width = 0.7 + m * 0.55; cut = i == 0 ? 3 : 0
++            default: // An irregular broken plate, flanked by two smaller shards.
++                x = CGFloat(i) * 26 - 23; y = m * 12
++                height = (i == 1 ? 68 : 22) + n * 21; angle = Double(-28 + m * 47)
++                width = i == 1 ? 1.6 : 0.8; cut = i == 1 ? 3 : 2
++            }
++            return Shard(root: CGPoint(x: x, y: y), height: height, width: width, angle: angle,
++                         cut: cut, tint: i == count - 1 && noise(seed, 19) > 0.74 ? (hue + 1) % 5 : hue)
++        }
++    }
++
++    static func highlight(_ seed: Int) -> CGPoint {
++        if seed % 8 == 1 || seed % 8 == 4 {
++            let height: CGFloat = (seed % 8 == 4 ? 68 : 39) + noise(seed, 3) * 12
++            return CGPoint(x: seed % 8 == 1 ? -15 : 0, y: -19 - height * 0.15)
++        }
++        return shards(seed).max(by: { $0.height < $1.height })!.highlight
++    }
++}
++
+ private enum CrystalCaveLifeLayout {
+     // Both banks have completely left the village before any cave stone enters.
+     static func entranceStart(_ layout: WorldSceneryLayout) -> CGFloat { 60 * layout.scale }
+@@ -7882,26 +7952,41 @@
+         return point
+     }
+ 
++    // Art-directed pockets, with deliberate quiet stretches and unequal banks.
++    private static let mineralSites: [(y: CGFloat, right: Bool, outward: CGFloat, size: CGFloat, seed: Int)] = [
++        (72, true, 36, 0.66, 41), (154, false, 15, 0.85, 80), (271, true, 2, 0.94, 107),
++        (354, true, 74, 0.50, 66), (418, false, 42, 0.54, 92), (530, false, 8, 0.78, 134),
++        (575, true, 51, 0.65, 109), (687, false, 74, 0.50, 154), (734, true, 7, 1.02, 72),
++        (829, false, 12, 0.73, 119), (931, true, 38, 0.76, 145), (1006, true, 87, 0.48, 181),
++        (1088, false, 13, 0.98, 163), (1207, true, 15, 0.88, 196), (1284, false, 68, 0.62, 218),
++        (1393, false, 11, 0.65, 233), (1471, true, 36, 0.73, 246), (1534, false, 51, 0.54, 253),
++        (1629, true, 6, 0.94, 264), (1704, false, 9, 0.77, 287)
++    ]
++    static var mineralCount: Int { mineralSites.count }
++
+     static func mineral(index i: Int, layout: WorldSceneryLayout) -> (point: CGPoint, size: CGFloat, variation: Int) {
+-        let right = i.isMultiple(of:2), sign: CGFloat = right ? 1 : -1
+-        let y = layout.routeOffset + 62 + CGFloat(i/2)*64 + (right ? 0 : 39)
+-        let x = wallX(at:y,right:right,distance:153,layout:layout) + sign*18*layout.scale
++        let site = mineralSites[i % mineralSites.count]
++        let right = site.right, sign: CGFloat = right ? 1 : -1
++        let y = layout.routeOffset + site.y
++        let x = wallX(at: y, right: right, distance: 147, layout: layout) + sign * site.outward * layout.scale
+         let taper = 1 - 0.56 * departureProgress(at: y, right: right, layout: layout)
+-        let size = layout.scale * (0.48 + CGFloat(i%4)*0.12) * taper
+-        var point = clearTimber(CGPoint(x:x,y:y),radius:66*size,rise:136*size,drop:28*size,right:right,layout:layout)
++        let size = layout.scale * site.size * taper
++        var point = clearTimber(CGPoint(x: x, y: y), radius: 90 * size, rise: 136 * size, drop: 32 * size,
++                                right: right, layout: layout)
+         for clock in clockClearances(layout: layout) {
+-            let mineral = CGRect(x: point.x - 66 * size, y: point.y - 136 * size,
+-                                 width: 132 * size, height: 168 * size)
++            let mineral = CGRect(x: point.x - 90 * size, y: point.y - 136 * size,
++                                 width: 180 * size, height: 168 * size)
+             if mineral.intersects(clock) {
+-                point.x = right ? max(point.x, clock.maxX + 66 * size) : min(point.x, clock.minX - 66 * size)
++                point.x = right ? max(point.x, clock.maxX + 90 * size) : min(point.x, clock.minX - 90 * size)
+             }
+         }
+         let boss = WorldBossStage(worldID: 5, width: layout.width).clearance.offsetBy(dx: 0, dy: layout.routeOffset)
+-        let mineral = CGRect(x: point.x - 66 * size, y: point.y - 136 * size,
+-                             width: 132 * size, height: 164 * size)
+-        if right && mineral.intersects(boss) { point.x = max(point.x, boss.maxX + 66 * size) }
+-        // Neighbouring beds belong to the same mineral seam.
+-        return (point,size,(i/8)%3 + (i%4 == 0 ? 3 : 0))
++        let mineral = CGRect(x: point.x - 90 * size, y: point.y - 136 * size,
++                             width: 180 * size, height: 168 * size)
++        if mineral.intersects(boss) {
++            point.x = right ? max(point.x, boss.maxX + 90 * size) : min(point.x, boss.minX - 90 * size)
++        }
++        return (point, size, site.seed)
+     }
+ 
+     private static func clockClearances(layout: WorldSceneryLayout) -> [CGRect] {
+@@ -7969,24 +8054,11 @@
+         return t * t * t * (t * (6 * t - 15) + 10)
+     }
+ 
+-    static func crystalHeights(variation: Int) -> [CGFloat] {
+-        let silhouettes: [[CGFloat]] = [[36, 73, 102, 60, 29], [45, 96, 77, 53, 33],
+-                                        [30, 58, 91, 77, 39], [39, 62, 84, 103, 34],
+-                                        [29, 87, 106, 57, 42], [44, 71, 96, 62, 28]]
+-        return silhouettes[variation % silhouettes.count]
+-    }
+-
+-    static func crystalHighlight(variation: Int) -> CGPoint {
+-        let height = crystalHeights(variation: variation)[2] * 0.74
+-        let angle = (variation.isMultiple(of: 2) ? 6.0 : -3.0) * .pi / 180
+-        return CGPoint(x: sin(angle) * height, y: 8 - cos(angle) * height)
+-    }
+-
+     static func glint(index: Int, layout: WorldSceneryLayout) -> (point: CGPoint, depth: CGFloat) {
+-        let mineral = mineral(index:index*2+index%2,layout:layout)
+-        let highlight = crystalHighlight(variation: mineral.variation)
+-        return (CGPoint(x:mineral.point.x+highlight.x*mineral.size,y:mineral.point.y+highlight.y*mineral.size),
+-                mineral.point.y+29*mineral.size)
++        let mineral = mineral(index: index * 7, layout: layout)
++        let highlight = CaveMineralFormation.highlight(mineral.variation)
++        return (CGPoint(x: mineral.point.x + highlight.x * mineral.size, y: mineral.point.y + highlight.y * mineral.size),
++                mineral.point.y + 29 * mineral.size)
+     }
+ 
+ }
+@@ -8188,56 +8260,43 @@
+     }
+ 
+     /// A whole boulder owns its silhouette; only its internal facets are clipped.
+-    private func wallBoulder(in rect: CGRect, variation: Int, distant: Bool = false, warm: Bool = false) {
+-        let v = variation % 5
++    private func wallBoulder(in rect: CGRect, variation seed: Int, distant: Bool = false, warm: Bool = false) {
++        func n(_ channel: Int) -> CGFloat { CaveMineralFormation.noise(seed, channel) }
+         func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+             CGPoint(x: rect.minX + x * rect.width, y: rect.minY + y * rect.height)
+         }
+-        let shoulder = CGFloat(v) * 0.025
+-        let points: [CGPoint]
+-        switch v {
+-        case 0:
+-            points = [point(0, 0.35), point(0.17, 0.06), point(0.57, 0),
+-                      point(0.88, 0.16), point(1, 0.58), point(0.91, 0.91),
+-                      point(0.56, 1), point(0.12, 0.88), point(0.02, 0.66)]
+-        case 1:
+-            points = [point(0, 0.49), point(0.10, 0.20), point(0.43, 0),
+-                      point(0.79, 0.04), point(1, 0.38), point(0.94, 0.84),
+-                      point(0.67, 1), point(0.19, 0.94), point(0.02, 0.74)]
+-        case 2:
+-            points = [point(0, 0.30), point(0.26, 0.04), point(0.69, 0),
+-                      point(0.94, 0.29), point(1, 0.69), point(0.79, 0.95),
+-                      point(0.38, 1), point(0.06, 0.82), point(0.03, 0.55)]
+-        case 3:
+-            points = [point(0, 0.46), point(0.22, 0.10), point(0.48, 0),
+-                      point(0.90, 0.13), point(1, 0.52), point(0.86, 0.86),
+-                      point(0.47, 1), point(0.09, 0.94), point(0.04, 0.69)]
+-        default:
+-            points = [point(0, 0.24), point(0.14, 0.02), point(0.62, 0),
+-                      point(0.83, 0.26), point(1, 0.47), point(0.94, 0.89),
+-                      point(0.61, 1), point(0.17, 0.96), point(0.02, 0.71)]
+-        }
+-        let stone = contour(points, radius: min(rect.width, rect.height) * 0.065)
+-        context.fill(stone.offsetBy(dx: 0, dy: rect.height * 0.035),
+-                     with: .color(Color(dinoHex: 0x243F59).opacity(distant ? 0.19 : 0.32)))
++        let points = [point(0, 0.23 + n(1) * 0.34), point(0.07 + n(2) * 0.21, 0.03 + n(3) * 0.1),
++                      point(0.39 + n(4) * 0.3, 0), point(0.84 + n(5) * 0.14, 0.09 + n(6) * 0.22),
++                      point(1, 0.4 + n(7) * 0.33), point(0.78 + n(8) * 0.18, 0.87 + n(9) * 0.12),
++                      point(0.29 + n(10) * 0.4, 1), point(0.03 + n(11) * 0.2, 0.8 + n(12) * 0.18),
++                      point(0.015, 0.59 + n(13) * 0.16)]
++        let stone = contour(points, radius: min(rect.width, rect.height) * (0.015 + n(14) * 0.055))
++        context.fill(stone.offsetBy(dx: 0, dy: 2 + rect.height * 0.012),
++                     with: .color(Color(dinoHex: 0x263F58).opacity(distant ? 0.16 : 0.24)))
+         let palettes: [[UInt32]] = distant
+-            ? [[0x7F9DAE, 0x67889F, 0x52758E], [0x879FB4, 0x6F8BA4, 0x577590],
+-               [0x83A1AF, 0x698CA0, 0x52798F]]
+-            : [[0xAEC8CF, 0x91AFBE, 0x7394A9], [0xAAC3CF, 0x8DA9BE, 0x708DA9],
+-               [0xB5CAD3, 0x96B3C3, 0x779AAD]]
+-        material(stone, colors: palettes[variation % palettes.count])
++            ? [[0x8FA8B7, 0x7894AB, 0x587A93], [0x99ABBD, 0x8298B0, 0x657F9C],
++               [0x8EA7AD, 0x7595A4, 0x587C91], [0xA1B4BD, 0x8199AD, 0x5E7F98]]
++            : [[0xB3CCD1, 0x91ADBE, 0x7393AC], [0xB9CCD7, 0x9CB3C8, 0x7897B3],
++               [0xB4CBCB, 0x94B3B9, 0x7495A7], [0xAFC3D2, 0x8FA7BF, 0x6C87A5]]
++        material(stone, colors: palettes[Int(n(15) * 3.99)])
+         var clipped = context; clipped.clip(to: stone)
+         let detail = CrystalCavePainter(context: clipped)
+-        let fold = point(0.33 + shoulder, 0.34 + CGFloat(v % 2) * 0.09)
+-        detail.polygon([points[0], points[1], points[2], points[3], fold, point(0.08, 0.64)],
+-                       colors: distant ? [0x91ACB9, 0x7898AD, 0x64869E] : [0xC6DADD, 0xAFC9D1, 0x99B7C8])
+-        detail.polygon([fold, points[3], points[4], points[5], points[6], point(0.58, 0.73)],
+-                       colors: distant ? [0x67859E, 0x486983] : [0x91AFBF, 0x6B8DA5])
+-        detail.line([point(0.19, 0.55), point(0.39, 0.64), point(0.34, 0.84)],
+-                    color: 0x253E61, width: max(0.7, rect.width * 0.012), opacity: 0.65)
+-        if v % 2 == 0 {
+-            detail.line([point(0.70, 0.24), point(0.64, 0.44), point(0.76, 0.55)],
+-                        color: 0x273E5B, width: max(0.6, rect.width * 0.009), opacity: 0.6)
++        let fold = point(0.22 + n(16) * 0.49, 0.22 + n(17) * 0.44)
++        detail.polygon([points[0], points[1], points[2], points[3], fold],
++                       colors: distant ? [0xA1B8C1, 0x8AA5B5, 0x7796AA] : [0xC9DBDE, 0xB3CDD4, 0x9DBAC9])
++        detail.polygon([fold, points[3], points[4], points[5], points[6]],
++                       colors: distant ? [0x7B96AD, 0x55738F] : [0x9BB6C7, 0x7092AA])
++        if n(18) > 0.53 {
++            detail.polygon([points[0], fold, point(0.27 + n(19) * 0.2, 0.81), points[7], points[8]],
++                           colors: distant ? [0x879FAF, 0x67879E] : [0xB2C8D2, 0x8AA8BB])
++        }
++        // Fractures differ in position and direction; many faces stay unbroken.
++        if n(20) > 0.39 {
++            let a = point(0.13 + n(21) * 0.22, 0.31 + n(22) * 0.27)
++            let b = point(0.38 + n(23) * 0.24, 0.57 + n(24) * 0.23)
++            let c = point(0.58 + n(25) * 0.26, 0.68 + n(26) * 0.24)
++            detail.line([a, b, c], color: 0x4C708C, width: max(0.65, min(1.3, rect.width * 0.007)), opacity: 0.54)
++            if n(27) > 0.62 { detail.line([b, point(0.46 + n(28) * 0.19, 0.94)], color: 0x4C708C, width: 0.75, opacity: 0.45) }
+         }
+         if warm {
+             detail.context.fill(stone, with: .linearGradient(Gradient(colors: [
+@@ -8284,42 +8343,57 @@
+         }
+     }
+ 
+-    /// Staggered courses fill the entire outer bank, including the broad bends.
++    /// Unequal fracture beds replace the regular rows and columns of blocks.
+     private func wallBoulders(layout: WorldSceneryLayout, right: Bool) {
+         let s = layout.scale, sign: CGFloat = right ? 1 : -1
+-        let step = 67 * s
+-        let rows = Int(ceil((layout.height - layout.routeOffset + 420 * s) / step))
+-        for row in 0..<rows {
+-            let base = layout.routeOffset + CGFloat(row) * step
++        var stones: [(rect: CGRect, seed: Int, distant: Bool, mineral: Int?)] = []
++        var base = layout.routeOffset - (right ? 31 : 9) * s, row = 0
++        while base < layout.height + 255 * s {
++            let rowSeed = row * 193 + (right ? 947 : 311)
+             let taper = 1 - 0.60 * CrystalCaveLifeLayout.departureProgress(at: base, right: right, layout: layout)
+-            let height = (116 + CGFloat((row * 7 + (right ? 3 : 0)) % 5) * 8) * s * taper
+-            // Sample the full height so a projecting corner stays off the trail.
+-            let edges = (0...6).map { i in
+-                wallX(at: base - height + CGFloat(i) * height / 6,
+-                      right: right, distance: 127, layout: layout)
+-            }
+-            let inner = right ? edges.max()! : edges.min()!
+-            let span = right ? layout.width - inner : inner
+-            guard span > -24 * s else { continue }
+-            let columns = max(1, Int(ceil((span + 45 * s) / (82 * s))))
+-            for column in (0..<columns).reversed() {
+-                let seed = row * 13 + column * 7 + (right ? 19 : 0)
+-                let width = (112 + CGFloat(seed % 4) * 9) * s * taper
+-                let stagger = column == 0 ? 0 : CGFloat(row % 3 - 1) * 13 * s
+-                let x = inner + sign * (CGFloat(column) * 82 * s - 4 * s + stagger)
+-                let y = base + CGFloat(seed % 5 - 2) * 4 * s
+-                let blockHeight = height + CGFloat(seed % 3 - 1) * 9 * s
+-                let rect = CGRect(x: right ? x : x - width, y: y - blockHeight,
+-                                  width: width, height: blockHeight)
+-                wallBoulder(in: rect, variation: seed, distant: column > 0)
+-                if column > 0 && seed%4 == 0 {
+-                    let growth = s*(0.24+CGFloat(seed%3)*0.055)
+-                    let root = CGPoint(x:rect.midX,y:rect.minY+rect.height*0.25)
+-                    let envelope = CGRect(x:root.x-66*growth,y:root.y-136*growth,width:132*growth,height:164*growth)
+-                    if !CrystalCaveLifeLayout.timberClearances(layout:layout).contains(where: { $0.intersects(envelope) }) {
+-                        cluster(at:root,size:growth,variation:seed%6)
+-                    }
+-                }
++            var outward: CGFloat = 0, column = 0
++            while outward < layout.width * 0.6 + 150 * s {
++                let seed = rowSeed + column * 71
++                func n(_ channel: Int) -> CGFloat { CaveMineralFormation.noise(seed, channel) }
++                let flat = n(1) > 0.72
++                let width = (flat ? 151 + n(2) * 103 : 77 + n(2) * 89) * s * taper
++                let height = (flat ? 65 + n(3) * 51 : 109 + n(3) * 115) * s * taper
++                let y = base + (n(4) - 0.5) * 48 * s
++                let edges = (0...8).map { i in
++                    wallX(at: y - height + CGFloat(i) * height / 8, right: right, distance: 127, layout: layout)
++                }
++                let inner = right ? edges.max()! : edges.min()!
++                let x = inner + sign * outward
++                let rect = CGRect(x: right ? x : x - width, y: y - height, width: width, height: height)
++                if rect.maxX > -80 * s && rect.minX < layout.width + 80 * s {
++                    let mineral = n(6) > 0.52 && base < layout.height + 25 * s ? seed + 217 : nil
++                    stones.append((rect, seed, column > 0, mineral))
++                }
++                outward += width * (0.62 + n(5) * 0.25)
++                column += 1
++            }
++            base += (53 + CaveMineralFormation.noise(rowSeed, 13) * 62) * s
++            row += 1
++        }
++        for stone in stones.sorted(by: { $0.rect.maxY < $1.rect.maxY }) {
++            wallBoulder(in: stone.rect, variation: stone.seed, distant: stone.distant)
++        }
++        // Gems cross the finished stone joints; they are not another row of objects.
++        var inWall = context; inWall.clip(to: wallPath(right: right, distance: 126, layout: layout))
++        let minerals = CrystalCavePainter(context: inWall)
++        for stone in stones {
++            guard let seed = stone.mineral else { continue }
++            func n(_ channel: Int) -> CGFloat { CaveMineralFormation.noise(seed, channel) }
++            let inset = stone.rect.width * (0.14 + n(51) * 0.49)
++            let x = right ? stone.rect.minX + inset : stone.rect.maxX - inset
++            let y = stone.rect.maxY - (8 + n(52) * 27) * s
++            let height = (15 + n(53) * 29) * s
++            minerals.embeddedDiamond(at: .init(x: x, y: y), height: height, angle: Double(-78 + n(54) * 156),
++                                     tint: Int(n(55) * 4.99), seed: seed)
++            if n(56) > 0.79 {
++                minerals.embeddedDiamond(at: .init(x: x + sign * height * 0.74, y: y - height * 0.31),
++                                         height: height * 0.45, angle: Double(31 - n(57) * 74),
++                                         tint: Int(n(55) * 4.99), seed: seed + 1)
+             }
+         }
+     }
+@@ -8347,38 +8421,10 @@
+     }
+ 
+     private func enclosure(layout: WorldSceneryLayout) {
+-        let h = layout.height, scale = layout.scale
+         for right in [false, true] {
+             entranceWall(layout: layout, right: right)
+-            let face = wallPath(right: right, distance: 131, layout: layout)
+-            // Bedding planes stay inside a single continuous wall mass.
+-            var rockContext = context; rockContext.clip(to: face)
+-            let rock = CrystalCavePainter(context: rockContext)
+-            let sign: CGFloat = right ? 1 : -1
+-            let strataStart = layout.routeOffset + 45
+-            let strataCount = 13
+-            for i in 0..<strataCount {
+-                let y = strataStart + CGFloat(i) * 132
+-                let edge = wallX(at: y, right: right, distance: 132, layout: layout)
+-                let layer = contour([.init(x: edge - sign * 5, y: y - 35), .init(x: edge + sign * 96, y: y - 66),
+-                                     .init(x: edge + sign * 122, y: y + 3), .init(x: edge + sign * 52, y: y + 31),
+-                                     .init(x: edge - sign * 6, y: y + 17)], radius: 15)
+-                rock.material(layer, colors: i % 2 == 0 ? [0xC6DADE, 0x9CB9C7, 0x7A9FB6] : [0xBDCCD9, 0x98AFC9, 0x718EAD])
+-                rock.line([.init(x: edge + sign * 8, y: y - 17), .init(x: edge + sign * 29, y: y - 23), .init(x: edge + sign * 62, y: y - 20)], color: 0xD7E4E4, width: 1, opacity: 0.34)
+-                rock.line([.init(x: edge + sign * 25, y: y + 9), .init(x: edge + sign * 33, y: y + 22), .init(x: edge + sign * 54, y: y + 26)], color: 0x3E577B, width: 1.1, opacity: 0.64)
+-            }
+             entranceShoulder(layout: layout, right: right)
+             wallBoulders(layout: layout, right: right)
+-            for i in 0..<10 {
+-                let y = layout.routeOffset + 124 + CGFloat(i) * 139 + (right ? 38 : 0)
+-                guard y < h - 300 else { continue }
+-                let x = wallX(at: y, right: right, distance: 157, layout: layout) + sign * 27 * scale
+-                rock.line([.init(x: x - sign * 14 * scale, y: y - 25 * scale), .init(x: x + sign * 8 * scale, y: y - 12 * scale),
+-                           .init(x: x + sign * 2 * scale, y: y + 11 * scale), .init(x: x + sign * 21 * scale, y: y + 20 * scale)],
+-                          color: i % 2 == 0 ? 0x69CEE1 : 0xB498DC, width: 2 * scale, opacity: 0.66)
+-                rock.cluster(at: CGPoint(x: x, y: y), size: scale * (0.38 + CGFloat(i % 3) * 0.05),
+-                             variation: 3 + (i / 2) % 3)
+-            }
+         }
+     }
+ 
+@@ -8386,10 +8432,9 @@
+         let h = layout.height, scale = layout.scale
+         for right in [false, true] {
+             // Attached ledges and downward growth give the sides a cavern ceiling.
+-            let overhangStart = layout.routeOffset + 245
+-            let overhangCount = 5
+-            for i in 0..<overhangCount {
+-                let y = overhangStart + CGFloat(i) * 286 + (right ? 113 : 0)
++            let anchors: [CGFloat] = right ? [493, 1278] : [361, 1119]
++            for (i, anchor) in anchors.enumerated() {
++                let y = layout.routeOffset + anchor
+                 if y >= h - 295 { continue }
+                 let x = wallX(at: y, right: right, distance: 155, layout: layout)
+                 let envelope = CGRect(x: x - 58 * scale, y: y - 32 * scale,
+@@ -8404,7 +8449,7 @@
+                         p.material(tooth, colors: [0xB3CCD8, 0x8CACBF, 0x60859F])
+                         if i % 2 == 0 {
+                             var hanging = p.context; hanging.translateBy(x: -8, y: 8); hanging.scaleBy(x: 1, y: -1)
+-                            CrystalCavePainter(context: hanging).crystal(at: .zero, height: 40 + CGFloat(i % 3) * 8, tint: right ? 0 : 1)
++                            CrystalCavePainter(context: hanging).crystal(at: .zero, height: right ? 31 : 53, tint: right ? 0 : 1, width: right ? 1.5 : 0.8, cut: right ? 1 : 2)
+                         }
+                         p.material(p.contour([.init(x: -50, y: -22), .init(x: 18, y: -19), .init(x: 31, y: -8),
+                                                .init(x: 5, y: 6), .init(x: -40, y: 0)], radius: 7), colors: [0xD5E5E7, 0xB4CCD6, 0x89AABD])
+@@ -8558,12 +8603,12 @@
+         let routeOffset = layout.routeOffset
+         appendOverhangs(layout: layout, to: &scene)
+         // Each mineral bed has its own complete stone root, clear of the timber.
+-        for i in 0..<56 {
++        for i in 0..<CrystalCaveLifeLayout.mineralCount {
+             let mineral = CrystalCaveLifeLayout.mineral(index:i,layout:layout)
+             let x = mineral.point.x, y = mineral.point.y, clusterSize = mineral.size
+             guard y < h - 12 else { continue }
+             scene.add(at:y+29*clusterSize,
+-                      bounds:CGRect(x:x-84*clusterSize,y:y-150*clusterSize,width:168*clusterSize,height:180*clusterSize)) {
++                      bounds:CGRect(x:x-100*clusterSize,y:y-150*clusterSize,width:200*clusterSize,height:190*clusterSize)) {
+                 cluster(at:mineral.point,size:clusterSize,variation:mineral.variation)
+             }
+         }
+@@ -8782,81 +8827,126 @@
+         }
+     }
+ 
+-    private func crystal(at point: CGPoint, height: CGFloat, tint: Int) {
++    private func mineralPalette(_ tint: Int) -> [UInt32] {
++        let palettes: [[UInt32]] = [
++            [0xE4FFFA, 0x9BE9DF, 0x47BFD0, 0x397BA4],
++            [0xF5EDFF, 0xC9ADF0, 0x9478CB, 0x615B9B],
++            [0xFFEFF8, 0xECC1E4, 0xC386C4, 0x91669E],
++            [0xEAF7FF, 0xABD8EF, 0x6FA9D5, 0x486DAD],
++            [0xF0FFE7, 0xB3E2C1, 0x70B7AC, 0x4A8894]
++        ]
++        return palettes[tint % palettes.count]
++    }
++
++    private func crystal(at point: CGPoint, height: CGFloat, tint: Int, width: CGFloat = 1, cut: Int = 0) {
+         at(point) { p in
+-            let r = height * 0.18
+-            let colors: [UInt32]
+-            if tint >= 3 {
+-                colors = tint % 3 == 0 ? [0xEBFFFF, 0x78EDFA, 0x20C2E8, 0x315FB9]
+-                    : tint % 3 == 1 ? [0xF8EAFF, 0xD7A9FF, 0xA16DE8, 0x6250AD]
+-                    : [0xFFF0FE, 0xF0B4F6, 0xCF7CE2, 0x8A56B8]
++            let r = height * 0.18 * width, colors = p.mineralPalette(tint)
++            let tip = CGPoint(x: -r * 0.12, y: -height)
++            let left: CGPoint, right: CGPoint, ridge: CGPoint, points: [CGPoint]
++            switch cut % 4 {
++            case 1: // Raw octahedral diamond, widest in the middle.
++                left = .init(x: -r, y: -height * 0.47); right = .init(x: r, y: -height * 0.56)
++                ridge = .init(x: r * 0.14, y: -height * 0.53)
++                points = [left, .init(x: -r * 0.61, y: -height * 0.83), tip,
++                          .init(x: r * 0.76, y: -height * 0.86), right, .init(x: r * 0.15, y: 5)]
++            case 2: // Broken prism with a slanted, chipped top.
++                left = .init(x: -r, y: -height * 0.88); right = .init(x: r * 0.86, y: -height * 0.84)
++                ridge = .init(x: -r * 0.17, y: -height * 0.76)
++                points = [left, .init(x: -r * 0.43, y: -height), .init(x: r * 0.19, y: -height * 0.92),
++                          .init(x: r * 0.68, y: -height * 0.98), right, .init(x: r, y: -height * 0.23),
++                          .init(x: r * 0.58, y: 2), .init(x: -r * 0.68, y: 3)]
++            case 3: // Broad tabular crystal with a fractured flat end.
++                left = .init(x: -r * 0.93, y: -height * 0.84); right = .init(x: r, y: -height * 0.75)
++                ridge = .init(x: r * 0.29, y: -height * 0.87)
++                points = [left, .init(x: -r * 0.57, y: -height), .init(x: r * 0.64, y: -height * 0.94),
++                          right, .init(x: r * 0.77, y: -height * 0.14), .init(x: -r * 0.09, y: 4),
++                          .init(x: -r * 0.77, y: -height * 0.08)]
++            default:
++                left = .init(x: -r, y: -height * 0.73); right = .init(x: r, y: -height * 0.78)
++                ridge = .init(x: -r * 0.09, y: -height * 0.69)
++                points = [left, tip, right, .init(x: r * 0.76, y: -2),
++                          .init(x: r * 0.02, y: 3), .init(x: -r * 0.71, y: -5)]
++            }
++            let stone = p.contour(points, radius: min(1.1, height * 0.018))
++            p.material(stone, colors: [colors[0], colors[1], colors[2]])
++            var clipped = p.context; clipped.clip(to: stone)
++            let face = CrystalCavePainter(context: clipped)
++            face.polygon([ridge, right, .init(x: r, y: height * 0.03), .init(x: -r * 0.12, y: 5)],
++                         colors: [colors[1], colors[2], colors[3]])
++            face.polygon([left, tip, right, ridge], colors: [colors[0], colors[1]])
++            if cut % 4 == 1 {
++                face.polygon([left, ridge, .init(x: r * 0.15, y: 5)], colors: [colors[1], colors[3]])
++                p.line([left, ridge, right], color: colors[0], width: 0.7, opacity: 0.74)
+             } else {
+-                colors = tint % 3 == 0 ? [0xE5FFF6, 0x9CEDE8, 0x54BBD2, 0x477FAF] : tint % 3 == 1 ? [0xF0EBFF, 0xCCBDF3, 0x9B93D6, 0x706EA8] : [0xFFF0F9, 0xE6C5E8, 0xBC9DCE, 0x8C7CAB]
+-            }
+-            let tip = CGPoint(x: -r * 0.06, y: -height)
+-            let left = CGPoint(x: -r, y: -height * 0.76)
+-            let right = CGPoint(x: r, y: -height * 0.75)
+-            let root = CGPoint(x: r * 0.12, y: 1)
+-            let crystal = p.contour([left, tip, right, .init(x: r * 0.87, y: -3), root, .init(x: -r * 0.84, y: -5)], radius: 1.5)
+-            p.material(crystal, colors: [colors[0], colors[1], colors[2]])
+-            var clipped = p.context; clipped.clip(to: crystal)
+-            let face = CrystalCavePainter(context: clipped)
+-            face.polygon([tip, right, .init(x: r * 0.87, y: 2), root, .init(x: 0, y: -height * 0.73)], colors: [colors[1], colors[2], colors[3]])
+-            face.polygon([left, tip, .init(x: 0, y: -height * 0.73)], colors: [0xFAFFFD, colors[0], colors[1]])
+-            var reflection = clipped; reflection.opacity = 0.26
+-            CrystalCavePainter(context: reflection).polygon([
+-                .init(x: -r * 1.2, y: -height * 0.48), .init(x: r * 1.2, y: -height * 0.61),
+-                .init(x: r * 1.2, y: -height * 0.56), .init(x: -r * 1.2, y: -height * 0.43)
+-            ], colors: [colors[0], colors[1]])
+-            p.line([left, tip, right], color: 0xF0FFFC, width: 0.9, opacity: 0.82)
+-            p.line([.init(x: 0, y: -height * 0.72), .init(x: r * 0.11, y: -5)], color: colors[0], width: 1, opacity: 0.76)
+-            p.line([.init(x: -r * 0.57, y: -height * 0.67), .init(x: -r * 0.54, y: -height * 0.44)], color: 0xFFFFFF, width: max(0.7, height * 0.012), opacity: 0.55)
+-        }
+-    }
+-
+-    private func cluster(at point: CGPoint, size: CGFloat, variation: Int) {
++                p.line([ridge, .init(x: -r * 0.1, y: -height * 0.09)], color: colors[0], width: 0.8, opacity: 0.64)
++                face.line([.init(x: -r * 0.58, y: -height * 0.68), .init(x: -r * 0.49, y: -height * 0.37)],
++                          color: 0xFFFFFF, width: 0.7, opacity: 0.48)
++            }
++            p.line(Array(points.prefix(cut % 4 == 2 ? 4 : 3)), color: colors[0], width: 0.8, opacity: 0.86)
++        }
++    }
++
++    /// A jewel occupies a fracture in the rock face, without a separate pedestal.
++    private func embeddedDiamond(at point: CGPoint, height: CGFloat, angle: Double, tint: Int, seed: Int) {
++        at(point) { p in
++            let n = CaveMineralFormation.noise(seed, 73), r = height * (0.34 + n * 0.18)
++            let split = p.contour([.init(x: -r * 1.25, y: -3), .init(x: -r * 0.45, y: -height * 0.58),
++                                   .init(x: r * 0.75, y: -height * 0.45), .init(x: r * 1.19, y: 4),
++                                   .init(x: r * 0.33, y: height * 0.43), .init(x: -r * 0.8, y: height * 0.3)], radius: 1)
++            p.material(split, colors: [0x6C8D9F, 0x456A83, 0x8AA4B0])
++            p.line([.init(x: -r * 2.3, y: -height * 0.25), .init(x: -r, y: -3),
++                    .init(x: r, y: 3), .init(x: r * 1.7, y: height * 0.38)],
++                   color: 0x3E657F, width: 0.85, opacity: 0.48)
++            var c = p.context; c.rotate(by: .degrees(angle)); c.translateBy(x: 0, y: height * 0.45)
++            CrystalCavePainter(context: c).crystal(at: .zero, height: height, tint: tint,
++                                                  width: 1.7 + n * 0.8, cut: n > 0.68 ? 2 : 1)
++            // A stone flake overlaps the lower facet, seating it inside the joint.
++            p.polygon([.init(x: -r * 1.3, y: height * 0.2), .init(x: -r * 0.4, y: height * 0.28),
++                       .init(x: r * 0.1, y: height * 0.13), .init(x: r * 0.7, y: height * 0.44),
++                       .init(x: -r * 0.7, y: height * 0.48)], colors: [0xAEC5CD, 0x7F9DAD])
++            if height > 24 && n > 0.73 { p.sparkle(at: .init(x: -r * 0.25, y: -height * 0.2), radius: 1.15) }
++        }
++    }
++
++    private func cluster(at point: CGPoint, size: CGFloat, variation seed: Int) {
+         at(point, size: size) { p in
+-            let hue = variation % 3
+-            let mineral: UInt32 = [0x8BDDDC, 0xB7A5DE, 0xD6AEDC][hue]
+-            p.ground(at: CGPoint(x: 0, y: 14), width: 142, height: 42, opacity: 0.23)
+-            p.glow(CGPoint(x: 0, y: -25), radius: 66, color: mineral, opacity: 0.14)
+-
+-            // One host rock, a recessed seam, then a front lip bury every root.
+-            let bed = p.contour([.init(x: -58, y: 0), .init(x: -42, y: -19), .init(x: -12, y: -24),
+-                                 .init(x: 25, y: -19), .init(x: 49, y: -5), .init(x: 59, y: 17),
+-                                 .init(x: 25, y: 29), .init(x: -15, y: 25), .init(x: -49, y: 20)], radius: 7)
+-            p.material(bed, colors: [0xAEC8CF, 0x91AFBE, 0x6B8DA5])
+-            p.material(p.contour([.init(x: -43, y: -4), .init(x: -26, y: -15), .init(x: 10, y: -17),
+-                                 .init(x: 39, y: -7), .init(x: 43, y: 6), .init(x: 9, y: 13),
+-                                 .init(x: -33, y: 8)], radius: 4), colors: [0x66889B, 0x51758B, 0x789BAA])
+-            let heights = CrystalCaveLifeLayout.crystalHeights(variation: variation)
+-            let roots: [CGPoint] = [.init(x: -34, y: 5), .init(x: -18, y: 3), .init(x: 0, y: 8),
+-                                    .init(x: 18, y: 10), .init(x: 35, y: 11)]
+-            let angles: [Double] = variation.isMultiple(of: 2) ? [-26, -9, 6, 20, 34] : [-32, -17, -3, 12, 29]
+-            for i in roots.indices {
+-                p.at(roots[i]) { shard in
+-                    var c = shard.context; c.rotate(by: .degrees(angles[i]))
+-                    CrystalCavePainter(context: c).crystal(at: .zero, height: heights[i], tint: variation)
+-                }
+-            }
+-
+-            let lip = p.contour([.init(x: -56, y: 2), .init(x: -36, y: -1), .init(x: -24, y: 6),
+-                                 .init(x: -6, y: 1), .init(x: 8, y: 9), .init(x: 26, y: 5),
+-                                 .init(x: 42, y: 10), .init(x: 52, y: 4), .init(x: 59, y: 17),
+-                                 .init(x: 25, y: 29), .init(x: -15, y: 25), .init(x: -49, y: 20)], radius: 3)
+-            p.material(lip, colors: [0xA8C5CD, 0x8BAABA, 0x6B8DA5])
+-            var reflected = p.context; reflected.clip(to: lip)
+-            CrystalCavePainter(context: reflected).ground(at: CGPoint(x: 0, y: 3), width: 98, height: 30,
+-                                                         color: mineral, opacity: 0.48)
+-            p.line([.init(x: -42, y: 17), .init(x: -24, y: 15), .init(x: -10, y: 19),
+-                    .init(x: 9, y: 17), .init(x: 22, y: 21), .init(x: 38, y: 17)],
+-                   color: 0x4C738C, width: 0.9, opacity: 0.45)
+-            // Small inclusions carry the same vein into the surrounding rock.
+-            p.polygon([.init(x: -34, y: 6), .init(x: -29, y: 0), .init(x: -23, y: 7), .init(x: -28, y: 13)],
+-                      colors: [mineral, 0x7398AA])
+-            p.polygon([.init(x: 18, y: 15), .init(x: 25, y: 10), .init(x: 31, y: 17), .init(x: 22, y: 20)],
+-                      colors: [mineral, 0x7398AA])
+-            if variation >= 3 { p.sparkle(at: CrystalCaveLifeLayout.crystalHighlight(variation: variation), radius: 1.6) }
++            let n = CaveMineralFormation.noise(seed, 3), m = CaveMineralFormation.noise(seed, 4)
++            let kind = seed % 8, shards = CaveMineralFormation.shards(seed)
++            if kind == 1 || kind == 4 {
++                // Broad diamonds sit in the wall, with stone covering a facet.
++                let count = kind == 1 ? 2 : 1
++                for i in 0..<count {
++                    p.embeddedDiamond(at: .init(x: CGFloat(i) * 30 - (count == 2 ? 15 : 0), y: CGFloat(i) * 17 - 19),
++                                      height: (kind == 4 ? 68 : 39) + n * 12 - CGFloat(i) * 11,
++                                      angle: Double(-29 + m * 68 + CGFloat(i) * 16),
++                                      tint: shards[i].tint, seed: seed + i * 13)
++                }
++                return
++            }
++
++            let w: CGFloat = (kind == 0 ? 65 : 91) + n * 25
++            let seam = p.contour([.init(x: -w * 0.49, y: -5 + n * 7), .init(x: -w * 0.19, y: -12),
++                                  .init(x: w * 0.21, y: -6 - m * 8), .init(x: w * 0.48, y: 9),
++                                  .init(x: w * 0.13, y: 18), .init(x: -w * 0.28, y: 15)], radius: 1)
++            p.material(seam, colors: [0x64879B, 0x456C87, 0x7595A6])
++            for shard in shards.sorted(by: { $0.root.y < $1.root.y }) {
++                p.at(shard.root) { local in
++                    var c = local.context; c.rotate(by: .degrees(shard.angle))
++                    CrystalCavePainter(context: c).crystal(at: .zero, height: shard.height, tint: shard.tint,
++                                                          width: shard.width, cut: shard.cut)
++                }
++            }
++            // Unequal fragments overlap the roots, never a complete flat platform.
++            let left = p.contour([.init(x: -w * 0.55, y: 3), .init(x: -w * 0.26, y: 7 + n * 9),
++                                  .init(x: -w * 0.08, y: 4), .init(x: w * 0.07, y: 14 + m * 7),
++                                  .init(x: -w * 0.27, y: 27), .init(x: -w * 0.6, y: 20)], radius: 2)
++            p.material(left, colors: [0xB8CED5, 0x9EB8C7, 0x829FB5])
++            if kind != 6 {
++                p.material(p.contour([.init(x: w * 0.08, y: 11), .init(x: w * 0.25, y: 4 + m * 8),
++                                      .init(x: w * 0.5, y: 10), .init(x: w * 0.58, y: 24 + n * 5),
++                                      .init(x: w * 0.28, y: 28)], radius: 1), colors: [0xAEC6D0, 0x8EAABC, 0x7392AC])
++            }
++            if kind == 3 { p.sparkle(at: CaveMineralFormation.highlight(seed), radius: 1.4) }
+         }
+     }
+ 

@@ -1,0 +1,3 @@
+Visible stone mask excludes foreground fountain basins, whose water intentionally animates over the stone behind them.
+393pt: 225871 visible opaque bridge/stair pixels, 0 changed pixels; 22603 moving water pixels
+834pt: 368893 visible opaque bridge/stair pixels, 0 changed pixels; 35077 moving water pixels

@@ -1,0 +1,599 @@
+{
+  "date": "2026-10-27",
+  "measurements": {
+    "before": {
+      "catalogBytes": 132335742,
+      "compiledCatalogBytes": 105440968,
+      "releaseSimulatorAppBytes": 143277284
+    },
+    "after": {
+      "catalogBytes": 29657419,
+      "compiledCatalogBytes": 26255240,
+      "releaseSimulatorAppBytes": 64015796
+    }
+  },
+  "measurementBuild": "Release, generic iOS Simulator, arm64 + x86_64, CODE_SIGNING_ALLOWED=NO",
+  "removedImageSets": [
+    "ChatGPT-afbeelding 24 okt 2026, 21_14_27-1",
+    "ChatGPT-afbeelding 24 okt 2026, 21_14_29-3",
+    "ChatGPT-afbeelding 24 okt 2026, 21_14_30-4",
+    "ChatGPT-afbeelding 24 okt 2026, 21_14_31-5",
+    "ChatGPT-afbeelding 24 okt 2026, 21_14_32-6",
+    "ChatGPT-afbeelding 24 okt 2026, 21_14_33-7",
+    "ChatGPT-afbeelding 24 okt 2026, 21_14_33-8",
+    "ChatGPT-afbeelding 24 okt 2026, 21_15_42-1",
+    "ChatGPT-afbeelding 24 okt 2026, 21_15_44-2",
+    "ChatGPT-afbeelding 24 okt 2026, 21_15_44-3",
+    "ChatGPT-afbeelding 24 okt 2026, 21_15_45-4",
+    "ChatGPT-afbeelding 24 okt 2026, 21_15_46-5",
+    "ChatGPT-afbeelding 24 okt 2026, 21_15_46-6",
+    "ChatGPT-afbeelding 24 okt 2026, 21_15_47-7",
+    "ChatGPT-afbeelding 24 okt 2026, 21_15_48-8",
+    "LaunchClock",
+    "Screenshot 2026-10-26 at 18.47.08",
+    "dino-backflip-02",
+    "dino-backflip-04",
+    "dino-backflip-05",
+    "dino-backflip-06",
+    "dino-stumble-01",
+    "dino-stumble-02",
+    "dino-stumble-03",
+    "dino-stumble-04",
+    "dino-stumble-05",
+    "dino-stumble-06",
+    "dino-stumble-06a",
+    "dino-stumble-06b",
+    "dino-stumble-07",
+    "dino-stumble-08",
+    "dino-stumble-deep-01",
+    "dino-thumbs-up-01",
+    "dino-thumbs-up-02",
+    "dino-thumbs-up-03",
+    "dino-thumbs-up-04",
+    "dino-thumbs-up-05",
+    "dino-thumbs-up-06",
+    "dino-thumbs-up-07",
+    "dino-thumbs-up-08",
+    "dino-world-jump-04",
+    "dino-world-jump-05",
+    "dino-wrong-answer-01",
+    "dino-wrong-answer-02",
+    "dino-wrong-answer-03",
+    "dino-wrong-answer-04",
+    "dino-wrong-answer-05",
+    "dino-wrong-answer-06",
+    "dino_applaus_frame_01",
+    "dino_applaus_frame_08",
+    "icon_trailer",
+    "result-jungle",
+    "result-jungle-grounded",
+    "result-podium",
+    "result-sign",
+    "result-stone"
+  ],
+  "assets": [
+    {
+      "name": "boss-castle",
+      "role": "boss",
+      "width": 640,
+      "height": 640,
+      "bytes": 258332,
+      "previousName": "boss-castle-10"
+    },
+    {
+      "name": "boss-clock-city",
+      "role": "boss",
+      "width": 640,
+      "height": 640,
+      "bytes": 237378,
+      "previousName": "boss-clock-city-06"
+    },
+    {
+      "name": "boss-clock-village",
+      "role": "boss",
+      "width": 640,
+      "height": 640,
+      "bytes": 269290,
+      "previousName": "boss-clock-village-04"
+    },
+    {
+      "name": "boss-crystal-cave",
+      "role": "boss",
+      "width": 640,
+      "height": 640,
+      "bytes": 305941,
+      "previousName": "boss-crystal-cave-05"
+    },
+    {
+      "name": "boss-desert",
+      "role": "boss",
+      "width": 640,
+      "height": 640,
+      "bytes": 311837,
+      "previousName": "boss-desert-07"
+    },
+    {
+      "name": "boss-jungle",
+      "role": "boss",
+      "width": 640,
+      "height": 640,
+      "bytes": 305614,
+      "previousName": "boss-jungle-01"
+    },
+    {
+      "name": "boss-pirates",
+      "role": "boss",
+      "width": 640,
+      "height": 640,
+      "bytes": 323422,
+      "previousName": "boss-pirates-09"
+    },
+    {
+      "name": "boss-sleep-valley",
+      "role": "boss",
+      "width": 640,
+      "height": 640,
+      "bytes": 208112,
+      "previousName": "boss-sleep-valley-02"
+    },
+    {
+      "name": "boss-time-machine",
+      "role": "boss",
+      "width": 640,
+      "height": 640,
+      "bytes": 266275,
+      "previousName": "boss-time-machine-08"
+    },
+    {
+      "name": "boss-volcano",
+      "role": "boss",
+      "width": 640,
+      "height": 640,
+      "bytes": 287170,
+      "previousName": "boss-volcano-03"
+    },
+    {
+      "name": "dino-answer-clap-01",
+      "role": "answer",
+      "width": 768,
+      "height": 768,
+      "bytes": 391193,
+      "previousName": "dino_applaus_frame_02"
+    },
+    {
+      "name": "dino-answer-clap-02",
+      "role": "answer",
+      "width": 768,
+      "height": 768,
+      "bytes": 391692,
+      "previousName": "dino_applaus_frame_03"
+    },
+    {
+      "name": "dino-answer-clap-03",
+      "role": "answer",
+      "width": 768,
+      "height": 768,
+      "bytes": 388003,
+      "previousName": "dino_applaus_frame_04"
+    },
+    {
+      "name": "dino-answer-clap-04",
+      "role": "answer",
+      "width": 768,
+      "height": 768,
+      "bytes": 379920,
+      "previousName": "dino_applaus_frame_05"
+    },
+    {
+      "name": "dino-answer-clap-05",
+      "role": "answer",
+      "width": 768,
+      "height": 768,
+      "bytes": 379508,
+      "previousName": "dino_applaus_frame_06"
+    },
+    {
+      "name": "dino-answer-clap-06",
+      "role": "answer",
+      "width": 768,
+      "height": 768,
+      "bytes": 380866,
+      "previousName": "dino_applaus_frame_07"
+    },
+    {
+      "name": "dino-answer-wrong",
+      "role": "answer",
+      "width": 768,
+      "height": 768,
+      "bytes": 408496,
+      "previousName": "ChatGPT-afbeelding 24 okt 2026, 21_14_28-2"
+    },
+    {
+      "name": "dino-idle",
+      "role": "opening",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1362430,
+      "previousName": "dino-idle"
+    },
+    {
+      "name": "dino-opening-jump-01",
+      "role": "opening",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 987352,
+      "previousName": "dino-opening-jump-01"
+    },
+    {
+      "name": "dino-opening-jump-02",
+      "role": "opening",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 941807,
+      "previousName": "dino-opening-jump-02"
+    },
+    {
+      "name": "dino-opening-jump-03",
+      "role": "opening",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1038510,
+      "previousName": "dino-opening-jump-03"
+    },
+    {
+      "name": "dino-opening-jump-04",
+      "role": "opening",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 986456,
+      "previousName": "dino-opening-jump-04"
+    },
+    {
+      "name": "dino-opening-jump-05",
+      "role": "opening",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1046211,
+      "previousName": "dino-opening-jump-05"
+    },
+    {
+      "name": "dino-opening-jump-06",
+      "role": "opening",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 903672,
+      "previousName": "dino-opening-jump-06"
+    },
+    {
+      "name": "dino-opening-jump-07",
+      "role": "opening",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1019206,
+      "previousName": "dino-opening-jump-07"
+    },
+    {
+      "name": "dino-opening-jump-08",
+      "role": "opening",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 996069,
+      "previousName": "dino-opening-jump-08"
+    },
+    {
+      "name": "dino-result-backflip-airborne",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 379310,
+      "previousName": "dino-backflip-03"
+    },
+    {
+      "name": "dino-result-backflip-crouch",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 427934,
+      "previousName": "dino-backflip-01"
+    },
+    {
+      "name": "dino-result-backflip-landing",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 435306,
+      "previousName": "dino-backflip-07"
+    },
+    {
+      "name": "dino-result-backflip-recover",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 437967,
+      "previousName": "dino-backflip-08"
+    },
+    {
+      "name": "dino-result-fall-02",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 427869,
+      "previousName": "dino-stumble-deep-02"
+    },
+    {
+      "name": "dino-result-fall-03",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 436551,
+      "previousName": "dino-stumble-deep-03"
+    },
+    {
+      "name": "dino-result-fall-04",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 432486,
+      "previousName": "dino-stumble-deep-03a"
+    },
+    {
+      "name": "dino-result-fall-05",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 371457,
+      "previousName": "dino-stumble-deep-04"
+    },
+    {
+      "name": "dino-result-fall-06",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 397688,
+      "previousName": "dino-stumble-deep-05"
+    },
+    {
+      "name": "dino-result-fall-07",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 492979,
+      "previousName": "dino-stumble-deep-06"
+    },
+    {
+      "name": "dino-result-fall-08",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 436750,
+      "previousName": "dino-stumble-deep-06a"
+    },
+    {
+      "name": "dino-result-fall-09",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 402128,
+      "previousName": "dino-stumble-deep-07"
+    },
+    {
+      "name": "dino-result-fall-10",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 411797,
+      "previousName": "dino-stumble-deep-08"
+    },
+    {
+      "name": "dino-result-pirouette-01",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 405079,
+      "previousName": "dino-pirouette-01"
+    },
+    {
+      "name": "dino-result-pirouette-02",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 422302,
+      "previousName": "dino-pirouette-02"
+    },
+    {
+      "name": "dino-result-pirouette-03",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 365890,
+      "previousName": "dino-pirouette-03"
+    },
+    {
+      "name": "dino-result-pirouette-04",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 331466,
+      "previousName": "dino-pirouette-04"
+    },
+    {
+      "name": "dino-result-pirouette-05",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 337783,
+      "previousName": "dino-pirouette-05"
+    },
+    {
+      "name": "dino-result-pirouette-06",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 363280,
+      "previousName": "dino-pirouette-06"
+    },
+    {
+      "name": "dino-result-pirouette-07",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 333178,
+      "previousName": "dino-pirouette-06a"
+    },
+    {
+      "name": "dino-result-pirouette-08",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 340868,
+      "previousName": "dino-pirouette-07"
+    },
+    {
+      "name": "dino-result-pirouette-09",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 309182,
+      "previousName": "dino-pirouette-07a"
+    },
+    {
+      "name": "dino-result-pirouette-10",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 326518,
+      "previousName": "dino-pirouette-08"
+    },
+    {
+      "name": "dino-result-pirouette-11",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 343059,
+      "previousName": "dino-pirouette-08a"
+    },
+    {
+      "name": "dino-result-pirouette-12",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 357499,
+      "previousName": "dino-pirouette-09"
+    },
+    {
+      "name": "dino-result-pirouette-13",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 369481,
+      "previousName": "dino-pirouette-10"
+    },
+    {
+      "name": "dino-result-pirouette-14",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 365031,
+      "previousName": "dino-pirouette-10a"
+    },
+    {
+      "name": "dino-result-pirouette-15",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 378947,
+      "previousName": "dino-pirouette-11"
+    },
+    {
+      "name": "dino-result-pirouette-16",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 379573,
+      "previousName": "dino-pirouette-12"
+    },
+    {
+      "name": "dino-result-pirouette-17",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 419348,
+      "previousName": "dino-pirouette-13"
+    },
+    {
+      "name": "dino-result-pirouette-18",
+      "role": "result",
+      "width": 768,
+      "height": 768,
+      "bytes": 435375,
+      "previousName": "dino-pirouette-14"
+    },
+    {
+      "name": "dino-world-jump-airborne",
+      "role": "world-transition",
+      "width": 768,
+      "height": 768,
+      "bytes": 359659,
+      "previousName": "dino-world-jump-03"
+    },
+    {
+      "name": "dino-world-jump-crouch",
+      "role": "world-transition",
+      "width": 768,
+      "height": 768,
+      "bytes": 415907,
+      "previousName": "dino-world-jump-01"
+    },
+    {
+      "name": "dino-world-jump-landing",
+      "role": "world-transition",
+      "width": 768,
+      "height": 768,
+      "bytes": 362677,
+      "previousName": "dino-world-jump-06"
+    },
+    {
+      "name": "dino-world-jump-recover",
+      "role": "world-transition",
+      "width": 768,
+      "height": 768,
+      "bytes": 390941,
+      "previousName": "dino-world-jump-07"
+    },
+    {
+      "name": "dino-world-jump-takeoff",
+      "role": "world-transition",
+      "width": 768,
+      "height": 768,
+      "bytes": 399217,
+      "previousName": "dino-world-jump-02"
+    },
+    {
+      "name": "reward-star",
+      "role": "reward",
+      "width": 384,
+      "height": 384,
+      "bytes": 100297,
+      "previousName": "result-star"
+    }
+  ],
+  "openingPixelIdentity": true,
+  "resizedAssetPixelComparison": {
+    "count": 54,
+    "maximumPremultipliedChannelDifference": 0,
+    "meanPremultipliedChannelDifference": 0
+  },
+  "verification": {
+    "releaseBuild": "passed",
+    "coreRegressionChecks": 1136233,
+    "coreRegressionResult": "passed",
+    "ipadDevice": "iPad Pro 13-inch (M5)",
+    "ipadOS": "27.0",
+    "ipadPixels": [
+      2064,
+      2752
+    ],
+    "ipadUITests": 6,
+    "ipadUITestResult": "passed"
+  }
+}

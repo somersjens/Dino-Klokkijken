@@ -1,0 +1,13 @@
+Definitieve simulatorbuild: TEST BUILD SUCCEEDED
+Native geometrie: 169070 vloerpunten en 320 transparante brugboogpunten geslaagd.
+
+iPhone: testNativeWorldChaptersAndMinuteQuestions passed (39.073 seconds)
+iPhone: testWorldBossSceneryRemainsPlayable passed (28.395 seconds)
+Volledig log: /tmp/dino-castle-recompose/iphone-verified.log
+iPad: testNativeWorldChaptersAndMinuteQuestions passed (40.900 seconds)
+iPad: testWorldBossSceneryRemainsPlayable passed (29.813 seconds)
+Volledig log: /tmp/dino-castle-recompose/ipad-verified.log
+iPhone: testComingSoonOnlyAfterLevelHundred passed (19.353 seconds)
+Volledig log: /tmp/dino-castle-recompose/iphone-ending.log
+iPad: testComingSoonOnlyAfterLevelHundred passed (19.272 seconds)
+Volledig log: /tmp/dino-castle-recompose/ipad-ending.log
