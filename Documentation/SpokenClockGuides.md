@@ -1,18 +1,22 @@
-# Klokhulp per vraagtype — 29 oktober 2026
+# Klokhulp per vraagtype — bijgewerkt 31 oktober 2026
 
 De hulp wordt per vraagtype gekozen en alleen na een fout op de huidige vraag geactiveerd. Een nieuwe vraag begint zonder hulp. De voorbeeldkaarten van de betreffende leesvragen tonen de uitleg meteen.
 
 | Vraagtypen | Klokhulp |
 | --- | --- |
 | 1, 2, 7, 8 | Bestaande genummerde uur- en minutenpijlen |
-| 3, 4, 5 | Uitspraakschaal met één blauwe boogpijl zonder (1) of (2) |
+| 3, 4, 5 | Uitspraakschaal met één kleine halftransparante boogpijl in de minutenwijzerkleur binnen de wijzerplaat, zonder (1) of (2) |
 | Overige typen | Geen van deze klokhelpers |
 
-De klokhulp heeft geen extra tijdzin onder de wijzerplaat. Elk schaalgetal of ankerwoord staat als gewone tekst net buiten een kort streepje aan de klokrand. De plaatsing gebruikt de gemeten tekstafmetingen, zodat ook twee cijfers en woorden vrij van het streepje blijven. De blauwe boog volgt de rand. De cirkel met een kort verbindingsstukje markeert de minutenstand van de vraag: bij over/past en over half het eindpunt, bij voor/to en voor half het beginpunt. Ook de antwoordklokken van type 5 tonen beide cirkels: de minutenafwijking en het uitgesproken uur. De verticale ruimte volgt de schaal, de boog en de korte richtingswoorden, met een kleine veiligheidsmarge.
+De klokhulp heeft geen extra tijdzin onder de wijzerplaat. Elk schaalgetal of ankerwoord staat als gewone tekst net buiten een kort streepje aan de klokrand. De plaatsing gebruikt de gemeten tekstafmetingen, zodat ook twee cijfers en woorden vrij van het streepje blijven. De halftransparante boog in de minutenwijzerkleur staat binnen de wijzerplaat op dezelfde straal als het terugwijspijltje van de kleine wijzer bij type 2. Losse verbindingswoorden zoals past/to en over/voor zijn weggelaten. De cirkel markeert de minutenstand van de vraag op zijn vaste plek bij de schaal; de binnenboog verbindt de betreffende minuutrichting met de richting van het hele of halve uur. Ook de antwoordklokken van type 5 tonen beide cirkels: de minutenafwijking en het uitgesproken uur. De buitenmarges volgen alleen de schaal, met een kleine veiligheidsmarge. De vrijgekomen ruimte vergroot de wijzerplaat.
 
 Bij type 4 verschijnt na een fout direct de eenvoudige hulplijn. De antwoordstenen blijven in beeld. Bij twee keuzes is de juiste steen meteen groen omlijnd; Verder gaat direct naar de volgende vraag. Er is geen tweede uitlegfase. De volledige ring met alle tijdomschrijvingen staat uitsluitend in Voorbeeld. De aansluitingen bestaan daar uit een kort streepje, een gewone Nederlandse of Engelse schaalwaarde en een langere lijn naar de uitspraak. De langere lijn blijft buiten de schaaltekst en de tekstballon. De gekleurde buitenband en het omcirkelde vertrekpunt zijn verwijderd; de tekstballonnen behouden hun taalspecifieke kleurgroepen.
 
 Bij type 5 krijgt na een fout elke antwoordklok een hulplijn voor zijn eigen tijd, met omcirkeling van de minutenafwijking en het uitgesproken uur. Kleinere buitencijfers en kleinere marges geven de wijzerplaat meer ruimte. De speler kan ook bij twee antwoordklokken de juiste keuze nog maken. Een goed antwoord gaat na de gewone antwoordanimatie automatisch door; de eerste fout blijft de score bepalen. Het afzonderlijke uitlegscherm en de losse tijdzin onder een fout gekozen klok zijn verwijderd.
+
+Type 5 zet de genoemde tijd op een eigen gecentreerde regel onder de vraag, in Nederlands en Engels. Voorbeeld gebruikt dezelfde complete uitlegklok met tijdomschrijvingen als type 4. Na een fout behouden de antwoordkaarten hun vaste afmetingen: de bestaande wijzerplaat verkleint en verschuift vloeiend in 0,42 seconde, waarna de hulp met een korte vertraging verschijnt. Bij Verminder beweging verschijnt de eindstand direct.
+
+Deze verfijning is gecontroleerd op iPhone 18 Pro en iPad (A16), beide met iOS 27: vier geslaagde schermtests voor de vraagtekst, de gedeelde uitlegklok en de ongewijzigde kaart- en titelposities. De gerichte kerncontroles slagen met **42.716 controles** voor vraagteksten, klokhulp en leesvragen. De volledige kernsuite stopt bij de bestaande ongebruikte asset `AppIcon-for-promo`; de simulatorbuilds gebruiken uitsluitend voor verificatie `ASSETCATALOG_COMPILER_APPICON_NAME=` wegens de bestaande AppIcon-configuratie. Visueel gecontroleerd: [losse Engelse tijdregel](Screenshots/SpokenClockGuides/type5-english-separate-time.png), [hulp binnen dezelfde kaarten](Screenshots/SpokenClockGuides/type5-english-stable-guide.png), [volledig voorbeeld zoals type 4](Screenshots/SpokenClockGuides/type5-english-full-example.png) en [Nederlandse hulp op iPad](Screenshots/SpokenClockGuides/type5-dutch-stable-guide-ipad.png).
 
 | Minutenpositie | Nederlands | Engels |
 | --- | --- | --- |
@@ -33,9 +37,9 @@ Bij :50 staat in het Engels 10: de uitspraak is ten to. De 20 uit de opgegeven r
 
 De Nederlandse boog loopt bij ‘over’ vanaf het hele uur naar de minutenpositie, bij ‘voor half’ vanaf de minutenpositie naar half, bij ‘over half’ vanaf half naar de minutenpositie en bij ‘voor’ vanaf de minutenpositie naar het volgende hele uur. De Engelse boog loopt tot en met half vanaf het hele uur naar de minutenpositie (‘past’) en daarna vanaf de minutenpositie naar het volgende hele uur (‘to’).
 
-Voor :20 betekent dit Nederlands 20 → 30 met ‘voor half’, tegenover Engels 0 → 20 met ‘past’. Bij exacte hele uren en het Nederlandse halve uur staat het schaalwoord bij zijn streepje, zonder een afstandsboog te suggereren. De grote helper markeert dit woord met een cirkel; de compacte antwoordhelper laat de cirkel weg. Bij losse minuten vervangt het exacte aantal de dichtstbijzijnde schaalwaarde, bijvoorbeeld 13 bij :17 in het Nederlands. Het verbindingswoord staat apart met een eigen aansluitstreepje. De aansluiting begint precies op het midden van de boog en sluit vlak naast de tekst aan.
+Voor :20 betekent dit Nederlands 20 → 30 met ‘voor half’, tegenover Engels 0 → 20 met ‘past’. Bij exacte hele uren en het Nederlandse halve uur staat het schaalwoord bij zijn streepje, zonder een afstandsboog te suggereren. Zowel de grote helper als de compacte antwoordhelper onderstrepen het actieve schaalwoord. Bij losse minuten vervangt het exacte aantal de dichtstbijzijnde schaalwaarde, bijvoorbeeld 13 bij :17 in het Nederlands. Er staat geen los verbindingswoord bij de boog.
 
-De schaal volgt ronde, vierkante en achthoekige klokken. De boog gebruikt steeds de gewone blauwe appkleur en neemt geen persoonlijke wijzerkleur over. De uur- en minutenwijzers zelf behouden hun gekozen kleuren.
+De schaal volgt ronde, vierkante en achthoekige klokken. De boog gebruikt de persoonlijke minutenwijzerkleur met 50% opacity. De uur- en minutenwijzers zelf behouden hun gekozen kleuren.
 
 ## Controles
 
@@ -118,3 +122,21 @@ De leesboog is één echte cirkel rond het klokcentrum, getekend zonder losse aa
 Toepasselijke schaalwoorden zoals quarter, kwart, half en uur krijgen een onderstreping in plaats van een cirkel. De boog begint of eindigt vlak bij het woord. De normale schaalwaarden blijven op hun plek.
 
 Geslaagd: 6.510 gerichte kerncontroles, beide taaltests, de kwartiertest en de nieuwe vijfminutentest. De eerste vijfminutenrun verloor de simulator tijdens scrollen; met de tijdkeuze vóór de typekeuze slaagt de herhaling. Visueel gecontroleerd: [five past](Screenshots/SpokenClockGuides/pure-circle-five-past.png), [five to](Screenshots/SpokenClockGuides/pure-circle-five-to.png), [onderstreept quarter past](Screenshots/SpokenClockGuides/underlined-quarter-past.png) en [onderstreept quarter to](Screenshots/SpokenClockGuides/underlined-quarter-to.png).
+
+
+## Kleine pijl binnen de klok — 31 oktober 2026
+
+De grote buitenboog is vervangen door een kleine klokwijzerboog binnen de wijzerplaat, op 0,275 maal de diameter van het klokcentrum. Dit is dezelfde straal als de bestaande uurafwijking bij type 2. De pijl gebruikt de minutenwijzerkleur met 50% opacity, zonder witte omlijning. Bij de minutenwijzer blijft een kleine vrije ruimte tussen de wijzer en de pijlpunt. De boog wordt boven de wijzers getekend, zodat ook bij heel korte intervallen de pijlpunt zichtbaar blijft. De richting en referenties blijven taalspecifiek: Nederlands :20 loopt naar half; Engels :20 loopt vanaf twaalf. Er is geen boog bij een exact heel uur of het Nederlandse halve uur.
+
+De actieve schaalwaarde blijft op zijn gewone plek buiten het korte streepje. Numerieke waarden houden hun cirkel; actieve schaalwoorden blijven onderstreept. De cirkel om het uitgesproken uur blijft behouden. De afzonderlijke labels past/to en de Nederlandse verbindingswoorden zijn verwijderd. De buitenmarges zijn kleiner voor zowel de grote uitlegklokken als de antwoordklokken van type 5. De eerdere buitenboogvarianten hierboven beschrijven de voorgeschiedenis.
+
+Geslaagd: **4.954 gerichte klokhulpcontroles** en de bestaande Nederlandse en Engelse schermtests voor typen 3/4/5 op iPhone 17 Pro / iOS 26.5. De gewone build liep vast op de al aanwezige appiconen van 1254 × 1254 pixels; de succesvolle simulatorcontrole gebruikte uitsluitend een tijdelijke buildinstelling `ASSETCATALOG_COMPILER_APPICON_NAME=`. De icoonbestanden zijn ongewijzigd.
+
+Visueel gecontroleerd: [kleine antwoordklokken](Screenshots/SpokenClockGuides/inner-arc-answer-clocks-nl.png), [Nederlands voor half](Screenshots/SpokenClockGuides/inner-arc-before-half-nl.png), [Engelse leesvraag](Screenshots/SpokenClockGuides/inner-arc-reading-en.png) en [Engels twenty past](Screenshots/SpokenClockGuides/inner-arc-twenty-past-en.png).
+
+
+### Verfijning van kleur en pijlpunt — 31 oktober 2026
+
+De binnenboog volgt nu de minutenwijzerkleur met 50% opacity. De witte omlijning is verwijderd. Bij de minutenwijzer is het boogeinde ingekort met de halve wijzerbreedte, de halve lijndikte en een kleine vrije ruimte. Het begin wordt op dezelfde manier vrijgehouden wanneer de boog vanaf de minutenwijzer vertrekt. Korte bogen behouden een zichtbare pijl; de helper wordt boven de wijzers getekend. De plaatsing en schaal blijven behouden.
+
+Geslaagd: de reguliere simulatorbuild, de bestaande Nederlandse uitspraakhulptest voor typen 3/4/5 en de Engelse vijfminutentest. Visueel gecontroleerd: [vijf over met vrije pijlpunt](Screenshots/SpokenClockGuides/tinted-inner-arc-five-past-en.png), [vijf voor](Screenshots/SpokenClockGuides/tinted-inner-arc-five-to-en.png) en [kleine antwoordklokken](Screenshots/SpokenClockGuides/tinted-inner-arc-answer-clocks-nl.png).

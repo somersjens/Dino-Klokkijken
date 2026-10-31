@@ -109,7 +109,7 @@ struct DinoTimeArithmeticExplanation: View {
                         .anchorPreference(key: FieldAnchorsKey.self, value: .bounds) { [FieldAnchor(row: 1, hours: true): $0] }
                         .accessibilityLabel(Text(verbatim: work.result.digitalText))
                         .accessibilityIdentifier(resultIdentifier)
-                        .padding(.top, 28 * layoutScale)
+                        .padding(.top, 6 * layoutScale)
                         .transition(.opacity)
                     if showsMidnightNote && work.crossesMidnight {
                         Text("dino.expanded.midnightHint")
@@ -190,12 +190,12 @@ struct DinoTimeArithmeticExplanation: View {
         let ruleExtension = signWidth + signGap
         let ruleY = barY + step / 2
         return ZStack {
-            block(opening, slots: slots, emphasis: .plain)
+            block(opening, slots: slots)
                 .position(x: x, y: clockY)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text(verbatim: column.sums.first?.equation ?? "\(clockDigits(opening, padded: true)) \(operation.symbol) \(clockDigits(addend, padded: true))"))
                 .accessibilityIdentifier("\(prefix).timeArithmetic.\(hours ? "hours" : "minutes")")
-            block(addend, slots: slots, emphasis: .plain)
+            block(addend, slots: slots)
                 .position(x: x, y: barY)
             Capsule().fill(blue)
                 .frame(width: boxWidth(slots: slots) + ruleExtension, height: 2)
@@ -219,15 +219,14 @@ struct DinoTimeArithmeticExplanation: View {
 
     private func totalBlock(_ column: DinoClockColumnWork, hours: Bool) -> some View {
         let value = column.sums.first?.result ?? column.passthrough ?? 0
-        let changed = (hours ? hourFix : minuteFix) != 0
-        return block(value, slots: columnSlots, emphasis: changed ? .bridge : .final)
+        return block(value, slots: columnSlots, outlined: false)
             .anchorPreference(key: FieldAnchorsKey.self, value: .bounds) { [FieldAnchor(row: 0, hours: hours): $0] }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text(verbatim: DinoClockArithmetic.format(value)))
             .accessibilityIdentifier("\(prefix).timeArithmetic.total.\(hours ? "hours" : "minutes")")
     }
 
-    private func block(_ value: Int, slots: Int, emphasis: DigitalClockReadout.Emphasis) -> some View {
+    private func block(_ value: Int, slots: Int, outlined: Bool = true) -> some View {
         HStack(spacing: 0) {
             if value < 0 {
                 Text(verbatim: "−").foregroundStyle(DinoTimeDirection.color(later: false, highContrast: highContrast))
@@ -244,8 +243,10 @@ struct DinoTimeArithmeticExplanation: View {
             DigitalClockOutline(shape: theme.digitalShape).fill(Color(dinoHex: theme.displayHex))
         }
         .overlay {
-            DigitalClockOutline(shape: theme.digitalShape)
-                .strokeBorder(border(emphasis), lineWidth: emphasis == .plain && !highContrast ? 2 : 2.5)
+            if outlined {
+                DigitalClockOutline(shape: theme.digitalShape)
+                    .strokeBorder(DinoStyle.ink.opacity(highContrast ? 1 : 0.12), lineWidth: 2)
+            }
         }
     }
 
@@ -255,14 +256,6 @@ struct DinoTimeArithmeticExplanation: View {
             .foregroundStyle(DinoTimeDirection.color(later: sign == .add, highContrast: highContrast))
             .frame(width: signWidth, height: signWidth)
             .accessibilityHidden(true)
-    }
-
-    private func border(_ emphasis: DigitalClockReadout.Emphasis) -> Color {
-        switch emphasis {
-        case .plain: return DinoStyle.ink.opacity(highContrast ? 1 : 0.12)
-        case .bridge: return highContrast ? DinoStyle.ink : Color(dinoHex: 0x154A86)
-        case .final: return highContrast ? DinoStyle.ink : DinoStyle.deepGreen
-        }
     }
 
     private func digitSlots(_ column: DinoClockColumnWork, addend: Int) -> Int {
@@ -308,19 +301,22 @@ struct DinoTimeArithmeticExplanation: View {
            let minutes = anchors[FieldAnchor(row: 0, hours: false)].map({ geometry[$0] }),
            let clock = anchors[FieldAnchor(row: 1, hours: true)].map({ geometry[$0] }) {
             let changed = hourFix != 0 || minuteFix != 0
+            // Keep enough horizontal shaft for the correction badge on narrow displays.
+            let hourBend = max(hours.maxX + 44 * layoutScale, clock.minX + clock.width * 0.18)
+            let minuteBend = min(minutes.minX - 44 * layoutScale, clock.maxX - clock.width * 0.18)
             GuideArrow(from: CGPoint(x: hours.maxX, y: hours.midY),
-                       to: CGPoint(x: clock.minX + clock.width * 0.3, y: clock.minY),
+                       to: CGPoint(x: hourBend, y: clock.minY),
                        label: hourFix == 0 ? nil : signed(hourFix),
                        color: blue,
                        labelColor: arrowColor(hourFix, changed: changed && hourFix != 0),
-                       progress: resultProgress)
+                       progress: resultProgress, scale: layoutScale)
                 .accessibilityIdentifier("\(prefix).timeArithmetic.arrow.result.hours")
             GuideArrow(from: CGPoint(x: minutes.minX, y: minutes.midY),
-                       to: CGPoint(x: clock.maxX - clock.width * 0.3, y: clock.minY),
+                       to: CGPoint(x: minuteBend, y: clock.minY),
                        label: minuteFix == 0 ? nil : signed(minuteFix),
                        color: blue,
                        labelColor: arrowColor(minuteFix, changed: changed && minuteFix != 0),
-                       progress: resultProgress)
+                       progress: resultProgress, scale: layoutScale)
                 .accessibilityIdentifier("\(prefix).timeArithmetic.arrow.result.minutes")
         }
     }
@@ -361,7 +357,9 @@ struct DinoTimeArithmeticExplanation: View {
         guard explains else { return }
         if stage == .resting {
             withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.55)) {
-                stage = .split
+                // A closed two-choice question (and an example) opens its complete layout once.
+                // Only the arrow drawing is staggered; the answer row never causes a second expansion.
+                stage = showsResult ? .corrected : .split
             }
         }
         if splitProgress == 0 {
@@ -375,13 +373,17 @@ struct DinoTimeArithmeticExplanation: View {
                 catch { return }
             }
         }
-        guard !Task.isCancelled, showsResult, stage < .corrected else { return }
-        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.55)) { stage = .corrected }
-        if !reduceMotion {
-            do { try await Task.sleep(nanoseconds: 80_000_000) }
-            catch { return }
+        guard !Task.isCancelled, showsResult else { return }
+        if stage < .corrected {
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.55)) { stage = .corrected }
+            if !reduceMotion {
+                do { try await Task.sleep(nanoseconds: 80_000_000) }
+                catch { return }
+            }
         }
-        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.55)) { resultProgress = 1 }
+        if resultProgress == 0 {
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.55)) { resultProgress = 1 }
+        }
     }
 }
 
@@ -393,6 +395,7 @@ private struct GuideArrow: View {
     let color: Color
     let labelColor: Color
     let progress: CGFloat
+    let scale: CGFloat
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -404,17 +407,18 @@ private struct GuideArrow: View {
                 .opacity(progress)
             if let label {
                 Text(verbatim: label)
-                    .font(.system(size: 12, weight: .heavy, design: .rounded))
+                    .font(.system(size: 12 * scale, weight: .heavy, design: .rounded))
                     .foregroundStyle(labelColor)
                     .monospacedDigit()
                     .lineLimit(1)
                     .fixedSize()
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 2)
+                    .padding(.horizontal, 5 * scale)
+                    .padding(.vertical, 2 * scale)
                     .background(.white.opacity(0.92), in: Capsule())
                     .overlay(Capsule().stroke(labelColor.opacity(0.45), lineWidth: 1))
-                    // Attach the correction to the vertical segment, on its outer side.
-                    .position(x: to.x + (from.x < to.x ? -24 : 24), y: (from.y + to.y) / 2)
+                    // Anchor the badge's near edge just before the bend, above the horizontal shaft.
+                    .frame(width: 0, height: 0, alignment: from.x < to.x ? .trailing : .leading)
+                    .position(x: to.x + (from.x < to.x ? -4 : 4) * scale, y: from.y - 14 * scale)
                     .opacity(progress)
             }
         }

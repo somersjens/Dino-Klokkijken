@@ -31,10 +31,6 @@ struct SpokenClockReadingHint: Equatable, Sendable {
         minutes[DinoTimeReading.labelPosition(minute: minute) / 5] = minute
         return minutes
     }
-    /// The word attaches to the exact middle of the reading arc.
-    var relationLeaderMinute: Double {
-        Double(startMinute + endMinute) / 2
-    }
     var relation: String {
         if minute == 0 || (isDutch && minute == 30) { return "" }
         if !isDutch { return minute <= 30 ? "past" : "to" }
@@ -53,77 +49,38 @@ struct SpokenClockReadingHint: Equatable, Sendable {
     }
 }
 
-/// Orthogonal circle intersection: the arc tangent points through the badge centre.
-/// This gives one constant-radius arc, without a separate connecting curve.
-struct SpokenClockCircleAttachment {
-    let badgeCenter: CGPoint
-    let contact: CGPoint
-    let contactMinute: Double
-
-    init(arcRadius: Double, badgeRadius: Double, minute: Int, atEnd: Bool) {
-        let angle = Double(minute) * .pi / 30
-        let trim = atan2(badgeRadius, arcRadius)
-        let contactAngle = angle + (atEnd ? -trim : trim)
-        badgeCenter = CGPoint(x: sin(angle) * hypot(arcRadius, badgeRadius),
-                              y: -cos(angle) * hypot(arcRadius, badgeRadius))
-        contact = CGPoint(x: sin(contactAngle) * arcRadius, y: -cos(contactAngle) * arcRadius)
-        contactMinute = contactAngle * 30 / .pi
-    }
-}
-
 enum SpokenClockGuideLayout {
     static func extent(shape: AnalogClockShape, compact: Bool = false) -> Double {
-        compact ? (shape == .square ? 1.18 : 1.12) : (shape == .square ? 1.20 : 1.14)
+        compact ? 0.84 : 0.86
     }
 
     static func scaleFontSize(faceSize: Double) -> Double { max(7, faceSize * 0.064) }
 
-    static let arrowOffset = 0.20
-    static let relationOffset = 0.26
+    static let arrowRadius = 0.275
     static func ringDiameter(faceSize: Double) -> Double {
         max(scaleFontSize(faceSize: faceSize) * 1.3, faceSize * 0.10) + 2 * max(2, faceSize * 0.014)
     }
 
-    /// Tight vertical bounds around the scale, rim arrow and relation text.
+    /// Only the rim scale needs outside space; the guide sits entirely inside the face.
     static func verticalBounds(minute: Int, language: String, shape: AnalogClockShape, faceSize: Double,
                                compact: Bool = false) -> ClosedRange<Double> {
         let face = max(1, faceSize)
         let hint = SpokenClockReadingHint(minute: minute, language: language)
-        let plainQuarters = [15, 45].filter { $0 != minute && hint.startMinute <= $0 && hint.endMinute >= $0 }
-        let wordWidth = scaleFontSize(faceSize: face) * (language == "nl" ? 3.0 : 4.0) / face
-        let arcOffset = plainQuarters.isEmpty ? arrowOffset : max(arrowOffset, 0.526 + max(2 / face, 0.018) + wordWidth + 0.025 - 0.5)
-        let labelHeight = scaleFontSize(faceSize: face) * 1.3
-        let circlePadding = 2 * max(2, face * 0.014)
-        let scaleExtent = 0.526 + max(2 / face, 0.018) + (labelHeight + circlePadding) / face
-        var lower = -scaleExtent
-        var upper = scaleExtent
-        let arcRadius = (hint.startMinute...hint.endMinute).reduce(0.5 + arcOffset) { radius, step in
-            max(radius, ClockHandHintGeometry.outerRadius(angle: Double(step) * 6, shape: shape) + arrowOffset)
-        }
-        for step in hint.startMinute...hint.endMinute {
-            let angle = Double(step) * 6
-            let y = ClockHandHintGeometry.point(radius: arcRadius, angle: angle).y
-            lower = min(lower, y - 0.06); upper = max(upper, y + 0.06)
-        }
-        if !hint.relation.isEmpty {
-            let angle = hint.relationLeaderMinute * 6
-            let radius = arcRadius + 0.06
-            let y = ClockHandHintGeometry.point(radius: radius, angle: angle).y
-            let halfHeight = max(7.5, face * 0.064) / face * 0.65 + 2 / face
-            lower = min(lower, y - halfHeight); upper = max(upper, y + halfHeight)
-        }
-        if hint.count > 0 {
-            if hint.scaleLabel.allSatisfy(\.isNumber) {
-                let badgeRadius = ringDiameter(faceSize: face) / (face * 2)
-                let attachment = SpokenClockCircleAttachment(arcRadius: arcRadius,
-                    badgeRadius: badgeRadius + 0.7 / face, minute: minute, atEnd: minute == hint.endMinute)
-                lower = min(lower, attachment.badgeCenter.y - badgeRadius)
-                upper = max(upper, attachment.badgeCenter.y + badgeRadius)
-            } else {
-                let y = ClockHandHintGeometry.point(radius: arcRadius, angle: Double(minute) * 6).y
-                lower = min(lower, y - labelHeight / (2 * face))
-                upper = max(upper, y + labelHeight / (2 * face) + 3 / face)
-            }
+        let font = scaleFontSize(faceSize: face)
+        var lower = -0.5, upper = 0.5
+        for scaleMinute in hint.scaleMinutes {
+            let label = SpokenClockReadingHint(minute: scaleMinute, language: language).scaleLabel
+            let numeric = label.allSatisfy(\.isNumber)
+            let selected = scaleMinute == minute
+            let diameter = ringDiameter(faceSize: face)
+            // Conservative font metrics; the Canvas uses the exact measured text rectangle.
+            let width = selected && numeric ? max(diameter, Double(label.count) * font * 0.72 + 2 * max(2, face * 0.014))
+                : Double(label.count) * font * 0.72
+            let height = selected && numeric ? width : font * 1.3
+            let mark = ClockHandHintGeometry.minuteMark(minute: scaleMinute, shape: shape,
+                labelSize: CGSize(width: width / face, height: height / face), gap: max(2 / face, 0.018))
+            lower = min(lower, mark.label.y - height / (2 * face))
+            upper = max(upper, mark.label.y + height / (2 * face) + (selected && !numeric ? 3 / face : 0))
         }
         let margin = compact ? max(3 / face, 0.025) : max(5 / face, 0.035)
         return (lower - margin)...(upper + margin)

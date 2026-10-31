@@ -107,8 +107,8 @@ struct DinoQuestionPrompt: Equatable, Sendable {
             return clockChoice(question, language: code, countedKey: "dino.question.chooseClock.format",
                                shortKey: "dino.question.chooseClock.short", plainKey: instructionKey)
         case .spokenTime:
-            return clockChoice(question, language: code, countedKey: "dino.question.spokenClock.format",
-                               shortKey: "dino.question.spokenTime.format", plainKey: instructionKey)
+            return formatted("dino.question.spokenTime.format", [clock(question.target, language: code)],
+                             plainKey: instructionKey)
         case .trueFalse:
             return formatted("dino.question.trueFalse.format",
                              [clock(question.statement ?? question.target, language: code)], plainKey: instructionKey)

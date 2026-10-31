@@ -388,7 +388,7 @@ struct DigitalClockControl: View {
         return Button { adjust(direction, minutes: minutes) } label: {
             Image(systemName: direction > 0 ? "chevron.up" : "chevron.down")
                 .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(enabled ? DinoTimeDirection.color(later: direction > 0, highContrast: highContrast) : DinoStyle.disabledInk(highContrast))
+                .foregroundStyle(enabled ? DinoStyle.ink.opacity(highContrast ? 1 : 0.75) : DinoStyle.disabledInk(highContrast))
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }

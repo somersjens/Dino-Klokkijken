@@ -66,7 +66,9 @@ struct DinoExpandedQuestionView: View {
                 if !isDemonstration { responses }
             case .spokenTime:
                 if isDemonstration {
-                    spokenReadingClock(q.target, identifier: isDemonstration ? "demo.answer" : "question.spokenClock")
+                    DinoTimeReadingClock(time: q.target, theme: theme, width: min(440, width),
+                                         faceSize: min(clockSize, width - 52), language: code, showsGuide: true)
+                        .environment(\.dinoClockReadingAssistance, false)
                 } else { responses }
             case .sortTimes: sorting
             case .sayTime:
@@ -98,6 +100,8 @@ struct DinoExpandedQuestionView: View {
                 }
             case .addTime, .subtractTime:
                 if !isDemonstration { responses }
+            case .trueFalse:
+                responses
             default:
                 if isDemonstration { demonstrationAnswer }
                 else { responses }
@@ -285,7 +289,7 @@ struct DinoExpandedQuestionView: View {
                                          fontSize: sequence ? 24 : 17)
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 12) {
             ForEach(Array(q.responses.enumerated()), id: \.offset) { index, response in
-                let correct = session.showsCorrectResponse && response == q.expectedAnswer
+                let correct = (isDemonstration || session.showsCorrectResponse) && response == q.expectedAnswer
                 let wrong = session.hasFeedback && session.rejectedResponses.contains(response)
                 let verdict = correct ? L(key: "dino.expanded.true") : wrong ? L(key: "dino.expanded.false") : ""
                 let reading: String = {
@@ -297,11 +301,9 @@ struct DinoExpandedQuestionView: View {
                 Button { session.submit(response) } label: {
                     Group {
                         if q.kind == .spokenTime, case .time(let time) = response {
-                            AnalogClock(time: time, theme: theme,
-                                        size: session.showsSpokenClockHints ? cellWidth - 12
-                                            : min(answerClockSize ?? (width >= 600 ? 184 : 125), cellWidth - 24),
-                                        spokenHintLanguage: session.showsSpokenClockHints ? code : nil,
-                                        compactSpokenHint: true)
+                            DinoSpokenAnswerClock(time: time, theme: theme, language: code,
+                                                  faceSize: min(answerClockSize ?? (width >= 600 ? 184 : 125), cellWidth - 24),
+                                                  width: cellWidth - 24, showsGuide: session.showsSpokenClockHints)
                                 .allowsHitTesting(false)
                                 .accessibilityElement(children: .ignore)
                                 .accessibilityLabel(Text(verbatim: wrong ? DinoTimeWords.time(time, language: code) : shownDigital(time)))
@@ -313,7 +315,7 @@ struct DinoExpandedQuestionView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                                 .accessibilityLabel(Text(verbatim: responseText(response)))
                         }
-                    }.padding(q.kind == .spokenTime && session.showsSpokenClockHints ? 6 : 12)
+                    }.padding(12)
                         .frame(maxWidth: .infinity, minHeight: sequence ? 88 : [.minutesBetween, .timeZone].contains(q.kind) && compactLayout ? 62 : 74)
                         .modifier(ClockAnswerOutline(visible: correct || wrong, correct: correct))
                         .background(.white, in: RoundedRectangle(cornerRadius: 22))
@@ -323,8 +325,8 @@ struct DinoExpandedQuestionView: View {
                                     .padding(2).background(.white, in: Circle()).offset(x: 4, y: -4)
                             }
                         }
-                }.buttonStyle(DinoAnswerButtonStyle()).disabled(!session.responseIsEnabled(response))
-                    .accessibilityIdentifier("question.option.\(index)")
+                }.buttonStyle(DinoAnswerButtonStyle()).disabled(isDemonstration || !session.responseIsEnabled(response))
+                    .accessibilityIdentifier("\(isDemonstration ? "demo" : "question").option.\(index)")
                     .accessibilityValue(Text(verbatim: [verdict, reading].filter { !$0.isEmpty }.joined(separator: ", ")))
             }
         }.frame(width: responseWidth).id("question.answers").questionAnswerFocus()
@@ -669,9 +671,8 @@ struct DinoAdvanceDifference: View {
                 .overlay(alignment: .trailing) {
                     if let enteredMinutes {
                         let entered = "\(enteredMinutes < 0 ? "−" : "+")\(DinoTimeWords.duration(abs(enteredMinutes), language: language))"
-                        let enteredInk = DinoTimeDirection.color(later: enteredMinutes >= 0, highContrast: highContrast)
                         durationLabel(entered, combined: abs(enteredMinutes) >= 60 && !enteredMinutes.isMultiple(of: 60),
-                                      ink: enteredInk, fill: DinoTimeDirection.tint(later: enteredMinutes >= 0))
+                                      ink: DinoStyle.wrong(highContrast), fill: DinoStyle.orange)
                             .padding(.trailing, resultOffset / 2)
                             .offset(y: -labelRise)
                             .accessibilityLabel(Text(verbatim: entered))
@@ -699,7 +700,7 @@ struct DinoAdvanceDifference: View {
                         style: StrokeStyle(lineWidth: 2.25, lineCap: .round, lineJoin: .round))
                 .accessibilityHidden(true)
             DinoAdvanceArrow(horizontalOffset: -resultOffset, extraHeight: resultTopInset)
-                .stroke(DinoTimeDirection.color(later: (enteredMinutes ?? 0) >= 0, highContrast: highContrast), style: StrokeStyle(lineWidth: 2.25, lineCap: .round, lineJoin: .round))
+                .stroke(DinoStyle.wrong(highContrast), style: StrokeStyle(lineWidth: 2.25, lineCap: .round, lineJoin: .round))
                 .opacity(enteredMinutes == nil ? 0 : 1)
                 .accessibilityHidden(true)
         }
@@ -1149,7 +1150,7 @@ private struct DinoTrainJourneyCard: View {
                     DinoTrainExpansion(axis: .horizontal, fraction: showsTotal ? 1 : 0) {
                         durationColumns(hours: durationMinutes / 60, minutes: durationMinutes % 60,
                                         label: DinoTimeWords.compactDuration(hours: durationMinutes / 60,
-                                            minutes: durationMinutes % 60, language: language, padMinutes: schedule.hasMinuteTerms))
+                                            minutes: durationMinutes % 60, language: language, padMinutes: schedule.usesMinuteColumn))
                             .padding(.trailing, valueSpacing)
                             .opacity(showsTotal ? 1 : 0)
                             .animation(reduceMotion ? nil : .easeIn(duration: 0.25).delay(0.4), value: showsTotal)
@@ -1200,9 +1201,9 @@ private struct DinoTrainJourneyCard: View {
                     .numericTextTransition()
                     .fixedSize(horizontal: true, vertical: false)
                     .frame(width: (language == "nl" ? 44 : 22) * columnScale, alignment: .trailing)
-                    .padding(.trailing, schedule.hasMinuteTerms ? 10 * columnScale : 0)
+                    .padding(.trailing, schedule.usesMinuteColumn ? 10 * columnScale : 0)
             }
-            if schedule.hasMinuteTerms {
+            if schedule.usesMinuteColumn {
                 Text(verbatim: String(format: "%02d min", minutes))
                     .numericTextTransition()
                     .fixedSize(horizontal: true, vertical: false)
@@ -1965,8 +1966,15 @@ struct DinoExpandedDemonstration: View {
         DinoDemonstrationCard(width: width, height: height) {
             VStack(spacing: 18) {
                 if let sample {
-                    DinoQuestionTitle(question: sample.question, fontSize: 22, speechScope: "demo")
-                        .accessibilityIdentifier("demo.title")
+                    if kind == .trueFalse {
+                        DinoTrueFalseQuestionTitle(question: sample.question,
+                                                  showsCorrection: sample.question.expectedAnswer == .truth(false),
+                                                  announces: true, fontSize: 22, prefix: "demo")
+                            .id(sample.question.id)
+                    } else {
+                        DinoQuestionTitle(question: sample.question, fontSize: 22, speechScope: "demo")
+                            .accessibilityIdentifier("demo.title")
+                    }
                     if [.timeSequence, .addTime, .subtractTime].contains(kind) {
                         Text("dino.expanded.midnightHint").font(.footnote).multilineTextAlignment(.center)
                             .accessibilityIdentifier(kind == .timeSequence ? "demo.sequence.hint" : "demo.arithmetic.hint")
@@ -2002,12 +2010,14 @@ struct DinoExpandedDemonstration: View {
         let code = LanguageManager.shared.effective.code
         let parts = [schedule.firstMinutes, schedule.breakMinutes, schedule.secondMinutes]
             .map { DinoTimeWords.duration($0, language: code) }
-        let start = Text(verbatim: clockText(schedule.start, kind: kind))
-        let sum = parts.reduce(start) { text, duration in
-            text + Text(verbatim: " + \(duration)")
-                .foregroundColor(DinoTimeDirection.color(later: true, highContrast: highContrast))
+        var text = AttributedString(clockText(schedule.start, kind: kind))
+        for duration in parts {
+            var addition = AttributedString(" + \(duration)")
+            addition.foregroundColor = DinoTimeDirection.color(later: true, highContrast: highContrast)
+            text.append(addition)
         }
-        return sum + Text(verbatim: " = \(clockText(schedule.end, kind: kind))")
+        text.append(AttributedString(" = \(clockText(schedule.end, kind: kind))"))
+        return Text(text)
     }
 
     private func loadExample() {

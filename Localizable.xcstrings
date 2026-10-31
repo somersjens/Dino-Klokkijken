@@ -5972,13 +5972,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Which clock shows %@?"
+            "value" : "Which of the clocks shows:\n%@"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Welke klok geeft %@ aan?"
+            "value" : "Welke klok geeft deze tijd aan:\n%@"
           }
         }
       }

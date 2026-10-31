@@ -382,7 +382,10 @@ final class DinoSession: ObservableObject, Identifiable {
     var showsWorkedExplanation: Bool {
         guard missedFirstAnswer && !canRetry else { return false }
         switch question.kind {
-        case .dayPart, .timeSequence, .addTime, .subtractTime, .flightArrival, .timeZone, .daySchedule:
+        case .timeSequence:
+            // The pattern was already explained on the first miss; a correct retry adds nothing.
+            return !correctFeedback
+        case .dayPart, .addTime, .subtractTime, .flightArrival, .timeZone, .daySchedule:
             return true
         default:
             return false

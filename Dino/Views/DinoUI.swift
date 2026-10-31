@@ -658,44 +658,24 @@ struct DinoClockControlButtonStyle: ButtonStyle {
     /// Fixed size keeps +1 and +30 on the same button. Nil follows the label.
     var width: CGFloat? = nil
     var height: CGFloat? = nil
-    var timeDirection: Bool? = nil
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: compact ? 15 : 17, weight: .bold, design: .rounded))
-            .foregroundStyle(labelInk)
+            .foregroundStyle(isEnabled ? (selected ? Color.white : DinoStyle.ink) : DinoStyle.disabledInk(highContrast))
             .lineLimit(1)
             .padding(.horizontal, width == nil ? (compact ? 12 : 18) : 0)
             .frame(width: width, height: height)
             .frame(minHeight: height ?? (compact ? 40 : 48))
             .frame(maxWidth: expands ? .infinity : nil)
-            .background(backgroundFill,
+            .background(isEnabled ? (selected ? DinoStyle.ink : .white) : DinoStyle.disabledBackground,
                         in: RoundedRectangle(cornerRadius: cornerRadius))
             .overlay(RoundedRectangle(cornerRadius: cornerRadius)
-                .strokeBorder(borderInk,
+                .strokeBorder(isEnabled ? DinoStyle.ink.opacity(highContrast || selected ? 1 : 0.22)
+                    : highContrast ? DinoStyle.disabledInk(true) : DinoStyle.disabledBorder,
                               lineWidth: highContrast ? 3 : 1.5))
             .opacity(configuration.isPressed ? 0.85 : 1)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
-    }
-
-    private var labelInk: Color {
-        guard isEnabled else { return DinoStyle.disabledInk(highContrast) }
-        if let timeDirection { return DinoTimeDirection.color(later: timeDirection, highContrast: highContrast) }
-        return selected ? .white : DinoStyle.ink
-    }
-
-    private var backgroundFill: Color {
-        guard isEnabled else { return DinoStyle.disabledBackground }
-        if let timeDirection { return DinoTimeDirection.background(later: timeDirection, highContrast: highContrast) }
-        return selected ? DinoStyle.ink : .white
-    }
-
-    private var borderInk: Color {
-        guard isEnabled else { return highContrast ? DinoStyle.disabledInk(true) : DinoStyle.disabledBorder }
-        if let timeDirection {
-            return DinoTimeDirection.color(later: timeDirection, highContrast: highContrast).opacity(highContrast ? 1 : 0.4)
-        }
-        return DinoStyle.ink.opacity(highContrast || selected ? 1 : 0.22)
     }
 
     private var cornerRadius: CGFloat { height == nil ? 14 : 18 }

@@ -2,13 +2,15 @@
 
 Vraagtype 20 is de vluchtvraag. Na het eerste foute antwoord toont het ticket bij een tijdzoneverschil de totale tijdverschuiving van vliegduur en tijdzoneverschil. De aankomsttijd blijft een vraagteken tijdens de herkansing. Sinds 30 oktober reserveert de totaalrij geen ruimte meer vóór een fout. Sinds 31 oktober klappen de scheidingslijn en het totaal binnen hun eigen ruimte open: de hoogte groeit in 0,45 seconde, zonder fade of schuifbeweging over de waarden erboven. Bij Minder beweging verschijnt de rij direct. Bij dezelfde tijdzone vervallen de scheidingslijn en het totaal, ook na een fout en tijdens replay of een voorbeeld.
 
-De aankomstanimatie gebruikt dezelfde rekenroute als de treinreis (18) en tijdzones (19): hele uren, gevolgd door één korte minutencorrectie. Een verschuiving van 1 uur en 55 minuten wordt 1 uur, 2 uur en daarna 5 minuten terug. De gedeelde berekening ondersteunt ook negatieve verschuivingen en middernacht.
+De aankomstanimatie gebruikt dezelfde tweestapsroute als de treinreis (18) en tijdzones (19): eerst minuten optellen tot het volgende hele uur of aftrekken tot het vorige hele uur, daarna de volledige resterende verschuiving in dezelfde richting toepassen. Bijvoorbeeld `23:40 + 1:55 → 00:00 (+20 min) → 01:35 (+1:35)`. Begint de klok al op een heel uur, of eindigt de verschuiving vóór dat hele uur, dan volstaat één stap. De gedeelde berekening ondersteunt ook negatieve verschuivingen en middernacht, zonder overschrijding of richtingswissel.
 
 Rechtsboven op het ticket staat tijdens de uitleg en in voorbeelden een ronde replayknop. Deze begint de tijdanimatie opnieuw bij de vertrektijd en behoudt de totaalhint. Herhaald tikken annuleert de vorige animatie. Bij Minder beweging verschijnt direct de eindtijd.
 
 ## Verificatie
 
-- De gerichte kernsuite `--flight-arrivals` slaagt met **48.180 controles** voor vluchten, tijdzones en de gedeelde rekenroute.
+De laatste wijziging voor de gedeelde rekenroute van vraagtypen 18/19/20 staat in [Tijd optellen en aftrekken via het hele uur](HourBoundaryReplayVerification.md), inclusief de geslaagde Nederlandse en Engelse vluchttest op iPhone van 31 oktober 2026.
+
+- De gerichte kernsuite `--flight-arrivals` slaagt sinds 31 oktober met **50.138 controles** voor vluchten, tijdzones en de gedeelde rekenroute via een heel uur.
 - `testFlightTotalHintAndReplayInBothLanguages` slaagt op aparte iPhone 18 Pro- en iPad Pro 13-inch (M5)-simulators met iOS 27, in Nederlands en Engels.
 - De schermtest controleert de verborgen hint vóór een fout, het totaal na één fout, de verborgen aankomst tijdens een herkansing, behoud na een voorbeeld, replay in het voorbeeld en de vraag, dubbele replay, vaste antwoordposities tijdens replay en het verdwijnen van de hint bij de volgende vraag.
 - De hint en de plaatsing van de replayknop zijn visueel gecontroleerd op beide schermformaten. `git diff --check` slaagt.

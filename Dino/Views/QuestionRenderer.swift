@@ -235,22 +235,30 @@ struct QuestionRenderer: View {
     private var analogOptions: some View {
         let columns = wideLayout && question.options.count == 4 ? 4 : 2
         let available = min(answerClockSize, width >= 600 ? 184 : 150, (width - CGFloat(columns - 1) * 12) / CGFloat(columns) - 18)
-        // Keep the digital explanation inside the existing answer area's height.
+        let cardHeight = width >= 600 ? available + 52 : max(132, available + 16)
+        // Other question types retain their existing explanation layout.
         let size = width >= 600 ? available : min(available, max(88, available - 44))
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 14) {
             ForEach(Array(question.options.enumerated()), id: \.offset) { index, option in
                 let wrong = session.hasFeedback && session.rejectedResponses.contains(.time(option))
                 let answered = wrong || (session.showsCorrectResponse && .time(option) == question.expectedAnswer)
                 answerButton(option: option, index: index) {
-                    AnswerTimeExplanation(time: option, theme: theme, visible: wrong,
-                                          fontSize: min(24, size * 0.19),
-                                          content: AnalogClock(time: option, theme: theme, size: size,
-                                                               showMinuteScale: question.kind == .chooseAnalog,
-                                                               minuteScaleVisible: !answered)
-                                            .allowsHitTesting(false))
-                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: answered)
+                    Group {
+                        if question.kind == .chooseAnalog {
+                            AnalogChoiceAnswer(time: option, theme: theme,
+                                               showsMinuteScale: session.missedFirstAnswer && !answered,
+                                               showsExplanation: wrong, fontSize: min(24, max(18, available * 0.14)))
+                                .frame(height: cardHeight - 12)
+                        } else {
+                            AnswerTimeExplanation(time: option, theme: theme, visible: wrong,
+                                                  fontSize: min(24, size * 0.19),
+                                                  content: AnalogClock(time: option, theme: theme, size: size)
+                                                    .allowsHitTesting(false))
+                        }
+                    }
                         .padding(.horizontal, 8)
                         .padding(.vertical, question.kind == .chooseAnalog ? 6 : 8)
+                        .clipShape(RoundedRectangle(cornerRadius: 22))
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel(theme.digitalReading(option, languageCode: language.effective.code))
                 }
@@ -295,6 +303,68 @@ struct QuestionRenderer: View {
                     }
                 }.shadow(color: DinoStyle.ink.opacity(0.06), radius: 7, y: 4)
         }.buttonStyle(DinoAnswerButtonStyle()).disabled(!session.responseIsEnabled(response)).accessibilityIdentifier("question.option.\(index)")
+    }
+}
+
+/// A single card area is shared by the face, the optional minute scale and the rejected time.
+/// No invisible footer or scale margins reduce the clock before the first mistake.
+private struct AnalogChoiceAnswer: View {
+    @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let time: ClockTime
+    let theme: ClockTheme
+    let showsMinuteScale: Bool
+    let showsExplanation: Bool
+    let fontSize: CGFloat
+
+    var body: some View {
+        AnalogChoiceAnswerLayout(minuteScale: showsMinuteScale ? 1 : 0,
+                                 explanation: showsExplanation ? 1 : 0) {
+            GeometryReader { geometry in
+                // Scale one unchanged drawing so numerals and hands resize together.
+                AnalogClock(time: time, theme: theme, size: 240,
+                            showMinuteScale: true, minuteScaleVisible: showsMinuteScale)
+                    .scaleEffect(geometry.size.width / 240)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+            }
+            VStack(spacing: 3) {
+                Rectangle().fill(DinoStyle.ink.opacity(highContrast ? 0.45 : 0.12))
+                    .frame(height: 1).padding(.horizontal, 8)
+                DigitalClock(time: time, theme: theme, fontSize: fontSize)
+            }
+            .padding(.top, 5)
+            .frame(maxWidth: .infinity)
+            .opacity(showsExplanation ? 1 : 0)
+            .accessibilityHidden(!showsExplanation)
+        }
+        .allowsHitTesting(false)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: showsMinuteScale)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: showsExplanation)
+    }
+}
+
+private struct AnalogChoiceAnswerLayout: Layout {
+    var minuteScale: CGFloat
+    var explanation: CGFloat
+    var animatableData: AnimatablePair<CGFloat, CGFloat> {
+        get { .init(minuteScale, explanation) }
+        set { minuteScale = newValue.first; explanation = newValue.second }
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        proposal.replacingUnspecifiedDimensions(by: CGSize(width: 160, height: 160))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard subviews.count == 2 else { return }
+        let footer = subviews[1].sizeThatFits(.init(width: bounds.width, height: nil))
+        let clockHeight = max(0, bounds.height - footer.height * explanation)
+        let scaleExtent = 1 + 0.28 * minuteScale
+        let face = max(0, min(bounds.width, clockHeight) / scaleExtent)
+        subviews[0].place(at: CGPoint(x: bounds.midX, y: bounds.minY + clockHeight / 2), anchor: .center,
+                          proposal: .init(width: face, height: face))
+        subviews[1].place(at: CGPoint(x: bounds.midX, y: bounds.maxY), anchor: .bottom,
+                          proposal: .init(width: bounds.width, height: footer.height))
     }
 }
 
@@ -513,7 +583,7 @@ struct DinoAnalogClockControls: View {
                 Text(verbatim: "\(direction < 0 ? "−" : "+")\(minutes ? minuteStep : 1)")
                     .monospacedDigit()
             }
-        }.buttonStyle(DinoClockControlButtonStyle(width: 118, height: 56, timeDirection: direction > 0))
+        }.buttonStyle(DinoClockControlButtonStyle(width: 118, height: 56))
             .accessibilityIdentifier("\(prefix).analog.\(direction < 0 ? "less" : "more")")
             .scaleEffect(cue && !reduceMotion ? 0.96 : 1)
             .overlay(alignment: .bottomTrailing) { if cue { DinoClockTapCue() } }

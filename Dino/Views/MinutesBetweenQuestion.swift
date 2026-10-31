@@ -90,12 +90,20 @@ struct DinoMinutesBetweenExplanation: View {
 
     private var hourUnit: String { language == "nl" ? "uur" : "h" }
 
+    private var subtraction: AttributedString {
+        var text = AttributedString("\(difference.later.digitalText) − \(difference.earlier.digitalText)")
+        if let sign = text.range(of: " − ") {
+            text[sign].foregroundColor = DinoTimeDirection.color(later: false, highContrast: highContrast)
+        }
+        return text
+    }
+
     var body: some View {
         VStack(spacing: 8) {
-            (Text(verbatim: difference.later.digitalText)
-             + Text(verbatim: " − ").foregroundColor(DinoTimeDirection.color(later: false, highContrast: highContrast))
-             + Text(verbatim: difference.earlier.digitalText))
+            Text(subtraction)
                 .font(.system(size: 19, weight: .bold, design: .rounded))
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(verbatim: String(subtraction.characters)))
                 .accessibilityIdentifier("demo.minutesBetween.subtraction")
             if difference.borrowsHour {
                 Text(verbatim: String(format: L(key: "dino.minutesBetween.borrow.format"),
@@ -117,6 +125,7 @@ struct DinoMinutesBetweenExplanation: View {
         .fixedSize(horizontal: false, vertical: true)
         .padding(12).frame(maxWidth: .infinity)
         .background(DinoTimeDirection.background(later: true, highContrast: highContrast), in: RoundedRectangle(cornerRadius: 18))
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("demo.minutesBetween.calculation")
     }
 }

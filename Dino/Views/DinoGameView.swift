@@ -788,7 +788,7 @@ struct DinoAnalogAdvanceDemonstration: View {
 }
 
 /// Reserve the correction before answering so the clock and choices stay in place.
-private struct DinoTrueFalseQuestionTitle: View {
+struct DinoTrueFalseQuestionTitle: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dinoHighContrast) private var highContrast
     @ObservedObject private var language = LanguageManager.shared
@@ -796,6 +796,7 @@ private struct DinoTrueFalseQuestionTitle: View {
     let showsCorrection: Bool
     let announces: Bool
     var fontSize: CGFloat = 21
+    var prefix = "question"
     @State private var strikeProgress: CGFloat = 0
     @State private var correctionVisible = false
 
@@ -814,7 +815,8 @@ private struct DinoTrueFalseQuestionTitle: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            DinoQuestionTitle(question: question, fontSize: fontSize, announces: announces)
+            DinoQuestionTitle(question: question, fontSize: fontSize, announces: announces,
+                              speechScope: prefix == "demo" ? "demo" : "play")
                 .opacity(strikesStatement ? (highContrast ? 0.75 : 0.55) : 1)
                 .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: strikesStatement)
                 .overlay {
@@ -832,7 +834,7 @@ private struct DinoTrueFalseQuestionTitle: View {
                         .allowsHitTesting(false)
                         .accessibilityHidden(true)
                 }
-                .accessibilityIdentifier("question.title")
+                .accessibilityIdentifier("\(prefix).title")
 
             Label {
                 Text(verbatim: statement(corrected: true))
@@ -847,7 +849,7 @@ private struct DinoTrueFalseQuestionTitle: View {
             .offset(y: correctionVisible || reduceMotion ? 0 : 7)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(statement(corrected: true))
-            .accessibilityIdentifier("question.correctStatement")
+            .accessibilityIdentifier("\(prefix).correctStatement")
             .accessibilityHidden(!correctionVisible)
         }
         .task(id: "\(showsCorrection)-\(reduceMotion)") {
