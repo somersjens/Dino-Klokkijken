@@ -217,13 +217,34 @@ struct DinoDaySchedule: Equatable, Sendable {
     var secondStart: ClockTime { firstEnd.adding(minutes: breakMinutes) }
     var end: ClockTime { secondStart.adding(minutes: secondMinutes) }
     var durations: [Int] { [firstMinutes, breakMinutes, secondMinutes] }
+    var hasMinuteTerms: Bool { durations.contains { !$0.isMultiple(of: 60) } }
     var writtenDuration: (hours: Int, minutes: Int) {
         (durations.reduce(0) { $0 + $1 / 60 }, durations.reduce(0) { $0 + $1 % 60 })
     }
 
     /// Add the units as written on each leg before carrying sixty minutes into an hour.
     func summedDurationText(language: String) -> String {
-        DinoTimeWords.compactDuration(hours: writtenDuration.hours, minutes: writtenDuration.minutes, language: language)
+        DinoTimeWords.compactDuration(hours: writtenDuration.hours, minutes: writtenDuration.minutes,
+                                      language: language, padMinutes: hasMinuteTerms)
+    }
+
+    /// Keep both replay units visible from zero whenever the worked sum uses them.
+    func addedDurationText(_ appliedMinutes: Int, language: String) -> String {
+        var units: [String] = []
+        if totalMinutes >= 60 {
+            units.append(language == "nl" ? "\(appliedMinutes / 60) uur" : "\(appliedMinutes / 60)h")
+        }
+        if hasMinuteTerms { units.append(String(format: "%02d min", appliedMinutes % 60)) }
+        return "+" + units.joined(separator: " ")
+    }
+
+    /// Count forward by whole hours, then add the remaining minutes in one readable step.
+    func walkMinutes() -> [Int] {
+        guard totalMinutes > 0 else { return [] }
+        let wholeHours = totalMinutes / 60 * 60
+        var steps = Array(stride(from: 60, through: wholeHours, by: 60))
+        if steps.last != totalMinutes { steps.append(totalMinutes) }
+        return steps
     }
 }
 
@@ -683,10 +704,11 @@ enum DinoTimeWords {
     }
 
     /// Short units also support a written sum whose minutes have not been carried yet.
-    static func compactDuration(hours: Int, minutes: Int, language: String) -> String {
-        guard hours > 0 else { return "\(minutes) min" }
+    static func compactDuration(hours: Int, minutes: Int, language: String, padMinutes: Bool = false) -> String {
+        let minuteText = padMinutes ? String(format: "%02d", minutes) : String(minutes)
+        guard hours > 0 else { return "\(minuteText) min" }
         let hoursText = language == "nl" ? "\(hours) uur" : "\(hours)h"
-        return minutes == 0 ? hoursText : "\(hoursText) \(minutes) min"
+        return minutes == 0 && !padMinutes ? hoursText : "\(hoursText) \(minuteText) min"
     }
 
     /// A clock time for a spoken title. Afternoon and night stay distinct from the morning hour.
@@ -761,7 +783,7 @@ struct DinoFlightArrivalWork: Equatable {
         return "\(departure.digitalText) + \(shift) = \(arrival.digitalText)"
     }
 
-    /// Match the train and time-zone examples: whole hours, then one short minute correction.
+    /// Whole hours, then one short minute correction, as in the time-zone example.
     func walkMinutes() -> [Int] {
         DinoTimeZoneStep.steps(from: departure, offsetMinutes: combinedMinutes).map(\.addedMinutes)
     }

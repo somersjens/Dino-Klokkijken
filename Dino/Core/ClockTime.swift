@@ -197,7 +197,32 @@ enum ClockHandHintGeometry {
     }
 
     static func pointers(time: ClockTime, shape: AnalogClockShape = .circle) -> [Pointer] {
-        // Both arrows stop outside the scale; the hour still names the completed hour.
+        let placed = positionedPointers(time: time, shape: shape)
+        let hour = time.hour % 12 == 0 ? 12 : time.hour % 12
+        let numeral = point(radius: 0.34, angle: Double(hour) * 30)
+        let minuteSize = CGSize(width: Double(String(time.minute).count) * 0.042, height: 0.078)
+        let minuteLabel = minuteMark(minute: time.minute, shape: shape, labelSize: minuteSize).label
+        func labelEdge(size: CGSize, toward direction: CGPoint) -> Double {
+            let length = hypot(direction.x, direction.y)
+            let x = abs(direction.x) / length, y = abs(direction.y) / length
+            return min(x < 1e-10 ? .infinity : size.width / 2 / x,
+                       y < 1e-10 ? .infinity : size.height / 2 / y)
+        }
+        let minuteApproach = CGPoint(x: placed[1].tip.x - minuteLabel.x, y: placed[1].tip.y - minuteLabel.y)
+        let gap = hypot(minuteApproach.x, minuteApproach.y) - labelEdge(size: minuteSize, toward: minuteApproach)
+        let approach = CGPoint(x: placed[0].badge.x - numeral.x, y: placed[0].badge.y - numeral.y)
+        let length = hypot(approach.x, approach.y)
+        let hourSize = CGSize(width: Double(String(hour).count) * 0.0525, height: 0.0975)
+        let stop = labelEdge(size: hourSize, toward: approach) + gap
+        let tip = CGPoint(x: numeral.x + approach.x / length * stop,
+                          y: numeral.y + approach.y / length * stop)
+        // Keep the accepted badge and approach angle. Only the hour shaft grows,
+        // stopping the same visible distance from its numeral as the minute arrow.
+        return [Pointer(start: placed[0].start, tip: tip, badge: placed[0].badge), placed[1]]
+    }
+
+    private static func positionedPointers(time: ClockTime, shape: AnalogClockShape) -> [Pointer] {
+        // Badge placement uses the outside scale so extending the hour shaft does not move badge 1.
         let hourAngle = Double(time.hour % 12) * 30
         func tip(at angle: Double) -> CGPoint {
             point(radius: outerRadius(angle: angle, shape: shape) + 0.165, angle: angle)

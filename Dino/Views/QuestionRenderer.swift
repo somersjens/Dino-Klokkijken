@@ -23,7 +23,7 @@ struct QuestionRenderer: View {
     private var analogSettingWidth: CGFloat { width }
 
     var body: some View {
-        VStack(spacing: question.kind == .setAnalog ? 12 : compactLayout ? 14 : 22) {
+        VStack(spacing: question.kind == .setAnalog ? 8 : compactLayout ? 14 : 22) {
             switch question.kind {
             case .chooseAnalog, .activity:
                 targetCard
@@ -68,15 +68,23 @@ struct QuestionRenderer: View {
     }
 
     private var tabletFace: CGFloat { min(clockSize, (min(760, width) - 28) / 2 - 24) }
+    private var tabletHintWidth: CGFloat { (min(760, width) - 28) / 2 - 20 }
+    private var tabletComparisonBounds: CGRect? {
+        guard comparing, session.showsClockHandHints else { return nil }
+        return ClockHandHintGeometry.bounds(time: session.attempt.submittedAnswer ?? session.inputTime,
+                                            shape: theme.analogShape, faceSize: 150)
+            .union(ClockHandHintGeometry.bounds(time: question.target, shape: theme.analogShape, faceSize: 150))
+    }
 
     private var tabletAnalogSetting: some View {
-        DinoClockSettingColumns(width: width, stageHeight: tabletFace + 20) {
+        DinoClockSettingColumns(width: width, stageHeight: tabletFace + 20, centersInput: horizontalSequence) {
             ZStack {
                 DigitalClock(time: question.target, theme: theme, fontSize: 38)
                     .accessibilityIdentifier("question.targetClock")
                     .opacity(comparing ? 0 : 1).accessibilityHidden(comparing)
                 AnalogClock(time: question.target, theme: theme, size: tabletFace,
-                            readingHintWidth: (min(760, width) - 28) / 2 - 20).padding(10)
+                            readingHintWidth: tabletHintWidth, readingHintBounds: tabletComparisonBounds)
+                    .frame(width: tabletHintWidth, height: tabletFace).padding(10)
                     .modifier(ClockAnswerOutline(visible: true, correct: true))
                     .accessibilityIdentifier("question.correctClock")
                     .opacity(comparing ? 1 : 0).accessibilityHidden(!comparing)
@@ -85,10 +93,11 @@ struct QuestionRenderer: View {
             VStack(spacing: 12) {
                 AnalogClock(time: session.attempt.submittedAnswer ?? session.inputTime, theme: theme, size: tabletFace,
                             onHourChange: session.hasFeedback ? nil : { session.inputHour = $0 },
+                            readingHintWidth: tabletHintWidth, readingHintBounds: tabletComparisonBounds,
                             onMinuteChange: session.hasFeedback || !session.allowsMinutes ? nil : { session.setInputTime($0) },
                             minuteStep: analogHandStep, adjustingMinutes: adjustingMinutes,
                             onHandSelection: session.hasFeedback ? nil : { adjustingMinutes = $0 })
-                    .padding(10)
+                    .frame(width: tabletHintWidth, height: tabletFace).padding(10)
                     .modifier(ClockAnswerOutline(visible: session.hasFeedback, correct: session.correctFeedback))
                     .accessibilityIdentifier("question.analogControl")
                 DinoAnalogClockControls(adjustingMinutes: $adjustingMinutes, allowsMinutes: session.allowsMinutes,
@@ -102,7 +111,7 @@ struct QuestionRenderer: View {
     }
 
     private var tabletDigitalSetting: some View {
-        DinoClockSettingColumns(width: width, stageHeight: tabletFace + 20) {
+        DinoClockSettingColumns(width: width, stageHeight: tabletFace + 20, centersInput: horizontalSequence) {
             ZStack {
                 AnalogClock(time: question.target, theme: theme, size: tabletFace,
                             readingHintWidth: (min(760, width) - 28) / 2 - 20)
@@ -326,19 +335,32 @@ private struct CenteredAnswerExplanationLayout: Layout {
     }
 }
 
-/// Shared tablet arrangement: reference on the left, editable clock and its controls on the right.
+/// Landscape keeps the editable clock and controls centered; the reference fits in the space to its left.
 struct DinoClockSettingColumns<Reference: View, Input: View>: View {
     let width: CGFloat
     let stageHeight: CGFloat
+    var centersInput = false
     @ViewBuilder var reference: () -> Reference
     @ViewBuilder var input: () -> Input
     private var columnWidth: CGFloat { (min(760, width) - 28) / 2 }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 28) {
-            reference().frame(width: columnWidth, height: stageHeight)
+        if centersInput {
+            let referenceWidth = max(0, (width - columnWidth) / 2 - 28)
+            let referenceScale = min(1, referenceWidth / columnWidth)
             input().frame(width: columnWidth)
-        }.frame(width: min(760, width))
+                .frame(width: width)
+                .overlay(alignment: .topLeading) {
+                    reference().frame(width: columnWidth, height: stageHeight)
+                        .scaleEffect(referenceScale)
+                        .frame(width: referenceWidth, height: stageHeight)
+                }
+        } else {
+            HStack(alignment: .top, spacing: 28) {
+                reference().frame(width: columnWidth, height: stageHeight)
+                input().frame(width: columnWidth)
+            }.frame(width: min(760, width))
+        }
     }
 }
 
@@ -459,6 +481,7 @@ struct DinoClockTapCue: View {
 /// Keep both faces in one stable layout. Inserting a second HStack child while
 /// resizing the first face also animated its layout proposal, causing a flash.
 struct AnalogClockAnswerComparison: View {
+    @Environment(\.dinoClockReadingAssistance) private var readingAssistance
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let answer: ClockTime
     let target: ClockTime
@@ -479,28 +502,47 @@ struct AnalogClockAnswerComparison: View {
     private var scale: CGFloat { comparing ? comparisonScale : 1 }
     private var stageHeight: CGFloat { max(clockSize + 20, (clockSize + 20) * comparisonScale + 72) }
     private var displacement: CGFloat { (width + 14) / 4 }
+    private var sharedHintBounds: CGRect? {
+        guard comparing && readingAssistance else { return nil }
+        return ClockHandHintGeometry.bounds(time: answer, shape: theme.analogShape, faceSize: 150)
+            .union(ClockHandHintGeometry.bounds(time: target, shape: theme.analogShape, faceSize: 150))
+    }
+    // Spend the reserved comparison stage on the faces and their actual arrows,
+    // leaving one row underneath for the verdicts instead of scaling a square twice.
+    private var hintHeight: CGFloat { sharedHintBounds == nil ? clockSize : (stageHeight - 52) / comparisonScale }
+    private var hintWidth: CGFloat { (cellWidth - 20) / comparisonScale }
 
     var body: some View {
         ZStack {
-            AnalogClock(time: answer, theme: theme, size: clockSize,
-                        onHourChange: onHourChange, onMinuteChange: onMinuteChange, minuteStep: minuteStep,
+            AnalogClock(time: answer, theme: theme, size: sharedHintBounds == nil ? clockSize : hintHeight,
+                        onHourChange: onHourChange,
+                        readingHintWidth: sharedHintBounds == nil ? nil : hintWidth,
+                        readingHintBounds: sharedHintBounds,
+                        onMinuteChange: onMinuteChange, minuteStep: minuteStep,
                         adjustingMinutes: adjustingMinutes, onHandSelection: onHandSelection)
-                .accessibilityIdentifier("question.analogControl")
+                .frame(width: sharedHintBounds == nil ? nil : hintWidth,
+                       height: sharedHintBounds == nil ? nil : hintHeight)
                 .padding(10).modifier(ClockAnswerOutline(visible: hasFeedback, correct: correct))
                 .scaleEffect(scale)
-                .offset(x: comparing ? -displacement : 0)
-            AnalogClock(time: target, theme: theme, size: clockSize).padding(10)
+                .accessibilityIdentifier("question.analogControl")
+                .offset(x: comparing ? -displacement : 0, y: sharedHintBounds == nil ? 0 : -20)
+            AnalogClock(time: target, theme: theme, size: sharedHintBounds == nil ? clockSize : hintHeight,
+                        readingHintWidth: sharedHintBounds == nil ? nil : hintWidth,
+                        readingHintBounds: sharedHintBounds)
+                .frame(width: sharedHintBounds == nil ? nil : hintWidth,
+                       height: sharedHintBounds == nil ? nil : hintHeight)
+                .padding(10)
                 .modifier(ClockAnswerOutline(visible: true, correct: true))
                 .scaleEffect(comparisonScale * (comparing || reduceMotion ? 1 : 0.94))
                 .accessibilityIdentifier("question.correctClock")
-                .offset(x: displacement)
+                .offset(x: displacement, y: sharedHintBounds == nil ? 0 : -20)
                 .opacity(comparing ? 1 : 0).allowsHitTesting(false).accessibilityHidden(!comparing)
                 .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: comparing)
             HStack(spacing: 14) {
                 AnswerVerdictMark(correct: false).frame(maxWidth: .infinity)
                 AnswerVerdictMark(correct: true).frame(maxWidth: .infinity)
             }
-            .offset(y: (clockSize + 20) * comparisonScale / 2 + 22)
+            .offset(y: sharedHintBounds == nil ? (clockSize + 20) * comparisonScale / 2 + 22 : stageHeight / 2 - 14)
             .opacity(comparing ? 1 : 0).accessibilityHidden(true)
             .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: comparing)
         }

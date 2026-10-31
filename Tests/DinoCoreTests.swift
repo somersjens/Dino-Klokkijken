@@ -1002,11 +1002,24 @@ struct DinoCoreTests {
                     expect(abs(route.x * target.y - route.y * target.x) < 0.000_001
                            && route.x * target.x + route.y * target.y > 0,
                            "hour pointer aims at the numeral centre, including its side route at \(time.digitalText)")
+                    func gap(from point: CGPoint, to label: CGPoint, size: CGSize) -> Double {
+                        let dx = abs(point.x - label.x), dy = abs(point.y - label.y)
+                        let distance = hypot(dx, dy)
+                        let edge = min(dx < 1e-10 ? .infinity : size.width / 2 * distance / dx,
+                                       dy < 1e-10 ? .infinity : size.height / 2 * distance / dy)
+                        return distance - edge
+                    }
+                    let hourNumber = time.hour % 12 == 0 ? 12 : time.hour % 12
+                    let hourLabelSize = CGSize(width: Double(String(hourNumber).count) * 0.0525, height: 0.0975)
+                    let minuteLabelSize = CGSize(width: Double(String(time.minute).count) * 0.042, height: 0.078)
+                    let minuteLabel = ClockHandHintGeometry.minuteMark(minute: time.minute, shape: shape,
+                                                                     labelSize: minuteLabelSize).label
+                    expect(abs(gap(from: hourTip, to: numeral, size: hourLabelSize)
+                               - gap(from: pointers[1].tip, to: minuteLabel, size: minuteLabelSize)) < 0.000_001,
+                           "both arrow tips stop the same visible distance from their own numeral")
+                    expect(hypot(hourTip.x, hourTip.y) < 0.5,
+                           "the longer hour arrow reaches the actual hour numeral inside the face")
                     for pointer in pointers {
-                        let angle = atan2(pointer.tip.x, -pointer.tip.y) * 180 / .pi
-                        expect(abs(hypot(pointer.tip.x, pointer.tip.y)
-                                   - ClockHandHintGeometry.outerRadius(angle: angle, shape: shape) - 0.165) < 0.000_001,
-                               "both arrow tips keep the same distance beyond the clock rim")
                         expect(hypot(pointer.badge.x - pointer.tip.x, pointer.badge.y - pointer.tip.y) >= 0.179_999,
                                "both arrows have a visible shaft beyond their badge and arrowhead")
                     }
@@ -1070,6 +1083,9 @@ struct DinoCoreTests {
         }
         let twelve = ClockHandHintGeometry.pointers(time: .init(hour: 12, minute: 0))
         let twelveSeparation = hypot(twelve[0].badge.x - twelve[1].badge.x, twelve[0].badge.y - twelve[1].badge.y)
+        let acceptedHourBadge = ClockHandHintGeometry.point(radius: 0.845, angle: -18)
+        expect(hypot(twelve[0].badge.x - acceptedHourBadge.x, twelve[0].badge.y - acceptedHourBadge.y) < 0.000_001,
+               "extending the blue arrow keeps the accepted position of badge 1 at twelve")
         expect(twelveSeparation > 0.2 && twelveSeparation < 0.3,
                "at twelve the hour badge sits closer to the minute badge without touching it")
         let horizontal = ClockHandHintGeometry.bounds(time: .init(hour: 3, minute: 45), shape: .circle, faceSize: 120)
@@ -1128,7 +1144,7 @@ struct DinoCoreTests {
 
     static func testSpokenClockReadingHints() {
         let expectedDutch = ["uur", "5", "10", "kwart", "10", "5", "half", "5", "10", "kwart", "10", "5"]
-        let expectedEnglish = ["o’clock", "5", "10", "15", "20", "25", "half", "25", "20", "15", "10", "5"]
+        let expectedEnglish = ["o’clock", "5", "10", "quarter", "20", "25", "half", "25", "20", "quarter", "10", "5"]
         for (language, expected) in [("nl", expectedDutch), ("en", expectedEnglish)] {
             expect(stride(from: 0, to: 60, by: 5).map { SpokenClockReadingHint(minute: $0, language: language).scaleLabel } == expected,
                    "the complete scale uses the minute counts actually named in \(language)")
@@ -1138,8 +1154,8 @@ struct DinoCoreTests {
                        "the actual minute has one scale label, including exact-minute questions")
                 expect(hint.scaleMinutes.filter { $0 != minute }.allSatisfy { $0.isMultiple(of: 5) },
                        "the remaining scale labels keep their five-minute positions")
-                expect(hint.relationLeaderMinute.truncatingRemainder(dividingBy: 5) == 2.5,
-                       "the word leader passes between the outside scale labels")
+                expect(hint.relationLeaderMinute == Double(hint.startMinute + hint.endMinute) / 2,
+                       "the word leader attaches at the exact midpoint of every reading interval")
                 expect((0...60).contains(hint.startMinute) && (0...60).contains(hint.endMinute)
                        && hint.startMinute <= hint.endMinute && hint.endMinute - hint.startMinute <= 30,
                        "each speech arrow follows one forward interval outside the face")
@@ -1164,6 +1180,16 @@ struct DinoCoreTests {
                 }
             }
         }
+        expect(SpokenClockReadingHint(minute: 30, language: "nl").spokenHour(for: 6) == 7, "half zeven circles seven")
+        expect(SpokenClockReadingHint(minute: 15, language: "nl").spokenHour(for: 6) == 6, "kwart over zes circles six")
+        expect(SpokenClockReadingHint(minute: 30, language: "en").spokenHour(for: 6) == 6, "half past six circles six")
+        expect(SpokenClockReadingHint(minute: 45, language: "en").spokenHour(for: 23) == 12, "quarter to midnight circles twelve")
+        expect(SpokenClockGuideLayout.badgeSide(minute: 45, atEnd: false) == CGPoint(x: 0, y: -1),
+               "quarter to starts from the top midpoint of its circle")
+        expect(SpokenClockGuideLayout.badgeSide(minute: 20, atEnd: false) == CGPoint(x: 0, y: 1),
+               "Dutch ten before half leaves the bottom midpoint")
+        expect(SpokenClockGuideLayout.badgeSide(minute: 20, atEnd: true) == CGPoint(x: 0, y: -1),
+               "English twenty past reaches the top midpoint at the same minute")
         let beforeHalf = SpokenClockReadingHint(minute: 20, language: "nl")
         expect(beforeHalf.scaleLabel == "10" && beforeHalf.startMinute == 20 && beforeHalf.endMinute == 30
                && beforeHalf.relation == "voor half", "Dutch twenty connects ten-before-half to half")
@@ -1998,7 +2024,7 @@ struct DinoCoreTests {
             ([40, 30, 70], "1 uur 80 min", "1h 80 min", "02:20"),
             ([80, 30, 95], "2 uur 85 min", "2h 85 min", "03:25"),
             ([60, 60, 60], "3 uur", "3h", "03:00"),
-            ([60, 1, 60], "2 uur 1 min", "2h 1 min", "02:01")
+            ([60, 1, 60], "2 uur 01 min", "2h 01 min", "02:01")
         ] {
             let schedule = DinoDaySchedule(start: .init(hour: 8), firstActivity: .drawing,
                                            firstMinutes: legs[0], breakMinutes: legs[1],
@@ -2012,9 +2038,35 @@ struct DinoCoreTests {
         expect(DinoTimeWords.digitalDuration(25 * 60) == "25:00", "elapsed hours do not wrap at midnight")
         expect(DinoTimeWords.compactDuration(hours: 2, minutes: 50, language: "en") == "2h 50 min",
                "the train uses short hour and minute units")
-        let trainSteps = DinoTimeZoneStep.steps(from: ClockTime(hour: 14, minute: 40), offsetMinutes: 170)
-        expect(trainSteps.map(\.addedMinutes) == [60, 120, 180, 170] && trainSteps.last?.time == ClockTime(hour: 17, minute: 30),
-               "the train reuses the time-zone walk's whole hours and final minute correction")
+        expect(DinoTimeWords.compactDuration(hours: 1, minutes: 0, language: "en", padMinutes: true) == "1h 00 min",
+               "a whole hour keeps two minute zeroes when the sum has minute terms")
+        expect(DinoTimeWords.compactDuration(hours: 0, minutes: 5, language: "nl", padMinutes: true) == "05 min",
+               "single-minute digits keep their leading zero in the worked column")
+        expect(DinoTimeWords.compactDuration(hours: 0, minutes: 0, language: "en", padMinutes: true) == "00 min",
+               "the replay starts with placeholder minute zeroes")
+        for (legs, expected) in [
+            ([15, 15, 15], [45]),
+            ([100, 10, 60], [60, 120, 170]),
+            ([10, 1, 3], [14]),
+            ([60, 60, 60], [60, 120, 180])
+        ] {
+            let schedule = DinoDaySchedule(start: .init(hour: 8), firstActivity: .drawing,
+                                           firstMinutes: legs[0], breakMinutes: legs[1],
+                                           secondActivity: .reading, secondMinutes: legs[2])
+            expect(schedule.walkMinutes() == expected, "the train always moves forward and finishes at its exact duration")
+            let hasHours = schedule.totalMinutes >= 60
+            for language in ["nl", "en"] {
+                let zeroHours = language == "nl" ? "0 uur" : "0h"
+                let zero = "+" + [hasHours ? zeroHours : nil, schedule.hasMinuteTerms ? "00 min" : nil]
+                    .compactMap { $0 }.joined(separator: " ")
+                expect(schedule.addedDurationText(0, language: language) == zero,
+                       "the replay starts with every applicable unit visible at zero")
+                if hasHours && schedule.hasMinuteTerms {
+                    expect(schedule.addedDurationText(60, language: language) == (language == "nl" ? "+1 uur 00 min" : "+1h 00 min"),
+                           "minute placeholders stay visible while the hours advance")
+                }
+            }
+        }
         for time in DinoPracticeTime.allCases {
             var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.daySchedule)), seed: 20261016)
             var seenActivities = Set<DinoScheduleActivity>()
@@ -2030,6 +2082,9 @@ struct DinoCoreTests {
                        "the complete schedule stays within the same daytime")
                 expect(schedule.end == question.target && question.relatedTimes == [schedule.start] &&
                        question.durationMinutes == schedule.totalMinutes, "the correct answer includes both activities and the break")
+                let walk = schedule.walkMinutes()
+                expect(walk.last == schedule.totalMinutes && zip([0] + walk, walk).allSatisfy { $0 < $1 },
+                       "all generated train replays increase until the exact total, without overshooting")
                 expect(!AnswerValidator.isCorrect(schedule.firstEnd, for: question) &&
                        !AnswerValidator.isCorrect(schedule.start.adding(minutes: schedule.firstMinutes + schedule.secondMinutes), for: question),
                        "stopping after the first activity and forgetting the break are rejected")

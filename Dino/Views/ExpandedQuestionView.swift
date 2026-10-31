@@ -150,7 +150,8 @@ struct DinoExpandedQuestionView: View {
                     startIdentifier: isDemonstration ? "demo.targetClock" : "question.targetClock",
                     resultIdentifier: isDemonstration ? "demo.answer" : "question.timeArithmetic.result",
                     captionIdentifier: isDemonstration ? "demo.timeChange.difference" : "question.timeChange.difference",
-                    explains: isDemonstration || session.showsWorkedExplanation,
+                    explains: isDemonstration || session.missedFirstAnswer,
+                    showsResult: isDemonstration || session.showsWorkedExplanation,
                     showsMidnightNote: !isDemonstration)
             }
         case .flightArrival:
@@ -197,7 +198,7 @@ struct DinoExpandedQuestionView: View {
                     .accessibilityIdentifier("\(sequencePrefix).sequence.clock.\(index)")
                 Image(systemName: horizontal ? "arrow.right" : "arrow.down")
                     .font(.system(size: horizontal ? 22 : isDemonstration ? 17 : 15, weight: .bold))
-                    .foregroundStyle(DinoStyle.deepGreen)
+                    .foregroundStyle(sequenceBlue)
                     .frame(width: horizontal ? 24 : nil)
                     .accessibilityIdentifier("\(sequencePrefix).sequence.arrow.\(index)")
             }
@@ -215,7 +216,7 @@ struct DinoExpandedQuestionView: View {
         }
         .frame(maxWidth: .infinity)
         .overlayPreferenceValue(SequenceClockAnchors.self) { anchors in
-            if isDemonstration || session.showsWorkedExplanation {
+            if showsSequenceHints {
                 GeometryReader { geometry in
                     // Side jumps never shift the clocks. The question mark stays without an arc.
                     let count = isDemonstration ? q.relatedTimes.count + 1 : q.relatedTimes.count
@@ -224,9 +225,11 @@ struct DinoExpandedQuestionView: View {
                 }.allowsHitTesting(false)
             }
         }
-        .padding(.top, horizontal && (isDemonstration || session.showsWorkedExplanation) ? 56 : 0)
+        .padding(.top, horizontal && (showsSequenceHints) ? 56 : 0)
     }
 
+    private var showsSequenceHints: Bool { isDemonstration || session.missedFirstAnswer }
+    private var sequenceBlue: Color { Color(dinoHex: 0x2E6B9A) }
     private var sequencePrefix: String { isDemonstration ? "demo" : "question" }
     private var sequenceClockFont: CGFloat {
         if horizontalSequence && width >= 600 {
@@ -480,7 +483,7 @@ struct DinoExpandedQuestionView: View {
         let face = min(clockSize, 220, (min(760, width) - 28) / 2 - 24)
         let start = DinoAnalogAdvanceExample.face(q.relatedTimes[0])
         let target = DinoAnalogAdvanceExample.face(q.target)
-        return DinoClockSettingColumns(width: width, stageHeight: face + 20) {
+        return DinoClockSettingColumns(width: width, stageHeight: face + 20, centersInput: horizontalSequence) {
             ZStack {
                 AnalogClock(time: start, theme: theme, size: face)
                     .accessibilityIdentifier("question.startClock")
@@ -494,7 +497,7 @@ struct DinoExpandedQuestionView: View {
                 VStack(spacing: 8) {
                     Text(verbatim: "+\(duration)")
                         .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundStyle(DinoStyle.deepGreen)
+                        .foregroundStyle(highContrast ? DinoStyle.deepGreen : DinoStyle.green)
                         .padding(.horizontal, 10).padding(.vertical, 5)
                         .background(DinoStyle.green.opacity(0.28), in: Capsule())
                         .accessibilityIdentifier("question.advance.difference")
@@ -652,7 +655,7 @@ struct DinoAdvanceDifference: View {
 
     var body: some View {
         let combined = minutes / 60 > 0 && minutes % 60 > 0
-        let ink = DinoStyle.deepGreen
+        let ink = highContrast ? DinoStyle.deepGreen : DinoStyle.green
         let duration = "\(subtracting ? "−" : "+")\(DinoTimeWords.duration(minutes, language: language))"
         // Both branches start below the prompt clock. Their mirrored labels stay above the shafts.
         HStack(spacing: 8) {
@@ -757,6 +760,8 @@ private struct SequencePatternArcs: View {
     let prefix: String
     var horizontal = false
 
+    private var blue: Color { Color(dinoHex: 0x2E6B9A) }
+
     var body: some View {
         let points = frames.map { horizontal ? CGPoint(x: $0.midX, y: $0.minY - 1) : CGPoint(x: $0.maxX + 1, y: $0.midY) }
         ZStack(alignment: .topLeading) {
@@ -782,22 +787,22 @@ private struct SequencePatternArcs: View {
                               control1: CGPoint(x: start.x, y: outerY),
                               control2: CGPoint(x: end.x, y: outerY))
             }
-            .stroke(DinoStyle.deepGreen, style: StrokeStyle(lineWidth: 2.25, lineCap: pointed ? .butt : .round))
+            .stroke(blue, style: StrokeStyle(lineWidth: 2.25, lineCap: pointed ? .butt : .round))
             if pointed {
                 Path { path in
                     path.move(to: end)
                     path.addLine(to: CGPoint(x: end.x - 4.5, y: baseY))
                     path.addLine(to: CGPoint(x: end.x + 4.5, y: baseY))
                     path.closeSubpath()
-                }.fill(DinoStyle.deepGreen)
+                }.fill(blue)
             }
             Text(verbatim: label)
                 .font(.system(size: 15, weight: .heavy, design: .rounded))
-                .foregroundStyle(DinoStyle.deepGreen)
+                .foregroundStyle(blue)
                 .lineLimit(1)
                 .padding(.horizontal, 7).padding(.vertical, 3)
-                .background(DinoStyle.green.opacity(0.28), in: Capsule())
-                .overlay(Capsule().stroke(DinoStyle.deepGreen.opacity(0.35), lineWidth: 1))
+                .background(blue.opacity(0.12), in: Capsule())
+                .overlay(Capsule().stroke(blue.opacity(0.35), lineWidth: 1))
                 .fixedSize()
                 .position(x: (start.x + end.x) / 2, y: outerY - 12)
                 .accessibilityHidden(prefix == "demo")
@@ -816,24 +821,24 @@ private struct SequencePatternArcs: View {
                               control1: CGPoint(x: outerX, y: start.y),
                               control2: CGPoint(x: outerX, y: lineEnd.y))
             }
-            .stroke(DinoStyle.deepGreen, style: StrokeStyle(lineWidth: 2.25, lineCap: pointed ? .butt : .round))
+            .stroke(blue, style: StrokeStyle(lineWidth: 2.25, lineCap: pointed ? .butt : .round))
             if pointed {
                 Path { path in
                     path.move(to: end)
                     path.addLine(to: CGPoint(x: baseX, y: end.y - 4.5))
                     path.addLine(to: CGPoint(x: baseX, y: end.y + 4.5))
                     path.closeSubpath()
-                }.fill(DinoStyle.deepGreen)
+                }.fill(blue)
             }
             Text(verbatim: label)
                 .font(.system(size: 13, weight: .heavy, design: .rounded))
-                .foregroundStyle(DinoStyle.deepGreen)
+                .foregroundStyle(blue)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
                 .padding(.horizontal, 7)
                 .padding(.vertical, 3)
-                .background(DinoStyle.green.opacity(0.28), in: Capsule())
-                .overlay(Capsule().stroke(DinoStyle.deepGreen.opacity(0.35), lineWidth: 1))
+                .background(blue.opacity(0.12), in: Capsule())
+                .overlay(Capsule().stroke(blue.opacity(0.35), lineWidth: 1))
                 .fixedSize()
                 .offset(x: outerX + 6, y: (start.y + end.y) / 2 - 12)
                 .accessibilityHidden(prefix == "demo")
@@ -868,6 +873,7 @@ private struct DinoTrainJourneyCard: View {
     private var columnScale: CGFloat { durationFont / 14 }
     private var valueSpacing: CGFloat { compactColumns ? 6 : 8 }
     private var clockColumnWidth: CGFloat { twelveHourClock ? (compactColumns ? 78 : 90) : (compactColumns ? 56 : 64) }
+    private var showsHoursColumn: Bool { schedule.totalMinutes >= 60 }
 
     private let ride = Color(dinoHex: 0x6A4300)
     private let rideFill = Color(dinoHex: 0xFFF4C8)
@@ -915,7 +921,7 @@ private struct DinoTrainJourneyCard: View {
         .task(id: arrivalWalkIdentity) { await playArrival() }
         .onValueChange(of: countsTotal) { show in
             guard show, !isDemonstration else { return }
-            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.5)) {
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.65)) {
                 showsTotal = true
             }
         }
@@ -923,13 +929,13 @@ private struct DinoTrainJourneyCard: View {
 
     /// Keep the journey rows alive while their arrows close and the sum opens inside the border.
     private var durationGroup: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 0) {
             trainOne
-            if !showsTotal { connector.transition(.opacity.combined(with: .scale(scale: 0.8))) }
-            transfer
-            if !showsTotal { connector.transition(.opacity.combined(with: .scale(scale: 0.8))) }
-            trainTwo
-            if showsTotal {
+            closingConnector
+            transfer.padding(.top, showsTotal ? 4 : 0)
+            closingConnector
+            trainTwo.padding(.top, showsTotal ? 4 : 0)
+            DinoTrainExpansion(axis: .vertical, fraction: showsTotal ? 1 : 0) {
                 VStack(spacing: 3) {
                     HStack(spacing: 6) {
                         Rectangle().frame(height: highContrast ? 2 : 1.5)
@@ -942,8 +948,12 @@ private struct DinoTrainJourneyCard: View {
                     .accessibilityHidden(true)
                     totalRow
                 }
-                .transition(.opacity.combined(with: .offset(y: -6)))
+                .padding(.top, 4)
+                .opacity(showsTotal ? 1 : 0)
+                .animation(reduceMotion ? nil : .easeIn(duration: 0.25).delay(0.4), value: showsTotal)
             }
+            .clipped()
+            .accessibilityHidden(!showsTotal)
         }
         .padding(.horizontal, 6)
         .padding(.vertical, showsTotal ? 6 : 0)
@@ -985,6 +995,16 @@ private struct DinoTrainJourneyCard: View {
             .accessibilityHidden(true)
     }
 
+    private var closingConnector: some View {
+        DinoTrainExpansion(axis: .vertical, fraction: showsTotal ? 0 : 1) {
+            connector.padding(.vertical, 4)
+                .opacity(showsTotal ? 0 : 1)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: showsTotal)
+        }
+        .clipped()
+        .accessibilityHidden(true)
+    }
+
     /// The finished sum of the two trains and the transfer. It opens once; it does not count up.
     private var totalRow: some View {
         journeyRow {
@@ -1002,7 +1022,7 @@ private struct DinoTrainJourneyCard: View {
         .foregroundStyle(highContrast ? DinoStyle.ink : totalInk)
         .padding(.horizontal, 10).padding(.vertical, 2)
         .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("\(prefix).schedule.total")
+        .accessibilityIdentifier(showsTotal ? "\(prefix).schedule.total" : "")
     }
 
     private var arrival: some View {
@@ -1070,7 +1090,7 @@ private struct DinoTrainJourneyCard: View {
 
     private var addedDuration: String {
         let minutes = playsArrival ? appliedMinutes : schedule.totalMinutes
-        return minutes == 0 ? "+0" : "+" + DinoTimeWords.compactDuration(hours: minutes / 60, minutes: minutes % 60, language: language)
+        return schedule.addedDurationText(minutes, language: language)
     }
 
     private var arrivalWalkIdentity: String {
@@ -1089,11 +1109,13 @@ private struct DinoTrainJourneyCard: View {
         appliedMinutes = 0
         do {
             try await Task.sleep(for: .milliseconds(900))
-            let steps = DinoTimeZoneStep.steps(from: schedule.start, offsetMinutes: schedule.totalMinutes)
+            let steps = schedule.walkMinutes()
             for (index, step) in steps.enumerated() {
                 try Task.checkCancellation()
-                withAnimation(.easeInOut(duration: 0.35)) { appliedMinutes = step.addedMinutes }
-                if index < steps.count - 1 { try await Task.sleep(for: .milliseconds(800)) }
+                withAnimation(.easeInOut(duration: 0.35)) { appliedMinutes = step }
+                if index < steps.count - 1 {
+                    try await Task.sleep(for: .milliseconds(800))
+                }
             }
         } catch { /* A new question, example or replay cancels the previous walk. */ }
     }
@@ -1112,12 +1134,35 @@ private struct DinoTrainJourneyCard: View {
             }
         } values: {
             if let durationMinutes {
-                HStack(spacing: valueSpacing) {
-                    durationColumns(hours: durationMinutes / 60, minutes: durationMinutes % 60, label: value)
-                        .padding(.horizontal, showsTotal ? 0 : (compactColumns ? 8 : 10))
-                        .padding(.vertical, showsTotal ? 0 : 4)
-                        .background(showsTotal ? .clear : chip, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    if showsTotal { clockChip(DinoTimeWords.digitalDuration(durationMinutes), fill: chip) }
+                HStack(spacing: 0) {
+                    DinoTrainExpansion(axis: .horizontal, fraction: showsTotal ? 1 : 0) {
+                        durationColumns(hours: durationMinutes / 60, minutes: durationMinutes % 60,
+                                        label: DinoTimeWords.compactDuration(hours: durationMinutes / 60,
+                                            minutes: durationMinutes % 60, language: language, padMinutes: schedule.hasMinuteTerms))
+                            .padding(.trailing, valueSpacing)
+                            .opacity(showsTotal ? 1 : 0)
+                            .animation(reduceMotion ? nil : .easeIn(duration: 0.25).delay(0.4), value: showsTotal)
+                    }
+                    .clipped()
+                    .accessibilityHidden(!showsTotal)
+                    // The same capsule changes width while its two readings crossfade in place.
+                    DinoTrainDurationChip(fraction: showsTotal ? 1 : 0, clockWidth: clockColumnWidth) {
+                        Text(verbatim: value)
+                            .fixedSize(horizontal: true, vertical: false)
+                            .padding(.horizontal, compactColumns ? 8 : 10).padding(.vertical, 4)
+                            .opacity(showsTotal ? 0 : 1)
+                            .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: showsTotal)
+                        Text(verbatim: DinoTimeWords.digitalDuration(durationMinutes))
+                            .fixedSize(horizontal: true, vertical: false)
+                            .padding(.vertical, 4)
+                            .opacity(showsTotal ? 1 : 0)
+                            .animation(reduceMotion ? nil : .easeIn(duration: 0.3).delay(0.2), value: showsTotal)
+                    }
+                    .font(.system(size: durationFont, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+                    .background(chip, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(Text(verbatim: showsTotal ? DinoTimeWords.digitalDuration(durationMinutes) : value))
                 }
             } else {
                 clockChip(value, fill: chip)
@@ -1132,20 +1177,26 @@ private struct DinoTrainJourneyCard: View {
         .accessibilityIdentifier(identifier)
     }
 
-    /// All rows reserve the same sign, hours and minutes slots, including empty units.
+    /// Only the worked sum uses shared columns; a minute column includes its zeroes on every row.
     private func durationColumns(hours: Int, minutes: Int, plus: Bool = false, label: String) -> some View {
         HStack(spacing: 0) {
             Text(verbatim: plus ? "+" : "")
                 .frame(width: 14 * columnScale, alignment: .trailing)
-            Text(verbatim: hours > 0 ? (language == "nl" ? "\(hours) uur" : "\(hours)h") : "")
-                .numericTextTransition()
-                .fixedSize(horizontal: true, vertical: false)
-                .frame(width: (language == "nl" ? 44 : 22) * columnScale, alignment: .trailing)
-                .padding(.trailing, 10 * columnScale)
-            Text(verbatim: minutes > 0 || hours == 0 ? "\(minutes) min" : "")
-                .numericTextTransition()
-                .fixedSize(horizontal: true, vertical: false)
-                .frame(width: 66 * columnScale, alignment: .trailing)
+            if showsHoursColumn {
+                let hourText = hours > 0 || plus
+                    ? (language == "nl" ? "\(hours) uur" : "\(hours)h") : ""
+                Text(verbatim: hourText)
+                    .numericTextTransition()
+                    .fixedSize(horizontal: true, vertical: false)
+                    .frame(width: (language == "nl" ? 44 : 22) * columnScale, alignment: .trailing)
+                    .padding(.trailing, schedule.hasMinuteTerms ? 10 * columnScale : 0)
+            }
+            if schedule.hasMinuteTerms {
+                Text(verbatim: String(format: "%02d min", minutes))
+                    .numericTextTransition()
+                    .fixedSize(horizontal: true, vertical: false)
+                    .frame(width: 66 * columnScale, alignment: .trailing)
+            }
         }
         .font(.system(size: durationFont, weight: .heavy, design: .rounded))
         .lineLimit(1)
@@ -1177,6 +1228,56 @@ private struct DinoTrainJourneyCard: View {
     }
 }
 
+/// Preserve child identity while the sum's columns open and the journey arrows close.
+private struct DinoTrainExpansion: Layout {
+    let axis: Axis
+    var fraction: CGFloat
+
+    var animatableData: CGFloat {
+        get { fraction }
+        set { fraction = newValue }
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard let view = subviews.first else { return .zero }
+        let size = view.sizeThatFits(axis == .horizontal ? .unspecified : ProposedViewSize(width: proposal.width, height: nil))
+        let progress = min(1, max(0, fraction))
+        return CGSize(width: size.width * (axis == .horizontal ? progress : 1),
+                      height: size.height * (axis == .vertical ? progress : 1))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard let view = subviews.first else { return }
+        let size = view.sizeThatFits(axis == .horizontal ? .unspecified : ProposedViewSize(width: bounds.width, height: nil))
+        let x = axis == .horizontal ? bounds.maxX - size.width : bounds.minX
+        view.place(at: CGPoint(x: x, y: bounds.minY), anchor: .topLeading,
+                   proposal: ProposedViewSize(size))
+    }
+}
+
+/// Natural duration widths become equal HH:MM widths without replacing the capsule.
+private struct DinoTrainDurationChip: Layout {
+    var fraction: CGFloat
+    let clockWidth: CGFloat
+
+    var animatableData: CGFloat {
+        get { fraction }
+        set { fraction = newValue }
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard let original = subviews.first else { return .zero }
+        let size = original.sizeThatFits(.unspecified)
+        return CGSize(width: size.width + (clockWidth - size.width) * min(1, max(0, fraction)), height: size.height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for view in subviews {
+            view.place(at: CGPoint(x: bounds.midX, y: bounds.midY), anchor: .center, proposal: .unspecified)
+        }
+    }
+}
+
 /// Shared inks so each number on the ticket stays distinct from the gray total.
 private enum DinoFlightInk {
     static let departure = Color(dinoHex: 0x154A86)
@@ -1199,8 +1300,6 @@ private struct DinoFlightTicket: View {
     @State private var appliedMinutes = 0
     @State private var walking = false
     @State private var replayCount = 0
-    /// 0...1 for the practice reveal. Examples show the finished total and ignore this.
-    @State private var totalProgress: CGFloat = 0
 
     private var prefix: String { isDemonstration ? "demo" : "question" }
     private var secondaryInk: Color { highContrast ? DinoStyle.ink : DinoStyle.muted }
@@ -1209,8 +1308,7 @@ private struct DinoFlightTicket: View {
     private var totalInk: Color { highContrast ? DinoStyle.ink : DinoFlightInk.total }
     private var factIcon: CGFloat { 28 }
     private var shownArrival: ClockTime { work.departure.adding(minutes: appliedMinutes) }
-    private var totalAmount: CGFloat { isDemonstration ? 1 : totalProgress }
-    private var totalRowAmount: CGFloat { max(0, min(1, (totalAmount - 0.22) / 0.78)) }
+    private var totalExpanded: Bool { showsTotal && work.offsetMinutes != 0 }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -1292,20 +1390,24 @@ private struct DinoFlightTicket: View {
                     }.frame(minWidth: 0, maxWidth: .infinity)
                 }
 
-                VStack(spacing: 8) {
-                    factRow(title: "dino.expanded.flightDuration", systemImage: "clock",
-                            value: work.durationText(language), color: DinoFlightInk.duration, fill: DinoStyle.green,
-                            identifier: "\(prefix).flight.duration")
-                    if work.offsetMinutes != 0 {
-                        factRow(title: "dino.expanded.flightZoneDifference", systemImage: "globe",
-                                value: DinoTimeWords.zoneDifference(work.offsetMinutes, language: language),
-                                color: work.offsetMinutes < 0 ? DinoTimeDirection.earlier : DinoStyle.deepGreen,
-                                fill: work.offsetMinutes < 0 ? DinoTimeDirection.earlier : DinoStyle.green,
-                                identifier: "\(prefix).flight.zone")
+                VStack(spacing: 0) {
+                    VStack(spacing: 8) {
+                        factRow(title: "dino.expanded.flightDuration", systemImage: "clock",
+                                value: work.durationText(language), color: DinoFlightInk.duration, fill: DinoStyle.green,
+                                identifier: "\(prefix).flight.duration")
+                        if work.offsetMinutes != 0 {
+                            factRow(title: "dino.expanded.flightZoneDifference", systemImage: "globe",
+                                    value: DinoTimeWords.zoneDifference(work.offsetMinutes, language: language),
+                                    color: work.offsetMinutes < 0 ? DinoTimeDirection.earlier : DinoStyle.deepGreen,
+                                    fill: work.offsetMinutes < 0 ? DinoTimeDirection.earlier : DinoStyle.green,
+                                    identifier: "\(prefix).flight.zone")
+                        }
                     }
-                    // Reserve the hint's space so revealing it never moves the answer choices.
-                    if showsTotal { totalReveal }
-                    else { totalReveal.hidden() }
+                    if totalExpanded {
+                        totalReveal.padding(.top, 8)
+                            .transition(.modifier(active: DinoFlightTotalUnfold(fraction: 0),
+                                                  identity: DinoFlightTotalUnfold(fraction: 1)))
+                    }
                 }
 
                 if work.offsetMinutes == 0 {
@@ -1329,27 +1431,21 @@ private struct DinoFlightTicket: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("\(prefix).flight.ticket")
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: showsWork)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: totalExpanded)
         .task(id: walkIdentity) { await play() }
-        .task(id: totalIdentity) { await revealTotal() }
     }
 
-    /// The line draws first. The finished total then settles open beneath it.
+    /// The expansion clips this full-size row within its own space, below the existing values.
     private var totalReveal: some View {
         VStack(spacing: 8) {
             Capsule()
                 .fill(totalInk.opacity(highContrast ? 0.55 : 0.35))
                 .frame(height: 1)
-                .scaleEffect(x: min(1, totalAmount * 1.35), anchor: .center)
-                .opacity(min(1, totalAmount * 1.8))
                 .accessibilityHidden(true)
             totalShift
-                .opacity(totalRowAmount)
-                .scaleEffect(x: 0.985 + 0.015 * totalRowAmount, y: 0.86 + 0.14 * totalRowAmount, anchor: .top)
-                .offset(y: (1 - totalRowAmount) * -4)
         }
         .padding(.top, 4)
         .clipped()
-        .accessibilityHidden(totalRowAmount < 0.9 && !isDemonstration)
     }
 
     /// Light gray field, a slightly darker circle, and a small dark equals, like the icons above.
@@ -1373,8 +1469,7 @@ private struct DinoFlightTicket: View {
         .background(totalInk.opacity(highContrast ? 0.14 : 0.10), in: RoundedRectangle(cornerRadius: 16))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(verbatim: "\(L(key: "dino.expanded.flightTotalAdded")) \(work.combinedText(language))"))
-        .accessibilityIdentifier(showsTotal ? "\(prefix).flight.total" : "")
-        .accessibilityHidden(!showsTotal)
+        .accessibilityIdentifier("\(prefix).flight.total")
     }
 
     /// Two short bars, sized like the clock and globe glyphs, centered in the circle.
@@ -1428,20 +1523,6 @@ private struct DinoFlightTicket: View {
 
     private var walkIdentity: String {
         "\(showsWork)-\(work.departure.digitalText)-\(work.combinedMinutes)-\(reduceMotion)-\(replayCount)"
-    }
-
-    private var totalIdentity: String {
-        "\(showsTotal)-\(work.departure.digitalText)-\(work.durationMinutes)-\(work.offsetMinutes)-\(reduceMotion)"
-    }
-
-    @MainActor private func revealTotal() async {
-        guard showsTotal else { totalProgress = 0; return }
-        if isDemonstration || reduceMotion { totalProgress = 1; return }
-        totalProgress = 0
-        do {
-            try await Task.sleep(for: .milliseconds(180))
-            withAnimation(.easeInOut(duration: 0.72)) { totalProgress = 1 }
-        } catch { /* Closing help or advancing cancels the hint reveal. */ }
     }
 
     @MainActor private func play() async {
@@ -1536,6 +1617,38 @@ private struct DinoFlightTicket: View {
         }
         .frame(height: timeSize + 8)
         .accessibilityHidden(true)
+    }
+}
+
+/// Reveal the row by increasing its layout height, without moving or fading its contents.
+private struct DinoFlightTotalUnfold: Animatable, ViewModifier {
+    var fraction: CGFloat
+
+    var animatableData: CGFloat {
+        get { fraction }
+        set { fraction = newValue }
+    }
+
+    func body(content: Content) -> some View {
+        DinoFlightTotalExpansion(fraction: fraction) { content }
+            .clipped()
+    }
+}
+
+private struct DinoFlightTotalExpansion: Layout {
+    var fraction: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard let row = subviews.first else { return .zero }
+        let size = row.sizeThatFits(ProposedViewSize(width: proposal.width, height: nil))
+        return CGSize(width: size.width, height: size.height * min(1, max(0, fraction)))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard let row = subviews.first else { return }
+        let size = row.sizeThatFits(ProposedViewSize(width: bounds.width, height: nil))
+        row.place(at: bounds.origin, anchor: .topLeading,
+                  proposal: ProposedViewSize(width: bounds.width, height: size.height))
     }
 }
 

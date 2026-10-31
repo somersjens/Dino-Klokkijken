@@ -17,6 +17,11 @@ struct SpokenClockReadingHint: Equatable, Sendable {
         }
         return minute <= 30 ? 0 : 60
     }
+    func spokenHour(for hour: Int) -> Int {
+        let named = hour + (referenceMinute >= 30 ? 1 : 0)
+        return ((named - 1) % 12 + 12) % 12 + 1
+    }
+
     var count: Int { abs(minute - referenceMinute) }
     var startMinute: Int { min(minute, referenceMinute) }
     var endMinute: Int { max(minute, referenceMinute) }
@@ -26,10 +31,9 @@ struct SpokenClockReadingHint: Equatable, Sendable {
         minutes[DinoTimeReading.labelPosition(minute: minute) / 5] = minute
         return minutes
     }
-    /// Route the word's leader between two scale marks instead of through a number.
+    /// The word attaches to the exact middle of the reading arc.
     var relationLeaderMinute: Double {
-        let middle = Double(startMinute + endMinute) / 2
-        return (floor(middle / 5) + 0.5) * 5
+        Double(startMinute + endMinute) / 2
     }
     var relation: String {
         if minute == 0 || (isDutch && minute == 30) { return "" }
@@ -44,40 +48,65 @@ struct SpokenClockReadingHint: Equatable, Sendable {
     var scaleLabel: String {
         if minute == 0 { return isDutch ? "uur" : "o’clock" }
         if minute == 30 { return "half" }
-        if isDutch && (minute == 15 || minute == 45) { return "kwart" }
+        if minute == 15 || minute == 45 { return isDutch ? "kwart" : "quarter" }
         return String(count)
     }
 }
 
 enum SpokenClockGuideLayout {
     static func extent(shape: AnalogClockShape, compact: Bool = false) -> Double {
-        compact ? (shape == .square ? 1.04 : 0.98) : (shape == .square ? 1.18 : 1.12)
+        compact ? (shape == .square ? 1.18 : 1.12) : (shape == .square ? 1.20 : 1.14)
     }
 
     static func scaleFontSize(faceSize: Double) -> Double { max(7, faceSize * 0.064) }
+
+    static let arrowOffset = 0.20
+    static let relationOffset = 0.26
+    /// Side of the badge facing the reading path: always a cardinal midpoint.
+    static func badgeSide(minute: Int, atEnd: Bool) -> CGPoint {
+        let angle = Double(minute) * .pi / 30
+        let sign = atEnd ? -1.0 : 1.0
+        let x = cos(angle) * sign, y = sin(angle) * sign
+        if abs(x) > abs(y) { return CGPoint(x: x >= 0 ? 1 : -1, y: 0) }
+        return CGPoint(x: 0, y: y >= 0 ? 1 : -1)
+    }
+
+    static func ringDiameter(faceSize: Double) -> Double {
+        max(scaleFontSize(faceSize: faceSize) * 1.3, faceSize * 0.10) + 2 * max(2, faceSize * 0.014)
+    }
 
     /// Tight vertical bounds around the scale, rim arrow and relation text.
     static func verticalBounds(minute: Int, language: String, shape: AnalogClockShape, faceSize: Double,
                                compact: Bool = false) -> ClosedRange<Double> {
         let face = max(1, faceSize)
         let hint = SpokenClockReadingHint(minute: minute, language: language)
+        let plainQuarters = [15, 45].filter { $0 != minute && hint.startMinute <= $0 && hint.endMinute >= $0 }
+        let wordWidth = scaleFontSize(faceSize: face) * (language == "nl" ? 3.0 : 4.0) / face
+        let arcOffset = plainQuarters.isEmpty ? arrowOffset : max(arrowOffset, 0.526 + max(2 / face, 0.018) + wordWidth + 0.025 - 0.5)
         let labelHeight = scaleFontSize(faceSize: face) * 1.3
-        let circlePadding = compact ? 0 : 2 * max(2, face * 0.014)
+        let circlePadding = 2 * max(2, face * 0.014)
         let scaleExtent = 0.526 + max(2 / face, 0.018) + (labelHeight + circlePadding) / face
         var lower = -scaleExtent
         var upper = scaleExtent
         for step in hint.startMinute...hint.endMinute {
             let angle = Double(step) * 6
-            let radius = ClockHandHintGeometry.outerRadius(angle: angle, shape: shape) + 0.005
+            let radius = ClockHandHintGeometry.outerRadius(angle: angle, shape: shape) + arcOffset
             let y = ClockHandHintGeometry.point(radius: radius, angle: angle).y
             lower = min(lower, y - 0.06); upper = max(upper, y + 0.06)
         }
         if !hint.relation.isEmpty {
             let angle = hint.relationLeaderMinute * 6
-            let radius = ClockHandHintGeometry.outerRadius(angle: angle, shape: shape) + 0.23
+            let radius = ClockHandHintGeometry.outerRadius(angle: angle, shape: shape) + arcOffset + 0.06
             let y = ClockHandHintGeometry.point(radius: radius, angle: angle).y
             let halfHeight = max(7.5, face * 0.064) / face * 0.65 + 2 / face
             lower = min(lower, y - halfHeight); upper = max(upper, y + halfHeight)
+        }
+        // Word badges sit outside the arc; reserve their top/bottom reach too.
+        if !hint.scaleLabel.allSatisfy(\.isNumber) {
+            let angle = Double(minute) * 6
+            let radius = ClockHandHintGeometry.outerRadius(angle: angle, shape: shape) + arrowOffset + 0.025 + ringDiameter(faceSize: face) / face
+            let y = ClockHandHintGeometry.point(radius: radius, angle: angle).y
+            lower = min(lower, y); upper = max(upper, y)
         }
         let margin = compact ? max(3 / face, 0.025) : max(5 / face, 0.035)
         return (lower - margin)...(upper + margin)

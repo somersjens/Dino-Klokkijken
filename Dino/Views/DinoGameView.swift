@@ -55,7 +55,7 @@ struct DinoGameView: View {
                     DinoQuestionViewportLayout(maximumHeight: questionViewport, fitsContent: tablet) {
                         ScrollViewReader { proxy in
                             ScrollView {
-                                VStack(spacing: short ? 10 : 18) {
+                                VStack(spacing: session.question.kind == .setAnalog ? 8 : short ? 10 : 18) {
                                     if session.level.isBoss { crystals }
                                     questionTitle(fontSize: tablet ? (short ? 23 : 26) : 21)
                                         .frame(maxWidth: min(tablet ? 760 : 680, width))
@@ -89,10 +89,15 @@ struct DinoGameView: View {
                                     }
                                 }
                             }
-                            .onValueChange(of: session.showsWorkedExplanation) { showing in
-                                guard showing, [.addTime, .subtractTime].contains(session.question.kind) else { return }
-                                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.35)) {
-                                    proxy.scrollTo("question.timeArithmetic", anchor: .top)
+                            .task(id: session.missedFirstAnswer) {
+                                guard session.question.kind == .flightArrival, session.question.offsetMinutes != 0,
+                                      session.missedFirstAnswer else { return }
+                                // The hint adds height after feedback. Recheck once its expansion has settled.
+                                do { try await Task.sleep(for: .milliseconds(reduceMotion ? 16 : 480)) }
+                                catch { return }
+                                guard let frame = answerFrame, frame.maxY > questionViewport else { return }
+                                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
+                                    proxy.scrollTo("question.answerFocus", anchor: .bottom)
                                 }
                             }
                             .onValueChange(of: session.hasFeedback) { showing in

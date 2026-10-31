@@ -38,7 +38,8 @@ struct DinoTimeReadingClock: View {
             ZStack(alignment: .topLeading) {
                 if hasLabels { guideLines.transition(.opacity) }
                 AnalogClock(time: time, theme: theme, size: diameter,
-                            spokenHintLanguage: showsSpokenHint && !hasLabels ? language : nil)
+                            spokenHintLanguage: showsSpokenHint && !hasLabels ? language : nil,
+                            spokenHourHintLanguage: hasLabels ? language : nil)
                     .position(center)
                     .accessibilityIdentifier("\(prefix).targetClock")
                 if hasLabels {
