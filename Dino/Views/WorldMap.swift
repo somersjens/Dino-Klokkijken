@@ -1652,7 +1652,7 @@ private struct LevelDetailsDisclosure: View {
     }
 }
 
-/// Practice number, exercise name, and time family, in the order the level asks them.
+/// Exercise title above its practice number and time family, in level order.
 private struct LevelQuestionOutlineList: View {
     let items: [LevelQuestionOutline]
     let theme: LevelStartTheme
@@ -1660,26 +1660,26 @@ private struct LevelQuestionOutlineList: View {
     var body: some View {
         VStack(spacing: 8) {
             ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                Rectangle().fill(theme.shade.opacity(0.18)).frame(height: 1)
                 Button {
                     if let configuration = item.practiceConfiguration { openPractice(configuration) }
                 } label: {
                     HStack(spacing: 8) {
-                        Text(verbatim: item.practiceNumber.map(String.init) ?? "–")
-                            .font(.system(size: 13, weight: .heavy, design: .rounded))
-                            .frame(width: 28, height: 28)
-                            .foregroundStyle(theme.ink)
-                            .background(theme.accent.opacity(0.2), in: Circle())
-                            .accessibilityIdentifier("level.question.\(index).number")
-                        Text(LocalizedStringKey(item.titleKey))
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            .multilineTextAlignment(.leading)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        Text(LocalizedStringKey(item.timeTitleKey))
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
-                            .foregroundStyle(theme.ink)
-                            .multilineTextAlignment(.trailing)
-                            .frame(maxWidth: 92, alignment: .trailing)
-                            .fixedSize(horizontal: false, vertical: true)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(LocalizedStringKey(item.titleKey))
+                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .foregroundStyle(DinoStyle.ink)
+                                .lineLimit(1).minimumScaleFactor(0.65)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            (Text(verbatim: item.practiceNumber.map(String.init) ?? "–")
+                                + Text(verbatim: " | ")
+                                + Text(LocalizedStringKey(item.timeTitleKey)))
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .foregroundStyle(theme.ink)
+                                .lineLimit(1).minimumScaleFactor(0.8)
+                                .accessibilityIdentifier("level.question.\(index).number")
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         Image(systemName: "chevron.right")
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(theme.ink.opacity(0.7))

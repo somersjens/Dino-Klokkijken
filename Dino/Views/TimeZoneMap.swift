@@ -1,13 +1,5 @@
 import SwiftUI
 
-/// Earlier stays the destination red; later uses the same light green as a positive difference.
-enum DinoTimeDirection {
-    static let earlier = Color(dinoHex: 0xA34A26)
-    static func color(later: Bool, highContrast: Bool) -> Color {
-        later ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : earlier
-    }
-}
-
 /// Offline atlas: Natural Earth country outlines and simplified time-zone
 /// geometry. The task's two offsets always come from Foundation's IANA zones.
 struct DinoTimeZoneMap: View {
@@ -117,6 +109,7 @@ struct DinoTimeZoneMap: View {
                 .font(.system(size: 10, weight: .bold, design: .rounded))
                 .lineLimit(1).minimumScaleFactor(0.75)
                 .foregroundStyle(isOrigin ? color : direction)
+                .background(isOrigin ? Color.clear : DinoTimeDirection.background(later: later, highContrast: highContrast), in: Capsule())
                 .monospacedDigit()
                 .numericTextTransition()
                 .accessibilityIdentifier("\(prefix).timeZone.\(isOrigin ? "referenceCaption" : "difference")")
@@ -201,10 +194,11 @@ struct DinoTimeZoneMap: View {
             let unit = code == "nl" ? "u" : "h"
             let text = Text(verbatim: "\(sign)\(DinoTimeWords.zoneHours(run.offset)) \(unit)")
                 .font(.system(size: 10, weight: .heavy, design: .rounded))
-                .canvasInk(Color(dinoHex: 0x315F6B))
+                .canvasInk(run.offset == 0 ? DinoStyle.ink : DinoTimeDirection.color(later: run.offset > 0, highContrast: highContrast))
             let x = (run.start + run.end) / 2
             context.fill(Path(roundedRect: CGRect(x: x - 21, y: y - 9, width: 42, height: 18), cornerRadius: 6),
-                         with: .color(.white.opacity(0.88)))
+                         with: .color(run.offset == 0 ? .white.opacity(0.88)
+                            : DinoTimeDirection.background(later: run.offset > 0, highContrast: highContrast)))
             context.draw(text, at: CGPoint(x: x, y: y))
         }
     }

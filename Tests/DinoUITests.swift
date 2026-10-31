@@ -1879,7 +1879,7 @@ final class DinoUITests: XCTestCase {
     }
 
     func testAnalogReadingArrowsKeepTheClockLarge() {
-        for (hour, minute) in [(1, 35), (12, 0), (1, 5)] {
+        for (hour, minute) in [(1, 35), (12, 0), (7, 35)] {
             let family: DinoPracticeTime = minute == 0 ? .whole : .fiveMinutes
             let configuration = DinoPracticeConfiguration(time: family, order: .specific(.chooseDigital))
             var selected: (seed: UInt64, first: ClockQuestion, question: ClockQuestion)?
@@ -1909,19 +1909,25 @@ final class DinoUITests: XCTestCase {
             let clock = app.descendants(matching: .any)["question.targetClock"]
             XCTAssertEqual(clock.label, selected.question.target.digitalText)
             let originalClock = clock.frame
+            let originalTitle = app.staticTexts["question.title"].frame
             let answers = selected.question.options.indices.map { app.buttons["question.option.\($0)"].frame }
             tap("question.option.\(selected.question.options.firstIndex { $0 != selected.question.target }!)")
             if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
             XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 5))
-            XCTAssertLessThanOrEqual(clock.frame.height, originalClock.height + 1)
+            saveScreenshot("compact-analog-arrows-\(hour)-\(minute)")
+            let hintBounds = ClockHandHintGeometry.bounds(time: selected.question.target, shape: .circle, faceSize: 150)
+            XCTAssertGreaterThan(clock.frame.height / hintBounds.height, originalClock.height * 0.75,
+                                 "The clock uses spare height to retain at least three quarters of its face size")
             XCTAssertGreaterThan(clock.frame.minY, app.staticTexts["question.title"].frame.maxY)
+            XCTAssertLessThanOrEqual(app.staticTexts["question.title"].frame.minY, originalTitle.minY + 2)
+            let viewport = app.scrollViews["game.questions"].frame
+            XCTAssertGreaterThanOrEqual(app.staticTexts["question.title"].frame.minY, viewport.minY)
             for index in selected.question.options.indices {
                 let option = app.buttons["question.option.\(index)"]
                 XCTAssertTrue(option.isHittable)
-                XCTAssertEqual(option.frame.minY, answers[index].minY, accuracy: 8,
-                               "Compact arrows keep the answer row in place")
+                XCTAssertGreaterThanOrEqual(option.frame.minY, answers[index].minY - 8)
+                XCTAssertLessThanOrEqual(option.frame.maxY, viewport.maxY)
             }
-            saveScreenshot("compact-analog-arrows-\(hour)-\(minute)")
         }
     }
 
@@ -1954,6 +1960,24 @@ final class DinoUITests: XCTestCase {
             saveScreenshot("clock-help-\(kind.rawValue)-next")
             tap("header.pause")
         }
+    }
+
+    func testFiveMinuteCircleConnectionsEnglish() {
+        app.terminate()
+        app.launchArguments = ["-settings.languageOverride", "en", "-AppleICUForce24HourTime", "YES"]
+        app.launch()
+        openPractice()
+        chooseExampleTimeFamily("fiveMinutes")
+        selectPractice("practice.type.spokenTime")
+        tap("practice.start")
+        tap("question.example")
+        for minute in stride(from: 5, through: 55, by: 5) {
+            tap("demo.nextExample")
+            let clock = app.descendants(matching: .any)["demo.answer"]
+            XCTAssertEqual(clock.value as? String, DinoTimeWords.time(.init(hour: 3, minute: minute), language: "en"))
+            if minute == 5 || minute == 55 { saveScreenshot("circular-\(minute)-en") }
+        }
+        tap("demo.ready")
     }
 
     func testQuarterCircleConnectionsEnglish() {
@@ -2087,6 +2111,11 @@ final class DinoUITests: XCTestCase {
         XCTAssertEqual(digital.label, "03:00")
         XCTAssertLessThan(app.buttons["demo.nextExample"].frame.maxY, app.buttons["demo.ready"].frame.minY)
         XCTAssertEqual(analog.frame.midX, digital.frame.midX, accuracy: 1)
+        let analogFrame = analog.frame
+        let digitalFrame = digital.frame
+        let nextFrame = app.buttons["demo.nextExample"].frame
+        let readyFrame = app.buttons["demo.ready"].frame
+        XCTAssertEqual(app.staticTexts["demo.heading"].frame.midX, app.frame.midX, accuracy: 1)
         XCTAssertFalse(app.staticTexts["1 · Uren"].exists)
         XCTAssertFalse(app.staticTexts["2 · Minuten"].exists)
         XCTAssertFalse(app.staticTexts["Deze klokken tonen dezelfde tijd. Tik om te kiezen."].exists)
@@ -2095,6 +2124,10 @@ final class DinoUITests: XCTestCase {
             tap("demo.nextExample")
             let expected = String(format: "%02d:00", hour)
             XCTAssertEqual(digital.label, expected)
+            XCTAssertEqual(analog.frame, analogFrame, "All arrow directions use the same initial reservation")
+            XCTAssertEqual(digital.frame, digitalFrame)
+            XCTAssertEqual(app.buttons["demo.nextExample"].frame, nextFrame)
+            XCTAssertEqual(app.buttons["demo.ready"].frame, readyFrame)
             if hour == 6 || hour == 12 { saveScreenshot("numbered-example-\(hour)") }
         }
         tap("demo.nextExample")
@@ -3637,6 +3670,9 @@ final class DinoUITests: XCTestCase {
             XCTAssertTrue(app.buttons["question.option.3"].waitForExistence(timeout: 6))
             let question = generator.next(index: 1, difficultyForKind: { _ in .familiar })
             let frames = question.responses.indices.map { app.buttons["question.option.\($0)"].frame }
+            let targetFrame = kind == .chooseAnalog ? app.descendants(matching: .any)["question.targetClock"].firstMatch.frame : .zero
+            let titleFrame = app.staticTexts["question.title"].frame
+            if kind == .chooseAnalog { saveScreenshot("analog-minute-scale-before-answer") }
             let wrong = question.responses.indices.filter { question.responses[$0] != question.expectedAnswer }
             for index in wrong {
                 guard case .time(let time) = question.responses[index] else { return XCTFail("Expected clock choices") }
@@ -3651,10 +3687,24 @@ final class DinoUITests: XCTestCase {
                     XCTAssertFalse(option.label.contains(":"), "Type 5 explains rejected clocks in words")
                 }
                 XCTAssertFalse(option.isEnabled)
-                if [.readDigital, .read24Hour].contains(kind) {
+                if [.readDigital, .read24Hour, .chooseAnalog].contains(kind) {
                     for other in question.responses.indices {
-                        XCTAssertEqual(app.buttons["question.option.\(other)"].frame.midY, frames[other].midY, accuracy: 1)
+                        let otherOption = app.buttons["question.option.\(other)"]
+                        // Feedback badges enlarge answered cards' AX bounds. Unanswered
+                        // cards retain their decoration and measure actual layout movement.
+                        if kind == .chooseAnalog && !otherOption.isEnabled { continue }
+                        let frame = otherOption.frame
+                        XCTAssertEqual(frame.midY, frames[other].midY, accuracy: 1)
+                        if kind == .chooseAnalog { XCTAssertEqual(frame.height, frames[other].height, accuracy: 1) }
                     }
+                }
+                if kind == .chooseAnalog {
+                    // The visible helpers extend the target's AX bounds upward by 48 points.
+                    // Its display baseline is unchanged, so compare the bottom edge.
+                    XCTAssertEqual(app.descendants(matching: .any)["question.targetClock"].firstMatch.frame.maxY,
+                                   targetFrame.maxY, accuracy: 1, "Reading help must not move the target display")
+                    XCTAssertEqual(app.staticTexts["question.title"].frame.midY, titleFrame.midY, accuracy: 1)
+                    if index == wrong.first { saveScreenshot("analog-first-mistake-smooth-feedback") }
                 }
             }
             XCTAssertTrue(app.buttons["question.next"].exists)
@@ -3752,6 +3802,10 @@ final class DinoUITests: XCTestCase {
                 XCTAssertTrue(app.buttons["question.option.\(wrong[1])"].isEnabled)
                 let optionCenters = question.responses.indices.map { app.buttons["question.option.\($0)"].frame.midY }
                 let startY = app.descendants(matching: .any)["question.targetClock"].frame.minY
+                let totals = app.descendants(matching: .any)["question.timeArithmetic.total.hours"]
+                XCTAssertTrue(totals.exists)
+                let hintGap = question.responses.indices.map { app.buttons["question.option.\($0)"].frame.minY }.min()! - totals.frame.maxY
+                XCTAssertLessThan(hintGap, 44, "The hint must end at the subtotals without reserving an empty answer row")
                 if index == 1 { saveScreenshot("\(kind.rawValue)-arithmetic-retry-hint") }
                 if index == 1 {
                     tap("question.showAnswer")
@@ -3765,14 +3819,15 @@ final class DinoUITests: XCTestCase {
                 XCTAssertTrue(hours.exists, "Closing the question keeps the upper explanation")
                 XCTAssertTrue(app.buttons["question.next"].exists)
                 if index == 1 {
-                    XCTAssertEqual(app.descendants(matching: .any)["question.targetClock"].frame.minY, startY, accuracy: 1)
                     saveScreenshot("\(kind.rawValue)-arithmetic-final-arrows")
-                    // The correct choice gains a badge and outline outside its card. Other choices
-                    // keep the same decoration, so their AX bounds measure layout movement directly.
+                    let finalStartY = app.descendants(matching: .any)["question.targetClock"].frame.minY
+                    // Measure relative to the start clock, allowing the whole lesson to recenter.
+                    // The correct choice gains an outer badge, so compare the unchanged wrong choices.
                     for option in wrong {
-                        XCTAssertEqual(app.buttons["question.option.\(option)"].frame.midY,
-                                       optionCenters[option], accuracy: 1,
-                                       "Revealing the final arrows must not move the answer choices")
+                        let growth = app.buttons["question.option.\(option)"].frame.midY - finalStartY
+                            - (optionCenters[option] - startY)
+                        XCTAssertGreaterThan(growth, result.frame.height + 20,
+                                             "The answer choices move down only when the final clock is inserted")
                     }
                 }
                 tap("question.next")
@@ -3873,6 +3928,36 @@ final class DinoUITests: XCTestCase {
         var starts = [Int](repeating: 0, count: 4)
         for offset in 0..<4 { starts[(origin + offset) % 4] = (hour + offset) % 24 }
         return DinoDayPartSchedule(night: starts[0], morning: starts[1], afternoon: starts[2], evening: starts[3])
+    }
+
+    func testExampleActionsStayFixedAcrossAllQuestionTypes() {
+        for type in DinoPracticeQuestion.allCases {
+            app.terminate()
+            app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.example-layout.\(UUID().uuidString)"
+            app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+            app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = type.rawValue
+            app.launchArguments = ["-settings.languageOverride", "en", "-AppleICUForce24HourTime", "YES"]
+            app.launch()
+            tap("question.example")
+            let another = app.buttons["demo.nextExample"]
+            let heading = app.staticTexts["demo.heading"]
+            XCTAssertTrue(another.waitForExistence(timeout: 5))
+            let nextFrame = another.frame
+            let headingFrame = heading.frame
+            let lessonFrame = app.scrollViews["demo.content"].frame
+            XCTAssertEqual(headingFrame.midX, app.frame.midX, accuracy: 1, "\(type) centres the heading text itself")
+            XCTAssertTrue(another.isHittable)
+            for _ in 0..<3 {
+                tap("demo.nextExample")
+                XCTAssertEqual(another.frame, nextFrame, "\(type) reserves its action row before refresh")
+                XCTAssertEqual(heading.frame, headingFrame, "\(type) keeps the modal in place")
+                XCTAssertEqual(app.scrollViews["demo.content"].frame, lessonFrame)
+            }
+            app.scrollViews["demo.content"].swipeUp()
+            XCTAssertEqual(another.frame, nextFrame, "\(type) scrolls only the explanation")
+            XCTAssertTrue(another.isHittable)
+            saveScreenshot("stable-example-\(type.rawValue)")
+        }
     }
 
     func testDayPartExampleActionsStayInPlace() {

@@ -312,6 +312,27 @@ enum ClockHandHintGeometry {
         return CGRect(x: -horizontal, y: bounds.minY, width: horizontal * 2, height: bounds.height)
     }
 
+    /// Examples can visit every hand position. Reserve their complete envelope
+    /// before the first example, including the largest (small-face) badge margins.
+    static func demonstrationBounds(shape: AnalogClockShape) -> CGRect {
+        demonstrationEnvelopes[shape]!
+    }
+
+    private static let demonstrationEnvelopes: [AnalogClockShape: CGRect] = Dictionary(
+        uniqueKeysWithValues: AnalogClockShape.allCases.map { shape in
+            var envelope = CGRect(x: -0.5, y: -0.5, width: 1, height: 1)
+            for hour in 1...12 {
+                for minute in 0..<60 {
+                    envelope = envelope.union(bounds(time: ClockTime(hour: hour, minute: minute),
+                                                     shape: shape, faceSize: 150))
+                }
+            }
+            let horizontal = max(-envelope.minX, envelope.maxX)
+            let vertical = max(-envelope.minY, envelope.maxY)
+            return (shape, CGRect(x: -horizontal, y: -vertical,
+                                  width: horizontal * 2, height: vertical * 2))
+        })
+
     static func point(radius: Double, angle: Double) -> CGPoint {
         let radians = angle * .pi / 180
         return CGPoint(x: sin(radians) * radius, y: -cos(radians) * radius)

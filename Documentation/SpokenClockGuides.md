@@ -110,3 +110,11 @@ Quarter heeft dezelfde korte schaalstreep en tekstafstand als alle andere waarde
 Geslaagd: 5.073 gerichte kerncontroles, beide bestaande taaltests en de nieuwe schermtest voor quarter past/to. De aansluitingen en de korte quarter-streepjes zijn visueel gecontroleerd: [quarter to](Screenshots/SpokenClockGuides/centered-side-quarter-to.png), [quarter past](Screenshots/SpokenClockGuides/centered-side-quarter-past.png) en [tien over](Screenshots/SpokenClockGuides/centered-side-ten-past.png).
 
 De korte aansluitcurves begrenzen hun controlepunten tot de eerste en laatste derde van de verbinding. Daardoor ontstaat geen S-knik wanneer de cirkel dicht bij de boog staat. De gerichte schermtest voor quarter past/to slaagt opnieuw; [het vertrekpunt is visueel gecontroleerd](Screenshots/SpokenClockGuides/smooth-quarter-to.png).
+
+## Eén cirkelstraal en onderstreepte woorden — 31 oktober 2026
+
+De leesboog is één echte cirkel rond het klokcentrum, getekend zonder losse aansluitsegmenten of Bézier-overgangen. Alleen het actieve cijfer schuift radiaal naar buiten. De straal van zijn cirkel en die van de leesboog bepalen het raakpunt: de raaklijn loopt door het midden van de cijfercirkel en de pijlpunt raakt de buitenrand. Dit wordt voor alle zestig minuutstanden en beide richtingen geometrisch gecontroleerd.
+
+Toepasselijke schaalwoorden zoals quarter, kwart, half en uur krijgen een onderstreping in plaats van een cirkel. De boog begint of eindigt vlak bij het woord. De normale schaalwaarden blijven op hun plek.
+
+Geslaagd: 6.510 gerichte kerncontroles, beide taaltests, de kwartiertest en de nieuwe vijfminutentest. De eerste vijfminutenrun verloor de simulator tijdens scrollen; met de tijdkeuze vóór de typekeuze slaagt de herhaling. Visueel gecontroleerd: [five past](Screenshots/SpokenClockGuides/pure-circle-five-past.png), [five to](Screenshots/SpokenClockGuides/pure-circle-five-to.png), [onderstreept quarter past](Screenshots/SpokenClockGuides/underlined-quarter-past.png) en [onderstreept quarter to](Screenshots/SpokenClockGuides/underlined-quarter-to.png).

@@ -48,7 +48,8 @@ struct DinoExpandedQuestionView: View {
         let _ = deviceHourFormat.notation
         VStack(spacing: q.kind == .timeSequence && width >= 600 ? 24 : wideLayout || (q.kind == .timeZone && compactLayout) ? 12 : 18) {
             if ![.advanceAnalog, .sayTime, .spokenTime, .readDigital].contains(q.kind), q.kind != .sortTimes || isDemonstration {
-                DinoQuestionContext(maxHeight: wideLayout && !isDemonstration ? max(160, availableHeight - 88) : nil) {
+                DinoQuestionContext(maxHeight: wideLayout && !isDemonstration ? max(160, availableHeight - 88) : nil,
+                                    animatesHeight: [.addTime, .subtractTime].contains(q.kind)) {
                     context.frame(width: contextWidth)
                 }
                     .frame(maxWidth: contextWidth)
@@ -221,15 +222,16 @@ struct DinoExpandedQuestionView: View {
                     // Side jumps never shift the clocks. The question mark stays without an arc.
                     let count = isDemonstration ? q.relatedTimes.count + 1 : q.relatedTimes.count
                     SequencePatternArcs(frames: (0..<count).compactMap { anchors[$0].map { geometry[$0] } },
-                                        label: "+\(duration)", prefix: sequencePrefix, horizontal: horizontal)
+                                        label: "\(q.durationMinutes < 0 ? "−" : "+")\(DinoTimeWords.duration(abs(q.durationMinutes), language: code))",
+                                        prefix: sequencePrefix, horizontal: horizontal, later: q.durationMinutes >= 0)
                 }.allowsHitTesting(false)
             }
         }
-        .padding(.top, horizontal && (showsSequenceHints) ? 56 : 0)
+        .padding(.top, horizontal && showsSequenceHints ? 56 : 0)
     }
 
     private var showsSequenceHints: Bool { isDemonstration || session.missedFirstAnswer }
-    private var sequenceBlue: Color { Color(dinoHex: 0x2E6B9A) }
+    private var sequenceBlue: Color { DinoStyle.ink }
     private var sequencePrefix: String { isDemonstration ? "demo" : "question" }
     private var sequenceClockFont: CGFloat {
         if horizontalSequence && width >= 600 {
@@ -249,7 +251,7 @@ struct DinoExpandedQuestionView: View {
     private var demonstrationAnswer: some View {
         VStack(spacing: q.kind == .dayPart ? 10 : 14) {
             Image(systemName: "arrow.down").font(.system(size: 22, weight: .bold))
-                .foregroundStyle(q.kind == .subtractTime ? DinoTimeDirection.earlier : DinoStyle.green).accessibilityHidden(true)
+                .foregroundStyle(DinoTimeDirection.color(later: q.kind != .subtractTime, highContrast: highContrast)).accessibilityHidden(true)
             if q.kind == .dayPart {
                 DinoDayPartLine(time: q.target, width: width, schedule: session.dayPartSchedule)
             } else {
@@ -497,9 +499,9 @@ struct DinoExpandedQuestionView: View {
                 VStack(spacing: 8) {
                     Text(verbatim: "+\(duration)")
                         .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundStyle(highContrast ? DinoStyle.deepGreen : DinoStyle.green)
+                        .foregroundStyle(DinoTimeDirection.color(later: true, highContrast: highContrast))
                         .padding(.horizontal, 10).padding(.vertical, 5)
-                        .background(DinoStyle.green.opacity(0.28), in: Capsule())
+                        .background(DinoTimeDirection.background(later: true, highContrast: highContrast), in: Capsule())
                         .accessibilityIdentifier("question.advance.difference")
                     if advanceComparing {
                         HStack(spacing: 8) {
@@ -599,7 +601,9 @@ struct DinoExpandedQuestionView: View {
 
 /// Only the question illustration scales down; answers and tap targets keep their normal size.
 private struct DinoQuestionContext<Content: View>: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let maxHeight: CGFloat?
+    var animatesHeight = false
     @ViewBuilder var content: () -> Content
     @State private var naturalHeight: CGFloat = 0
     private var scale: CGFloat { maxHeight.map { min(1, $0 / max(1, naturalHeight)) } ?? 1 }
@@ -610,6 +614,7 @@ private struct DinoQuestionContext<Content: View>: View {
             .readGeometry(for: CGFloat.self) { $0.size.height } action: { naturalHeight = $0 }
             .scaleEffect(scale, anchor: .top)
             .frame(height: naturalHeight > 0 ? naturalHeight * scale : nil, alignment: .top)
+            .animation(animatesHeight && !reduceMotion ? .easeInOut(duration: 0.55) : nil, value: naturalHeight)
     }
 }
 
@@ -655,7 +660,8 @@ struct DinoAdvanceDifference: View {
 
     var body: some View {
         let combined = minutes / 60 > 0 && minutes % 60 > 0
-        let ink = highContrast ? DinoStyle.deepGreen : DinoStyle.green
+        let ink = DinoTimeDirection.color(later: !subtracting, highContrast: highContrast)
+        let fill = DinoTimeDirection.tint(later: !subtracting)
         let duration = "\(subtracting ? "−" : "+")\(DinoTimeWords.duration(minutes, language: language))"
         // Both branches start below the prompt clock. Their mirrored labels stay above the shafts.
         HStack(spacing: 8) {
@@ -663,15 +669,15 @@ struct DinoAdvanceDifference: View {
                 .overlay(alignment: .trailing) {
                     if let enteredMinutes {
                         let entered = "\(enteredMinutes < 0 ? "−" : "+")\(DinoTimeWords.duration(abs(enteredMinutes), language: language))"
-                        let orange = DinoStyle.wrong(highContrast)
+                        let enteredInk = DinoTimeDirection.color(later: enteredMinutes >= 0, highContrast: highContrast)
                         durationLabel(entered, combined: abs(enteredMinutes) >= 60 && !enteredMinutes.isMultiple(of: 60),
-                                      ink: orange, fill: orange)
+                                      ink: enteredInk, fill: DinoTimeDirection.tint(later: enteredMinutes >= 0))
                             .padding(.trailing, resultOffset / 2)
                             .offset(y: -labelRise)
                             .accessibilityLabel(Text(verbatim: entered))
                             .accessibilityIdentifier("\(prefix).advance.entered")
                     } else if subtracting {
-                        durationLabel(duration, combined: combined, ink: ink, fill: DinoStyle.green)
+                        durationLabel(duration, combined: combined, ink: ink, fill: fill)
                             .accessibilityIdentifier("\(prefix).advance.difference")
                     }
                 }
@@ -679,7 +685,7 @@ struct DinoAdvanceDifference: View {
             Color.clear.frame(maxWidth: .infinity)
                 .overlay(alignment: .leading) {
                     if !subtracting {
-                        durationLabel(duration, combined: combined, ink: ink, fill: DinoStyle.green)
+                        durationLabel(duration, combined: combined, ink: ink, fill: fill)
                             .padding(.leading, resultOffset / 2)
                             .offset(y: -labelRise)
                             .accessibilityIdentifier("\(prefix).advance.difference")
@@ -689,11 +695,11 @@ struct DinoAdvanceDifference: View {
         .padding(.vertical, 2)
         .background {
             DinoAdvanceArrow(horizontalOffset: resultOffset, extraHeight: resultTopInset)
-                .stroke(highContrast ? ink : DinoStyle.green,
+                .stroke(ink,
                         style: StrokeStyle(lineWidth: 2.25, lineCap: .round, lineJoin: .round))
                 .accessibilityHidden(true)
             DinoAdvanceArrow(horizontalOffset: -resultOffset, extraHeight: resultTopInset)
-                .stroke(DinoStyle.wrong(highContrast), style: StrokeStyle(lineWidth: 2.25, lineCap: .round, lineJoin: .round))
+                .stroke(DinoTimeDirection.color(later: (enteredMinutes ?? 0) >= 0, highContrast: highContrast), style: StrokeStyle(lineWidth: 2.25, lineCap: .round, lineJoin: .round))
                 .opacity(enteredMinutes == nil ? 0 : 1)
                 .accessibilityHidden(true)
         }
@@ -755,12 +761,15 @@ struct AnswerControlVisibility: ViewModifier {
 
 /// Jumps sit beside the clocks. Only the last curve ends in a triangle on its endpoint.
 private struct SequencePatternArcs: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     let frames: [CGRect]
     let label: String
     let prefix: String
     var horizontal = false
+    var later = true
 
-    private var blue: Color { Color(dinoHex: 0x2E6B9A) }
+    private var blue: Color { DinoStyle.ink }
+    private var differenceInk: Color { DinoTimeDirection.color(later: later, highContrast: highContrast) }
 
     var body: some View {
         let points = frames.map { horizontal ? CGPoint(x: $0.midX, y: $0.minY - 1) : CGPoint(x: $0.maxX + 1, y: $0.midY) }
@@ -798,11 +807,11 @@ private struct SequencePatternArcs: View {
             }
             Text(verbatim: label)
                 .font(.system(size: 15, weight: .heavy, design: .rounded))
-                .foregroundStyle(blue)
+                .foregroundStyle(differenceInk)
                 .lineLimit(1)
                 .padding(.horizontal, 7).padding(.vertical, 3)
-                .background(blue.opacity(0.12), in: Capsule())
-                .overlay(Capsule().stroke(blue.opacity(0.35), lineWidth: 1))
+                .background(DinoTimeDirection.background(later: later, highContrast: highContrast), in: Capsule())
+                .overlay(Capsule().stroke(differenceInk.opacity(highContrast ? 1 : 0.35), lineWidth: highContrast ? 2 : 1))
                 .fixedSize()
                 .position(x: (start.x + end.x) / 2, y: outerY - 12)
                 .accessibilityHidden(prefix == "demo")
@@ -832,13 +841,13 @@ private struct SequencePatternArcs: View {
             }
             Text(verbatim: label)
                 .font(.system(size: 13, weight: .heavy, design: .rounded))
-                .foregroundStyle(blue)
+                .foregroundStyle(differenceInk)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
                 .padding(.horizontal, 7)
                 .padding(.vertical, 3)
-                .background(blue.opacity(0.12), in: Capsule())
-                .overlay(Capsule().stroke(blue.opacity(0.35), lineWidth: 1))
+                .background(DinoTimeDirection.background(later: later, highContrast: highContrast), in: Capsule())
+                .overlay(Capsule().stroke(differenceInk.opacity(highContrast ? 1 : 0.35), lineWidth: highContrast ? 2 : 1))
                 .fixedSize()
                 .offset(x: outerX + 6, y: (start.y + end.y) / 2 - 12)
                 .accessibilityHidden(prefix == "demo")
@@ -941,6 +950,7 @@ private struct DinoTrainJourneyCard: View {
                         Rectangle().frame(height: highContrast ? 2 : 1.5)
                         Image(systemName: "plus")
                             .font(.system(size: 11, weight: .heavy))
+                            .foregroundStyle(DinoTimeDirection.color(later: true, highContrast: highContrast))
                     }
                     .foregroundStyle(highContrast ? DinoStyle.ink : totalInk)
                     .frame(height: 8)
@@ -1055,6 +1065,7 @@ private struct DinoTrainJourneyCard: View {
             HStack(spacing: valueSpacing) {
                 let minutes = playsArrival ? appliedMinutes : schedule.totalMinutes
                 durationColumns(hours: minutes / 60, minutes: minutes % 60, plus: true, label: addedDuration)
+                    .foregroundStyle(DinoTimeDirection.color(later: true, highContrast: highContrast))
                     .opacity(playsArrival ? 1 : 0)
                     .accessibilityHidden(!playsArrival)
                     .accessibilityIdentifier("\(prefix).schedule.added")
@@ -1281,7 +1292,6 @@ private struct DinoTrainDurationChip: Layout {
 /// Shared inks so each number on the ticket stays distinct from the gray total.
 private enum DinoFlightInk {
     static let departure = Color(dinoHex: 0x154A86)
-    static let duration = DinoStyle.deepGreen
     static let arrival = DinoStyle.deepGreen
     static let total = Color(dinoHex: 0x5E6A70)
     static let totalFill = Color(dinoHex: 0xE6EAEC)
@@ -1393,13 +1403,13 @@ private struct DinoFlightTicket: View {
                 VStack(spacing: 0) {
                     VStack(spacing: 8) {
                         factRow(title: "dino.expanded.flightDuration", systemImage: "clock",
-                                value: work.durationText(language), color: DinoFlightInk.duration, fill: DinoStyle.green,
+                                value: work.durationText(language), color: DinoTimeDirection.color(later: true, highContrast: highContrast), fill: DinoTimeDirection.positive,
                                 identifier: "\(prefix).flight.duration")
                         if work.offsetMinutes != 0 {
                             factRow(title: "dino.expanded.flightZoneDifference", systemImage: "globe",
                                     value: DinoTimeWords.zoneDifference(work.offsetMinutes, language: language),
-                                    color: work.offsetMinutes < 0 ? DinoTimeDirection.earlier : DinoStyle.deepGreen,
-                                    fill: work.offsetMinutes < 0 ? DinoTimeDirection.earlier : DinoStyle.green,
+                                    color: DinoTimeDirection.color(later: work.offsetMinutes >= 0, highContrast: highContrast),
+                                    fill: DinoTimeDirection.tint(later: work.offsetMinutes >= 0),
                                     identifier: "\(prefix).flight.zone")
                         }
                     }
@@ -1459,6 +1469,7 @@ private struct DinoFlightTicket: View {
             }
             Spacer(minLength: 8)
             Text(verbatim: work.combinedText(language))
+                .foregroundStyle(DinoTimeDirection.color(later: work.combinedMinutes >= 0, highContrast: highContrast))
                 .font(.system(size: 17, weight: .heavy, design: .rounded))
                 .monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
                 .fixedSize(horizontal: true, vertical: false)
@@ -1488,10 +1499,9 @@ private struct DinoFlightTicket: View {
 
     /// Same capsule as the time-zone walk: the icon carries the sign, the text is the amount so far.
     private var difference: some View {
-        let resting = appliedMinutes == 0
         let negative = appliedMinutes < 0
-        let ink = resting ? DinoStyle.muted : negative ? DinoTimeDirection.earlier : DinoStyle.deepGreen
-        let fill = resting ? DinoStyle.muted : negative ? DinoTimeDirection.earlier : DinoStyle.green
+        let ink = DinoTimeDirection.color(later: !negative, highContrast: highContrast)
+        let fill = DinoTimeDirection.tint(later: !negative)
         return HStack(spacing: 4) {
             Image(systemName: negative ? "minus.circle.fill" : "plus.circle.fill")
                 .font(.system(size: 15, weight: .bold))
@@ -1504,8 +1514,8 @@ private struct DinoFlightTicket: View {
         .padding(.horizontal, 10).padding(.vertical, 7)
         .fixedSize(horizontal: true, vertical: false)
         .layoutPriority(1)
-        .background(fill.opacity(resting ? 0.14 : 0.28), in: Capsule())
-        .overlay(Capsule().strokeBorder(ink.opacity(resting ? 0.28 : 0.35), lineWidth: 1))
+        .background(fill.opacity(highContrast ? 0.45 : 0.28), in: Capsule())
+        .overlay(Capsule().strokeBorder(ink.opacity(highContrast ? 1 : 0.35), lineWidth: 1))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: chipCaption))
         .accessibilityIdentifier("\(prefix).flight.difference")
@@ -1580,7 +1590,7 @@ private struct DinoFlightTicket: View {
         }
         .padding(.horizontal, 12).padding(.vertical, 7)
         .frame(maxWidth: .infinity)
-        .background(fill.opacity(0.28), in: RoundedRectangle(cornerRadius: 16))
+        .background(fill.opacity(highContrast ? 0.45 : 0.28), in: RoundedRectangle(cornerRadius: 16))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier(identifier)
     }
@@ -1936,6 +1946,7 @@ extension DinoDayPart {
 }
 
 struct DinoExpandedDemonstration: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     @EnvironmentObject private var player: DinoPlayer
     @EnvironmentObject private var settings: DinoSettings
     @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
@@ -1944,37 +1955,37 @@ struct DinoExpandedDemonstration: View {
     var worldMinutes: [Int]? = nil
     var minuteStep = 60
     let width: CGFloat
+    let height: CGFloat
     let theme: ClockTheme
     let done: () -> Void
     @State private var sample: DinoSession?
     @State private var exampleIndex = 0
 
     var body: some View {
-        VStack(spacing: 18) {
-            Label("dino.example", systemImage: "sparkles").font(.subheadline.bold()).foregroundStyle(DinoStyle.deepGreen)
-            if let sample {
-                DinoQuestionTitle(question: sample.question, fontSize: 22, speechScope: "demo")
-                    .accessibilityIdentifier("demo.title")
-                if [.timeSequence, .addTime, .subtractTime].contains(kind) {
-                    Text("dino.expanded.midnightHint").font(.footnote).multilineTextAlignment(.center)
-                        .accessibilityIdentifier(kind == .timeSequence ? "demo.sequence.hint" : "demo.arithmetic.hint")
-                }
-                DinoExpandedQuestionView(session: sample, theme: theme, width: width, clockSize: 150, isDemonstration: true)
-                    .id(sample.question.id)
-                if !kind.usesOptions && ![.sortTimes, .advanceAnalog, .sayTime].contains(kind) {
-                    Text(verbatim: answer(sample.question)).font(.system(size: 15, weight: .medium, design: .rounded))
-                        .multilineTextAlignment(.center).accessibilityIdentifier("demo.answer")
-                }
-                if kind == .daySchedule, let schedule = sample.question.daySchedule {
-                    let code = LanguageManager.shared.effective.code
-                    let parts = [schedule.firstMinutes, schedule.breakMinutes, schedule.secondMinutes]
-                        .map { DinoTimeWords.duration($0, language: code) }
-                    Text(verbatim: "\(clockText(schedule.start, kind: kind)) + \(parts.joined(separator: " + ")) = \(clockText(schedule.end, kind: kind))")
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.center)
-                        .accessibilityIdentifier("demo.schedule.calculation")
+        DinoDemonstrationCard(width: width, height: height) {
+            VStack(spacing: 18) {
+                if let sample {
+                    DinoQuestionTitle(question: sample.question, fontSize: 22, speechScope: "demo")
+                        .accessibilityIdentifier("demo.title")
+                    if [.timeSequence, .addTime, .subtractTime].contains(kind) {
+                        Text("dino.expanded.midnightHint").font(.footnote).multilineTextAlignment(.center)
+                            .accessibilityIdentifier(kind == .timeSequence ? "demo.sequence.hint" : "demo.arithmetic.hint")
+                    }
+                    DinoExpandedQuestionView(session: sample, theme: theme, width: width, clockSize: 150, isDemonstration: true)
+                        .id(sample.question.id)
+                    if !kind.usesOptions && ![.sortTimes, .advanceAnalog, .sayTime].contains(kind) {
+                        Text(verbatim: answer(sample.question)).font(.system(size: 15, weight: .medium, design: .rounded))
+                            .multilineTextAlignment(.center).accessibilityIdentifier("demo.answer")
+                    }
+                    if kind == .daySchedule, let schedule = sample.question.daySchedule {
+                        scheduleCalculation(schedule)
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.center)
+                            .accessibilityIdentifier("demo.schedule.calculation")
+                    }
                 }
             }
+        } actions: {
             DinoDemonstrationActions(done: done) {
                 var transaction = Transaction(animation: nil)
                 transaction.disablesAnimations = true
@@ -1983,10 +1994,20 @@ struct DinoExpandedDemonstration: View {
                     loadExample()
                 }
             }
-        }.frame(width: width).dinoCard()
-            .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
-            .foregroundStyle(DinoStyle.ink)
-            .onAppear { loadExample() }
+        }
+        .onAppear { loadExample() }
+    }
+
+    private func scheduleCalculation(_ schedule: DinoDaySchedule) -> Text {
+        let code = LanguageManager.shared.effective.code
+        let parts = [schedule.firstMinutes, schedule.breakMinutes, schedule.secondMinutes]
+            .map { DinoTimeWords.duration($0, language: code) }
+        let start = Text(verbatim: clockText(schedule.start, kind: kind))
+        let sum = parts.reduce(start) { text, duration in
+            text + Text(verbatim: " + \(duration)")
+                .foregroundColor(DinoTimeDirection.color(later: true, highContrast: highContrast))
+        }
+        return sum + Text(verbatim: " = \(clockText(schedule.end, kind: kind))")
     }
 
     private func loadExample() {

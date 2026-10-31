@@ -29,8 +29,7 @@ struct QuestionRenderer: View {
                 targetCard
                 analogOptions
             case .chooseDigital:
-                analogTarget
-                digitalOptions
+                digitalReadingQuestion
             case .setAnalog:
                 if pairedClocks {
                     tabletAnalogSetting
@@ -184,16 +183,22 @@ struct QuestionRenderer: View {
     }
 
     private var targetCard: some View {
-        VStack(spacing: 10) {
+        let reservesHints = question.kind == .chooseAnalog
+        return VStack(spacing: 10) {
             if let activity = question.activity {
                 Label(LocalizedStringKey(activity.titleKey), systemImage: activity.symbol)
                     .font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(DinoStyle.deepGreen)
             }
-            clockStage(height: (compactLayout ? 50 : 64) + (session.showsClockHandHints ? 48 : 0), width: question.kind == .setAnalog ? analogSettingWidth : width) {
-                DigitalClock(time: question.target, theme: theme, fontSize: width < 350 ? 32 : 38)
+            // Half the reserved helper space fits in the existing gap below the title.
+            // This keeps four answer clocks inside the phone's viewport as well.
+            clockStage(height: (compactLayout ? 50 : 64) + (reservesHints ? 24 : session.showsClockHandHints ? 48 : 0), width: question.kind == .setAnalog ? analogSettingWidth : width) {
+                DigitalClock(time: question.target, theme: theme, fontSize: width < 350 ? 32 : 38,
+                             reservesHandHintSpace: reservesHints)
+                    .padding(.top, reservesHints ? -24 : 0)
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(theme.digitalReading(question.target, languageCode: language.effective.code))
                     .accessibilityIdentifier("question.targetClock")
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: session.showsClockHandHints)
             }
         }
     }
@@ -202,6 +207,23 @@ struct QuestionRenderer: View {
         clockStage(height: targetSize) {
             AnalogClock(time: question.target, theme: theme, size: targetSize, readingHintWidth: width)
                 .accessibilityIdentifier("question.targetClock")
+        }
+    }
+
+    private var digitalReadingQuestion: some View {
+        let bounds = ClockHandHintGeometry.bounds(time: question.target, shape: theme.analogShape, faceSize: 150)
+        // Grow into the spare question area before reducing the face for its helpers.
+        // The surrounding centered stack moves the title up and the answers down.
+        let preferredHeight = session.showsClockHandHints ? targetSize * bounds.height : targetSize
+        return AnalogReadingQuestionLayout(width: width, clockHeight: targetSize,
+                                           preferredClockHeight: preferredHeight, availableHeight: availableHeight,
+                                           spacing: compactLayout ? 14 : 22) {
+            GeometryReader { geometry in
+                AnalogClock(time: question.target, theme: theme, size: geometry.size.height, readingHintWidth: width)
+                    .accessibilityIdentifier("question.targetClock")
+                    .frame(width: width, height: geometry.size.height)
+            }
+            digitalOptions
         }
     }
 
@@ -218,12 +240,17 @@ struct QuestionRenderer: View {
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 14) {
             ForEach(Array(question.options.enumerated()), id: \.offset) { index, option in
                 let wrong = session.hasFeedback && session.rejectedResponses.contains(.time(option))
+                let answered = wrong || (session.showsCorrectResponse && .time(option) == question.expectedAnswer)
                 answerButton(option: option, index: index) {
                     AnswerTimeExplanation(time: option, theme: theme, visible: wrong,
                                           fontSize: min(24, size * 0.19),
-                                          content: AnalogClock(time: option, theme: theme, size: size)
+                                          content: AnalogClock(time: option, theme: theme, size: size,
+                                                               showMinuteScale: question.kind == .chooseAnalog,
+                                                               minuteScaleVisible: !answered)
                                             .allowsHitTesting(false))
-                        .padding(8)
+                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: answered)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, question.kind == .chooseAnalog ? 6 : 8)
                         .accessibilityElement(children: .ignore)
                         .accessibilityLabel(theme.digitalReading(option, languageCode: language.effective.code))
                 }
@@ -271,6 +298,33 @@ struct QuestionRenderer: View {
     }
 }
 
+/// Measure the real answer stones so helpers can use all remaining vertical space.
+private struct AnalogReadingQuestionLayout: Layout {
+    let width: CGFloat
+    let clockHeight: CGFloat
+    let preferredClockHeight: CGFloat
+    let availableHeight: CGFloat
+    let spacing: CGFloat
+
+    private func stageHeight(answers: CGSize) -> CGFloat {
+        min(preferredClockHeight, max(clockHeight, availableHeight - answers.height - spacing))
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let answers = subviews[1].sizeThatFits(ProposedViewSize(width: width, height: nil))
+        return CGSize(width: width, height: stageHeight(answers: answers) + spacing + answers.height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let answers = subviews[1].sizeThatFits(ProposedViewSize(width: width, height: nil))
+        let height = stageHeight(answers: answers)
+        subviews[0].place(at: CGPoint(x: bounds.midX, y: bounds.minY), anchor: .top,
+                          proposal: ProposedViewSize(width: width, height: height))
+        subviews[1].place(at: CGPoint(x: bounds.midX, y: bounds.minY + height + spacing), anchor: .top,
+                          proposal: ProposedViewSize(width: width, height: answers.height))
+    }
+}
+
 /// The clock occupies the card's center until this particular answer needs its explanation.
 struct AnswerTimeExplanation<Content: View>: View {
     @Environment(\.dinoHighContrast) private var highContrast
@@ -302,14 +356,13 @@ struct AnswerTimeExplanation<Content: View>: View {
                         DigitalClock(time: time, theme: theme, fontSize: fontSize, notation: notation)
                     }
                 }
-                .offset(y: visible || reduceMotion ? 0 : 4)
             }
             .padding(.top, 4)
             .frame(maxWidth: .infinity)
             .opacity(visible ? 1 : 0)
             .accessibilityHidden(!visible)
         }
-        .animation(reduceMotion ? nil : .easeOut(duration: 0.22), value: visible)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: visible)
     }
 }
 
@@ -460,7 +513,7 @@ struct DinoAnalogClockControls: View {
                 Text(verbatim: "\(direction < 0 ? "−" : "+")\(minutes ? minuteStep : 1)")
                     .monospacedDigit()
             }
-        }.buttonStyle(DinoClockControlButtonStyle(width: 118, height: 56))
+        }.buttonStyle(DinoClockControlButtonStyle(width: 118, height: 56, timeDirection: direction > 0))
             .accessibilityIdentifier("\(prefix).analog.\(direction < 0 ? "less" : "more")")
             .scaleEffect(cue && !reduceMotion ? 0.96 : 1)
             .overlay(alignment: .bottomTrailing) { if cue { DinoClockTapCue() } }

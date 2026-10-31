@@ -42,18 +42,20 @@ struct DinoMinutesBetweenCard: View {
                         .font(.system(size: compact ? 20 : 22, weight: .heavy, design: .rounded))
                         .monospacedDigit().lineLimit(1).minimumScaleFactor(0.75)
                 }
-                .foregroundStyle(DinoStyle.deepGreen)
+                .foregroundStyle(showsAnswer ? DinoTimeDirection.color(later: minutes >= 0, highContrast: highContrast) : DinoStyle.ink)
                 .padding(.horizontal, 18).padding(.vertical, compact ? 10 : 13)
                 .background {
                     Capsule().fill(DinoStyle.paper)
                         .overlay {
-                            if showsAnswer { Capsule().fill(DinoStyle.green.opacity(0.32)) }
+                            if showsAnswer { Capsule().fill(DinoTimeDirection.background(later: minutes >= 0, highContrast: highContrast)) }
                         }
                 }
-                .overlay(Capsule().strokeBorder(DinoStyle.deepGreen.opacity(highContrast ? 1 : 0.5),
+                .overlay(Capsule().strokeBorder(DinoTimeDirection.color(later: minutes >= 0, highContrast: highContrast).opacity(highContrast ? 1 : 0.5),
                                                style: StrokeStyle(lineWidth: highContrast ? 2.5 : 1.5,
                                                                   dash: showsAnswer ? [] : [5, 4])))
                 .padding(.horizontal, 24)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(verbatim: showsAnswer ? DinoTimeWords.minutes(minutes, language: language) : "? min"))
                 .accessibilityIdentifier(isDemonstration ? "demo.answer" : "question.minutesBetween.\(showsAnswer ? "answer" : "unknown")")
             }
 
@@ -90,7 +92,9 @@ struct DinoMinutesBetweenExplanation: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Text(verbatim: "\(difference.later.digitalText) − \(difference.earlier.digitalText)")
+            (Text(verbatim: difference.later.digitalText)
+             + Text(verbatim: " − ").foregroundColor(DinoTimeDirection.color(later: false, highContrast: highContrast))
+             + Text(verbatim: difference.earlier.digitalText))
                 .font(.system(size: 19, weight: .bold, design: .rounded))
                 .accessibilityIdentifier("demo.minutesBetween.subtraction")
             if difference.borrowsHour {
@@ -106,13 +110,13 @@ struct DinoMinutesBetweenExplanation: View {
                 .accessibilityIdentifier("demo.minutesBetween.remainder")
             Text(verbatim: "\(difference.hours) × 60 + \(difference.minutes) = \(DinoTimeWords.minutes(difference.totalMinutes, language: language))")
                 .font(.system(size: 17, weight: .heavy, design: .rounded))
-                .foregroundStyle(DinoStyle.deepGreen)
+                .foregroundStyle(DinoTimeDirection.color(later: true, highContrast: highContrast))
                 .accessibilityIdentifier("demo.minutesBetween.conversion")
         }
         .monospacedDigit().multilineTextAlignment(.center)
         .fixedSize(horizontal: false, vertical: true)
         .padding(12).frame(maxWidth: .infinity)
-        .background(DinoStyle.green.opacity(0.10), in: RoundedRectangle(cornerRadius: 18))
+        .background(DinoTimeDirection.background(later: true, highContrast: highContrast), in: RoundedRectangle(cornerRadius: 18))
         .accessibilityIdentifier("demo.minutesBetween.calculation")
     }
 }

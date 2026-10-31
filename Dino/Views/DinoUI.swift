@@ -438,6 +438,25 @@ enum DinoStyle {
     }
 }
 
+/// Shared meaning for time changes, independent of answer correctness and clock themes.
+/// Match type 13: fresh green on pale green; subtraction uses the same pairing in red.
+enum DinoTimeDirection {
+    static let positive = DinoStyle.green
+    static let negative = Color(dinoHex: 0xD94A50)
+    static let deepNegative = Color(dinoHex: 0x8F2435)
+
+    static func color(later: Bool, highContrast: Bool) -> Color {
+        later ? (highContrast ? DinoStyle.deepGreen : positive)
+            : (highContrast ? deepNegative : negative)
+    }
+
+    static func tint(later: Bool) -> Color { later ? positive : negative }
+
+    static func background(later: Bool, highContrast: Bool) -> Color {
+        tint(later: later).opacity(highContrast ? 0.45 : 0.28)
+    }
+}
+
 private struct CustomizationTypeScaleKey: EnvironmentKey { static let defaultValue: CGFloat = 1 }
 private struct CustomizationMetricsKey: EnvironmentKey { static let defaultValue = CustomizationMetrics() }
 
@@ -639,24 +658,44 @@ struct DinoClockControlButtonStyle: ButtonStyle {
     /// Fixed size keeps +1 and +30 on the same button. Nil follows the label.
     var width: CGFloat? = nil
     var height: CGFloat? = nil
+    var timeDirection: Bool? = nil
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: compact ? 15 : 17, weight: .bold, design: .rounded))
-            .foregroundStyle(isEnabled ? (selected ? Color.white : DinoStyle.ink) : DinoStyle.disabledInk(highContrast))
+            .foregroundStyle(labelInk)
             .lineLimit(1)
             .padding(.horizontal, width == nil ? (compact ? 12 : 18) : 0)
             .frame(width: width, height: height)
             .frame(minHeight: height ?? (compact ? 40 : 48))
             .frame(maxWidth: expands ? .infinity : nil)
-            .background(isEnabled ? (selected ? DinoStyle.ink : .white) : DinoStyle.disabledBackground,
+            .background(backgroundFill,
                         in: RoundedRectangle(cornerRadius: cornerRadius))
             .overlay(RoundedRectangle(cornerRadius: cornerRadius)
-                .strokeBorder(isEnabled ? DinoStyle.ink.opacity(highContrast || selected ? 1 : 0.22)
-                    : highContrast ? DinoStyle.disabledInk(true) : DinoStyle.disabledBorder,
+                .strokeBorder(borderInk,
                               lineWidth: highContrast ? 3 : 1.5))
             .opacity(configuration.isPressed ? 0.85 : 1)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
+    }
+
+    private var labelInk: Color {
+        guard isEnabled else { return DinoStyle.disabledInk(highContrast) }
+        if let timeDirection { return DinoTimeDirection.color(later: timeDirection, highContrast: highContrast) }
+        return selected ? .white : DinoStyle.ink
+    }
+
+    private var backgroundFill: Color {
+        guard isEnabled else { return DinoStyle.disabledBackground }
+        if let timeDirection { return DinoTimeDirection.background(later: timeDirection, highContrast: highContrast) }
+        return selected ? DinoStyle.ink : .white
+    }
+
+    private var borderInk: Color {
+        guard isEnabled else { return highContrast ? DinoStyle.disabledInk(true) : DinoStyle.disabledBorder }
+        if let timeDirection {
+            return DinoTimeDirection.color(later: timeDirection, highContrast: highContrast).opacity(highContrast ? 1 : 0.4)
+        }
+        return DinoStyle.ink.opacity(highContrast || selected ? 1 : 0.22)
     }
 
     private var cornerRadius: CGFloat { height == nil ? 14 : 18 }
@@ -689,6 +728,7 @@ struct DinoButtonStyle: ButtonStyle {
 
 struct DinoSecondaryButtonStyle: ButtonStyle {
     @Environment(\.dinoHighContrast) private var highContrast
+    var outlined = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 17, weight: .bold, design: .rounded))
@@ -697,7 +737,8 @@ struct DinoSecondaryButtonStyle: ButtonStyle {
             .frame(minHeight: 52)
             .frame(maxWidth: .infinity)
             .background(.white.opacity(highContrast ? 1 : configuration.isPressed ? 0.6 : 0.95), in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: highContrast ? 3 : 1.5))
+            .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(DinoStyle.ink.opacity(highContrast || outlined ? 1 : 0.1),
+                                                                   lineWidth: highContrast ? 3 : outlined ? 2 : 1.5))
     }
 }
 

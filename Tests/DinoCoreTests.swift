@@ -981,6 +981,9 @@ struct DinoCoreTests {
                "crossing pointer segments still have zero clearance")
         for shape in AnalogClockShape.allCases {
             let marks = ClockHandHintGeometry.minuteMarks(shape: shape)
+            let demonstrationBounds = ClockHandHintGeometry.demonstrationBounds(shape: shape)
+            expect(abs(demonstrationBounds.midX) < 0.000_001 && abs(demonstrationBounds.midY) < 0.000_001,
+                   "example envelopes keep the clock face centred at every hand position")
             expect(marks.map(\.minute) == Array(stride(from: 0, to: 60, by: 5)),
                    "minute scale starts with zero and counts by five")
             for mark in marks {
@@ -1037,6 +1040,8 @@ struct DinoCoreTests {
                         radius: ClockHandHintGeometry.outerRadius(angle: hourAngle, shape: shape) + 0.345, angle: hourAngle)
                     let nearOverlap = hypot(expectedHourBadge.x - expectedMinuteBadge.x, expectedHourBadge.y - expectedMinuteBadge.y) < 0.235
                     let bounds = ClockHandHintGeometry.bounds(time: time, shape: shape, faceSize: 120)
+                    expect(demonstrationBounds.insetBy(dx: -0.000_001, dy: -0.000_001).contains(bounds),
+                           "the initial example envelope fits every scale, arrow and badge at \(time.digitalText)")
                     let hourBadgeShift = hypot(pointers[0].badge.x - expectedHourBadge.x, pointers[0].badge.y - expectedHourBadge.y)
                     expect(nearOverlap ? hourBadgeShift > 0.05 : hourBadgeShift < 0.000_001,
                            "hour badge sits behind its minute numeral and only moves aside near the minute badge")
@@ -1184,12 +1189,22 @@ struct DinoCoreTests {
         expect(SpokenClockReadingHint(minute: 15, language: "nl").spokenHour(for: 6) == 6, "kwart over zes circles six")
         expect(SpokenClockReadingHint(minute: 30, language: "en").spokenHour(for: 6) == 6, "half past six circles six")
         expect(SpokenClockReadingHint(minute: 45, language: "en").spokenHour(for: 23) == 12, "quarter to midnight circles twelve")
-        expect(SpokenClockGuideLayout.badgeSide(minute: 45, atEnd: false) == CGPoint(x: 0, y: -1),
-               "quarter to starts from the top midpoint of its circle")
-        expect(SpokenClockGuideLayout.badgeSide(minute: 20, atEnd: false) == CGPoint(x: 0, y: 1),
-               "Dutch ten before half leaves the bottom midpoint")
-        expect(SpokenClockGuideLayout.badgeSide(minute: 20, atEnd: true) == CGPoint(x: 0, y: -1),
-               "English twenty past reaches the top midpoint at the same minute")
+        for minute in 0..<60 {
+            for atEnd in [false, true] {
+                for radius in [0.7, 0.85, 1.0] {
+                    let attachment = SpokenClockCircleAttachment(arcRadius: radius, badgeRadius: 0.07,
+                                                                 minute: minute, atEnd: atEnd)
+                    let p = attachment.contact, c = attachment.badgeCenter
+                    let dx = c.x - p.x, dy = c.y - p.y
+                    expect(abs(hypot(p.x, p.y) - radius) < 1e-10, "the contact stays on the exact clock-centred circle")
+                    expect(abs(hypot(dx, dy) - 0.07) < 1e-10, "the arc touches the badge rim exactly")
+                    expect(abs(p.x * dx + p.y * dy) < 1e-10, "the arc tangent goes through the badge centre without a kink")
+                    let angle = attachment.contactMinute * .pi / 30
+                    let alignment = cos(angle) * dx + sin(angle) * dy
+                    expect(atEnd ? alignment > 0 : alignment < 0, "the tangent faces the correct side for past/to")
+                }
+            }
+        }
         let beforeHalf = SpokenClockReadingHint(minute: 20, language: "nl")
         expect(beforeHalf.scaleLabel == "10" && beforeHalf.startMinute == 20 && beforeHalf.endMinute == 30
                && beforeHalf.relation == "voor half", "Dutch twenty connects ten-before-half to half")

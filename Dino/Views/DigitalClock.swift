@@ -68,12 +68,14 @@ struct DigitalClock: View {
     var fontSize: CGFloat = 42
     var showsDisplay = true
     var showHandHints = false
+    /// Keep the display and the surrounding question still when reading help appears.
+    var reservesHandHintSpace = false
     var exposesControlFields = false
     /// Lessons that teach the 24-hour clock keep those digits even when the player prefers 12-hour time.
     var notation: DigitalHourNotation? = nil
     var feedbackCorrect: Bool? = nil
     private var displaysHandHints: Bool { showHandHints || readingAssistance }
-    private var hintHeight: CGFloat { displaysHandHints ? 48 * min(1, fontSize / 30) : 0 }
+    private var hintHeight: CGFloat { displaysHandHints || reservesHandHintSpace ? 48 * min(1, fontSize / 30) : 0 }
     private var reading: DigitalClockReading {
         time.digitalReading(notation: notation ?? theme.resolvedHourNotation(device: deviceHourFormat.notation),
                             languageCode: language.effective.code)
@@ -386,7 +388,7 @@ struct DigitalClockControl: View {
         return Button { adjust(direction, minutes: minutes) } label: {
             Image(systemName: direction > 0 ? "chevron.up" : "chevron.down")
                 .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(enabled ? DinoStyle.ink.opacity(highContrast ? 1 : 0.75) : DinoStyle.disabledInk(highContrast))
+                .foregroundStyle(enabled ? DinoTimeDirection.color(later: direction > 0, highContrast: highContrast) : DinoStyle.disabledInk(highContrast))
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }

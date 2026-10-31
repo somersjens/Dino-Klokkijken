@@ -70,7 +70,7 @@ De eerste start volgt de apparaatstaal en opent bij **Maak jouw dino** met vier 
 
 Vraagtype **16 – Bereken het verschil in minuten** toont twee persoonlijke digitale klokken in een afgeronde kaart met een groene tijdlijn. De speler kiest uit vier aantallen minuten; ook hele uren worden als minuten getoond. Beide klokken volgen de gekozen tijdsoort en vallen op dezelfde dag, met een verschil tot drie uur. Het voorbeeld toont de uitkomst in de tijdlijn en kan worden vernieuwd. Het type is beschikbaar als losse oefening, in **Oplopend** en in **Mix**, met een eigen oefenrecord. [Uitwerking en controles](Documentation/MinutesBetweenVerification.md).
 
-Vraagtype **17 – Maak de tijdreeks af** toont de tijdsverschilhelpers al na het eerste foute antwoord, ook bij vier antwoordopties. De overige keuzes blijven beschikbaar. Tussenpijlen, verklarende boogpijlen en tijdsverschillen gebruiken de blauwe uitlegkleur **#2E6B9A**, ook in het voorbeeld.
+Vraagtype **17 – Maak de tijdreeks af** toont de tijdsverschilhelpers al na het eerste foute antwoord, ook bij vier antwoordopties. De overige keuzes blijven beschikbaar. Tussenpijlen en verklarende boogpijlen gebruiken hetzelfde donkerblauw als het vraagteken (**#193B53**), ook in het voorbeeld. Positieve tijdsverschillen gebruiken het frisse groen van type 13 (**#81D349**) op zachtgroen; negatieve verschillen gebruiken rood (**#D94A50**) op lichtrood. De gedeelde kleuren in `DinoTimeDirection` gelden ook voor plus/min, eerder/later, vooruit en voor/achter bij tijdzones, rekenuitleg, de trein en vluchten. Hoog contrast gebruikt de bijbehorende donkere groen- en roodtinten.
 
 ## Project en opslag
 

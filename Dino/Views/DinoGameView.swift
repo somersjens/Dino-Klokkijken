@@ -30,6 +30,9 @@ struct DinoGameView: View {
             let questionViewport = max(0, g.size.height - hudHeight - footerHeight - sectionSpacing * 2)
             let playHeight = max(0, questionViewport - (session.level.isBoss ? 40 : 0))
             let short = tablet ? questionViewport < 560 : g.size.height < 700
+            let expandsReadingClock = session.question.kind == .chooseDigital && session.showsClockHandHints
+            let questionPadding: CGFloat = short || expandsReadingClock ? 12 : 20
+            let readingClockSpace: CGFloat = expandsReadingClock && !short ? 16 : 0
             let interactiveClock = wide && [.setAnalog, .advanceAnalog].contains(session.question.kind)
             let clockSize = min(tablet ? 240 : 210, width * 0.54,
                                 max(tablet ? 136 : 160, tablet ? playHeight * (interactiveClock ? 0.42 : 0.33) : g.size.height * 0.28))
@@ -62,9 +65,9 @@ struct DinoGameView: View {
                                         .frame(maxWidth: .infinity)
                                         .id("question.top")
                                     QuestionRenderer(session: session, theme: player.profile.clockTheme, width: width, clockSize: clockSize, wideLayout: wide, compactLayout: short, answerClockSize: answerClockSize,
-                                                     availableHeight: max(180, questionViewport - (session.level.isBoss ? 140 : 100)),
+                                                     availableHeight: max(180, questionViewport - (session.level.isBoss ? 140 : 100) + readingClockSpace),
                                                      horizontalSequence: tablet && g.size.width > g.size.height)
-                                }.padding(.vertical, short ? 12 : 20).frame(width: width)
+                                }.padding(.vertical, questionPadding).frame(width: width)
                                     .fixedSize(horizontal: false, vertical: true)
                                     .frame(maxWidth: .infinity)
                                     .modifier(ShortScrollCentering(height: tablet ? 0 : questionViewport))
@@ -119,15 +122,12 @@ struct DinoGameView: View {
                     .disabled(confirmExit || session.demonstration != nil).accessibilityHidden(confirmExit || session.demonstration != nil)
                 if let kind = session.demonstration {
                     Color.black.opacity(0.28).ignoresSafeArea()
-                    ScrollView {
-                        InteractionDemonstration(kind: kind, theme: player.profile.clockTheme, minuteStep: session.minuteStep,
-                                                 practiceTime: session.practice?.time ?? session.question.timeFamily,
-                                                 worldMinutes: session.practice == nil ? session.question.timeFamily.minutes : nil,
-                                                 width: min(380, max(230, g.size.width - 80)), done: session.dismissDemonstration)
-                            .padding(16)
-                    }.bouncesOnlyWhenNeeded()
-                        .centersShortContent()
-                        .frame(maxWidth: 480, maxHeight: g.size.height - 24)
+                    InteractionDemonstration(kind: kind, theme: player.profile.clockTheme, minuteStep: session.minuteStep,
+                                             practiceTime: session.practice?.time ?? session.question.timeFamily,
+                                             worldMinutes: session.practice == nil ? session.question.timeFamily.minutes : nil,
+                                             width: min(380, max(230, g.size.width - 80)),
+                                             height: min(800, max(240, g.size.height - 56)),
+                                             done: session.dismissDemonstration)
                         .transition(.scale.combined(with: .opacity))
                 }
                 if confirmExit {
@@ -431,6 +431,7 @@ struct InteractionDemonstration: View {
     var practiceTime: DinoPracticeTime = .whole
     var worldMinutes: [Int]? = nil
     var width: CGFloat = 280
+    var height: CGFloat = 700
     var done: () -> Void
     @State private var exampleHour = 3
     @State private var exampleMinute = 0
@@ -451,64 +452,66 @@ struct InteractionDemonstration: View {
     }
     var body: some View {
         if kind == .setAnalog {
-            DinoAnalogSettingDemonstration(theme: theme, minuteStep: minuteStep, minutes: minutes, width: width, done: done)
+            DinoAnalogSettingDemonstration(theme: theme, minuteStep: minuteStep, minutes: minutes, width: width, height: height, done: done)
         } else if kind == .advanceAnalog {
-            DinoAnalogAdvanceDemonstration(theme: theme, minuteStep: minuteStep, minutes: minutes, width: width, done: done)
+            DinoAnalogAdvanceDemonstration(theme: theme, minuteStep: minuteStep, minutes: minutes, width: width, height: height, done: done)
         } else if kind.isExpanded {
             DinoExpandedDemonstration(kind: kind, time: practiceTime, worldMinutes: worldMinutes,
-                                      minuteStep: minuteStep, width: width, theme: theme, done: done)
+                                      minuteStep: minuteStep, width: width, height: height, theme: theme, done: done)
         } else { originalExample }
     }
     private var exampleAnalogSize: CGFloat {
         guard kind.clockHelpStyle == .numberedHands else { return min(170, width) }
-        let bounds = ClockHandHintGeometry.bounds(time: exampleTime, shape: theme.analogShape, faceSize: 150)
+        let bounds = ClockHandHintGeometry.demonstrationBounds(shape: theme.analogShape)
         return min(170, width / bounds.width)
     }
 
     private var originalExample: some View {
-        VStack(spacing: 14) {
-            Label("dino.example", systemImage: "sparkles").font(.system(size: 13, weight: .heavy, design: .rounded)).foregroundStyle(DinoStyle.green)
-            if kind == .chooseAnalog || kind == .activity {
-                DinoQuestionTitle(question: examplePrompt, fontSize: 24, speechScope: "demo")
-                    .accessibilityIdentifier("demo.title")
-            } else {
-                Text(LocalizedStringKey(minuteStep < 60 && kind == .setDigital ? "dino.practice.\(kind.rawValue)" : kind.instructionKey))
-                    .font(.system(size: 24, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
-                    .speakQuestionTitle(L(key: minuteStep < 60 && kind == .setDigital ? "dino.practice.\(kind.rawValue)" : kind.instructionKey),
-                                        identity: "demo-\(kind.rawValue)-\(exampleIndex)")
-                    .accessibilityIdentifier("demo.title")
-            }
-            if kind == .activity {
-                let activity = DinoDemonstrationExamples.activity(index: exampleIndex)
-                Label(LocalizedStringKey(activity.titleKey), systemImage: activity.symbol)
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-            }
-            if kind == .match {
-                ClockMatchingBoard(times: matchingQuestion.relatedTimes, options: matchingQuestion.options,
-                                   selections: $matchingSelections, theme: theme, width: width, isDemonstration: true)
-                    .id(exampleIndex)
-            } else {
-                AnalogClock(time: exampleTime, theme: theme,
-                            size: exampleAnalogSize, showHandHints: kind.clockHelpStyle == .numberedHands)
-                    .accessibilityIdentifier("demo.analog")
-                if kind == .setDigital {
-                    DigitalClockControl(hour: $exampleHour,
-                                        theme: theme, minute: exampleMinute, fontSize: min(38, width * 0.14),
-                                        onMinuteChange: { exampleMinute = $0 }, minuteStep: minuteStep,
-                                        valueIdentifier: "demo.digital", showHandHints: kind.clockHelpStyle == .numberedHands)
-                    Text("dino.clock.arrowControls").font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .multilineTextAlignment(.center)
+        DinoDemonstrationCard(width: width, height: height) {
+            VStack(spacing: 14) {
+                if kind == .chooseAnalog || kind == .activity {
+                    DinoQuestionTitle(question: examplePrompt, fontSize: 24, speechScope: "demo")
+                        .accessibilityIdentifier("demo.title")
                 } else {
-                    DigitalClock(time: ClockTime(hour: exampleHour, minute: exampleMinute), theme: theme, fontSize: 30,
-                                 showHandHints: kind.clockHelpStyle == .numberedHands)
-                        .accessibilityIdentifier("demo.digital")
+                    Text(LocalizedStringKey(minuteStep < 60 && kind == .setDigital ? "dino.practice.\(kind.rawValue)" : kind.instructionKey))
+                        .font(.system(size: 24, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
+                        .speakQuestionTitle(L(key: minuteStep < 60 && kind == .setDigital ? "dino.practice.\(kind.rawValue)" : kind.instructionKey),
+                                            identity: "demo-\(kind.rawValue)-\(exampleIndex)")
+                        .accessibilityIdentifier("demo.title")
+                }
+                if kind == .activity {
+                    let activity = DinoDemonstrationExamples.activity(index: exampleIndex)
+                    Label(LocalizedStringKey(activity.titleKey), systemImage: activity.symbol)
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                }
+                if kind == .match {
+                    ClockMatchingBoard(times: matchingQuestion.relatedTimes, options: matchingQuestion.options,
+                                       selections: $matchingSelections, theme: theme, width: width, isDemonstration: true)
+                        .id(exampleIndex)
+                } else {
+                    AnalogClock(time: exampleTime, theme: theme,
+                                size: exampleAnalogSize, showHandHints: kind.clockHelpStyle == .numberedHands,
+                                readingHintBounds: kind.clockHelpStyle == .numberedHands
+                                    ? ClockHandHintGeometry.demonstrationBounds(shape: theme.analogShape) : nil)
+                        .accessibilityIdentifier("demo.analog")
+                    if kind == .setDigital {
+                        DigitalClockControl(hour: $exampleHour,
+                                            theme: theme, minute: exampleMinute, fontSize: min(38, width * 0.14),
+                                            onMinuteChange: { exampleMinute = $0 }, minuteStep: minuteStep,
+                                            valueIdentifier: "demo.digital", showHandHints: kind.clockHelpStyle == .numberedHands)
+                        Text("dino.clock.arrowControls").font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .multilineTextAlignment(.center)
+                    } else {
+                        DigitalClock(time: ClockTime(hour: exampleHour, minute: exampleMinute), theme: theme, fontSize: 30,
+                                     showHandHints: kind.clockHelpStyle == .numberedHands)
+                            .accessibilityIdentifier("demo.digital")
+                    }
                 }
             }
+        } actions: {
             DinoDemonstrationActions(done: done, another: nextExample)
-        }.frame(width: width).dinoCard()
-            .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
-            .foregroundStyle(DinoStyle.ink)
-            .onAppear { resetExample() }
+        }
+        .onAppear { resetExample() }
     }
 
     private func nextExample() {
@@ -530,6 +533,7 @@ struct DinoAnalogSettingDemonstration: View {
     let minuteStep: Int
     let minutes: [Int]
     let width: CGFloat
+    let height: CGFloat
     let done: () -> Void
     @State private var exampleIndex = 0
     @State private var time = ClockTime(hour: 9)
@@ -547,59 +551,60 @@ struct DinoAnalogSettingDemonstration: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
-            Label("dino.example", systemImage: "sparkles")
-                .font(.system(size: 13, weight: .heavy, design: .rounded)).foregroundStyle(DinoStyle.green)
-            Text("dino.question.setAnalog")
-                .font(.system(size: 21, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
-                .speakQuestionTitle(L(key: "dino.question.setAnalog"), identity: "demo-setAnalog-\(exampleIndex)")
-                .accessibilityIdentifier("demo.title")
-            DigitalClock(time: script.target, theme: theme, fontSize: min(32, width * 0.1))
-                .accessibilityIdentifier("demo.digital")
-            AnalogClock(time: time, theme: theme, size: min(180, width * 0.57),
-                        onHourChange: { hour in
-                            stopDemonstration()
-                            time = ClockTime(hour: hour, minute: time.minute)
-                        },
-                        onMinuteChange: minuteStep < 60 ? { next in stopDemonstration(); time = next } : nil,
-                        minuteStep: handStep, adjustingMinutes: adjustingMinutes,
-                        onHandSelection: { stopDemonstration(); adjustingMinutes = $0 },
-                        displayedHourAngle: manuallyAdjusting ? nil : hourAngle,
-                        displayedMinuteAngle: manuallyAdjusting ? nil : minuteAngle)
-                .padding(6)
-                .modifier(ClockAnswerOutline(visible: confirmed, correct: true))
-                .accessibilityIdentifier("demo.analog")
-            DinoAnalogClockControls(adjustingMinutes: Binding(get: { adjustingMinutes }, set: {
-                stopDemonstration()
-                adjustingMinutes = $0
-            }), allowsMinutes: minuteStep < 60, minuteStep: handStep, prefix: "demo",
-                                    demonstratedAction: demonstratedAction) { direction in
-                stopDemonstration()
-                time = script.applying(.adjust(direction), to: time, adjustingMinutes: adjustingMinutes)
+        DinoDemonstrationCard(width: width, height: height) {
+            VStack(spacing: 12) {
+                Text("dino.question.setAnalog")
+                    .font(.system(size: 21, weight: .heavy, design: .rounded)).multilineTextAlignment(.center)
+                    .speakQuestionTitle(L(key: "dino.question.setAnalog"), identity: "demo-setAnalog-\(exampleIndex)")
+                    .accessibilityIdentifier("demo.title")
+                DigitalClock(time: script.target, theme: theme, fontSize: min(32, width * 0.1))
+                    .accessibilityIdentifier("demo.digital")
+                AnalogClock(time: time, theme: theme, size: min(180, width * 0.57),
+                            onHourChange: { hour in
+                                stopDemonstration()
+                                time = ClockTime(hour: hour, minute: time.minute)
+                            },
+                            onMinuteChange: minuteStep < 60 ? { next in stopDemonstration(); time = next } : nil,
+                            minuteStep: handStep, adjustingMinutes: adjustingMinutes,
+                            onHandSelection: { stopDemonstration(); adjustingMinutes = $0 },
+                            displayedHourAngle: manuallyAdjusting ? nil : hourAngle,
+                            displayedMinuteAngle: manuallyAdjusting ? nil : minuteAngle)
+                    .padding(6)
+                    .modifier(ClockAnswerOutline(visible: confirmed, correct: true))
+                    .accessibilityIdentifier("demo.analog")
+                DinoAnalogClockControls(adjustingMinutes: Binding(get: { adjustingMinutes }, set: {
+                    stopDemonstration()
+                    adjustingMinutes = $0
+                }), allowsMinutes: minuteStep < 60, minuteStep: handStep, prefix: "demo",
+                                        demonstratedAction: demonstratedAction) { direction in
+                    stopDemonstration()
+                    time = script.applying(.adjust(direction), to: time, adjustingMinutes: adjustingMinutes)
+                }
             }
-            DinoDemonstrationActions(showsReady: false, done: done) {
-                // Reset synchronously so the next frame never shows the previous answer.
-                exampleIndex = (exampleIndex + 1) % (12 * minutes.count)
-                reset()
+        } actions: {
+            VStack(spacing: 12) {
+                DinoDemonstrationActions(showsReady: false, done: done) {
+                    // Reset synchronously so the next frame never shows the previous answer.
+                    exampleIndex = (exampleIndex + 1) % (12 * minutes.count)
+                    reset()
+                }
+                Button {
+                    // The script hides the separate ready button. Leaving while it is still
+                    // playing has to dismiss the example, or the player cannot close it.
+                    if confirmed || !manuallyAdjusting { done() }
+                    else { confirmed = time == script.target }
+                } label: {
+                    Label(LocalizedStringKey(confirmed ? "dino.ready" : "dino.clock.check"), systemImage: "checkmark")
+                        .lineLimit(1).minimumScaleFactor(0.75)
+                        .opacityTextTransition()
+                }.buttonStyle(DinoClockControlButtonStyle())
+                    .padding(.top, 12)
+                    .accessibilityIdentifier(confirmed ? "demo.ready" : "demo.confirm")
+                    .overlay(alignment: .bottomTrailing) { if demonstratedAction == .confirm { DinoClockTapCue() } }
             }
-            Button {
-                // The script hides the separate ready button. Leaving while it is still
-                // playing has to dismiss the example, or the player cannot close it.
-                if confirmed || !manuallyAdjusting { done() }
-                else { confirmed = time == script.target }
-            } label: {
-                Label(LocalizedStringKey(confirmed ? "dino.ready" : "dino.clock.check"), systemImage: "checkmark")
-                    .lineLimit(1).minimumScaleFactor(0.75)
-                    .opacityTextTransition()
-            }.buttonStyle(DinoClockControlButtonStyle())
-                .padding(.top, 12)
-                .accessibilityIdentifier(confirmed ? "demo.ready" : "demo.confirm")
-                .overlay(alignment: .bottomTrailing) { if demonstratedAction == .confirm { DinoClockTapCue() } }
-        }.frame(width: width).dinoCard()
-            .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
-            .foregroundStyle(DinoStyle.ink)
-            .onAppear { reset() }
-            .task(id: exampleIndex) { await demonstrate() }
+        }
+        .onAppear { reset() }
+        .task(id: exampleIndex) { await demonstrate() }
     }
 
     private func reset() {
@@ -658,6 +663,7 @@ struct DinoAnalogAdvanceDemonstration: View {
     let minuteStep: Int
     let minutes: [Int]
     let width: CGFloat
+    let height: CGFloat
     let done: () -> Void
     @State private var exampleIndex = 0
     @State private var previousTarget: ClockTime?
@@ -676,55 +682,54 @@ struct DinoAnalogAdvanceDemonstration: View {
     private var playFace: CGFloat { min(160, max(120, width - 24)) }
 
     var body: some View {
-        VStack(spacing: 12) {
-            Label("dino.example", systemImage: "sparkles")
-                .font(.system(size: 13, weight: .heavy, design: .rounded)).foregroundStyle(DinoStyle.green)
-            DinoQuestionTitle(question: question, speechScope: "demo")
-                .accessibilityIdentifier("demo.title")
-            DinoAnalogAdvanceLayout(start: script.start, theme: theme, durationMinutes: question.durationMinutes,
-                                    language: language.effective.code, playSize: playFace,
-                                    prefix: "demo", startIdentifier: "demo.startClock") {
-                AnalogClock(time: time, theme: theme, size: playFace,
-                            onHourChange: { hour in
-                                stopDemonstration()
-                                time = ClockTime(hour: hour, minute: time.minute)
-                            },
-                            onMinuteChange: minuteStep < 60 ? { next in stopDemonstration(); time = next } : nil,
-                            minuteStep: handStep, adjustingMinutes: adjustingMinutes,
-                            onHandSelection: { stopDemonstration(); adjustingMinutes = $0 },
-                            displayedHourAngle: manuallyAdjusting ? nil : hourAngle,
-                            displayedMinuteAngle: manuallyAdjusting ? nil : minuteAngle)
-                    .padding(4)
-                    .modifier(ClockAnswerOutline(visible: confirmed, correct: true))
-                    .accessibilityIdentifier("demo.analog")
+        DinoDemonstrationCard(width: width, height: height) {
+            VStack(spacing: 12) {
+                DinoQuestionTitle(question: question, speechScope: "demo")
+                    .accessibilityIdentifier("demo.title")
+                DinoAnalogAdvanceLayout(start: script.start, theme: theme, durationMinutes: question.durationMinutes,
+                                        language: language.effective.code, playSize: playFace,
+                                        prefix: "demo", startIdentifier: "demo.startClock") {
+                    AnalogClock(time: time, theme: theme, size: playFace,
+                                onHourChange: { hour in
+                                    stopDemonstration()
+                                    time = ClockTime(hour: hour, minute: time.minute)
+                                },
+                                onMinuteChange: minuteStep < 60 ? { next in stopDemonstration(); time = next } : nil,
+                                minuteStep: handStep, adjustingMinutes: adjustingMinutes,
+                                onHandSelection: { stopDemonstration(); adjustingMinutes = $0 },
+                                displayedHourAngle: manuallyAdjusting ? nil : hourAngle,
+                                displayedMinuteAngle: manuallyAdjusting ? nil : minuteAngle)
+                        .padding(4)
+                        .modifier(ClockAnswerOutline(visible: confirmed, correct: true))
+                        .accessibilityIdentifier("demo.analog")
+                }
+                DinoAnalogClockControls(adjustingMinutes: Binding(get: { adjustingMinutes }, set: {
+                    stopDemonstration()
+                    adjustingMinutes = $0
+                }), allowsMinutes: minuteStep < 60, minuteStep: handStep, prefix: "demo",
+                                        demonstratedAction: demonstratedAction) { direction in
+                    stopDemonstration()
+                    time = script.applying(.adjust(direction), to: time, adjustingMinutes: adjustingMinutes)
+                }
+                Button {
+                    stopDemonstration()
+                    confirmed = time == script.target
+                } label: {
+                    Label("dino.clock.check", systemImage: "checkmark")
+                        .lineLimit(1).minimumScaleFactor(0.75)
+                }.buttonStyle(DinoClockControlButtonStyle())
+                    .accessibilityIdentifier("demo.confirm")
+                    .overlay(alignment: .bottomTrailing) { if demonstratedAction == .confirm { DinoClockTapCue() } }
             }
-            DinoAnalogClockControls(adjustingMinutes: Binding(get: { adjustingMinutes }, set: {
-                stopDemonstration()
-                adjustingMinutes = $0
-            }), allowsMinutes: minuteStep < 60, minuteStep: handStep, prefix: "demo",
-                                    demonstratedAction: demonstratedAction) { direction in
-                stopDemonstration()
-                time = script.applying(.adjust(direction), to: time, adjustingMinutes: adjustingMinutes)
-            }
-            Button {
-                stopDemonstration()
-                confirmed = time == script.target
-            } label: {
-                Label("dino.clock.check", systemImage: "checkmark")
-                    .lineLimit(1).minimumScaleFactor(0.75)
-            }.buttonStyle(DinoClockControlButtonStyle())
-                .accessibilityIdentifier("demo.confirm")
-                .overlay(alignment: .bottomTrailing) { if demonstratedAction == .confirm { DinoClockTapCue() } }
+        } actions: {
             DinoDemonstrationActions(done: done) {
                 exampleIndex = (exampleIndex + 1) % 10_000
                 previousTarget = question.target
                 reset()
             }
-        }.frame(width: width).dinoCard()
-            .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
-            .foregroundStyle(DinoStyle.ink)
-            .onAppear { reset() }
-            .task(id: exampleIndex) { await demonstrate() }
+        }
+        .onAppear { reset() }
+        .task(id: exampleIndex) { await demonstrate() }
     }
 
     private func reset() {
@@ -868,6 +873,7 @@ private struct DinoTrueFalseQuestionTitle: View {
 }
 
 struct DinoQuestionTitle: View {
+    @Environment(\.dinoHighContrast) private var highContrast
     @ObservedObject private var language = LanguageManager.shared
     let question: ClockQuestion
     var instructionKey: String? = nil
@@ -913,9 +919,9 @@ struct DinoQuestionTitle: View {
         case .plain:
             return DinoStyle.ink
         case .forward:
-            return DinoStyle.deepGreen
+            return DinoTimeDirection.color(later: true, highContrast: highContrast)
         case .backward:
-            return DinoStyle.warning
+            return DinoTimeDirection.color(later: false, highContrast: highContrast)
         }
     }
 }
@@ -950,6 +956,43 @@ private struct SpokenQuestionTitle: ViewModifier {
     }
 }
 
+/// Keep the modal's geometry independent of its current example. Only the lesson
+/// scrolls when a title, guide or worked answer needs more than the reserved space.
+struct DinoDemonstrationCard<Content: View, Actions: View>: View {
+    let width: CGFloat
+    let height: CGFloat
+    @ViewBuilder var content: () -> Content
+    @ViewBuilder var actions: () -> Actions
+
+    var body: some View {
+        VStack(spacing: 14) {
+            HStack(spacing: 8) {
+                Image(systemName: "sparkles").accessibilityHidden(true)
+                Text("dino.example").accessibilityIdentifier("demo.heading")
+                Image(systemName: "sparkles").accessibilityHidden(true)
+            }
+            .font(.system(size: 13, weight: .heavy, design: .rounded))
+            .foregroundStyle(DinoStyle.green)
+            .frame(maxWidth: .infinity)
+            ScrollView {
+                content()
+                    .frame(width: width)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.vertical, 8)
+            }
+            .bouncesOnlyWhenNeeded()
+            .centersShortContent()
+            .clipped()
+            .accessibilityIdentifier("demo.content")
+            actions().fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(width: width, height: height - 40)
+        .dinoCard()
+        .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
+        .foregroundStyle(DinoStyle.ink)
+    }
+}
+
 struct DinoDemonstrationActions: View {
     var showsReady = true
     let done: () -> Void
@@ -957,9 +1000,12 @@ struct DinoDemonstrationActions: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            Button(action: another) { Label("dino.example.another", systemImage: "arrow.clockwise") }
-                .multilineTextAlignment(.center).buttonStyle(DinoSecondaryButtonStyle())
-                .overlay(RoundedRectangle(cornerRadius: 18).stroke(DinoStyle.ink, lineWidth: 2))
+            Button {
+                var transaction = Transaction(animation: nil)
+                transaction.disablesAnimations = true
+                withTransaction(transaction, another)
+            } label: { Label("dino.example.another", systemImage: "arrow.clockwise") }
+                .multilineTextAlignment(.center).buttonStyle(DinoSecondaryButtonStyle(outlined: true))
                 .accessibilityIdentifier("demo.nextExample")
             if showsReady {
                 Button(action: done) { Label("dino.ready", systemImage: "checkmark") }
