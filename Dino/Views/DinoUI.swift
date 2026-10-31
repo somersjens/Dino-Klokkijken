@@ -725,7 +725,9 @@ struct DinoSecondaryButtonStyle: ButtonStyle {
 /// Disabled choices retain their contrast so the child can inspect the answer.
 struct DinoAnswerButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.scaleEffect(configuration.isPressed ? 0.98 : 1)
+        // Press feedback must not add a second transform while a rejected answer's
+        // contents and its siblings animate into their reading-help layout.
+        configuration.label.opacity(configuration.isPressed ? 0.85 : 1)
     }
 }
 

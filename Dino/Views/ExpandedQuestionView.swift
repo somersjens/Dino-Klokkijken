@@ -298,7 +298,11 @@ struct DinoExpandedQuestionView: View {
                     }
                     return ""
                 }()
-                Button { session.submit(response) } label: {
+                Button {
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
+                        session.submit(response)
+                    }
+                } label: {
                     Group {
                         if q.kind == .spokenTime, case .time(let time) = response {
                             DinoSpokenAnswerClock(time: time, theme: theme, language: code,

@@ -936,8 +936,20 @@ final class DinoUITests: XCTestCase {
             XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 5))
             XCTAssertEqual(title.frame.minY, titleFrame.minY, accuracy: 1, "Feedback must not recenter the question")
             if app.frame.width < 664 {
-                XCTAssertEqual(target.frame.minY, targetFrame.minY, accuracy: 1)
-                XCTAssertEqual(target.frame.width, targetFrame.width, accuracy: 1, "The prompt clock keeps its size")
+                if kind == .setAnalog {
+                    XCTAssertEqual(target.frame.maxY, targetFrame.maxY, accuracy: 1,
+                                   "Pointers extend above the digital target without moving its display")
+                } else {
+                    XCTAssertEqual(target.frame.minY, targetFrame.minY, accuracy: 1)
+                }
+                if kind == .setDigital {
+                    // The analog target fits its new pointers inside the same height;
+                    // their horizontal reach is part of its accessibility frame.
+                    XCTAssertEqual(target.frame.height, targetFrame.height, accuracy: 1)
+                    XCTAssertLessThanOrEqual(target.frame.width, app.scrollViews["game.questions"].frame.width)
+                } else {
+                    XCTAssertEqual(target.frame.width, targetFrame.width, accuracy: 1, "The prompt clock keeps its size")
+                }
             }
             XCTAssertEqual(control.label, submittedValue, "The submitted clock keeps its value")
             XCTAssertEqual(app.descendants(matching: .any).matching(identifier: controlID).count, 1)
@@ -962,7 +974,14 @@ final class DinoUITests: XCTestCase {
                 XCTAssertLessThan(entered.frame.maxY, control.frame.minY)
                 XCTAssertLessThan(difference.frame.maxY, correct.frame.minY)
             } else {
-                XCTAssertEqual(control.frame.midY, controlFrame.midY, accuracy: 1, "The submitted clock does not rise from below")
+                if kind == .setDigital {
+                    // Numbered pointers extend the accessible readout upward;
+                    // its bottom edge follows the actual display baseline.
+                    XCTAssertEqual(control.frame.maxY, controlFrame.maxY, accuracy: 4.1,
+                                   "The display stays in place within its four-point feedback outline")
+                } else {
+                    XCTAssertEqual(control.frame.midY, controlFrame.midY, accuracy: 1, "The submitted clock does not rise from below")
+                }
                 XCTAssertLessThan(control.frame.midX, correct.frame.midX)
             }
             XCTAssertTrue(correct.frame.intersects(app.scrollViews["game.questions"].frame))
@@ -970,6 +989,59 @@ final class DinoUITests: XCTestCase {
             tap("question.next")
             XCTAssertTrue(app.buttons["question.confirm"].waitForExistence(timeout: 5))
             tap("header.pause")
+        }
+    }
+
+    func testWrongAnswerLayoutAcrossQuestionTypes() {
+        continueAfterFailure = true
+        defer { continueAfterFailure = false }
+        for type in DinoPracticeQuestion.allCases {
+            app.terminate()
+            app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.wrong-layout.\(UUID().uuidString)"
+            app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+            app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = type.rawValue
+            app.launchEnvironment["DINO_TEST_PRACTICE_CHALLENGE"] = "1"
+            app.launch()
+            XCTAssertTrue(app.staticTexts["question.title"].waitForExistence(timeout: 10))
+            var generator = DinoPracticeGenerator(configuration: .init(time: .minutes, order: .specific(type)), seed: seed)
+            let question = generator.next(index: 3, difficultyForKind: { _ in .challenge })
+            saveScreenshot("wrong-layout-\(type.rawValue)-before")
+            if type == .setDigital {
+                XCTAssertTrue(app.buttons["clock.hour.more"].isHittable)
+                XCTAssertTrue(app.buttons["clock.minute.less"].isHittable)
+            }
+            answerPracticeWrong(question)
+            let next = app.buttons["question.next"]
+            XCTAssertTrue(next.isHittable, "\(type): Next remains reachable after a wrong answer")
+            if [.chooseAnalog, .setAnalog].contains(type) {
+                let target = app.descendants(matching: .any)["question.targetClock"]
+                if target.exists {
+                    XCTAssertGreaterThanOrEqual(target.frame.minY, app.staticTexts["question.title"].frame.maxY + 4,
+                                                "Reading pointers stay clear of the question title")
+                }
+            }
+            if type == .setDigital {
+                for field in ["hour", "minute"] {
+                    for direction in ["more", "less"] {
+                        XCTAssertFalse(app.buttons["clock.\(field).\(direction)"].exists,
+                                       "Adjustment chevrons disappear from answer feedback")
+                    }
+                }
+            }
+            let options = app.buttons.allElementsBoundByIndex.filter { $0.identifier.hasPrefix("question.option.") }
+            let frames = options.map(\.frame)
+            let viewport = app.scrollViews["game.questions"].frame
+            for option in options {
+                XCTAssertGreaterThanOrEqual(option.frame.minX, viewport.minX - 8)
+                XCTAssertLessThanOrEqual(option.frame.maxX, viewport.maxX + 8)
+                XCTAssertLessThanOrEqual(option.frame.maxY, viewport.maxY + 4.1,
+                                         "\(type): answers stay above Next, allowing their four-point feedback outline")
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.4))
+            for (option, frame) in zip(options, frames) {
+                XCTAssertEqual(option.frame, frame, "\(type): rejected and untouched answers settle together")
+            }
+            saveScreenshot("wrong-layout-\(type.rawValue)-after")
         }
     }
 
@@ -1122,8 +1194,10 @@ final class DinoUITests: XCTestCase {
             let answer = app.descendants(matching: .any)["question.correctClock"]
             XCTAssertTrue(answer.waitForExistence(timeout: 5))
             XCTAssertEqual(control.label, initial, "Feedback preserves the submitted time")
-            XCTAssertGreaterThan(answer.frame.width, answer.frame.height * 1.9,
-                                 "The complete answer display stays on one line")
+            // Reading pointers add height to the accessible clock, so its outer
+            // aspect ratio no longer describes the digital display itself.
+            XCTAssertEqual(answer.frame.width, control.frame.width, accuracy: 1,
+                           "Both complete displays use the same scale")
             if app.frame.width >= 664 {
                 XCTAssertLessThan(answer.frame.maxX, control.frame.minX)
             } else {

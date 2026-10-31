@@ -21,6 +21,7 @@ struct QuestionRenderer: View {
     private var analogHandStep: Int { DinoPracticeTime.analogHandStep(session.minuteStep) }
     private var pairedClocks: Bool { width >= 600 }
     private var analogSettingWidth: CGFloat { width }
+    private var targetHintClearance: CGFloat { question.kind == .chooseAnalog ? 16 : 0 }
 
     var body: some View {
         VStack(spacing: question.kind == .setAnalog ? 8 : compactLayout ? 14 : 22) {
@@ -160,7 +161,9 @@ struct QuestionRenderer: View {
                                 controlsEnabled: !session.hidesAnswerControls)
                 .scaleEffect(comparing ? scale : 1)
                 .offset(x: comparing ? -displacement : 0)
-            DigitalClock(time: question.target, theme: theme, fontSize: font, feedbackCorrect: true)
+            DigitalClock(time: question.target, theme: theme, fontSize: font,
+                         reservesHandHintSpace: true, feedbackCorrect: true)
+                .padding(.bottom, 48)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(theme.digitalReading(question.target, languageCode: language.effective.code))
                 .scaleEffect(scale * (comparing || reduceMotion ? 1 : 0.94))
@@ -173,7 +176,7 @@ struct QuestionRenderer: View {
                 AnswerVerdictMark(correct: false).frame(maxWidth: .infinity)
                 AnswerVerdictMark(correct: true).frame(maxWidth: .infinity)
             }
-            .offset(y: font * 0.9 + 22 + (session.showsClockHandHints ? 24 : 0))
+            .offset(y: font * 0.9 + 22)
             .opacity(comparing ? 1 : 0).accessibilityHidden(true)
             .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: comparing)
         }
@@ -183,24 +186,26 @@ struct QuestionRenderer: View {
     }
 
     private var targetCard: some View {
-        let reservesHints = question.kind == .chooseAnalog
+        let reservesHints = [.chooseAnalog, .setAnalog].contains(question.kind)
+        let hintOverlap = question.kind == .chooseAnalog ? DigitalClock.handHintHeight / 2 : 0
         return VStack(spacing: 10) {
             if let activity = question.activity {
                 Label(LocalizedStringKey(activity.titleKey), systemImage: activity.symbol)
                     .font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(DinoStyle.deepGreen)
             }
-            // Half the reserved helper space fits in the existing gap below the title.
-            // This keeps four answer clocks inside the phone's viewport as well.
-            clockStage(height: (compactLayout ? 50 : 64) + (reservesHints ? 24 : session.showsClockHandHints ? 48 : 0), width: question.kind == .setAnalog ? analogSettingWidth : width) {
+            // Four-choice questions share part of the title gap with the helpers;
+            // clock-setting questions have room to reserve their full height.
+            clockStage(height: (compactLayout ? 50 : 64) + (reservesHints ? DigitalClock.handHintHeight - hintOverlap : session.showsClockHandHints ? DigitalClock.handHintHeight : 0), width: question.kind == .setAnalog ? analogSettingWidth : width) {
                 DigitalClock(time: question.target, theme: theme, fontSize: width < 350 ? 32 : 38,
                              reservesHandHintSpace: reservesHints)
-                    .padding(.top, reservesHints ? -24 : 0)
+                    .padding(.top, -hintOverlap)
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(theme.digitalReading(question.target, languageCode: language.effective.code))
                     .accessibilityIdentifier("question.targetClock")
                     .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: session.showsClockHandHints)
             }
         }
+        .padding(.top, targetHintClearance)
     }
 
     private var analogTarget: some View {
@@ -235,7 +240,10 @@ struct QuestionRenderer: View {
     private var analogOptions: some View {
         let columns = wideLayout && question.options.count == 4 ? 4 : 2
         let available = min(answerClockSize, width >= 600 ? 184 : 150, (width - CGFloat(columns - 1) * 12) / CGFloat(columns) - 18)
-        let cardHeight = width >= 600 ? available + 52 : max(132, available + 16)
+        // Share the extra title clearance across both answer rows on phones,
+        // keeping the last row inside the same viewport.
+        let rowAllowance = question.options.count == 4 ? targetHintClearance / 2 : 0
+        let cardHeight = width >= 600 ? available + 52 : max(132, available + 16 - rowAllowance)
         // Other question types retain their existing explanation layout.
         let size = width >= 600 ? available : min(available, max(88, available - 44))
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 14) {
@@ -292,7 +300,13 @@ struct QuestionRenderer: View {
         let response = ClockAnswer.time(option)
         let correct = session.showsCorrectResponse && response == question.expectedAnswer
         let wrong = session.hasFeedback && session.rejectedResponses.contains(response)
-        return Button { session.submit(option) } label: {
+        return Button {
+            // One transaction moves the tapped choice and its siblings together,
+            // including the surrounding layout when reading help needs more room.
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
+                session.submit(option)
+            }
+        } label: {
             content().environment(\.dinoClockReadingAssistance, false).frame(maxWidth: .infinity)
                 .background(.white, in: RoundedRectangle(cornerRadius: 22))
                 .overlay(RoundedRectangle(cornerRadius: 22).stroke(correct ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : wrong ? DinoStyle.wrong(highContrast) : DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: correct || wrong ? 4 : highContrast ? 3 : 1.5))
