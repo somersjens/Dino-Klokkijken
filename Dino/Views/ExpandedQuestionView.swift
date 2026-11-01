@@ -46,11 +46,18 @@ struct DinoExpandedQuestionView: View {
 
     var body: some View {
         let _ = deviceHourFormat.notation
-        VStack(spacing: q.kind == .timeSequence ? 12 : wideLayout || (q.kind == .timeZone && compactLayout) ? 12 : 18) {
+        VStack(spacing: q.kind == .minutesBetween ? 10 : q.kind == .timeSequence ? 12 : wideLayout || (q.kind == .timeZone && compactLayout) ? 12 : 18) {
             if ![.advanceAnalog, .sayTime, .spokenTime, .readDigital].contains(q.kind), q.kind != .sortTimes || isDemonstration {
-                DinoQuestionContext(maxHeight: wideLayout && !isDemonstration ? max(160, availableHeight - 88) : nil,
-                                    animatesHeight: [.addTime, .subtractTime].contains(q.kind)) {
-                    context.frame(width: contextWidth)
+                Group {
+                    if q.kind == .minutesBetween && (!wideLayout || isDemonstration) {
+                        // This card animates its own height; measuring it again would delay the outer layout.
+                        context.frame(width: contextWidth)
+                    } else {
+                        DinoQuestionContext(maxHeight: wideLayout && !isDemonstration ? max(160, availableHeight - 88) : nil,
+                                            animatesHeight: [.addTime, .subtractTime].contains(q.kind)) {
+                            context.frame(width: contextWidth)
+                        }
+                    }
                 }
                     .frame(maxWidth: contextWidth)
                     .frame(maxWidth: .infinity)
@@ -169,7 +176,7 @@ struct DinoExpandedQuestionView: View {
             DinoFlightTicket(work: flightWork, showsWork: isDemonstration || session.showsWorkedExplanation,
                              showsTotal: isDemonstration || session.missedFirstAnswer,
                              language: code, width: min(600, lessonWidth),
-                             isDemonstration: isDemonstration, theme: theme)
+                             isDemonstration: isDemonstration, theme: theme, compactLayout: compactLayout)
         case .daySchedule:
             if let schedule = q.daySchedule {
                 DinoTrainJourneyCard(schedule: schedule,
@@ -1139,16 +1146,16 @@ private struct DinoTrainJourneyCard: View {
         }
         appliedMinutes = 0
         do {
-            try await Task.sleep(for: .milliseconds(900))
+            try await Task.sleep(for: DinoTimeWalkTiming.openingPause)
             let steps = schedule.walkMinutes()
             for (index, step) in steps.enumerated() {
                 try Task.checkCancellation()
-                withAnimation(.easeInOut(duration: 0.35)) { appliedMinutes = step }
+                withAnimation(.easeInOut(duration: DinoTimeWalkTiming.digitDuration)) { appliedMinutes = step }
                 if index < steps.count - 1 {
-                    try await Task.sleep(for: .milliseconds(800))
+                    try await Task.sleep(for: DinoTimeWalkTiming.stepInterval)
                 }
             }
-            try await Task.sleep(for: .milliseconds(350))
+            try await Task.sleep(for: DinoTimeWalkTiming.settlingPause)
             try Task.checkCancellation()
             if !steps.isEmpty { arrivalCompletion += 1 }
         } catch { /* A new question, example or replay cancels the previous walk. */ }
@@ -1330,6 +1337,7 @@ private struct DinoFlightTicket: View {
     let width: CGFloat
     let isDemonstration: Bool
     let theme: ClockTheme
+    var compactLayout = false
     @State private var appliedMinutes = 0
     @State private var walking = false
     @State private var replayCount = 0
@@ -1338,9 +1346,13 @@ private struct DinoFlightTicket: View {
     private var prefix: String { isDemonstration ? "demo" : "question" }
     private var secondaryInk: Color { highContrast ? DinoStyle.ink : DinoStyle.muted }
     private var pathWidth: CGFloat { min(88, max(36, width * 0.16)) }
-    private var timeSize: CGFloat { width < 380 ? 22 : 26 }
+    private var compactTicket: Bool { width < 430 || isDemonstration || compactLayout }
+    private var timeSize: CGFloat { compactTicket ? 22 : 26 }
     private var totalInk: Color { highContrast ? DinoStyle.ink : DinoFlightInk.total }
-    private var factIcon: CGFloat { 28 }
+    private var factIcon: CGFloat { compactTicket ? 24 : 28 }
+    private var headerIcon: CGFloat { compactTicket ? 34 : 36 }
+    private var rowPadding: CGFloat { compactTicket ? 5 : 7 }
+    private var rowInset: CGFloat { compactTicket ? 10 : 12 }
     private var shownArrival: ClockTime { work.departure.adding(minutes: appliedMinutes) }
     private var totalExpanded: Bool { showsTotal && work.offsetMinutes != 0 }
 
@@ -1348,12 +1360,12 @@ private struct DinoFlightTicket: View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
                 Image(systemName: "airplane")
-                    .font(.system(size: 21, weight: .bold))
-                    .frame(width: 36, height: 36)
+                    .font(.system(size: compactTicket ? 20 : 21, weight: .bold))
+                    .frame(width: headerIcon, height: headerIcon)
                     .background(.white.opacity(0.65), in: RoundedRectangle(cornerRadius: 12))
                     .accessibilityHidden(true)
                 Text("dino.expanded.flightTicket")
-                    .font(.system(size: 19, weight: .heavy, design: .rounded))
+                    .font(.system(size: compactTicket ? 18 : 19, weight: .heavy, design: .rounded))
                 Spacer(minLength: 0)
                 if showsWork {
                     Button {
@@ -1364,10 +1376,11 @@ private struct DinoFlightTicket: View {
                             .font(.system(size: 17, weight: .bold))
                             .replayCompletionTurn(walkCompletion)
                             .foregroundStyle(DinoStyle.deepGreen)
-                            .frame(width: 36, height: 36)
+                            .frame(width: headerIcon, height: headerIcon)
                             .background(.white.opacity(0.85), in: Circle())
                             .overlay(Circle().strokeBorder(DinoStyle.deepGreen.opacity(highContrast ? 1 : 0.3),
                                                           lineWidth: highContrast ? 2 : 1))
+                            .frame(width: 44, height: 44)
                             .contentShape(Circle())
                     }
                     .buttonStyle(.plain)
@@ -1379,14 +1392,14 @@ private struct DinoFlightTicket: View {
                         .accessibilityHidden(true)
                 }
             }
-            .padding(.horizontal, 16).frame(height: 54)
+            .padding(.horizontal, compactTicket ? 14 : 16).frame(height: compactTicket ? 50 : 54)
             .background(DinoStyle.green.opacity(highContrast ? 0.5 : 0.25))
 
             Rectangle().strokeBorder(DinoStyle.deepGreen.opacity(highContrast ? 0.7 : 0.25),
                                      style: StrokeStyle(lineWidth: 1, dash: [4, 5]))
                 .frame(height: 1).padding(.horizontal, 16).accessibilityHidden(true)
 
-            VStack(spacing: 12) {
+            VStack(spacing: compactTicket ? 8 : 12) {
                 HStack(alignment: .center, spacing: 6) {
                     VStack(spacing: 4) {
                         fieldLabel("dino.expanded.departure", color: DinoFlightInk.departure)
@@ -1426,7 +1439,7 @@ private struct DinoFlightTicket: View {
                 }
 
                 VStack(spacing: 0) {
-                    VStack(spacing: 8) {
+                    VStack(spacing: compactTicket ? 6 : 8) {
                         factRow(title: "dino.expanded.flightDuration", systemImage: "clock",
                                 value: work.durationText(language), color: DinoTimeDirection.color(later: true, highContrast: highContrast), fill: DinoTimeDirection.positive,
                                 identifier: "\(prefix).flight.duration")
@@ -1439,7 +1452,7 @@ private struct DinoFlightTicket: View {
                         }
                     }
                     if totalExpanded {
-                        totalReveal.padding(.top, 8)
+                        totalReveal.padding(.top, compactTicket ? 6 : 8)
                             .transition(.modifier(active: DinoFlightTotalUnfold(fraction: 0),
                                                   identity: DinoFlightTotalUnfold(fraction: 1)))
                     }
@@ -1454,8 +1467,8 @@ private struct DinoFlightTicket: View {
                 }
 
             }
-            .padding(.horizontal, width < 300 ? 14 : 16)
-            .padding(.vertical, 14)
+            .padding(.horizontal, compactTicket ? 12 : 16)
+            .padding(.vertical, compactTicket ? 10 : 14)
         }
         .foregroundStyle(DinoStyle.ink)
         .background(.white)
@@ -1472,14 +1485,14 @@ private struct DinoFlightTicket: View {
 
     /// The expansion clips this full-size row within its own space, below the existing values.
     private var totalReveal: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: compactTicket ? 5 : 8) {
             Capsule()
                 .fill(totalInk.opacity(highContrast ? 0.55 : 0.35))
                 .frame(height: 1)
                 .accessibilityHidden(true)
             totalShift
         }
-        .padding(.top, 4)
+        .padding(.top, compactTicket ? 2 : 4)
         .clipped()
     }
 
@@ -1494,13 +1507,13 @@ private struct DinoFlightTicket: View {
             }
             Spacer(minLength: 8)
             Text(verbatim: work.combinedText(language))
-                .foregroundStyle(DinoTimeDirection.color(later: work.combinedMinutes >= 0, highContrast: highContrast))
+                .foregroundStyle(totalInk)
                 .font(.system(size: 17, weight: .heavy, design: .rounded))
                 .monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
                 .fixedSize(horizontal: true, vertical: false)
         }
         .foregroundStyle(totalInk)
-        .padding(.horizontal, 12).padding(.vertical, 7)
+        .padding(.horizontal, rowInset).padding(.vertical, rowPadding)
         .frame(maxWidth: .infinity)
         .background(totalInk.opacity(highContrast ? 0.14 : 0.10), in: RoundedRectangle(cornerRadius: 16))
         .accessibilityElement(children: .combine)
@@ -1573,13 +1586,13 @@ private struct DinoFlightTicket: View {
             return
         }
         do {
-            try await Task.sleep(for: .milliseconds(900))
+            try await Task.sleep(for: DinoTimeWalkTiming.openingPause)
             for (index, step) in steps.enumerated() {
                 try Task.checkCancellation()
-                withAnimation(.easeInOut(duration: 0.35)) { appliedMinutes = step }
-                if index < steps.count - 1 { try await Task.sleep(for: .milliseconds(800)) }
+                withAnimation(.easeInOut(duration: DinoTimeWalkTiming.digitDuration)) { appliedMinutes = step }
+                if index < steps.count - 1 { try await Task.sleep(for: DinoTimeWalkTiming.stepInterval) }
             }
-            try await Task.sleep(for: .milliseconds(350))
+            try await Task.sleep(for: DinoTimeWalkTiming.settlingPause)
             try Task.checkCancellation()
             walkCompletion += 1
         } catch { /* A new example, question or replay cancels the previous walk. */ }
@@ -1616,7 +1629,7 @@ private struct DinoFlightTicket: View {
                 factValue(value, color: color)
             }
         }
-        .padding(.horizontal, 12).padding(.vertical, 7)
+        .padding(.horizontal, rowInset).padding(.vertical, rowPadding)
         .frame(maxWidth: .infinity)
         .background(fill.opacity(highContrast ? 0.45 : 0.28), in: RoundedRectangle(cornerRadius: 16))
         .accessibilityElement(children: .combine)

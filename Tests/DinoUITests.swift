@@ -1151,7 +1151,7 @@ final class DinoUITests: XCTestCase {
         checkMinutesBetweenQuestionAndExample(language: "nl", family: .quarter)
     }
 
-    func testMinutesBetweenPartialHintAfterFirstMistake() {
+    func testMinutesBetweenTimelineAfterFirstMistake() {
         app.terminate()
         app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
         app.launch()
@@ -1182,9 +1182,11 @@ final class DinoUITests: XCTestCase {
         for index in question.responses.indices where index != wrong {
             XCTAssertTrue(app.buttons["question.option.\(index)"].isHittable)
         }
-        saveScreenshot("minutes-between-first-mistake-partial-hint")
+        assertMinutesBetweenAnswersFit(question)
+        saveScreenshot("minutes-between-first-mistake-expanded-timeline")
         tap("question.showAnswer")
         assertMinutesBetweenTimeline(question, language: "nl", prefix: "question", showsAnswer: true)
+        assertMinutesBetweenAnswersFit(question)
         saveScreenshot("minutes-between-complete-timeline")
         tap("question.next")
         XCTAssertFalse(app.descendants(matching: .any)["question.minutesBetween.timeline"].exists)
@@ -1357,7 +1359,7 @@ final class DinoUITests: XCTestCase {
             for index in q.responses.indices where index != wrong {
                 XCTAssertTrue(app.buttons["question.option.\(index)"].isHittable, "Hint leaves remaining answers accessible")
             }
-            saveScreenshot("minutes-between-partial-hint-\(language)")
+            saveScreenshot("minutes-between-timeline-hint-\(language)")
             tap("question.showAnswer")
         } else {
             XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 5))
@@ -1380,6 +1382,19 @@ final class DinoUITests: XCTestCase {
                        "The next question starts without a hint")
     }
 
+    private func assertMinutesBetweenAnswersFit(_ question: ClockQuestion) {
+        let viewport = app.scrollViews["game.questions"].frame
+        let footer = app.buttons["question.showAnswer"].exists
+            ? app.buttons["question.showAnswer"].frame : app.buttons["question.next"].frame
+        for index in question.responses.indices {
+            let answer = app.buttons["question.option.\(index)"].frame
+            XCTAssertGreaterThanOrEqual(answer.minY, viewport.minY - 0.5,
+                                        "The complete answer stays inside the question viewport")
+            XCTAssertLessThanOrEqual(answer.maxY, min(viewport.maxY, footer.minY) + 0.5,
+                                     "The bottom answer row stays fully above the footer")
+        }
+    }
+
     private func assertMinutesBetweenCalculation(_ question: ClockQuestion, language: String) {
         assertMinutesBetweenTimeline(question, language: language, prefix: "demo", showsAnswer: true)
         XCTAssertFalse(app.staticTexts["Beide tijden zijn op dezelfde dag."].exists)
@@ -1391,21 +1406,25 @@ final class DinoUITests: XCTestCase {
         let timeline = DinoMinuteTimeline(question.relatedTimes[0], question.relatedTimes[1])
         let card = app.descendants(matching: .any)["\(prefix).minutesBetween.timeline"]
         XCTAssertTrue(card.waitForExistence(timeout: 5))
+        let total = app.descendants(matching: .any)[prefix == "demo" ? "demo.answer" : "question.minutesBetween.\(showsAnswer ? "answer" : "unknown")"]
         var previous: XCUIElement?
         for (index, time) in timeline.times.enumerated() {
             let stop = app.staticTexts["\(prefix).minutesBetween.stop.\(index)"]
             XCTAssertEqual(stop.label, time.digitalText)
-            XCTAssertGreaterThanOrEqual(stop.frame.minX, card.frame.minX)
-            XCTAssertLessThanOrEqual(stop.frame.maxX, card.frame.maxX)
+            XCTAssertGreaterThan(stop.frame.minY, total.frame.maxY,
+                                 "Timeline labels sit below the total interval after the arrow lowers")
+            XCTAssertGreaterThanOrEqual(stop.frame.minX, card.frame.minX - 0.5)
+            XCTAssertLessThanOrEqual(stop.frame.maxX, card.frame.maxX + 0.5)
             if let previous { XCTAssertLessThan(previous.frame.maxX, stop.frame.minX) }
             previous = stop
         }
         for (index, minutes) in timeline.segments.enumerated() {
             let segment = app.staticTexts["\(prefix).minutesBetween.segment.\(index)"]
-            let revealed = timeline.revealsSegment(index, showsAnswer: showsAnswer)
-            XCTAssertEqual(segment.label, revealed ? "\(minutes) min" : "? min")
+            XCTAssertEqual(segment.label, "\(minutes) min", "Every helper block states its full duration")
             let first = app.staticTexts["\(prefix).minutesBetween.stop.\(index)"]
             let last = app.staticTexts["\(prefix).minutesBetween.stop.\(index + 1)"]
+            XCTAssertGreaterThan(segment.frame.minY, first.frame.maxY + 12,
+                                 "A gathering curl separates the time labels from the minute blocks")
             XCTAssertEqual(segment.frame.midX, (first.frame.midX + last.frame.midX) / 2, accuracy: 1,
                            "Step values are centered between the time labels")
         }
@@ -1525,6 +1544,94 @@ final class DinoUITests: XCTestCase {
             XCTAssertEqual(count.label, preparedCount, "Scrolling must reuse the prepared terrain instead of repainting it")
         }
         saveScreenshot("prepared-village-after-repeated-scroll")
+    }
+
+    func testMapLevelCircleKeepsItsFullHitArea() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "5"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 15))
+        waitForMapOpeningToFinish()
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "map.level.")).count, 100)
+        let first = revealMapNode(51)
+        XCTAssertTrue(first.isEnabled)
+        first.coordinate(withNormalizedOffset: CGVector(dx: 0.88, dy: 0.5)).tap()
+        XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5))
+    }
+
+    func testMapDecorationResumesAfterGentleGesture() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "5"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 15))
+        waitForMapOpeningToFinish()
+        let budget = app.staticTexts["map.scrollBudget"]
+        XCTAssertTrue(budget.waitForExistence(timeout: 5))
+        XCTAssertEqual(budget.label, "normal")
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.65))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.58))
+        start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
+        XCTAssertGreaterThan(Int(budget.value as? String ?? "0") ?? 0, 0,
+                             "Even a short, slow drag must pause decoration")
+        let settled = NSPredicate(format: "label == %@", "normal")
+        expectation(for: settled, evaluatedWith: budget)
+        waitForExpectations(timeout: 6)
+        XCTAssertTrue(app.buttons["header.settings"].isHittable)
+        end.press(forDuration: 0.05, thenDragTo: start, withVelocity: .slow, thenHoldForDuration: 0.1)
+        expectation(for: settled, evaluatedWith: budget)
+        waitForExpectations(timeout: 6)
+        saveScreenshot("map-budget-restored-city")
+    }
+
+    func testGentleScrollLiveDecorationControl() {
+        measureGentleMapScroll(liveDecoration: true)
+    }
+
+    func testGentleScrollPausedDecoration() {
+        measureGentleMapScroll(liveDecoration: false)
+    }
+
+    private func measureGentleMapScroll(liveDecoration: Bool) {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "5"
+        app.launchEnvironment["DINO_TEST_MAP_DIAGNOSTICS"] = "1"
+        app.launchEnvironment["DINO_TEST_SCROLL_ONLY_GAPS"] = "1"
+        app.launchEnvironment["DINO_TEST_LIVE_SCROLL_DECORATION"] = liveDecoration ? "1" : "0"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 15))
+        waitForMapOpeningToFinish()
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.65))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.58))
+        let options = XCTMeasureOptions()
+        options.iterationCount = 3
+        measure(metrics: [XCTCPUMetric(application: app), XCTMemoryMetric(application: app)], options: options) {
+            for _ in 0..<3 {
+                start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
+                end.press(forDuration: 0.05, thenDragTo: start, withVelocity: .slow, thenHoldForDuration: 0.1)
+            }
+        }
+        let gap = app.staticTexts["map.maximumFrameGapMilliseconds"]
+        XCTAssertTrue(gap.exists)
+        print("MAP_GENTLE_SCROLL live=\(liveDecoration) maximumScrollGapMilliseconds=\(gap.label)")
+        XCTAssertTrue(app.buttons["header.settings"].isHittable)
+        saveScreenshot(liveDecoration ? "gentle-map-live-control" : "gentle-map-paused-decoration")
+    }
+
+    func testCityScrollRenderingBudgetPerformance() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "5"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 15))
+        waitForMapOpeningToFinish()
+        let options = XCTMeasureOptions()
+        options.iterationCount = 3
+        measure(metrics: [XCTCPUMetric(application: app), XCTMemoryMetric(application: app),
+                          XCTOSSignpostMetric.scrollingAndDecelerationMetric], options: options) {
+            for _ in 0..<2 { app.swipeUp(velocity: .fast) }
+            for _ in 0..<2 { app.swipeDown(velocity: .fast) }
+        }
+        XCTAssertTrue(app.buttons["header.settings"].isHittable)
+        saveScreenshot("city-scroll-rendering-budget")
     }
 
     func testMapScrollPerformance() {
@@ -2434,7 +2541,7 @@ final class DinoUITests: XCTestCase {
                 tap("question.showAnswer")
             }
             let walked = question.timeZoneJourney!.steps(from: question.relatedTimes[0])
-            waitUntilLabel("question.timeZone.targetTime", equals: question.target.digitalText, timeout: Double(walked.count) + 8)
+            waitUntilLabel("question.timeZone.targetTime", equals: question.target.digitalText, timeout: timeWalkTimeout(walked.count))
             XCTAssertTrue(destination.label.contains(question.target.digitalText), "Revealing the answer animates the map card")
             assertTimeZoneReplay(question, prefix: "question")
             saveScreenshot("time-zone-in-card-answer-\(family.rawValue)")
@@ -2638,16 +2745,18 @@ final class DinoUITests: XCTestCase {
             XCTAssertTrue(app.descendants(matching: .any)["demo.flight.sameZone"].exists)
             XCTAssertFalse(app.descendants(matching: .any)["demo.flight.total"].exists,
                            "A same-zone example needs only the flight duration")
+            let exampleDeparture = app.descendants(matching: .any)["demo.targetClock"].label
             exampleReplay.tap()
-            XCTAssertEqual(app.descendants(matching: .any)["demo.answer"].label,
-                           app.descendants(matching: .any)["demo.targetClock"].label)
+            XCTAssertEqual(app.descendants(matching: .any)["demo.targetClock"].label, exampleDeparture,
+                           "Replay preserves the given departure while the arrival counts up again")
             tap("demo.ready")
             XCTAssertTrue(total.waitForExistence(timeout: 5), "The total hint survives opening an example")
             XCTAssertTrue(unknown.exists)
 
             tap("question.showAnswer")
             let steps = DinoTimeZoneStep.steps(from: start, offsetMinutes: shift)
-            waitUntilLabel("question.flight.arrival", equals: question.target.digitalText, timeout: Double(steps.count) + 6)
+            waitUntilLabel("question.flight.arrival", equals: question.target.digitalText, timeout: timeWalkTimeout(steps.count))
+            assertFlightChoicesVisible()
             let difference = "+" + DinoTimeWords.duration(shift, language: language)
             XCTAssertEqual(app.descendants(matching: .any)["question.flight.difference"].label, difference)
             XCTAssertTrue(replay.exists && replay.isEnabled)
@@ -2658,7 +2767,8 @@ final class DinoUITests: XCTestCase {
             XCTAssertEqual(app.descendants(matching: .any)["question.flight.arrival"].label, start.digitalText)
             XCTAssertEqual(total.label, totalLabel, "Replay preserves the finished total hint")
             replay.tap()
-            waitUntilLabel("question.flight.arrival", equals: question.target.digitalText, timeout: Double(steps.count) + 6)
+            waitUntilLabel("question.flight.arrival", equals: question.target.digitalText, timeout: timeWalkTimeout(steps.count))
+            assertFlightChoicesVisible()
             XCTAssertEqual(app.buttons["question.option.0"].frame.midY, optionFrame.midY, accuracy: 1)
             XCTAssertTrue(app.buttons["question.next"].exists)
             RunLoop.current.run(until: Date().addingTimeInterval(0.4))
@@ -2667,6 +2777,48 @@ final class DinoUITests: XCTestCase {
             XCTAssertTrue(unknown.waitForExistence(timeout: 5))
             XCTAssertFalse(total.exists, "A new question hides the hint again")
             XCTAssertFalse(replay.exists)
+        }
+    }
+
+    func testFlightHalfHoursWorkedAnswerKeepsAllChoicesVisible() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.flight-half-hour-fit.\(UUID().uuidString)"
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchArguments = ["-settings.languageOverride", "en", "-AppleICUForce24HourTime", "YES"]
+        app.launch()
+        XCTAssertTrue(app.buttons["header.practice"].waitForExistence(timeout: 10))
+        waitForMapOpeningToFinish()
+        tap("header.practice")
+        XCTAssertTrue(app.buttons["practice.start"].waitForExistence(timeout: 5))
+        tap("practice.time.half")
+        selectPractice("practice.type.flightArrival")
+        tap("practice.start")
+        var generator = DinoPracticeGenerator(configuration: .init(time: .half, order: .specific(.flightArrival)), seed: seed,
+                                              language: "en")
+        var progress = DinoLearningProgress()
+        for index in 0..<3 {
+            let difficulty = progress.difficulty
+            let question = generator.next(index: index, difficultyForKind: { _ in difficulty })
+            let number = app.staticTexts.matching(identifier: "header.questions")
+                .matching(NSPredicate(format: "label == %@", String(index + 1))).firstMatch
+            XCTAssertTrue(number.waitForExistence(timeout: 8))
+            if index < 2 {
+                tap("question.option.\(question.responses.firstIndex(of: question.expectedAnswer)!)")
+                progress.record(correct: true, at: difficulty)
+                continue
+            }
+            XCTAssertEqual(question.responses.count, 4)
+            let wrong = question.responses.indices.filter { question.responses[$0] != question.expectedAnswer }
+            for option in wrong.prefix(2) { tap("question.option.\(option)") }
+            if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+            XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 6))
+            let work = DinoFlightArrivalWork(departure: question.relatedTimes[0], durationMinutes: question.durationMinutes,
+                                             offsetMinutes: question.offsetMinutes, arrival: question.target)
+            waitUntilLabel("question.flight.arrival", equals: question.target.digitalText,
+                           timeout: timeWalkTimeout(work.walkMinutes().count))
+            assertFlightChoicesVisible()
+            RunLoop.current.run(until: Date().addingTimeInterval(0.8))
+            saveScreenshot("flight-half-hours-compact-worked-en")
         }
     }
 
@@ -2883,6 +3035,19 @@ final class DinoUITests: XCTestCase {
         }
     }
 
+    private func timeWalkTimeout(_ stepCount: Int) -> TimeInterval { Double(stepCount) * 2 + 6 }
+
+    private func assertFlightChoicesVisible() {
+        let viewport = app.scrollViews["game.questions"].frame
+        for index in 0..<4 {
+            let option = app.buttons["question.option.\(index)"]
+            XCTAssertTrue(option.exists)
+            XCTAssertGreaterThanOrEqual(option.frame.minY, viewport.minY - 1)
+            XCTAssertLessThanOrEqual(option.frame.maxY, viewport.maxY + 1,
+                                     "Every answer stays fully above the action button after the flight explanation opens")
+        }
+    }
+
     private func waitUntilLabel(_ identifier: String, equals expected: String, timeout: TimeInterval) {
         let element = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
         // Re-resolve a clock that replaces its question mark with animated digits.
@@ -2904,7 +3069,7 @@ final class DinoUITests: XCTestCase {
 
     private func waitForTimeZoneWalk(_ question: ClockQuestion, language: String = "nl") {
         let steps = question.timeZoneJourney!.steps(from: question.relatedTimes[0])
-        waitUntilLabel("demo.timeZone.targetTime", equals: question.target.digitalText, timeout: Double(steps.count) + 8)
+        waitUntilLabel("demo.timeZone.targetTime", equals: question.target.digitalText, timeout: timeWalkTimeout(steps.count))
         XCTAssertEqual(app.descendants(matching: .any)["demo.timeZone.referenceTime"].label, question.relatedTimes[0].digitalText)
         XCTAssertEqual(app.descendants(matching: .any)["demo.timeZone.difference"].label, timeZoneDifference(question.offsetMinutes, language: language))
         XCTAssertTrue(app.descendants(matching: .any)["demo.timeZone.destination"].label.contains(question.target.digitalText))
@@ -2933,7 +3098,7 @@ final class DinoUITests: XCTestCase {
         // Restart again during the opening pause: only the latest run may update the card.
         button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         let steps = question.timeZoneJourney!.steps(from: question.relatedTimes[0])
-        waitUntilLabel("\(prefix).timeZone.targetTime", equals: question.target.digitalText, timeout: Double(steps.count) + 8)
+        waitUntilLabel("\(prefix).timeZone.targetTime", equals: question.target.digitalText, timeout: timeWalkTimeout(steps.count))
         XCTAssertEqual(app.descendants(matching: .any)["\(prefix).timeZone.difference"].label,
                        timeZoneDifference(question.offsetMinutes, language: language))
         XCTAssertEqual(app.descendants(matching: .any)["\(prefix).timeZone.referenceTime"].label, question.relatedTimes[0].digitalText)
@@ -4040,6 +4205,85 @@ final class DinoUITests: XCTestCase {
             tap("demo.ready")
             tap("header.pause")
         }
+    }
+
+    func testArithmeticMidnightCorrectionsStaySeparate() {
+        checkArithmeticNotation(type: .addTime, notation: .twentyFour, name: "midnight-carry") { work, display in
+            work.start.hour == 23 && display.hourCarry == 1 && display.hourWrap == -24
+        }
+        checkArithmeticNotation(type: .subtractTime, notation: .twentyFour, name: "midnight-borrow") { work, display in
+            work.start.hour == 0 && display.hourCarry == -1 && display.hourWrap == 24
+        }
+    }
+
+    func testArithmeticSupportsTwelveHourNoonAndMidnight() {
+        checkArithmeticNotation(type: .addTime, notation: .twelve, name: "noon-ampm") { work, display in
+            work.start.hour < 12 && work.result.hour >= 12 && display.hourCarry == 1
+        }
+        checkArithmeticNotation(type: .addTime, notation: .twelve, name: "midnight-ampm") { work, display in
+            work.start.hour >= 12 && work.result.hour < 12 && display.hourCarry == 1
+        }
+        checkArithmeticNotation(type: .addTime, notation: .twelve, name: "twelve-to-one-pm") { work, display in
+            work.start.hour == 12 && work.result.hour == 13 && display.hourWrap == -12 && !display.changesPeriod
+        }
+        checkArithmeticNotation(type: .subtractTime, notation: .twelve, name: "borrow-before-noon") { work, display in
+            work.start.hour >= 12 && work.result.hour < 12 && display.hourCarry == -1
+        }
+    }
+
+    private func checkArithmeticNotation(type: DinoPracticeQuestion, notation: DigitalHourNotation, name: String,
+                                         matches: (DinoClockArithmetic, DinoClockArithmeticDisplay) -> Bool) {
+        let configuration = DinoPracticeConfiguration(time: .minutes, order: .specific(type))
+        var fixture: (UInt64, ClockQuestion)?
+        for candidate in UInt64(0)..<500 {
+            var generator = DinoPracticeGenerator(configuration: configuration, seed: candidate, language: "en")
+            let question = generator.next(index: 3, difficultyForKind: { _ in .challenge })
+            let work = DinoClockArithmetic(start: question.relatedTimes[0], durationMinutes: question.durationMinutes, adding: type == .addTime)
+            if matches(work, .init(work: work, notation: notation)) { fixture = (candidate, question); break }
+        }
+        guard let (fixtureSeed, question) = fixture else { return XCTFail("No arithmetic fixture for \(name)") }
+        let work = DinoClockArithmetic(start: question.relatedTimes[0], durationMinutes: question.durationMinutes, adding: type == .addTime)
+        let display = DinoClockArithmeticDisplay(work: work, notation: notation)
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.arithmetic.\(UUID().uuidString)"
+        app.launchEnvironment["DINO_TEST_SEED"] = String(fixtureSeed)
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = type.rawValue
+        app.launchEnvironment["DINO_TEST_PRACTICE_CHALLENGE"] = "1"
+        app.launchArguments = ["-settings.languageOverride", "en", "-AppleICUForce24HourTime", notation == .twentyFour ? "YES" : "NO"]
+        app.launch()
+        let start = app.descendants(matching: .any)["question.targetClock"]
+        let result = app.descendants(matching: .any)["question.timeArithmetic.result"]
+        XCTAssertTrue(start.waitForExistence(timeout: 10))
+        XCTAssertEqual(start.label, work.start.digitalReading(notation: notation, languageCode: "en").text)
+        let wrong = question.responses.firstIndex { $0 != question.expectedAnswer }!
+        tap("question.option.\(wrong)")
+        XCTAssertTrue(app.buttons["question.showAnswer"].waitForExistence(timeout: 5))
+        XCTAssertFalse(result.exists)
+        let hours = app.descendants(matching: .any)["question.timeArithmetic.hours"]
+        XCTAssertTrue(hours.waitForExistence(timeout: 5))
+        XCTAssertEqual(hours.label, display.hourEquation)
+        XCTAssertEqual(app.descendants(matching: .any)["question.timeArithmetic.total.hours"].label,
+                       DinoClockArithmetic.format(display.hourSubtotal))
+        XCTAssertFalse(app.descendants(matching: .any)["question.timeArithmetic.periodChange"].exists)
+        saveScreenshot("arithmetic-\(name)-hint")
+        tap("question.showAnswer")
+        XCTAssertTrue(result.waitForExistence(timeout: 5))
+        XCTAssertEqual(result.label, work.result.digitalReading(notation: notation, languageCode: "en").text)
+        func signed(_ value: Int) -> String { value < 0 ? "−\(abs(value))" : "+\(value)" }
+        let corrections = [display.hourCarry, display.hourWrap].filter { $0 != 0 }.map(signed)
+        let arrow = app.descendants(matching: .any)["question.timeArithmetic.arrow.result.hours"]
+        XCTAssertTrue(arrow.exists)
+        XCTAssertEqual(arrow.label, corrections.joined(separator: ", "))
+        let period = app.descendants(matching: .any)["question.timeArithmetic.periodChange"]
+        XCTAssertEqual(period.exists, display.changesPeriod)
+        if display.changesPeriod {
+            let before = work.start.digitalReading(notation: notation, languageCode: "en").period!
+            let after = work.result.digitalReading(notation: notation, languageCode: "en").period!
+            XCTAssertEqual(period.label, "\(before) → \(after)")
+        }
+        XCTAssertGreaterThan(result.frame.width, result.frame.height * 1.8, "AM/PM stays on the clock's digit row")
+        saveScreenshot("arithmetic-\(name)-result")
     }
 
     func testTwoChoiceArithmeticRevealsTheCompleteCompactExplanation() {

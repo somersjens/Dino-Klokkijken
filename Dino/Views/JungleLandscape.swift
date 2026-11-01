@@ -534,12 +534,13 @@ private struct WorldBannerLettering: View {
 private struct TimeMachineBannerMotion<Content: View>: View {
     @ViewBuilder var content: (TimeInterval) -> Content
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var epoch
     @State private var visible = false
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: reduceMotion || !visible || scenePhase != .active)) { timeline in
-            content(reduceMotion ? 0 : timeline.date.timeIntervalSince(epoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: frozenDate != nil || reduceMotion || !visible || scenePhase != .active)) { timeline in
+            content(reduceMotion ? 0 : (frozenDate ?? timeline.date).timeIntervalSince(epoch ?? Date(timeIntervalSinceReferenceDate: 0)))
         }
         .readGeometry(for: Bool.self) { geometry in
             let frame = geometry.frame(in: .named("adventure.map.viewport"))
@@ -2032,6 +2033,7 @@ private struct JungleDepthOcclusion: View {
 /// explicit envelope which participates in the same road-clearance solver.
 private struct JungleWildlife: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
@@ -2040,12 +2042,12 @@ private struct JungleWildlife: View {
 
     var body: some View {
         let bounds = item.kind.footprint[0]
-        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: !visible || reduceMotion || scenePhase != .active)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: frozenDate != nil || !visible || reduceMotion || scenePhase != .active)) { timeline in
             Canvas { context, _ in
                 var c = context
                 c.translateBy(x: -bounds.minX * item.size, y: -bounds.minY * item.size)
                 c.scaleBy(x: item.mirrored ? -item.size : item.size, y: item.size)
-                let time = reduceMotion ? 0 : timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
+                let time = reduceMotion ? 0 : (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
                 if item.kind == .snake { snake(in: c, time: time) }
                 else { leaves(in: c, time: time) }
             }
@@ -2053,7 +2055,7 @@ private struct JungleWildlife: View {
         .frame(width: bounds.width * item.size, height: bounds.height * item.size)
         .readGeometry(for: Bool.self) { geometry in
             let frame = geometry.frame(in: .named("adventure.map.viewport"))
-            return frame.maxY > -256 && frame.minY < viewportHeight + 256
+            return DinoMapViewport.isVisible(frame: frame, viewportHeight: viewportHeight)
         } action: { visible = $0 }
         .allowsHitTesting(false).accessibilityHidden(true)
     }
@@ -2133,15 +2135,16 @@ private struct JungleWildlife: View {
 
 private struct JungleFlyingBirds: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
     let viewportHeight: CGFloat
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24, paused: !visible || reduceMotion || scenePhase != .active)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24, paused: frozenDate != nil || !visible || reduceMotion || scenePhase != .active)) { timeline in
             Canvas { context, size in
-                let time = reduceMotion ? 0 : timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
+                let time = reduceMotion ? 0 : (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
                 for i in 0..<9 {
                     let seed = Double(i)
                     let flight = (time * (i < 5 ? 0.018 : 0.013) + seed * 0.113).truncatingRemainder(dividingBy: 1)
@@ -2162,7 +2165,7 @@ private struct JungleFlyingBirds: View {
         }
         .readGeometry(for: Bool.self) { geometry in
             let frame = geometry.frame(in: .named("adventure.map.viewport"))
-            return frame.maxY > -256 && frame.minY < viewportHeight + 256
+            return DinoMapViewport.isVisible(frame: frame, viewportHeight: viewportHeight)
         } action: { visible = $0 }
         .allowsHitTesting(false).accessibilityHidden(true)
     }
@@ -2281,6 +2284,7 @@ private enum JungleWaterfallGeometry {
 /// A bounded transparent canvas animates water, never the cliffs or map texture.
 private struct JungleWaterfallFlow: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
@@ -2292,21 +2296,21 @@ private struct JungleWaterfallFlow: View {
 
     var body: some View {
         let bounds = JungleWaterfallGeometry.bounds(mirrored: mirrored, heightScale: heightScale)
-        TimelineView(.animation(minimumInterval: 1.0 / 24, paused: !visible || reduceMotion || scenePhase != .active)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24, paused: frozenDate != nil || !visible || reduceMotion || scenePhase != .active)) { timeline in
             Canvas { context, _ in
                 if !reduceMotion {
                     var c = context
                     c.translateBy(x: -bounds.minX * scale, y: -bounds.minY * scale)
                     c.scaleBy(x: mirrored ? -scale : scale, y: scale * heightScale)
                     c.opacity = opacity
-                    drawWater(in: c, time: timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                    drawWater(in: c, time: (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 }
             }
         }
         .frame(width: bounds.width * scale, height: bounds.height * scale)
         .readGeometry(for: Bool.self) { geometry in
             let r = geometry.frame(in: .named("adventure.map.viewport"))
-            return r.maxY > -256 && r.minY < viewportHeight + 256 && r.maxX > 0
+            return DinoMapViewport.isVisible(frame: r, viewportHeight: viewportHeight) && r.maxX > 0
         } action: { visible = $0 }
         .allowsHitTesting(false).accessibilityHidden(true)
     }
@@ -3620,6 +3624,7 @@ private struct SleepValleyLifeSurface: View {
     var fixedTime: TimeInterval? = nil
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
@@ -3629,9 +3634,9 @@ private struct SleepValleyLifeSurface: View {
         let isWater = tree == nil && cascade == nil && glint == nil
         let river = isWater ? SleepValleyLayout.riverGeometry(layout: layout) : nil
         TimelineView(.animation(minimumInterval: 1.0 / 20,
-                                paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
+                                paused: frozenDate != nil || fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
             Canvas { context, _ in
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 var c = context; c.translateBy(x: -frame.minX, y: layout.routeOffset - frame.minY)
                 if let tree {
                     c.translateBy(x: tree.point.x, y: tree.point.y)
@@ -3651,7 +3656,7 @@ private struct SleepValleyLifeSurface: View {
         }
         .readGeometry(for: Bool.self) { geometry in
             let rect = geometry.frame(in: .named("adventure.map.viewport"))
-            return rect.maxY > -256 && rect.minY < viewportHeight + 256
+            return DinoMapViewport.isVisible(frame: rect, viewportHeight: viewportHeight)
         } action: { visible = $0 }
     }
 }
@@ -5425,6 +5430,7 @@ private struct VolcanoLifeSurface: View {
     var fixedTime: TimeInterval? = nil
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
@@ -5446,11 +5452,11 @@ private struct VolcanoLifeSurface: View {
             VolcanoWorldLayout.FlowLine(VolcanoWorldLayout.slopeFlow(lane: $0))
         } : []
         TimelineView(.animation(minimumInterval: 1.0 / 20,
-                                paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
+                                paused: frozenDate != nil || fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
             Canvas { context, _ in
                 var c = context
                 c.translateBy(x: -frame.minX, y: layout.routeOffset - frame.minY)
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 if let source {
                     let terrain = c
                     c.translateBy(x: source.point.x, y: source.point.y)
@@ -5469,7 +5475,7 @@ private struct VolcanoLifeSurface: View {
         }
         .readGeometry(for: Bool.self) { proxy in
             let rect = proxy.frame(in: .named("adventure.map.viewport"))
-            return rect.maxY > -256 && rect.minY < viewportHeight + 256
+            return DinoMapViewport.isVisible(frame: rect, viewportHeight: viewportHeight)
         } action: { visible = $0 }
     }
 }
@@ -7669,6 +7675,7 @@ private struct VillageRiverTraffic: View {
     var fixedTime: TimeInterval? = nil
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var viewport = CGRect.zero
@@ -7679,8 +7686,8 @@ private struct VillageRiverTraffic: View {
             let routes = VillageRiverTrafficLayout.routes(layout: layout)
             let bridges = VillageRiverTrafficLayout.bridges(layout: layout)
             TimelineView(.animation(minimumInterval: 1.0 / 20,
-                                    paused: fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                                    paused: frozenDate != nil || fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 ZStack(alignment: .topLeading) {
                     ForEach(0..<2, id: \.self) { index in
                         let route = routes[index]
@@ -7731,6 +7738,7 @@ private struct VillageLifeSurface: View {
     let fixedTime: TimeInterval?
     let frozen: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
@@ -7742,9 +7750,9 @@ private struct VillageLifeSurface: View {
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 15,
-                                paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
+                                paused: frozenDate != nil || fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
             Canvas { context, _ in
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 var c = context
                 if let plot {
                     c.translateBy(x: plot.point.x - frame.minX, y: plot.point.y + layout.routeOffset - frame.minY)
@@ -7769,7 +7777,7 @@ private struct VillageLifeSurface: View {
         .frame(width: frame.width, height: frame.height).clipped()
         .readGeometry(for: Bool.self) { proxy in
             let bounds = proxy.frame(in: .named("adventure.map.viewport"))
-            return bounds.maxY > -256 && bounds.minY < viewportHeight + 256
+            return DinoMapViewport.isVisible(frame: bounds, viewportHeight: viewportHeight)
         } action: { visible = $0 }
         .position(x: frame.midX, y: frame.midY)
     }
@@ -7783,6 +7791,7 @@ private struct CrystalCaveLife: View {
     var fixedTime: TimeInterval? = nil
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var viewport = CGRect.zero
@@ -7806,8 +7815,8 @@ private struct CrystalCaveLife: View {
                         .position(glint.point)
                 }
                 TimelineView(.animation(minimumInterval: 1.0 / 20,
-                                        paused: fixedTime != nil || viewport.isEmpty || reduceMotion || scenePhase != .active)) { timeline in
-                    let time = reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                                        paused: frozenDate != nil || fixedTime != nil || viewport.isEmpty || reduceMotion || scenePhase != .active)) { timeline in
+                    let time = reduceMotion ? 0 : (fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                     ForEach(CrystalMinerPatrol.routes.sorted { $0.pose(at: time).y < $1.pose(at: time).y }) { route in
                         let pose = route.pose(at: time)
                         let point = CrystalCaveLifeLayout.worker(pose: pose, right: route.right, layout: layout)
@@ -8047,6 +8056,7 @@ private struct CrystalCaveLamp: View {
     let viewportHeight: CGFloat
     var fixedTime: TimeInterval?
     let reduceMotion: Bool
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
@@ -8054,9 +8064,9 @@ private struct CrystalCaveLamp: View {
         let s = layout.scale
         let frame = CGRect(x: lamp.pivot.x - 65 * s, y: lamp.pivot.y - 45 * s, width: 130 * s, height: 160 * s)
         TimelineView(.animation(minimumInterval: 1.0 / 20,
-                                paused: fixedTime != nil || !visible || reduceMotion || scenePhase != .active)) { timeline in
+                                paused: frozenDate != nil || fixedTime != nil || !visible || reduceMotion || scenePhase != .active)) { timeline in
             Canvas { context, _ in
-                let time = fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
+                let time = fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
                 let angle = reduceMotion ? 0 : sin(time * 1.25 + Double(lamp.id) * 1.7) * 0.055
                 var c = context; c.translateBy(x: 65 * s, y: 45 * s); c.rotate(by: .radians(angle))
                 CrystalCavePainter(context: c).swingingLamp(size: lamp.parentSize, lampSize: lamp.lampSize, drop: lamp.drop)
@@ -8065,7 +8075,7 @@ private struct CrystalCaveLamp: View {
         .mask(CrystalCaveOcclusion(layout: layout, frame: frame, depth: lamp.depth))
         .readGeometry(for: Bool.self) { proxy in
             let frame = proxy.frame(in: .named("adventure.map.viewport"))
-            return frame.maxY > -256 && frame.minY < viewportHeight + 256
+            return DinoMapViewport.isVisible(frame: frame, viewportHeight: viewportHeight)
         } action: { visible = $0 }
     }
 }
@@ -8078,15 +8088,16 @@ private struct CrystalCaveGlint: View {
     let viewportHeight: CGFloat
     var fixedTime: TimeInterval?
     let reduceMotion: Bool
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
     var body: some View {
         let s = layout.scale
         TimelineView(.animation(minimumInterval: 1.0 / 15,
-                                paused: fixedTime != nil || !visible || reduceMotion || scenePhase != .active)) { timeline in
+                                paused: frozenDate != nil || fixedTime != nil || !visible || reduceMotion || scenePhase != .active)) { timeline in
             Canvas { context, size in
-                let time = fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
+                let time = fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
                 let phase = (time + Double(index) * 1.73).truncatingRemainder(dividingBy: 6.8)
                 let pulse = reduceMotion ? 0.2 : pow(max(0, sin(min(1, phase / 0.95) * .pi)), 3)
                 if pulse > 0.01 {
@@ -8099,7 +8110,7 @@ private struct CrystalCaveGlint: View {
                                   frame: CGRect(x: point.x - 14 * s, y: point.y - 14 * s, width: 28 * s, height: 28 * s), depth: depth))
         .readGeometry(for: Bool.self) { proxy in
             let frame = proxy.frame(in: .named("adventure.map.viewport"))
-            return frame.maxY > -256 && frame.minY < viewportHeight + 256
+            return DinoMapViewport.isVisible(frame: frame, viewportHeight: viewportHeight)
         } action: { visible = $0 }
     }
 }
@@ -9925,6 +9936,7 @@ private struct CityWorldLife: View {
     var fixedTime: TimeInterval? = nil
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var viewport = CGRect.zero
@@ -9934,8 +9946,8 @@ private struct CityWorldLife: View {
             let layout = WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset)
             let line = CityMetroLine.cached(layout: layout)
             TimelineView(.animation(minimumInterval: 1.0 / 60,
-                                    paused: fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                                    paused: frozenDate != nil || fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 CityMetroForeground(layout: layout, line: line, time: time, viewport: viewport,
                                     frozen: frozen || reduceMotion, alwaysVisible: fixedTime != nil)
             }
@@ -12636,15 +12648,16 @@ private struct TimeMachinePartsSurface: View {
     var frozen: Bool
     var protectsRoute = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
     var body: some View {
         let bounds = assembly.bounds
         TimelineView(.animation(minimumInterval: 1.0 / 20,
-                                paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
+                                paused: frozenDate != nil || fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
             Canvas { context, _ in
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 var c = context; c.translateBy(x: -bounds.minX, y: -bounds.minY)
                 TimeMachinePainter(context: c, time: time).movingParts(assembly)
             }
@@ -12670,7 +12683,7 @@ private struct TimeMachinePartsSurface: View {
         }
         .readGeometry(for: Bool.self) { geometry in
             let frame = geometry.frame(in: .named("adventure.map.viewport"))
-            return frame.maxY > -128 && frame.minY < viewportHeight + 128
+            return DinoMapViewport.isVisible(frame: frame, viewportHeight: viewportHeight)
         } action: { visible = $0 }
     }
 }
@@ -12752,6 +12765,7 @@ private struct TimeMachineAtmosphereSurface: View {
     var fixedTime: TimeInterval? = nil
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
@@ -12765,9 +12779,9 @@ private struct TimeMachineAtmosphereSurface: View {
         }
         let water = TimeMachineLayout.waterField(layout: layout)
         TimelineView(.animation(minimumInterval: 1.0 / 15,
-                                paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
+                                paused: frozenDate != nil || fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
             Canvas { context, _ in
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 var c = context; c.translateBy(x: 0, y: layout.routeOffset - frame.minY)
                 let painter = TimeMachinePainter(context: c, time: time)
                 painter.kingdomWaterLight(field: water, scale: layout.scale)
@@ -12788,15 +12802,16 @@ private struct TimeMachineMechanismSurface: View {
     var fixedTime: TimeInterval? = nil
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 20,
-                                paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
+                                paused: frozenDate != nil || fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
             Canvas { context, _ in
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 var c = context
                 c.translateBy(x: site.point.x - site.bounds.minX, y: site.point.y - site.bounds.minY)
                 c.scaleBy(x: site.size, y: site.size)
@@ -12808,7 +12823,7 @@ private struct TimeMachineMechanismSurface: View {
         }
         .readGeometry(for: Bool.self) { geometry in
             let frame = geometry.frame(in: .named("adventure.map.viewport"))
-            return frame.maxY > -256 && frame.minY < viewportHeight + 256
+            return DinoMapViewport.isVisible(frame: frame, viewportHeight: viewportHeight)
         } action: { visible = $0 }
     }
 }
@@ -15387,15 +15402,16 @@ private struct PirateCoastLifeSurface: View {
     var fixedTime: TimeInterval? = nil
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 20,
-                                paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
+                                paused: frozenDate != nil || fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
             Canvas { context, _ in
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 var c = context; c.translateBy(x: -frame.minX, y: sea.layout.routeOffset - frame.minY)
                 if let vessel {
                     let pose = PirateSeaMotion.boat(vessel, sea: sea, time: time)
@@ -15408,7 +15424,7 @@ private struct PirateCoastLifeSurface: View {
         }
         .readGeometry(for: Bool.self) { proxy in
             let rect = proxy.frame(in: .named("adventure.map.viewport"))
-            return rect.maxY > -256 && rect.minY < viewportHeight + 256
+            return DinoMapViewport.isVisible(frame: rect, viewportHeight: viewportHeight)
         } action: { visible = $0 }
     }
 }
@@ -15997,6 +16013,7 @@ struct PirateCoastFlights: View {
     var fixedTime: TimeInterval? = nil
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var viewport = CGRect.zero
@@ -16006,8 +16023,8 @@ struct PirateCoastFlights: View {
         GeometryReader { geometry in
             let key = PirateGullFlightCache.key(size: geometry.size, routeOffset: routeOffset)
             TimelineView(.animation(minimumInterval: 1.0 / 20,
-                                    paused: prepared?.key != key || fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                                    paused: frozenDate != nil || prepared?.key != key || fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 ZStack(alignment: .topLeading) {
                     if let prepared, prepared.key == key, fixedTime != nil || !viewport.isEmpty {
                         ForEach(prepared.flocks.poses(time: time, track: prepared.track)) { pose in
@@ -16604,15 +16621,16 @@ private struct CastleWaterSurface: View {
     var fixedTime: TimeInterval? = nil
     var frozen = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 20,
-                                paused: fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
+                                paused: frozenDate != nil || fixedTime != nil || frozen || reduceMotion || !visible || scenePhase != .active)) { timeline in
             Canvas { context, _ in
-                let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
+                let time = frozen || reduceMotion ? 0 : (fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 var c = context
                 c.translateBy(x: -frame.minX, y: plan.layout.scenery.routeOffset - frame.minY)
                 if let feature {
@@ -18418,6 +18436,7 @@ private struct WorldBossMapClocks: View {
 struct WorldThemePreview: View {
     let world: DinoWorld
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @State private var epoch = Date()
 
@@ -18443,11 +18462,11 @@ struct WorldThemePreview: View {
             p.bossClearingForeground(worldID: theme, at: footing, size: scale)
         }
         .overlay {
-            TimelineView(.animation(minimumInterval: 1.0 / 30, paused: reduceMotion || scenePhase != .active)) { timeline in
+            TimelineView(.animation(minimumInterval: 1.0 / 30, paused: frozenDate != nil || reduceMotion || scenePhase != .active)) { timeline in
                 Canvas { context, size in
                     WorldBossPainter(context: context).drawClocks(worldID: world.themeID,
                         at: CGPoint(x: size.width * 0.70, y: size.height * 0.94), size: scale(size),
-                        elapsed: reduceMotion ? 0 : timeline.date.timeIntervalSince(epoch))
+                        elapsed: reduceMotion ? 0 : (frozenDate ?? timeline.date).timeIntervalSince(epoch))
                 }
             }
         }.allowsHitTesting(false)

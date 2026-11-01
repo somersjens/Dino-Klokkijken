@@ -264,14 +264,14 @@ struct DinoTimeZoneLesson: View {
         }
         applied = 0
         do {
-            try await Task.sleep(for: .milliseconds(900))
+            try await Task.sleep(for: DinoTimeWalkTiming.openingPause)
             let steps = journey.steps(from: referenceTime)
             for (index, step) in steps.enumerated() {
                 try Task.checkCancellation()
-                withAnimation(.easeInOut(duration: 0.35)) { applied = step.addedMinutes }
-                if index < steps.count - 1 { try await Task.sleep(for: .milliseconds(800)) }
+                withAnimation(.easeInOut(duration: DinoTimeWalkTiming.digitDuration)) { applied = step.addedMinutes }
+                if index < steps.count - 1 { try await Task.sleep(for: DinoTimeWalkTiming.stepInterval) }
             }
-            try await Task.sleep(for: .milliseconds(350))
+            try await Task.sleep(for: DinoTimeWalkTiming.settlingPause)
             try Task.checkCancellation()
             if !steps.isEmpty { walkCompletion += 1 }
         } catch { /* Closing the example or loading another one cancels the walk. */ }

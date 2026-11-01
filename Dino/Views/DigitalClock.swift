@@ -75,6 +75,8 @@ struct DigitalClock: View {
     /// Lessons that teach the 24-hour clock keep those digits even when the player prefers 12-hour time.
     var notation: DigitalHourNotation? = nil
     var feedbackCorrect: Bool? = nil
+    /// Editable clocks keep their pointers clear of the future answer outline.
+    var reservesFeedbackOutline = false
     private var displaysHandHints: Bool { showHandHints || readingAssistance }
     private var hintHeight: CGFloat { displaysHandHints || reservesHandHintSpace ? Self.handHintHeight * min(1, fontSize / 30) : 0 }
     private var reading: DigitalClockReading {
@@ -172,7 +174,10 @@ struct DigitalClock: View {
                                         ink: ink, bounds: CGSize(width: 30, height: 48))
                         .scaleEffect(scale)
                         .frame(width: 30 * scale, height: 48 * scale)
-                        .offset(y: -Self.handHintHeight * scale - fontSize * (theme.numerals == .digital ? 0.3 : 0.22))
+                        // Pointer clearance follows the visible display, independently
+                        // of the space reserved above it for reading help.
+                        .offset(y: -(48 + (reservesFeedbackOutline || feedbackCorrect != nil ? 8 : 2)) * scale
+                                - (showsDisplay ? fontSize * (theme.numerals == .digital ? 0.3 : 0.22) : 0))
                         .accessibilityHidden(true)
                 }
             }
@@ -317,7 +322,7 @@ struct DigitalClockControl: View {
         if controlsBelow {
             VStack(spacing: 12) {
                 DigitalClock(time: time, theme: theme, fontSize: fontSize, showHandHints: displaysHandHints,
-                             notation: notation, feedbackCorrect: feedbackCorrect)
+                             notation: notation, feedbackCorrect: feedbackCorrect, reservesFeedbackOutline: true)
                     .frame(height: displayHeight)
                     .accessibilityIdentifier(valueIdentifier)
                 HStack(spacing: 16) {
@@ -344,7 +349,7 @@ struct DigitalClockControl: View {
         DigitalClock(time: time, theme: theme, fontSize: fontSize,
                      showHandHints: readingAssistance && !showHandHints,
                      reservesHandHintSpace: !showHandHints, exposesControlFields: true,
-                     notation: notation, feedbackCorrect: feedbackCorrect)
+                     notation: notation, feedbackCorrect: feedbackCorrect, reservesFeedbackOutline: true)
             .environment(\.dinoClockReadingAssistance, false)
             .accessibilityIdentifier(valueIdentifier)
             // In examples the reading pointers share the upper controls' space.
@@ -368,7 +373,8 @@ struct DigitalClockControl: View {
                                                     wings: [CGPoint(x: 10.5, y: 38), CGPoint(x: 19.5, y: 38)],
                                                     ink: field == .minutes ? theme.minuteHex : theme.hourHex,
                                                     bounds: CGSize(width: 30, height: 48))
-                                    .position(x: center, y: 22)
+                                    // Example pointers need no room for an answer outline.
+                                    .position(x: center, y: 26)
                                     .allowsHitTesting(false)
                                     .accessibilityHidden(true)
                             }

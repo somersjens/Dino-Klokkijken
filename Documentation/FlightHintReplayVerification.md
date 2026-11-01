@@ -2,7 +2,7 @@
 
 Vraagtype 20 is de vluchtvraag. Na het eerste foute antwoord toont het ticket bij een tijdzoneverschil de totale tijdverschuiving van vliegduur en tijdzoneverschil. De aankomsttijd blijft een vraagteken tijdens de herkansing. Sinds 30 oktober reserveert de totaalrij geen ruimte meer vóór een fout. Sinds 31 oktober klappen de scheidingslijn en het totaal binnen hun eigen ruimte open: de hoogte groeit in 0,45 seconde, zonder fade of schuifbeweging over de waarden erboven. Bij Minder beweging verschijnt de rij direct. Bij dezelfde tijdzone vervallen de scheidingslijn en het totaal, ook na een fout en tijdens replay of een voorbeeld.
 
-De aankomstanimatie gebruikt dezelfde tweestapsroute als de treinreis (18) en tijdzones (19): eerst minuten optellen tot het volgende hele uur of aftrekken tot het vorige hele uur, daarna de volledige resterende verschuiving in dezelfde richting toepassen. Bijvoorbeeld `23:40 + 1:55 → 00:00 (+20 min) → 01:35 (+1:35)`. Hele uren worden altijd in één stap toegevoegd of afgetrokken, ook vanaf een tijd met minuten. Begint de klok al op een heel uur, of eindigt de verschuiving vóór dat hele uur, dan volstaat eveneens één stap. De gedeelde berekening ondersteunt ook negatieve verschuivingen en middernacht, zonder overschrijding of richtingswissel.
+De aankomstanimatie gebruikt dezelfde rustige rekenroute als treinvragen (18) en tijdzones (19): eerst zo nodig minuten naar het hele uur, daarna steeds één uur en tot slot de resterende minuten. Bijvoorbeeld `23:40 + 1:55 → 00:00 → 01:00 → 01:35`. Hele uren worden ook vanaf een begintijd met minuten afzonderlijk toegevoegd of afgetrokken. De gedeelde berekening ondersteunt negatieve verschuivingen en middernacht zonder overschrijding of richtingswissel. Alle niveaus gebruiken dezelfde leesrust van 1,2 seconde vóór de eerste stap, cijferovergangen van 0,55 seconde en 1,4 seconde tussen het begin van de stappen.
 
 Rechtsboven op het ticket staat tijdens de uitleg en in voorbeelden een ronde replayknop. Deze begint de tijdanimatie opnieuw bij de vertrektijd en behoudt de totaalhint. Herhaald tikken annuleert de vorige animatie. Na de laatste cijferovergang draait de replaypijl één keer 360 graden in 0,65 seconde. Bij Minder beweging verschijnt direct de eindtijd en vervalt de draaiing.
 
@@ -34,3 +34,15 @@ Bij een tijdzoneverschil van nul vervallen de scheidingslijn en het totaal volle
 `testFlightTotalHintAndReplayInBothLanguages` en `testFlightSameZoneDoesNotShowTotal` slagen op iPhone 18 Pro en iPad Pro 13-inch (M5), beide met iOS 27 en Nederlands/Engels. De controles omvatten de hoogte vóór en na een fout, de antwoorden boven de onderknop, voorbeelden, replay en het ontbreken van een totaal bij dezelfde tijdzone. De uitklap is bovendien beeld voor beeld gecontroleerd in een lokale simulatoropname; de waarden erboven blijven vrij van overlap.
 
 Resultaten: `.build/FlightUnfold-Final-iPhone.xcresult` en `.build/FlightUnfold-Final-iPad.xcresult`. De lokale opname staat in `/tmp/dino-flight-unfold-final-20261031.mp4`. `git diff --check` slaagt.
+
+## Rustiger uurstappen en compacter ticket — 1 november 2026
+
+Trein, tijdzones en vluchten gebruiken hetzelfde tempo op ieder niveau: 1,2 seconde leesrust vóór de eerste stap, cijferovergangen van 0,55 seconde en 1,4 seconde tussen het begin van twee stappen. Hele uren worden één voor één toegevoegd of afgetrokken. Tijden met minuten gebruiken eerst zo nodig de uurgrens, daarna uurstappen en het exacte restant. De replaydraaiing begint pas als de laatste cijfers zijn uitgeschoven.
+
+Op telefoons, in voorbeelden en in een lage vraagruimte gebruikt het ticket minder verticale ruimte. De kop is na de laatste verfijning 50 in plaats van 54 punten hoog, met een titel van 18 punten en pictogramvelden van 34 punten. Kleinere rij- en randruimte maken het uitgewerkte ticket ongeveer 49 punten lager. De klokcijfers op telefoons blijven 22 punten; de antwoordknoppen behouden hun formaat. De replayknop houdt een aanraakvlak van 44 punten.
+
+De tekst én de getalwaarde van de totaalrij gebruiken de grijze totaalinkt, ongeacht de richting van het tijdzoneverschil. De groene optelling bij de klok blijft de voortgang van de animatie tonen.
+
+De schermcontrole meet alle vier antwoordknoppen na het openen van de uitleg en na replay. Een extra controle speelt in het Engels de eerste twee halfuurvragen goed en geeft bij de derde vraag twee foute antwoorden, zoals in het aangeleverde voorbeeld.
+
+De ruimere ticketkop is apart gecontroleerd met `testFlightHalfHoursWorkedAnswerKeepsAllChoicesVisible` op iPhone 17e: geslaagd, met vier volledig zichtbare antwoorden. Rapport: `/tmp/dino-ticket-header-iphone-e2a7.xcresult`. Beeld: `Documentation/Screenshots/CalmFlight/iphone-flight-header-roomier-en.png`.

@@ -232,6 +232,7 @@ struct WorldBossClockSurface: View {
     let viewportHeight: CGFloat
     var fixedTime: TimeInterval? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
@@ -239,16 +240,16 @@ struct WorldBossClockSurface: View {
     var body: some View {
         let bounds = WorldBossPainter.bounds(worldID: themeID, at: point, size: scale)
         TimelineView(.animation(minimumInterval: 1.0 / 30,
-                                paused: fixedTime != nil || reduceMotion || !visible || scenePhase != .active)) { timeline in
+                                paused: frozenDate != nil || fixedTime != nil || reduceMotion || !visible || scenePhase != .active)) { timeline in
             Canvas { context, _ in
-                let elapsed = reduceMotion ? 0 : fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
+                let elapsed = reduceMotion ? 0 : fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
                 var c = context; c.translateBy(x: -bounds.minX, y: -bounds.minY)
                 WorldBossPainter(context: c).drawClocks(worldID: themeID, at: point, size: scale, elapsed: elapsed)
             }
         }
         .readGeometry(for: Bool.self) { geometry in
             let frame = geometry.frame(in: .named("adventure.map.viewport"))
-            return frame.maxY > -128 && frame.minY < viewportHeight + 128
+            return DinoMapViewport.isVisible(frame: frame, viewportHeight: viewportHeight)
         } action: { visible = $0 }
         .frame(width: bounds.width, height: bounds.height)
         .allowsHitTesting(false).accessibilityHidden(true)

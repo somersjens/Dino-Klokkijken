@@ -48,7 +48,7 @@ struct WorldMap: View {
     @State private var openingJumpPrepared = false
     @State private var preparedWorlds: Set<Int> = []
     @State private var introFinished = false
-    @State private var animationEpoch = Date()
+    @State private var sceneryClock = DinoMapAnimationClock()
     @State private var worldJumpStartedAt: Date?
     @State private var worldJumpFinished = false
     @State private var worldJumpImages: [String: UIImage] = [:]
@@ -146,8 +146,13 @@ struct WorldMap: View {
                                 }
                                 comingSoon(bottomInset: geometry.safeAreaInsets.bottom)
                             }
+                            .background(alignment: .topLeading) {
+                                MapScrollActivityObserver { setMapScrolling($0) }
+                                    .frame(width: 1, height: 1)
+                            }
                             .scaleEffect(mapScale, anchor: .topLeading)
                             }
+                            .environment(\.dinoMapFrozenDate, sceneryClock.frozenDate)
 
                         }
                         .accessibilityIdentifier("map.route")
@@ -192,7 +197,7 @@ struct WorldMap: View {
                     .allowsHitTesting(mapInteractive)
                     .disabled(!mapInteractive)
                     .accessibilityHidden(!mapInteractive)
-                    .environment(\.dinoMapAnimationEpoch, animationEpoch)
+                    .environment(\.dinoMapAnimationEpoch, sceneryClock.epoch)
                     .environment(\.dinoMapPreparing, !introFinished && animatesOpening)
                     .environment(\.dinoMapArtworkPrepared, {
                         preparedWorlds.insert($0)
@@ -208,6 +213,7 @@ struct WorldMap: View {
                 }
             }.coordinateSpace(name: "adventure.map.viewport")
         }
+        .onDisappear { setMapScrolling(false) }
         .overlayPreferenceValue(MapDinoAnchorKey.self) { anchor in
             if animatesOpening && !introFinished {
                 GeometryReader { geometry in
@@ -332,6 +338,15 @@ struct WorldMap: View {
         hintedLevel = nil
         celebrationID = nil
         openLevel(level)
+    }
+
+    private func setMapScrolling(_ scrolling: Bool) {
+#if DEBUG
+        // A same-binary control for the gentle-gesture performance tests.
+        if ProcessInfo.processInfo.environment["DINO_TEST_LIVE_SCROLL_DECORATION"] == "1" { return }
+#endif
+        guard (sceneryClock.frozenDate != nil) != scrolling else { return }
+        sceneryClock.setScrolling(scrolling)
     }
 
     private func updateVisibleWorld(_ id: Int, aboveHUD: Bool) {
@@ -605,6 +620,112 @@ private struct MapWorldJumpScrollObserver: UIViewRepresentable {
         }
 
         func stop() { displayLink?.invalidate(); displayLink = nil; scrollView = nil }
+    }
+}
+
+/// Observe the native gesture without replacing SwiftUI's scroll delegate.
+/// Only gesture start/stop reaches SwiftUI; no per-pixel offset is published.
+private struct MapScrollActivityObserver: UIViewRepresentable {
+    var changed: (Bool) -> Void
+    func makeUIView(context: Context) -> Probe { Probe(changed: changed) }
+    func updateUIView(_ view: Probe, context: Context) { view.changed = changed }
+    static func dismantleUIView(_ view: Probe, coordinator: ()) { view.detach() }
+
+    final class Probe: UILabel {
+        var changed: (Bool) -> Void
+        private weak var scroll: UIScrollView?
+        private var link: CADisplayLink?
+        private var scrolling = false
+        private var reductions = 0
+
+        init(changed: @escaping (Bool) -> Void) {
+            self.changed = changed
+            super.init(frame: .zero)
+            isUserInteractionEnabled = false
+#if DEBUG
+            if ProcessInfo.processInfo.environment["DINO_TEST_SUITE"] != nil {
+                text = "normal"
+                textColor = .clear
+                font = .systemFont(ofSize: 1)
+                isAccessibilityElement = true
+                accessibilityIdentifier = "map.scrollBudget"
+                accessibilityValue = "0"
+            }
+#endif
+        }
+        required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            if window == nil { detach() } else { attach() }
+        }
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            if window != nil { attach() }
+        }
+        private func attach() {
+            guard scroll == nil else { return }
+            var ancestor = superview
+            while let view = ancestor {
+                if let candidate = view as? UIScrollView {
+                    scroll = candidate
+                    candidate.panGestureRecognizer.addTarget(self, action: #selector(pan(_:)))
+                    return
+                }
+                ancestor = view.superview
+            }
+        }
+        func detach() {
+            scroll?.panGestureRecognizer.removeTarget(self, action: #selector(pan(_:)))
+            scroll = nil
+            stop()
+            if scrolling {
+                scrolling = false
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, !self.scrolling else { return }
+                    self.changed(false)
+                }
+            }
+        }
+        private func stop() {
+            link?.invalidate()
+            link = nil
+        }
+        private func update(scrolling value: Bool) {
+            guard scrolling != value else { return }
+            scrolling = value
+            if value { reductions += 1 }
+#if DEBUG
+            if accessibilityIdentifier != nil {
+                text = value ? "paused" : "normal"
+                accessibilityValue = String(reductions)
+            }
+#endif
+            changed(value)
+        }
+        @objc private func pan(_ gesture: UIPanGestureRecognizer) {
+            switch gesture.state {
+            case .began, .changed:
+                if link == nil {
+                    let displayLink = CADisplayLink(target: self, selector: #selector(tick))
+                    displayLink.preferredFramesPerSecond = 15
+                    displayLink.add(to: .main, forMode: .common)
+                    link = displayLink
+                }
+                update(scrolling: true)
+            case .cancelled, .failed:
+                update(scrolling: false)
+                stop()
+            default: break // Keep the last frame through native deceleration.
+            }
+        }
+        @objc private func tick() {
+            guard let scroll, window != nil else { stop(); return }
+            let moving = scroll.isTracking || scroll.isDragging || scroll.isDecelerating
+            if !moving {
+                update(scrolling: false)
+                stop()
+            }
+        }
     }
 }
 
@@ -939,6 +1060,7 @@ struct LevelNode: View {
                     }.foregroundStyle(level.isBoss ? .white : DinoStyle.ink)
                         .opacity(current && (level.worldID == 1 || ((2...10).contains(level.worldID) && !highContrast)) ? 0.55 : 1)
                 }.frame(width: level.isBoss ? 90 : 72, height: level.isBoss ? 90 : 72)
+                    .contentShape(Circle())
             }
             .buttonStyle(DinoAnswerButtonStyle()).disabled(!unlocked)
             .accessibilityIdentifier("map.level.\(level.id)")

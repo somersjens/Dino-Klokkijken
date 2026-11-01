@@ -668,9 +668,10 @@ struct DinoMinuteTimeline: Equatable, Sendable {
         zip(times, times.dropFirst()).map { $1.minutesOfDay - $0.minutesOfDay }
     }
 
-    /// Keep part of the calculation for the player, even for a one-minute question.
-    func revealsSegment(_ index: Int, showsAnswer: Bool) -> Bool {
-        showsAnswer || (index == 0 && segments.count > 1)
+    /// Equal minute amounts share a tint; the largest amount uses the first (blue) tint.
+    var colorGroups: [Int] {
+        let amounts = Array(Set(segments)).sorted(by: >)
+        return segments.map { amounts.firstIndex(of: $0)! }
     }
 }
 
@@ -820,7 +821,7 @@ struct DinoFlightArrivalWork: Equatable {
         return "\(departure.digitalText) + \(shift) = \(arrival.digitalText)"
     }
 
-    /// Share the train/time-zone route, with whole hours in one step and a bridge for minutes.
+    /// Share the train/time-zone route: one hour at a time, with a bridge for minutes.
     func walkMinutes() -> [Int] {
         DinoTimeZoneStep.steps(from: departure, offsetMinutes: combinedMinutes).map(\.addedMinutes)
     }
@@ -915,5 +916,37 @@ struct DinoClockArithmetic: Equatable, Sendable {
 
     static func format(_ value: Int) -> String {
         value < 0 ? "−\(abs(value))" : String(value)
+    }
+}
+
+/// The written columns follow the chosen dial, while the actual result keeps its 24-hour day part.
+/// Carrying/borrowing minutes and wrapping the dial are separate teaching steps.
+struct DinoClockArithmeticDisplay: Equatable, Sendable {
+    let startHour: Int
+    let hourSubtotal: Int
+    let minuteSubtotal: Int
+    let hourCarry: Int
+    let hourWrap: Int
+    let minuteCorrection: Int
+    let resultHour: Int
+    let changesPeriod: Bool
+    let hourEquation: String
+    let minuteEquation: String
+
+    init(work: DinoClockArithmetic, notation: DigitalHourNotation) {
+        func hour(_ time: ClockTime) -> Int {
+            notation == .twelve ? (time.hour + 11) % 12 + 1 : time.hour
+        }
+        let operation: DinoClockOperation = work.adding ? .add : .subtract
+        startHour = hour(work.start)
+        hourSubtotal = operation.apply(startHour, work.differenceHours)
+        minuteSubtotal = operation.apply(work.start.minute, work.differenceMinutes)
+        hourCarry = minuteSubtotal >= 60 ? 1 : minuteSubtotal < 0 ? -1 : 0
+        resultHour = hour(work.result)
+        hourWrap = resultHour - (hourSubtotal + hourCarry)
+        minuteCorrection = work.result.minute - minuteSubtotal
+        changesPeriod = notation == .twelve && work.start.hour / 12 != work.result.hour / 12
+        hourEquation = "\(startHour) \(operation.symbol) \(work.differenceHours) = \(DinoClockArithmetic.format(hourSubtotal))"
+        minuteEquation = "\(work.start.minute) \(operation.symbol) \(work.differenceMinutes) = \(DinoClockArithmetic.format(minuteSubtotal))"
     }
 }

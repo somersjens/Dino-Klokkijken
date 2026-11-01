@@ -33,12 +33,17 @@ struct DinoAnswerTextLayout {
     }
 }
 
+private struct DinoMapFrozenDateKey: EnvironmentKey { static let defaultValue: Date? = nil }
 private struct DinoMapPreparingKey: EnvironmentKey { static let defaultValue = false }
 private struct DinoMapInitialWorldKey: EnvironmentKey { static let defaultValue = 1 }
 private struct DinoMapArtworkPreparedKey: EnvironmentKey { static let defaultValue: (Int) -> Void = { _ in } }
 private struct DinoMapAnimationEpochKey: EnvironmentKey { static let defaultValue: Date? = nil }
 private struct DinoMapDefersAnimationsKey: EnvironmentKey { static let defaultValue = false }
 extension EnvironmentValues {
+    var dinoMapFrozenDate: Date? {
+        get { self[DinoMapFrozenDateKey.self] }
+        set { self[DinoMapFrozenDateKey.self] = newValue }
+    }
     var dinoMapDefersAnimations: Bool {
         get { self[DinoMapDefersAnimationsKey.self] }
         set { self[DinoMapDefersAnimationsKey.self] = newValue }
@@ -341,6 +346,8 @@ private struct MapFrameGapProbe: UIViewRepresentable {
         private var maximumGap: CFTimeInterval = 0
         private var startedAt: CFTimeInterval = 0
         private weak var mapScroll: UIScrollView?
+        private var wasScrolling = false
+        private let scrollOnly = ProcessInfo.processInfo.environment["DINO_TEST_SCROLL_ONLY_GAPS"] == "1"
         override init(frame: CGRect) {
             super.init(frame: frame)
             text = "0"
@@ -371,6 +378,13 @@ private struct MapFrameGapProbe: UIViewRepresentable {
         }
         @objc private func frame(_ displayLink: CADisplayLink) {
             let now = CACurrentMediaTime()
+            if scrollOnly {
+                if mapScroll == nil, let window { mapScroll = findMapScroll(in: window) }
+                let scrolling = mapScroll.map { $0.isTracking || $0.isDragging || $0.isDecelerating } ?? false
+                let samplesGesture = scrolling || wasScrolling
+                wasScrolling = scrolling
+                if !samplesGesture { lastFrame = nil; return }
+            }
             if let lastFrame, now - lastFrame > maximumGap {
                 maximumGap = now - lastFrame
                 text = String(format: "%.1f", maximumGap * 1000)

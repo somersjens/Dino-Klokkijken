@@ -20,7 +20,15 @@ struct DinoCapital: Equatable, Sendable {
     }
 }
 
-/// Whole-hour shifts happen at once; minute shifts first reach the next whole hour, then finish.
+/// Shared reading pace for train, time-zone and flight explanations at every difficulty.
+enum DinoTimeWalkTiming {
+    static let openingPause: Duration = .milliseconds(1200)
+    static let stepInterval: Duration = .milliseconds(1400)
+    static let digitDuration = 0.55
+    static let settlingPause: Duration = .milliseconds(550)
+}
+
+/// Move by one hour at a time, bridging to a whole hour first for shifts with minutes.
 struct DinoTimeZoneStep: Equatable, Sendable {
     let addedMinutes: Int
     let time: ClockTime
@@ -37,11 +45,16 @@ struct DinoTimeZoneStep: Equatable, Sendable {
         let direction = offsetMinutes >= 0 ? 1 : -1
         let minutesToHour = direction > 0 ? (60 - reference.minute) % 60 : reference.minute
         var changes: [Int] = []
-        // Already on the hour, or arriving before it: one step is enough; never overshoot.
+        var applied = 0
         if !magnitude.isMultiple(of: 60) && minutesToHour > 0 && minutesToHour < magnitude {
-            changes.append(direction * minutesToHour)
+            applied = minutesToHour
+            changes.append(direction * applied)
         }
-        changes.append(offsetMinutes)
+        while magnitude - applied >= 60 {
+            applied += 60
+            changes.append(direction * applied)
+        }
+        if applied < magnitude { changes.append(offsetMinutes) }
         return changes.map { Self(addedMinutes: $0, time: reference.adding(minutes: $0)) }
     }
 }
@@ -79,7 +92,7 @@ struct DinoTimeZoneJourney: Equatable, Sendable {
         return formatter.string(from: referenceDate)
     }
 
-    /// Apply whole hours at once; bridge to a whole hour only for shifts with minutes.
+    /// Apply one hour at a time; bridge to a whole hour first for shifts with minutes.
     func steps(from reference: ClockTime) -> [DinoTimeZoneStep] {
         DinoTimeZoneStep.steps(from: reference, offsetMinutes: offsetMinutes)
     }

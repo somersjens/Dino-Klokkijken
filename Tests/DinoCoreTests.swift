@@ -13,6 +13,12 @@ private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
 @MainActor
 struct DinoCoreTests {
     static func main() async {
+        if CommandLine.arguments.contains("--clock-arithmetic") {
+            testClockArithmetic()
+            testClockArithmeticDisplay()
+            print("PASS: \(checks) clock arithmetic checks.")
+            return
+        }
         if CommandLine.arguments.contains("--map-viewport") {
             testMapAnimationViewport()
             print("PASS: \(checks) map viewport checks.")
@@ -155,6 +161,7 @@ struct DinoCoreTests {
         testFlightArrivals()
         testMinutesBetweenQuestions()
         testClockArithmetic()
+        testClockArithmeticDisplay()
         testDaySchedules()
         testCapitalTimeZones()
         testUnambiguousQuestionTimes()
@@ -563,8 +570,8 @@ struct DinoCoreTests {
             expect(abs(journey.offsetMinutes) % 60 == 30, "real half-hour city offsets are not truncated")
             expect(steps.last?.time == start.adding(minutes: journey.offsetMinutes) && steps.last?.addedMinutes == journey.offsetMinutes,
                    "both directions of the worked zone example include the final half hour across midnight")
-            expect(steps.count == 2 && steps[0].time.minute == 0,
-                   "a half-hour zone shift first reaches a whole hour, then finishes the remaining shift")
+            expect(steps.dropLast().allSatisfy { $0.time.minute == 0 },
+                   "a half-hour zone shift bridges to a whole hour before counting the remaining hours")
         }
         expect(DinoTimeWords.zoneDifference(330, language: "nl") == "+5½ uur" && DinoTimeWords.zoneDifference(-210, language: "en") == "−3½ h",
                "compact labels retain half hours and the direction")
@@ -582,6 +589,24 @@ struct DinoCoreTests {
     }
 
     static func testMapAnimationViewport() {
+        let origin = Date(timeIntervalSinceReferenceDate: 100)
+        var clock = DinoMapAnimationClock(epoch: origin)
+        clock.setScrolling(true, at: origin.addingTimeInterval(10))
+        expect(clock.elapsed(at: origin.addingTimeInterval(15)) == 10, "map decoration holds its last time during any scroll")
+        clock.setScrolling(true, at: origin.addingTimeInterval(16))
+        expect(clock.frozenDate == origin.addingTimeInterval(10), "changed pan events must not move the frozen time")
+        clock.setScrolling(false, at: origin.addingTimeInterval(20))
+        expect(clock.frozenDate == nil, "ending scroll restores normal scene time")
+        expect(clock.elapsed(at: origin.addingTimeInterval(20)) == 10, "resuming does not jump a train or waterfall forward")
+        expect(clock.elapsed(at: origin.addingTimeInterval(25)) == 15, "normal animation speed returns after the scroll")
+        clock.setScrolling(false, at: origin.addingTimeInterval(30))
+        expect(clock.elapsed(at: origin.addingTimeInterval(30)) == 20, "duplicate stop notifications do not shift the clock")
+        let approaching = CGRect(x: 0, y: 900, width: 390, height: 100)
+        expect(DinoMapViewport.preparesAnimation(frame: approaching, viewportHeight: 852), "nearby effects are still prepared")
+        expect(!DinoMapViewport.isVisible(frame: approaching, viewportHeight: 852), "prepared offscreen effects do not keep ticking")
+        expect(DinoMapViewport.isVisible(frame: approaching.offsetBy(dx: 0, dy: -49), viewportHeight: 852),
+               "the first visible pixel enables normal animation")
+        expect(!DinoMapViewport.isVisible(frame: .zero, viewportHeight: 852), "unlaid-out effects do not tick")
         for viewport: CGFloat in [568, 852, 1194, 1366] {
             let margin = max(1800, viewport * 3)
             let incoming = CGRect(x: 0, y: viewport + margin - 1, width: 390, height: 2200)
@@ -1272,8 +1297,8 @@ struct DinoCoreTests {
         let sameZone = DinoFlightArrivalWork(departure: .init(hour: 9, minute: 30), durationMinutes: 150,
                                              offsetMinutes: 0, arrival: .init(hour: 12))
         expect(sameZone.arrivalLine(language: "nl") == "09:30 + 2 uur 30 min = 12:00", "one zone uses the duration as the only shift")
-        expect(forward.walkMinutes() == [360], "a whole-hour flight shift happens at once, even from 08:15")
-        expect(sameZone.walkMinutes() == [30, 150], "a same-zone flight reaches 10:00 before finishing at 12:00")
+        expect(forward.walkMinutes() == [60, 120, 180, 240, 300, 360], "the flight adds each hour separately from 08:15")
+        expect(sameZone.walkMinutes() == [30, 90, 150], "a same-zone flight reaches 10:00 before adding each remaining hour")
         for shift in [-175, -115, -35, 0, 5, 30, 35, 55, 85, 115, 145, 175] {
             let start = ClockTime(hour: 23, minute: 40)
             let work = DinoFlightArrivalWork(departure: start, durationMinutes: 240, offsetMinutes: shift - 240,
@@ -1284,10 +1309,10 @@ struct DinoCoreTests {
         }
         let rounded = DinoFlightArrivalWork(departure: .init(hour: 23, minute: 40), durationMinutes: 235,
                                             offsetMinutes: -120, arrival: .init(hour: 1, minute: 35))
-        expect(rounded.walkMinutes() == [20, 115], "a flight from 23:40 reaches midnight, then adds the remaining 95 minutes")
+        expect(rounded.walkMinutes() == [20, 80, 115], "a flight from 23:40 reaches midnight, then 01:00, then 01:35")
         let removed = DinoFlightArrivalWork(departure: .init(hour: 10), durationMinutes: 60,
                                             offsetMinutes: -180, arrival: .init(hour: 8))
-        expect(removed.combinedMinutes == -120 && removed.walkMinutes() == [-120], "a departure already on the hour goes straight to the result")
+        expect(removed.combinedMinutes == -120 && removed.walkMinutes() == [-60, -120], "subtraction removes one hour at a time")
         expect(DinoExpandedQuestions.flightDurationMinutes(offsetMinutes: 240, minuteStep: 5, extraSteps: 0) == 360,
                "a four-hour zone change needs at least a six-hour flight")
         expect(DinoTimeWords.hourDifference(2, language: "nl") == "+2 uur" &&
@@ -1326,6 +1351,7 @@ struct DinoCoreTests {
     static func testMinutesBetweenQuestions() {
         let timelines: [(ClockTime, ClockTime, [Int])] = [
             (.init(hour: 13, minute: 30), .init(hour: 15), [30, 60]),
+            (.init(hour: 8), .init(hour: 10, minute: 30), [60, 60, 30]),
             (.init(hour: 13, minute: 45), .init(hour: 15, minute: 15), [15, 60, 15]),
             (.init(hour: 8, minute: 10), .init(hour: 8, minute: 40), [15, 15]),
             (.init(hour: 8), .init(hour: 9), [15, 15, 15, 15]),
@@ -1337,12 +1363,16 @@ struct DinoCoreTests {
             let timeline = DinoMinuteTimeline(start, end)
             expect(timeline.times.first == start && timeline.times.last == end, "timeline preserves both endpoints")
             expect(timeline.segments == expected, "timeline chooses whole hours, quarters or a useful midpoint")
-            for index in timeline.segments.indices {
-                expect(timeline.revealsSegment(index, showsAnswer: false) == (index == 0 && expected.count > 1),
-                       "a hint fills only the first step and never gives away a one-minute answer")
-                expect(timeline.revealsSegment(index, showsAnswer: true), "examples and revealed answers fill every step")
+            expect(timeline.colorGroups.count == expected.count, "each minute block receives a color")
+            for first in expected.indices {
+                for second in expected.indices {
+                    expect((timeline.colorGroups[first] == timeline.colorGroups[second]) == (expected[first] == expected[second]),
+                           "equal amounts share a color and different amounts have different colors")
+                }
             }
         }
+        expect(DinoMinuteTimeline(.init(hour: 8), .init(hour: 10, minute: 30)).colorGroups == [0, 0, 1],
+               "both 60-minute blocks are blue and the 30-minute block is green")
         let calculations: [(ClockTime, ClockTime, Int, Int, Bool)] = [
             (.init(hour: 1), .init(hour: 3), 2, 0, false),
             (.init(hour: 5, minute: 15), .init(hour: 7, minute: 45), 2, 30, false),
@@ -1393,6 +1423,61 @@ struct DinoCoreTests {
                 crossedHour = crossedHour || start.hour != end.hour
             }
             expect(crossedHour, "minute differences include hour changes for every time family")
+        }
+    }
+
+    static func testClockArithmeticDisplay() {
+        func shown(_ hour: Int, _ minute: Int, _ duration: Int, _ adding: Bool,
+                   _ notation: DigitalHourNotation) -> DinoClockArithmeticDisplay {
+            .init(work: .init(start: .init(hour: hour, minute: minute), durationMinutes: duration, adding: adding), notation: notation)
+        }
+        let midnight = shown(23, 50, 20, true, .twentyFour)
+        expect(midnight.hourCarry == 1 && midnight.hourWrap == -24,
+               "midnight keeps +1 and -24 separate instead of combining them into -23")
+        let previousDay = shown(0, 5, 10, false, .twentyFour)
+        expect(previousDay.hourCarry == -1 && previousDay.hourWrap == 24,
+               "borrowing across midnight keeps -1 and +24 separate")
+        let noon = shown(11, 50, 20, true, .twelve)
+        expect(noon.startHour == 11 && noon.resultHour == 12 && noon.hourCarry == 1 && noon.hourWrap == 0 && noon.changesPeriod,
+               "11:50 AM becomes 12:10 PM without a spurious twelve-hour subtraction")
+        let twelveMidnight = shown(23, 50, 20, true, .twelve)
+        expect(twelveMidnight.resultHour == 12 && twelveMidnight.hourWrap == 0 && twelveMidnight.changesPeriod,
+               "11:50 PM becomes 12:10 AM, not zero o'clock")
+        let onePM = shown(12, 30, 60, true, .twelve)
+        expect(onePM.startHour == 12 && onePM.hourSubtotal == 13 && onePM.hourWrap == -12 && onePM.resultHour == 1 && !onePM.changesPeriod,
+               "12:30 PM to 1:30 PM wraps the displayed hour while staying PM")
+        let oneAM = shown(0, 30, 60, true, .twelve)
+        expect(oneAM.startHour == 12 && oneAM.hourWrap == -12 && oneAM.resultHour == 1 && !oneAM.changesPeriod,
+               "12:30 AM to 1:30 AM uses the same dial correction while staying AM")
+        let beforeNoon = shown(12, 5, 10, false, .twelve)
+        expect(beforeNoon.resultHour == 11 && beforeNoon.hourCarry == -1 && beforeNoon.hourWrap == 0 && beforeNoon.changesPeriod,
+               "12:05 PM minus ten minutes is 11:55 AM")
+        let zeroHour = shown(1, 5, 10, false, .twelve)
+        expect(zeroHour.resultHour == 12 && zeroHour.hourCarry == -1 && zeroHour.hourWrap == 12 && !zeroHour.changesPeriod,
+               "a zero displayed hour becomes 12 without incorrectly flipping AM/PM")
+        expect(shown(3, 5, 10, true, .twentyFour).hourEquation == "3 + 0 = 3",
+               "arithmetic numbers do not contain placeholder zeroes")
+        for startMinute in 0..<1440 {
+            let start = ClockTime(hour: startMinute / 60, minute: startMinute % 60)
+            for duration in [0, 1, 10, 59, 60, 70, 90, 720, 1440, 1501] {
+                for adding in [false, true] {
+                    let work = DinoClockArithmetic(start: start, durationMinutes: duration, adding: adding)
+                    let expected = start.adding(minutes: adding ? duration : -duration)
+                    for notation in DigitalHourNotation.allCases {
+                        let display = DinoClockArithmeticDisplay(work: work, notation: notation)
+                        let expectedHour = notation == .twelve ? (expected.hour + 11) % 12 + 1 : expected.hour
+                        expect(display.resultHour == expectedHour, "displayed result agrees with the real time")
+                        expect(display.hourSubtotal + display.hourCarry + display.hourWrap == expectedHour,
+                               "each separate hour correction leads to the displayed result")
+                        expect(display.minuteSubtotal + display.minuteCorrection == expected.minute,
+                               "minute correction leads to the real minute")
+                        expect(display.hourWrap.isMultiple(of: notation == .twelve ? 12 : 24),
+                               "dial correction respects the chosen clock cycle")
+                        expect(display.changesPeriod == (notation == .twelve && start.hour / 12 != expected.hour / 12),
+                               "AM/PM follows actual noon/midnight, including long durations")
+                    }
+                }
+            }
         }
     }
 
@@ -1956,18 +2041,20 @@ struct DinoCoreTests {
             (.init(hour: 23, minute: 40), 0, []),
             (.init(hour: 23, minute: 40), 5, [5]),
             (.init(hour: 23, minute: 40), 20, [20]),
-            (.init(hour: 23, minute: 40), 115, [20, 115]),
+            (.init(hour: 23, minute: 40), 115, [20, 80, 115]),
             (.init(hour: 23, minute: 40), -5, [-5]),
             (.init(hour: 23, minute: 40), -40, [-40]),
-            (.init(hour: 23, minute: 40), -115, [-40, -115]),
+            (.init(hour: 23, minute: 40), -115, [-40, -100, -115]),
             (.init(hour: 0, minute: 10), -45, [-10, -45]),
             (.init(hour: 23, minute: 50), 45, [10, 45]),
-            (.init(hour: 10), 120, [120]),
-            (.init(hour: 10), -120, [-120]),
-            (.init(hour: 14, minute: 40), 120, [120]),
-            (.init(hour: 14, minute: 40), -120, [-120]),
-            (.init(hour: 10, minute: 30), 1440, [1440]),
-            (.init(hour: 10, minute: 30), -1440, [-1440])
+            (.init(hour: 10), 120, [60, 120]),
+            (.init(hour: 10), -120, [-60, -120]),
+            (.init(hour: 14, minute: 40), 120, [60, 120]),
+            (.init(hour: 14, minute: 40), -120, [-60, -120]),
+            (.init(hour: 14, minute: 40), 135, [20, 80, 135]),
+            (.init(hour: 14, minute: 40), -135, [-40, -100, -135]),
+            (.init(hour: 10, minute: 30), 1440, Array(stride(from: 60, through: 1440, by: 60))),
+            (.init(hour: 10, minute: 30), -1440, Array(stride(from: -60, through: -1440, by: -60)))
         ]
         for (start, offset, expected) in animationCases {
             let steps = DinoTimeZoneStep.steps(from: start, offsetMinutes: offset)
@@ -1979,15 +2066,17 @@ struct DinoCoreTests {
             for offset in [-151, -120, -60, -45, -1, 0, 1, 45, 60, 120, 151] {
                 let start = ClockTime(hour: 0, minute: minute)
                 let steps = DinoTimeZoneStep.steps(from: start, offsetMinutes: offset)
-                expect(steps.count <= 2 && (steps.count < 2 || steps[0].time.minute == 0),
-                       "every starting minute needs at most a whole-hour bridge and a remainder")
+                expect(offset.isMultiple(of: 60) || steps.dropLast().allSatisfy { $0.time.minute == 0 },
+                       "minute shifts use whole-hour stops between the bridge and final remainder")
                 expect(steps.last?.addedMinutes == (offset == 0 ? nil : offset), "the shared route finishes at the exact signed shift")
                 if offset != 0 && offset.isMultiple(of: 60) {
-                    expect(steps.count == 1, "whole hours happen at once from every starting minute")
+                    expect(steps.count == abs(offset) / 60 && steps.allSatisfy { $0.time.minute == start.minute },
+                           "whole-hour shifts keep their starting minutes and count each hour separately")
                 }
                 let changes = [0] + steps.map(\.addedMinutes)
-                expect(zip(changes, changes.dropFirst()).allSatisfy { offset > 0 ? $0 < $1 : $0 > $1 },
-                       "both stages keep the same direction without overshooting")
+                expect(zip(changes, changes.dropFirst()).allSatisfy {
+                    abs($1 - $0) <= 60 && (offset > 0 ? $0 < $1 : $0 > $1)
+                }, "each step keeps the same direction and never skips more than an hour")
             }
         }
         let catalog = DinoTimeZoneJourney.capitals
@@ -2028,8 +2117,8 @@ struct DinoCoreTests {
                     expect(q.offsetMinutes == journey.offsetMinutes, "map and question use the same real-world offset")
                     expect(q.relatedTimes[0].adding(minutes: journey.offsetMinutes) == q.target, "geographic time-zone calculation survives midnight")
                     let walked = journey.steps(from: q.relatedTimes[0])
-                    expect(walked.count <= 2 && (walked.count < 2 || walked[0].time.minute == 0) && walked.last?.time == q.target,
-                           "the example reaches a whole hour first and finishes in at most two stages")
+                    expect((q.offsetMinutes.isMultiple(of: 60) || walked.dropLast().allSatisfy { $0.time.minute == 0 }) &&
+                           walked.last?.time == q.target, "the example uses whole-hour stops before its exact destination time")
                     expect(q.options.count == 4 && Set(q.options).count == 4 && q.options.contains(q.target), "four distinct answer choices include the correct time")
                     expect(q.options.allSatisfy { family.minutes.contains($0.minute) }, "time-zone choices retain the selected minute family")
                     switch q.difficulty {
@@ -2126,10 +2215,10 @@ struct DinoCoreTests {
                "the replay starts with placeholder minute zeroes")
         for (minute, legs, expected) in [
             (45, [15, 15, 15], [15, 45]),
-            (10, [100, 10, 60], [50, 170]),
+            (10, [100, 10, 60], [50, 110, 170]),
             (45, [10, 1, 3], [14]),
-            (40, [60, 60, 60], [180]),
-            (0, [60, 60, 60], [180])
+            (40, [60, 60, 60], [60, 120, 180]),
+            (0, [60, 60, 60], [60, 120, 180])
         ] {
             let schedule = DinoDaySchedule(start: .init(hour: 8, minute: minute), firstActivity: .drawing,
                                            firstMinutes: legs[0], breakMinutes: legs[1],
@@ -2164,9 +2253,10 @@ struct DinoCoreTests {
                 expect(schedule.end == question.target && question.relatedTimes == [schedule.start] &&
                        question.durationMinutes == schedule.totalMinutes, "the correct answer includes both activities and the break")
                 let walk = schedule.walkMinutes()
-                expect(walk.count <= 2 && (walk.count < 2 || schedule.start.adding(minutes: walk[0]).minute == 0) &&
-                       walk.last == schedule.totalMinutes && zip([0] + walk, walk).allSatisfy { $0 < $1 },
-                       "all generated train replays increase until the exact total, without overshooting")
+                expect((schedule.totalMinutes.isMultiple(of: 60) || walk.dropLast().allSatisfy {
+                    schedule.start.adding(minutes: $0).minute == 0
+                }) && walk.last == schedule.totalMinutes && zip([0] + walk, walk).allSatisfy { $0 < $1 && $1 - $0 <= 60 },
+                       "all generated train replays count at most one hour per step until their exact total")
                 expect(!AnswerValidator.isCorrect(schedule.firstEnd, for: question) &&
                        !AnswerValidator.isCorrect(schedule.start.adding(minutes: schedule.firstMinutes + schedule.secondMinutes), for: question),
                        "stopping after the first activity and forgetting the break are rejected")

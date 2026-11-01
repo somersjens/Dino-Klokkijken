@@ -4,6 +4,7 @@ import SwiftUI
 struct DinoTimeArithmeticExplanation: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
     let work: DinoClockArithmetic
     let theme: ClockTheme
     let language: String
@@ -18,6 +19,7 @@ struct DinoTimeArithmeticExplanation: View {
     var demonstrates = false
     @State private var stage = Stage.resting
     @State private var activeWork: DinoClockArithmetic?
+    @State private var activeNotation: DigitalHourNotation?
     @State private var splitProgress: CGFloat = 0
     @State private var resultProgress: CGFloat = 0
     @State private var clockHeight: CGFloat = 0
@@ -52,9 +54,14 @@ struct DinoTimeArithmeticExplanation: View {
     private var digitFont: CGFloat { (layoutWidth < 360 ? 18 : 20) * layoutScale }
     private var blockHeight: CGFloat { digitFont + 16 * layoutScale }
     private func boxWidth(slots: Int) -> CGFloat { digitFont * 0.92 * CGFloat(max(slots, 2)) + 20 * layoutScale }
+    private var notation: DigitalHourNotation { theme.resolvedHourNotation(device: deviceHourFormat.notation) }
+    private var display: DinoClockArithmeticDisplay { .init(work: work, notation: notation) }
+    private var startReading: DigitalClockReading { work.start.digitalReading(notation: notation, languageCode: language) }
+    private var resultReading: DigitalClockReading { work.result.digitalReading(notation: notation, languageCode: language) }
     private var columnSlots: Int {
-        max(digitSlots(work.hours, addend: work.differenceHours),
-            digitSlots(work.minutes, addend: work.differenceMinutes))
+        max(2, [display.startHour, display.hourSubtotal, display.minuteSubtotal,
+                work.start.minute, work.differenceHours, work.differenceMinutes]
+            .map { String(abs($0)).count + ($0 < 0 ? 1 : 0) }.max() ?? 2)
     }
     private var columnWidth: CGFloat { boxWidth(slots: columnSlots) }
     private var edgeInset: CGFloat { signGap + signWidth + 8 * layoutScale }
@@ -68,7 +75,7 @@ struct DinoTimeArithmeticExplanation: View {
         layoutWidth - 2 * (edgeInset + columnWidth + 12 * layoutScale)
     }
     private var shownClockFont: CGFloat {
-        min(clockFont, centerWidth / 4.2)
+        min(clockFont, centerWidth / (notation == .twelve ? 5.1 : 4.2))
     }
     private var columnStep: CGFloat {
         max((clockHeight + differenceHeight) / 2 + 10, blockHeight + 28 * layoutScale)
@@ -77,23 +84,11 @@ struct DinoTimeArithmeticExplanation: View {
         max(0, columnStep - (differenceHeight + blockHeight) / 2 - 10)
     }
     private var resultVisible: Bool { explains && showsResult && stage >= .corrected }
-    private var playID: String { "\(explains)-\(showsResult)-\(work.adding)-\(work.start.digitalText)-\(work.differenceHours)-\(work.differenceMinutes)" }
-
-    private var hourFix: Int {
-        work.hours.sums.dropFirst().reduce(0) { partial, sum in
-            let magnitude = sum.terms.last ?? 0
-            return partial + (sum.operation == .add ? magnitude : -magnitude)
-        }
-    }
-    private var minuteFix: Int {
-        guard let sum = work.minutes.sums.dropFirst().last else { return 0 }
-        let magnitude = sum.terms.last ?? 0
-        return sum.operation == .add ? magnitude : -magnitude
-    }
+    private var playID: String { "\(notation.rawValue)-\(explains)-\(showsResult)-\(work.adding)-\(work.start.digitalText)-\(work.differenceHours)-\(work.differenceMinutes)" }
 
     var body: some View {
         VStack(spacing: 10) {
-            DigitalClock(time: work.start, theme: theme, fontSize: shownClockFont, notation: .twentyFour)
+            DigitalClock(time: work.start, theme: theme, fontSize: shownClockFont, notation: notation)
                 .anchorPreference(key: FieldAnchorsKey.self, value: .bounds) { [FieldAnchor(row: -1, hours: true): $0] }
                 .accessibilityIdentifier(startIdentifier)
                 .readGeometry(for: CGFloat.self) { $0.size.height } action: { clockHeight = $0 }
@@ -105,12 +100,19 @@ struct DinoTimeArithmeticExplanation: View {
                     .padding(.top, totalsTopPadding)
                     .transition(.opacity)
                 if resultVisible {
-                    DigitalClock(time: work.result, theme: theme, fontSize: shownClockFont, notation: .twentyFour)
+                    DigitalClock(time: work.result, theme: theme, fontSize: shownClockFont, notation: notation)
                         .anchorPreference(key: FieldAnchorsKey.self, value: .bounds) { [FieldAnchor(row: 1, hours: true): $0] }
-                        .accessibilityLabel(Text(verbatim: work.result.digitalText))
+                        .accessibilityLabel(Text(verbatim: resultReading.text))
                         .accessibilityIdentifier(resultIdentifier)
                         .padding(.top, 6 * layoutScale)
                         .transition(.opacity)
+                    if display.changesPeriod, let start = startReading.period, let end = resultReading.period {
+                        Text(verbatim: "\(start) → \(end)")
+                            .font(.system(size: 12 * layoutScale, weight: .bold, design: .rounded))
+                            .foregroundStyle(blue)
+                            .accessibilityIdentifier("\(prefix).timeArithmetic.periodChange")
+                            .transition(.opacity)
+                    }
                 }
             }
         }
@@ -179,17 +181,17 @@ struct DinoTimeArithmeticExplanation: View {
         let hourX = columnX(hours: true)
         let minuteX = columnX(hours: false)
         return ZStack {
-            columnPieces(work.hours, addend: work.differenceHours, hours: true,
+            columnPieces(addend: work.differenceHours, hours: true,
                          x: hourX, clockY: clock.midY, barY: bar.midY, step: columnStep)
-            columnPieces(work.minutes, addend: work.differenceMinutes, hours: false,
+            columnPieces(addend: work.differenceMinutes, hours: false,
                          x: minuteX, clockY: clock.midY, barY: bar.midY, step: columnStep)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    private func columnPieces(_ column: DinoClockColumnWork, addend: Int, hours: Bool,
+    private func columnPieces(addend: Int, hours: Bool,
                               x: CGFloat, clockY: CGFloat, barY: CGFloat, step: CGFloat) -> some View {
-        let opening = column.sums.first?.terms.first ?? column.passthrough ?? 0
+        let opening = hours ? display.startHour : work.start.minute
         let slots = columnSlots
         let ruleExtension = signWidth + signGap
         let ruleY = barY + step / 2
@@ -197,7 +199,7 @@ struct DinoTimeArithmeticExplanation: View {
             block(opening, slots: slots)
                 .position(x: x, y: clockY)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text(verbatim: column.sums.first?.equation ?? "\(clockDigits(opening, padded: true)) \(operation.symbol) \(clockDigits(addend, padded: true))"))
+                .accessibilityLabel(Text(verbatim: hours ? display.hourEquation : display.minuteEquation))
                 .accessibilityIdentifier("\(prefix).timeArithmetic.\(hours ? "hours" : "minutes")")
                 .opacity(helperVisible(hours ? 1 : 2) ? 1 : 0)
                 .accessibilityHidden(!helperVisible(hours ? 1 : 2))
@@ -218,16 +220,16 @@ struct DinoTimeArithmeticExplanation: View {
     /// Actual layout content ends at the subtotals until the answer is revealed.
     private var totalsRow: some View {
         HStack(spacing: 0) {
-            totalBlock(work.hours, hours: true)
+            totalBlock(hours: true)
             Spacer(minLength: 0)
-            totalBlock(work.minutes, hours: false)
+            totalBlock(hours: false)
         }
         .padding(.horizontal, edgeInset)
         .frame(width: layoutWidth)
     }
 
-    private func totalBlock(_ column: DinoClockColumnWork, hours: Bool) -> some View {
-        let value = column.sums.first?.result ?? column.passthrough ?? 0
+    private func totalBlock(hours: Bool) -> some View {
+        let value = hours ? display.hourSubtotal : display.minuteSubtotal
         return block(value, slots: columnSlots, outlined: false)
             .anchorPreference(key: FieldAnchorsKey.self, value: .bounds) { [FieldAnchor(row: 0, hours: hours): $0] }
             .accessibilityElement(children: .ignore)
@@ -238,11 +240,17 @@ struct DinoTimeArithmeticExplanation: View {
     }
 
     private func block(_ value: Int, slots: Int, outlined: Bool = true) -> some View {
-        HStack(spacing: 0) {
-            if value < 0 {
-                Text(verbatim: "−").foregroundStyle(DinoTimeDirection.color(later: false, highContrast: highContrast))
+        ZStack(alignment: .trailing) {
+            // Measure an invisible digit grid in the selected font; every units digit shares its right edge.
+            Text(verbatim: String(repeating: "0", count: max(2, slots)))
+                .hidden()
+                .accessibilityHidden(true)
+            HStack(spacing: 0) {
+                if value < 0 {
+                    Text(verbatim: "−").foregroundStyle(DinoTimeDirection.color(later: false, highContrast: highContrast))
+                }
+                Text(verbatim: String(abs(value)))
             }
-            Text(verbatim: clockDigits(abs(value), padded: abs(value) < 100))
         }
         .font(.system(size: digitFont, weight: .heavy, design: digitDesign))
         .monospacedDigit()
@@ -267,14 +275,6 @@ struct DinoTimeArithmeticExplanation: View {
             .foregroundStyle(DinoTimeDirection.color(later: sign == .add, highContrast: highContrast))
             .frame(width: signWidth, height: signWidth)
             .accessibilityHidden(true)
-    }
-
-    private func digitSlots(_ column: DinoClockColumnWork, addend: Int) -> Int {
-        let opening = column.sums.first?.terms.first ?? column.passthrough ?? 0
-        let raw = column.sums.first?.result ?? opening
-        return max(2, [opening, addend, raw].map { value in
-            (abs(value) < 100 ? 2 : String(abs(value)).count) + (value < 0 ? 1 : 0)
-        }.max() ?? 2)
     }
 
     private func splitGuides(clock: CGRect, bar: CGRect) -> some View {
@@ -315,39 +315,34 @@ struct DinoTimeArithmeticExplanation: View {
         if let hours = anchors[FieldAnchor(row: 0, hours: true)].map({ geometry[$0] }),
            let minutes = anchors[FieldAnchor(row: 0, hours: false)].map({ geometry[$0] }),
            let clock = anchors[FieldAnchor(row: 1, hours: true)].map({ geometry[$0] }) {
-            let changed = hourFix != 0 || minuteFix != 0
             // Keep enough horizontal shaft for the correction badge on narrow displays.
             let hourBend = max(hours.maxX + 44 * layoutScale, clock.minX + clock.width * 0.18)
             let minuteBend = min(minutes.minX - 44 * layoutScale, clock.maxX - clock.width * 0.18)
             GuideArrow(from: CGPoint(x: hours.maxX, y: hours.midY),
                        to: CGPoint(x: hourBend, y: clock.minY),
-                       label: hourFix == 0 ? nil : signed(hourFix),
+                       label: display.hourCarry == 0 ? nil : signed(display.hourCarry),
                        color: blue,
-                       labelColor: arrowColor(hourFix, changed: changed && hourFix != 0),
-                       progress: resultProgress, scale: layoutScale)
+                       labelColor: arrowColor(display.hourCarry),
+                       progress: resultProgress, scale: layoutScale,
+                       sideLabel: display.hourWrap == 0 ? nil : signed(display.hourWrap),
+                       sideLabelColor: arrowColor(display.hourWrap))
                 .accessibilityIdentifier("\(prefix).timeArithmetic.arrow.result.hours")
             GuideArrow(from: CGPoint(x: minutes.minX, y: minutes.midY),
                        to: CGPoint(x: minuteBend, y: clock.minY),
-                       label: minuteFix == 0 ? nil : signed(minuteFix),
+                       label: display.minuteCorrection == 0 ? nil : signed(display.minuteCorrection),
                        color: blue,
-                       labelColor: arrowColor(minuteFix, changed: changed && minuteFix != 0),
+                       labelColor: arrowColor(display.minuteCorrection),
                        progress: resultProgress, scale: layoutScale)
                 .accessibilityIdentifier("\(prefix).timeArithmetic.arrow.result.minutes")
         }
     }
 
-    private func arrowColor(_ delta: Int, changed: Bool) -> Color {
-        guard changed else { return blue }
+    private func arrowColor(_ delta: Int) -> Color {
         return DinoTimeDirection.color(later: delta >= 0, highContrast: highContrast)
     }
 
     private func signed(_ value: Int) -> String {
         value < 0 ? "−\(abs(value))" : "+\(value)"
-    }
-
-    private func clockDigits(_ value: Int, padded: Bool) -> String {
-        if padded && abs(value) < 100 { return String(format: "%02d", abs(value)) }
-        return String(abs(value))
     }
 
     private var digitDesign: Font.Design {
@@ -359,11 +354,12 @@ struct DinoTimeArithmeticExplanation: View {
     }
 
     @MainActor private func play() async {
-        if activeWork != work || !explains {
+        if activeWork != work || activeNotation != notation || !explains {
             var reset = Transaction()
             reset.disablesAnimations = true
             withTransaction(reset) {
                 activeWork = work
+                activeNotation = notation
                 stage = .resting
                 splitProgress = 0
                 resultProgress = 0
@@ -428,6 +424,8 @@ private struct GuideArrow: View {
     let labelColor: Color
     let progress: CGFloat
     let scale: CGFloat
+    var sideLabel: String? = nil
+    var sideLabelColor: Color = .clear
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -438,23 +436,35 @@ private struct GuideArrow: View {
                 .fill(color)
                 .opacity(progress)
             if let label {
-                Text(verbatim: label)
-                    .font(.system(size: 12 * scale, weight: .heavy, design: .rounded))
-                    .foregroundStyle(labelColor)
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .fixedSize()
-                    .padding(.horizontal, 5 * scale)
-                    .padding(.vertical, 2 * scale)
-                    .background(.white.opacity(0.92), in: Capsule())
-                    .overlay(Capsule().stroke(labelColor.opacity(0.45), lineWidth: 1))
+                badge(label, color: labelColor)
                     // Anchor the badge's near edge just before the bend, above the horizontal shaft.
                     .frame(width: 0, height: 0, alignment: from.x < to.x ? .trailing : .leading)
                     .position(x: to.x + (from.x < to.x ? -4 : 4) * scale, y: from.y - 14 * scale)
                     .opacity(progress)
             }
+            if let sideLabel {
+                badge(sideLabel, color: sideLabelColor)
+                    .frame(width: 0, height: 0, alignment: .leading)
+                    .position(x: to.x + 6 * scale, y: (from.y + to.y) / 2)
+                    .opacity(progress)
+            }
         }
-        .accessibilityHidden(true)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: [label, sideLabel].compactMap { $0 }.joined(separator: ", ")))
+        .accessibilityHidden(label == nil && sideLabel == nil)
+    }
+
+    private func badge(_ text: String, color: Color) -> some View {
+        Text(verbatim: text)
+            .font(.system(size: 12 * scale, weight: .heavy, design: .rounded))
+            .foregroundStyle(color)
+            .monospacedDigit()
+            .lineLimit(1)
+            .fixedSize()
+            .padding(.horizontal, 5 * scale)
+            .padding(.vertical, 2 * scale)
+            .background(.white.opacity(0.92), in: Capsule())
+            .overlay(Capsule().stroke(color.opacity(0.45), lineWidth: 1))
     }
 }
 

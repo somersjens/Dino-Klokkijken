@@ -42,9 +42,6 @@ struct MapOpeningView: View {
                         OpeningClock(size: side * 0.83, paused: reduceMotion || scenePhase != .active)
                             .environment(\.dinoHighContrast, highContrast)
                             .position(x: source.x + insets.leading, y: origin.y + side * 0.43 + insets.top)
-                        OpeningFoliage()
-                            .frame(width: side, height: side * 1.13)
-                            .position(x: geometry.size.width / 2 + insets.leading, y: origin.y + side * 0.565 + insets.top)
                     }
                 }
                 // The hosting controller has its own bounds. Include the outer
@@ -67,6 +64,12 @@ struct MapOpeningView: View {
                         .zIndex(1)
                         .accessibilityHidden(true)
                 }
+                OpeningScenery(startedAt: jumpStartedAt, reducedMotion: reduceMotion) {
+                    OpeningFoliage()
+                }
+                    .frame(width: side, height: side * 1.13)
+                    .position(x: geometry.size.width / 2, y: origin.y + side * 0.565)
+                    .zIndex(2)
                 OpeningScenery(startedAt: jumpStartedAt, reducedMotion: reduceMotion) {
                     OpeningTitleBoard(artwork: title)
                 }
@@ -576,9 +579,10 @@ private final class OpeningTitleGeometry {
         let letters = first.union(second)
         wood = Self.expanded(letters, radius: 44)
         face = Self.expanded(letters, radius: 31)
-        revealEdge = Self.upperEdge(of: Self.expanded(first, radius: 44))
+        revealEdge = Self.upperEdge(of: wood)
         // Register the highest painted spike, rather than the transparent square.
-        headClearance = revealEdge.filter { (405...500).contains($0.x) }.map(\.y).max() ?? 40
+        headClearance = Self.upperEdge(of: Self.expanded(first, radius: 44))
+            .filter { (405...500).contains($0.x) }.map(\.y).max() ?? 40
     }
     private static func expanded(_ path: CGPath, radius: CGFloat) -> CGPath {
         let outline = path.union(path.copy(strokingWithWidth: radius * 2, lineCap: .round, lineJoin: .round, miterLimit: 1))
@@ -655,7 +659,7 @@ private final class OpeningTitleGeometry {
         // Sample vector segments once. Per-frame mask animation only moves this
         // short polyline, without re-running font shaping or path operations.
         let step: CGFloat = 4
-        var values = [CGFloat](repeating: .greatestFiniteMagnitude, count: 251)
+        var values = [CGFloat](repeating: .infinity, count: 251)
         var current = CGPoint.zero
         var start = CGPoint.zero
         func segment(_ a: CGPoint, _ b: CGPoint) {
@@ -679,9 +683,9 @@ private final class OpeningTitleGeometry {
             }
         }
         return values.enumerated().map { index, y in
-            // Outside the first word, keep the low tail completely behind the
-            // logo rather than exposing small, horizontally clipped spike tips.
-            CGPoint(x: CGFloat(index) * step, y: y.isFinite && y < 540 ? y : path.boundingBoxOfPath.minY - 36)
+            // Only the wooden silhouette occludes Dino. Outside the lettering,
+            // let arms clear the sides instead of extending its highest edge.
+            CGPoint(x: CGFloat(index) * step, y: y.isFinite ? y : width * aspect)
         }
     }
 }
@@ -689,41 +693,50 @@ private final class OpeningTitleGeometry {
 private struct OpeningTitleBoard: View {
     let artwork: OpeningTitleGeometry
     var body: some View {
-        Canvas { context, size in
-            context.scaleBy(x: size.width / OpeningTitleGeometry.width, y: size.width / OpeningTitleGeometry.width)
-            let wood = Path(artwork.wood)
-            let face = Path(artwork.face)
-            context.drawLayer { shadow in
-                shadow.addFilter(.shadow(color: Color(dinoHex: 0x3F3218).opacity(0.27), radius: 15, y: 18))
-                shadow.fill(wood.offsetBy(dx: 0, dy: 12), with: .color(Color(dinoHex: 0x5B2B10)))
-            }
-            context.fill(wood, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xF6BC69),
-                Color(dinoHex: 0xA65B20), Color(dinoHex: 0x6D3514)]),
-                startPoint: CGPoint(x: 200, y: 0), endPoint: CGPoint(x: 650, y: 540)))
-            context.stroke(wood, with: .color(Color(dinoHex: 0x6B3215)), style: StrokeStyle(lineWidth: 4, lineJoin: .round))
-            context.fill(face, with: .linearGradient(Gradient(stops: [
-                .init(color: Color(dinoHex: 0xE8A552), location: 0),
-                .init(color: Color(dinoHex: 0xC97C32), location: 0.35),
-                .init(color: Color(dinoHex: 0xA45B24), location: 0.75),
-                .init(color: Color(dinoHex: 0xBD7232), location: 1)
-            ]), startPoint: CGPoint(x: 300, y: 0), endPoint: CGPoint(x: 600, y: 540)))
-            context.stroke(face, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xFFE0A1),
-                Color(dinoHex: 0xD79A56), Color(dinoHex: 0xEEB66F)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: 540)),
-                style: StrokeStyle(lineWidth: 3.2, lineJoin: .round))
-            context.drawLayer { grain in
-                grain.clip(to: face)
-                for row in 0..<18 {
-                    let y = CGFloat(row) * 33
-                    var line = Path()
-                    line.move(to: CGPoint(x: 0, y: y))
-                    line.addCurve(to: CGPoint(x: 1000, y: y + 7),
-                        control1: CGPoint(x: 330, y: y - 28), control2: CGPoint(x: 650, y: y + 31))
-                    grain.stroke(line, with: .color(Color(dinoHex: 0x7A3D19).opacity(row.isMultiple(of: 3) ? 0.23 : 0.12)), lineWidth: 2.4)
-                    grain.stroke(line.offsetBy(dx: 0, dy: 3), with: .color(Color(dinoHex: 0xFFE0A3).opacity(0.14)), lineWidth: 1.2)
+        GeometryReader { geometry in
+            let scale = geometry.size.width / OpeningTitleGeometry.width
+            // Canvas filters need real drawing space beyond the board bounds;
+            // otherwise the lower blur is cut off along a horizontal line.
+            let margin = 96 * scale
+            Canvas { context, _ in
+                context.translateBy(x: margin, y: margin)
+                context.scaleBy(x: scale, y: scale)
+                let wood = Path(artwork.wood)
+                let face = Path(artwork.face)
+                context.drawLayer { shadow in
+                    shadow.addFilter(.shadow(color: Color(dinoHex: 0x3F3218).opacity(0.27), radius: 15, y: 18))
+                    shadow.fill(wood.offsetBy(dx: 0, dy: 12), with: .color(Color(dinoHex: 0x5B2B10)))
                 }
+                context.fill(wood, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xF6BC69),
+                    Color(dinoHex: 0xA65B20), Color(dinoHex: 0x6D3514)]),
+                    startPoint: CGPoint(x: 200, y: 0), endPoint: CGPoint(x: 650, y: 540)))
+                context.stroke(wood, with: .color(Color(dinoHex: 0x6B3215)), style: StrokeStyle(lineWidth: 4, lineJoin: .round))
+                context.fill(face, with: .linearGradient(Gradient(stops: [
+                    .init(color: Color(dinoHex: 0xE8A552), location: 0),
+                    .init(color: Color(dinoHex: 0xC97C32), location: 0.35),
+                    .init(color: Color(dinoHex: 0xA45B24), location: 0.75),
+                    .init(color: Color(dinoHex: 0xBD7232), location: 1)
+                ]), startPoint: CGPoint(x: 300, y: 0), endPoint: CGPoint(x: 600, y: 540)))
+                context.stroke(face, with: .linearGradient(Gradient(colors: [Color(dinoHex: 0xFFE0A1),
+                    Color(dinoHex: 0xD79A56), Color(dinoHex: 0xEEB66F)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: 540)),
+                    style: StrokeStyle(lineWidth: 3.2, lineJoin: .round))
+                context.drawLayer { grain in
+                    grain.clip(to: face)
+                    for row in 0..<18 {
+                        let y = CGFloat(row) * 33
+                        var line = Path()
+                        line.move(to: CGPoint(x: 0, y: y))
+                        line.addCurve(to: CGPoint(x: 1000, y: y + 7),
+                            control1: CGPoint(x: 330, y: y - 28), control2: CGPoint(x: 650, y: y + 31))
+                        grain.stroke(line, with: .color(Color(dinoHex: 0x7A3D19).opacity(row.isMultiple(of: 3) ? 0.23 : 0.12)), lineWidth: 2.4)
+                        grain.stroke(line.offsetBy(dx: 0, dy: 3), with: .color(Color(dinoHex: 0xFFE0A3).opacity(0.14)), lineWidth: 1.2)
+                    }
+                }
+                title(artwork.first, in: &context, colors: [0xFFF5A0, 0xFFE14C, 0xFFBE23], edge: 0xB8640A)
+                title(artwork.second, in: &context, colors: [0xD5F99A, 0x81D349, 0x4DAA30], edge: 0x2F771F)
             }
-            title(artwork.first, in: &context, colors: [0xFFF5A0, 0xFFE14C, 0xFFBE23], edge: 0xB8640A)
-            title(artwork.second, in: &context, colors: [0xD5F99A, 0x81D349, 0x4DAA30], edge: 0x2F771F)
+            .frame(width: geometry.size.width + margin * 2, height: geometry.size.height + margin * 2)
+            .offset(x: -margin, y: -margin)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: L("dino.launch.title.firstLine") + " " + L("dino.launch.title.secondLine")))

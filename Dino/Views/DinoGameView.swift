@@ -31,7 +31,8 @@ struct DinoGameView: View {
             let playHeight = max(0, questionViewport - (session.level.isBoss ? 40 : 0))
             let short = tablet ? questionViewport < 560 : g.size.height < 700
             let expandsReadingClock = session.question.kind == .chooseDigital && session.showsClockHandHints
-            let questionPadding: CGFloat = short || expandsReadingClock || session.question.kind == .timeSequence ? 12 : 20
+            let questionPadding: CGFloat = session.question.kind == .minutesBetween ? 10
+                : short || expandsReadingClock || session.question.kind == .timeSequence ? 12 : 20
             let readingClockSpace: CGFloat = expandsReadingClock && !short ? 16 : 0
             let interactiveClock = wide && [.setAnalog, .advanceAnalog].contains(session.question.kind)
             let clockSize = min(tablet ? 240 : 210, width * 0.54,
