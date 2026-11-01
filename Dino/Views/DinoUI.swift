@@ -127,7 +127,11 @@ struct PreparedMapArtwork<Content: View>: View {
 final class DinoMapArtworkCache: ObservableObject {
     static let shared = DinoMapArtworkCache()
     private let images = NSCache<NSString, UIImage>()
-    private var pendingBitmaps: [String: Task<UIImage?, Never>] = [:]
+    private struct ArtworkRequest {
+        let task: Task<UIImage?, Never>
+        var consumers: Set<UUID>
+    }
+    private var pendingBitmaps: [String: ArtworkRequest] = [:]
     private let directory: URL
     @Published private(set) var rasterizationCount = 0
 #if DEBUG
@@ -164,11 +168,50 @@ final class DinoMapArtworkCache: ObservableObject {
 
     func image<Content: View>(key: String, worldID: Int, size: CGSize, routeOffset: CGFloat,
                              scale: CGFloat, content: Content, tileContent: ((CGRect) -> Content)? = nil) async -> UIImage? {
+        // Coalesce the complete request, including geometry and disk decoding.
+        // Previously only castle raster strips shared work; simultaneous callers
+        // could still prepare and decode the same artwork more than once.
+        guard !Task.isCancelled else { return nil }
+        let consumer = UUID()
+        let pending: Task<UIImage?, Never>
+        if var request = pendingBitmaps[key] {
+            request.consumers.insert(consumer)
+            pendingBitmaps[key] = request
+            pending = request.task
+        } else {
+            pending = Task { @MainActor in
+                await self.loadImage(key: key, worldID: worldID, size: size,
+                                     routeOffset: routeOffset, scale: scale, content: content, tileContent: tileContent)
+            }
+            pendingBitmaps[key] = ArtworkRequest(task: pending, consumers: [consumer])
+        }
+        defer { releaseRequest(key: key, consumer: consumer) }
+        return await withTaskCancellationHandler {
+            await pending.value
+        } onCancel: {
+            Task { @MainActor in self.releaseRequest(key: key, consumer: consumer) }
+        }
+    }
+
+    private func releaseRequest(key: String, consumer: UUID) {
+        guard var request = pendingBitmaps[key], request.consumers.remove(consumer) != nil else { return }
+        if request.consumers.isEmpty {
+            request.task.cancel()
+            pendingBitmaps[key] = nil
+        } else {
+            pendingBitmaps[key] = request
+        }
+    }
+
+    private func loadImage<Content: View>(key: String, worldID: Int, size: CGSize, routeOffset: CGFloat,
+                                         scale: CGFloat, content: Content,
+                                         tileContent: ((CGRect) -> Content)?) async -> UIImage? {
         // Live layers need their geometry even when the terrain came from disk.
         // Start it ahead of the viewport, rather than on an actor's first frame.
         let preparation = Task.detached(priority: .userInitiated) {
             DinoMapArtworkPreparation.prepare(worldID: worldID, size: size, routeOffset: routeOffset)
         }
+        defer { preparation.cancel() }
         if let cached = cached(key) {
             await preparation.value
             return cached
@@ -184,7 +227,6 @@ final class DinoMapArtworkCache: ObservableObject {
             return diskImage
         }
         if let cached = cached(key) { return cached }
-        if let pending = pendingBitmaps[key] { return await pending.value }
 #if DEBUG
         let rasterStarted = ProcessInfo.processInfo.systemUptime
 #endif
@@ -193,12 +235,7 @@ final class DinoMapArtworkCache: ObservableObject {
         renderer.proposedSize = ProposedViewSize(size)
         let image: UIImage?
         if worldID == 10, let tileContent {
-            let pending = Task { @MainActor in
-                await self.tiledImage(size: size, scale: scale, content: tileContent)
-            }
-            pendingBitmaps[key] = pending
-            image = await pending.value
-            pendingBitmaps[key] = nil
+            image = await tiledImage(size: size, scale: scale, content: tileContent)
         } else {
             image = renderer.uiImage
         }
@@ -920,6 +957,26 @@ extension View {
         } else {
             self
         }
+    }
+
+    /// One counterclockwise turn after the clock's final digits have settled.
+    func replayCompletionTurn(_ completion: Int) -> some View {
+        modifier(DinoReplayCompletionTurn(completion: completion))
+    }
+}
+
+private struct DinoReplayCompletionTurn: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let completion: Int
+    @State private var angle = 0.0
+
+    func body(content: Content) -> some View {
+        content
+            .rotationEffect(.degrees(reduceMotion ? 0 : angle))
+            .onValueChange(of: completion) { _ in
+                guard !reduceMotion else { return }
+                withAnimation(.easeInOut(duration: 0.65)) { angle -= 360 }
+            }
     }
 }
 

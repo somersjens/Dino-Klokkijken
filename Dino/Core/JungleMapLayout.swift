@@ -54,6 +54,14 @@ struct WorldBossStage {
 }
 
 enum DinoMapViewport {
+    /// Keep a prepared chapter through short reversals at the preload boundary.
+    /// Distances are screen points, also when the iPad map is scaled.
+    static func preparesScenery(frame: CGRect, viewportHeight: CGFloat, retained: Bool) -> Bool {
+        let margin = max(1800, viewportHeight * 3) + (retained ? max(512, viewportHeight) : 0)
+        return frame.width > 0 && frame.height > 0 &&
+            frame.maxY >= -margin && frame.minY <= viewportHeight + margin
+    }
+
     /// Prepare actors before they enter view; keep them a little longer on exit
     /// so small back-and-forth drags do not recreate their static masks.
     static func preparesAnimation(frame: CGRect, viewportHeight: CGFloat, retained: Bool = false) -> Bool {

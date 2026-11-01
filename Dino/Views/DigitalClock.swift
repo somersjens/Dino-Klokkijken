@@ -347,8 +347,7 @@ struct DigitalClockControl: View {
                      notation: notation, feedbackCorrect: feedbackCorrect)
             .environment(\.dinoClockReadingAssistance, false)
             .accessibilityIdentifier(valueIdentifier)
-            // The reading pointers use the space previously occupied by the up arrows.
-            // Reserve it before checking so the submitted display stays on its baseline.
+            // In examples the reading pointers share the upper controls' space.
             .padding(.top, showHandHints ? 48 : 0)
             .padding(.bottom, 48)
             .overlayPreferenceValue(DigitalClockFieldAnchors.self) { anchors in
@@ -369,7 +368,8 @@ struct DigitalClockControl: View {
                                                     wings: [CGPoint(x: 10.5, y: 38), CGPoint(x: 19.5, y: 38)],
                                                     ink: field == .minutes ? theme.minuteHex : theme.hourHex,
                                                     bounds: CGSize(width: 30, height: 48))
-                                    .position(x: center, y: -24)
+                                    .position(x: center, y: 22)
+                                    .allowsHitTesting(false)
                                     .accessibilityHidden(true)
                             }
                         }
@@ -381,7 +381,6 @@ struct DigitalClockControl: View {
                 .allowsHitTesting(controlsEnabled)
                 .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: controlsEnabled)
             }
-            .padding(.top, showHandHints ? 48 : 0)
             .disabled(feedbackCorrect != nil)
             .accessibilityElement(children: .contain)
             .environment(\.layoutDirection, .leftToRight)

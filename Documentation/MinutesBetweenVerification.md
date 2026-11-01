@@ -1,6 +1,6 @@
-# Vraagtype 21 – Verschil in minuten
+# Vraagtype 16 – Verschil in minuten
 
-Vraagtype 21 staat na de dagplanning in Levels oefenen. Het heeft een eigen record per tijdsoort en draait mee in Oplopend en Mix. De bestaande nummering blijft behouden.
+Vraagtype 16 staat na optellen en aftrekken in Levels oefenen. Het heeft een eigen record per tijdsoort en draait mee in Oplopend en Mix.
 
 De vraag is **Hoeveel minuten zitten ertussen?** Twee digitale klokken gebruiken de persoonlijke klokstijl. Onder Van en Tot verbindt een groene tijdlijn beide tijden; een gestippelde capsule toont `? min`. De afgeronde kaart gebruikt het groene apppalet, een lichte achtergrond en een zachte schaduw. Vier antwoordknoppen tonen uitsluitend minuten, bijvoorbeeld **120 minuten** voor twee uur. De teksten zijn beschikbaar in Nederlands en Engels.
 
@@ -8,7 +8,7 @@ Beide tijden volgen de gekozen minuutfamilie. De eindtijd ligt later op dezelfde
 
 Bij een fout antwoord blijft het vraagteken staan tijdens herkansingen. Na een juiste keuze of Toon antwoord verschijnt het juiste aantal minuten in de tijdlijn. De ondoorzichtige capsule houdt de verbindingslijn achter de tekst verborgen. Op de kleine iPhone passen alle vier antwoorden tegelijk; antwoordfeedback laat de vraag op dezelfde plek staan. Het voorbeeld toont de uitkomst direct; Een ander voorbeeld laten zien maakt een nieuwe geldige opgave zonder de lopende vraag of oefenvoortgang te wijzigen.
 
-Onder het voorbeeld staat de berekening in drie regels, bijvoorbeeld **07:45 − 05:15**, **= 2 uur 30 min**, **2 × 60 + 30 = 150 minuten**. Wanneer de minuten van de eindtijd kleiner zijn, maakt een extra regel het lenen van één uur zichtbaar: **Leen 1 uur: 7 uur 15 min = 6 uur 75 min**. De aftreksom en omzetting verversen samen met de voorbeeldklokken. Op kleine schermen gebruikt het voorbeeld de compacte klokkaart zodat de berekening en acties passen.
+Sinds 1 november 2026 gebruikt het voorbeeld een opgebroken tijdlijn met ingevulde minutendelen en hun optelling. Na één fout verschijnt dezelfde tijdlijn als gedeeltelijk ingevulde hint onder de bestaande Van/Tot-kaart. Zie [de actuele uitleg en controles](MinutesBetweenHints.md). De onderstaande testresultaten beschrijven de eerdere aftrekuitleg.
 
 ## Controles
 

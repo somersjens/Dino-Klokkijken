@@ -2056,23 +2056,6 @@
         }
       }
     },
-    "dino.expanded.midnightHint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A day has 24 hours. At 00:00, continue on the previous or next day."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Een dag heeft 24 uur. Bij 00:00 reken je verder op de vorige of volgende dag."
-          }
-        }
-      }
-    },
     "dino.expanded.arithmetic.hours" : {
       "extractionState" : "manual",
       "localizations" : {

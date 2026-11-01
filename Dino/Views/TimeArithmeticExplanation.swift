@@ -15,13 +15,14 @@ struct DinoTimeArithmeticExplanation: View {
     var captionIdentifier: String? = nil
     var explains = false
     var showsResult = false
-    var showsMidnightNote = false
+    var demonstrates = false
     @State private var stage = Stage.resting
     @State private var activeWork: DinoClockArithmetic?
     @State private var splitProgress: CGFloat = 0
     @State private var resultProgress: CGFloat = 0
     @State private var clockHeight: CGFloat = 0
     @State private var differenceHeight: CGFloat = 0
+    @State private var revealedStep = 0
 
     private enum Stage: Int, Comparable {
         case resting, split, corrected
@@ -45,7 +46,6 @@ struct DinoTimeArithmeticExplanation: View {
     private var subtracting: Bool { !work.adding }
     private var operation: DinoClockOperation { subtracting ? .subtract : .add }
     private var operationInk: Color { DinoTimeDirection.color(later: !subtracting, highContrast: highContrast) }
-    private var secondaryInk: Color { highContrast ? DinoStyle.ink : DinoStyle.muted }
     private var blue: Color { DinoStyle.ink }
     private var layoutWidth: CGFloat { min(600, width) }
     private var layoutScale: CGFloat { min(1, layoutWidth / 320) }
@@ -111,14 +111,6 @@ struct DinoTimeArithmeticExplanation: View {
                         .accessibilityIdentifier(resultIdentifier)
                         .padding(.top, 6 * layoutScale)
                         .transition(.opacity)
-                    if showsMidnightNote && work.crossesMidnight {
-                        Text("dino.expanded.midnightHint")
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundStyle(secondaryInk)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .multilineTextAlignment(.center)
-                            .accessibilityIdentifier("\(prefix).timeArithmetic.midnight")
-                    }
                 }
             }
         }
@@ -145,6 +137,7 @@ struct DinoTimeArithmeticExplanation: View {
             .allowsHitTesting(false)
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.55), value: stage)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: revealedStep)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("\(prefix).timeArithmetic")
         .id("\(prefix).timeArithmetic")
@@ -152,22 +145,33 @@ struct DinoTimeArithmeticExplanation: View {
     }
 
     private var differenceBar: some View {
-        HStack(spacing: 8) {
-            Image(systemName: subtracting ? "minus.circle.fill" : "plus.circle.fill")
-                .font(.system(size: 19 * layoutScale, weight: .bold))
-            Text(verbatim: DinoTimeWords.duration(work.differenceHours * 60 + work.differenceMinutes, language: language))
-                .font(.system(size: 19 * layoutScale, weight: .bold, design: .rounded))
-                .foregroundStyle(operationInk)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
-                .fixedSize(horizontal: false, vertical: true)
+        ViewThatFits(in: .horizontal) {
+            differenceLabel(fontSize: 19 * layoutScale)
+            differenceLabel(fontSize: 16 * layoutScale)
+            differenceLabel(fontSize: 13 * layoutScale)
+            differenceLabel(fontSize: 10 * layoutScale)
+            differenceLabel(fontSize: 8 * layoutScale)
         }
-        .foregroundStyle(operationInk)
-        .padding(.horizontal, 12 * layoutScale).padding(.vertical, 7 * layoutScale)
-        .background(DinoTimeDirection.background(later: !subtracting, highContrast: highContrast), in: Capsule())
-        .overlay(Capsule().strokeBorder(operationInk.opacity(highContrast ? 1 : 0.35), lineWidth: highContrast ? 2 : 1))
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier(captionIdentifier ?? "\(prefix).timeChange.difference")
+    }
+
+    private func differenceLabel(fontSize: CGFloat) -> some View {
+        HStack(spacing: fontSize * 0.4) {
+            Image(systemName: subtracting ? "minus.circle.fill" : "plus.circle.fill")
+            Text(verbatim: DinoTimeWords.duration(work.differenceHours * 60 + work.differenceMinutes, language: language))
+        }
+        .font(.system(size: fontSize, weight: .bold, design: .rounded))
+        .lineLimit(1)
+        .foregroundStyle(operationInk)
+        .padding(.horizontal, fontSize * 0.6).padding(.vertical, fontSize * 0.36)
+        .background(DinoTimeDirection.background(later: !subtracting, highContrast: highContrast), in: Capsule())
+        .overlay(Capsule().strokeBorder(operationInk.opacity(highContrast ? 1 : 0.35), lineWidth: highContrast ? 2 : 1))
+        .fixedSize()
+    }
+
+    private func helperVisible(_ step: Int) -> Bool {
+        !demonstrates || revealedStep >= step
     }
 
     /// Starting values align with the clock; addends align with the bar, with room below for the rules.
@@ -195,14 +199,19 @@ struct DinoTimeArithmeticExplanation: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text(verbatim: column.sums.first?.equation ?? "\(clockDigits(opening, padded: true)) \(operation.symbol) \(clockDigits(addend, padded: true))"))
                 .accessibilityIdentifier("\(prefix).timeArithmetic.\(hours ? "hours" : "minutes")")
+                .opacity(helperVisible(hours ? 1 : 2) ? 1 : 0)
+                .accessibilityHidden(!helperVisible(hours ? 1 : 2))
             block(addend, slots: slots)
                 .position(x: x, y: barY)
+                .opacity(helperVisible(hours ? 3 : 4) ? 1 : 0)
             Capsule().fill(blue)
                 .frame(width: boxWidth(slots: slots) + ruleExtension, height: 2)
                 .position(x: x + ruleExtension / 2, y: ruleY)
+                .opacity(helperVisible(hours ? 3 : 4) ? 1 : 0)
             signMark(operation)
                 .position(x: x + columnWidth / 2 + signGap + signWidth / 2,
                           y: ruleY - signWidth / 2 - 5 * layoutScale)
+                .opacity(helperVisible(hours ? 3 : 4) ? 1 : 0)
         }
     }
 
@@ -224,6 +233,8 @@ struct DinoTimeArithmeticExplanation: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text(verbatim: DinoClockArithmetic.format(value)))
             .accessibilityIdentifier("\(prefix).timeArithmetic.total.\(hours ? "hours" : "minutes")")
+            .opacity(helperVisible(hours ? 5 : 6) ? 1 : 0)
+            .accessibilityHidden(!helperVisible(hours ? 5 : 6))
     }
 
     private func block(_ value: Int, slots: Int, outlined: Bool = true) -> some View {
@@ -274,12 +285,16 @@ struct DinoTimeArithmeticExplanation: View {
         return ZStack {
             outwardArrow(from: CGPoint(x: clock.minX + 4 - sourceGap, y: clock.midY),
                          to: CGPoint(x: leftEdge, y: clock.midY), identifier: "start.hours")
+                .opacity(helperVisible(1) ? 1 : 0)
             outwardArrow(from: CGPoint(x: clock.maxX - 4 + sourceGap, y: clock.midY),
                          to: CGPoint(x: rightEdge, y: clock.midY), identifier: "start.minutes")
+                .opacity(helperVisible(2) ? 1 : 0)
             outwardArrow(from: CGPoint(x: bar.minX - sourceGap, y: bar.midY),
                          to: CGPoint(x: leftEdge, y: bar.midY), identifier: "difference.hours")
+                .opacity(helperVisible(3) ? 1 : 0)
             outwardArrow(from: CGPoint(x: bar.maxX + sourceGap, y: bar.midY),
                          to: CGPoint(x: rightEdge, y: bar.midY), identifier: "difference.minutes")
+                .opacity(helperVisible(4) ? 1 : 0)
         }
         .accessibilityHidden(true)
     }
@@ -352,12 +367,29 @@ struct DinoTimeArithmeticExplanation: View {
                 stage = .resting
                 splitProgress = 0
                 resultProgress = 0
+                revealedStep = 0
             }
         }
         guard explains else { return }
+        if demonstrates {
+            do {
+                if !reduceMotion { try await Task.sleep(for: .seconds(1)) }
+                stage = .split
+                splitProgress = 1
+                for step in 1...6 {
+                    try Task.checkCancellation()
+                    revealedStep = step
+                    if !reduceMotion { try await Task.sleep(for: .milliseconds(650)) }
+                }
+                guard showsResult else { return }
+                stage = .corrected
+                resultProgress = 1
+            } catch { /* A new example or dismissal cancels the complete sequence. */ }
+            return
+        }
         if stage == .resting {
             withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.55)) {
-                // A closed two-choice question (and an example) opens its complete layout once.
+                // A closed two-choice question opens its complete layout once.
                 // Only the arrow drawing is staggered; the answer row never causes a second expansion.
                 stage = showsResult ? .corrected : .split
             }

@@ -31,7 +31,7 @@ struct DinoGameView: View {
             let playHeight = max(0, questionViewport - (session.level.isBoss ? 40 : 0))
             let short = tablet ? questionViewport < 560 : g.size.height < 700
             let expandsReadingClock = session.question.kind == .chooseDigital && session.showsClockHandHints
-            let questionPadding: CGFloat = short || expandsReadingClock ? 12 : 20
+            let questionPadding: CGFloat = short || expandsReadingClock || session.question.kind == .timeSequence ? 12 : 20
             let readingClockSpace: CGFloat = expandsReadingClock && !short ? 16 : 0
             let interactiveClock = wide && [.setAnalog, .advanceAnalog].contains(session.question.kind)
             let clockSize = min(tablet ? 240 : 210, width * 0.54,
@@ -463,7 +463,7 @@ struct InteractionDemonstration: View {
     private var exampleAnalogSize: CGFloat {
         guard kind.clockHelpStyle == .numberedHands else { return min(170, width) }
         let bounds = ClockHandHintGeometry.demonstrationBounds(shape: theme.analogShape)
-        return min(170, width / bounds.width)
+        return min(kind == .setDigital ? 140 : 170, width / bounds.width)
     }
 
     private var originalExample: some View {
@@ -496,7 +496,7 @@ struct InteractionDemonstration: View {
                         .accessibilityIdentifier("demo.analog")
                     if kind == .setDigital {
                         DigitalClockControl(hour: $exampleHour,
-                                            theme: theme, minute: exampleMinute, fontSize: min(38, width * 0.14),
+                                            theme: theme, minute: exampleMinute, fontSize: min(30, width * 0.1),
                                             onMinuteChange: { exampleMinute = $0 }, minuteStep: minuteStep,
                                             valueIdentifier: "demo.digital", showHandHints: kind.clockHelpStyle == .numberedHands)
                         Text("dino.clock.arrowControls").font(.system(size: 14, weight: .semibold, design: .rounded))
@@ -539,7 +539,6 @@ struct DinoAnalogSettingDemonstration: View {
     @State private var time = ClockTime(hour: 9)
     @State private var adjustingMinutes = false
     @State private var demonstratedAction: DinoAnalogSettingExample.Action? = nil
-    @State private var confirmed = false
     @State private var manuallyAdjusting = false
     @State private var hourAngle = 270.0
     @State private var minuteAngle = 0.0
@@ -570,7 +569,6 @@ struct DinoAnalogSettingDemonstration: View {
                             displayedHourAngle: manuallyAdjusting ? nil : hourAngle,
                             displayedMinuteAngle: manuallyAdjusting ? nil : minuteAngle)
                     .padding(6)
-                    .modifier(ClockAnswerOutline(visible: confirmed, correct: true))
                     .accessibilityIdentifier("demo.analog")
                 DinoAnalogClockControls(adjustingMinutes: Binding(get: { adjustingMinutes }, set: {
                     stopDemonstration()
@@ -582,25 +580,10 @@ struct DinoAnalogSettingDemonstration: View {
                 }
             }
         } actions: {
-            VStack(spacing: 12) {
-                DinoDemonstrationActions(showsReady: false, done: done) {
-                    // Reset synchronously so the next frame never shows the previous answer.
-                    exampleIndex = (exampleIndex + 1) % (12 * minutes.count)
-                    reset()
-                }
-                Button {
-                    // The script hides the separate ready button. Leaving while it is still
-                    // playing has to dismiss the example, or the player cannot close it.
-                    if confirmed || !manuallyAdjusting { done() }
-                    else { confirmed = time == script.target }
-                } label: {
-                    Label(LocalizedStringKey(confirmed ? "dino.ready" : "dino.clock.check"), systemImage: "checkmark")
-                        .lineLimit(1).minimumScaleFactor(0.75)
-                        .opacityTextTransition()
-                }.buttonStyle(DinoClockControlButtonStyle())
-                    .padding(.top, 12)
-                    .accessibilityIdentifier(confirmed ? "demo.ready" : "demo.confirm")
-                    .overlay(alignment: .bottomTrailing) { if demonstratedAction == .confirm { DinoClockTapCue() } }
+            DinoDemonstrationActions(done: done) {
+                // Reset synchronously so the next frame never shows the previous answer.
+                exampleIndex = (exampleIndex + 1) % (12 * minutes.count)
+                reset()
             }
         }
         .onAppear { reset() }
@@ -614,7 +597,6 @@ struct DinoAnalogSettingDemonstration: View {
             time = script.initialTime
             adjustingMinutes = false
             demonstratedAction = nil
-            confirmed = false
             manuallyAdjusting = false
             hourAngle = script.initialHourAngle
             minuteAngle = script.initialMinuteAngle
@@ -624,7 +606,6 @@ struct DinoAnalogSettingDemonstration: View {
     private func stopDemonstration() {
         manuallyAdjusting = true
         demonstratedAction = nil
-        confirmed = false
     }
 
     @MainActor private func demonstrate() async {
@@ -633,6 +614,7 @@ struct DinoAnalogSettingDemonstration: View {
             try await Task.sleep(for: .seconds(2))
             for action in example.actions {
                 try Task.checkCancellation()
+                guard action != .confirm else { break }
                 guard !manuallyAdjusting else { return }
                 demonstratedAction = action
                 try await Task.sleep(for: .seconds(0.3))
@@ -645,7 +627,7 @@ struct DinoAnalogSettingDemonstration: View {
                         time = example.applying(action, to: time, adjustingMinutes: adjustingMinutes)
                         hourAngle = DinoAnalogSettingExample.continuingAngle(time.hourAngle, from: hourAngle, direction: direction)
                         minuteAngle = DinoAnalogSettingExample.continuingAngle(time.minuteAngle, from: minuteAngle, direction: direction)
-                    case .confirm: confirmed = time == example.target
+                    case .confirm: break
                     }
                 }
                 try await Task.sleep(for: .seconds(action == .confirm ? 0.8 : 0.3))

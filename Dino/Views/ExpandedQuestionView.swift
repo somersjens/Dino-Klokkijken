@@ -46,7 +46,7 @@ struct DinoExpandedQuestionView: View {
 
     var body: some View {
         let _ = deviceHourFormat.notation
-        VStack(spacing: q.kind == .timeSequence && width >= 600 ? 24 : wideLayout || (q.kind == .timeZone && compactLayout) ? 12 : 18) {
+        VStack(spacing: q.kind == .timeSequence ? 12 : wideLayout || (q.kind == .timeZone && compactLayout) ? 12 : 18) {
             if ![.advanceAnalog, .sayTime, .spokenTime, .readDigital].contains(q.kind), q.kind != .sortTimes || isDemonstration {
                 DinoQuestionContext(maxHeight: wideLayout && !isDemonstration ? max(160, availableHeight - 88) : nil,
                                     animatesHeight: [.addTime, .subtractTime].contains(q.kind)) {
@@ -81,10 +81,7 @@ struct DinoExpandedQuestionView: View {
             case .timeSequence:
                 if !isDemonstration { responses }
             case .minutesBetween:
-                if isDemonstration, q.relatedTimes.count == 2 {
-                    DinoMinutesBetweenExplanation(difference: DinoMinuteDifference(q.relatedTimes[0], q.relatedTimes[1]),
-                                                  language: code)
-                } else if !isDemonstration { responses }
+                if !isDemonstration { responses }
             case .flightArrival, .daySchedule:
                 if !isDemonstration { responses }
             case .timeZone:
@@ -98,6 +95,14 @@ struct DinoExpandedQuestionView: View {
                                         schedule: session.dayPartSchedule)
                     }
                 }
+            case .read24Hour:
+                if isDemonstration {
+                    Dino24HourReadingClock(time: q.target, theme: theme, width: min(300, width))
+                    Text(verbatim: responseText(q.expectedAnswer))
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("demo.answer")
+                } else { responses }
             case .addTime, .subtractTime:
                 if !isDemonstration { responses }
             case .trueFalse:
@@ -136,7 +141,8 @@ struct DinoExpandedQuestionView: View {
                                        minutes: q.durationMinutes, theme: theme, width: min(600, lessonWidth),
                                        showsAnswer: isDemonstration || session.showsCorrectResponse,
                                        isDemonstration: isDemonstration, language: code,
-                                       compact: compactLayout || (isDemonstration && width < 340))
+                                       compact: compactLayout || (isDemonstration && width < 340),
+                                       showsHint: isDemonstration || session.missedFirstAnswer)
             }
         case .timeZone:
             if let journey = q.timeZoneJourney, let referenceTime = q.relatedTimes.first {
@@ -157,7 +163,7 @@ struct DinoExpandedQuestionView: View {
                     captionIdentifier: isDemonstration ? "demo.timeChange.difference" : "question.timeChange.difference",
                     explains: isDemonstration || session.missedFirstAnswer,
                     showsResult: isDemonstration || session.showsWorkedExplanation,
-                    showsMidnightNote: !isDemonstration)
+                    demonstrates: isDemonstration)
             }
         case .flightArrival:
             DinoFlightTicket(work: flightWork, showsWork: isDemonstration || session.showsWorkedExplanation,
@@ -227,7 +233,8 @@ struct DinoExpandedQuestionView: View {
                     let count = isDemonstration ? q.relatedTimes.count + 1 : q.relatedTimes.count
                     SequencePatternArcs(frames: (0..<count).compactMap { anchors[$0].map { geometry[$0] } },
                                         label: "\(q.durationMinutes < 0 ? "−" : "+")\(DinoTimeWords.duration(abs(q.durationMinutes), language: code))",
-                                        prefix: sequencePrefix, horizontal: horizontal, later: q.durationMinutes >= 0)
+                                        prefix: sequencePrefix, width: geometry.size.width,
+                                        horizontal: horizontal, later: q.durationMinutes >= 0)
                 }.allowsHitTesting(false)
             }
         }
@@ -242,7 +249,7 @@ struct DinoExpandedQuestionView: View {
             let cell = (contextWidth - CGFloat(q.relatedTimes.count) * 48) / CGFloat(q.relatedTimes.count + 1)
             return min(48, cell / 4)
         }
-        return isDemonstration ? 32 : min(compactLayout ? 28 : width >= 600 ? 42 : 36, lessonWidth * 0.10)
+        return isDemonstration ? 30 : min(compactLayout ? 27 : width >= 600 ? 38 : 32, lessonWidth * 0.10)
     }
 
     private func timeCard(_ time: ClockTime, title: String) -> some View {
@@ -320,7 +327,7 @@ struct DinoExpandedQuestionView: View {
                                 .accessibilityLabel(Text(verbatim: responseText(response)))
                         }
                     }.padding(12)
-                        .frame(maxWidth: .infinity, minHeight: sequence ? 88 : [.minutesBetween, .timeZone].contains(q.kind) && compactLayout ? 62 : 74)
+                        .frame(maxWidth: .infinity, minHeight: sequence ? 80 : [.minutesBetween, .timeZone].contains(q.kind) && compactLayout ? 62 : 74)
                         .modifier(ClockAnswerOutline(visible: correct || wrong, correct: correct))
                         .background(.white, in: RoundedRectangle(cornerRadius: 22))
                         .overlay(alignment: .topTrailing) {
@@ -770,6 +777,7 @@ private struct SequencePatternArcs: View {
     let frames: [CGRect]
     let label: String
     let prefix: String
+    let width: CGFloat
     var horizontal = false
     var later = true
 
@@ -825,7 +833,11 @@ private struct SequencePatternArcs: View {
     }
 
     private func arc(from start: CGPoint, to end: CGPoint, pointed: Bool, index: Int) -> some View {
-        let outerX = max(start.x, end.x) + 26
+        // Fit the guide into the right margin; the clock column stays on the centerline.
+        let clockEdge = max(start.x, end.x)
+        let outerX = clockEdge + min(22, max(10, (width - clockEdge) * 0.2))
+        let labelX = outerX + 4
+        let textWidth = max(1, width - labelX - 12)
         let baseX = end.x + (pointed ? 9 : 0)
         let lineEnd = CGPoint(x: baseX, y: end.y)
         return ZStack(alignment: .topLeading) {
@@ -845,16 +857,17 @@ private struct SequencePatternArcs: View {
                 }.fill(blue)
             }
             Text(verbatim: label)
-                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                .font(.system(size: min(12, max(9, textWidth * 0.15)), weight: .heavy, design: .rounded))
                 .foregroundStyle(differenceInk)
                 .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .padding(.horizontal, 7)
+                .minimumScaleFactor(0.5)
+                .frame(width: textWidth)
+                .padding(.horizontal, 5)
                 .padding(.vertical, 3)
                 .background(DinoTimeDirection.background(later: later, highContrast: highContrast), in: Capsule())
                 .overlay(Capsule().stroke(differenceInk.opacity(highContrast ? 1 : 0.35), lineWidth: highContrast ? 2 : 1))
-                .fixedSize()
-                .offset(x: outerX + 6, y: (start.y + end.y) / 2 - 12)
+                .fixedSize(horizontal: false, vertical: true)
+                .offset(x: labelX, y: (start.y + end.y) / 2 - 12)
                 .accessibilityHidden(prefix == "demo")
                 .accessibilityIdentifier("\(prefix).sequence.step.\(index)")
         }
@@ -877,6 +890,7 @@ private struct DinoTrainJourneyCard: View {
     @State private var showsTotal: Bool
     @State private var appliedMinutes = 0
     @State private var replayCount = 0
+    @State private var arrivalCompletion = 0
     private var prefix: String { isDemonstration ? "demo" : "question" }
     private var playsArrival: Bool { isDemonstration || explainsLive }
     private var compactColumns: Bool { width < 340 || (twelveHourClock && width < 384) }
@@ -1050,6 +1064,7 @@ private struct DinoTrainJourneyCard: View {
                     } label: {
                         Image(systemName: "arrow.counterclockwise")
                             .font(.system(size: 17, weight: .bold))
+                            .replayCompletionTurn(arrivalCompletion)
                             .frame(width: 26, height: 26)
                             .contentShape(Rectangle())
                     }
@@ -1133,6 +1148,9 @@ private struct DinoTrainJourneyCard: View {
                     try await Task.sleep(for: .milliseconds(800))
                 }
             }
+            try await Task.sleep(for: .milliseconds(350))
+            try Task.checkCancellation()
+            if !steps.isEmpty { arrivalCompletion += 1 }
         } catch { /* A new question, example or replay cancels the previous walk. */ }
     }
 
@@ -1154,7 +1172,7 @@ private struct DinoTrainJourneyCard: View {
                     DinoTrainExpansion(axis: .horizontal, fraction: showsTotal ? 1 : 0) {
                         durationColumns(hours: durationMinutes / 60, minutes: durationMinutes % 60,
                                         label: DinoTimeWords.compactDuration(hours: durationMinutes / 60,
-                                            minutes: durationMinutes % 60, language: language, padMinutes: schedule.usesMinuteColumn))
+                                            minutes: durationMinutes % 60, language: language, padMinutes: schedule.hasMinuteTerms))
                             .padding(.trailing, valueSpacing)
                             .opacity(showsTotal ? 1 : 0)
                             .animation(reduceMotion ? nil : .easeIn(duration: 0.25).delay(0.4), value: showsTotal)
@@ -1205,9 +1223,9 @@ private struct DinoTrainJourneyCard: View {
                     .numericTextTransition()
                     .fixedSize(horizontal: true, vertical: false)
                     .frame(width: (language == "nl" ? 44 : 22) * columnScale, alignment: .trailing)
-                    .padding(.trailing, schedule.usesMinuteColumn ? 10 * columnScale : 0)
+                    .padding(.trailing, schedule.hasMinuteTerms ? 10 * columnScale : 0)
             }
-            if schedule.usesMinuteColumn {
+            if schedule.hasMinuteTerms {
                 Text(verbatim: String(format: "%02d min", minutes))
                     .numericTextTransition()
                     .fixedSize(horizontal: true, vertical: false)
@@ -1315,6 +1333,7 @@ private struct DinoFlightTicket: View {
     @State private var appliedMinutes = 0
     @State private var walking = false
     @State private var replayCount = 0
+    @State private var walkCompletion = 0
 
     private var prefix: String { isDemonstration ? "demo" : "question" }
     private var secondaryInk: Color { highContrast ? DinoStyle.ink : DinoStyle.muted }
@@ -1343,6 +1362,7 @@ private struct DinoFlightTicket: View {
                     } label: {
                         Image(systemName: "arrow.counterclockwise")
                             .font(.system(size: 17, weight: .bold))
+                            .replayCompletionTurn(walkCompletion)
                             .foregroundStyle(DinoStyle.deepGreen)
                             .frame(width: 36, height: 36)
                             .background(.white.opacity(0.85), in: Circle())
@@ -1559,6 +1579,9 @@ private struct DinoFlightTicket: View {
                 withAnimation(.easeInOut(duration: 0.35)) { appliedMinutes = step }
                 if index < steps.count - 1 { try await Task.sleep(for: .milliseconds(800)) }
             }
+            try await Task.sleep(for: .milliseconds(350))
+            try Task.checkCancellation()
+            walkCompletion += 1
         } catch { /* A new example, question or replay cancels the previous walk. */ }
     }
 
@@ -1978,10 +2001,6 @@ struct DinoExpandedDemonstration: View {
                     } else {
                         DinoQuestionTitle(question: sample.question, fontSize: 22, speechScope: "demo")
                             .accessibilityIdentifier("demo.title")
-                    }
-                    if [.timeSequence, .addTime, .subtractTime].contains(kind) {
-                        Text("dino.expanded.midnightHint").font(.footnote).multilineTextAlignment(.center)
-                            .accessibilityIdentifier(kind == .timeSequence ? "demo.sequence.hint" : "demo.arithmetic.hint")
                     }
                     DinoExpandedQuestionView(session: sample, theme: theme, width: width, clockSize: 150, isDemonstration: true)
                         .id(sample.question.id)

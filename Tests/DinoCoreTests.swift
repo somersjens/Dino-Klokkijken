@@ -13,6 +13,11 @@ private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
 @MainActor
 struct DinoCoreTests {
     static func main() async {
+        if CommandLine.arguments.contains("--map-viewport") {
+            testMapAnimationViewport()
+            print("PASS: \(checks) map viewport checks.")
+            return
+        }
         if CommandLine.arguments.contains("--question-prompts") {
             testQuestionPrompts()
             print("PASS: \(checks) question prompt checks.")
@@ -100,6 +105,11 @@ struct DinoCoreTests {
         if CommandLine.arguments.contains("--train-durations") {
             testDaySchedules()
             print("PASS: \(checks) train duration checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--minute-intervals") {
+            testMinutesBetweenQuestions()
+            print("PASS: \(checks) minute interval and timeline checks.")
             return
         }
         if CommandLine.arguments.contains("--jungle-scenery") {
@@ -572,6 +582,20 @@ struct DinoCoreTests {
     }
 
     static func testMapAnimationViewport() {
+        for viewport: CGFloat in [568, 852, 1194, 1366] {
+            let margin = max(1800, viewport * 3)
+            let incoming = CGRect(x: 0, y: viewport + margin - 1, width: 390, height: 2200)
+            expect(DinoMapViewport.preparesScenery(frame: incoming, viewportHeight: viewport, retained: false),
+                   "terrain prepares at the original three-screen boundary")
+            let justOutside = incoming.offsetBy(dx: 0, dy: 2)
+            expect(!DinoMapViewport.preparesScenery(frame: justOutside, viewportHeight: viewport, retained: false),
+                   "distant chapters are not eagerly constructed")
+            expect(DinoMapViewport.preparesScenery(frame: justOutside, viewportHeight: viewport, retained: true),
+                   "a reverse drag at the boundary retains prepared scenery")
+            expect(!DinoMapViewport.preparesScenery(frame: incoming.offsetBy(dx: 0, dy: viewport + 513),
+                                                  viewportHeight: viewport, retained: true),
+                   "distant retained chapters are eventually released")
+        }
         for viewport: CGFloat in [568, 852, 1194, 1366] {
             for height: CGFloat in [30, 320, 2200] {
                 let incoming = CGRect(x: 0, y: viewport + 200, width: 390, height: height)
@@ -1248,7 +1272,7 @@ struct DinoCoreTests {
         let sameZone = DinoFlightArrivalWork(departure: .init(hour: 9, minute: 30), durationMinutes: 150,
                                              offsetMinutes: 0, arrival: .init(hour: 12))
         expect(sameZone.arrivalLine(language: "nl") == "09:30 + 2 uur 30 min = 12:00", "one zone uses the duration as the only shift")
-        expect(forward.walkMinutes() == [45, 360], "the flight first bridges 08:15 to 09:00, then adds the remaining shift")
+        expect(forward.walkMinutes() == [360], "a whole-hour flight shift happens at once, even from 08:15")
         expect(sameZone.walkMinutes() == [30, 150], "a same-zone flight reaches 10:00 before finishing at 12:00")
         for shift in [-175, -115, -35, 0, 5, 30, 35, 55, 85, 115, 145, 175] {
             let start = ClockTime(hour: 23, minute: 40)
@@ -1300,6 +1324,25 @@ struct DinoCoreTests {
     }
 
     static func testMinutesBetweenQuestions() {
+        let timelines: [(ClockTime, ClockTime, [Int])] = [
+            (.init(hour: 13, minute: 30), .init(hour: 15), [30, 60]),
+            (.init(hour: 13, minute: 45), .init(hour: 15, minute: 15), [15, 60, 15]),
+            (.init(hour: 8, minute: 10), .init(hour: 8, minute: 40), [15, 15]),
+            (.init(hour: 8), .init(hour: 9), [15, 15, 15, 15]),
+            (.init(hour: 8), .init(hour: 8, minute: 45), [15, 15, 15]),
+            (.init(hour: 8, minute: 15), .init(hour: 8, minute: 30), [5, 10]),
+            (.init(hour: 23, minute: 58), .init(hour: 23, minute: 59), [1])
+        ]
+        for (start, end, expected) in timelines {
+            let timeline = DinoMinuteTimeline(start, end)
+            expect(timeline.times.first == start && timeline.times.last == end, "timeline preserves both endpoints")
+            expect(timeline.segments == expected, "timeline chooses whole hours, quarters or a useful midpoint")
+            for index in timeline.segments.indices {
+                expect(timeline.revealsSegment(index, showsAnswer: false) == (index == 0 && expected.count > 1),
+                       "a hint fills only the first step and never gives away a one-minute answer")
+                expect(timeline.revealsSegment(index, showsAnswer: true), "examples and revealed answers fill every step")
+            }
+        }
         let calculations: [(ClockTime, ClockTime, Int, Int, Bool)] = [
             (.init(hour: 1), .init(hour: 3), 2, 0, false),
             (.init(hour: 5, minute: 15), .init(hour: 7, minute: 45), 2, 30, false),
@@ -1340,6 +1383,10 @@ struct DinoCoreTests {
                 expect(q.expectedAnswer == .duration(elapsed), "minute totals use duration validation")
                 let calculation = DinoMinuteDifference(start, end)
                 expect(calculation.totalMinutes == elapsed && (0..<60).contains(calculation.minutes), "every worked example converts the correct remaining time")
+                let timeline = DinoMinuteTimeline(start, end)
+                expect(timeline.segments.allSatisfy { $0 > 0 } && timeline.segments.reduce(0, +) == elapsed,
+                       "every timeline uses positive steps that add to the exact interval")
+                expect(timeline.times.count <= 5, "at most four steps keep the compact timeline readable")
                 expect(q.responses.count == 4 && Set(q.responses).count == 4, "four distinct minute totals")
                 expect(q.responses.filter { AnswerValidator.isCorrect($0, for: q) }.count == 1, "exactly one correct minute total")
                 expect(q.responses.allSatisfy { if case .duration(let m) = $0 { return m > 0 }; return false }, "every choice is a positive number of minutes")
@@ -1917,8 +1964,10 @@ struct DinoCoreTests {
             (.init(hour: 23, minute: 50), 45, [10, 45]),
             (.init(hour: 10), 120, [120]),
             (.init(hour: 10), -120, [-120]),
-            (.init(hour: 10, minute: 30), 1440, [30, 1440]),
-            (.init(hour: 10, minute: 30), -1440, [-30, -1440])
+            (.init(hour: 14, minute: 40), 120, [120]),
+            (.init(hour: 14, minute: 40), -120, [-120]),
+            (.init(hour: 10, minute: 30), 1440, [1440]),
+            (.init(hour: 10, minute: 30), -1440, [-1440])
         ]
         for (start, offset, expected) in animationCases {
             let steps = DinoTimeZoneStep.steps(from: start, offsetMinutes: offset)
@@ -1933,6 +1982,9 @@ struct DinoCoreTests {
                 expect(steps.count <= 2 && (steps.count < 2 || steps[0].time.minute == 0),
                        "every starting minute needs at most a whole-hour bridge and a remainder")
                 expect(steps.last?.addedMinutes == (offset == 0 ? nil : offset), "the shared route finishes at the exact signed shift")
+                if offset != 0 && offset.isMultiple(of: 60) {
+                    expect(steps.count == 1, "whole hours happen at once from every starting minute")
+                }
                 let changes = [0] + steps.map(\.addedMinutes)
                 expect(zip(changes, changes.dropFirst()).allSatisfy { offset > 0 ? $0 < $1 : $0 > $1 },
                        "both stages keep the same direction without overshooting")
@@ -2076,7 +2128,7 @@ struct DinoCoreTests {
             (45, [15, 15, 15], [15, 45]),
             (10, [100, 10, 60], [50, 170]),
             (45, [10, 1, 3], [14]),
-            (40, [60, 60, 60], [20, 180]),
+            (40, [60, 60, 60], [180]),
             (0, [60, 60, 60], [180])
         ] {
             let schedule = DinoDaySchedule(start: .init(hour: 8, minute: minute), firstActivity: .drawing,
@@ -2086,11 +2138,11 @@ struct DinoCoreTests {
             let hasHours = schedule.totalMinutes >= 60
             for language in ["nl", "en"] {
                 let zeroHours = language == "nl" ? "0 uur" : "0h"
-                let zero = "+" + [hasHours ? zeroHours : nil, schedule.usesMinuteColumn ? "00 min" : nil]
+                let zero = "+" + [hasHours ? zeroHours : nil, schedule.hasMinuteTerms ? "00 min" : nil]
                     .compactMap { $0 }.joined(separator: " ")
                 expect(schedule.addedDurationText(0, language: language) == zero,
                        "the replay starts with every applicable unit visible at zero")
-                if hasHours && schedule.usesMinuteColumn {
+                if hasHours && schedule.hasMinuteTerms {
                     expect(schedule.addedDurationText(60, language: language) == (language == "nl" ? "+1 uur 00 min" : "+1h 00 min"),
                            "minute placeholders stay visible while the hours advance")
                 }

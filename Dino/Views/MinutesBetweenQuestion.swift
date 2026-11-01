@@ -12,6 +12,7 @@ struct DinoMinutesBetweenCard: View {
     let isDemonstration: Bool
     let language: String
     var compact = false
+    var showsHint = false
 
     private var prefix: String { isDemonstration ? "demo" : "question" }
     private var clockFont: CGFloat { min(compact ? 31 : 48, (width - 52) / 7.8) }
@@ -59,6 +60,11 @@ struct DinoMinutesBetweenCard: View {
                 .accessibilityIdentifier(isDemonstration ? "demo.answer" : "question.minutesBetween.\(showsAnswer ? "answer" : "unknown")")
             }
 
+            if showsHint {
+                DinoMinutesBetweenTimeline(timeline: DinoMinuteTimeline(start, end), theme: theme,
+                                           language: language, prefix: prefix,
+                                           showsAnswer: showsAnswer, compact: compact)
+            }
         }
         .padding(compact ? 14 : 18).frame(maxWidth: .infinity)
         .background {
@@ -83,49 +89,102 @@ struct DinoMinutesBetweenCard: View {
     }
 }
 
-struct DinoMinutesBetweenExplanation: View {
+/// A compact addition to the original From / Until card. Labels share the dots' centers.
+struct DinoMinutesBetweenTimeline: View {
     @Environment(\.dinoHighContrast) private var highContrast
-    let difference: DinoMinuteDifference
+    @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
+    let timeline: DinoMinuteTimeline
+    let theme: ClockTheme
     let language: String
+    let prefix: String
+    let showsAnswer: Bool
+    var compact = false
 
-    private var hourUnit: String { language == "nl" ? "uur" : "h" }
+    private var segments: [Int] { timeline.segments }
+    private var sum: String {
+        "\(segments.map(String.init).joined(separator: " + ")) = \(DinoTimeWords.minutes(segments.reduce(0, +), language: language))"
+    }
 
-    private var subtraction: AttributedString {
-        var text = AttributedString("\(difference.later.digitalText) − \(difference.earlier.digitalText)")
-        if let sign = text.range(of: " − ") {
-            text[sign].foregroundColor = DinoTimeDirection.color(later: false, highContrast: highContrast)
+    private func segmentWidths(length: CGFloat) -> [CGFloat] {
+        let minimum = min(56, length / CGFloat(segments.count))
+        var widths = segments.map { _ in CGFloat.zero }
+        var remaining = Array(segments.indices)
+        var available = length
+        while !remaining.isEmpty {
+            let total = CGFloat(max(1, remaining.reduce(0) { $0 + segments[$1] }))
+            let small = remaining.filter { available * CGFloat(segments[$0]) / total < minimum }
+            if small.isEmpty {
+                for index in remaining { widths[index] = available * CGFloat(segments[index]) / total }
+                break
+            }
+            for index in small { widths[index] = minimum; available -= minimum }
+            remaining.removeAll { small.contains($0) }
         }
-        return text
+        return widths
     }
 
     var body: some View {
-        VStack(spacing: 8) {
-            Text(subtraction)
-                .font(.system(size: 19, weight: .bold, design: .rounded))
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text(verbatim: String(subtraction.characters)))
-                .accessibilityIdentifier("demo.minutesBetween.subtraction")
-            if difference.borrowsHour {
-                Text(verbatim: String(format: L(key: "dino.minutesBetween.borrow.format"),
-                                      difference.later.hour, difference.later.minute,
-                                      difference.later.hour - 1, difference.later.minute + 60))
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-                    .accessibilityIdentifier("demo.minutesBetween.borrow")
+        VStack(spacing: 6) {
+            GeometryReader { geometry in
+                let inset: CGFloat = compact ? 25 : 30
+                let length = max(1, geometry.size.width - inset * 2)
+                // Preserve proportional lengths where possible, with enough room for every time.
+                let widths = segmentWidths(length: length)
+                let points = (0..<timeline.times.count).map { index in
+                    inset + widths.prefix(index).reduce(0, +)
+                }
+                let labelWidth = min(inset * 2, (widths.min() ?? length) - 3)
+                ZStack(alignment: .topLeading) {
+                    Path { path in
+                        path.move(to: CGPoint(x: inset, y: 34))
+                        path.addLine(to: CGPoint(x: inset + length, y: 34))
+                    }
+                    .stroke(highContrast ? DinoStyle.ink : DinoStyle.muted.opacity(0.55), lineWidth: 2)
+                    .accessibilityHidden(true)
+
+                    ForEach(Array(timeline.times.enumerated()), id: \.offset) { index, time in
+                        Text(verbatim: theme.digitalReading(time, languageCode: language))
+                            .font(.system(size: compact ? 13 : 16, weight: .bold, design: .rounded))
+                            .monospacedDigit().lineLimit(1).minimumScaleFactor(0.5)
+                            .frame(width: labelWidth, height: 25)
+                            .position(x: points[index], y: 13)
+                            .accessibilityIdentifier("\(prefix).minutesBetween.stop.\(index)")
+                        Circle().fill(DinoStyle.deepGreen)
+                            .frame(width: 10, height: 10)
+                            .position(x: points[index], y: 34)
+                            .accessibilityHidden(true)
+                    }
+                    ForEach(Array(segments.enumerated()), id: \.offset) { index, minutes in
+                        let revealed = timeline.revealsSegment(index, showsAnswer: showsAnswer)
+                        Text(verbatim: revealed ? "\(minutes) min" : "? min")
+                            .font(.system(size: compact ? 14 : 17, weight: .heavy, design: .rounded))
+                            .monospacedDigit().lineLimit(1).minimumScaleFactor(0.65)
+                            .foregroundStyle(DinoStyle.ink)
+                            .frame(width: max(1, widths[index] - 5), height: compact ? 32 : 36)
+                            .background(index == 0 ? Color(dinoHex: 0xD4E9FC) : Color(dinoHex: 0xD9F2DA),
+                                        in: RoundedRectangle(cornerRadius: 10))
+                            .overlay(RoundedRectangle(cornerRadius: 10)
+                                .strokeBorder(highContrast ? DinoStyle.ink : .clear, lineWidth: 1.5))
+                            .position(x: (points[index] + points[index + 1]) / 2, y: compact ? 62 : 64)
+                            .accessibilityIdentifier("\(prefix).minutesBetween.segment.\(index)")
+                    }
+                }
             }
-            Text(verbatim: "= \(difference.hours) \(hourUnit) \(difference.minutes) min")
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                .accessibilityIdentifier("demo.minutesBetween.remainder")
-            Text(verbatim: "\(difference.hours) × 60 + \(difference.minutes) = \(DinoTimeWords.minutes(difference.totalMinutes, language: language))")
-                .font(.system(size: 17, weight: .heavy, design: .rounded))
-                .foregroundStyle(DinoTimeDirection.color(later: true, highContrast: highContrast))
-                .accessibilityIdentifier("demo.minutesBetween.conversion")
+            .frame(height: compact ? 80 : 84)
+            if showsAnswer {
+                Text(verbatim: sum)
+                    .font(.system(size: compact ? 13 : 15, weight: .bold, design: .rounded))
+                    .monospacedDigit().multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("\(prefix).minutesBetween.conversion")
+            }
         }
-        .monospacedDigit().multilineTextAlignment(.center)
-        .fixedSize(horizontal: false, vertical: true)
-        .padding(12).frame(maxWidth: .infinity)
-        .background(DinoTimeDirection.background(later: true, highContrast: highContrast), in: RoundedRectangle(cornerRadius: 18))
+        .foregroundStyle(DinoStyle.ink)
+        .padding(8).frame(maxWidth: .infinity)
+        .background(Color.white.opacity(0.65), in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16)
+            .strokeBorder(highContrast ? DinoStyle.ink : DinoStyle.deepGreen.opacity(0.12), lineWidth: 1))
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("demo.minutesBetween.calculation")
+        .accessibilityIdentifier("\(prefix).minutesBetween.timeline")
     }
 }

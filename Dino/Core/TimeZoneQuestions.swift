@@ -20,7 +20,7 @@ struct DinoCapital: Equatable, Sendable {
     }
 }
 
-/// Cumulative clock changes: first reach the next whole hour in the travel direction, then finish.
+/// Whole-hour shifts happen at once; minute shifts first reach the next whole hour, then finish.
 struct DinoTimeZoneStep: Equatable, Sendable {
     let addedMinutes: Int
     let time: ClockTime
@@ -38,7 +38,9 @@ struct DinoTimeZoneStep: Equatable, Sendable {
         let minutesToHour = direction > 0 ? (60 - reference.minute) % 60 : reference.minute
         var changes: [Int] = []
         // Already on the hour, or arriving before it: one step is enough; never overshoot.
-        if minutesToHour > 0 && minutesToHour < magnitude { changes.append(direction * minutesToHour) }
+        if !magnitude.isMultiple(of: 60) && minutesToHour > 0 && minutesToHour < magnitude {
+            changes.append(direction * minutesToHour)
+        }
         changes.append(offsetMinutes)
         return changes.map { Self(addedMinutes: $0, time: reference.adding(minutes: $0)) }
     }
@@ -77,7 +79,7 @@ struct DinoTimeZoneJourney: Equatable, Sendable {
         return formatter.string(from: referenceDate)
     }
 
-    /// Reach a whole hour first, then finish the shift, updating the destination card in place.
+    /// Apply whole hours at once; bridge to a whole hour only for shifts with minutes.
     func steps(from reference: ClockTime) -> [DinoTimeZoneStep] {
         DinoTimeZoneStep.steps(from: reference, offsetMinutes: offsetMinutes)
     }

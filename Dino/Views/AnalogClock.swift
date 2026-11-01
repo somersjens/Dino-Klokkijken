@@ -95,11 +95,46 @@ struct PracticeClockPreview: View {
     }
 }
 
+/// The ordinary hour face pairs with the second half of a 24-hour day outside its rim.
+struct Dino24HourReadingClock: View {
+    let time: ClockTime
+    let theme: ClockTheme
+    let width: CGFloat
+
+    private var face: CGFloat { min(200, width / 1.5) }
+
+    var body: some View {
+        ZStack {
+            AnalogClock(time: time, theme: theme, size: face)
+                .environment(\.dinoClockReadingAssistance, false)
+                .accessibilityIdentifier("demo.24Hour.analog")
+            ForEach(1...12, id: \.self) { hour in
+                let angle = Double(hour) * .pi / 6
+                let edge = theme.analogShape == .square
+                    ? 0.5 / max(abs(sin(angle)), abs(cos(angle))) : 0.5
+                let radius = face * (edge + 0.14)
+                Text(verbatim: String(format: "%02d", (hour + 12) % 24))
+                    .font(.system(size: face * 0.075, weight: .heavy, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(DinoStyle.ink)
+                    .position(x: width / 2 + sin(angle) * radius,
+                              y: width / 2 - cos(angle) * radius)
+                    .accessibilityIdentifier("demo.24Hour.hour.\((hour + 12) % 24)")
+            }
+        }
+        .frame(width: width, height: width)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("demo.24Hour.clock")
+    }
+}
+
 struct AnalogClock: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dinoClockReadingAssistance) private var readingAssistance
     @GestureState private var touchingClock = false
     @State private var draggingMinutes: Bool?
+    @State private var revealedSpokenHintLanguage: String?
     let time: ClockTime
     let theme: ClockTheme
     var size: CGFloat = 230
@@ -126,6 +161,9 @@ struct AnalogClock: View {
     var displayedHourAngle: Double? = nil
     var displayedMinuteAngle: Double? = nil
     private var displaysHandHints: Bool { spokenHintLanguage == nil && (showHandHints || readingAssistance) }
+    private var spokenGuideOpacity: Double {
+        spokenHintLanguage == nil || reduceMotion || revealedSpokenHintLanguage == spokenHintLanguage ? 1 : 0
+    }
     private var drawingSize: CGFloat {
         if spokenHintLanguage != nil { return size / (SpokenClockGuideLayout.extent(shape: theme.analogShape, compact: compactSpokenHint) * 2) }
         if readingAssistance && !showHandHints {
@@ -171,6 +209,7 @@ struct AnalogClock: View {
                     .frame(width: diameter, height: diameter)
                     .position(x: size / 2 + sin(radians) * size * 0.34,
                               y: size / 2 - cos(radians) * size * 0.34)
+                    .opacity(spokenGuideOpacity)
             }
             if displaysHandHints {
                 ClockHourReturnGuide(time: time, theme: theme, size: size)
@@ -179,6 +218,7 @@ struct AnalogClock: View {
             hand(length: size * 0.34, width: minuteWidth, color: Color(dinoHex: theme.minuteHex), angle: displayedMinuteAngle ?? time.minuteAngle)
             if let language = spokenHintLanguage {
                 ClockSpokenMinuteGuide(time: time, language: language, theme: theme, size: size)
+                    .opacity(spokenGuideOpacity)
             }
             Circle().fill(Color(dinoHex: theme.rimHex)).frame(width: size * 0.085)
             Circle().fill(.white).frame(width: size * 0.025)
@@ -220,6 +260,7 @@ struct AnalogClock: View {
         .overlay {
             if let language = spokenHintLanguage {
                 ClockSpokenReadingScale(time: time, language: language, shape: theme.analogShape, size: size, compact: compactSpokenHint)
+                    .opacity(spokenGuideOpacity)
             } else if let handHintBounds {
                 let pointers = ClockHandHintGeometry.pointers(time: time, shape: theme.analogShape)
                 ClockMinuteReadingScale(shape: theme.analogShape, size: size, bounds: handHintBounds)
@@ -243,6 +284,17 @@ struct AnalogClock: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(time.digitalText)
         .accessibilityValue(Text(verbatim: spokenHintLanguage.map { DinoTimeWords.time(time, language: $0) } ?? ""))
+        .task(id: spokenHintLanguage) {
+            revealedSpokenHintLanguage = nil
+            guard let language = spokenHintLanguage else { return }
+            if !reduceMotion {
+                do { try await Task.sleep(for: .milliseconds(320)) }
+                catch { return }
+            }
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.18)) {
+                revealedSpokenHintLanguage = language
+            }
+        }
     }
 
     private var hourWidth: CGFloat { drawingSize * 0.038 }

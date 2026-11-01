@@ -3500,6 +3500,37 @@ private enum SleepValleyLayout {
 
 }
 
+/// Cascade silhouettes and filament lengths never depend on animation time.
+/// Reuse their exact paths instead of resampling hundreds of river points per tick.
+private final class SleepValleyCascadeGeometry {
+    private static let plans: NSCache<NSString, SleepValleyCascadeGeometry> = {
+        let cache = NSCache<NSString, SleepValleyCascadeGeometry>()
+        cache.countLimit = 32
+        return cache
+    }()
+    static func cached(cascade: SleepValleyLayout.Cascade, layout: WorldSceneryLayout) -> SleepValleyCascadeGeometry {
+        let key = "\(layout.width):\(layout.height):\(layout.routeOffset):\(cascade.id):\(cascade.point.x):\(cascade.point.y):\(cascade.right)" as NSString
+        if let plan = plans.object(forKey: key) { return plan }
+        let plan = SleepValleyCascadeGeometry(cascade: cascade, layout: layout)
+        plans.setObject(plan, forKey: key)
+        return plan
+    }
+    let ribbon: Path
+    let filaments: [Path]
+    let metrics: [DownstreamFlow.Metrics]
+    let start: CGPoint
+    let end: CGPoint
+
+    private init(cascade: SleepValleyLayout.Cascade, layout: WorldSceneryLayout) {
+        ribbon = cascade.ribbon(from: -105, to: 85, layout: layout)
+        let filaments = (0..<8).map { cascade.filament(across: CGFloat($0) * 0.22 - 0.77, layout: layout) }
+        self.filaments = filaments
+        metrics = filaments.map { DownstreamFlow.metrics($0) }
+        start = cascade.localPoint(y: -105, layout: layout)
+        end = cascade.localPoint(y: 85, layout: layout)
+    }
+}
+
 /// The terrain stays cached. Small effect canvases tick only inside the viewport.
 private struct SleepValleyLife: View {
     let routeOffset: CGFloat
@@ -3687,8 +3718,9 @@ private struct SleepValleyEffects {
     }
 
     func waterfall(_ cascade: SleepValleyLayout.Cascade, layout: WorldSceneryLayout) {
+        let geometry = SleepValleyCascadeGeometry.cached(cascade: cascade, layout: layout)
         var water = context
-        water.clip(to: cascade.ribbon(from: -105, to: 85, layout: layout))
+        water.clip(to: geometry.ribbon)
         let shimmer = Gradient(stops: [
             .init(color: Color(dinoHex: 0xE6F5EB).opacity(0), location: 0),
             .init(color: Color(dinoHex: 0xE6F5EB).opacity(0.38), location: 0.20),
@@ -3697,10 +3729,8 @@ private struct SleepValleyEffects {
             .init(color: Color(dinoHex: 0xDAF1E7).opacity(0), location: 1)
         ])
         for i in 0..<8 {
-            let filament = cascade.filament(across: CGFloat(i) * 0.22 - 0.77, layout: layout)
-            DownstreamFlow.marks(filament, in: water,
-                                 shading: .linearGradient(shimmer, startPoint: cascade.localPoint(y: -105, layout: layout),
-                                                          endPoint: cascade.localPoint(y: 85, layout: layout)),
+            DownstreamFlow.marks(geometry.filaments[i], metrics: geometry.metrics[i], in: water,
+                                 shading: .linearGradient(shimmer, startPoint: geometry.start, endPoint: geometry.end),
                                  width: i.isMultiple(of: 2) ? 1.6 : 0.8,
                                  time: time + Double(i * 7) / (i.isMultiple(of: 2) ? 24 : 31),
                                  pointsPerSecond: i.isMultiple(of: 2) ? 24 : 31, dash: 16, gap: 27)
@@ -9069,7 +9099,22 @@ private struct CrystalCavePainter {
 
 /// The metro enters beyond the left edge and leaves beyond the right edge.
 /// Carriages share arc-length geometry, so the complete long consist follows every bend.
-private struct CityMetroLine {
+private final class CityMetroLine {
+    // The arc-length filter and foundation index depend only on scene geometry.
+    // Share the immutable plan across terrain, masks and animation frames.
+    private static let plans: NSCache<NSString, CityMetroLine> = {
+        let cache = NSCache<NSString, CityMetroLine>()
+        cache.countLimit = 8
+        return cache
+    }()
+    static func cached(layout: WorldSceneryLayout) -> CityMetroLine {
+        let key = "\(layout.width):\(layout.height):\(layout.routeOffset)" as NSString
+        if let plan = plans.object(forKey: key) { return plan }
+        let plan = CityMetroLine(layout: layout)
+        plans.setObject(plan, forKey: key)
+        return plan
+    }
+
     static let carriageCount = 30
     static let carriagePitch: CGFloat = 31
     static let cruiseSpeed: CGFloat = 132.5
@@ -9085,7 +9130,7 @@ private struct CityMetroLine {
     private let foundationRows: [Int:[CGRect]]
     var length: CGFloat { distances.last ?? 0 }
 
-    init(layout: WorldSceneryLayout) {
+    private init(layout: WorldSceneryLayout) {
         let s = layout.scale
         func rail(_ y: CGFloat, _ right: Bool) -> CGPoint {
             CGPoint(x: layout.centerX(at: y) + (right ? 104 : -104) * s, y: y)
@@ -9437,6 +9482,38 @@ private struct CityBossCourt {
     }
 }
 
+/// Tunnel masks and court placement are static too. In particular, the convex
+/// hull of the buried train must not be rebuilt twice per 60 Hz metro frame.
+private final class CityMetroGeometry {
+    private static let plans: NSCache<NSString, CityMetroGeometry> = {
+        let cache = NSCache<NSString, CityMetroGeometry>()
+        cache.countLimit = 8
+        return cache
+    }()
+    static func cached(layout: WorldSceneryLayout) -> CityMetroGeometry {
+        let key = "\(layout.width):\(layout.height):\(layout.routeOffset)" as NSString
+        if let plan = plans.object(forKey: key) { return plan }
+        let plan = CityMetroGeometry(layout: layout)
+        plans.setObject(plan, forKey: key)
+        return plan
+    }
+    let line: CityMetroLine
+    let tunnel: CityMetroTunnel
+    let tunnelCut: Path
+    let tunnelBounds: CGRect
+    let court: CityBossCourt
+
+    private init(layout: WorldSceneryLayout) {
+        let line = CityMetroLine.cached(layout: layout)
+        let tunnel = CityMetroTunnel(line: line, scale: layout.scale)
+        self.line = line
+        self.tunnel = tunnel
+        tunnelCut = tunnel.buriedVolume
+        tunnelBounds = tunnel.bounds
+        court = CityBossCourt(layout: layout, line: line)
+    }
+}
+
 /// One clockwise phase for every city clock: 150 simulated seconds per second.
 /// A minute-hand revolution takes 24 real seconds (world eight takes 0.5 seconds).
 private struct CityClockPhase {
@@ -9545,7 +9622,7 @@ private enum CityUrbanLayout {
     static func sites(layout: WorldSceneryLayout) -> [Site] {
         let key = "\(layout.width):\(layout.height):\(layout.routeOffset)" as NSString
         if let field = fields.object(forKey: key) { return field.sites }
-        let s = layout.scale, metro = CityMetroLine(layout: layout)
+        let s = layout.scale, metro = CityMetroLine.cached(layout: layout)
         let street = CityGroundLayout.streetSurface(in: CGSize(width:layout.width,height:layout.height))
         let tunnel = CityMetroTunnel(line:metro,scale:s)
         let approaches = tunnel.approachClearances
@@ -9855,7 +9932,7 @@ private struct CityWorldLife: View {
     var body: some View {
         GeometryReader { geometry in
             let layout = WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset)
-            let line = CityMetroLine(layout: layout)
+            let line = CityMetroLine.cached(layout: layout)
             TimelineView(.animation(minimumInterval: 1.0 / 60,
                                     paused: fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
                 let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
@@ -9884,8 +9961,9 @@ private struct CityMetroForeground: View {
 
     var body: some View {
         let s = layout.scale
-        let tunnel = CityMetroTunnel(line: line, scale: s)
-        let tunnelCut = tunnel.buriedVolume
+        let geometry = CityMetroGeometry.cached(layout: layout)
+        let tunnel = geometry.tunnel
+        let tunnelCut = geometry.tunnelCut
         let travel = line.travel(at: time, scale: s)
         let clockTime = floor(time * 30) / 30
         let cars = (0..<CityMetroLine.carriageCount).map { index in
@@ -9939,16 +10017,14 @@ private struct CityMetroForeground: View {
                 }.frame(width: frame.width, height: frame.height)
                     .position(x: frame.midX, y: frame.midY).zIndex(Double(point.y+100*s))
             }
-            let tunnelFrame = tunnel.bounds.offsetBy(dx: 0, dy: layout.routeOffset)
+            let tunnelFrame = geometry.tunnelBounds.offsetBy(dx: 0, dy: layout.routeOffset)
             CityTunnelArtwork(layout: layout).equatable()
                 .frame(width: tunnelFrame.width, height: tunnelFrame.height)
                 .position(x: tunnelFrame.midX, y: tunnelFrame.midY).zIndex(Double(tunnelFrame.maxY-layout.routeOffset))
-            let court = CityBossCourt(layout: layout, line: line)
+            let court = geometry.court
             let frame = court.clearance.offsetBy(dx: 0, dy: layout.routeOffset)
-            Canvas { context, _ in
-                var c = context; c.translateBy(x: -frame.minX, y: layout.routeOffset-frame.minY)
-                CityWorldPainter(context: c).metroForeground(layout: layout)
-            }.frame(width: frame.width, height: frame.height)
+            CityCourtArtwork(layout: layout, frame: frame).equatable()
+                .frame(width: frame.width, height: frame.height)
                 .position(x: frame.midX, y: frame.midY).zIndex(Double(court.point.y))
             // The carried clocks share the boss's ground depth, so nearer
             // buildings cover them just as they cover the dinosaur's wings.
@@ -9962,6 +10038,24 @@ private struct CityMetroForeground: View {
                     .position(x: clockFrame.midX, y: clockFrame.midY).zIndex(Double(court.point.y) + 0.001)
             }
         }.frame(width: layout.width, height: layout.height, alignment: .topLeading)
+    }
+}
+
+/// The platform and boss body do not depend on train time. Keep their Canvas
+/// outside the timeline's redraws; only the carried clock hands tick above it.
+private struct CityCourtArtwork: View, Equatable {
+    let layout: WorldSceneryLayout
+    let frame: CGRect
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.frame == rhs.frame && lhs.layout.width == rhs.layout.width &&
+        lhs.layout.height == rhs.layout.height && lhs.layout.routeOffset == rhs.layout.routeOffset
+    }
+    var body: some View {
+        Canvas { context, _ in
+            var c = context
+            c.translateBy(x: -frame.minX, y: layout.routeOffset - frame.minY)
+            CityWorldPainter(context: c).metroForeground(layout: layout)
+        }
     }
 }
 
@@ -10013,7 +10107,7 @@ private struct CityStationFacade: View, Equatable {
         Canvas { context, _ in
             var c = context; c.translateBy(x: -frame.minX, y: layout.routeOffset-frame.minY)
             CityWorldPainter(context: c, liveClocks: true)
-                .stationCanopy(line: CityMetroLine(layout: layout), index: index, scale: layout.scale)
+                .stationCanopy(line: CityMetroLine.cached(layout: layout), index: index, scale: layout.scale)
         }
     }
 }
@@ -10026,7 +10120,7 @@ private struct CityTunnelArtwork: View, Equatable {
         lhs.layout.width == rhs.layout.width && lhs.layout.height == rhs.layout.height && lhs.layout.routeOffset == rhs.layout.routeOffset
     }
     var body: some View {
-        let tunnel = CityMetroTunnel(line: CityMetroLine(layout: layout), scale: layout.scale)
+        let tunnel = CityMetroTunnel(line: CityMetroLine.cached(layout: layout), scale: layout.scale)
         let frame = tunnel.bounds.offsetBy(dx: 0, dy: layout.routeOffset)
         Canvas { context, _ in
             var c = context; c.translateBy(x: -frame.minX, y: layout.routeOffset-frame.minY)
@@ -10189,7 +10283,7 @@ private struct CityWorldPainter {
         p.cityDistricts(layout: layout)
         CrystalCavePainter(context: context).cityOutcrops(in: size)
         p.innerPromenades(layout: layout)
-        let metro = CityMetroLine(layout: layout)
+        let metro = CityMetroLine.cached(layout: layout)
         for index in 0..<2 { p.stationPlatform(line: metro, index: index, scale: scale) }
         p.tunnelInterior(CityMetroTunnel(line:metro,scale:scale))
         p.metroViaduct(line: metro, scale: scale)
@@ -10217,7 +10311,7 @@ private struct CityWorldPainter {
     }
 
     private func cityDistricts(layout: WorldSceneryLayout) {
-        let metro = CityMetroLine(layout: layout)
+        let metro = CityMetroLine.cached(layout: layout)
         for right in [false, true] {
             let ground = cityBank(layout: layout,metro: metro,right: right)
             context.fill(ground,with:streetMaterial(layout:layout))
@@ -10669,7 +10763,7 @@ private struct CityWorldPainter {
     }
 
     func metroForeground(layout: WorldSceneryLayout) {
-        let court = CityBossCourt(layout:layout,line:CityMetroLine(layout:layout))
+        let court = CityBossCourt(layout:layout,line:CityMetroLine.cached(layout:layout))
         let p = ThemePainter(context: context, colors: WorldThemeColors(DinoWorldCatalog.world(6)!))
         p.bossClearing(worldID: 6, at: court.bossPoint, size: layout.scale)
         p.boss(worldID: 6, at: court.bossPoint, size: court.artScale)
@@ -19329,6 +19423,9 @@ enum DinoMapArtworkPreparation {
         switch worldID {
         case 1: _ = JungleMapLayout(width: size.width).scene()
         case 2:
+            for cascade in SleepValleyLayout.cascades(layout: layout) {
+                _ = SleepValleyCascadeGeometry.cached(cascade: cascade, layout: layout)
+            }
             let join = VolcanoWorldLayout.joinLayout(width: size.width, routeOffset: routeOffset)
             _ = VolcanoWorldLayout.sources(layout: join)
             _ = VolcanoWorldLayout.tributaries(layout: join)
@@ -19340,8 +19437,14 @@ enum DinoMapArtworkPreparation {
         case 4:
             _ = VillagePlan.plots(layout: layout)
             _ = VillageRiverTrafficLayout.routes(layout: layout)
+        case 6:
+            _ = CityMetroGeometry.cached(layout: layout)
+            _ = CityUrbanLayout.sites(layout: layout)
         case 7:
             _ = SleepValleyLayout.riverGeometry(layout: layout)
+            for cascade in SleepValleyLayout.cascades(layout: layout) {
+                _ = SleepValleyCascadeGeometry.cached(cascade: cascade, layout: layout)
+            }
         case 8:
             _ = TimeMachineLayout.waterField(layout: layout)
             _ = TimeMachineLayout.assemblies(layout: layout)

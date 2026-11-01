@@ -218,8 +218,6 @@ struct DinoDaySchedule: Equatable, Sendable {
     var end: ClockTime { secondStart.adding(minutes: secondMinutes) }
     var durations: [Int] { [firstMinutes, breakMinutes, secondMinutes] }
     var hasMinuteTerms: Bool { durations.contains { !$0.isMultiple(of: 60) } }
-    /// Even whole-hour legs need minutes when replay first bridges an off-hour departure.
-    var usesMinuteColumn: Bool { hasMinuteTerms || (start.minute != 0 && totalMinutes > 0) }
     var writtenDuration: (hours: Int, minutes: Int) {
         (durations.reduce(0) { $0 + $1 / 60 }, durations.reduce(0) { $0 + $1 % 60 })
     }
@@ -227,7 +225,7 @@ struct DinoDaySchedule: Equatable, Sendable {
     /// Add the units as written on each leg before carrying sixty minutes into an hour.
     func summedDurationText(language: String) -> String {
         DinoTimeWords.compactDuration(hours: writtenDuration.hours, minutes: writtenDuration.minutes,
-                                      language: language, padMinutes: usesMinuteColumn)
+                                      language: language, padMinutes: hasMinuteTerms)
     }
 
     /// Keep both replay units visible from zero whenever the worked sum uses them.
@@ -236,7 +234,7 @@ struct DinoDaySchedule: Equatable, Sendable {
         if totalMinutes >= 60 {
             units.append(language == "nl" ? "\(appliedMinutes / 60) uur" : "\(appliedMinutes / 60)h")
         }
-        if usesMinuteColumn { units.append(String(format: "%02d min", appliedMinutes % 60)) }
+        if hasMinuteTerms { units.append(String(format: "%02d min", appliedMinutes % 60)) }
         return "+" + units.joined(separator: " ")
     }
 
@@ -635,6 +633,47 @@ struct DinoMinuteDifference: Equatable, Sendable {
     var totalMinutes: Int { hours * 60 + minutes }
 }
 
+/// Count forward via whole hours, or divide a shorter interval into manageable steps.
+struct DinoMinuteTimeline: Equatable, Sendable {
+    let times: [ClockTime]
+
+    init(_ start: ClockTime, _ end: ClockTime) {
+        let first = start.minutesOfDay, last = end.minutesOfDay
+        guard last > first else { times = [start, end]; return }
+        let duration = last - first
+        let hours = stride(from: (first / 60 + 1) * 60, to: last, by: 60).map { $0 }
+        let stops: [Int]
+        if !hours.isEmpty {
+            stops = hours
+        } else if duration >= 45 && duration.isMultiple(of: 15) {
+            // Three or four familiar quarters, including a single complete hour.
+            stops = stride(from: first + 15, to: last, by: 15).map { $0 }
+        } else if duration >= 2 {
+            if duration.isMultiple(of: 2) {
+                stops = [first + duration / 2]
+            } else {
+                // Prefer a five-minute landmark near the middle of an odd interval.
+                let middle = first + duration / 2
+                let rounded = ((middle + 2) / 5) * 5
+                stops = [rounded > first && rounded < last ? rounded : middle]
+            }
+        } else {
+            // One minute cannot be split without introducing seconds.
+            stops = []
+        }
+        times = ([first] + stops + [last]).map { ClockTime(hour: $0 / 60, minute: $0 % 60) }
+    }
+
+    var segments: [Int] {
+        zip(times, times.dropFirst()).map { $1.minutesOfDay - $0.minutesOfDay }
+    }
+
+    /// Keep part of the calculation for the player, even for a one-minute question.
+    func revealsSegment(_ index: Int, showsAnswer: Bool) -> Bool {
+        showsAnswer || (index == 0 && segments.count > 1)
+    }
+}
+
 enum DinoTimeWords {
     static func time(_ time: ClockTime, language: String, dayPart: Bool = false,
                       schedule: DinoDayPartSchedule = .standard) -> String {
@@ -781,7 +820,7 @@ struct DinoFlightArrivalWork: Equatable {
         return "\(departure.digitalText) + \(shift) = \(arrival.digitalText)"
     }
 
-    /// Reach a whole hour first, then finish, as in the train and time-zone examples.
+    /// Share the train/time-zone route, with whole hours in one step and a bridge for minutes.
     func walkMinutes() -> [Int] {
         DinoTimeZoneStep.steps(from: departure, offsetMinutes: combinedMinutes).map(\.addedMinutes)
     }

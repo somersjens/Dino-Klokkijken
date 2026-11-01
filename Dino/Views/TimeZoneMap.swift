@@ -15,6 +15,7 @@ struct DinoTimeZoneMap: View {
     var theme = ClockTheme.standard
     var animatedOffset: Int? = nil
     var replay: (() -> Void)? = nil
+    var replayCompletion = 0
 
     private let originColor = Color(dinoHex: 0x25674C)
     private var destinationColor: Color {
@@ -51,7 +52,7 @@ struct DinoTimeZoneMap: View {
                         .position(destinationLabel)
                         .accessibilityIdentifier("\(prefix).timeZone.destination")
                     marker(color: originColor, target: false).position(origin)
-                    marker(color: destinationColor, target: true).position(destination)
+                    destinationMarker.position(destination)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 22))
                 .overlay(RoundedRectangle(cornerRadius: 22)
@@ -72,6 +73,27 @@ struct DinoTimeZoneMap: View {
         }.accessibilityHidden(true).allowsHitTesting(false)
     }
 
+    @ViewBuilder private var destinationMarker: some View {
+        if let replay {
+            Button(action: replay) {
+                Image(systemName: "arrow.counterclockwise")
+                    .font(.system(size: 14, weight: .bold))
+                    .replayCompletionTurn(replayCompletion)
+                    .foregroundStyle(destinationColor)
+                    .frame(width: 26, height: 26)
+                    .background(.white.opacity(0.95), in: Circle())
+                    .overlay(Circle().strokeBorder(destinationColor, lineWidth: 1.5))
+                    .frame(width: 44, height: 44)
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("dino.timeZone.replay"))
+            .accessibilityIdentifier("\(prefix).timeZone.replay")
+        } else {
+            marker(color: destinationColor, target: true)
+        }
+    }
+
     private func cityLabel(_ capital: DinoCapital, time: String, isOrigin: Bool, width: CGFloat) -> some View {
         let color = isOrigin ? originColor : destinationColor
         let later = journey.offsetMinutes > 0
@@ -79,26 +101,13 @@ struct DinoTimeZoneMap: View {
         let difference = animatedOffset ?? journey.offsetMinutes
         let offset = isOrigin ? L(key: "dino.timeZone.reference") : differenceText(difference)
         return VStack(spacing: 2) {
-            HStack(spacing: 2) {
-                Text(verbatim: capital.name(language: code))
-                    .font(.system(size: 13, weight: .heavy, design: .rounded))
-                    .lineLimit(1).minimumScaleFactor(0.7)
-                    .frame(maxWidth: .infinity)
-                if !isOrigin, let replay {
-                    Button(action: replay) {
-                        Image(systemName: "arrow.counterclockwise")
-                            .font(.system(size: 12, weight: .bold))
-                            .frame(width: 28, height: 28)
-                            .background(direction.opacity(0.12), in: Circle())
-                            .contentShape(Circle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(Text("dino.timeZone.replay"))
-                    .accessibilityIdentifier("\(prefix).timeZone.replay")
-                }
-            }
-            .frame(height: 24)
-            .foregroundStyle(isOrigin ? color : direction)
+            Text(verbatim: capital.name(language: code))
+                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                .lineLimit(1).minimumScaleFactor(0.7)
+                .frame(maxWidth: .infinity)
+                .frame(height: 24)
+                .foregroundStyle(isOrigin ? color : direction)
+                .accessibilityIdentifier("\(prefix).timeZone.\(isOrigin ? "originName" : "destinationName")")
             Text(verbatim: time)
                 .font(.system(size: 23, weight: .heavy, design: .rounded)).monospacedDigit()
                 .lineLimit(1).minimumScaleFactor(0.55)
@@ -109,6 +118,8 @@ struct DinoTimeZoneMap: View {
                 .font(.system(size: 10, weight: .bold, design: .rounded))
                 .lineLimit(1).minimumScaleFactor(0.75)
                 .foregroundStyle(isOrigin ? color : direction)
+                .padding(.horizontal, isOrigin ? 0 : 6)
+                .padding(.vertical, isOrigin ? 0 : 3)
                 .background(isOrigin ? Color.clear : DinoTimeDirection.background(later: later, highContrast: highContrast), in: Capsule())
                 .monospacedDigit()
                 .numericTextTransition()
@@ -218,6 +229,7 @@ struct DinoTimeZoneLesson: View {
     var explainsLive = false
     @State private var applied = 0
     @State private var replayCount = 0
+    @State private var walkCompletion = 0
 
     private var resultTime: ClockTime { referenceTime.adding(minutes: applied) }
 
@@ -226,7 +238,7 @@ struct DinoTimeZoneLesson: View {
                         answer: playsWalk ? resultTime : answer, showsAnswer: playsWalk || showsAnswer,
                         isDemonstration: isDemonstration, compactLayout: compactLayout, theme: theme,
                         animatedOffset: playsWalk ? applied : nil,
-                        replay: playsWalk ? { restart() } : nil)
+                        replay: playsWalk ? { restart() } : nil, replayCompletion: walkCompletion)
         .task(id: stepIdentity) { await play() }
     }
 
@@ -259,6 +271,9 @@ struct DinoTimeZoneLesson: View {
                 withAnimation(.easeInOut(duration: 0.35)) { applied = step.addedMinutes }
                 if index < steps.count - 1 { try await Task.sleep(for: .milliseconds(800)) }
             }
+            try await Task.sleep(for: .milliseconds(350))
+            try Task.checkCancellation()
+            if !steps.isEmpty { walkCompletion += 1 }
         } catch { /* Closing the example or loading another one cancels the walk. */ }
     }
 }

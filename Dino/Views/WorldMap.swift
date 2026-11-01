@@ -883,8 +883,7 @@ private struct MapScenery<Content: View>: View {
                 // its restored offset. Layout anchors remain available.
                 if preparing { return abs(worldID - initialWorld) <= 2 }
                 let frame = geometry.frame(in: .named("adventure.map.viewport"))
-                let margin = max(1800, viewportHeight * 3)
-                return frame.maxY >= -margin && frame.minY <= viewportHeight + margin
+                return DinoMapViewport.preparesScenery(frame: frame, viewportHeight: viewportHeight, retained: isNearby)
             } action: { nearby in
                 var transaction = Transaction()
                 transaction.disablesAnimations = true
