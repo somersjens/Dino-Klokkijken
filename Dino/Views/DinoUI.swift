@@ -33,17 +33,12 @@ struct DinoAnswerTextLayout {
     }
 }
 
-private struct DinoMapFrozenDateKey: EnvironmentKey { static let defaultValue: Date? = nil }
 private struct DinoMapPreparingKey: EnvironmentKey { static let defaultValue = false }
 private struct DinoMapInitialWorldKey: EnvironmentKey { static let defaultValue = 1 }
 private struct DinoMapArtworkPreparedKey: EnvironmentKey { static let defaultValue: (Int) -> Void = { _ in } }
 private struct DinoMapAnimationEpochKey: EnvironmentKey { static let defaultValue: Date? = nil }
 private struct DinoMapDefersAnimationsKey: EnvironmentKey { static let defaultValue = false }
 extension EnvironmentValues {
-    var dinoMapFrozenDate: Date? {
-        get { self[DinoMapFrozenDateKey.self] }
-        set { self[DinoMapFrozenDateKey.self] = newValue }
-    }
     var dinoMapDefersAnimations: Bool {
         get { self[DinoMapDefersAnimationsKey.self] }
         set { self[DinoMapDefersAnimationsKey.self] = newValue }
@@ -1052,5 +1047,67 @@ private struct ValueChangeProbe<T: Equatable>: ViewModifier {
                     .onChange(of: value) { newValue in action(newValue) }
             }
         }
+    }
+}
+
+/// Only the question illustration scales down; answers and tap targets keep their normal size.
+struct DinoQuestionContext<Content: View>: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let maxHeight: CGFloat?
+    var animatesHeight = false
+    @ViewBuilder var content: () -> Content
+    @State private var naturalHeight: CGFloat = 0
+    private var scale: CGFloat { maxHeight.map { min(1, $0 / max(1, naturalHeight)) } ?? 1 }
+
+    @ViewBuilder var body: some View {
+        if let maxHeight, #available(iOS 17, *) {
+            content()
+                .fixedSize(horizontal: false, vertical: true)
+                .visualEffect { effect, geometry in
+                    let fit = min(1, maxHeight / max(1, geometry.size.height))
+                    return effect.scaleEffect(x: fit, y: fit, anchor: .center)
+                }
+                .frame(height: maxHeight)
+        } else if maxHeight != nil {
+            content()
+                .fixedSize(horizontal: false, vertical: true)
+                .readGeometry(for: CGFloat.self) { ceil($0.size.height) } action: { naturalHeight = $0 }
+                .scaleEffect(scale, anchor: .top)
+                .frame(height: naturalHeight > 0 ? naturalHeight * scale : nil, alignment: .top)
+                .animation(animatesHeight && !reduceMotion ? .easeInOut(duration: 0.55) : nil, value: naturalHeight)
+        } else {
+            content().fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+/// Reflows one persistent context/answer tree, preserving gestures and feedback animations.
+/// The illustration gives up space to the measured answers, never the title or tap targets.
+struct DinoQuestionComposition<Context: View, Answers: View>: View {
+    let layout: DinoGameLayout
+    var hasContext = true
+    var fitsAvailableHeight = true
+    @ViewBuilder var context: () -> Context
+    @ViewBuilder var answers: () -> Answers
+    @State private var answerHeight: CGFloat = 0
+
+    var body: some View {
+        let arrangement = layout.hasSideContext
+            ? AnyLayout(HStackLayout(alignment: .center, spacing: layout.spacing))
+            : AnyLayout(VStackLayout(spacing: layout.spacing))
+        arrangement {
+            if hasContext {
+                DinoQuestionContext(maxHeight: fitsAvailableHeight ? max(24, layout.height - (layout.hasSideContext ? 0 : answerHeight + layout.spacing)) : nil,
+                                    animatesHeight: [.addTime, .subtractTime].contains(layout.kind)) {
+                    context().frame(width: layout.contextWidth)
+                }
+                .frame(width: layout.contextWidth)
+            }
+            VStack(spacing: layout.spacing) { answers() }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(width: layout.answerWidth)
+                .readGeometry(for: CGFloat.self) { ceil($0.size.height) } action: { answerHeight = $0 }
+        }
+        .frame(width: layout.width)
     }
 }

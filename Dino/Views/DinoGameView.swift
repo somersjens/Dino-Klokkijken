@@ -13,65 +13,38 @@ struct DinoGameView: View {
     @State private var confirmExit = false
     @State private var personalizing = false
     @State private var showsDayPartSettings = false
-    @State private var hudHeight: CGFloat = 128
     @State private var answerFrame: CGRect?
     @State private var answerReminder: DinoAnswerRequirement?
     @State private var reminderAttempt = 0
 
     var body: some View {
         GeometryReader { g in
-            let tablet = g.size.width >= 600
-            let wide = g.size.width >= 900 && g.size.width > g.size.height
-            let contentLimit: CGFloat = tablet && session.question.kind == .sayTime ? 760 : wide
-                ? 900 : session.question.kind == .timeZone ? 760 : tablet ? 680 : 520
-            let width = min(contentLimit, max(240, g.size.width - (tablet ? 64 : 36)))
-            let footerHeight: CGFloat = session.question.kind == .dayPart ? 146 : 80
-            let sectionSpacing: CGFloat = tablet ? 16 : 0
-            let questionViewport = max(0, g.size.height - hudHeight - footerHeight - sectionSpacing * 2)
-            let playHeight = max(0, questionViewport - (session.level.isBoss ? 40 : 0))
-            let short = tablet ? questionViewport < 560 : g.size.height < 700
-            let expandsReadingClock = session.question.kind == .chooseDigital && session.showsClockHandHints
-            let questionPadding: CGFloat = session.question.kind == .minutesBetween ? 10
-                : short || expandsReadingClock || session.question.kind == .timeSequence ? 12 : 20
-            let readingClockSpace: CGFloat = expandsReadingClock && !short ? 16 : 0
-            let interactiveClock = wide && [.setAnalog, .advanceAnalog].contains(session.question.kind)
-            let clockSize = min(tablet ? 240 : 210, width * 0.54,
-                                max(tablet ? 136 : 160, tablet ? playHeight * (interactiveClock ? 0.42 : 0.33) : g.size.height * 0.28))
-            let answerClockSize = tablet
-                ? min(184, max(96, wide ? (width - 84) / 4 : (playHeight - 210) / 2 - 48))
-                : max(88, (questionViewport - (short ? 198 : 250)) / 2)
+            // GeometryReader already excludes the container's safe areas.
+            let width = max(1, g.size.width - 32)
+            let compact = g.size.height < 500
+            let horizontalChrome = compact && g.size.width > g.size.height
+            let footerHeight: CGFloat = session.question.kind == .dayPart && !compact ? 146 : 74
             ZStack {
                 JungleBackground(quiet: true)
-                VStack(spacing: sectionSpacing) {
-                    AdventureHeader(personalizerChanged: { personalizing = $0 }, sharedCompanion: true, level: session.level.id,
-                                        stars: player.profile.totalStars, worldID: session.level.worldID,
-                                        compact: g.size.height < 430, viewportHeight: g.size.height, viewportWidth: g.size.width,
-                                        maximumScale: tablet ? 1.2 : 1.9,
-                                        questionCounter: session.practice == nil
-                                            ? "\(min(session.attempt.index + 1, session.level.questionCount))/\(session.level.questionCount)"
-                                            : DinoPracticeCounter(value: session.practiceQuestionNumber).digits,
-                                        practiceStreak: session.practice == nil ? nil : session.practiceStreak,
-                                        practiceRecord: session.practiceBestStreak,
-                                        practiceQuestionNumber: session.practice == nil ? nil : session.practiceQuestionNumber,
-                                        practiceConfiguration: session.practice,
-                                        help: showExample, action: pause)
-                        .readGeometry(for: CGFloat.self) { $0.size.height } action: { hudHeight = $0 }
-                    DinoQuestionViewportLayout(maximumHeight: questionViewport, fitsContent: tablet) {
+                VStack(spacing: 0) {
+                    gameChrome(size: g.size, compact: compact, horizontal: horizontalChrome)
+                    GeometryReader { play in
+                        let layout = DinoGameLayout(width: width, height: max(1, play.size.height - 16),
+                                                    kind: session.question.kind,
+                                                    optionCount: max(session.question.options.count, session.question.responses.count))
                         ScrollViewReader { proxy in
                             ScrollView {
-                                VStack(spacing: session.question.kind == .setAnalog ? 8 : short ? 10 : 18) {
-                                    if session.level.isBoss { crystals }
-                                    questionTitle(fontSize: tablet ? (short ? 23 : 26) : 21)
-                                        .frame(maxWidth: min(tablet ? 760 : 680, width))
-                                        .frame(maxWidth: .infinity)
-                                        .id("question.top")
-                                    QuestionRenderer(session: session, theme: player.profile.clockTheme, width: width, clockSize: clockSize, wideLayout: wide, compactLayout: short, answerClockSize: answerClockSize,
-                                                     availableHeight: max(180, questionViewport - (session.level.isBoss ? 140 : 100) + readingClockSpace),
-                                                     horizontalSequence: tablet && g.size.width > g.size.height)
-                                }.padding(.vertical, questionPadding).frame(width: width)
-                                    .fixedSize(horizontal: false, vertical: true)
+                                QuestionRenderer(session: session, theme: player.profile.clockTheme,
+                                                 width: layout.width, clockSize: layout.clockSize,
+                                                 wideLayout: layout.horizontal, compactLayout: layout.compact,
+                                                 answerClockSize: layout.answerClockSize,
+                                                 availableHeight: layout.height,
+                                                 horizontalSequence: layout.horizontalSequence)
+                                    .padding(.vertical, 8)
+                                    .frame(width: width)
+                                    .id("question.top")
+                                    .frame(minHeight: play.size.height, alignment: layout.pairedClocks ? .bottom : .center)
                                     .frame(maxWidth: .infinity)
-                                    .modifier(ShortScrollCentering(height: tablet ? 0 : questionViewport))
                                     .contentShape(Rectangle())
                             }
                             .centersShortContent()
@@ -85,7 +58,7 @@ struct DinoGameView: View {
                                 guard visible, !session.correctFeedback, let frame = answerFrame else { return }
                                 let anchor: UnitPoint?
                                 if frame.minY < 0 { anchor = .top }
-                                else if frame.maxY > questionViewport { anchor = .bottom }
+                                else if frame.maxY > play.size.height { anchor = .bottom }
                                 else { anchor = nil }
                                 if let anchor {
                                     withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
@@ -99,7 +72,7 @@ struct DinoGameView: View {
                                 // The hint adds height after feedback. Recheck once its expansion has settled.
                                 do { try await Task.sleep(for: .milliseconds(reduceMotion ? 16 : 480)) }
                                 catch { return }
-                                guard let frame = answerFrame, frame.maxY > questionViewport else { return }
+                                guard let frame = answerFrame, frame.maxY > play.size.height else { return }
                                 withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
                                     proxy.scrollTo("question.answerFocus", anchor: .bottom)
                                 }
@@ -107,17 +80,15 @@ struct DinoGameView: View {
                             .onValueChange(of: session.hasFeedback) { showing in
                                 if showing { DinoQuestionSpeech.shared.interrupt() }
                             }
-                            .onValueChange(of: wide) { _ in
+                            .onValueChange(of: layout.horizontal) { _ in
                                 if session.question.kind == .timeZone { proxy.scrollTo("question.top", anchor: .top) }
                             }
                         }
                     }
-                    // On iPad the HUD, exercise and action form one centered lesson.
-                    // Measure its current ideal height during layout, without a second state update.
-                    // A new scroll view also starts at its own initial position in that same pass.
+                    // Keep the existing question lifecycle; rotation only changes proposals.
                     .id(session.question.id)
                     .transition(.identity)
-                    answerFooter(height: footerHeight, width: width, hasBackdrop: !tablet)
+                    answerFooter(height: footerHeight, width: width, hasBackdrop: true, compact: compact)
                         .fixedSize(horizontal: false, vertical: true)
                 }.frame(maxWidth: .infinity, maxHeight: .infinity)
                     .disabled(confirmExit || session.demonstration != nil).accessibilityHidden(confirmExit || session.demonstration != nil)
@@ -140,6 +111,8 @@ struct DinoGameView: View {
                         .transition(.scale(scale: 0.94).combined(with: .opacity))
                 }
             }
+            // Reflow immediately on rotation; answer animations keep their own transactions.
+            .animation(nil, value: g.size)
 
         }.foregroundStyle(DinoStyle.ink)
             .task {
@@ -185,6 +158,32 @@ struct DinoGameView: View {
             }
     }
 
+    @ViewBuilder private func gameChrome(size: CGSize, compact: Bool, horizontal: Bool) -> some View {
+        let chrome = horizontal ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 8))
+        chrome {
+            AdventureHeader(personalizerChanged: { personalizing = $0 }, sharedCompanion: true, level: session.level.id,
+                                stars: player.profile.totalStars, worldID: session.level.worldID,
+                                compact: compact, showsPracticeSubtitle: !horizontal, viewportHeight: size.height, viewportWidth: size.width,
+                                maximumScale: 1.2,
+                                questionCounter: session.practice == nil
+                                    ? "\(min(session.attempt.index + 1, session.level.questionCount))/\(session.level.questionCount)"
+                                    : DinoPracticeCounter(value: session.practiceQuestionNumber).digits,
+                                practiceStreak: session.practice == nil ? nil : session.practiceStreak,
+                                practiceRecord: session.practiceBestStreak,
+                                practiceQuestionNumber: session.practice == nil ? nil : session.practiceQuestionNumber,
+                                practiceConfiguration: session.practice,
+                                help: showExample, action: pause)
+                .frame(width: horizontal ? min(390, size.width * 0.48) : size.width)
+            VStack(spacing: 8) {
+                if session.level.isBoss { crystals }
+                questionTitle(fontSize: 23)
+                    .frame(maxWidth: .infinity)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 16)
+            }
+        }
+    }
+
     @ViewBuilder private func questionTitle(fontSize: CGFloat) -> some View {
         let announces = session.demonstration == nil && !confirmExit
         if session.question.kind == .trueFalse {
@@ -197,22 +196,24 @@ struct DinoGameView: View {
         }
     }
 
-    private func answerFooter(height: CGFloat, width: CGFloat, hasBackdrop: Bool) -> some View {
+    private func answerFooter(height: CGFloat, width: CGFloat, hasBackdrop: Bool, compact: Bool) -> some View {
         // Reserve the same space before and after answering so the question stays still.
         // A day-part question also reserves the settings button, so closing the question does not move the choices.
         // This row sits outside the scroll view and above the bottom safe area.
         let showsNext = session.hasFeedback && !session.shouldAutoAdvance
         let check = showsNext ? nil : session.answerCheck
         let dayPart = session.question.kind == .dayPart
+        let actionWidth = min(420, compact && dayPart && session.offersDayPartSettings ? (width - 12) / 2 : width)
         return Color.clear.frame(height: height)
             .overlay(alignment: dayPart ? .bottom : .center) {
-                VStack(spacing: 8) {
+                let actions = compact && dayPart ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 8))
+                actions {
                     if showsNext && session.offersDayPartSettings {
                         Button { showsDayPartSettings = true } label: {
                             Label("dino.dayPart.changeSettings", systemImage: "gearshape.fill")
                         }
                         .buttonStyle(DinoDayPartSettingsButtonStyle())
-                        .frame(width: min(420, width))
+                        .frame(width: actionWidth)
                         .accessibilityIdentifier("question.dayPart.settings")
                     }
                     if showsNext {
@@ -224,7 +225,7 @@ struct DinoGameView: View {
                         }
                         .buttonStyle(DinoButtonStyle())
                         .multilineTextAlignment(.center)
-                        .frame(width: min(420, width))
+                        .frame(width: actionWidth)
                         .accessibilityIdentifier(session.canRetry ? "question.showAnswer" : "question.next")
                     } else if let check {
                         Button {
@@ -243,11 +244,11 @@ struct DinoGameView: View {
                         }
                         .buttonStyle(DinoButtonStyle())
                         .disabled(!check.enabled)
-                        .frame(width: min(420, width))
+                        .frame(width: actionWidth)
                         .accessibilityIdentifier("question.confirm")
                     }
                 }
-                .padding(.bottom, dayPart && (showsNext || check != nil) ? 11 : 0)
+                .padding(.bottom, dayPart && !compact && (showsNext || check != nil) ? 11 : 0)
                 .frame(maxWidth: dayPart ? .infinity : nil)
                 .background {
                     if hasBackdrop && dayPart && (showsNext || check != nil) {
@@ -319,26 +320,6 @@ struct DinoGameView: View {
     }
 
 
-}
-
-/// Fits a short iPad lesson and caps taller questions without storing a previous question's height.
-private struct DinoQuestionViewportLayout: Layout {
-    let maximumHeight: CGFloat
-    let fitsContent: Bool
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        if !fitsContent, let width = proposal.width {
-            return CGSize(width: width, height: maximumHeight)
-        }
-        guard let scroll = subviews.first else { return .zero }
-        let ideal = scroll.sizeThatFits(.init(width: proposal.width, height: nil))
-        return CGSize(width: proposal.width ?? ideal.width,
-                      height: fitsContent ? min(maximumHeight, ideal.height) : maximumHeight)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        subviews.first?.place(at: bounds.origin, anchor: .topLeading, proposal: .init(bounds.size))
-    }
 }
 
 private struct DinoAnswerReminder: View {

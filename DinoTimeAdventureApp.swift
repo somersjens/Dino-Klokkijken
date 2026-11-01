@@ -15,7 +15,7 @@ final class DinoOrientationDelegate: NSObject, UIApplicationDelegate {
 
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
         window?.overrideUserInterfaceStyle = .light
-        return UIDevice.current.userInterfaceIdiom == .pad ? .all : .portrait
+        return .all
     }
 }
 

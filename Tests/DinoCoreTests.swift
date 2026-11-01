@@ -12,7 +12,37 @@ private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
 @main
 @MainActor
 struct DinoCoreTests {
+    static func testGameLayout() {
+        // Sweep continuous window sizes, including narrow split views and short landscape windows.
+        for width in stride(from: 280, through: 1400, by: 37) {
+            for height in stride(from: 160, through: 1100, by: 43) {
+                for kind in ClockQuestionKind.allCases {
+                    let layout = DinoGameLayout(width: CGFloat(width), height: CGFloat(height), kind: kind, optionCount: 4)
+                    expect(layout.clockSize.isFinite && layout.clockSize > 0, "finite positive clock size")
+                    expect(layout.answerWidth > 0 && layout.contextWidth > 0, "positive content widths")
+                    if layout.hasSideContext {
+                        expect(layout.contextWidth + layout.answerWidth + layout.spacing <= CGFloat(width) + 0.01,
+                               "columns stay inside the available width")
+                    }
+                    let columns = layout.answerColumns()
+                    expect(columns == 2 || columns == 4, "four choices form two rows or one row")
+                    expect(layout.answerClockSize + 24 <= (layout.answerWidth - layout.spacing * CGFloat(columns - 1)) / CGFloat(columns) + 0.01,
+                           "answer clocks fit their stones")
+                }
+            }
+        }
+        let portrait = DinoGameLayout(width: 370, height: 500, kind: .timeSequence, optionCount: 4)
+        let landscape = DinoGameLayout(width: 720, height: 220, kind: .timeSequence, optionCount: 4)
+        expect(!portrait.horizontalSequence && landscape.horizontalSequence, "sequence reflows with available aspect ratio")
+        expect(portrait.answerColumns() == 2 && landscape.answerColumns() == 4, "choices reflow on phones too")
+    }
+
     static func main() async {
+        if CommandLine.arguments.contains("--game-layout") {
+            testGameLayout()
+            print("PASS: \(checks) adaptive game layout checks.")
+            return
+        }
         if CommandLine.arguments.contains("--clock-arithmetic") {
             testClockArithmetic()
             testClockArithmeticDisplay()
@@ -128,6 +158,7 @@ struct DinoCoreTests {
             print("PASS: \(checks) boss clock motion checks.")
             return
         }
+        testGameLayout()
         testLevelCurriculum()
         testAdaptiveDifficulty()
         testQuestionVariation()
@@ -589,18 +620,6 @@ struct DinoCoreTests {
     }
 
     static func testMapAnimationViewport() {
-        let origin = Date(timeIntervalSinceReferenceDate: 100)
-        var clock = DinoMapAnimationClock(epoch: origin)
-        clock.setScrolling(true, at: origin.addingTimeInterval(10))
-        expect(clock.elapsed(at: origin.addingTimeInterval(15)) == 10, "map decoration holds its last time during any scroll")
-        clock.setScrolling(true, at: origin.addingTimeInterval(16))
-        expect(clock.frozenDate == origin.addingTimeInterval(10), "changed pan events must not move the frozen time")
-        clock.setScrolling(false, at: origin.addingTimeInterval(20))
-        expect(clock.frozenDate == nil, "ending scroll restores normal scene time")
-        expect(clock.elapsed(at: origin.addingTimeInterval(20)) == 10, "resuming does not jump a train or waterfall forward")
-        expect(clock.elapsed(at: origin.addingTimeInterval(25)) == 15, "normal animation speed returns after the scroll")
-        clock.setScrolling(false, at: origin.addingTimeInterval(30))
-        expect(clock.elapsed(at: origin.addingTimeInterval(30)) == 20, "duplicate stop notifications do not shift the clock")
         let approaching = CGRect(x: 0, y: 900, width: 390, height: 100)
         expect(DinoMapViewport.preparesAnimation(frame: approaching, viewportHeight: 852), "nearby effects are still prepared")
         expect(!DinoMapViewport.isVisible(frame: approaching, viewportHeight: 852), "prepared offscreen effects do not keep ticking")

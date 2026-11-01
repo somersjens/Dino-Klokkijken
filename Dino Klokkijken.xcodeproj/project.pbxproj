@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DA011126AD01000000000002 /* DinoGameLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA011126AD01000000000001 /* DinoGameLayout.swift */; };
 		00BF1DDD8A1DDC39990EF9D2 /* Dino/Core/ProgressSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ED274EAFF7B807862126964 /* Dino/Core/ProgressSyncService.swift */; };
 		0E03B85644DFB788EEC72EB8 /* Dino/Views/LevelResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7BF4989C8E56DBDD0035B47 /* Dino/Views/LevelResult.swift */; };
 		113D4C997110CB7A3F76A105 /* Dino/Core/PlayerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56A2803CE327ECBD272C7D1 /* Dino/Core/PlayerProfile.swift */; };
@@ -102,6 +103,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		DA011126AD01000000000001 /* DinoGameLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/DinoGameLayout.swift; sourceTree = SOURCE_ROOT; };
 		01881B3B65886D0F9D53F6C8 /* Dino/Core/SocialProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/SocialProgress.swift; sourceTree = SOURCE_ROOT; };
 		0B80587E32D18C0831D8ACC9 /* Dino/Views/OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/OnboardingFlow.swift; sourceTree = SOURCE_ROOT; };
 		1BC06D8CEF6D4051A1A0BD11 /* Dino/Views/ResultLevelSign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/ResultLevelSign.swift; sourceTree = SOURCE_ROOT; };
@@ -291,6 +293,7 @@
 				6006716CA601E3DD24C0D9F6 /* Dino/Views/QuestionRenderer.swift */,
 				6B1DFC98581D62FAF83297BD /* Dino/Views/ClockCustomizer.swift */,
 				8AAEBD1E16CB94C4F51E8B01 /* Dino/Views/DinoGameView.swift */,
+				DA011126AD01000000000001 /* DinoGameLayout.swift */,
 				945545C5CAAF92265CBE1BFE /* Dino/Views/DinoCharacter.swift */,
 				9CC831804F11124D46221EE6 /* Dino/Views/DigitalClock.swift */,
 				B7BF4989C8E56DBDD0035B47 /* Dino/Views/LevelResult.swift */,
@@ -496,6 +499,7 @@
 				DDD392F183235DB51B76875F /* Dino/Views/ClockCustomizer.swift in Sources */,
 				3B68E92C41BE1E6926B1CD26 /* Dino/Views/DigitalClock.swift in Sources */,
 				A3A7FCEFEAA9FAF58F4BD046 /* Dino/Views/DinoGameView.swift in Sources */,
+				DA011126AD01000000000002 /* DinoGameLayout.swift in Sources */,
 				3B04AE1E8CC46A033D379434 /* Dino/Views/DinoUI.swift in Sources */,
 				0E03B85644DFB788EEC72EB8 /* Dino/Views/LevelResult.swift in Sources */,
 				DA202026BD02000000000002 /* Dino/Views/ResultWorldScenery.swift in Sources */,
@@ -703,7 +707,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
@@ -759,7 +763,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";

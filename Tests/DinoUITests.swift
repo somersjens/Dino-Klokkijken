@@ -1559,44 +1559,34 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5))
     }
 
-    func testMapDecorationResumesAfterGentleGesture() {
+    func testWorldJumpStillLandsOnNextWorld() {
         app.terminate()
-        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "5"
+        app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.cached-map-jump.\(UUID().uuidString)"
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "59"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "60"
+        app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = "10"
         app.launch()
-        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 15))
-        waitForMapOpeningToFinish()
-        let budget = app.staticTexts["map.scrollBudget"]
-        XCTAssertTrue(budget.waitForExistence(timeout: 5))
-        XCTAssertEqual(budget.label, "normal")
-        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.65))
-        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.58))
-        start.press(forDuration: 0.05, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.1)
-        XCTAssertGreaterThan(Int(budget.value as? String ?? "0") ?? 0, 0,
-                             "Even a short, slow drag must pause decoration")
-        let settled = NSPredicate(format: "label == %@", "normal")
-        expectation(for: settled, evaluatedWith: budget)
-        waitForExpectations(timeout: 6)
-        XCTAssertTrue(app.buttons["header.settings"].isHittable)
-        end.press(forDuration: 0.05, thenDragTo: start, withVelocity: .slow, thenHoldForDuration: 0.1)
-        expectation(for: settled, evaluatedWith: budget)
-        waitForExpectations(timeout: 6)
-        saveScreenshot("map-budget-restored-city")
+        XCTAssertTrue(app.buttons["result.next"].waitForExistence(timeout: 10))
+        tap("result.next")
+        let dino = app.descendants(matching: .any)["map.dino.61"]
+        XCTAssertTrue(dino.waitForExistence(timeout: 20))
+        let stone = app.buttons["map.level.61"]
+        XCTAssertTrue(stone.isHittable)
+        XCTAssertFalse(app.descendants(matching: .any)["map.worldJump"].exists)
+        XCTAssertEqual(dino.frame.midX, stone.frame.midX, accuracy: 2)
+        XCTAssertEqual(dino.frame.maxY, stone.frame.midY + 12, accuracy: 2)
+        saveScreenshot("cached-map-world-jump-landed")
     }
 
-    func testGentleScrollLiveDecorationControl() {
-        measureGentleMapScroll(liveDecoration: true)
+    func testGentleMapScrollPerformance() {
+        measureGentleMapScroll()
     }
 
-    func testGentleScrollPausedDecoration() {
-        measureGentleMapScroll(liveDecoration: false)
-    }
-
-    private func measureGentleMapScroll(liveDecoration: Bool) {
+    private func measureGentleMapScroll() {
         app.terminate()
         app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "5"
         app.launchEnvironment["DINO_TEST_MAP_DIAGNOSTICS"] = "1"
         app.launchEnvironment["DINO_TEST_SCROLL_ONLY_GAPS"] = "1"
-        app.launchEnvironment["DINO_TEST_LIVE_SCROLL_DECORATION"] = liveDecoration ? "1" : "0"
         app.launch()
         XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 15))
         waitForMapOpeningToFinish()
@@ -1612,9 +1602,9 @@ final class DinoUITests: XCTestCase {
         }
         let gap = app.staticTexts["map.maximumFrameGapMilliseconds"]
         XCTAssertTrue(gap.exists)
-        print("MAP_GENTLE_SCROLL live=\(liveDecoration) maximumScrollGapMilliseconds=\(gap.label)")
+        print("MAP_GENTLE_SCROLL maximumScrollGapMilliseconds=\(gap.label)")
         XCTAssertTrue(app.buttons["header.settings"].isHittable)
-        saveScreenshot(liveDecoration ? "gentle-map-live-control" : "gentle-map-paused-decoration")
+        saveScreenshot("gentle-map-scroll")
     }
 
     func testCityScrollRenderingBudgetPerformance() {
@@ -5392,7 +5382,7 @@ final class DinoUITests: XCTestCase {
         tap("onboarding.next")
         XCUIDevice.shared.orientation = .landscapeLeft
         let landscape = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
-            (UIDevice.current.userInterfaceIdiom == .pad ? self.app.frame.width > self.app.frame.height : self.app.frame.width < self.app.frame.height)
+            (self.app.frame.width > self.app.frame.height)
         }, object: nil)
         wait(for: [landscape], timeout: 8)
         RunLoop.current.run(until: Date().addingTimeInterval(0.7))
@@ -5833,19 +5823,16 @@ final class DinoUITests: XCTestCase {
         assertCompanionInPortrait(idle)
         XCTAssertLessThanOrEqual(idle.frame.width, smallQuestionSize + 2, "Dense questions retain the same recognizable companion")
         saveScreenshot("companion-large-pair-question")
-        // The practice cover uses its presenter's orientation on iPhone. Rotate
-        // the main game scene to verify the same portrait at a short viewport height.
+        // Rotate the main scene to verify the same companion in the compact HUD.
         tap("header.pause")
         tap("practice.close")
         begin(10)
         XCUIDevice.shared.orientation = .landscapeLeft
-        let landscape = NSPredicate { _, _ in (UIDevice.current.userInterfaceIdiom == .pad ? self.app.frame.width > self.app.frame.height : self.app.frame.width < self.app.frame.height) && idle.exists && idle.frame.maxY <= self.app.frame.maxY + 1 }
+        let landscape = NSPredicate { _, _ in (self.app.frame.width > self.app.frame.height) && idle.exists && idle.frame.maxY <= self.app.frame.maxY + 1 }
         expectation(for: landscape, evaluatedWith: nil)
         waitForExpectations(timeout: 8)
         assertCompanionInPortrait(idle)
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            XCTAssertEqual(idle.frame.width, smallQuestionSize, accuracy: 2, "iPhone keeps the portrait companion when the device rotates")
-        }
+        XCTAssertGreaterThanOrEqual(idle.frame.width, 52, "The compact HUD keeps a recognizable companion")
         saveScreenshot("companion-question-landscape")
         XCUIDevice.shared.orientation = .portrait
     }
@@ -5887,25 +5874,33 @@ final class DinoUITests: XCTestCase {
     }
 
     func testAllQuestionTypesFitTabletViewport() {
+        continueAfterFailure = true
         let requested = ProcessInfo.processInfo.environment["DINO_LAYOUT_TYPES"]?.split(separator: ",").map(String.init)
         let types = DinoPracticeQuestion.allCases.filter { requested == nil || requested!.contains($0.rawValue) }
         for type in types {
             app.terminate()
             XCUIDevice.shared.orientation = .portrait
-            app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.ipad-layout.\(UUID().uuidString)"
+            app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.adaptive-layout.\(UUID().uuidString)"
             app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
             app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = type.rawValue
             app.launchEnvironment["DINO_TEST_PRACTICE_CHALLENGE"] = "1"
             app.launch()
             XCTAssertTrue(app.staticTexts["question.title"].waitForExistence(timeout: 10))
             checkQuestionFits(type, name: "portrait")
-            if UIDevice.current.userInterfaceIdiom == .pad {
-                XCUIDevice.shared.orientation = .landscapeLeft
-                let rotated = NSPredicate { _, _ in self.app.frame.width > self.app.frame.height }
-                expectation(for: rotated, evaluatedWith: nil)
-                waitForExpectations(timeout: 8)
-                checkQuestionFits(type, name: "landscape")
-            }
+            XCUIDevice.shared.orientation = .landscapeLeft
+            let rotated = NSPredicate { _, _ in self.app.frame.width > self.app.frame.height }
+            expectation(for: rotated, evaluatedWith: nil)
+            waitForExpectations(timeout: 8)
+            checkQuestionFits(type, name: "landscape")
+            var generator = DinoPracticeGenerator(configuration: .init(time: .minutes, order: .specific(type)), seed: seed)
+            let question = generator.next(index: 3, difficultyForKind: { _ in .challenge })
+            answerPracticeWrong(question)
+            checkQuestionFits(type, name: "landscape-feedback")
+            XCUIDevice.shared.orientation = .portrait
+            let portrait = NSPredicate { _, _ in self.app.frame.width < self.app.frame.height }
+            expectation(for: portrait, evaluatedWith: nil)
+            waitForExpectations(timeout: 8)
+            checkQuestionFits(type, name: "portrait-feedback")
         }
     }
 
@@ -6243,72 +6238,47 @@ final class DinoUITests: XCTestCase {
 
     private func checkQuestionFits(_ type: DinoPracticeQuestion, name: String) {
         RunLoop.current.run(until: Date().addingTimeInterval(0.8))
-        let viewport = app.scrollViews["game.questions"].frame.insetBy(dx: -1, dy: -1)
-        let title = app.staticTexts["question.title"]
-        XCTAssertTrue(viewport.contains(title.frame), "\(type): title stays below the HUD")
+        let viewport = app.scrollViews["game.questions"].frame.insetBy(dx: -2, dy: -2)
+        let title = app.staticTexts.matching(identifier: "question.title").firstMatch
+        XCTAssertTrue(app.frame.contains(title.frame), "\(type) \(name): title stays on screen")
+        XCTAssertLessThanOrEqual(title.frame.maxY, viewport.minY + 2, "The title has its own reserved space")
         let answers = app.buttons.allElementsBoundByIndex.filter {
             $0.identifier.hasPrefix("question.option.") || $0.identifier.hasPrefix("question.sort.")
                 || $0.identifier.hasPrefix("question.match.clock.") || $0.identifier.hasPrefix("question.match.time.")
                 || $0.identifier.hasPrefix("question.spoken.") || $0.identifier.hasPrefix("question.analog.")
+                || $0.identifier.hasPrefix("question.hand.") || $0.identifier.hasPrefix("clock.hour.") || $0.identifier.hasPrefix("clock.minute.")
         }
-        XCTAssertFalse(answers.isEmpty && ![.setDigital, .advanceAnalog].contains(type))
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            XCTAssertLessThanOrEqual(title.frame.minY - viewport.minY, 24,
-                                     "A short exercise does not have a large internal gap above its title")
-            if type == .sayTime {
-                for answer in answers {
-                    // Tablet stones are deliberately larger; their height still remains bounded.
-                    XCTAssertLessThanOrEqual(answer.frame.height, 52, "Word stones never stretch vertically")
-                }
-            }
-            if type == .match {
-                let clock = app.buttons["question.match.clock.0"].frame
-                let time = app.buttons["question.match.time.0"].frame
-                let horizontal = app.frame.width > app.frame.height
-                // The landscape connection dot extends beyond the card's lower edge.
-                XCTAssertLessThanOrEqual(clock.height, horizontal ? 216 : 189)
-                XCTAssertLessThanOrEqual(time.height, 96, "Digital cards use their own compact height")
-                if horizontal {
-                    XCTAssertEqual(clock.midX, time.midX, accuracy: 1)
-                    XCTAssertLessThan(clock.maxY, time.minY)
-                    XCTAssertEqual(app.buttons["question.match.clock.1"].frame.midY, clock.midY, accuracy: 1)
-                    XCTAssertGreaterThanOrEqual(clock.height, 144, "Landscape uses its width to keep the faces readable")
-                } else {
-                    XCTAssertEqual(clock.midY, time.midY, accuracy: 1)
-                    XCTAssertLessThanOrEqual(app.buttons["question.match.clock.1"].frame.minY - clock.maxY, 13)
-                }
-            }
-            for answer in answers {
-                XCTAssertTrue(viewport.contains(answer.frame), "\(type) \(name): \(answer.identifier) \(answer.frame) exceeds \(viewport)")
-                XCTAssertTrue(answer.isHittable, "\(type): every answer is accessible without scrolling")
-            }
-            for identifier in ["question.analogControl", "question.digitalControl", "question.flight.ticket", "question.schedule.card", "question.minutesBetween.card"] {
-                let display = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
-                if display.exists {
-                    XCTAssertTrue(viewport.contains(display.frame), "\(type): \(identifier) also fits above the action row")
-                }
-            }
-            if [.setDigital, .setAnalog, .advanceAnalog].contains(type) {
-                let reference = app.descendants(matching: .any)[type == .advanceAnalog ? "question.startClock" : "question.targetClock"]
-                let input = app.descendants(matching: .any)[type == .setDigital ? "question.digitalControl" : "question.analogControl"]
-                XCTAssertLessThan(reference.frame.maxX, input.frame.minX)
-                XCTAssertEqual(reference.frame.midY, input.frame.midY, accuracy: 1)
-                let control = app.buttons[type == .setDigital ? "clock.hour.more" : "question.analog.more"]
-                XCTAssertGreaterThanOrEqual(control.frame.minY, input.frame.maxY)
-            } else if app.frame.width > app.frame.height {
-                let options = answers.filter { $0.identifier.hasPrefix("question.option.") }
-                if options.count == 4 {
-                    for option in options { XCTAssertEqual(option.frame.midY, options[0].frame.midY, accuracy: 1) }
-                    for identifier in ["question.flight.ticket", "question.schedule.card", "question.minutesBetween.card", "question.targetClock", "question.sequence.unknown"] {
-                        let context = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
-                        if context.exists { XCTAssertLessThanOrEqual(context.frame.maxY, options[0].frame.minY) }
-                    }
-                }
+        for answer in answers {
+            XCTAssertTrue(viewport.contains(answer.frame), "\(type) \(name): \(answer.identifier) \(answer.frame) exceeds \(viewport)")
+            XCTAssertTrue(answer.isHittable, "\(type) \(name): answer is reachable")
+        }
+        let options = answers.filter { $0.identifier.hasPrefix("question.option.") }
+        if options.count == 4 {
+            let centers = options.map { $0.frame.midY }.sorted()
+            let rowCount = zip(centers, centers.dropFirst()).filter { abs($0 - $1) > 12 }.count + 1
+            XCTAssertTrue(rowCount == 1 || rowCount == 2, "Four choices use one or two rows")
+        }
+        for identifier in ["question.analogControl", "question.digitalControl", "question.targetClock", "question.correctClock",
+                           "question.flight.ticket", "question.schedule.card", "question.minutesBetween.card", "question.sequence.unknown"] {
+            let display = app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+            if display.exists && !display.frame.isEmpty {
+                XCTAssertTrue(viewport.contains(display.frame), "\(type) \(name): \(identifier) \(display.frame) exceeds \(viewport)")
             }
         }
-        let confirm = app.buttons["question.confirm"]
-        if confirm.exists { assertStickyAnswerButton(confirm) }
-        saveScreenshot("ipad-fit-\(type.rawValue)-\(name)")
+        for id in ["question.confirm", "question.next", "question.showAnswer"] {
+            let action = app.buttons[id]
+            if action.exists {
+                XCTAssertTrue(action.isHittable)
+                XCTAssertGreaterThanOrEqual(action.frame.minY, viewport.maxY - 2)
+                XCTAssertLessThanOrEqual(action.frame.maxY, app.frame.maxY)
+            }
+        }
+        if app.frame.width > app.frame.height && [.setDigital, .setAnalog, .advanceAnalog].contains(type) {
+            let controls = answers.filter { $0.identifier.hasPrefix("question.analog.") || $0.identifier.hasPrefix("question.hand.") || $0.identifier.hasPrefix("clock.") }
+                .reduce(CGRect.null) { $0.union($1.frame) }
+            if !controls.isNull { XCTAssertEqual(controls.midX, viewport.midX, accuracy: 2, "Clock controls remain centered") }
+        }
+        saveScreenshot("adaptive-fit-\(type.rawValue)-\(name)")
     }
 
     func testResponsiveOrientationsAndProportionalHUD() {
@@ -6323,12 +6293,11 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("responsive-map-portrait")
         let settings = app.buttons["header.settings"]
         let portraitRatio = settings.frame.width / settings.frame.height
-        let portraitPortraitSize = app.buttons["header.dino"].frame.height
         for orientation in [UIDeviceOrientation.landscapeLeft, .landscapeRight] {
             XCUIDevice.shared.orientation = orientation
             RunLoop.current.run(until: Date().addingTimeInterval(1))
             let settled = NSPredicate { _, _ in
-                (tablet ? self.app.frame.width > self.app.frame.height : self.app.frame.width < self.app.frame.height)
+                (self.app.frame.width > self.app.frame.height)
                     && settings.exists && settings.frame.maxX <= self.app.frame.maxX
             }
             expectation(for: settled, evaluatedWith: nil)
@@ -6336,7 +6305,7 @@ final class DinoUITests: XCTestCase {
             RunLoop.current.run(until: Date().addingTimeInterval(0.7))
             XCTAssertEqual(settings.frame.width / settings.frame.height, portraitRatio, accuracy: 0.04,
                            "HUD cells preserve their proportions on rotation")
-            XCTAssertGreaterThanOrEqual(app.buttons["header.dino"].frame.height, portraitPortraitSize * 0.75)
+            XCTAssertGreaterThanOrEqual(app.buttons["header.dino"].frame.height, 52)
             XCTAssertEqual(mapScroll.frame.minX, app.frame.minX, accuracy: 1)
             XCTAssertEqual(mapScroll.frame.maxX, app.frame.maxX, accuracy: 1)
             saveScreenshot("responsive-map-\(orientation == .landscapeLeft ? "left" : "right")")
@@ -6355,7 +6324,7 @@ final class DinoUITests: XCTestCase {
         for orientation in [UIDeviceOrientation.landscapeLeft, .landscapeRight] {
             XCUIDevice.shared.orientation = orientation
             let settled = NSPredicate { _, _ in
-                (tablet ? self.app.frame.width > self.app.frame.height : self.app.frame.width < self.app.frame.height)
+                (self.app.frame.width > self.app.frame.height)
                     && companion.exists && companion.frame.maxX <= self.app.frame.maxX + 1
             }
             expectation(for: settled, evaluatedWith: nil)
@@ -6458,7 +6427,7 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["header.pause"].waitForExistence(timeout: 5))
         let settled = NSPredicate { _, _ in
             let lastOption = self.app.buttons["question.option.2"]
-            return (UIDevice.current.userInterfaceIdiom == .pad ? self.app.frame.width > self.app.frame.height : self.app.frame.width < self.app.frame.height) && lastOption.exists &&
+            return (self.app.frame.width > self.app.frame.height) && lastOption.exists &&
                 lastOption.frame.maxX <= self.app.frame.maxX + 1 && lastOption.frame.minX >= self.app.frame.minX
         }
         expectation(for: settled, evaluatedWith: nil)

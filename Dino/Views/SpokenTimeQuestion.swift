@@ -24,7 +24,7 @@ struct DinoTimeReadingClock: View {
             let face = diameter / (SpokenClockGuideLayout.extent(shape: theme.analogShape) * 2)
             let bounds = SpokenClockGuideLayout.verticalBounds(minute: time.minute, language: language,
                                                                shape: theme.analogShape, faceSize: face)
-            return face * (bounds.upperBound - bounds.lowerBound) + 16
+            return max(diameter, face * (bounds.upperBound - bounds.lowerBound)) + 16
         }
         return diameter + 24
     }
@@ -151,18 +151,39 @@ struct SpokenTimeQuestion: View {
     var isDemonstration = false
     var compact = false
     var wideLayout = false
+    var availableHeight: CGFloat = 700
 
     private var prompt: SpokenTimePrompt? { session.question.spokenPrompt }
     private var prefix: String { isDemonstration ? "demo" : "question" }
-    private var wordBankWidth: CGFloat { width }
+    private var horizontal: Bool { wideLayout && width >= 560 }
+    private var wordBankWidth: CGFloat { horizontal ? (width - 12) * 0.66 : width }
     private var tablet: Bool { width >= 600 }
+    private var rowCount: CGFloat { CGFloat(max(1, prompt?.slots.count ?? 1)) }
+    private var wordRowHeight: CGFloat {
+        horizontal ? min(40, max(32, floor(availableHeight / rowCount))) : tablet && !compact ? 48 : 40
+    }
+    private var wordSpacing: CGFloat {
+        horizontal ? min(8, max(0, (availableHeight - rowCount * wordRowHeight - 16) / max(1, rowCount - 1)))
+            : tablet && compact ? 6 : 8
+    }
+    private var wordPadding: CGFloat {
+        horizontal ? min(8, max(0, (availableHeight - rowCount * wordRowHeight - (rowCount - 1) * wordSpacing) / 2))
+            : tablet ? (compact ? 8 : 12) : 10
+    }
+    private var sentenceHeight: CGFloat {
+        horizontal ? min(72, max(44, availableHeight - 96)) : tablet ? (compact ? 32 : 40) : 56
+    }
 
     var body: some View {
-        VStack(spacing: tablet ? (compact ? 8 : 12) : 10) {
+        let arrangement = horizontal ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: compact ? 8 : 12))
+        arrangement {
             if let prompt {
-                clock
-                sentence(prompt)
-                wordBank(prompt)
+                VStack(spacing: 8) {
+                    clock
+                    sentence(prompt)
+                }
+                .frame(width: horizontal ? width - wordBankWidth - 12 : width)
+                wordBank(prompt).frame(width: wordBankWidth)
             }
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -170,14 +191,14 @@ struct SpokenTimeQuestion: View {
     }
 
     private func wordBank(_ prompt: SpokenTimePrompt) -> some View {
-        VStack(spacing: tablet && compact ? 6 : 8) {
+        VStack(spacing: wordSpacing) {
             let fontSize = optionFontSize(for: prompt)
             ForEach(Array(prompt.slots.enumerated()), id: \.element.id) { index, slot in
                 slotRow(slot, index: index, prompt: prompt, fontSize: fontSize)
             }
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, tablet ? (compact ? 8 : 12) : 10)
+        .padding(.vertical, wordPadding)
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.white, in: RoundedRectangle(cornerRadius: 22))
@@ -206,7 +227,7 @@ struct SpokenTimeQuestion: View {
         .multilineTextAlignment(.center)
         .lineLimit(2)
         .minimumScaleFactor(0.75)
-        .frame(maxWidth: .infinity, minHeight: tablet ? (compact ? 32 : 40) : 56, maxHeight: tablet ? (compact ? 32 : 40) : 56)
+        .frame(maxWidth: .infinity, minHeight: sentenceHeight, maxHeight: sentenceHeight)
         .questionAnswerFocus()
     }
 
@@ -280,7 +301,7 @@ struct SpokenTimeQuestion: View {
             .foregroundStyle(DinoStyle.ink)
             .padding(.horizontal, 4)
             .frame(maxWidth: .infinity)
-            .frame(height: tablet && !compact ? 48 : 40)
+            .frame(height: wordRowHeight)
             .background(chipFill(selected: selected, correct: showCorrect, wrong: showWrong), in: RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(chipStroke(selected: selected, correct: showCorrect, wrong: showWrong),
                                                               lineWidth: selected || showCorrect || showWrong ? 2.5 : highContrast ? 2 : 1.5))

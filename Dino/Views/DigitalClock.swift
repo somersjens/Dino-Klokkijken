@@ -321,8 +321,10 @@ struct DigitalClockControl: View {
     @ViewBuilder var body: some View {
         if controlsBelow {
             VStack(spacing: 12) {
-                DigitalClock(time: time, theme: theme, fontSize: fontSize, showHandHints: displaysHandHints,
-                             notation: notation, feedbackCorrect: feedbackCorrect, reservesFeedbackOutline: true)
+                DinoQuestionContext(maxHeight: displayHeight) {
+                    DigitalClock(time: time, theme: theme, fontSize: fontSize, showHandHints: displaysHandHints,
+                                 notation: notation, feedbackCorrect: feedbackCorrect, reservesFeedbackOutline: true)
+                }
                     .frame(height: displayHeight)
                     .accessibilityIdentifier(valueIdentifier)
                 HStack(spacing: 16) {

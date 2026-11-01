@@ -53,28 +53,6 @@ struct WorldBossStage {
     }
 }
 
-/// Freeze map scenery for a native scroll gesture and resume without a time jump.
-/// Gameplay, Dino's arrival and the native scroll view use independent clocks.
-struct DinoMapAnimationClock {
-    private(set) var epoch: Date
-    private(set) var frozenDate: Date?
-
-    init(epoch: Date = Date()) { self.epoch = epoch }
-
-    mutating func setScrolling(_ scrolling: Bool, at date: Date = Date()) {
-        if scrolling {
-            if frozenDate == nil { frozenDate = date }
-        } else if let frozenDate {
-            epoch = epoch.addingTimeInterval(max(0, date.timeIntervalSince(frozenDate)))
-            self.frozenDate = nil
-        }
-    }
-
-    func elapsed(at date: Date) -> TimeInterval {
-        (frozenDate ?? date).timeIntervalSince(epoch)
-    }
-}
-
 enum DinoMapViewport {
     /// Preparation and ticking are separate: off-screen surfaces may be built
     /// ahead of the viewport, but do not need recurring animation frames yet.

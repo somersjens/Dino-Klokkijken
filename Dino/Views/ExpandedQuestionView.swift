@@ -27,16 +27,14 @@ struct DinoExpandedQuestionView: View {
     private var q: ClockQuestion { session.question }
     private var code: String { language.effective.code }
     private var duration: String { DinoTimeWords.duration(q.durationMinutes, language: code) }
-    private var lessonWidth: CGFloat { q.kind == .timeSequence && horizontalSequence ? width : wideLayout ? min(540, width) : width }
-    private var contextWidth: CGFloat {
-        q.kind == .timeSequence && horizontalSequence ? lessonWidth : min(q.kind == .timeZone ? 760 : 600, lessonWidth)
+    private var gameLayout: DinoGameLayout {
+        DinoGameLayout(width: width, height: availableHeight, kind: q.kind, optionCount: q.responses.count)
     }
-    private var responseWidth: CGFloat {
-        if q.kind == .spokenTime, let answerClockSize {
-            let columns = wideLayout ? 4 : 2
-            return min(width, CGFloat(columns) * (answerClockSize + 32) + CGFloat(columns - 1) * 12)
-        }
-        return width
+    private var lessonWidth: CGFloat { isDemonstration ? width : gameLayout.contextWidth }
+    private var contextWidth: CGFloat { lessonWidth }
+    private var responseWidth: CGFloat { isDemonstration ? width : gameLayout.answerWidth }
+    private var hasContext: Bool {
+        ![.advanceAnalog, .sayTime, .spokenTime].contains(q.kind) && (q.kind != .sortTimes || isDemonstration)
     }
     /// Reading a 24-hour clock stays in 24-hour digits. Every other digital time follows the player.
     private func shownDigital(_ time: ClockTime) -> String {
@@ -46,30 +44,11 @@ struct DinoExpandedQuestionView: View {
 
     var body: some View {
         let _ = deviceHourFormat.notation
-        VStack(spacing: q.kind == .minutesBetween ? 10 : q.kind == .timeSequence ? 12 : wideLayout || (q.kind == .timeZone && compactLayout) ? 12 : 18) {
-            if ![.advanceAnalog, .sayTime, .spokenTime, .readDigital].contains(q.kind), q.kind != .sortTimes || isDemonstration {
-                Group {
-                    if q.kind == .minutesBetween && (!wideLayout || isDemonstration) {
-                        // This card animates its own height; measuring it again would delay the outer layout.
-                        context.frame(width: contextWidth)
-                    } else {
-                        DinoQuestionContext(maxHeight: wideLayout && !isDemonstration ? max(160, availableHeight - 88) : nil,
-                                            animatesHeight: [.addTime, .subtractTime].contains(q.kind)) {
-                            context.frame(width: contextWidth)
-                        }
-                    }
-                }
-                    .frame(maxWidth: contextWidth)
-                    .frame(maxWidth: .infinity)
-            }
+        DinoQuestionComposition(layout: gameLayout, hasContext: hasContext, fitsAvailableHeight: !isDemonstration) {
+            context.frame(width: contextWidth)
+        } answers: {
             switch q.kind {
             case .readDigital:
-                DinoTimeReadingClock(time: q.target, theme: theme,
-                                     width: min(isDemonstration ? 440 : 420, width),
-                                     faceSize: min(clockSize, width - 52), language: code,
-                                     showsGuide: isDemonstration,
-                                     showsSpokenHint: !isDemonstration && session.showsSpokenClockHints)
-                    .environment(\.dinoClockReadingAssistance, false)
                 if !isDemonstration { responses }
             case .spokenTime:
                 if isDemonstration {
@@ -81,9 +60,9 @@ struct DinoExpandedQuestionView: View {
             case .sayTime:
                 SpokenTimeQuestion(session: session, theme: theme, width: width,
                                    isDemonstration: isDemonstration, compact: compactLayout,
-                                   wideLayout: wideLayout)
+                                   wideLayout: wideLayout, availableHeight: availableHeight)
             case .advanceAnalog:
-                if width >= 600 && !isDemonstration { tabletAnalogAdvance }
+                if gameLayout.pairedClocks && !isDemonstration { pairedAnalogAdvance }
                 else { analogAdvance }
             case .timeSequence:
                 if !isDemonstration { responses }
@@ -95,13 +74,7 @@ struct DinoExpandedQuestionView: View {
                 if !isDemonstration { responses }
             case .dayPart:
                 if isDemonstration { demonstrationAnswer }
-                else {
-                    responses
-                    if session.showsWorkedExplanation {
-                        DinoDayPartLine(time: q.target, width: min(600, width), isDemonstration: false,
-                                        schedule: session.dayPartSchedule)
-                    }
-                }
+                else { responses }
             case .read24Hour:
                 if isDemonstration {
                     Dino24HourReadingClock(time: q.target, theme: theme, width: min(300, width))
@@ -123,16 +96,29 @@ struct DinoExpandedQuestionView: View {
 
     @ViewBuilder private var context: some View {
         switch q.kind {
+        case .readDigital:
+                DinoTimeReadingClock(time: q.target, theme: theme,
+                                     width: isDemonstration ? min(440, lessonWidth) : lessonWidth,
+                                     faceSize: min(clockSize, lessonWidth - 52), language: code,
+                                     showsGuide: isDemonstration,
+                                     showsSpokenHint: !isDemonstration && session.showsSpokenClockHints)
+                    .environment(\.dinoClockReadingAssistance, false)
         case .read24Hour, .dayPart:
-            DigitalClock(time: q.target, theme: theme, fontSize: 38, notation: q.kind == .read24Hour ? .twentyFour : nil)
-                .accessibilityIdentifier(isDemonstration ? "demo.targetClock" : "question.targetClock")
+            VStack(spacing: 12) {
+                DigitalClock(time: q.target, theme: theme, fontSize: 38, notation: q.kind == .read24Hour ? .twentyFour : nil)
+                    .accessibilityIdentifier(isDemonstration ? "demo.targetClock" : "question.targetClock")
+                if q.kind == .dayPart && !isDemonstration && session.showsWorkedExplanation {
+                    DinoDayPartLine(time: q.target, width: contextWidth, isDemonstration: false,
+                                    schedule: session.dayPartSchedule)
+                }
+            }
         case .spokenTime:
             EmptyView()
         case .trueFalse:
             if isDemonstration || session.showsSpokenClockHints {
                 spokenReadingClock(q.target, identifier: isDemonstration ? "demo.targetClock" : "question.targetClock")
             } else {
-                AnalogClock(time: q.target, theme: theme, size: min(180, clockSize))
+                AnalogClock(time: q.target, theme: theme, size: min(clockSize, lessonWidth - 24))
                     .accessibilityIdentifier("question.targetClock")
             }
         case .sortTimes:
@@ -145,7 +131,7 @@ struct DinoExpandedQuestionView: View {
         case .minutesBetween:
             if q.relatedTimes.count == 2 {
                 DinoMinutesBetweenCard(start: q.relatedTimes[0], end: q.relatedTimes[1],
-                                       minutes: q.durationMinutes, theme: theme, width: min(600, lessonWidth),
+                                       minutes: q.durationMinutes, theme: theme, width: lessonWidth,
                                        showsAnswer: isDemonstration || session.showsCorrectResponse,
                                        isDemonstration: isDemonstration, language: code,
                                        compact: compactLayout || (isDemonstration && width < 340),
@@ -155,8 +141,8 @@ struct DinoExpandedQuestionView: View {
             if let journey = q.timeZoneJourney, let referenceTime = q.relatedTimes.first {
                 DinoTimeZoneLesson(journey: journey, referenceTime: referenceTime, answer: q.target,
                                    showsAnswer: isDemonstration || session.showsCorrectResponse,
-                                   isDemonstration: isDemonstration, compactLayout: compactLayout && width >= 600,
-                                   theme: theme, width: min(760, lessonWidth),
+                                   isDemonstration: isDemonstration, compactLayout: compactLayout,
+                                   theme: theme, width: lessonWidth,
                                    explainsLive: session.showsWorkedExplanation)
             }
         case .addTime, .subtractTime:
@@ -175,7 +161,7 @@ struct DinoExpandedQuestionView: View {
         case .flightArrival:
             DinoFlightTicket(work: flightWork, showsWork: isDemonstration || session.showsWorkedExplanation,
                              showsTotal: isDemonstration || session.missedFirstAnswer,
-                             language: code, width: min(600, lessonWidth),
+                             language: code, width: lessonWidth,
                              isDemonstration: isDemonstration, theme: theme, compactLayout: compactLayout)
         case .daySchedule:
             if let schedule = q.daySchedule {
@@ -194,7 +180,11 @@ struct DinoExpandedQuestionView: View {
     private var timeChangeClockFont: CGFloat { isDemonstration ? 32 : min(wideLayout ? 32 : 48, lessonWidth * 0.14) }
 
     private func spokenReadingClock(_ time: ClockTime, identifier: String) -> some View {
-        AnalogClock(time: time, theme: theme, size: min(340, width), spokenHintLanguage: code)
+        let size = min(clockSize, lessonWidth - 24)
+        return AnalogClock(time: time, theme: theme, size: size, spokenHintLanguage: code)
+            // The guide's asymmetric padding can be shorter than its square accessibility frame.
+            // Reserve both so fitting and rotation keep the entire clock below the title.
+            .frame(width: size, height: size)
             .accessibilityIdentifier(identifier)
             .environment(\.dinoClockReadingAssistance, false)
     }
@@ -205,7 +195,7 @@ struct DinoExpandedQuestionView: View {
     }
 
     private var timeSequence: some View {
-        let horizontal = horizontalSequence && width >= 600
+        let horizontal = horizontalSequence
         let layout = horizontal ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: isDemonstration ? 6 : 4))
         let cellWidth = (contextWidth - CGFloat(q.relatedTimes.count) * 48) / CGFloat(q.relatedTimes.count + 1)
         return layout {
@@ -252,7 +242,7 @@ struct DinoExpandedQuestionView: View {
     private var sequenceBlue: Color { DinoStyle.ink }
     private var sequencePrefix: String { isDemonstration ? "demo" : "question" }
     private var sequenceClockFont: CGFloat {
-        if horizontalSequence && width >= 600 {
+        if horizontalSequence {
             let cell = (contextWidth - CGFloat(q.relatedTimes.count) * 48) / CGFloat(q.relatedTimes.count + 1)
             return min(48, cell / 4)
         }
@@ -296,11 +286,11 @@ struct DinoExpandedQuestionView: View {
     }
 
     private var responses: some View {
-        let columns = wideLayout && q.responses.count == 4 ? 4 : 2
+        let columns = gameLayout.answerColumns()
         let cellWidth = (responseWidth - CGFloat(columns - 1) * 12) / CGFloat(columns)
-        let sequence = q.kind == .timeSequence && width >= 600
+        let sequence = q.kind == .timeSequence
         let layout = DinoAnswerTextLayout(titles: q.responses.map(responseTitle), width: cellWidth - 24,
-                                         fontSize: sequence ? 24 : 17)
+                                         fontSize: 17)
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 12) {
             ForEach(Array(q.responses.enumerated()), id: \.offset) { index, response in
                 let correct = (isDemonstration || session.showsCorrectResponse) && response == q.expectedAnswer
@@ -365,7 +355,7 @@ struct DinoExpandedQuestionView: View {
                 .font(.system(size: fontSize, weight: .bold, design: .rounded))
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
-                .frame(height: 54)
+                .frame(height: compactLayout ? 44 : 54)
             if q.kind == .read24Hour { dayPartDescription(time) }
         }
         if q.kind == .readDigital {
@@ -415,9 +405,9 @@ struct DinoExpandedQuestionView: View {
     }
 
     private var sorting: some View {
-        let columns = wideLayout && q.options.count == 4 ? 4 : 2
+        let columns = gameLayout.answerColumns()
         let cellWidth = (width - CGFloat(columns - 1) * 12) / CGFloat(columns)
-        return VStack(spacing: 16) {
+        return VStack(spacing: 12) {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 12) {
                 ForEach(Array(q.options.enumerated()), id: \.offset) { index, time in
                     let position = session.selectedOrder.firstIndex(of: time)
@@ -456,7 +446,8 @@ struct DinoExpandedQuestionView: View {
                 }
             }.id("question.answers")
                 .environment(\.dinoClockReadingAssistance, false)
-            VStack(spacing: 12) {
+            let slots = gameLayout.horizontal ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 12))
+            slots {
                 sortAnswerSlot(correct: false)
                 if !isDemonstration { sortAnswerSlot(correct: true) }
             }
@@ -487,53 +478,47 @@ struct DinoExpandedQuestionView: View {
             .monospacedDigit().multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity)
-            .padding(12)
+            .padding(gameLayout.horizontal ? 8 : 12)
             .modifier(ClockAnswerOutline(visible: revealed && (correct || session.hasFeedback), correct: correct || session.correctFeedback))
     }
 
     private var advanceComparing: Bool { session.hasFeedback && !session.correctFeedback }
     private var analogHandStep: Int { DinoPracticeTime.analogHandStep(session.minuteStep) }
 
-    /// The clock the player turns. The start face above it is exactly half this size.
-    private var playFace: CGFloat {
-        let cap = wideLayout ? min(200, clockSize) : compactLayout ? min(148, clockSize) : clockSize
-        return min(cap, max(112, width - 16))
-    }
-    private var advanceWidth: CGFloat { wideLayout ? width - 304 : width }
+    private var playFace: CGFloat { min(clockSize, width - 16) }
+    private var advanceWidth: CGFloat { width }
 
-    private var tabletAnalogAdvance: some View {
-        let face = min(clockSize, 220, (min(760, width) - 28) / 2 - 24)
+    private var pairedAnalogAdvance: some View {
+        let face = min(clockSize, width * 0.38 - 24)
         let start = DinoAnalogAdvanceExample.face(q.relatedTimes[0])
         let target = DinoAnalogAdvanceExample.face(q.target)
-        return DinoClockSettingColumns(width: width, stageHeight: face + 20, centersInput: horizontalSequence) {
-            ZStack {
-                AnalogClock(time: start, theme: theme, size: face)
-                    .accessibilityIdentifier("question.startClock")
-                    .opacity(advanceComparing ? 0 : 1).accessibilityHidden(advanceComparing)
-                AnalogClock(time: target, theme: theme, size: face).padding(10)
-                    .modifier(ClockAnswerOutline(visible: true, correct: true))
-                    .accessibilityIdentifier("question.correctClock")
-                    .opacity(advanceComparing ? 1 : 0).accessibilityHidden(!advanceComparing)
-            }
-            .overlay(alignment: .top) {
-                VStack(spacing: 8) {
-                    Text(verbatim: "+\(duration)")
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundStyle(DinoTimeDirection.color(later: true, highContrast: highContrast))
-                        .padding(.horizontal, 10).padding(.vertical, 5)
-                        .background(DinoTimeDirection.background(later: true, highContrast: highContrast), in: Capsule())
-                        .accessibilityIdentifier("question.advance.difference")
-                    if advanceComparing {
-                        HStack(spacing: 8) {
-                            DigitalClock(time: start, theme: theme, fontSize: 18)
-                            Image(systemName: "arrow.right")
-                            DigitalClock(time: target, theme: theme, fontSize: 18)
-                        }
+        return VStack(spacing: 12) {
+        DinoClockSettingColumns(width: width, stageHeight: face + 20) {
+            VStack(spacing: 8) {
+                ZStack {
+                    AnalogClock(time: start, theme: theme, size: face)
+                        .accessibilityIdentifier("question.startClock")
+                        .opacity(advanceComparing ? 0 : 1).accessibilityHidden(advanceComparing)
+                    AnalogClock(time: target, theme: theme, size: face).padding(10)
+                        .modifier(ClockAnswerOutline(visible: true, correct: true))
+                        .accessibilityIdentifier("question.correctClock")
+                        .opacity(advanceComparing ? 1 : 0).accessibilityHidden(!advanceComparing)
+                }
+                Text(verbatim: "+\(duration)")
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundStyle(DinoTimeDirection.color(later: true, highContrast: highContrast))
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(DinoTimeDirection.background(later: true, highContrast: highContrast), in: Capsule())
+                    .accessibilityIdentifier("question.advance.difference")
+                if advanceComparing {
+                    HStack(spacing: 8) {
+                        DigitalClock(time: start, theme: theme, fontSize: 18)
+                        Image(systemName: "arrow.right")
+                        DigitalClock(time: target, theme: theme, fontSize: 18)
                     }
-                }.offset(y: face + 26)
+                }
             }
         } input: {
-            VStack(spacing: 12) {
                 AnalogClock(time: session.attempt.submittedAnswer ?? session.inputTime, theme: theme, size: face,
                             onHourChange: session.hasFeedback ? nil : { session.inputHour = $0 },
                             onMinuteChange: session.hasFeedback || !session.allowsMinutes ? nil : { session.setInputTime($0) },
@@ -542,11 +527,11 @@ struct DinoExpandedQuestionView: View {
                     .padding(10)
                     .modifier(ClockAnswerOutline(visible: session.hasFeedback, correct: session.correctFeedback))
                     .accessibilityIdentifier("question.analogControl")
-                DinoAnalogClockControls(adjustingMinutes: $movingMinutes, allowsMinutes: session.allowsMinutes,
-                                        minuteStep: analogHandStep, adjust: adjust)
-                    .frame(maxWidth: 280)
-                    .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
-            }
+        }
+        DinoAnalogClockControls(adjustingMinutes: $movingMinutes, allowsMinutes: session.allowsMinutes,
+                                minuteStep: analogHandStep, horizontalLayout: gameLayout.horizontalControls, adjust: adjust)
+            .frame(width: min(width, gameLayout.horizontalControls ? 520 : 280))
+            .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
         }
         .id("question.answers").questionAnswerFocus()
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: advanceComparing)
@@ -556,7 +541,7 @@ struct DinoExpandedQuestionView: View {
         let hourChange: ((Int) -> Void)? = session.hasFeedback ? nil : { session.inputHour = $0 }
         let minuteChange: ((ClockTime) -> Void)? = session.hasFeedback || !session.allowsMinutes ? nil : { session.setInputTime($0) }
         let shown = session.attempt.submittedAnswer ?? session.inputTime
-        let arrangement = wideLayout ? AnyLayout(HStackLayout(spacing: 24)) : AnyLayout(VStackLayout(spacing: 12))
+        let arrangement = AnyLayout(VStackLayout(spacing: 12))
         return arrangement {
             DinoAnalogAdvanceLayout(start: DinoAnalogAdvanceExample.face(q.relatedTimes[0]), theme: theme,
                                     durationMinutes: q.durationMinutes, language: code, playSize: playFace,
@@ -596,7 +581,7 @@ struct DinoExpandedQuestionView: View {
             .questionAnswerFocus()
             DinoAnalogClockControls(adjustingMinutes: $movingMinutes, allowsMinutes: session.allowsMinutes,
                                     minuteStep: analogHandStep, adjust: adjust)
-                .frame(width: wideLayout ? 280 : min(320, width))
+                .frame(width: min(320, width))
                 .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
         }.id("question.answers")
     }
@@ -616,25 +601,6 @@ struct DinoExpandedQuestionView: View {
         guard !session.hasFeedback else { return }
         if movingMinutes { session.adjustInputMinutes(by: direction * analogHandStep) }
         else { session.inputHour = ClockTime.shiftedHour(session.inputHour, by: direction) }
-    }
-}
-
-/// Only the question illustration scales down; answers and tap targets keep their normal size.
-private struct DinoQuestionContext<Content: View>: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let maxHeight: CGFloat?
-    var animatesHeight = false
-    @ViewBuilder var content: () -> Content
-    @State private var naturalHeight: CGFloat = 0
-    private var scale: CGFloat { maxHeight.map { min(1, $0 / max(1, naturalHeight)) } ?? 1 }
-
-    var body: some View {
-        content()
-            .fixedSize(horizontal: false, vertical: true)
-            .readGeometry(for: CGFloat.self) { $0.size.height } action: { naturalHeight = $0 }
-            .scaleEffect(scale, anchor: .top)
-            .frame(height: naturalHeight > 0 ? naturalHeight * scale : nil, alignment: .top)
-            .animation(animatesHeight && !reduceMotion ? .easeInOut(duration: 0.55) : nil, value: naturalHeight)
     }
 }
 

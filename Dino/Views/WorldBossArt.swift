@@ -232,7 +232,6 @@ struct WorldBossClockSurface: View {
     let viewportHeight: CGFloat
     var fixedTime: TimeInterval? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.dinoMapFrozenDate) private var frozenDate
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoMapAnimationEpoch) private var animationEpoch
     @State private var visible = false
@@ -240,9 +239,9 @@ struct WorldBossClockSurface: View {
     var body: some View {
         let bounds = WorldBossPainter.bounds(worldID: themeID, at: point, size: scale)
         TimelineView(.animation(minimumInterval: 1.0 / 30,
-                                paused: frozenDate != nil || fixedTime != nil || reduceMotion || !visible || scenePhase != .active)) { timeline in
+                                paused: fixedTime != nil || reduceMotion || !visible || scenePhase != .active)) { timeline in
             Canvas { context, _ in
-                let elapsed = reduceMotion ? 0 : fixedTime ?? (frozenDate ?? timeline.date).timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
+                let elapsed = reduceMotion ? 0 : fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0))
                 var c = context; c.translateBy(x: -bounds.minX, y: -bounds.minY)
                 WorldBossPainter(context: c).drawClocks(worldID: themeID, at: point, size: scale, elapsed: elapsed)
             }

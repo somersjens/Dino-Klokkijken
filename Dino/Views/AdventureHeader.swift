@@ -23,6 +23,7 @@ struct AdventureHeader: View {
     let stars: Int
     var worldID = 1
     var compact = false
+    var showsPracticeSubtitle = true
     var viewportHeight: CGFloat = 900
     var viewportWidth: CGFloat? = nil
     var maximumScale: CGFloat = 1.9
@@ -99,7 +100,7 @@ struct AdventureHeader: View {
                 }.offset(y: compact ? -1 : -2)
             }
             .overlay(alignment: .bottom) {
-                if let practiceConfiguration {
+                if let practiceConfiguration, showsPracticeSubtitle {
                     HUDPracticeSubtitle(configuration: practiceConfiguration, palette: palette,
                                         compact: compact, spacious: metrics.spacious, highContrast: highContrast)
                         .padding(.leading, metrics.leadingMargin + metrics.portraitFootprint * 0.48)
@@ -107,8 +108,8 @@ struct AdventureHeader: View {
                         .offset(y: (compact ? 9 : -6) + HUDPracticeSubtitle.addedHeight(compact: compact, spacious: metrics.spacious))
                 }
             }
-            .padding(.top, compact && practiceConfiguration != nil ? 4 : 0)
-            .padding(.bottom, practiceConfiguration == nil ? 0 : compact ? 26 : 11)
+            .padding(.top, compact && practiceConfiguration != nil && showsPracticeSubtitle ? 4 : 0)
+            .padding(.bottom, practiceConfiguration == nil || !showsPracticeSubtitle ? 0 : compact ? 26 : 11)
             // Scale the complete composition, including its rim, leaves and badges.
             // Extra tablet width surrounds the HUD instead of stretching its cells.
             .scaleEffect(scale, anchor: .top)
@@ -125,7 +126,7 @@ struct AdventureHeader: View {
     }
 
     private var headerHeight: CGFloat {
-        (compact ? 82 : 128) + (practiceConfiguration == nil ? 0 : compact ? 30 : 11)
+        (compact ? 82 : 128) + (practiceConfiguration == nil || !showsPracticeSubtitle ? 0 : compact ? 30 : 11)
     }
 
     private func headerScale(width: CGFloat) -> CGFloat {
