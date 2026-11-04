@@ -1,5 +1,83 @@
 import SwiftUI
 
+/// After the first miss, translate the 24-hour display into familiar clock hours.
+private struct DinoAfterNoonReadingClock: View {
+    @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
+    @State private var revealsConversion = false
+    @State private var revealsOperator = false
+    let time: ClockTime
+    let theme: ClockTheme
+    let width: CGFloat
+    let showsHint: Bool
+    let isDemonstration: Bool
+
+    private var explains: Bool {
+        showsHint && time.hour > 12 && theme.resolvedHourNotation(device: deviceHourFormat.notation) == .twentyFour
+    }
+    private var prefix: String { isDemonstration ? "demo" : "question" }
+    private var conversionFont: CGFloat { min(38, (width - 46) * 0.105) }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            DigitalClock(time: time, theme: theme, fontSize: explains ? conversionFont : 38)
+                .accessibilityIdentifier("\(prefix).targetClock")
+            if explains {
+                VStack(spacing: 5) {
+                    Text(verbatim: "−12")
+                        .font(.system(size: 13, weight: .heavy, design: .rounded))
+                        .lineLimit(1)
+                        .fixedSize()
+                        .foregroundStyle(DinoTimeDirection.color(later: false, highContrast: highContrast))
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(DinoTimeDirection.background(later: false, highContrast: highContrast), in: Capsule())
+                        .accessibilityIdentifier("\(prefix).afterNoon.subtractTwelve")
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(DinoStyle.ink)
+                        .accessibilityIdentifier("\(prefix).afterNoon.arrow")
+                }
+                .frame(width: 38)
+                .offset(y: -12)
+                .scaleEffect(reduceMotion || revealsOperator ? 1 : 0.001)
+                .accessibilityHidden(!reduceMotion && !revealsOperator)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.28), value: revealsOperator)
+                .transition(.identity)
+                DigitalClock(time: time.adding(minutes: -720), theme: theme,
+                             fontSize: conversionFont, notation: .twentyFour, dashedOutline: true)
+                    .scaleEffect(reduceMotion || revealsConversion ? 1 : 0.001)
+                    .accessibilityHidden(!reduceMotion && !revealsConversion)
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.24), value: revealsConversion)
+                    .transition(.identity)
+                    .accessibilityIdentifier("\(prefix).afterNoon.convertedClock")
+            }
+        }
+        // Intrinsic display widths keep the arrow close to both clock outlines.
+        .fixedSize(horizontal: true, vertical: false)
+        .frame(width: width, height: isDemonstration ? nil : 88, alignment: .bottom)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: explains)
+        .environment(\.layoutDirection, .leftToRight)
+        .environment(\.dinoClockReadingAssistance, false)
+        .task(id: "\(explains)-\(reduceMotion)") {
+            var reset = Transaction()
+            reset.disablesAnimations = true
+            withTransaction(reset) {
+                revealsConversion = false
+                revealsOperator = false
+            }
+            guard explains, !reduceMotion else { return }
+            do {
+                // Finish moving the original clock before introducing the helper.
+                try await Task.sleep(nanoseconds: 600_000_000)
+                revealsConversion = true
+                try await Task.sleep(nanoseconds: 240_000_000)
+                revealsOperator = true
+            } catch { return }
+        }
+    }
+}
+
 private struct SequenceClockAnchors: PreferenceKey {
     static var defaultValue: [Int: Anchor<CGRect>] { [:] }
 
@@ -33,13 +111,16 @@ struct DinoExpandedQuestionView: View {
     private var lessonWidth: CGFloat { isDemonstration ? width : gameLayout.contextWidth }
     private var contextWidth: CGFloat { lessonWidth }
     private var responseWidth: CGFloat { isDemonstration ? width : gameLayout.answerWidth }
+    private var showsDayPartExplanation: Bool {
+        q.kind == .dayPart && !isDemonstration && session.showsWorkedExplanation
+    }
     private var hasContext: Bool {
         ![.advanceAnalog, .sayTime, .spokenTime].contains(q.kind) && (q.kind != .sortTimes || isDemonstration)
     }
-    /// Reading a 24-hour clock stays in 24-hour digits. Every other digital time follows the player.
+    /// The lesson follows the player's chosen hour notation, including answer feedback.
     private func shownDigital(_ time: ClockTime) -> String {
         let _ = deviceHourFormat.notation
-        return theme.digitalReading(time, languageCode: code, notation: q.kind == .read24Hour ? .twentyFour : nil)
+        return theme.digitalReading(time, languageCode: code)
     }
 
     var body: some View {
@@ -92,6 +173,8 @@ struct DinoExpandedQuestionView: View {
                 else { responses }
             }
         }.frame(width: width).multilineTextAlignment(.center)
+            // Recenter the clock and choices together as the day-part ruler opens.
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: showsDayPartExplanation)
     }
 
     @ViewBuilder private var context: some View {
@@ -103,13 +186,18 @@ struct DinoExpandedQuestionView: View {
                                      showsGuide: isDemonstration,
                                      showsSpokenHint: !isDemonstration && session.showsSpokenClockHints)
                     .environment(\.dinoClockReadingAssistance, false)
-        case .read24Hour, .dayPart:
+        case .read24Hour:
+            DinoAfterNoonReadingClock(time: q.target, theme: theme, width: min(420, contextWidth),
+                                      showsHint: session.missedFirstAnswer && !isDemonstration,
+                                      isDemonstration: isDemonstration)
+        case .dayPart:
             VStack(spacing: 12) {
-                DigitalClock(time: q.target, theme: theme, fontSize: 38, notation: q.kind == .read24Hour ? .twentyFour : nil)
+                DigitalClock(time: q.target, theme: theme, fontSize: 38)
                     .accessibilityIdentifier(isDemonstration ? "demo.targetClock" : "question.targetClock")
-                if q.kind == .dayPart && !isDemonstration && session.showsWorkedExplanation {
+                if showsDayPartExplanation {
                     DinoDayPartLine(time: q.target, width: contextWidth, isDemonstration: false,
                                     schedule: session.dayPartSchedule)
+                        .transition(reduceMotion ? .identity : .opacity.combined(with: .offset(y: 8)))
                 }
             }
         case .spokenTime:
@@ -310,7 +398,8 @@ struct DinoExpandedQuestionView: View {
                                 .accessibilityElement(children: .ignore)
                                 .accessibilityLabel(Text(verbatim: wrong ? DinoTimeWords.time(time, language: code) : shownDigital(time)))
                         } else if [.readDigital, .read24Hour].contains(q.kind), case .time(let time) = response {
-                            timeReadingResponse(time, wrong: wrong, title: layout.titles[index], fontSize: layout.fontSize)
+                            timeReadingResponse(time, wrong: wrong, title: layout.titles[index], fontSize: layout.fontSize,
+                                                titleLines: layout.titles.map { $0.components(separatedBy: "\n").count }.max() ?? 1)
                         } else {
                             Text(verbatim: layout.titles[index])
                                 .font(.system(size: layout.fontSize, weight: .bold, design: .rounded)).multilineTextAlignment(.center)
@@ -342,15 +431,15 @@ struct DinoExpandedQuestionView: View {
         return responseText(response)
     }
 
-    @ViewBuilder private func timeReadingResponse(_ time: ClockTime, wrong: Bool, title: String, fontSize: CGFloat) -> some View {
+    @ViewBuilder private func timeReadingResponse(_ time: ClockTime, wrong: Bool, title: String, fontSize: CGFloat, titleLines: Int) -> some View {
         let description = responseText(.time(time))
-        let content = VStack(spacing: 9) {
+        let content = VStack(spacing: 4) {
             Text(verbatim: title)
                 .font(.system(size: fontSize, weight: .bold, design: .rounded))
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
-                .frame(height: compactLayout ? 44 : 54)
-            if q.kind == .read24Hour { dayPartDescription(time) }
+                .frame(height: fontSize * 1.25 * CGFloat(titleLines), alignment: .bottom)
+            if q.kind == .read24Hour { dayPartDescription(time).frame(height: 38) }
         }
         if q.kind == .readDigital {
             content.foregroundStyle(DinoStyle.ink)
@@ -358,9 +447,7 @@ struct DinoExpandedQuestionView: View {
                 .accessibilityLabel(Text(verbatim: description))
         } else {
             AnswerTimeExplanation(time: time, theme: theme, visible: wrong,
-                                     fontSize: min(24, width * 0.065),
-                                     notation: q.kind == .read24Hour ? .twentyFour : nil,
-                                     content: content)
+                                  fontSize: min(24, width * 0.065), content: content)
             .foregroundStyle(DinoStyle.ink)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text(verbatim: wrong && q.kind == .read24Hour ? "\(description), \(shownDigital(time))" : description))
@@ -2032,8 +2119,7 @@ struct DinoExpandedDemonstration: View {
 
     private func clockText(_ time: ClockTime, kind: ClockQuestionKind) -> String {
         let _ = deviceHourFormat.notation
-        return theme.digitalReading(time, languageCode: LanguageManager.shared.effective.code,
-                                    notation: kind == .read24Hour ? .twentyFour : nil)
+        return theme.digitalReading(time, languageCode: LanguageManager.shared.effective.code)
     }
 
     private func answer(_ q: ClockQuestion) -> String {

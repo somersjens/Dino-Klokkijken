@@ -72,8 +72,9 @@ struct DigitalClock: View {
     /// Keep the display and the surrounding question still when reading help appears.
     var reservesHandHintSpace = false
     var exposesControlFields = false
-    /// Lessons that teach the 24-hour clock keep those digits even when the player prefers 12-hour time.
+    /// A conversion helper can show plain clock hours independently of the player's notation.
     var notation: DigitalHourNotation? = nil
+    var dashedOutline = false
     var feedbackCorrect: Bool? = nil
     /// Editable clocks keep their pointers clear of the future answer outline.
     var reservesFeedbackOutline = false
@@ -139,7 +140,10 @@ struct DigitalClock: View {
         .overlay {
             if showsDisplay {
                 DigitalClockOutline(shape: theme.digitalShape)
-                    .strokeBorder(DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: highContrast ? 3 : 2)
+                    .inset(by: dashedOutline ? -4 : 0)
+                    .strokeBorder(DinoStyle.ink.opacity(highContrast ? 1 : dashedOutline ? 0.65 : 0.1),
+                                  style: StrokeStyle(lineWidth: highContrast ? 3 : 2,
+                                                     dash: dashedOutline ? [6, 4] : []))
                 if let feedbackCorrect {
                     // The stroke sits entirely outside the display and follows its
                     // exact shape, rather than cutting across its rounded corners.

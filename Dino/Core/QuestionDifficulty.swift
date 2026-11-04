@@ -152,6 +152,10 @@ enum DinoQuestionTeaching {
             // Twelve hours apart gives the same time words; the day part alone must not make an answer wrong.
             allowed.remove(target.adding(minutes: 12 * 60))
         }
+        if kind == .timeSequence {
+            // The last given term is context, never an answer to the next term.
+            allowed.remove(target.adding(minutes: -operation))
+        }
         let twelveHour = !allowed.contains { $0.hour == 0 || $0.hour > 12 }
         let step = max(1, minuteStep)
         let bands = mistakeBands(target: target, kind: kind, step: step, operation: operation, twelveHour: twelveHour)

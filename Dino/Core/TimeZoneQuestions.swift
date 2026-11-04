@@ -208,7 +208,7 @@ struct DinoTimeZoneViewport {
 }
 
 struct DinoTimeZoneLabelLayout {
-    static let cardHeight: CGFloat = 76
+    static let cardHeight: CGFloat = 80
     let origin: CGPoint
     let destination: CGPoint
     let width: CGFloat

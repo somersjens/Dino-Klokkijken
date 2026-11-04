@@ -1914,12 +1914,15 @@ struct DinoCoreTests {
             for difficulty in DinoQuestionDifficulty.allCases {
                 for hour in 0..<24 {
                     for minute in time.minutes {
-                        let target = ClockTime(hour: hour, minute: minute)
+                        let requested = ClockTime(hour: hour, minute: minute)
                         let question = DinoExpandedQuestions.generate(kind: .read24Hour, minutes: time.minutes,
-                            minuteStep: time.minuteStep, index: 0, previousTarget: nil, preferredTarget: target,
+                            minuteStep: time.minuteStep, index: 0, previousTarget: nil, preferredTarget: requested,
                             difficulty: difficulty, using: &rng)
-                        expect(question.target == target && question.options.count == difficulty.optionCount,
-                               "24-hour choices retain the requested time and the full answer grid")
+                        let target = question.target
+                        expect(target.hour > 12 && time.minutes.contains(target.minute),
+                               "after-noon reading rejects morning and noon targets in every minute family and difficulty")
+                        expect((hour <= 12 || target == requested) && question.options.count == difficulty.optionCount,
+                               "after-noon choices retain eligible requested times and the full answer grid")
                         expect(question.options.filter { $0 == target }.count == 1,
                                "24-hour choices keep exactly one correct answer")
                         let wrong = question.options.filter { $0 != target }
@@ -1936,6 +1939,17 @@ struct DinoCoreTests {
             }
         }
         expect(hasSameDayPart, "24-hour alternatives may still share the correct answer's day part")
+        for time in DinoPracticeTime.allCases {
+            var seenHours: Set<Int> = []
+            for index in 0..<(11 * time.minutes.count) {
+                let example = DinoDemonstrationExamples.question(kind: .read24Hour, minutes: time.minutes,
+                    minuteStep: time.minuteStep, index: index, previousTarget: nil)
+                expect(example.target.hour > 12 && time.minutes.contains(example.target.minute),
+                       "after-noon examples stay after twelve and on the selected minute grid")
+                seenHours.insert(example.target.hour)
+            }
+            expect(seenHours == Set(13...23), "after-noon examples cycle every eligible hour")
+        }
         for time in DinoPracticeTime.allCases {
             var dayParts = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.dayPart)), seed: 20261015)
             var sorting = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.sortTimes)), seed: 20261015)
@@ -2651,6 +2665,7 @@ struct DinoCoreTests {
                         sawMidnight = sawMidnight || q.relatedTimes[0].minutesOfDay < q.target.minutesOfDay
                     case .timeSequence:
                         expect(q.relatedTimes.count == 3, "three terms in pattern")
+                        expect(!q.options.contains(q.relatedTimes.last!), "the last sequence term is never an answer option")
                         let all = q.relatedTimes + [q.target]
                         for pair in zip(all, all.dropFirst()) {
                             expect(pair.0.adding(minutes: q.durationMinutes) == pair.1, "every sequence step is identical")
@@ -3366,6 +3381,10 @@ struct DinoCoreTests {
                     var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(type)), seed: 77)
                     for index in 0..<16 {
                         let question = generator.next(index: index, difficultyForKind: { _ in difficulty })
+                        if question.kind == .timeSequence {
+                            expect(!question.options.contains(question.relatedTimes.last!),
+                                   "every difficulty excludes the last sequence term from its answer choices")
+                        }
                         let step = time.minuteStep
                         let twelve = usesTwelveHourFace(question.kind)
                         if question.kind == .trueFalse, let statement = question.statement, statement != question.target {
@@ -4592,6 +4611,10 @@ struct DinoCoreTests {
         let toWashington = DinoTimeZoneJourney(origin: london, destination: washington)
         let washingtonQuestion = question(kind: .timeZone, target: ClockTime(hour: 10), related: [ClockTime(hour: 15)], journey: toWashington)
         expect(toWashington.offsetMinutes < 0, "Washington is behind London in this check")
+        expect(prompt(washingtonQuestion, "nl").arguments.last?.text == "eerder",
+               "Dutch zones describe an earlier local time rather than a slow clock")
+        expect(prompt(parisQuestion, "nl").arguments.last?.text == "later",
+               "Dutch zones describe a later local time rather than a fast clock")
         expect(prompt(washingtonQuestion, "nl").arguments.last?.emphasis == .backward, "a city behind is red")
         expect(!sentence(prompt(washingtonQuestion, "en"), "en").contains("ten"), "the destination time is not spoken")
 

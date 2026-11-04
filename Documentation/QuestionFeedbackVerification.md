@@ -199,3 +199,38 @@ Beelden: [type 1 met standaardklok](Screenshots/AnswerTimeFooter/chooseAnalog-de
 Type 4 toont zijn volledige uitleg pas na het juiste antwoord of **Volgende**. De vraagklok wordt kleiner, de antwoordvakken verdwijnen en alle beschrijvingen verschijnen rond de wijzerplaat. De juiste tijd is groen omlijnd, alle eerder gekozen foute tijden oranje, de overige teksten hebben dezelfde lichte salietinten als inactieve klokbediening. Oranje kruisjes worden bij dit type niet meer gebruikt. Bij losse minuten krijgen de werkelijk gekozen tijden eigen tekstvakken op de dichtstbijzijnde vijfminutenposities. De uitleg wacht op een tweede tik op **Volgende**, ook na een eerste goed antwoord. Het voorbeeldmenu behoudt de bestaande taalspecifieke kleurgroepen.
 
 Controle: de definitieve iOS-build en **1.294.329 kerncontroles** slagen. De Nederlandse uitlegklok slaagt op iPhone SE, de Engelse op iPad mini. Beide schermtests behandelen een eerste goed antwoord, meerdere foute antwoorden, doorgaan via **Volgende**, twee-keuzevragen en losse minuten. Ook de schermtest voor automatisch doorgaan bij andere vraagtypen slaagt. [Nederlandse uitleg na meerdere antwoorden](Screenshots/time-reading/time-reading-review-nl-whole-multiple-answers.png), [Nederlandse losse minuten](Screenshots/time-reading/time-reading-review-nl-minutes-multiple-answers.png), [Engelse uitleg](Screenshots/time-reading/time-reading-review-en-whole-multiple-answers.png).
+
+## Vaste klokmaat en compactere vraaglay-outs — 4 november 2026
+
+Type 1 behoudt de minutenhulpschaal bij het goede antwoord na een fout. De klok groeit daardoor niet terug tijdens de succesfeedback. Afgewezen klokken houden hun eigen tijdsuitleg.
+
+Type 7 berekent vooraf de omtrek van de genummerde wijzerhulp. De analoge referentie heeft vanaf het begin dezelfde kleinere maat en dezelfde omhullende ruimte als na een fout, zowel in de gewone als de brede lay-out.
+
+Type 8 reserveert vóór het antwoord geen lege rij boven de digitale klok. Na een fout opent die ruimte in 0,30 seconde; de wijzerpijlen worden daarna zichtbaar. De klok en bediening mogen daarbij naar beneden bewegen. Verminder beweging schakelt de verplaatsingsanimatie uit. De schermtest controleert deze nieuwe opbouw in plaats van de vroegere vaste digitale basislijn.
+
+Type 17 verwijdert de laatste gegeven tijd uit de toegestane afleiders voordat de antwoordopties worden gekozen. Dit geldt voor alle tijdsoorten, moeilijkheidsstappen en voorbeelden.
+
+Type 19 gebruikt Nederlands “In … is het … eerder/later”, ook bij voorlezen en met behoud van de rode/groene nadruk. Beide stadskaartjes hebben dezelfde hoogte en verticale ruimte voor hun bijschrift. De compactere stadsnaamrij en een hoogte van 80 punten per stadskaartje geven ruimte onder de verschilcapsule zonder plaatsmarkeringen op smalle voorbeeldkaarten te bedekken.
+
+De volledige logicasuite slaagt met **1.649.276 controles**. Aanvullend slagen 20.260 promptcontroles en 45.303 controles van tijdzoneberekeningen, animatiestappen en kaartgeometrie.
+
+De drie gerichte schermscenario's slagen op iPhone 18 Pro en iPad Pro 11-inch (M5), met iOS 27: vaste klokbediening bij feedback, type 1 na één fout gevolgd door de goede keuze, en tijdzones met voorbeelden en antwoordanimaties. De tijdzonecontrole start elke tijdsoort rechtstreeks om een veegactie tijdens het terugkeren van de iPad-oefensheet te vermijden. De schermbeelden van type 1, 7, 8 en 19 zijn visueel gecontroleerd, inclusief de tijdzonekaart in iPad-landschap. De simulatorbuild en whitespacecontrole slagen.
+
+
+## Lees de klok na 12 uur — 4 november 2026
+
+Vraagtype 9 heet **Lees de klok na 12 uur**. De doelklokken gebruiken uitsluitend 13:00–23:59, in alle zes tijdsoorten, moeilijkheidsstappen, levels, oefenmodi en voorbeelden. Afleiders mogen een ander dagdeel hebben; een tijd met dezelfde tijdwoorden twaalf uur eerder blijft uitgesloten. Voorbeelden doorlopen alle elf middag- en avonduren.
+
+De vraagklok en de digitale uitleg bij afgewezen antwoorden volgen de persoonlijke 12-/24-uursinstelling. Na de eerste fout verschijnt alleen bij een ingestelde 24-uursklok een tweede digitale klok rechts: de begintijd min twaalf uur, zonder AM/PM, met een stippelrand rond de gekozen displayvorm. Een rechte donkerblauwe pijl staat tussen beide klokken, met dezelfde stijl als de pijlen van vraagtype 17. Een klein rood −12-cijfer (13 punten) op een lichtrode capsule staat boven de pijl; de capsulekleuren komen overeen met aftrekken. Een volgende vraag wist de hint.
+
+Antwoordtegels delen de benodigde teksthoogte en tonen het dagdeel direct onder de tijdwoorden. De tijdwoorden en het dagdeel staan samen gecentreerd. Na elke foute keuze schuift alleen die inhoud in 0,30 seconde soepel omhoog; daarna verschijnt de digitale foutuitleg met een fade. De tegels en de overige antwoorden behouden hun plaats. Verminder beweging toont deze verandering direct. Ook de vraagklok reserveert voldoende hoogte voor de hint.
+
+De volledige logicasuite slaagt met **1.656.337 controles**, inclusief alle 24 voorkeursuren per minuutsoort en moeilijkheidsstap, en een volledige cyclus van middag-/avondvoorbeelden.
+
+`testAfterNoonReadingHintFollowsHourNotation` slaagt op iPhone 17 Pro / iOS 26.5 en iPad Pro 11-inch (M5) / iOS 27. Beide uitvoeringen behandelen 24- en 12-uursweergave, de eerste fout, de omgerekende tijd, behoud van de antwoordposities en het wissen van de hint bij de volgende echte oefenvraag. `testCompactClockExamplesKeepTheirActionsVisible` en `testTimeDescriptionsAndArithmeticExampleSizes` slagen op iPhone 17 Pro. De simulatorbuild en whitespacecontrole slagen.
+
+De screenshots zijn visueel gecontroleerd: [iPhone met −12-hint](Screenshots/AfterNoonReading/iphone-twentyFour.png), [iPhone met 12-uursklok](Screenshots/AfterNoonReading/iphone-twelve.png), [iPad met −12-hint](Screenshots/AfterNoonReading/ipad-twentyFour.png) en [iPad met 12-uursklok](Screenshots/AfterNoonReading/ipad-twelve.png).
+
+De vervolgcontrole voor de kleinere −12-capsule, rechte donkerblauwe tussenpijl en gecentreerde antwoordinhoud slaagt opnieuw op beide apparaten. De test bewaakt dat −12 op één regel blijft en de pijl tussen de klokken staat. Schermbeelden vóór een fout, na de eerste fout en tijdens de tweede fout laten de afzonderlijk bewegende antwoordinhoud zien; de overige antwoordstenen behouden hun positie.
+
+De klokhint verplaatst de oorspronkelijke klok nu in 0,60 seconde. Daarna groeit de hulpklok in 0,24 seconde in beeld; pas daarna verschijnen pijl en −12 met een korte schaalanimatie van 0,28 seconde. De nieuwe onderdelen gebruiken geen opacity-overgang. Verminder beweging toont alles direct. Intrinsieke displaybreedtes en vier punten tussenruimte vervangen de uitgevulde klokkolommen, waardoor de pijl dichter bij beide displays staat. De antwoordstenen behouden hun bestaande centrering en animatie. De gerichte hinttest slaagt op iPhone 17 Pro en iPad Pro 11-inch (M5), inclusief beide uurinstellingen en de volgende vraag. De schermbeelden en whitespacecontrole zijn gecontroleerd.

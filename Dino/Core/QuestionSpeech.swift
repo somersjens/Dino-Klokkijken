@@ -154,7 +154,7 @@ struct DinoQuestionPrompt: Equatable, Sendable {
             }
             let ahead = minutes > 0
             let shift = duration(abs(minutes), language: code)
-            let direction = word(code == "nl" ? (ahead ? "voor" : "achter") : (ahead ? "ahead" : "behind"),
+            let direction = word(code == "nl" ? (ahead ? "later" : "eerder") : (ahead ? "ahead" : "behind"),
                                  ahead ? .forward : .backward)
             return formatted(ahead ? "dino.question.timeZone.ahead.format" : "dino.question.timeZone.behind.format", [
                 clock(reference, language: code), plain(origin), plain(destination), shift, direction

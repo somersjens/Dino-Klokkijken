@@ -147,6 +147,8 @@ struct AnalogClock: View {
     var readingHintWidth: CGFloat? = nil
     /// Compared clocks share these bounds so their faces keep the same scale and baseline.
     var readingHintBounds: CGRect? = nil
+    /// Reference clocks can use their final assisted size before the first mistake.
+    var reservesHandHintSpace = false
     /// A separate, unnumbered guide for speaking a time. Size includes its outer scale.
     var spokenHintLanguage: String? = nil
     /// Answer clocks keep tighter margins around the reading guide.
@@ -171,7 +173,7 @@ struct AnalogClock: View {
     }
     private var drawingSize: CGFloat {
         if spokenHintLanguage != nil { return size / (SpokenClockGuideLayout.extent(shape: theme.analogShape, compact: compactSpokenHint) * 2) }
-        if readingAssistance && !showHandHints {
+        if (readingAssistance || reservesHandHintSpace) && !showHandHints {
             // The old square reserved the worst-case arrow reach on all four sides.
             // Fit the actual artwork instead, keeping the clock larger after a miss.
             let bounds = readingHintBounds ?? ClockHandHintGeometry.bounds(time: time, shape: theme.analogShape, faceSize: 150)
@@ -187,7 +189,7 @@ struct AnalogClock: View {
     }
     var body: some View {
         let size = drawingSize
-        let handHintBounds = displaysHandHints
+        let handHintBounds = displaysHandHints || reservesHandHintSpace
             ? readingHintBounds ?? ClockHandHintGeometry.bounds(time: time, shape: theme.analogShape, faceSize: size) : nil
         let minuteScaleBounds = CGRect(x: -0.64, y: -0.64, width: 1.28, height: 1.28)
         ZStack {

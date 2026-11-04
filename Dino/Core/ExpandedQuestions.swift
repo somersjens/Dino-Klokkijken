@@ -319,7 +319,9 @@ enum DinoExpandedQuestions {
                 }
                 return true
             }
-        var targets = pool
+        // This lesson teaches subtracting twelve from afternoon/evening hours.
+        // Keep morning distractors available, but never ask a morning or noon target.
+        var targets = kind == .read24Hour ? pool.filter { $0.hour > 12 } : pool
         if !isDemonstration && difficulty != .challenge {
             let noMidnight = targets.filter { (0..<1440).contains($0.minutesOfDay - shift) }
             if !noMidnight.isEmpty { targets = noMidnight }
@@ -337,7 +339,9 @@ enum DinoExpandedQuestions {
             let minimum = targets.map { counts[dayPartSchedule.part(at: $0.hour), default: 0] }.min()!
             targets = targets.filter { counts[dayPartSchedule.part(at: $0.hour), default: 0] == minimum }
         }
-        let target = preferredTarget.flatMap { pool.contains($0) ? $0 : nil }
+        let target = preferredTarget.flatMap {
+            pool.contains($0) && (kind != .read24Hour || $0.hour > 12) ? $0 : nil
+        }
             ?? DinoQuestionTeaching.target(pool: targets, time: family, difficulty: difficulty, previous: previousTarget,
                 recent: recentQuestions.map(\.target), using: &rng)
         let operation: Int
@@ -508,10 +512,13 @@ enum DinoDemonstrationExamples {
                          dayPartSchedule: DinoDayPartSchedule = .standard) -> ClockQuestion {
         let sequential = [.readDigital, .spokenTime, .trueFalse, .dayPart, .read24Hour].contains(kind)
         let hours = [.readDigital, .spokenTime, .trueFalse].contains(kind) ? 12 : 24
+        let sequentialTime = kind == .read24Hour
+            ? ClockTime(hour: 13 + (index / minutes.count) % 11, minute: minutes.sorted()[index % minutes.count])
+            : time(index: index, minutes: minutes, hours: hours)
         var rng = SeededGenerator(seed: 20261012 &+ UInt64(index))
         return DinoExpandedQuestions.generate(kind: kind, minutes: minutes, minuteStep: minuteStep,
                                               index: index, previousTarget: previousTarget,
-                                              preferredTarget: sequential ? time(index: index, minutes: minutes, hours: hours) : nil,
+                                              preferredTarget: sequential ? sequentialTime : nil,
                                               isDemonstration: true,
                                               language: language, difficulty: .introduction,
                                               dayPartSchedule: dayPartSchedule,

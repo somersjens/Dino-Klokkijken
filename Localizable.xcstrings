@@ -5105,13 +5105,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Read the 24-hour clock"
+            "value" : "Read the clock after noon"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lees de 24-uursklok af"
+            "value" : "Lees de klok na 12 uur"
           }
         }
       }
@@ -5853,13 +5853,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Read the time and the part of the day"
+            "value" : "Read the clock after noon"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lees de tijd en het dagdeel af"
+            "value" : "Lees de klok na 12 uur"
           }
         }
       }
@@ -6097,7 +6097,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Het is %@ in %@. De klok in %@ loopt %@ %@. Hoe laat is het daar?"
+            "value" : "Het is %@ in %@. In %@ is het %@ %@. Hoe laat is het daar?"
           }
         }
       }
@@ -6114,7 +6114,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Het is %@ in %@. De klok in %@ loopt %@ %@. Hoe laat is het daar?"
+            "value" : "Het is %@ in %@. In %@ is het %@ %@. Hoe laat is het daar?"
           }
         }
       }

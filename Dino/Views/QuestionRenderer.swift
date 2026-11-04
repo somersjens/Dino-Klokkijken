@@ -71,10 +71,11 @@ struct QuestionRenderer: View {
             }
         }.frame(maxWidth: .infinity)
             .environment(\.dinoClockReadingAssistance, session.showsClockHandHints)
-            // The reference face also resizes when its numbered helpers appear.
-            // Animate that same artwork together with the digital comparison.
+            // Move the digital comparison within the reference clock's stable stage.
             .animation(reduceMotion ? nil : .easeInOut(duration: DinoQuestionFeedbackTiming.layout),
                        value: question.kind == .setDigital && comparing)
+            .animation(reduceMotion ? nil : .easeInOut(duration: DinoQuestionFeedbackTiming.layout),
+                       value: question.kind == .setAnalog && session.showsClockHandHints)
     }
 
     private var pairedFace: CGFloat { min(clockSize, width * 0.38 - 24) }
@@ -125,7 +126,7 @@ struct QuestionRenderer: View {
         return DinoClockSettingColumns(width: width, stageHeight: stageHeight) {
             DinoFeedbackReplacement(revealed: comparing) {
                 AnalogClock(time: question.target, theme: theme, size: pairedFace,
-                            readingHintWidth: width * 0.38 - 20)
+                            readingHintWidth: width * 0.38 - 20, reservesHandHintSpace: true)
                     .accessibilityIdentifier("question.targetClock")
             } correction: {
                 DigitalClock(time: question.target, theme: theme, fontSize: 38, feedbackCorrect: true)
@@ -207,7 +208,7 @@ struct QuestionRenderer: View {
                     .font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(DinoStyle.deepGreen)
             }
             DigitalClock(time: question.target, theme: theme, fontSize: width < 350 ? 32 : 38,
-                         reservesHandHintSpace: [.chooseAnalog, .setAnalog].contains(question.kind))
+                         reservesHandHintSpace: question.kind == .chooseAnalog)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(theme.digitalReading(question.target, languageCode: language.effective.code))
                 .accessibilityIdentifier("question.targetClock")
@@ -217,7 +218,8 @@ struct QuestionRenderer: View {
 
     private var analogTarget: some View {
         clockStage(height: targetSize) {
-            AnalogClock(time: question.target, theme: theme, size: targetSize, readingHintWidth: width)
+            AnalogClock(time: question.target, theme: theme, size: targetSize,
+                        readingHintWidth: width, reservesHandHintSpace: true)
                 .accessibilityIdentifier("question.targetClock")
         }
     }
@@ -250,12 +252,11 @@ struct QuestionRenderer: View {
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 14) {
             ForEach(Array(question.options.enumerated()), id: \.offset) { index, option in
                 let wrong = session.hasFeedback && session.rejectedResponses.contains(.time(option))
-                let answered = wrong || (session.showsCorrectResponse && .time(option) == question.expectedAnswer)
                 answerButton(option: option, index: index) {
                     Group {
                         if question.kind == .chooseAnalog {
                             AnalogChoiceAnswer(time: option, theme: theme,
-                                               showsMinuteScale: session.missedFirstAnswer && !answered,
+                                               showsMinuteScale: session.missedFirstAnswer && !wrong,
                                                showsExplanation: wrong, fontSize: min(24, max(18, available * 0.14)))
                                 .frame(height: cardHeight - 12)
                         } else {
