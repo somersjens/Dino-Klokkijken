@@ -22,9 +22,9 @@ final class DinoOrientationDelegate: NSObject, UIApplicationDelegate {
 /// The game is drawn for one palette. Dark Mode keeps that same light appearance.
 enum DinoInterface {
     static func lockLight() {
-        UIWindow.appearance().overrideUserInterfaceStyle = .light
-        UITextField.appearance().keyboardAppearance = .light
-        UITextView.appearance().keyboardAppearance = .light
+        // These traits are not UI_APPEARANCE_SELECTOR properties. Applying
+        // keyboardAppearance through a global proxy can crash UIKit's own
+        // keyboard views. The light window trait also styles their keyboards.
         for scene in UIApplication.shared.connectedScenes {
             guard let windowScene = scene as? UIWindowScene else { continue }
             for window in windowScene.windows {

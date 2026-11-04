@@ -2396,6 +2396,23 @@
         }
       }
     },
+    "dino.friends.contact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact the developer"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact met de ontwikkelaar"
+          }
+        }
+      }
+    },
     "dino.friends.contactMissing" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2460,6 +2477,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nodig een vriend uit via Apple. Jullie moeten allebei deze game toegang tot de vriendenlijst geven om hier te verschijnen."
+          }
+        }
+      }
+    },
+    "dino.friends.externalContact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An adult can open the game’s contact page in the browser."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een volwassene kan de contactpagina van de game in de browser openen."
           }
         }
       }
@@ -6652,13 +6686,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You are not signed in to Game Center."
+            "value" : "Not signed in to Game Center"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Je bent niet aangemeld bij Game Center."
+            "value" : "Niet aangemeld bij Game Center"
           }
         }
       }
@@ -6771,13 +6805,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Share your progress between iPhone and iPad using the same iCloud account. Enable iCloud sync on both devices."
+            "value" : "Turn sync on to save your progress in iCloud and keep playing on other devices. If it's off, your progress stays only on this device and you can lose it if you lose the device."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deel je voortgang tussen iPhone en iPad met hetzelfde iCloud-account. Zet iCloud-sync op beide apparaten aan."
+            "value" : "Zet synchronisatie aan om je voortgang in iCloud te bewaren en op andere apparaten verder te spelen. Staat het uit? Dan blijft je voortgang alleen op dit apparaat en kun je die kwijtraken als je het apparaat verliest."
           }
         }
       }

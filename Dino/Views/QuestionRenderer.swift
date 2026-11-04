@@ -71,6 +71,10 @@ struct QuestionRenderer: View {
             }
         }.frame(maxWidth: .infinity)
             .environment(\.dinoClockReadingAssistance, session.showsClockHandHints)
+            // The reference face also resizes when its numbered helpers appear.
+            // Animate that same artwork together with the digital comparison.
+            .animation(reduceMotion ? nil : .easeInOut(duration: DinoQuestionFeedbackTiming.layout),
+                       value: question.kind == .setDigital && comparing)
     }
 
     private var pairedFace: CGFloat { min(clockSize, width * 0.38 - 24) }
@@ -85,16 +89,16 @@ struct QuestionRenderer: View {
     private var pairedAnalogSetting: some View {
         VStack(spacing: 12) {
         DinoClockSettingColumns(width: width, stageHeight: pairedFace + 20) {
-            ZStack {
+            DinoFeedbackReplacement(revealed: comparing) {
                 DigitalClock(time: question.target, theme: theme, fontSize: 38)
+                    .environment(\.dinoClockReadingAssistance, false)
                     .accessibilityIdentifier("question.targetClock")
-                    .opacity(comparing ? 0 : 1).accessibilityHidden(comparing)
+            } correction: {
                 AnalogClock(time: question.target, theme: theme, size: pairedFace,
                             readingHintWidth: pairedHintWidth, readingHintBounds: pairedComparisonBounds)
                     .frame(width: pairedHintWidth, height: pairedFace).padding(10)
                     .modifier(ClockAnswerOutline(visible: true, correct: true))
                     .accessibilityIdentifier("question.correctClock")
-                    .opacity(comparing ? 1 : 0).accessibilityHidden(!comparing)
             }
         } input: {
                 AnalogClock(time: session.attempt.submittedAnswer ?? session.inputTime, theme: theme, size: pairedFace,
@@ -119,14 +123,13 @@ struct QuestionRenderer: View {
     private var pairedDigitalSetting: some View {
         let stageHeight = min(pairedFace + 20, max(36, availableHeight - 90))
         return DinoClockSettingColumns(width: width, stageHeight: stageHeight) {
-            ZStack {
+            DinoFeedbackReplacement(revealed: comparing) {
                 AnalogClock(time: question.target, theme: theme, size: pairedFace,
                             readingHintWidth: width * 0.38 - 20)
                     .accessibilityIdentifier("question.targetClock")
-                    .opacity(comparing ? 0 : 1).accessibilityHidden(comparing)
+            } correction: {
                 DigitalClock(time: question.target, theme: theme, fontSize: 38, feedbackCorrect: true)
                     .accessibilityIdentifier("question.correctClock")
-                    .opacity(comparing ? 1 : 0).accessibilityHidden(!comparing)
             }
         } input: {
             DigitalClockControl(hour: $session.inputHour, theme: theme, minute: session.inputMinute, fontSize: 38,
@@ -165,27 +168,32 @@ struct QuestionRenderer: View {
                                 onMinuteChange: { session.inputMinute = $0 },
                                 minuteStep: session.minuteStep, valueIdentifier: "question.digitalControl",
                                 feedbackCorrect: session.hasFeedback ? session.correctFeedback : nil,
-                                controlsEnabled: !session.hidesAnswerControls)
+                                controlsEnabled: !session.hidesAnswerControls,
+                                feedbackRevealDelay: DinoQuestionFeedbackTiming.inputRevealDelay)
                 .scaleEffect(comparing ? scale : 1)
                 .offset(x: comparing ? -displacement : 0)
+                .animation(reduceMotion ? nil : .easeInOut(duration: DinoQuestionFeedbackTiming.layout)
+                    .delay(comparing ? DinoQuestionFeedbackTiming.controlExit : 0), value: comparing)
             DigitalClock(time: question.target, theme: theme, fontSize: font,
                          reservesHandHintSpace: true, feedbackCorrect: true)
                 .padding(.bottom, 48)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(theme.digitalReading(question.target, languageCode: language.effective.code))
-                .scaleEffect(scale * (comparing || reduceMotion ? 1 : 0.94))
+                .scaleEffect(scale)
                 .offset(x: displacement)
                 .opacity(comparing ? 1 : 0)
                 .allowsHitTesting(false).accessibilityHidden(!comparing)
                 .accessibilityIdentifier("question.correctClock")
-                .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: comparing)
+                .animation(reduceMotion ? nil : .easeOut(duration: DinoQuestionFeedbackTiming.reveal)
+                    .delay(comparing ? DinoQuestionFeedbackTiming.inputRevealDelay : 0), value: comparing)
             HStack(spacing: 14) {
                 AnswerVerdictMark(correct: false).frame(maxWidth: .infinity)
                 AnswerVerdictMark(correct: true).frame(maxWidth: .infinity)
             }
             .offset(y: font * 0.9 + 22)
             .opacity(comparing ? 1 : 0).accessibilityHidden(true)
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: comparing)
+            .animation(reduceMotion ? nil : .easeOut(duration: DinoQuestionFeedbackTiming.reveal)
+                .delay(comparing ? DinoQuestionFeedbackTiming.inputRevealDelay : 0), value: comparing)
         }
         .frame(width: width)
         .questionAnswerFocus()
@@ -215,9 +223,14 @@ struct QuestionRenderer: View {
     }
 
     private var digitalReadingQuestion: some View {
-        DinoQuestionComposition(layout: layout) {
-            AnalogClock(time: question.target, theme: theme, size: min(targetSize, layout.contextWidth - 24),
-                        readingHintWidth: layout.contextWidth)
+        let hints = session.showsClockHandHints
+        let bounds = hints ? ClockHandHintGeometry.bounds(time: question.target, shape: theme.analogShape, faceSize: 150)
+            : CGRect(x: -0.5, y: -0.5, width: 1, height: 1)
+        let face = min(targetSize, (layout.contextWidth - 24) / bounds.width)
+        return DinoQuestionComposition(layout: layout) {
+            AnalogClock(time: question.target, theme: theme, size: face * bounds.height,
+                        readingHintWidth: layout.contextWidth - 24,
+                        readingHintBounds: hints ? bounds : nil)
                 .accessibilityIdentifier("question.targetClock")
         } answers: {
             digitalOptions
@@ -406,8 +419,10 @@ struct AnswerTimeExplanation<Content: View>: View {
             .frame(maxWidth: .infinity)
             .opacity(visible ? 1 : 0)
             .accessibilityHidden(!visible)
+            .animation(reduceMotion ? nil : .easeOut(duration: DinoQuestionFeedbackTiming.reveal)
+                .delay(visible ? DinoQuestionFeedbackTiming.revealDelay : 0), value: visible)
         }
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: visible)
+        .animation(reduceMotion ? nil : .easeInOut(duration: DinoQuestionFeedbackTiming.layout), value: visible)
     }
 }
 

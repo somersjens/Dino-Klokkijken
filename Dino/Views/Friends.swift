@@ -480,12 +480,21 @@ struct LevelFriendsView<Play: View>: View {
 struct DinoSocialPrivacyView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
-    @State private var showsParent = false
-    @State private var approved = false
-    private var policyURL: URL? {
-        guard let value = Bundle.main.object(forInfoDictionaryKey: "DinoPrivacyPolicyURL") as? String,
-              let url = URL(string: value), url.scheme == "https", url.host != nil else { return nil }
-        return url
+    @ObservedObject private var language = LanguageManager.shared
+    private enum SupportPage: String, Identifiable {
+        case privacy, contact
+        var id: String { rawValue }
+        var configurationKey: String { self == .privacy ? "DinoPrivacyPolicyURL" : "DinoSafetyContact" }
+    }
+    @State private var parentPage: SupportPage?
+    @State private var approvedURL: URL?
+    private func localizedURL(for page: SupportPage) -> URL? {
+        guard let value = Bundle.main.object(forInfoDictionaryKey: page.configurationKey) as? String,
+              var components = URLComponents(string: value),
+              components.scheme?.lowercased() == "https",
+              let host = components.host, !host.isEmpty else { return nil }
+        components.fragment = language.effective.code == "nl" ? "nl" : "en"
+        return components.url
     }
     var body: some View {
         NavigationStack {
@@ -494,20 +503,30 @@ struct DinoSocialPrivacyView: View {
                     Text("dino.friends.privacyBody").font(.body)
                     Text("dino.friends.reportHelp").font(.body)
                     // Developer-owned URLs are configurable; never invent contact details.
-                    if let contact = Bundle.main.object(forInfoDictionaryKey: "DinoSafetyContact") as? String, !contact.isEmpty {
+                    if let url = localizedURL(for: .contact) {
+                        Button("dino.friends.contact") { parentPage = .contact }.frame(minHeight: 44)
+                            .accessibilityIdentifier("privacy.contact")
+                            .accessibilityValue(Text(verbatim: url.absoluteString))
+                    } else if let contact = Bundle.main.object(forInfoDictionaryKey: "DinoSafetyContact") as? String, !contact.isEmpty {
                         Text(verbatim: contact).textSelection(.enabled)
                     } else { Text("dino.friends.contactMissing").font(.footnote) }
-                    if policyURL != nil {
-                        Button("dino.friends.fullPrivacy") { showsParent = true }.frame(minHeight: 44)
+                    if let url = localizedURL(for: .privacy) {
+                        Button("dino.friends.fullPrivacy") { parentPage = .privacy }.frame(minHeight: 44)
+                            .accessibilityIdentifier("privacy.policy")
+                            .accessibilityValue(Text(verbatim: url.absoluteString))
                     }
                 }.padding(24).frame(maxWidth: 560).frame(maxWidth: .infinity)
             }.background(JungleBackground(quiet: true))
                 .navigationTitle(Text(verbatim: L("dino.friends.privacy")))
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("dino.done") { dismiss() } } }
-                .sheet(isPresented: $showsParent, onDismiss: {
-                    if approved, let url = policyURL { approved = false; openURL(url) }
-                }) {
-                    DinoParentGate(sharing: false, explanationKey: "dino.friends.externalPolicy") { approved = true; showsParent = false }
+                .sheet(item: $parentPage, onDismiss: {
+                    if let url = approvedURL { approvedURL = nil; openURL(url) }
+                }) { page in
+                    DinoParentGate(sharing: false, explanationKey: page == .privacy
+                                   ? "dino.friends.externalPolicy" : "dino.friends.externalContact") {
+                        approvedURL = localizedURL(for: page)
+                        parentPage = nil
+                    }
                 }
         }.foregroundStyle(DinoStyle.ink).gameEnvironment()
     }

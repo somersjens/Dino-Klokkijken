@@ -8,7 +8,7 @@ Beide tijden volgen de gekozen minuutfamilie. De eindtijd ligt later op dezelfde
 
 Bij een fout antwoord blijft het vraagteken staan tijdens herkansingen. Na een juiste keuze of Toon antwoord verschijnt het juiste aantal minuten in de tijdlijn. De ondoorzichtige capsule houdt de verbindingslijn achter de tekst verborgen. Op de kleine iPhone passen alle vier antwoorden tegelijk; antwoordfeedback laat de vraag op dezelfde plek staan. Het voorbeeld toont de uitkomst direct; Een ander voorbeeld laten zien maakt een nieuwe geldige opgave zonder de lopende vraag of oefenvoortgang te wijzigen.
 
-Sinds 1 november 2026 gebruikt het voorbeeld een opgebroken tijdlijn met ingevulde minutendelen en hun optelling. Na één fout verschijnt dezelfde tijdlijn met ingevulde hulpblokken vanuit de bestaande pijl onder Van/Tot. Zie [de actuele uitleg en controles](MinutesBetweenHints.md). De onderstaande testresultaten beschrijven de eerdere aftrekuitleg.
+Sinds 1 november 2026 gebruikt het voorbeeld een opgebroken tijdlijn met ingevulde minutendelen. Na één fout verschijnt dezelfde tijdlijn met ingevulde hulpblokken vanuit de bestaande pijl onder Van/Tot. Zie [de actuele uitleg en controles](MinutesBetweenHints.md). De onderstaande testresultaten beschrijven de eerdere aftrekuitleg.
 
 ## Controles
 

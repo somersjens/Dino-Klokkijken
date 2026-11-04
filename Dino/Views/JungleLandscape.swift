@@ -7876,7 +7876,35 @@ private enum CrystalCaveLifeLayout {
         return result
     }
 
+    /// Worker masks request the same fixed obstacles for every mineral bed.
+    /// Build them once per scene size, retaining the exact placement calculations.
+    private final class Clearances {
+        let timber: [CGRect]
+        let clocks: [CGRect]
+        init(layout: WorldSceneryLayout) {
+            timber = makeTimberClearances(layout: layout)
+            clocks = makeClockClearances(layout: layout, timber: timber)
+        }
+    }
+    private static let clearancePlans: NSCache<NSString, Clearances> = {
+        let cache = NSCache<NSString, Clearances>()
+        cache.countLimit = 8
+        return cache
+    }()
+    private static func clearances(layout: WorldSceneryLayout) -> Clearances {
+        let key = "\(layout.width)-\(layout.height)-\(layout.routeOffset)-\(layout.jungle)" as NSString
+        if let plan = clearancePlans.object(forKey: key) { return plan }
+        let plan = Clearances(layout: layout)
+        clearancePlans.setObject(plan, forKey: key)
+        return plan
+    }
+    static func prepare(layout: WorldSceneryLayout) {
+        _ = clearances(layout: layout)
+    }
     static func timberClearances(layout: WorldSceneryLayout) -> [CGRect] {
+        clearances(layout: layout).timber
+    }
+    private static func makeTimberClearances(layout: WorldSceneryLayout) -> [CGRect] {
         let s = layout.scale, w = layout.width
         var result: [CGRect] = []
         func add(_ point: CGPoint, size: CGFloat, radius: CGFloat, rise: CGFloat,
@@ -7905,11 +7933,17 @@ private enum CrystalCaveLifeLayout {
 
     static func clearTimber(_ point: CGPoint, radius: CGFloat, rise: CGFloat, drop: CGFloat,
                             right: Bool, layout: WorldSceneryLayout) -> CGPoint {
+        clearTimber(point, radius: radius, rise: rise, drop: drop, right: right,
+                    scale: layout.scale, zones: clearances(layout: layout).timber)
+    }
+
+    private static func clearTimber(_ point: CGPoint, radius: CGFloat, rise: CGFloat, drop: CGFloat,
+                                    right: Bool, scale: CGFloat, zones: [CGRect]) -> CGPoint {
         var point = point
-        for zone in timberClearances(layout: layout) {
+        for zone in zones {
             let footprint = CGRect(x:point.x-radius,y:point.y-rise,width:radius*2,height:rise+drop)
             if footprint.intersects(zone) {
-                point.x = right ? zone.maxX + radius + 8*layout.scale : zone.minX - radius - 8*layout.scale
+                point.x = right ? zone.maxX + radius + 8*scale : zone.minX - radius - 8*scale
             }
         }
         return point
@@ -7938,13 +7972,17 @@ private enum CrystalCaveLifeLayout {
     }
 
     private static func clockClearances(layout: WorldSceneryLayout) -> [CGRect] {
+        clearances(layout: layout).clocks
+    }
+
+    private static func makeClockClearances(layout: WorldSceneryLayout, timber: [CGRect]) -> [CGRect] {
         let s = layout.scale, size = s * 0.92
         return [(CGFloat(465), false), (CGFloat(1430), true)].map { y, right in
             let anchor = layout.position(CGPoint(x: right ? layout.width - 32 * s : 32 * s, y: y),
                                          radius: 77 * size, rise: 130 * size)
             let placed = clearTimber(CGPoint(x: anchor.x, y: anchor.y + layout.routeOffset),
                                      radius: 87 * size, rise: 130 * size, drop: 48 * size,
-                                     right: anchor.x > layout.width / 2, layout: layout)
+                                     right: anchor.x > layout.width / 2, scale: s, zones: timber)
             // The screen sits inside the clock stone on the shared scene shelf.
             return CGRect(x: placed.x + (8 - 33 * 0.94) * size - 4 * s,
                           y: placed.y + (7 - 54 * 0.94) * size - 4 * s,
@@ -14245,7 +14283,28 @@ private enum PirateCoastLayout {
         let size: CGFloat
     }
 
-    static func sites(layout: WorldSceneryLayout) -> [Site] {
+    private final class Field {
+        let sites: [Site]
+        let jetties: [Jetty]
+        let rocks: [Rock]
+        init(layout: WorldSceneryLayout) {
+            sites = makeSites(layout: layout)
+            jetties = makeJetties(layout: layout)
+            rocks = makeLandRocks(layout: layout, sites: sites, jetties: jetties)
+        }
+    }
+    private static let fields: NSCache<NSString, Field> = {
+        let cache = NSCache<NSString, Field>(); cache.countLimit = 8; return cache
+    }()
+    private static func field(layout: WorldSceneryLayout) -> Field {
+        let key = "\(layout.width)-\(layout.height)-\(layout.routeOffset)-\(layout.jungle)" as NSString
+        if let field = fields.object(forKey: key) { return field }
+        let field = Field(layout: layout)
+        fields.setObject(field, forKey: key)
+        return field
+    }
+    static func sites(layout: WorldSceneryLayout) -> [Site] { field(layout: layout).sites }
+    private static func makeSites(layout: WorldSceneryLayout) -> [Site] {
         let scale = layout.scale, size = scale * 0.94
         return [0, 2, 3, 4, 6, 7, 8].map { index in
             let right = index % 4 == 0 || index % 4 == 3
@@ -14271,7 +14330,8 @@ private enum PirateCoastLayout {
         }
     }
 
-    static func jetties(layout: WorldSceneryLayout) -> [Jetty] {
+    static func jetties(layout: WorldSceneryLayout) -> [Jetty] { field(layout: layout).jetties }
+    private static func makeJetties(layout: WorldSceneryLayout) -> [Jetty] {
         [false, true].map { right in
             let point = layout.position(CGPoint(x: right ? layout.width - 23 * layout.scale : 23 * layout.scale,
                                                 y: right ? 1185 : 650))
@@ -14280,11 +14340,11 @@ private enum PirateCoastLayout {
     }
 
     /// Landings and stall feet need open sand rather than intersecting rock faces.
-    static func rockClearsStructures(at point: CGPoint, size: CGFloat, layout: WorldSceneryLayout) -> Bool {
+    private static func rockClearsStructures(at point: CGPoint, size: CGFloat, sites: [Site], jetties: [Jetty]) -> Bool {
         let silhouette = CGRect(x: point.x - 36 * size, y: point.y - 52 * size,
                                 width: 72 * size, height: 67 * size)
-        guard jetties(layout: layout).allSatisfy({ !$0.clearance.intersects(silhouette) }) else { return false }
-        return sites(layout: layout).filter { $0.id == 0 || $0.id == 4 }.allSatisfy { stall in
+        guard jetties.allSatisfy({ !$0.clearance.intersects(silhouette) }) else { return false }
+        return sites.filter { $0.id == 0 || $0.id == 4 }.allSatisfy { stall in
             let footing = CGRect(x: stall.point.x - 70 * stall.size, y: stall.point.y - 12 * stall.size,
                                  width: 132 * stall.size, height: 67 * stall.size)
             return !footing.intersects(silhouette)
@@ -14298,7 +14358,8 @@ private enum PirateCoastLayout {
     }
 
     /// The same rock positions guide both the artwork and sand landings.
-    static func landRocks(layout: WorldSceneryLayout) -> [Rock] {
+    static func landRocks(layout: WorldSceneryLayout) -> [Rock] { field(layout: layout).rocks }
+    private static func makeLandRocks(layout: WorldSceneryLayout, sites: [Site], jetties: [Jetty]) -> [Rock] {
         let scale = layout.scale
         var result: [Rock] = []
         for right in [false, true] {
@@ -14327,12 +14388,15 @@ private enum PirateCoastLayout {
             let origin = layout.position(CGPoint(x: onRight ? 7 * scale : layout.width - 7 * scale, y: 273 + CGFloat(index) * 175))
             result.append(Rock(point: .init(x: origin.x + (onRight ? 1 : -1) * 23 * scale, y: origin.y), size: 0.88 * scale))
         }
-        return result.filter { rockClearsStructures(at: $0.point, size: $0.size, layout: layout) }
+        return result.filter { rockClearsStructures(at: $0.point, size: $0.size, sites: sites, jetties: jetties) }
     }
 
     /// A continuous outer contour joins each sandy shelf to the original beach.
     /// Drawing the contour directly also supports devices running iOS 16.
     static func shoreline(layout: WorldSceneryLayout, right: Bool) -> [CGPoint] {
+        PirateSeaGeometry.cached(layout: layout).coasts[right ? 1 : 0].points
+    }
+    fileprivate static func makeShoreline(layout: WorldSceneryLayout, right: Bool) -> [CGPoint] {
         let sign: CGFloat = right ? 1 : -1
         let palmFootings = [0, 3, 6].map { index -> Site in
             let mainRight = index % 4 == 0 || index % 4 == 3
@@ -14374,20 +14438,14 @@ private enum PirateCoastLayout {
     }
 
     static func waterArea(layout: WorldSceneryLayout, right: Bool) -> Path {
-        let points = shoreline(layout: layout, right: right)
-        guard let first = points.first, let last = points.last else { return Path() }
-        var water = Path(); water.addLines(points)
-        let start = first.y, end = last.y
-        let outside: CGFloat = right ? layout.width + 400 : -400
-        water.addLine(to: CGPoint(x: outside, y: end))
-        water.addLine(to: CGPoint(x: outside, y: start))
-        water.closeSubpath()
-        return water
+        PirateSeaGeometry.cached(layout: layout).coasts[right ? 1 : 0].water
     }
 
     /// Sample the complete hull against the final water mask, with room for surf.
     static func vessels(layout: WorldSceneryLayout) -> [Vessel] {
-        let water = layout.pirateWaterArea(right: false)
+        PirateSeaGeometry.cached(layout: layout).vessels
+    }
+    fileprivate static func makeVessels(layout: WorldSceneryLayout, water: Path) -> [Vessel] {
         let hull: [CGPoint] = [.init(x: -59, y: -13), .init(x: -50, y: 9), .init(x: -43, y: 26),
                                .init(x: -15, y: 33), .init(x: 20, y: 28), .init(x: 45, y: 8),
                                .init(x: 60, y: -19), .init(x: 10, y: -7)]
@@ -15288,17 +15346,32 @@ private struct PirateSeaGeometry {
     let coasts: [Coast]
     let vessels: [PirateCoastLayout.Vessel]
 
-    init(layout: WorldSceneryLayout) {
+    private final class Plan {
+        let geometry: PirateSeaGeometry
+        init(layout: WorldSceneryLayout) { geometry = PirateSeaGeometry(layout: layout) }
+    }
+    private static let plans: NSCache<NSString, Plan> = {
+        let cache = NSCache<NSString, Plan>(); cache.countLimit = 8; return cache
+    }()
+    static func cached(layout: WorldSceneryLayout) -> PirateSeaGeometry {
+        let key = "\(layout.width)-\(layout.height)-\(layout.routeOffset)-\(layout.jungle)" as NSString
+        if let plan = plans.object(forKey: key) { return plan.geometry }
+        let plan = Plan(layout: layout)
+        plans.setObject(plan, forKey: key)
+        return plan.geometry
+    }
+
+    private init(layout: WorldSceneryLayout) {
         self.layout = layout
         coasts = [false, true].map { right in
-            let points = PirateCoastLayout.shoreline(layout: layout, right: right)
+            let points = PirateCoastLayout.makeShoreline(layout: layout, right: right)
             var water = Path(); water.addLines(points)
             let outside: CGFloat = right ? layout.width + 400 : -400
             water.addLine(to: .init(x: outside, y: points.last!.y))
             water.addLine(to: .init(x: outside, y: points.first!.y)); water.closeSubpath()
             return Coast(points: points, water: water, right: right)
         }
-        vessels = PirateCoastLayout.vessels(layout: layout)
+        vessels = PirateCoastLayout.makeVessels(layout: layout, water: coasts[0].water)
     }
 }
 
@@ -15328,7 +15401,7 @@ private struct PirateCoastLife: View {
     var body: some View {
         GeometryReader { geometry in
             let layout = WorldSceneryLayout(width: geometry.size.width, height: geometry.size.height, routeOffset: routeOffset)
-            let sea = PirateSeaGeometry(layout: layout)
+            let sea = PirateSeaGeometry.cached(layout: layout)
             ZStack(alignment: .topLeading) {
                 ForEach(0..<Int(ceil(geometry.size.height / 320)), id: \.self) { index in
                     let frame = CGRect(x: 0, y: CGFloat(index) * 320, width: geometry.size.width,
@@ -15981,7 +16054,7 @@ private actor PirateGullFlightCache {
             return prepared
         }
         let layout = WorldSceneryLayout(width: size.width, height: size.height, routeOffset: routeOffset)
-        let flocks = PirateGullFlocks(sea: PirateSeaGeometry(layout: layout))
+        let flocks = PirateGullFlocks(sea: PirateSeaGeometry.cached(layout: layout))
         let prepared = Prepared(key: key, flocks: flocks, track: try PirateGullMotionTrack(plan: flocks),
                                 preparedOnMainThread: Thread.isMainThread)
         flights[key] = prepared
@@ -19437,6 +19510,8 @@ enum DinoMapArtworkPreparation {
         case 4:
             _ = VillagePlan.plots(layout: layout)
             _ = VillageRiverTrafficLayout.routes(layout: layout)
+        case 5:
+            CrystalCaveLifeLayout.prepare(layout: layout)
         case 6:
             _ = CityMetroGeometry.cached(layout: layout)
             _ = CityUrbanLayout.sites(layout: layout)
@@ -19448,6 +19523,8 @@ enum DinoMapArtworkPreparation {
         case 8:
             _ = TimeMachineLayout.waterField(layout: layout)
             _ = TimeMachineLayout.assemblies(layout: layout)
+        case 9:
+            _ = PirateSeaGeometry.cached(layout: layout)
         case 10:
             _ = CastleWaterPlan.cached(scenery: layout)
         default: break

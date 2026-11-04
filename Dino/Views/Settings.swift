@@ -16,13 +16,18 @@ struct DinoSettingsView: View {
     @State private var showsPrivacy = false
     @State private var showsGameCenter = false
     @State private var showsLanguages = false
+    @State private var showsCloudHelp = false
     @State private var showsDayParts = false
     @State private var challenge = ResetChallenge.make()
     @State private var resetAnswer = ""
+    /// Full page size, kept while the keyboard is up so the reset card does not rebuild under the focused field.
+    @State private var resetPageWidth: CGFloat = 0
+    @State private var resetPageHeight: CGFloat = 0
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
                 let spacious = geometry.size.width >= 650
+                let resetHeight = resetPageHeight > 1 ? resetPageHeight : geometry.size.height
                 ZStack {
                     VStack(spacing: 0) {
                         Text("dino.settings")
@@ -44,17 +49,22 @@ struct DinoSettingsView: View {
                             .contentShape(Rectangle())
                             .onTapGesture { confirmReset = false }
                         ScrollView {
-                            VStack(spacing: 0) {
-                                resetScrimTap()
-                                resetCard(compact: geometry.size.height < 700)
+                            ResetConfirmationPage(minimumHeight: resetHeight) {
+                                Color.clear
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture { confirmReset = false }
+                                    .accessibilityHidden(true)
+                                resetCard(compact: resetHeight < 700)
                                     .padding(16)
-                                resetScrimTap()
+                                    .zIndex(1)
                             }
-                            .frame(minHeight: geometry.size.height)
                         }.bouncesOnlyWhenNeeded()
                             .frame(maxWidth: 460)
                     }
                 }.background(JungleBackground(quiet: true))
+                    .onAppear { rememberResetPage(geometry.size) }
+                    .onValueChange(of: geometry.size) { rememberResetPage($0) }
             }
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showsPrivacy) { DinoSocialPrivacyView() }
@@ -77,28 +87,21 @@ struct DinoSettingsView: View {
 
     private var menu: some View {
         VStack(spacing: 0) {
-            navigationRow(title: "dino.settings.gameCenter", symbol: "person.crop.circle.fill",
-                          identifier: "settings.gameCenter") {
-                showsGameCenter = true
-            } detail: {
+            linkedRow(identifier: "settings.gameCenter") { showsGameCenter = true } icon: {
+                Image(systemName: "person.crop.circle.fill")
+            } title: {
                 if let name = friends.playerDisplayName {
-                    Text(verbatim: name).font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-                        .accessibilityIdentifier("settings.gameCenterName")
+                    Text(verbatim: name).accessibilityIdentifier("settings.gameCenterName")
                 } else {
-                    Text("dino.settings.gameCenter.noAccount")
-                        .font(.system(size: 14, weight: .medium, design: .rounded))
-                        .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+                    Text("dino.settings.gameCenter")
                         .accessibilityIdentifier("settings.gameCenterSignedOut")
                 }
             }
             rowDivider
-            navigationRow(title: "dino.language", symbol: "globe", identifier: "settings.language") {
-                showsLanguages = true
-            } detail: {
-                Text(verbatim: language.effective.flag + "  " + language.effective.displayName)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+            linkedRow(identifier: "settings.language") { showsLanguages = true } icon: {
+                Text(verbatim: language.effective.flag)
+            } title: {
+                Text(verbatim: language.effective.displayName)
             }
             rowDivider
             navigationRow(title: "dino.settings.dayParts", symbol: "sun.horizon.fill",
@@ -118,15 +121,7 @@ struct DinoSettingsView: View {
             preference("dino.settings.highContrast", symbol: "circle.lefthalf.filled",
                        value: $settings.highContrastEnabled, identifier: "settings.highContrast")
             rowDivider
-            VStack(alignment: .leading, spacing: 0) {
-                preference("dino.settings.icloudSync", symbol: "icloud.fill",
-                           value: $settings.icloudSyncEnabled, identifier: "settings.icloudSync")
-                Text(LocalizedStringKey(cloudSync.status.messageKey))
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-                    .padding(.horizontal, 16).padding(.bottom, 12)
-                    .accessibilityIdentifier("settings.icloudStatus")
-            }
+            icloudRow
             rowDivider
             navigationRow(title: "dino.friends.privacy", symbol: "hand.raised.fill",
                           identifier: "settings.privacy") { showsPrivacy = true }
@@ -194,13 +189,13 @@ struct DinoSettingsView: View {
         }.padding(4).dinoCard()
     }
 
-    /// The dimmed space above and below the card. The scroll view fills the screen, so those taps never reach the scrim behind it.
-    private func resetScrimTap() -> some View {
-        Color.clear
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .contentShape(Rectangle())
-            .onTapGesture { confirmReset = false }
-            .accessibilityHidden(true)
+    /// Keeps the open confirmation page stable. The keyboard shrinks height without changing width; a rotation changes both.
+    private func rememberResetPage(_ size: CGSize) {
+        guard size.width > 1, size.height > 1 else { return }
+        let rotated = resetPageWidth > 1 && abs(size.width - resetPageWidth) > 80
+        guard !confirmReset || rotated else { return }
+        resetPageWidth = size.width
+        resetPageHeight = size.height
     }
 
     private func resetApp() {
@@ -222,12 +217,85 @@ struct DinoSettingsView: View {
 #endif
     }
 
+    /// Same height as the other switches. The longer explanation opens beside the info button.
+    private var icloudRow: some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 6) {
+                Button { settings.icloudSyncEnabled.toggle() } label: {
+                    Label("dino.settings.icloudSync", systemImage: "icloud.fill")
+                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+                        .frame(minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(SettingsRowButtonStyle())
+                .accessibilityHidden(true)
+                Button { showsCloudHelp = true } label: {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+                        .frame(width: 28, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(SettingsRowButtonStyle())
+                .accessibilityIdentifier("settings.icloudInfo")
+                .accessibilityLabel(Text("dino.settings.icloudSync"))
+                .accessibilityHint(Text("dino.settings.icloudDescription"))
+                .popover(isPresented: $showsCloudHelp, attachmentAnchor: .rect(.bounds)) {
+                    Text("dino.settings.icloudDescription")
+                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .foregroundStyle(DinoStyle.ink)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(16)
+                        .frame(width: 280)
+                        .accessibilityIdentifier("settings.icloudStatus")
+                        .modifier(CloudHelpPopover())
+                }
+            }
+            .layoutPriority(1)
+            Button { settings.icloudSyncEnabled.toggle() } label: {
+                Color.clear.frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHidden(true)
+            Toggle(isOn: $settings.icloudSyncEnabled) { EmptyView() }
+                .labelsHidden().toggleStyle(.switch).tint(DinoStyle.deepGreen)
+                .accessibilityLabel(Text("dino.settings.icloudSync"))
+        }
+        .padding(.horizontal, 16).padding(.vertical, 10).frame(minHeight: 60)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("settings.icloudSync")
+    }
+
     private func preference(_ key: LocalizedStringKey, symbol: String, value: Binding<Bool>, identifier: String) -> some View {
         Toggle(isOn: value) {
             Label(key, systemImage: symbol).font(.system(size: 17, weight: .semibold, design: .rounded))
                 .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
         }.toggleStyle(SettingsToggleStyle()).padding(.horizontal, 16).padding(.vertical, 10).frame(minHeight: 60)
             .accessibilityIdentifier(identifier)
+    }
+
+    private func linkedRow<Icon: View, Title: View>(identifier: String, action: @escaping () -> Void,
+                                          @ViewBuilder icon: () -> Icon,
+                                          @ViewBuilder title: () -> Title) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                icon().frame(minWidth: 26)
+                title()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+            }
+            .font(.system(size: 17, weight: .semibold, design: .rounded))
+            .padding(.horizontal, 16).frame(minHeight: 60)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(identifier)
     }
 
     private func navigationRow(title: LocalizedStringKey, symbol: String, identifier: String,
@@ -254,6 +322,30 @@ struct DinoSettingsView: View {
     }
 }
 
+/// Centers the reset card on a finite page. Flexible frames inside the scroll view have no height bound,
+/// so focusing the answer field asks the keyboard to scroll to a non-finite position and the app closes.
+private struct ResetConfirmationPage: Layout {
+    var minimumHeight: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.replacingUnspecifiedDimensions(by: CGSize(width: 460, height: minimumHeight)).width
+        let cardHeight = subviews.last?.sizeThatFits(ProposedViewSize(width: width, height: nil)).height ?? 0
+        let height = max(minimumHeight, cardHeight)
+        return CGSize(width: width, height: height.isFinite ? height : minimumHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard let card = subviews.last else { return }
+        let cardSize = card.sizeThatFits(ProposedViewSize(width: bounds.width, height: nil))
+        if subviews.count > 1, let scrim = subviews.first {
+            scrim.place(at: bounds.origin, proposal: ProposedViewSize(width: bounds.width, height: bounds.height))
+        }
+        let height = cardSize.height.isFinite ? cardSize.height : bounds.height
+        card.place(at: CGPoint(x: bounds.midX, y: bounds.midY), anchor: .center,
+                   proposal: ProposedViewSize(width: bounds.width, height: height))
+    }
+}
+
 /// A product large enough that confirming a reset takes a calculator.
 private struct ResetChallenge {
     let left: Int
@@ -274,6 +366,24 @@ private struct ResetChallenge {
     }
 }
 
+/// A button that never scales its label. The plain style shrinks text when the button hugs its contents.
+private struct SettingsRowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+    }
+}
+
+/// Keeps the iCloud explanation a popover on iPhone, so the settings row stays one line.
+private struct CloudHelpPopover: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.4, *) {
+            content.presentationCompactAdaptation(.popover).presentationBackground(DinoStyle.paper)
+        } else {
+            content
+        }
+    }
+}
+
 /// The label fills the row and has its own action, including its empty space.
 private struct SettingsToggleStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -282,7 +392,7 @@ private struct SettingsToggleStyle: ToggleStyle {
                 configuration.label.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                     .contentShape(Rectangle())
             }.buttonStyle(.plain)
-            Toggle(isOn: configuration.$isOn) { EmptyView() }
+            Toggle(isOn: configuration.$isOn) { configuration.label }
                 .labelsHidden().toggleStyle(.switch).tint(DinoStyle.deepGreen)
         }
     }

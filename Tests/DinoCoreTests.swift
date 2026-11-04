@@ -13,6 +13,30 @@ private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
 @MainActor
 struct DinoCoreTests {
     static func testGameLayout() {
+        // These intermediate proposals used to produce a negative diameter/height
+        // in the actual time-reading view, even though final device sizes fitted.
+        let proposals: [CGFloat] = [-100, -1, 0, 1, 15, 16, 24, 51, 52, 53, 280, 370, 1024, .nan, .infinity, -.infinity]
+        for width in proposals {
+            for face in [CGFloat(-52), 0, 210, .nan, .infinity] {
+                for mode in 0..<3 {
+                    for shape in [AnalogClockShape.circle, .square, .octagon] {
+                        for language in ["nl", "en"] {
+                            for minute in [0, 17, 30, 59] {
+                                let clock = DinoTimeReadingClockLayout(width: width, faceSize: face, minute: minute,
+                                    language: language, shape: shape, showsGuide: mode == 2, showsSpokenHint: mode == 1)
+                                expect([clock.width, clock.diameter, clock.height, clock.center.x, clock.center.y]
+                                    .allSatisfy { $0.isFinite && $0 > 0 },
+                                       "temporary layout proposals cannot create invalid time-reading frames")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        let reading = DinoTimeReadingClockLayout(width: 370, faceSize: 210, minute: 0, language: "nl",
+                                                 shape: .circle, showsGuide: false, showsSpokenHint: false)
+        expect(reading.width == 370 && reading.diameter == 210 && reading.height == 234,
+               "valid time-reading sizes retain their existing proportions")
         // Sweep continuous window sizes, including narrow split views and short landscape windows.
         for width in stride(from: 280, through: 1400, by: 37) {
             for height in stride(from: 160, through: 1100, by: 43) {
@@ -31,6 +55,20 @@ struct DinoCoreTests {
                 }
             }
         }
+        for kind in [ClockQuestionKind.chooseDigital, .trueFalse, .readDigital] {
+            let phone = DinoGameLayout(width: 370, height: 600, kind: kind, optionCount: 4)
+            let tablet = DinoGameLayout(width: 1000, height: 1000, kind: kind, optionCount: 4)
+            let short = DinoGameLayout(width: 700, height: 160, kind: kind, optionCount: 4)
+            expect(abs(phone.clockSize - 210) < 0.01, "reading clock keeps familiar phone proportions")
+            expect(tablet.clockSize <= phone.clockSize * 1.2 + 0.01, "large windows cannot inflate a reading clock")
+            expect(short.clockSize < phone.clockSize, "a preferred clock still yields to short windows")
+        }
+        expect(DinoQuestionFeedbackTiming.revealDelay >= DinoQuestionFeedbackTiming.layout,
+               "new explanation waits for the existing content to finish moving")
+        expect(DinoQuestionFeedbackTiming.replacementFadeOut < DinoQuestionFeedbackTiming.revealDelay,
+               "old and corrected reference clocks are never crossfaded over one another")
+        expect(DinoQuestionFeedbackTiming.inputRevealDelay >= DinoQuestionFeedbackTiming.controlExit + DinoQuestionFeedbackTiming.layout,
+               "digital reading pointers wait for the controls to leave and the submitted clock to settle")
         let portrait = DinoGameLayout(width: 370, height: 500, kind: .timeSequence, optionCount: 4)
         let landscape = DinoGameLayout(width: 720, height: 220, kind: .timeSequence, optionCount: 4)
         expect(!portrait.horizontalSequence && landscape.horizontalSequence, "sequence reflows with available aspect ratio")

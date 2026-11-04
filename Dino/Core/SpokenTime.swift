@@ -49,6 +49,41 @@ struct SpokenClockReadingHint: Equatable, Sendable {
     }
 }
 
+/// SwiftUI can probe a view with zero width before its final placement.
+/// Insets must never turn that temporary proposal into a negative clock frame.
+struct DinoTimeReadingClockLayout {
+    let width: CGFloat
+    let diameter: CGFloat
+    let height: CGFloat
+    let center: CGPoint
+
+    init(width proposedWidth: CGFloat, faceSize: CGFloat, minute: Int, language: String,
+         shape: AnalogClockShape, showsGuide: Bool, showsSpokenHint: Bool) {
+        let width = proposedWidth.isFinite ? max(1, proposedWidth) : 1
+        let face = faceSize.isFinite ? max(1, faceSize) : 1
+        let extent = SpokenClockGuideLayout.extent(shape: shape) * 2
+        let diameter: CGFloat
+        let height: CGFloat
+        if showsGuide {
+            diameter = max(1, width * 0.34)
+            height = width * 1.14
+        } else if showsSpokenHint {
+            diameter = min(max(1, width - 16), face * extent)
+            let drawingFace = diameter / extent
+            let bounds = SpokenClockGuideLayout.verticalBounds(minute: minute, language: language,
+                                                               shape: shape, faceSize: drawingFace)
+            height = drawingFace * (bounds.upperBound - bounds.lowerBound) + 24
+        } else {
+            diameter = min(face, max(1, width - 52))
+            height = diameter + 24
+        }
+        self.width = width
+        self.diameter = diameter
+        self.height = height
+        center = CGPoint(x: width / 2, y: showsGuide ? width * 0.59 : height / 2)
+    }
+}
+
 enum SpokenClockGuideLayout {
     static func extent(shape: AnalogClockShape, compact: Bool = false) -> Double {
         compact ? 0.84 : 0.86

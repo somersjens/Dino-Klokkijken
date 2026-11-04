@@ -1061,13 +1061,14 @@ struct DinoQuestionContext<Content: View>: View {
 
     @ViewBuilder var body: some View {
         if let maxHeight, #available(iOS 17, *) {
-            content()
-                .fixedSize(horizontal: false, vertical: true)
-                .visualEffect { effect, geometry in
-                    let fit = min(1, maxHeight / max(1, geometry.size.height))
-                    return effect.scaleEffect(x: fit, y: fit, anchor: .center)
-                }
-                .frame(height: maxHeight)
+            DinoFittedQuestionContextLayout(maximumHeight: maxHeight) {
+                content()
+                    .fixedSize(horizontal: false, vertical: true)
+                    .visualEffect { effect, geometry in
+                        let fit = min(1, maxHeight / max(1, geometry.size.height))
+                        return effect.scaleEffect(x: fit, y: fit, anchor: .center)
+                    }
+            }
         } else if maxHeight != nil {
             content()
                 .fixedSize(horizontal: false, vertical: true)
@@ -1078,6 +1079,25 @@ struct DinoQuestionContext<Content: View>: View {
         } else {
             content().fixedSize(horizontal: false, vertical: true)
         }
+    }
+}
+
+/// Measure the real illustration in the layout pass. Spare height belongs around the
+/// complete lesson, rather than becoming a gap between its illustration and answers.
+private struct DinoFittedQuestionContextLayout: Layout {
+    let maximumHeight: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard let content = subviews.first else { return .zero }
+        let natural = content.sizeThatFits(.init(width: proposal.width, height: nil))
+        return CGSize(width: proposal.width ?? natural.width, height: min(natural.height, maximumHeight))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard let content = subviews.first else { return }
+        let natural = content.sizeThatFits(.init(width: bounds.width, height: nil))
+        content.place(at: CGPoint(x: bounds.midX, y: bounds.midY), anchor: .center,
+                      proposal: .init(width: bounds.width, height: natural.height))
     }
 }
 
@@ -1109,5 +1129,43 @@ struct DinoQuestionComposition<Context: View, Answers: View>: View {
                 .readGeometry(for: CGFloat.self) { ceil($0.size.height) } action: { answerHeight = $0 }
         }
         .frame(width: layout.width)
+    }
+}
+
+/// Start newly inserted reading help only after the existing artwork has settled.
+struct DinoFeedbackReveal: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var visible = false
+    var delay = DinoQuestionFeedbackTiming.revealDelay
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(reduceMotion || visible ? 1 : 0)
+            .task(id: reduceMotion) {
+                guard !reduceMotion else { return }
+                do { try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000)) }
+                catch { return }
+                withAnimation(.easeOut(duration: DinoQuestionFeedbackTiming.reveal)) { visible = true }
+            }
+    }
+}
+
+/// Replace a reference without superimposing the old and corrected clock faces.
+struct DinoFeedbackReplacement<Original: View, Correction: View>: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let revealed: Bool
+    @ViewBuilder var original: () -> Original
+    @ViewBuilder var correction: () -> Correction
+
+    var body: some View {
+        ZStack {
+            original()
+                .opacity(revealed ? 0 : 1).accessibilityHidden(revealed)
+                .animation(reduceMotion ? nil : .easeOut(duration: DinoQuestionFeedbackTiming.replacementFadeOut), value: revealed)
+            correction()
+                .opacity(revealed ? 1 : 0).accessibilityHidden(!revealed)
+                .animation(reduceMotion ? nil : .easeOut(duration: DinoQuestionFeedbackTiming.reveal)
+                    .delay(revealed ? DinoQuestionFeedbackTiming.revealDelay : 0), value: revealed)
+        }
     }
 }

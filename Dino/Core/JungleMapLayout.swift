@@ -101,8 +101,8 @@ struct JungleMapLayout {
     static let levelSpacing: CGFloat = 175
     static let firstNodeY: CGFloat = 70
     static let chapterPositions: [CGFloat] = [0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5]
-    /// A broad right bend opens into a longer left sweep, then returns to centre.
-    static let levelPositions: [CGFloat] = [0.5, 0.67, 0.72, 0.59, 0.38, 0.27, 0.29, 0.34, 0.38, 0.5]
+    /// Alternate left and right through the centre, with a half-left approach to the boss.
+    static let levelPositions: [CGFloat] = [0.5, 0.28, 0.5, 0.72, 0.5, 0.28, 0.5, 0.72, 0.39, 0.5]
 
     /// Shared by the drawn trail and scenery clearance. Carry the direction
     /// through each stone; only actual bends and the two endpoints turn vertical.

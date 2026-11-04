@@ -13,6 +13,7 @@ struct DinoGameView: View {
     @State private var confirmExit = false
     @State private var personalizing = false
     @State private var showsDayPartSettings = false
+    @State private var lessonHeadingHeight: CGFloat = 0
     @State private var answerFrame: CGRect?
     @State private var answerReminder: DinoAnswerRequirement?
     @State private var reminderAttempt = 0
@@ -29,17 +30,24 @@ struct DinoGameView: View {
                 VStack(spacing: 0) {
                     gameChrome(size: g.size, compact: compact, horizontal: horizontalChrome)
                     GeometryReader { play in
-                        let layout = DinoGameLayout(width: width, height: max(1, play.size.height - 16),
+                        let headingSpace = horizontalChrome ? 0 : lessonHeadingHeight + 12
+                        let layout = DinoGameLayout(width: width, height: max(1, play.size.height - headingSpace - 16),
                                                     kind: session.question.kind,
                                                     optionCount: max(session.question.options.count, session.question.responses.count))
                         ScrollViewReader { proxy in
                             ScrollView {
-                                QuestionRenderer(session: session, theme: player.profile.clockTheme,
-                                                 width: layout.width, clockSize: layout.clockSize,
-                                                 wideLayout: layout.horizontal, compactLayout: layout.compact,
-                                                 answerClockSize: layout.answerClockSize,
-                                                 availableHeight: layout.height,
-                                                 horizontalSequence: layout.horizontalSequence)
+                                VStack(spacing: 12) {
+                                    if !horizontalChrome {
+                                        lessonHeading
+                                            .readGeometry(for: CGFloat.self) { ceil($0.size.height) } action: { lessonHeadingHeight = $0 }
+                                    }
+                                    QuestionRenderer(session: session, theme: player.profile.clockTheme,
+                                                     width: layout.width, clockSize: layout.clockSize,
+                                                     wideLayout: layout.horizontal, compactLayout: layout.compact,
+                                                     answerClockSize: layout.answerClockSize,
+                                                     availableHeight: layout.height,
+                                                     horizontalSequence: layout.horizontalSequence)
+                                }
                                     .padding(.vertical, 8)
                                     .frame(width: width)
                                     .id("question.top")
@@ -174,13 +182,17 @@ struct DinoGameView: View {
                                 practiceConfiguration: session.practice,
                                 help: showExample, action: pause)
                 .frame(width: horizontal ? min(390, size.width * 0.48) : size.width)
-            VStack(spacing: 8) {
-                if session.level.isBoss { crystals }
-                questionTitle(fontSize: 23)
-                    .frame(maxWidth: .infinity)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 16)
-            }
+            if horizontal { lessonHeading }
+        }
+    }
+
+    private var lessonHeading: some View {
+        VStack(spacing: 8) {
+            if session.level.isBoss { crystals }
+            questionTitle(fontSize: 23)
+                .frame(maxWidth: .infinity)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 16)
         }
     }
 

@@ -15,20 +15,12 @@ struct DinoTimeReadingClock: View {
 
     private var prefix: String { showsGuide ? "demo" : "question" }
     private var hasLabels: Bool { showsGuide }
-    private var diameter: CGFloat {
-        hasLabels ? width * 0.34 : showsSpokenHint ? min(width - 16, max(300, faceSize)) : min(faceSize, width - 52)
+    private var layout: DinoTimeReadingClockLayout {
+        DinoTimeReadingClockLayout(width: width, faceSize: faceSize, minute: time.minute, language: language,
+                                  shape: theme.analogShape, showsGuide: hasLabels, showsSpokenHint: showsSpokenHint)
     }
-    private var height: CGFloat {
-        if hasLabels { return width * 1.14 }
-        if showsSpokenHint {
-            let face = diameter / (SpokenClockGuideLayout.extent(shape: theme.analogShape) * 2)
-            let bounds = SpokenClockGuideLayout.verticalBounds(minute: time.minute, language: language,
-                                                               shape: theme.analogShape, faceSize: face)
-            return max(diameter, face * (bounds.upperBound - bounds.lowerBound)) + 16
-        }
-        return diameter + 24
-    }
-    private var center: CGPoint { CGPoint(x: width / 2, y: hasLabels ? width * 0.59 : height / 2) }
+    private var diameter: CGFloat { layout.diameter }
+    private var center: CGPoint { layout.center }
     private var labelTimes: [ClockTime] {
         stride(from: 0, to: 60, by: 5).map { ClockTime(hour: time.hour, minute: $0) }
     }
@@ -49,7 +41,7 @@ struct DinoTimeReadingClock: View {
                     }
                 }
             }
-            .frame(width: width, height: height)
+            .frame(width: layout.width, height: layout.height)
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("\(prefix).timeReading.clock")
@@ -64,11 +56,11 @@ struct DinoTimeReadingClock: View {
             .init(x: 0.10, y: 0.59), .init(x: 0.10, y: 0.41), .init(x: 0.24, y: 0.25)
         ]
         let point = points[DinoTimeReading.labelPosition(minute: minute) / 5]
-        return CGPoint(x: point.x * width, y: point.y * width)
+        return CGPoint(x: point.x * layout.width, y: point.y * layout.width)
     }
 
     private func labelWidth(_ minute: Int) -> CGFloat {
-        width * ([10, 15, 20, 40, 45, 50].contains(DinoTimeReading.labelPosition(minute: minute)) ? 0.20 : 0.25)
+        layout.width * ([10, 15, 20, 40, 45, 50].contains(DinoTimeReading.labelPosition(minute: minute)) ? 0.20 : 0.25)
     }
 
     private func guideLabel(_ minute: Int) -> some View {
@@ -78,12 +70,12 @@ struct DinoTimeReadingClock: View {
         let border = color.opacity(selected || highContrast ? 1 : 0.28)
         let background = color.opacity(highContrast ? 0.10 : 0.08)
         return Text(verbatim: phrase)
-            .font(.system(size: max(10, min(16, width * 0.037)), weight: .bold, design: .rounded))
+            .font(.system(size: max(10, min(16, layout.width * 0.037)), weight: .bold, design: .rounded))
             .foregroundStyle(color)
             .multilineTextAlignment(.center)
             .lineLimit(3).minimumScaleFactor(0.75)
             .padding(.horizontal, 4)
-            .frame(width: labelWidth(minute), height: width * 0.14)
+            .frame(width: labelWidth(minute), height: layout.width * 0.14)
             .background(background, in: RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(border, lineWidth: selected ? 2.5 : 1))
             .position(labelCenter(minute))
@@ -112,7 +104,7 @@ struct DinoTimeReadingClock: View {
                 let start = ClockHandHintGeometry.labelCenter(from: countCenter, toward: direction, labelSize: measured, gap: 2)
                 let end = ClockHandHintGeometry.labelCenter(from: phraseCenter,
                     toward: CGPoint(x: -direction.x, y: -direction.y),
-                    labelSize: CGSize(width: labelWidth(minute), height: width * 0.14), gap: 1)
+                    labelSize: CGSize(width: labelWidth(minute), height: layout.width * 0.14), gap: 1)
                 var connector = Path()
                 connector.move(to: start); connector.addLine(to: end)
                 context.stroke(connector, with: .color(DinoStyle.ink.opacity(0.45)), lineWidth: 1.2)

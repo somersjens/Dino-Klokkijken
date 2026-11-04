@@ -77,6 +77,7 @@ struct DigitalClock: View {
     var feedbackCorrect: Bool? = nil
     /// Editable clocks keep their pointers clear of the future answer outline.
     var reservesFeedbackOutline = false
+    var feedbackRevealDelay = DinoQuestionFeedbackTiming.revealDelay
     private var displaysHandHints: Bool { showHandHints || readingAssistance }
     private var hintHeight: CGFloat { displaysHandHints || reservesHandHintSpace ? Self.handHintHeight * min(1, fontSize / 30) : 0 }
     private var reading: DigitalClockReading {
@@ -146,6 +147,7 @@ struct DigitalClock: View {
                         .inset(by: -2)
                         .stroke(feedbackCorrect ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : DinoStyle.wrong(highContrast),
                                 lineWidth: 4)
+                        .modifier(DinoFeedbackReveal(delay: feedbackRevealDelay))
                 }
             }
         }
@@ -179,6 +181,7 @@ struct DigitalClock: View {
                         .offset(y: -(48 + (reservesFeedbackOutline || feedbackCorrect != nil ? 8 : 2)) * scale
                                 - (showsDisplay ? fontSize * (theme.numerals == .digital ? 0.3 : 0.22) : 0))
                         .accessibilityHidden(true)
+                        .modifier(DinoFeedbackReveal(delay: feedbackRevealDelay))
                 }
             }
     }
@@ -311,6 +314,7 @@ struct DigitalClockControl: View {
     var notation: DigitalHourNotation? = nil
     var controlsBelow = false
     var displayHeight: CGFloat? = nil
+    var feedbackRevealDelay = DinoQuestionFeedbackTiming.revealDelay
     private var displaysHandHints: Bool { showHandHints || readingAssistance }
     private var time: ClockTime { ClockTime(hour: hour, minute: minute) }
     private var reading: DigitalClockReading {
@@ -323,7 +327,8 @@ struct DigitalClockControl: View {
             VStack(spacing: 12) {
                 DinoQuestionContext(maxHeight: displayHeight) {
                     DigitalClock(time: time, theme: theme, fontSize: fontSize, showHandHints: displaysHandHints,
-                                 notation: notation, feedbackCorrect: feedbackCorrect, reservesFeedbackOutline: true)
+                                 notation: notation, feedbackCorrect: feedbackCorrect, reservesFeedbackOutline: true,
+                                 feedbackRevealDelay: feedbackRevealDelay)
                 }
                     .frame(height: displayHeight)
                     .accessibilityIdentifier(valueIdentifier)
@@ -342,6 +347,7 @@ struct DigitalClockControl: View {
                 .opacity(controlsEnabled ? 1 : 0)
                 .accessibilityHidden(!controlsEnabled)
                 .disabled(!controlsEnabled || feedbackCorrect != nil)
+                .animation(reduceMotion ? nil : .easeOut(duration: DinoQuestionFeedbackTiming.controlExit), value: controlsEnabled)
             }
             .environment(\.layoutDirection, .leftToRight)
         } else { legacyControl }
@@ -351,7 +357,8 @@ struct DigitalClockControl: View {
         DigitalClock(time: time, theme: theme, fontSize: fontSize,
                      showHandHints: readingAssistance && !showHandHints,
                      reservesHandHintSpace: !showHandHints, exposesControlFields: true,
-                     notation: notation, feedbackCorrect: feedbackCorrect, reservesFeedbackOutline: true)
+                     notation: notation, feedbackCorrect: feedbackCorrect, reservesFeedbackOutline: true,
+                     feedbackRevealDelay: feedbackRevealDelay)
             .environment(\.dinoClockReadingAssistance, false)
             .accessibilityIdentifier(valueIdentifier)
             // In examples the reading pointers share the upper controls' space.
@@ -362,12 +369,14 @@ struct DigitalClockControl: View {
                     ForEach(DigitalClockField.allCases, id: \.self) { field in
                         if let anchor = anchors[field] {
                             let center = geometry[anchor].midX
-                            if controlsEnabled {
+                            Group {
                                 arrow(field: field, direction: 1)
                                     .position(x: center, y: 22)
                                 arrow(field: field, direction: -1)
                                     .position(x: center, y: geometry.size.height - 22)
                             }
+                            .opacity(controlsEnabled ? 1 : 0)
+                            .accessibilityHidden(!controlsEnabled)
                             if showHandHints {
                                 ClockHintBadgeArrow(number: field == .minutes ? 2 : 1,
                                                     badge: CGPoint(x: 15, y: 14.5),
@@ -387,7 +396,7 @@ struct DigitalClockControl: View {
                 .accessibilityHidden(!controlsEnabled)
                 .disabled(!controlsEnabled)
                 .allowsHitTesting(controlsEnabled)
-                .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: controlsEnabled)
+                .animation(reduceMotion ? nil : .easeOut(duration: DinoQuestionFeedbackTiming.controlExit), value: controlsEnabled)
             }
             .disabled(feedbackCorrect != nil)
             .accessibilityElement(children: .contain)

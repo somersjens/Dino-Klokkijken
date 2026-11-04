@@ -75,9 +75,6 @@ struct DinoMinutesBetweenTimeline: View {
     private var expandedY: CGFloat { compact ? 50 : 54 }
     private var expandedHeight: CGFloat { expandedY + 74 }
     private var trackInk: Color { highContrast ? DinoStyle.deepGreen : Color(dinoHex: 0x9ABF78) }
-    private var sum: String {
-        "\(segments.map(String.init).joined(separator: " + ")) = \(DinoTimeWords.minutes(total, language: language))"
-    }
 
     private func segmentWidths(length: CGFloat) -> [CGFloat] {
         let minimum = min(56, length / CGFloat(segments.count))
@@ -172,13 +169,6 @@ struct DinoMinutesBetweenTimeline: View {
             }
             .frame(height: restingHeight + (expandedHeight - restingHeight) * expansion)
             .clipped()
-            if showsHint && showsAnswer {
-                Text(verbatim: sum)
-                    .font(.system(size: compact ? 12 : 14, weight: .bold, design: .rounded))
-                    .monospacedDigit().multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityIdentifier("\(prefix).minutesBetween.conversion")
-            }
         }
         .foregroundStyle(DinoStyle.ink)
         .accessibilityElement(children: .contain)

@@ -62,7 +62,8 @@ struct DinoRootView: View {
                 if environment["DINO_TEST_SUITE"] != nil,
                    let raw = environment["DINO_TEST_PRACTICE_TYPE"],
                    let type = DinoPracticeQuestion(rawValue: raw) {
-                    let configuration = DinoPracticeConfiguration(time: .minutes, order: .specific(type))
+                    let time = environment["DINO_TEST_PRACTICE_TIME"].flatMap(DinoPracticeTime.init(rawValue:)) ?? .minutes
+                    let configuration = DinoPracticeConfiguration(time: time, order: .specific(type))
                     let seed = environment["DINO_TEST_SEED"].flatMap(UInt64.init) ?? 42
                     var generator = DinoPracticeGenerator(configuration: configuration, seed: seed,
                                                            language: LanguageManager.shared.effective.code)

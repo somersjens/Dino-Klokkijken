@@ -115,12 +115,8 @@ struct DinoExpandedQuestionView: View {
         case .spokenTime:
             EmptyView()
         case .trueFalse:
-            if isDemonstration || session.showsSpokenClockHints {
-                spokenReadingClock(q.target, identifier: isDemonstration ? "demo.targetClock" : "question.targetClock")
-            } else {
-                AnalogClock(time: q.target, theme: theme, size: min(clockSize, lessonWidth - 24))
-                    .accessibilityIdentifier("question.targetClock")
-            }
+            spokenReadingClock(q.target, identifier: isDemonstration ? "demo.targetClock" : "question.targetClock",
+                               showsGuide: isDemonstration || session.showsSpokenClockHints)
         case .sortTimes:
             if isDemonstration {
                 Text("dino.expanded.sameDay").font(.subheadline).multilineTextAlignment(.center)
@@ -179,12 +175,10 @@ struct DinoExpandedQuestionView: View {
 
     private var timeChangeClockFont: CGFloat { isDemonstration ? 32 : min(wideLayout ? 32 : 48, lessonWidth * 0.14) }
 
-    private func spokenReadingClock(_ time: ClockTime, identifier: String) -> some View {
-        let size = min(clockSize, lessonWidth - 24)
-        return AnalogClock(time: time, theme: theme, size: size, spokenHintLanguage: code)
-            // The guide's asymmetric padding can be shorter than its square accessibility frame.
-            // Reserve both so fitting and rotation keep the entire clock below the title.
-            .frame(width: size, height: size)
+    private func spokenReadingClock(_ time: ClockTime, identifier: String, showsGuide: Bool = true) -> some View {
+        let envelope = clockSize * SpokenClockGuideLayout.extent(shape: theme.analogShape) * 2
+        let size = min(showsGuide ? envelope : clockSize, lessonWidth - 24)
+        return AnalogClock(time: time, theme: theme, size: size, spokenHintLanguage: showsGuide ? code : nil)
             .accessibilityIdentifier(identifier)
             .environment(\.dinoClockReadingAssistance, false)
     }
@@ -495,14 +489,13 @@ struct DinoExpandedQuestionView: View {
         return VStack(spacing: 12) {
         DinoClockSettingColumns(width: width, stageHeight: face + 20) {
             VStack(spacing: 8) {
-                ZStack {
+                DinoFeedbackReplacement(revealed: advanceComparing) {
                     AnalogClock(time: start, theme: theme, size: face)
                         .accessibilityIdentifier("question.startClock")
-                        .opacity(advanceComparing ? 0 : 1).accessibilityHidden(advanceComparing)
+                } correction: {
                     AnalogClock(time: target, theme: theme, size: face).padding(10)
                         .modifier(ClockAnswerOutline(visible: true, correct: true))
                         .accessibilityIdentifier("question.correctClock")
-                        .opacity(advanceComparing ? 1 : 0).accessibilityHidden(!advanceComparing)
                 }
                 Text(verbatim: "+\(duration)")
                     .font(.system(size: 15, weight: .bold, design: .rounded))
