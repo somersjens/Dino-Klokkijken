@@ -518,8 +518,8 @@ struct CustomizationMetrics {
     var controlHeight: CGFloat { spacious ? 60 : 44 }
 
     init(size: CGSize = .zero) {
-        spacious = size.width >= 650
-        sideBySide = size.width >= 900 && size.height < 900
+        spacious = size.width >= 650 && size.height >= 500
+        sideBySide = (size.width >= 500 && size.height < 500) || (size.width >= 900 && size.height < 900)
     }
 }
 
@@ -707,6 +707,7 @@ struct DinoClockControlButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .dinoSelectSound(pressed: configuration.isPressed)
             .font(.system(size: compact ? 15 : 17, weight: .bold, design: .rounded))
             .foregroundStyle(isEnabled ? (selected ? Color.white : DinoStyle.ink) : DinoStyle.disabledInk(highContrast))
             .lineLimit(1)
@@ -734,8 +735,10 @@ struct DinoButtonStyle: ButtonStyle {
     var compact = false
     var customization = false
     var inkLabel = false
+    var playsSelectSound = true
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .dinoSelectSound(pressed: configuration.isPressed, enabled: playsSelectSound)
             .font(.system(size: customization ? 17 * customizationScale : compact ? 17 : 20, weight: .bold, design: .rounded))
             .foregroundStyle(inkLabel || color == DinoStyle.green ? DinoStyle.ink : .white)
             .padding(.horizontal, compact ? 16 : 24)
@@ -757,6 +760,7 @@ struct DinoSecondaryButtonStyle: ButtonStyle {
     var outlined = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .dinoSelectSound(pressed: configuration.isPressed)
             .font(.system(size: 17, weight: .bold, design: .rounded))
             .foregroundStyle(DinoStyle.ink)
             .padding(.horizontal, 20)
@@ -770,10 +774,21 @@ struct DinoSecondaryButtonStyle: ButtonStyle {
 
 /// Disabled choices retain their contrast so the child can inspect the answer.
 struct DinoAnswerButtonStyle: ButtonStyle {
+    var playsSelectSound = true
     func makeBody(configuration: Configuration) -> some View {
         // Press feedback must not add a second transform while a rejected answer's
         // contents and its siblings animate into their reading-help layout.
-        configuration.label.opacity(configuration.isPressed ? 0.85 : 1)
+        configuration.label
+            .dinoSelectSound(pressed: configuration.isPressed, enabled: playsSelectSound)
+            .opacity(configuration.isPressed ? 0.85 : 1)
+    }
+}
+
+/// Looks like the plain style and plays the menu click.
+struct DinoPlainButtonStyle: ButtonStyle {
+    var playsSelectSound = true
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.dinoSelectSound(pressed: configuration.isPressed, enabled: playsSelectSound)
     }
 }
 
@@ -792,7 +807,7 @@ struct DinoIconButton: View {
                 .overlay(RoundedRectangle(cornerRadius: 17).stroke(highContrast ? DinoStyle.ink : .white, lineWidth: highContrast ? 3 : 1.5))
                 .shadow(color: DinoStyle.ink.opacity(0.08), radius: 8, y: 3)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(DinoPlainButtonStyle())
     }
 }
 
@@ -807,7 +822,23 @@ struct DinoCard: ViewModifier {
     }
 }
 
-extension View { func dinoCard(padding: CGFloat = 20) -> some View { modifier(DinoCard(padding: padding)) } }
+extension View {
+    func dinoCard(padding: CGFloat = 20) -> some View {
+        modifier(DinoCard(padding: padding))
+    }
+
+    /// Plays the menu click when a control is pressed down.
+    /// A view that exists only while pressed is more reliable than observing the button style.
+    func dinoSelectSound(pressed: Bool, enabled: Bool = true) -> some View {
+        background {
+            if pressed && enabled {
+                Color.clear.frame(width: 0, height: 0).onAppear {
+                    DinoAnswerFeedback.shared.playSelect()
+                }
+            }
+        }
+    }
+}
 
 /// Shared reward art keeps the result, map nodes and star totals visually consistent.
 struct DinoRewardStar: View {

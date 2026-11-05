@@ -97,7 +97,7 @@ struct DinoFriendsView: View {
                                     LazyVStack(spacing: 12) {
                                         ForEach(manager.friends) { friend in
                                             NavigationLink(value: friend.id) { FriendListRow(friend: friend) }
-                                                .buttonStyle(.plain).accessibilityIdentifier("friends.profile.\(friend.id)")
+                                                .buttonStyle(DinoPlainButtonStyle()).accessibilityIdentifier("friends.profile.\(friend.id)")
                                         }
                                     }
                                     Button { manager.refresh(); manager.scheduleSync(force: true) } label: {
@@ -110,9 +110,15 @@ struct DinoFriendsView: View {
                                 Text("dino.friends.reportHelp").font(.footnote)
                             }
                             if let key = manager.actionMessageKey { Text(LocalizedStringKey(key)).font(.footnote).accessibilityIdentifier("friends.error") }
-                            Button("dino.friends.privacy") { showsPrivacy = true }.frame(minHeight: 44)
+                            Button("dino.friends.privacy") {
+                                DinoAnswerFeedback.shared.playSelect()
+                                showsPrivacy = true
+                            }.frame(minHeight: 44)
                             if manager.enabled {
-                                Button("dino.friends.disable") { manager.disable() }.frame(minHeight: 44)
+                                Button("dino.friends.disable") {
+                                    DinoAnswerFeedback.shared.playSelect()
+                                    manager.disable()
+                                }.frame(minHeight: 44)
                             }
                         }.padding(20).frame(maxWidth: 560).frame(maxWidth: .infinity)
                     }
@@ -177,6 +183,7 @@ struct DinoFriendsView: View {
     private func consentToggle(_ title: LocalizedStringKey, isOn: Bool, enabled: Bool = true, epoch: Binding<Int>, identifier: String, change: @escaping (Bool) -> Void) -> some View {
         Toggle(isOn: Binding(get: { isOn }, set: { allowed in
             guard allowed != isOn else { return }
+            DinoAnswerFeedback.shared.playSelect()
             if allowed { epoch.wrappedValue += 1 }
             change(allowed)
         })) {
@@ -319,13 +326,13 @@ struct FriendMapAvatars: View {
             ForEach(group.visibleIDs, id: \.self) { id in
                 if let friend = friends.first(where: { $0.id == id }) {
                     Button { openFriend(id) } label: { FriendAvatar(friend: friend, size: 28).frame(width: 44, height: 44) }
-                        .buttonStyle(.plain)
+                        .buttonStyle(DinoPlainButtonStyle())
                         .accessibilityIdentifier("map.friend.\(id)")
                 }
             }
             if group.additionalCount > 0 {
                 Button(action: openMore) { Text(verbatim: "+\(group.additionalCount)").font(.caption.bold()).frame(minWidth: 44, minHeight: 44) }
-                    .buttonStyle(.plain)
+                    .buttonStyle(DinoPlainButtonStyle())
             }
         }.padding(.horizontal, 3).background(.white.opacity(0.95), in: Capsule())
     }
@@ -357,7 +364,7 @@ struct LevelFriendsView<Play: View>: View {
                         .font(.system(size: 15, weight: .bold, design: .rounded))
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(DinoPlainButtonStyle())
                 .foregroundStyle(theme.ink)
                 .accessibilityIdentifier("level.friends.more")
             }
@@ -379,7 +386,10 @@ struct LevelFriendsView<Play: View>: View {
                 NavigationStack {
                     FriendProfileView(friendID: id)
                         .toolbar { ToolbarItem(placement: .confirmationAction) {
-                            Button("dino.done") { socialSheet = nil }.accessibilityIdentifier("friend.close")
+                            Button("dino.done") {
+                                DinoAnswerFeedback.shared.playSelect()
+                                socialSheet = nil
+                            }.accessibilityIdentifier("friend.close")
                         } }
                 }.gameEnvironment()
             }
@@ -446,7 +456,7 @@ struct LevelFriendsView<Play: View>: View {
             }.font(.system(size: 13, weight: .bold, design: .rounded))
                 .padding(.vertical, 5).frame(minHeight: 44)
                 .contentShape(Rectangle())
-        }.buttonStyle(.plain)
+        }.buttonStyle(DinoPlainButtonStyle())
             .accessibilityIdentifier("level.friend.\(friend.id)")
     }
 
@@ -504,21 +514,30 @@ struct DinoSocialPrivacyView: View {
                     Text("dino.friends.reportHelp").font(.body)
                     // Developer-owned URLs are configurable; never invent contact details.
                     if let url = localizedURL(for: .contact) {
-                        Button("dino.friends.contact") { parentPage = .contact }.frame(minHeight: 44)
+                        Button("dino.friends.contact") {
+                            DinoAnswerFeedback.shared.playSelect()
+                            parentPage = .contact
+                        }.frame(minHeight: 44)
                             .accessibilityIdentifier("privacy.contact")
                             .accessibilityValue(Text(verbatim: url.absoluteString))
                     } else if let contact = Bundle.main.object(forInfoDictionaryKey: "DinoSafetyContact") as? String, !contact.isEmpty {
                         Text(verbatim: contact).textSelection(.enabled)
                     } else { Text("dino.friends.contactMissing").font(.footnote) }
                     if let url = localizedURL(for: .privacy) {
-                        Button("dino.friends.fullPrivacy") { parentPage = .privacy }.frame(minHeight: 44)
+                        Button("dino.friends.fullPrivacy") {
+                            DinoAnswerFeedback.shared.playSelect()
+                            parentPage = .privacy
+                        }.frame(minHeight: 44)
                             .accessibilityIdentifier("privacy.policy")
                             .accessibilityValue(Text(verbatim: url.absoluteString))
                     }
                 }.padding(24).frame(maxWidth: 560).frame(maxWidth: .infinity)
             }.background(JungleBackground(quiet: true))
                 .navigationTitle(Text(verbatim: L("dino.friends.privacy")))
-                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("dino.done") { dismiss() } } }
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("dino.done") {
+                    DinoAnswerFeedback.shared.playSelect()
+                    dismiss()
+                } } }
                 .sheet(item: $parentPage, onDismiss: {
                     if let url = approvedURL { approvedURL = nil; openURL(url) }
                 }) { page in

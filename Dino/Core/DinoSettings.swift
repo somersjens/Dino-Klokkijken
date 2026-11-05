@@ -4,7 +4,12 @@ import Combine
 /// Device preferences stay local, including the opt-in for cloud progress.
 @MainActor
 final class DinoSettings: ObservableObject {
-    @Published var soundEffectsEnabled: Bool { didSet { save(soundEffectsEnabled, key: "soundEffects") } }
+    @Published var soundEffectsEnabled: Bool {
+        didSet {
+            save(soundEffectsEnabled, key: "soundEffects")
+            DinoAnswerFeedback.shared.setSoundEnabled(soundEffectsEnabled)
+        }
+    }
     @Published var speakQuestionTitles: Bool { didSet { save(speakQuestionTitles, key: "speakQuestionTitle") } }
     @Published var hapticsEnabled: Bool { didSet { save(hapticsEnabled, key: "haptics") } }
     @Published var highContrastEnabled: Bool { didSet { save(highContrastEnabled, key: "highContrast") } }
@@ -40,6 +45,7 @@ final class DinoSettings: ObservableObject {
         practiceTime = DinoPracticeTime(storageKey: resolved.string(forKey: "dino.settings.practiceTime") ?? "") ?? .whole
         practiceOrder = DinoPracticeOrder(storageKey: resolved.string(forKey: "dino.settings.practiceOrder") ?? "") ?? .ascending
         dayPartSchedule = resolved.string(forKey: "dino.settings.dayParts").flatMap(DinoDayPartSchedule.init(storageKey:)) ?? .standard
+        DinoAnswerFeedback.shared.setSoundEnabled(soundEffectsEnabled)
     }
 
     private func save(_ value: Bool, key: String) { defaults.set(value, forKey: "dino.settings." + key) }

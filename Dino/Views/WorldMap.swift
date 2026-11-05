@@ -88,8 +88,10 @@ struct WorldMap: View {
         GeometryReader { geometry in
             let landscape = geometry.size.width > geometry.size.height
             let compact = verticalSizeClass == .compact
-            let mapScale = geometry.size.width >= 600 ? min(1.55, max(1.2, geometry.size.width / 700)) : 1
-            let sceneWidth = geometry.size.width / mapScale
+            let shortSide = min(geometry.size.width, geometry.size.height)
+            let mapScale = shortSide >= 600 ? min(1.55, max(1.2, shortSide / 700)) : 1
+            // The scroll view extends behind both landscape safe-area strips.
+            let sceneWidth = (geometry.size.width + geometry.safeAreaInsets.leading + geometry.safeAreaInsets.trailing) / mapScale
             // Use the actual first layout, including iPad scale. Measuring an
             // initial 128pt placeholder used to shift the whole scroll content.
             let floatingHUDHeight = (compact ? 82.0 : 128.0) * (compact ? 1 : min(1.9, max(1, geometry.size.width / 390), max(1, geometry.size.height / 480)))
@@ -100,7 +102,8 @@ struct WorldMap: View {
                 artworkReady: readyWorlds.contains((standingLevel - 1) / 10 + 1),
                 ready: { initialPositionReady = true },
                 focused: { arrivedFocusRequest = $0 })
-            let routeTopClearance = max(0, min(200, (min(600, sceneWidth) - 36) * 0.37) - 82)
+            let actorLimit = landscape ? min(200, max(96, (geometry.size.height - floatingHUDHeight) * 0.48 / mapScale)) : 200
+            let routeTopClearance = max(0, min(actorLimit, (min(600, sceneWidth) - 36) * 0.37) - 82)
             ZStack {
                 Color(dinoHex: DinoWorldCatalog.worlds.last!.ground).ignoresSafeArea()
                 if initialArtworkReady {
@@ -120,7 +123,7 @@ struct WorldMap: View {
                                     }.padding(.horizontal, 18).padding(.bottom, 2)
                                         .frame(maxWidth: 600).frame(maxWidth: .infinity)
                                         .readGeometry(for: CGFloat.self) { $0.size.height } action: { landscapeRouteOffset = $0 }
-                                    mapRoute(topClearance: routeTopClearance, viewportObserver: viewportObserver)
+                                    mapRoute(topClearance: routeTopClearance, actorLimit: actorLimit, viewportObserver: viewportObserver)
                                 }.padding(.top, (floatingHUDHeight + geometry.safeAreaInsets.top) / mapScale)
                                     .background {
                                         MapScenery(worldID: 1, viewportHeight: geometry.size.height) {
@@ -133,7 +136,7 @@ struct WorldMap: View {
                                         $0.frame(in: .named("adventure.map.viewport")).minY <= floatingHUDHeight + 24
                                     } action: { updateVisibleWorld(1, aboveHUD: $0) }
                                 ForEach(DinoWorldCatalog.worlds.dropFirst()) { world in
-                                    WorldChapter(world: world, topClearance: routeTopClearance,
+                                    WorldChapter(world: world, topClearance: routeTopClearance, actorLimit: actorLimit,
                                                  viewportHeight: geometry.size.height, hintedLevel: guidedLevel,
                                                  viewportObserver: viewportObserver, showsDino: showsMapDino,
                                                  standingLevel: standingLevel, worldTransition: worldTransition,
@@ -168,7 +171,8 @@ struct WorldMap: View {
                             } catch { /* A new tap or leaving the map cancels the previous cue. */ }
                         }
                         .ignoresSafeArea(edges: [.top, .bottom, .horizontal])
-                    }.overlay(alignment: .top) {
+                    }.frame(width: geometry.size.width)
+                        .overlay(alignment: .top) {
                         AdventureHeader(personalizerChanged: { showsPersonalizer = $0 },
                                         level: max(1, player.profile.dinoLevel),
                                         stars: player.profile.totalStars, worldID: worldsAboveHUD.max() ?? 1,
@@ -181,6 +185,7 @@ struct WorldMap: View {
                                             focusRequest += 1
                                         },
                                         openStars: { showsStars = true }, action: openSettings)
+                            .frame(width: geometry.size.width)
                             .readGeometry(for: CGFloat.self) { $0.size.height } action: {
                                 hudHeightChanged($0)
                             }
@@ -316,7 +321,10 @@ struct WorldMap: View {
             NavigationStack {
                 FriendProfileView(friendID: friend.id)
                     .toolbar { ToolbarItem(placement: .confirmationAction) {
-                        Button("dino.done") { selectedFriend = nil }.accessibilityIdentifier("friend.close")
+                        Button("dino.done") {
+                            DinoAnswerFeedback.shared.playSelect()
+                            selectedFriend = nil
+                        }.accessibilityIdentifier("friend.close")
                     } }
             }.environmentObject(friends).gameEnvironment()
         }
@@ -361,7 +369,7 @@ struct WorldMap: View {
             }
             .overlay(Capsule().strokeBorder(.white.opacity(0.9), lineWidth: 2))
             .shadow(color: DinoStyle.deepGreen.opacity(0.2), radius: 3, y: 4)
-        }.buttonStyle(.plain).accessibilityIdentifier("map.friends")
+        }.buttonStyle(DinoPlainButtonStyle()).accessibilityIdentifier("map.friends")
     }
 
     private var bossShortcut: some View {
@@ -378,11 +386,11 @@ struct WorldMap: View {
             }.padding(12).background(.white.opacity(highContrast ? 1 : 0.8), in: RoundedRectangle(cornerRadius: 23))
                 .overlay(RoundedRectangle(cornerRadius: 23).stroke(highContrast ? DinoStyle.ink : DinoStyle.green.opacity(0.5), lineWidth: highContrast ? 3 : 1.5))
                 .shadow(color: DinoStyle.ink.opacity(0.05), radius: 10, y: 4)
-        }.buttonStyle(.plain).accessibilityIdentifier("map.bossShortcut")
+        }.buttonStyle(DinoPlainButtonStyle()).accessibilityIdentifier("map.bossShortcut")
     }
 
-    private func mapRoute(topClearance: CGFloat, viewportObserver: MapViewportObserver) -> some View {
-        routeNodes(viewportObserver: viewportObserver).padding(.horizontal, 18).frame(maxWidth: 600)
+    private func mapRoute(topClearance: CGFloat, actorLimit: CGFloat, viewportObserver: MapViewportObserver) -> some View {
+        routeNodes(actorLimit: actorLimit, viewportObserver: viewportObserver).padding(.horizontal, 18).frame(maxWidth: 600)
             .frame(maxWidth: .infinity)
             .frame(height: WorldRouteTrail.jungleRouteHeight(topClearance: topClearance))
     }
@@ -411,10 +419,10 @@ struct WorldMap: View {
             .background { WorldMapEndingLandscape().equatable() }
     }
 
-    private func routeNodes(viewportObserver: MapViewportObserver) -> some View {
+    private func routeNodes(actorLimit: CGFloat, viewportObserver: MapViewportObserver) -> some View {
         GeometryReader { g in
             let standingLevel = self.standingLevel
-            let dinoSize = min(200, g.size.width * 0.37)
+            let dinoSize = min(actorLimit, g.size.width * 0.37)
             let topClearance = max(0, dinoSize - 82)
             let points = JungleMapLayout.levelPositions.indices.map { routePoint($0, width: g.size.width, topClearance: topClearance) }
             ZStack(alignment: .topLeading) {
@@ -1400,6 +1408,7 @@ private struct WorldChapter: View, Equatable {
     @EnvironmentObject private var player: DinoPlayer
     let world: DinoWorld
     let topClearance: CGFloat
+    let actorLimit: CGFloat
     let viewportHeight: CGFloat
     let hintedLevel: Int?
     let viewportObserver: MapViewportObserver
@@ -1415,7 +1424,7 @@ private struct WorldChapter: View, Equatable {
     private let positions = WorldRouteTrail.chapterPositions
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.world == rhs.world && lhs.topClearance == rhs.topClearance &&
+        lhs.world == rhs.world && lhs.topClearance == rhs.topClearance && lhs.actorLimit == rhs.actorLimit &&
         lhs.viewportHeight == rhs.viewportHeight && lhs.hintedLevel == rhs.hintedLevel && lhs.showsDino == rhs.showsDino &&
         lhs.standingLevel == rhs.standingLevel && lhs.worldTransition == rhs.worldTransition &&
         lhs.worldJumpStartedAt == rhs.worldJumpStartedAt && lhs.worldJumpFinished == rhs.worldJumpFinished &&
@@ -1441,7 +1450,7 @@ private struct WorldChapter: View, Equatable {
                 VStack(spacing: 0) {
                     ForEach(Array(world.levels.enumerated()), id: \.element) { index, id in
                         let level = DinoLevelCatalog.level(id)!
-                        let dinoSize = min(200, geometry.size.width * 0.37)
+                        let dinoSize = min(actorLimit, geometry.size.width * 0.37)
                         ZStack {
                             LevelNode(level: level, record: player.profile.record(id),
                                       unlocked: player.profile.isUnlocked(id),
@@ -1514,25 +1523,51 @@ struct LevelInfoPanel: View {
     var openPractice: (DinoPracticeConfiguration) -> Void
     private var theme: LevelStartTheme { .init(worldID: level.worldID) }
     var body: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                LevelDetailsDisclosure(level: level, theme: theme, highContrast: highContrast, openPractice: openPractice)
-                LevelFriendsView(levelID: level.id, theme: theme) {
-                    Button(action: start) { Label("dino.play", systemImage: "play.fill") }
-                        .buttonStyle(DinoButtonStyle(color: theme.accent, inkLabel: true))
-                        .accessibilityIdentifier("level.play")
+        GeometryReader { geometry in
+            let landscape = geometry.size.width > geometry.size.height
+            Group {
+                if landscape {
+                    HStack(alignment: .top, spacing: 16) {
+                        ScrollView {
+                            LevelDetailsDisclosure(level: level, theme: theme, highContrast: highContrast,
+                                                   expanded: true, openPractice: openPractice)
+                        }.bouncesOnlyWhenNeeded()
+                            .accessibilityIdentifier("level.outlineViewport")
+                            .frame(width: (geometry.size.width - 48) * 0.52)
+                        ScrollView { levelActions(compact: true) }
+                            .bouncesOnlyWhenNeeded()
+                            .accessibilityIdentifier("level.actionsViewport")
+                    }.padding(16)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 12) {
+                            LevelDetailsDisclosure(level: level, theme: theme, highContrast: highContrast,
+                                                   openPractice: openPractice)
+                            levelActions(compact: false)
+                        }
+                        .padding(26).frame(maxWidth: 450).frame(maxWidth: .infinity, alignment: .top)
+                    }.bouncesOnlyWhenNeeded()
                 }
-                Button { if let close { close() } else { dismiss() } } label: {
-                    Label("dino.map", systemImage: "map.fill")
-                }
-                    .buttonStyle(DinoSecondaryButtonStyle())
-                    .accessibilityIdentifier("level.map")
             }
-            .padding(26).frame(maxWidth: 450).frame(maxWidth: .infinity, alignment: .top)
+            .background(LevelStartBackground(theme: theme)).foregroundStyle(DinoStyle.ink)
         }
-        .bouncesOnlyWhenNeeded()
-        .background(LevelStartBackground(theme: theme)).foregroundStyle(DinoStyle.ink)
     }
+
+    private func levelActions(compact: Bool) -> some View {
+        VStack(spacing: 12) {
+            LevelFriendsView(levelID: level.id, theme: theme) {
+                Button(action: start) { Label("dino.play", systemImage: "play.fill") }
+                    .buttonStyle(DinoButtonStyle(color: theme.accent, compact: compact, inkLabel: true))
+                    .accessibilityIdentifier("level.play")
+            }
+            Button { if let close { close() } else { dismiss() } } label: {
+                Label("dino.map", systemImage: "map.fill")
+            }
+                .buttonStyle(DinoSecondaryButtonStyle())
+                .accessibilityIdentifier("level.map")
+        }
+    }
+
 }
 
 /// All start-card surfaces follow the selected level, including replays in an earlier world.
@@ -1572,14 +1607,18 @@ private struct LevelDetailsDisclosure: View {
     let level: LevelConfiguration
     let theme: LevelStartTheme
     let highContrast: Bool
+    var expanded = false
     var openPractice: (DinoPracticeConfiguration) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var open = false
     @State private var retainsDetails = false
 
+    private var isOpen: Bool { expanded || open }
+
     var body: some View {
         VStack(spacing: 0) {
             Button {
+                guard !expanded else { return }
                 if !open { retainsDetails = true }
                 withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.34)) { open.toggle() }
             } label: {
@@ -1594,37 +1633,42 @@ private struct LevelDetailsDisclosure: View {
                         .frame(maxWidth: .infinity)
                         .shadow(color: theme.ground, radius: 0, y: 1)
                         .accessibilityIdentifier("level.number")
+                    if !expanded {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 14, weight: .bold))
                         .rotationEffect(.degrees(open ? 90 : 0))
                         .frame(width: 30, height: 30)
                         .background(theme.shade.opacity(0.08), in: Circle())
                         .accessibilityHidden(true)
+                    }
                 }
                 .foregroundStyle(theme.ink)
                 .padding(.horizontal, 18)
-                .frame(minHeight: 64)
+                .frame(minHeight: expanded ? 52 : 64)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(DinoPlainButtonStyle())
+            .allowsHitTesting(!expanded)
+            .accessibilityAddTraits(expanded ? .isStaticText : [])
+            .accessibilityRemoveTraits(expanded ? .isButton : [])
             .accessibilityIdentifier("level.details")
             .accessibilityLabel(Text("dino.levelNumber \(level.id)") + Text(", ") + Text("dino.level.details"))
-            .accessibilityValue(Text(LocalizedStringKey(open ? "dino.level.detailsOpen" : "dino.level.detailsClosed")))
+            .accessibilityValue(Text(LocalizedStringKey(isOpen ? "dino.level.detailsOpen" : "dino.level.detailsClosed")))
             .accessibilityHint(Text(LocalizedStringKey(theme.world.titleKey)))
-            if retainsDetails {
-                VStack(alignment: .leading, spacing: 12) {
+            if expanded || retainsDetails {
+                VStack(alignment: .leading, spacing: expanded ? 10 : 12) {
                     Rectangle().fill(theme.shade.opacity(0.18)).frame(height: 1)
                     Text("dino.level.details")
                         .font(.system(size: 14, weight: .heavy, design: .rounded))
                         .foregroundStyle(theme.ink)
                     LevelQuestionOutlineList(items: level.questionOutline, theme: theme, openPractice: openPractice)
                 }
-                .padding(.horizontal, 18).padding(.bottom, 18)
+                .padding(.horizontal, 18).padding(.bottom, expanded ? 12 : 18)
                 .fixedSize(horizontal: false, vertical: true)
-                .frame(height: open ? nil : 0, alignment: .top)
+                .frame(height: isOpen ? nil : 0, alignment: .top)
                 .clipped()
-                .accessibilityHidden(!open)
-                .allowsHitTesting(open)
+                .accessibilityHidden(!isOpen)
+                .allowsHitTesting(isOpen)
                 .transition(.identity)
             }
         }
@@ -1640,7 +1684,7 @@ private struct LevelDetailsDisclosure: View {
         .accessibilityIdentifier("level.outlineCard")
         .id(level.id)
         .task(id: open) {
-            guard !open, retainsDetails else { return }
+            guard !expanded, !open, retainsDetails else { return }
             // Keep the full text laid out while the clipped height retracts it.
             if !reduceMotion {
                 do { try await Task.sleep(nanoseconds: 340_000_000) }
@@ -1688,7 +1732,7 @@ private struct LevelQuestionOutlineList: View {
                     .padding(.vertical, 4).frame(minHeight: 44)
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(DinoPlainButtonStyle())
                 .disabled(item.practiceConfiguration == nil)
                 .accessibilityElement(children: .combine)
                 .accessibilityHint(Text("dino.practice.title"))
@@ -1779,10 +1823,15 @@ struct LevelStartOverlay: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let top = min(hudHeight + 14, max(14, geometry.size.height - 180))
+            let landscape = geometry.size.width > geometry.size.height
+            let top = landscape ? CGFloat(12) : min(hudHeight + 14, max(14, geometry.size.height - 180))
+            let landscapeHeight = min(700, max(360, CGFloat(level.questionOutline.count) * 64 + 132))
             ZStack(alignment: .top) {
                 Color.black.opacity(0.28).ignoresSafeArea()
-                    .onTapGesture(perform: close).transition(.opacity)
+                    .onTapGesture {
+                        DinoAnswerFeedback.shared.playSelect()
+                        close()
+                    }.transition(.opacity)
                 VStack(spacing: 0) {
                     Capsule().fill(LevelStartTheme(worldID: level.worldID).ink.opacity(0.2)).frame(width: 36, height: 5)
                         .frame(maxWidth: .infinity).frame(height: 28).contentShape(Rectangle())
@@ -1795,8 +1844,9 @@ struct LevelStartOverlay: View {
                         .accessibilityHidden(true)
                     LevelInfoPanel(level: level, start: start, close: close, openPractice: openPractice)
                 }
-                .frame(width: min(540, geometry.size.width - 24),
-                       height: min(level.isBoss ? 640 : 570, geometry.size.height - top - 16))
+                .frame(width: min(landscape ? 1000 : 540, geometry.size.width - 24),
+                       height: min(landscape ? landscapeHeight : level.isBoss ? 640 : 570,
+                                   geometry.size.height - top - 16))
                 .background(LevelStartTheme(worldID: level.worldID).paper)
                 .clipShape(RoundedRectangle(cornerRadius: 28))
                 .shadow(color: .black.opacity(0.14), radius: 20, y: 8)

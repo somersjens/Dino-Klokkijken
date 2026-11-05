@@ -17,29 +17,45 @@ struct DinoResultView: View {
         GeometryReader { geometry in
             let layout = ResultLayout(size: geometry.size, needsMessage: !succeeded, worldID: result.level.worldID)
             ZStack {
-                VStack(spacing: 0) {
-                    DinoResultLevelSign(levelID: result.level.id, worldID: result.level.worldID)
-                        .frame(width: layout.signWidth, height: layout.signHeight)
-                        .padding(.top, layout.topInset)
-                        .accessibilityIdentifier("result.level")
-                        .zIndex(1)
-                    resultCaption
-                        .padding(.top, 6)
-                    Spacer(minLength: 0)
-                    stage(layout: layout)
-                    Spacer(minLength: 16)
-                    actions
-                        .frame(width: layout.actionWidth)
-                        .padding(.bottom, 14)
+                if layout.landscape {
+                    HStack(spacing: 20) {
+                        stage(layout: layout)
+                        VStack(spacing: 12) {
+                            DinoResultLevelSign(levelID: result.level.id, worldID: result.level.worldID)
+                                .frame(width: layout.signWidth, height: layout.signHeight)
+                                .accessibilityIdentifier("result.level")
+                            resultCaption
+                            Spacer(minLength: 0)
+                            actions(compact: true)
+                        }
+                        .frame(width: layout.actionWidth, height: geometry.size.height - 24)
+                    }
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                } else {
+                    VStack(spacing: 0) {
+                        DinoResultLevelSign(levelID: result.level.id, worldID: result.level.worldID)
+                            .frame(width: layout.signWidth, height: layout.signHeight)
+                            .padding(.top, layout.topInset)
+                            .accessibilityIdentifier("result.level")
+                            .zIndex(1)
+                        resultCaption
+                            .padding(.top, 6)
+                        Spacer(minLength: 0)
+                        stage(layout: layout)
+                        Spacer(minLength: 16)
+                        actions()
+                            .frame(width: layout.actionWidth)
+                            .padding(.bottom, 14)
+                    }
+                    .frame(width: geometry.size.width, height: geometry.size.height)
                 }
-                .frame(width: geometry.size.width, height: geometry.size.height)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
             .backgroundPreferenceValue(ResultPodiumBoundsKey.self) { anchor in
                 GeometryReader { scene in
                     let podium = anchor.map { scene[$0] } ?? .zero
                     ResultScenery(worldID: result.level.worldID,
-                                  signFrame: CGRect(x: (geometry.size.width - layout.signWidth) / 2 + geometry.safeAreaInsets.leading,
+                                  signFrame: CGRect(x: layout.signCenterX - layout.signWidth / 2 + geometry.safeAreaInsets.leading,
                                                     y: layout.topInset + geometry.safeAreaInsets.top,
                                                     width: layout.signWidth, height: layout.signHeight),
                                   podiumFrame: podium.offsetBy(dx: geometry.safeAreaInsets.leading, dy: geometry.safeAreaInsets.top))
@@ -84,6 +100,7 @@ struct DinoResultView: View {
     private func playReward() async {
         starsRevealed = 0
         confetti = false
+        if result.stars > 0 { DinoAnswerFeedback.shared.playLevelComplete() }
         if reduceMotion {
             starsRevealed = result.stars
             confetti = result.stars >= 3
@@ -173,21 +190,21 @@ struct DinoResultView: View {
         }
     }
 
-    private var actions: some View {
+    private func actions(compact: Bool = false) -> some View {
         VStack(spacing: 10) {
             if result.level.isBoss && succeeded {
                 if DinoWorldCatalog.world(result.level.worldID + 1) != nil {
                     Button(action: next) {
                         Label("dino.nextWorld", systemImage: "arrow.right")
                     }
-                    .buttonStyle(ResultAdventureButtonStyle(primary: true))
+                    .buttonStyle(ResultAdventureButtonStyle(primary: true, compact: compact))
                     .accessibilityIdentifier("result.next")
                 } else {
                     Button(action: map) { Label("dino.map", systemImage: "map.fill") }
-                        .buttonStyle(ResultAdventureButtonStyle(primary: true))
+                        .buttonStyle(ResultAdventureButtonStyle(primary: true, compact: compact))
                         .accessibilityIdentifier("result.map")
                 }
-                retryButton
+                retryButton(compact: compact)
             } else if nextAvailable {
                 Button(action: next) {
                     HStack(spacing: 12) {
@@ -197,28 +214,28 @@ struct DinoResultView: View {
                         Spacer(minLength: 0)
                     }
                 }
-                .buttonStyle(ResultAdventureButtonStyle(primary: true))
+                .buttonStyle(ResultAdventureButtonStyle(primary: true, compact: compact))
                 .accessibilityIdentifier("result.next")
                 HStack(spacing: 10) {
-                    retryButton
-                    mapButton
+                    retryButton(compact: compact)
+                    mapButton(compact: compact)
                 }
             } else {
-                retryButton
-                mapButton
+                retryButton(compact: compact)
+                mapButton(compact: compact)
             }
         }
     }
 
-    private var retryButton: some View {
+    private func retryButton(compact: Bool = false) -> some View {
         Button(action: retry) { Label("dino.playAgain", systemImage: "arrow.clockwise") }
-            .buttonStyle(ResultAdventureButtonStyle(primary: !nextAvailable))
+            .buttonStyle(ResultAdventureButtonStyle(primary: !nextAvailable, compact: compact))
             .accessibilityIdentifier("result.retry")
     }
 
-    private var mapButton: some View {
+    private func mapButton(compact: Bool = false) -> some View {
         Button(action: map) { Label("dino.map", systemImage: "map.fill") }
-            .buttonStyle(ResultAdventureButtonStyle(primary: false))
+            .buttonStyle(ResultAdventureButtonStyle(primary: false, compact: compact))
             .accessibilityIdentifier("result.map")
     }
 }
@@ -236,13 +253,15 @@ private struct ResultLayout {
     let size: CGSize
     let needsMessage: Bool
     let worldID: Int
-    var topInset: CGFloat { size.height < 650 ? 0 : 8 }
-    var signWidth: CGFloat { min(size.width * 0.96, size.height * 0.56, 500) }
+    var landscape: Bool { size.width > size.height }
+    var topInset: CGFloat { landscape ? 12 : size.height < 650 ? 0 : 8 }
+    var signCenterX: CGFloat { landscape ? (size.width + stageWidth + 20) / 2 : size.width / 2 }
+    var signWidth: CGFloat { landscape ? min(actionWidth, 340) : min(size.width * 0.96, size.height * 0.56, 500) }
     var signHeight: CGFloat { signWidth * 0.36 }
-    var actionWidth: CGFloat { min(size.width - 40, 430) }
-    var stageWidth: CGFloat { min(size.width * 1.12, 700) }
-    var availableHeight: CGFloat { max(160, size.height - signHeight - topInset - (needsMessage ? 224 : 194)) }
-    var dinoSize: CGFloat { min(size.width * 0.73, availableHeight / 1.65, 360) }
+    var actionWidth: CGFloat { landscape ? min(330, max(180, size.width * 0.38 - 16)) : min(size.width - 40, 430) }
+    var stageWidth: CGFloat { landscape ? size.width - actionWidth - 52 : min(size.width * 1.12, 700) }
+    var availableHeight: CGFloat { landscape ? max(160, size.height - 24) : max(160, size.height - signHeight - topInset - (needsMessage ? 224 : 194)) }
+    var dinoSize: CGFloat { landscape ? min(stageWidth * 0.67, availableHeight / 1.45, 360) : min(size.width * 0.73, availableHeight / 1.65, 360) }
     var podiumWidth: CGFloat { min(stageWidth * 0.88, dinoSize * 1.40) }
     var podiumHeight: CGFloat { podiumWidth * ResultPodiumGeometry.height / ResultPodiumGeometry.width }
     var podiumCenterX: CGFloat { stageWidth / 2 + dinoSize * 0.04 }
@@ -258,12 +277,15 @@ private struct ResultLayout {
 private struct ResultAdventureButtonStyle: ButtonStyle {
     @Environment(\.dinoHighContrast) private var highContrast
     let primary: Bool
+    var compact = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: primary ? 20 : 15, weight: .heavy, design: .rounded))
+            .dinoSelectSound(pressed: configuration.isPressed)
+            .font(.system(size: compact ? (primary ? 17 : 13) : primary ? 20 : 15, weight: .heavy, design: .rounded))
             .lineLimit(1).minimumScaleFactor(0.7)
+            .padding(.horizontal, compact ? 10 : 12)
             .frame(maxWidth: .infinity)
-            .frame(height: primary ? 56 : 46)
+            .frame(height: compact ? (primary ? 48 : 44) : primary ? 56 : 46)
             .foregroundStyle(primary ? Color.white : Color(dinoHex: 0x28502B))
             .background {
                 RoundedRectangle(cornerRadius: primary ? 22 : 18)

@@ -2749,6 +2749,17 @@ private struct JungleWorldPainter {
             for (x, y, s) in [(CGFloat(-9), CGFloat(-255), CGFloat(0.43)), (63, -201, 0.32), (-55, -65, 0.28), (93, -106, 0.32)] {
                 p.shrub(at: CGPoint(x: x, y: y), size: s)
             }
+            // A wide viewport can expose the inlet. Anchor it in a connected rock
+            // spring, so the water has a visible source even when the bank is onscreen.
+            if mirror {
+                p.polygon([.init(x: 23, y: -258), .init(x: 25, y: -279), .init(x: 78, y: -285),
+                           .init(x: 106, y: -276), .init(x: 110, y: -248), .init(x: 68, y: -239),
+                           .init(x: 45, y: -215)], colors: [0xD1D0A8, 0x8DA89D, 0x668F89])
+                p.rock(at: CGPoint(x: 88, y: -257), size: 0.48)
+                p.context.fill(Path(ellipseIn: CGRect(x: 79, y: -272, width: 24, height: 18)),
+                               with: .color(Color(dinoHex: 0x345E60)))
+                p.shrub(at: CGPoint(x: 91, y: -285), size: 0.30)
+            }
             // The upper stream spills over a broad lip, then fans into a second cascade.
             var source = Path()
             source.move(to: CGPoint(x: mirror ? 90 : 29, y: mirror ? -263 : -257))

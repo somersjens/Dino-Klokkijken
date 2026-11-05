@@ -17,6 +17,42 @@ final class DinoAnswerFeedback {
         if vibration { haptics.notificationOccurred(correct ? .success : .warning) }
         if sound { audio.play(correct: correct) }
     }
+
+    /// Menu and control taps. Answer judgments keep their own tones.
+    func playSelect() {
+        audio.playSelect()
+    }
+
+    /// Two palm contacts in the HUD applause, a little quieter than the correct-answer tone.
+    @discardableResult
+    func playClaps(at times: [Double]) -> Int {
+        audio.playClaps(at: times)
+    }
+
+    func playLevelComplete() {
+        audio.playLevelComplete()
+    }
+
+    @discardableResult
+    func playGroundImpact(after delay: Double) -> Int {
+        audio.playGroundImpact(after: delay)
+    }
+
+    func stopLevelOutcome() {
+        audio.stopLevelOutcome()
+    }
+
+    func cancelClaps(_ generation: Int) {
+        audio.cancelClaps(generation)
+    }
+
+    func cancelImpact(_ generation: Int) {
+        audio.cancelImpact(generation)
+    }
+
+    nonisolated func setSoundEnabled(_ enabled: Bool) {
+        audio.setEnabled(enabled)
+    }
 }
 
 /// Reads the question title with the best installed Apple voice for the selected language.
@@ -87,8 +123,21 @@ private final class DinoAnswerAudio: @unchecked Sendable {
     private let queue = DispatchQueue(label: "DinoTime.answerAudio", qos: .userInitiated)
     private var correctPlayer: AVAudioPlayer?
     private var incorrectPlayer: AVAudioPlayer?
+    private var selectPlayer: AVAudioPlayer?
+    private var clapPlayer: AVAudioPlayer?
+    private var levelCompletePlayer: AVAudioPlayer?
+    private var impactPlayer: AVAudioPlayer?
+    private let generationLock = NSLock()
+    private var soundEnabled = true
+    private var clapGeneration = 0
+    private var impactGeneration = 0
+    private var lastSelect = Date.distantPast
     private lazy var correctTone = Self.tone(frequencies: [659.25, 880])
     private lazy var incorrectTone = Self.tone(frequencies: [330, 261.63])
+
+    func setEnabled(_ enabled: Bool) {
+        queue.async { [self] in soundEnabled = enabled }
+    }
 
     func prepare() {
         queue.async { [self] in preparePlayers() }
@@ -96,6 +145,7 @@ private final class DinoAnswerAudio: @unchecked Sendable {
 
     func play(correct: Bool) {
         queue.async { [self] in
+            guard soundEnabled else { return }
             preparePlayers()
             correctPlayer?.stop()
             incorrectPlayer?.stop()
@@ -105,22 +155,134 @@ private final class DinoAnswerAudio: @unchecked Sendable {
         }
     }
 
-    private func preparePlayers() {
-        dispatchPrecondition(condition: .onQueue(queue))
-        guard correctPlayer == nil || incorrectPlayer == nil else { return }
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default)
-            if correctPlayer == nil { correctPlayer = try makePlayer(data: correctTone) }
-            if incorrectPlayer == nil { incorrectPlayer = try makePlayer(data: incorrectTone) }
-        } catch { /* Try again on the next answer if audio is temporarily unavailable. */ }
+    func playSelect() {
+        queue.async { [self] in
+            guard soundEnabled else { return }
+            let now = Date()
+            guard now.timeIntervalSince(lastSelect) > 0.04 else { return }
+            lastSelect = now
+            preparePlayers()
+            selectPlayer?.currentTime = 0
+            selectPlayer?.play()
+        }
     }
 
-    private func makePlayer(data: Data) throws -> AVAudioPlayer {
+    @discardableResult
+    func playClaps(at times: [Double]) -> Int {
+        let generation = nextGeneration(\.clapGeneration)
+        queue.async { [self] in
+            guard soundEnabled, generation == current(\.clapGeneration) else { return }
+            preparePlayers()
+            for time in times {
+                queue.asyncAfter(deadline: .now() + time) { [self] in
+                    guard generation == current(\.clapGeneration), soundEnabled else { return }
+                    clapPlayer?.currentTime = 0
+                    clapPlayer?.play()
+                }
+            }
+        }
+        return generation
+    }
+
+    func playLevelComplete() {
+        queue.async { [self] in
+            guard soundEnabled else { return }
+            preparePlayers()
+            levelCompletePlayer?.currentTime = 0
+            levelCompletePlayer?.play()
+        }
+    }
+
+    @discardableResult
+    func playGroundImpact(after delay: Double) -> Int {
+        let generation = nextGeneration(\.impactGeneration)
+        queue.async { [self] in
+            guard soundEnabled, generation == current(\.impactGeneration) else { return }
+            preparePlayers()
+            queue.asyncAfter(deadline: .now() + delay) { [self] in
+                guard generation == current(\.impactGeneration), soundEnabled else { return }
+                impactPlayer?.currentTime = 0
+                impactPlayer?.play()
+            }
+        }
+        return generation
+    }
+
+    func stopLevelOutcome() {
+        queue.async { [self] in
+            levelCompletePlayer?.stop()
+            invalidate(\.impactGeneration)
+            impactPlayer?.stop()
+        }
+    }
+
+    func cancelClaps(_ generation: Int) {
+        queue.async { [self] in
+            guard current(\.clapGeneration) == generation else { return }
+            invalidate(\.clapGeneration)
+            clapPlayer?.stop()
+        }
+    }
+
+    func cancelImpact(_ generation: Int) {
+        queue.async { [self] in
+            guard current(\.impactGeneration) == generation else { return }
+            invalidate(\.impactGeneration)
+            impactPlayer?.stop()
+        }
+    }
+
+    private func nextGeneration(_ keyPath: ReferenceWritableKeyPath<DinoAnswerAudio, Int>) -> Int {
+        generationLock.lock()
+        self[keyPath: keyPath] += 1
+        let generation = self[keyPath: keyPath]
+        generationLock.unlock()
+        return generation
+    }
+
+    private func current(_ keyPath: KeyPath<DinoAnswerAudio, Int>) -> Int {
+        generationLock.lock()
+        let generation = self[keyPath: keyPath]
+        generationLock.unlock()
+        return generation
+    }
+
+    private func invalidate(_ keyPath: ReferenceWritableKeyPath<DinoAnswerAudio, Int>) {
+        generationLock.lock()
+        self[keyPath: keyPath] += 1
+        generationLock.unlock()
+    }
+
+    private func preparePlayers() {
         dispatchPrecondition(condition: .onQueue(queue))
-        let player = try AVAudioPlayer(data: data)
-        player.volume = 0.45
+        let ready = correctPlayer != nil && incorrectPlayer != nil && selectPlayer != nil
+            && clapPlayer != nil && levelCompletePlayer != nil && impactPlayer != nil
+        guard !ready else { return }
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+        try? session.setActive(true)
+        if correctPlayer == nil { correctPlayer = try? makePlayer(data: correctTone, volume: 0.45) }
+        if incorrectPlayer == nil { incorrectPlayer = try? makePlayer(data: incorrectTone, volume: 0.45) }
+        // Files are peaked at -10 dBFS. Clap stays under the correct-answer tone.
+        if selectPlayer == nil { selectPlayer = try? makePlayer(resource: "select-menu", volume: 0.85) }
+        if clapPlayer == nil { clapPlayer = try? makePlayer(resource: "single-clap", volume: 0.31) }
+        if levelCompletePlayer == nil { levelCompletePlayer = try? makePlayer(resource: "end-of-level", volume: 0.85) }
+        if impactPlayer == nil { impactPlayer = try? makePlayer(resource: "zero-stars-fall", volume: 0.85) }
+    }
+
+    private func makePlayer(data: Data, volume: Float, fileTypeHint: String? = nil) throws -> AVAudioPlayer {
+        dispatchPrecondition(condition: .onQueue(queue))
+        let player = try AVAudioPlayer(data: data, fileTypeHint: fileTypeHint)
+        player.volume = volume
         player.prepareToPlay()
         return player
+    }
+
+    private func makePlayer(resource: String, volume: Float) throws -> AVAudioPlayer {
+        let data = NSDataAsset(name: resource, bundle: .main)?.data
+            ?? Bundle.main.url(forResource: resource, withExtension: "m4a").flatMap { try? Data(contentsOf: $0) }
+        guard let data else { throw CocoaError(.fileNoSuchFile) }
+        return try makePlayer(data: data, volume: volume, fileTypeHint: AVFileType.m4a.rawValue)
     }
 
     /// Small PCM WAVs generated once; no external audio files or dependencies.

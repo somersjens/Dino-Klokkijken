@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
+
+    },
     ", " : {
 
     },
@@ -15,22 +18,6 @@
             "value" : "%1$@, %2$@–%3$@"
           }
         }
-      }
-    },
-    "dino.launch.title.firstLine" : {
-      "comment" : "First of exactly two lines of the game title on the opening wooden sign. Translate the name freely across these two keys; text automatically fits the sign. No lettering is baked into an image.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Dino" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Dino" } }
-      }
-    },
-    "dino.launch.title.secondLine" : {
-      "comment" : "Second of exactly two lines of the localized game title, below dino.launch.title.firstLine. Keep the title on one line here; long translations automatically shrink to fit.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time" } },
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Klokkijken" } }
       }
     },
     "dino.activity.breakfast" : {
@@ -233,6 +220,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Romeins"
+          }
+        }
+      }
+    },
+    "dino.answer.changeTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change the time to continue"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verander de tijd om verder te gaan"
+          }
+        }
+      }
+    },
+    "dino.answer.chooseTile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press at least 1 tile to continue"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies minstens 1 steen om verder te gaan"
+          }
+        }
+      }
+    },
+    "dino.answer.selectClocks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select all clocks first"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecteer eerst alle klokken"
+          }
+        }
+      }
+    },
+    "dino.answer.connectClocks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect all clocks first"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbind eerst alle klokken"
           }
         }
       }
@@ -692,40 +747,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dino"
-          }
-        }
-      }
-    },
-    "dino.answer.changeTime" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Change the time to continue"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verander de tijd om verder te gaan"
-          }
-        }
-      }
-    },
-    "dino.answer.chooseTile" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Press at least 1 tile to continue"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kies minstens 1 steen om verder te gaan"
           }
         }
       }
@@ -1206,23 +1227,6 @@
         }
       }
     },
-    "dino.dayPart.changeSettings" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Change settings"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Instellingen wijzigen"
-          }
-        }
-      }
-    },
     "dino.dayPart.afternoon" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1236,6 +1240,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Middag"
+          }
+        }
+      }
+    },
+    "dino.dayPart.changeSettings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change settings"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instellingen wijzigen"
           }
         }
       }
@@ -1750,6 +1771,74 @@
         }
       }
     },
+    "dino.expanded.arithmetic.hours" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hours"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uren"
+          }
+        }
+      }
+    },
+    "dino.expanded.arithmetic.minutes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minutes"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minuten"
+          }
+        }
+      }
+    },
+    "dino.expanded.arithmetic.newTime" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New time"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe tijd"
+          }
+        }
+      }
+    },
+    "dino.expanded.arithmetic.split" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Split"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Splitsom"
+          }
+        }
+      }
+    },
     "dino.expanded.arrival" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2052,74 +2141,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "later"
-          }
-        }
-      }
-    },
-    "dino.expanded.arithmetic.hours" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hours"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uren"
-          }
-        }
-      }
-    },
-    "dino.expanded.arithmetic.minutes" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minutes"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minuten"
-          }
-        }
-      }
-    },
-    "dino.expanded.arithmetic.newTime" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New time"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nieuwe tijd"
-          }
-        }
-      }
-    },
-    "dino.expanded.arithmetic.split" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Split"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Splitsom"
           }
         }
       }
@@ -3820,6 +3841,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Taal"
+          }
+        }
+      }
+    },
+    "dino.launch.title.firstLine" : {
+      "comment" : "First of exactly two lines of the game title on the opening wooden sign. Translate the name freely across these two keys; text automatically fits the sign. No lettering is baked into an image.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino"
+          }
+        }
+      }
+    },
+    "dino.launch.title.secondLine" : {
+      "comment" : "Second of exactly two lines of the localized game title, below dino.launch.title.firstLine. Keep the title on one line here; long translations automatically shrink to fit.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klokkijken"
           }
         }
       }
@@ -5853,13 +5910,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Read the clock after noon"
+            "value" : "What time is it?"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lees de klok na 12 uur"
+            "value" : "Hoe laat is het?"
           }
         }
       }
@@ -6527,23 +6584,6 @@
         }
       }
     },
-    "dino.settings.dayParts.backToGame" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back to the game"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terug naar het spel"
-          }
-        }
-      }
-    },
     "dino.settings.dayParts" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6557,6 +6597,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dagdelen"
+          }
+        }
+      }
+    },
+    "dino.settings.dayParts.backToGame" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to the game"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terug naar het spel"
           }
         }
       }

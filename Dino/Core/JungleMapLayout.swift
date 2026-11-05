@@ -144,7 +144,7 @@ struct JungleMapLayout {
                 return [CGRect(x: -105, y: -290, width: 270, height: 240),
                         CGRect(x: -40, y: -180, width: 90, height: 205)]
             case .waterfall:
-                return [CGRect(x: -65, y: -292, width: 165, height: 102),
+                return [CGRect(x: -65, y: -312, width: 185, height: 122),
                         CGRect(x: -86, y: -205, width: 216, height: 155),
                         CGRect(x: -85, y: -62, width: 220, height: 118),
                         CGRect(x: -130, y: 26, width: 265, height: 90)]

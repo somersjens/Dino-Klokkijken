@@ -1,12 +1,11 @@
 import SwiftUI
 
-/// After the first miss, translate the 24-hour display into familiar clock hours.
+/// The session's missed-answer state drives the same expansion used by the train lesson.
+/// Rebuilding the view after rotation therefore starts with the hint already open.
 private struct DinoAfterNoonReadingClock: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
-    @State private var revealsConversion = false
-    @State private var revealsOperator = false
     let time: ClockTime
     let theme: ClockTheme
     let width: CGFloat
@@ -17,64 +16,45 @@ private struct DinoAfterNoonReadingClock: View {
         showsHint && time.hour > 12 && theme.resolvedHourNotation(device: deviceHourFormat.notation) == .twentyFour
     }
     private var prefix: String { isDemonstration ? "demo" : "question" }
-    private var conversionFont: CGFloat { min(38, (width - 46) * 0.105) }
+    private var conversionFont: CGFloat { min(42, (width - 42) * 0.12) }
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(alignment: .bottom, spacing: 0) {
             DigitalClock(time: time, theme: theme, fontSize: explains ? conversionFont : 38)
                 .accessibilityIdentifier("\(prefix).targetClock")
-            if explains {
-                VStack(spacing: 5) {
-                    Text(verbatim: "−12")
-                        .font(.system(size: 13, weight: .heavy, design: .rounded))
-                        .lineLimit(1)
-                        .fixedSize()
-                        .foregroundStyle(DinoTimeDirection.color(later: false, highContrast: highContrast))
-                        .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(DinoTimeDirection.background(later: false, highContrast: highContrast), in: Capsule())
-                        .accessibilityIdentifier("\(prefix).afterNoon.subtractTwelve")
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(DinoStyle.ink)
-                        .accessibilityIdentifier("\(prefix).afterNoon.arrow")
+            DinoTrainExpansion(axis: .horizontal, fraction: explains ? 1 : 0) {
+                HStack(spacing: 4) {
+                    VStack(spacing: 3) {
+                        Text(verbatim: "−12")
+                            .font(.system(size: 11, weight: .heavy, design: .rounded))
+                            .lineLimit(1)
+                            .fixedSize()
+                            .foregroundStyle(DinoTimeDirection.color(later: false, highContrast: highContrast))
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(DinoTimeDirection.background(later: false, highContrast: highContrast), in: Capsule())
+                            .accessibilityIdentifier("\(prefix).afterNoon.subtractTwelve")
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundStyle(DinoStyle.ink)
+                            .accessibilityIdentifier("\(prefix).afterNoon.arrow")
+                    }
+                    .frame(width: 34)
+                    DigitalClock(time: time.adding(minutes: -720), theme: theme,
+                                 fontSize: conversionFont, notation: .twentyFour, dashedOutline: true)
+                        .accessibilityIdentifier("\(prefix).afterNoon.convertedClock")
                 }
-                .frame(width: 38)
-                .offset(y: -12)
-                .scaleEffect(reduceMotion || revealsOperator ? 1 : 0.001)
-                .accessibilityHidden(!reduceMotion && !revealsOperator)
-                .animation(reduceMotion ? nil : .easeOut(duration: 0.28), value: revealsOperator)
-                .transition(.identity)
-                DigitalClock(time: time.adding(minutes: -720), theme: theme,
-                             fontSize: conversionFont, notation: .twentyFour, dashedOutline: true)
-                    .scaleEffect(reduceMotion || revealsConversion ? 1 : 0.001)
-                    .accessibilityHidden(!reduceMotion && !revealsConversion)
-                    .animation(reduceMotion ? nil : .easeOut(duration: 0.24), value: revealsConversion)
-                    .transition(.identity)
-                    .accessibilityIdentifier("\(prefix).afterNoon.convertedClock")
+                .padding(.leading, 4)
+                // The compact caption stays within the display height, so the
+                // complete helper emerges from behind the original clock.
             }
+            .clipped()
+            .accessibilityHidden(!explains)
         }
-        // Intrinsic display widths keep the arrow close to both clock outlines.
         .fixedSize(horizontal: true, vertical: false)
         .frame(width: width, height: isDemonstration ? nil : 88, alignment: .bottom)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: explains)
         .environment(\.layoutDirection, .leftToRight)
         .environment(\.dinoClockReadingAssistance, false)
-        .task(id: "\(explains)-\(reduceMotion)") {
-            var reset = Transaction()
-            reset.disablesAnimations = true
-            withTransaction(reset) {
-                revealsConversion = false
-                revealsOperator = false
-            }
-            guard explains, !reduceMotion else { return }
-            do {
-                // Finish moving the original clock before introducing the helper.
-                try await Task.sleep(nanoseconds: 600_000_000)
-                revealsConversion = true
-                try await Task.sleep(nanoseconds: 240_000_000)
-                revealsOperator = true
-            } catch { return }
-        }
     }
 }
 
@@ -101,7 +81,9 @@ struct DinoExpandedQuestionView: View {
     var wideLayout = false
     var availableHeight: CGFloat = 700
     var horizontalSequence = false
+    var reminderAttempt = 0
     @State private var movingMinutes = false
+    @State private var reminderProgress: CGFloat = 0
     private var q: ClockQuestion { session.question }
     private var code: String { language.effective.code }
     private var duration: String { DinoTimeWords.duration(q.durationMinutes, language: code) }
@@ -416,7 +398,7 @@ struct DinoExpandedQuestionView: View {
                                     .padding(2).background(.white, in: Circle()).offset(x: 4, y: -4)
                             }
                         }
-                }.buttonStyle(DinoAnswerButtonStyle()).disabled(isDemonstration || !session.responseIsEnabled(response))
+                }.buttonStyle(DinoAnswerButtonStyle(playsSelectSound: false)).disabled(isDemonstration || !session.responseIsEnabled(response))
                     .accessibilityIdentifier("\(isDemonstration ? "demo" : "question").option.\(index)")
                     .accessibilityValue(Text(verbatim: [verdict, reading].filter { !$0.isEmpty }.joined(separator: ", ")))
             }
@@ -488,6 +470,7 @@ struct DinoExpandedQuestionView: View {
     private var sorting: some View {
         let columns = gameLayout.answerColumns()
         let cellWidth = (width - CGFloat(columns - 1) * 12) / CGFloat(columns)
+        let highlightsMissingClocks = reminderAttempt > 0 && !session.hasFeedback && !isDemonstration
         return VStack(spacing: 12) {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 12) {
                 ForEach(Array(q.options.enumerated()), id: \.offset) { index, time in
@@ -518,12 +501,14 @@ struct DinoExpandedQuestionView: View {
                             Text(verbatim: shownDigital(time)).font(.system(size: 17, weight: .bold, design: .rounded)).monospacedDigit()
                         }.padding(12).frame(maxWidth: .infinity).background(.white, in: RoundedRectangle(cornerRadius: 22))
                             .overlay(RoundedRectangle(cornerRadius: 22).stroke(position == nil ? .clear : wrongPosition ? DinoStyle.deepOrange : DinoStyle.deepGreen, lineWidth: 3))
+                            .modifier(MissingClockReminder(visible: highlightsMissingClocks && position == nil,
+                                                           progress: position == nil ? reminderProgress : 0, cornerRadius: 22))
                     }.buttonStyle(DinoAnswerButtonStyle()).disabled(session.hasFeedback || isDemonstration)
                         .accessibilityIdentifier("\(isDemonstration ? "demo" : "question").sort.\(index)")
                         .accessibilityValue(Text(verbatim: position.map {
                             let number = String($0 + 1)
                             return session.hasFeedback ? "\(number), \(L(key: wrongPosition ? "dino.expanded.false" : "dino.expanded.true"))" : number
-                        } ?? ""))
+                        } ?? (highlightsMissingClocks ? L(key: DinoAnswerRequirement.selectClocks.rawValue) : "")))
                 }
             }.id("question.answers")
                 .environment(\.dinoClockReadingAssistance, false)
@@ -533,6 +518,12 @@ struct DinoExpandedQuestionView: View {
                 if !isDemonstration { sortAnswerSlot(correct: true) }
             }
             .questionAnswerFocus()
+        }
+        .task(id: reminderAttempt) {
+            guard highlightsMissingClocks else { return }
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.55)) {
+                reminderProgress += 1
+            }
         }
     }
 
@@ -1121,7 +1112,7 @@ private struct DinoTrainJourneyCard: View {
                             .frame(width: 26, height: 26)
                             .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(DinoPlainButtonStyle())
                     .accessibilityLabel(Text("dino.timeZone.replay"))
                     .accessibilityIdentifier("\(prefix).schedule.replay")
                 } else {
@@ -1429,7 +1420,7 @@ private struct DinoFlightTicket: View {
                             .frame(width: 44, height: 44)
                             .contentShape(Circle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(DinoPlainButtonStyle())
                     .accessibilityLabel(Text("dino.timeZone.replay"))
                     .accessibilityIdentifier("\(prefix).flight.replay")
                 } else if width >= 300 {

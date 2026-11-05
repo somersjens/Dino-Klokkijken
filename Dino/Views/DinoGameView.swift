@@ -17,91 +17,109 @@ struct DinoGameView: View {
     @State private var answerFrame: CGRect?
     @State private var answerReminder: DinoAnswerRequirement?
     @State private var reminderAttempt = 0
+    private static let modalDimmingOpacity = 0.28
 
     var body: some View {
         GeometryReader { g in
             // GeometryReader already excludes the container's safe areas.
-            let width = max(1, g.size.width - 32)
+            let landscape = g.size.width > g.size.height
+            let sideHUD = g.size.height < 500 && landscape
+            let railWidth: CGFloat = sideHUD ? AdventureHeader.railWidth(showsPracticeSubtitle: session.practice != nil) : 0
+            let width = min(620, max(1, g.size.width - railWidth - (sideHUD ? 40 : 32)))
             let compact = g.size.height < 500
-            let horizontalChrome = compact && g.size.width > g.size.height
-            let footerHeight: CGFloat = session.question.kind == .dayPart && !compact ? 146 : 74
+            let footerHeight: CGFloat = session.question.kind == .dayPart && !compact ? 146 : compact ? 64 : 74
             ZStack {
                 JungleBackground(quiet: true)
-                VStack(spacing: 0) {
-                    gameChrome(size: g.size, compact: compact, horizontal: horizontalChrome)
-                    GeometryReader { play in
-                        let headingSpace = horizontalChrome ? 0 : lessonHeadingHeight + 12
-                        let layout = DinoGameLayout(width: width, height: max(1, play.size.height - headingSpace - 16),
-                                                    kind: session.question.kind,
-                                                    optionCount: max(session.question.options.count, session.question.responses.count))
-                        ScrollViewReader { proxy in
-                            ScrollView {
-                                VStack(spacing: 12) {
-                                    if !horizontalChrome {
-                                        lessonHeading
-                                            .readGeometry(for: CGFloat.self) { ceil($0.size.height) } action: { lessonHeadingHeight = $0 }
+                HStack(spacing: sideHUD ? 8 : 0) {
+                    if sideHUD {
+                        gameChrome(size: g.size, compact: true, vertical: true)
+                            .frame(width: railWidth)
+                    }
+                    VStack(spacing: 0) {
+                        if !sideHUD { gameChrome(size: g.size, compact: compact, vertical: false) }
+                        GeometryReader { play in
+                            let headingSpace = lessonHeadingHeight + 12
+                            let layout = DinoGameLayout(width: width, height: max(sideHUD ? 360 : 1, play.size.height - headingSpace - 16),
+                                                        kind: session.question.kind,
+                                                        optionCount: max(session.question.options.count, session.question.responses.count))
+                            ScrollViewReader { proxy in
+                                ScrollView {
+                                    DinoQuestionContext(maxHeight: landscape ? max(1, play.size.height - 12) : nil) {
+                                        VStack(spacing: sideHUD ? 8 : 12) {
+                                            lessonHeading(compact: compact)
+                                                .readGeometry(for: CGFloat.self) { ceil($0.size.height) } action: { lessonHeadingHeight = $0 }
+                                            QuestionRenderer(session: session, theme: player.profile.clockTheme,
+                                                             width: layout.width, clockSize: layout.clockSize,
+                                                             wideLayout: layout.horizontal, compactLayout: layout.compact,
+                                                             answerClockSize: layout.answerClockSize,
+                                                             availableHeight: layout.height,
+                                                             horizontalSequence: layout.horizontalSequence,
+                                                             clockReminderAttempt: answerReminder == .connectClocks || answerReminder == .selectClocks ? reminderAttempt : 0)
+                                        }
+                                            .padding(.vertical, 8)
+                                            .frame(width: width)
                                     }
-                                    QuestionRenderer(session: session, theme: player.profile.clockTheme,
-                                                     width: layout.width, clockSize: layout.clockSize,
-                                                     wideLayout: layout.horizontal, compactLayout: layout.compact,
-                                                     answerClockSize: layout.answerClockSize,
-                                                     availableHeight: layout.height,
-                                                     horizontalSequence: layout.horizontalSequence)
+                                        .id("question.top")
+                                        .frame(minHeight: play.size.height, alignment: .center)
+                                        .frame(maxWidth: .infinity)
+                                        .contentShape(Rectangle())
                                 }
-                                    .padding(.vertical, 8)
-                                    .frame(width: width)
-                                    .id("question.top")
-                                    .frame(minHeight: play.size.height, alignment: layout.pairedClocks ? .bottom : .center)
-                                    .frame(maxWidth: .infinity)
-                                    .contentShape(Rectangle())
-                            }
-                            .centersShortContent()
-                            // SwiftUI can draw overflowing fixed-size children beyond a scroll view's bounds.
-                            // Keep every answer, outline and feedback animation above the reserved action row.
-                            .clipped()
-                            .coordinateSpace(name: "game.questionViewport")
-                            .onPreferenceChange(QuestionAnswerFrameKey.self) { answerFrame = $0 }
-                            .accessibilityIdentifier("game.questions")
-                            .onValueChange(of: session.hasFeedback) { visible in
-                                guard visible, !session.correctFeedback, let frame = answerFrame else { return }
-                                let anchor: UnitPoint?
-                                if frame.minY < 0 { anchor = .top }
-                                else if frame.maxY > play.size.height { anchor = .bottom }
-                                else { anchor = nil }
-                                if let anchor {
+                                .centersShortContent()
+                                // SwiftUI can draw overflowing fixed-size children beyond a scroll view's bounds.
+                                // Keep every answer, outline and feedback animation above the reserved action row.
+                                .clipped()
+                                .coordinateSpace(name: "game.questionViewport")
+                                .onPreferenceChange(QuestionAnswerFrameKey.self) { answerFrame = $0 }
+                                .accessibilityIdentifier("game.questions")
+                                .onValueChange(of: session.hasFeedback) { visible in
+                                    guard visible, !session.correctFeedback, let frame = answerFrame else { return }
+                                    let anchor: UnitPoint?
+                                    if frame.minY < 0 { anchor = .top }
+                                    else if frame.maxY > play.size.height { anchor = .bottom }
+                                    else { anchor = nil }
+                                    if let anchor {
+                                        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
+                                            proxy.scrollTo("question.answerFocus", anchor: anchor)
+                                        }
+                                    }
+                                }
+                                .task(id: session.missedFirstAnswer) {
+                                    guard session.question.kind == .flightArrival, session.question.offsetMinutes != 0,
+                                          session.missedFirstAnswer else { return }
+                                    // The hint adds height after feedback. Recheck once its expansion has settled.
+                                    do { try await Task.sleep(for: .milliseconds(reduceMotion ? 16 : 480)) }
+                                    catch { return }
+                                    guard let frame = answerFrame, frame.maxY > play.size.height else { return }
                                     withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
-                                        proxy.scrollTo("question.answerFocus", anchor: anchor)
+                                        proxy.scrollTo("question.answerFocus", anchor: .bottom)
                                     }
                                 }
-                            }
-                            .task(id: session.missedFirstAnswer) {
-                                guard session.question.kind == .flightArrival, session.question.offsetMinutes != 0,
-                                      session.missedFirstAnswer else { return }
-                                // The hint adds height after feedback. Recheck once its expansion has settled.
-                                do { try await Task.sleep(for: .milliseconds(reduceMotion ? 16 : 480)) }
-                                catch { return }
-                                guard let frame = answerFrame, frame.maxY > play.size.height else { return }
-                                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
-                                    proxy.scrollTo("question.answerFocus", anchor: .bottom)
+                                .onValueChange(of: session.hasFeedback) { showing in
+                                    if showing { DinoQuestionSpeech.shared.interrupt() }
                                 }
-                            }
-                            .onValueChange(of: session.hasFeedback) { showing in
-                                if showing { DinoQuestionSpeech.shared.interrupt() }
-                            }
-                            .onValueChange(of: layout.horizontal) { _ in
-                                if session.question.kind == .timeZone { proxy.scrollTo("question.top", anchor: .top) }
+                                .onValueChange(of: layout.horizontal) { _ in
+                                    if session.question.kind == .timeZone { proxy.scrollTo("question.top", anchor: .top) }
+                                }
                             }
                         }
+                        // Keep the existing question lifecycle; rotation only changes proposals.
+                        .id(session.question.id)
+                        .transition(.identity)
+                        answerFooter(height: footerHeight, width: width, compact: compact)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    // Keep the existing question lifecycle; rotation only changes proposals.
-                    .id(session.question.id)
-                    .transition(.identity)
-                    answerFooter(height: footerHeight, width: width, hasBackdrop: true, compact: compact)
-                        .fixedSize(horizontal: false, vertical: true)
                 }.frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(alignment: .bottom) {
+                        if session.answerCheck != nil || (session.hasFeedback && !session.shouldAutoAdvance) {
+                            DinoLightMaterial()
+                                .frame(height: footerHeight + g.safeAreaInsets.bottom)
+                                .offset(y: g.safeAreaInsets.bottom)
+                                .ignoresSafeArea(edges: .horizontal)
+                        }
+                    }
                     .disabled(confirmExit || session.demonstration != nil).accessibilityHidden(confirmExit || session.demonstration != nil)
                 if let kind = session.demonstration {
-                    Color.black.opacity(0.28).ignoresSafeArea()
+                    Color.black.opacity(Self.modalDimmingOpacity).ignoresSafeArea()
                     InteractionDemonstration(kind: kind, theme: player.profile.clockTheme, minuteStep: session.minuteStep,
                                              practiceTime: session.practice?.time ?? session.question.timeFamily,
                                              worldMinutes: session.practice == nil ? session.question.timeFamily.minutes : nil,
@@ -111,7 +129,7 @@ struct DinoGameView: View {
                         .transition(.scale.combined(with: .opacity))
                 }
                 if confirmExit {
-                    Color.black.opacity(0.28).ignoresSafeArea()
+                    Color.black.opacity(Self.modalDimmingOpacity).ignoresSafeArea()
                     ScrollView {
                         exitCard(compact: g.size.height < 430).padding(16)
                     }.bouncesOnlyWhenNeeded()
@@ -127,7 +145,8 @@ struct DinoGameView: View {
                 DinoAnswerFeedback.shared.prepare(sound: settings.soundEffectsEnabled, vibration: settings.hapticsEnabled)
             }
             .transformPreference(DinoCompanionPreference.self) { anchors in
-                if confirmExit || session.demonstration != nil { anchors = [:] }
+                if session.demonstration != nil { anchors = [:] }
+                else { anchors[.game]?.dimmingOpacity = confirmExit ? Self.modalDimmingOpacity : 0 }
             }
             .task(id: session.shouldAutoAdvance && session.demonstration == nil && !confirmExit && !personalizing) {
                 guard session.shouldAutoAdvance && session.demonstration == nil && !confirmExit && !personalizing else { return }
@@ -166,30 +185,27 @@ struct DinoGameView: View {
             }
     }
 
-    @ViewBuilder private func gameChrome(size: CGSize, compact: Bool, horizontal: Bool) -> some View {
-        let chrome = horizontal ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 8))
-        chrome {
-            AdventureHeader(personalizerChanged: { personalizing = $0 }, sharedCompanion: true, level: session.level.id,
-                                stars: player.profile.totalStars, worldID: session.level.worldID,
-                                compact: compact, showsPracticeSubtitle: !horizontal, viewportHeight: size.height, viewportWidth: size.width,
-                                maximumScale: 1.2,
-                                questionCounter: session.practice == nil
-                                    ? "\(min(session.attempt.index + 1, session.level.questionCount))/\(session.level.questionCount)"
-                                    : DinoPracticeCounter(value: session.practiceQuestionNumber).digits,
-                                practiceStreak: session.practice == nil ? nil : session.practiceStreak,
-                                practiceRecord: session.practiceBestStreak,
-                                practiceQuestionNumber: session.practice == nil ? nil : session.practiceQuestionNumber,
-                                practiceConfiguration: session.practice,
-                                help: showExample, action: pause)
-                .frame(width: horizontal ? min(390, size.width * 0.48) : size.width)
-            if horizontal { lessonHeading }
-        }
+    @ViewBuilder private func gameChrome(size: CGSize, compact: Bool, vertical: Bool) -> some View {
+        AdventureHeader(personalizerChanged: { personalizing = $0 }, sharedCompanion: true, level: session.level.id,
+                        stars: player.profile.totalStars, worldID: session.level.worldID,
+                        compact: compact, vertical: vertical,
+                        viewportHeight: size.height,
+                        viewportWidth: vertical ? AdventureHeader.railWidth(showsPracticeSubtitle: session.practice != nil) : size.width,
+                        maximumScale: 1.2,
+                        questionCounter: session.practice == nil
+                            ? "\(min(session.attempt.index + 1, session.level.questionCount))/\(session.level.questionCount)"
+                            : DinoPracticeCounter(value: session.practiceQuestionNumber).digits,
+                        practiceStreak: session.practice == nil ? nil : session.practiceStreak,
+                        practiceRecord: session.practiceBestStreak,
+                        practiceQuestionNumber: session.practice == nil ? nil : session.practiceQuestionNumber,
+                        practiceConfiguration: session.practice,
+                        help: showExample, action: pause)
     }
 
-    private var lessonHeading: some View {
+    private func lessonHeading(compact: Bool) -> some View {
         VStack(spacing: 8) {
             if session.level.isBoss { crystals }
-            questionTitle(fontSize: 23)
+            questionTitle(fontSize: compact ? 21 : 23)
                 .frame(maxWidth: .infinity)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 16)
@@ -208,7 +224,7 @@ struct DinoGameView: View {
         }
     }
 
-    private func answerFooter(height: CGFloat, width: CGFloat, hasBackdrop: Bool, compact: Bool) -> some View {
+    private func answerFooter(height: CGFloat, width: CGFloat, compact: Bool) -> some View {
         // Reserve the same space before and after answering so the question stays still.
         // A day-part question also reserves the settings button, so closing the question does not move the choices.
         // This row sits outside the scroll view and above the bottom safe area.
@@ -217,7 +233,7 @@ struct DinoGameView: View {
         let dayPart = session.question.kind == .dayPart
         let actionWidth = min(420, compact && dayPart && session.offersDayPartSettings ? (width - 12) / 2 : width)
         return Color.clear.frame(height: height)
-            .overlay(alignment: dayPart ? .bottom : .center) {
+            .overlay(alignment: compact || dayPart ? .bottom : .center) {
                 let actions = compact && dayPart ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 8))
                 actions {
                     if showsNext && session.offersDayPartSettings {
@@ -235,7 +251,7 @@ struct DinoGameView: View {
                         } label: {
                             Label(LocalizedStringKey(session.canRetry ? "dino.showAnswer" : "dino.next"), systemImage: session.canRetry ? "eye" : "arrow.right")
                         }
-                        .buttonStyle(DinoButtonStyle())
+                        .buttonStyle(DinoButtonStyle(compact: compact))
                         .multilineTextAlignment(.center)
                         .frame(width: actionWidth)
                         .accessibilityIdentifier(session.canRetry ? "question.showAnswer" : "question.next")
@@ -246,6 +262,7 @@ struct DinoGameView: View {
                                     answerReminder = requirement
                                 }
                                 reminderAttempt += 1
+                                DinoAnswerFeedback.shared.playSelect()
                                 UIAccessibility.post(notification: .announcement, argument: L(key: requirement.rawValue))
                             } else {
                                 session.submit(check.answer)
@@ -254,24 +271,14 @@ struct DinoGameView: View {
                             Label(LocalizedStringKey(check.titleKey), systemImage: "checkmark")
                                 .lineLimit(1).minimumScaleFactor(0.7)
                         }
-                        .buttonStyle(DinoButtonStyle())
+                        .buttonStyle(DinoButtonStyle(compact: compact, playsSelectSound: false))
                         .disabled(!check.enabled)
                         .frame(width: actionWidth)
                         .accessibilityIdentifier("question.confirm")
                     }
                 }
-                .padding(.bottom, dayPart && !compact && (showsNext || check != nil) ? 11 : 0)
+                .padding(.bottom, compact ? 6 : dayPart && (showsNext || check != nil) ? 11 : 0)
                 .frame(maxWidth: dayPart ? .infinity : nil)
-                .background {
-                    if hasBackdrop && dayPart && (showsNext || check != nil) {
-                        DinoLightMaterial().ignoresSafeArea(edges: .bottom)
-                    }
-                }
-            }
-            .background {
-                if hasBackdrop && !dayPart && (showsNext || check != nil) {
-                    DinoLightMaterial().ignoresSafeArea(edges: .bottom)
-                }
             }
             .overlay {
                 if let answerReminder {
@@ -386,7 +393,7 @@ private struct DinoAnswerReminder: View {
     }
 }
 
-private struct DinoReminderNudge: GeometryEffect {
+struct DinoReminderNudge: GeometryEffect {
     var progress: CGFloat
     var animatableData: CGFloat {
         get { progress }
@@ -403,6 +410,7 @@ private struct DinoDayPartSettingsButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .dinoSelectSound(pressed: configuration.isPressed)
             .font(.system(size: 20, weight: .bold, design: .rounded))
             .foregroundStyle(DinoStyle.ink)
             .padding(.horizontal, 24)
@@ -861,10 +869,38 @@ struct DinoQuestionTitle: View {
     var speechScope = "play"
 
     var body: some View {
-        title.font(.system(size: fontSize, weight: .heavy, design: .rounded))
+        Group {
+            if question.kind == .spokenTime, let formatKey = prompt.formatKey, let time = prompt.arguments.first {
+                spokenTimeTitle(formatKey: formatKey, time: time.text)
+            } else {
+                title
+            }
+        }
+            .font(.system(size: fontSize, weight: .heavy, design: .rounded))
             .foregroundColor(DinoStyle.ink)
             .multilineTextAlignment(.center).frame(maxWidth: .infinity)
             .speakQuestionTitle(spokenText, identity: "\(speechScope)-\(question.id)", active: announces)
+    }
+
+    private func spokenTimeTitle(formatKey: String, time: String) -> some View {
+        VStack(spacing: 10) {
+            Text(verbatim: L(key: formatKey).replacingOccurrences(of: "%@", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines))
+            Text(verbatim: time)
+                .font(.system(size: fontSize + 2, weight: .heavy, design: .rounded))
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 9)
+                .background(DinoStyle.ink.opacity(highContrast ? 0.10 : 0.06),
+                            in: RoundedRectangle(cornerRadius: 16))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(DinoStyle.ink.opacity(highContrast ? 0.7 : 0.16), lineWidth: highContrast ? 2 : 1)
+                }
+        }
+        .accessibilityRepresentation {
+            Text(verbatim: spokenText)
+        }
     }
 
     private var prompt: DinoQuestionPrompt {
@@ -944,14 +980,12 @@ struct DinoDemonstrationCard<Content: View, Actions: View>: View {
 
     var body: some View {
         VStack(spacing: 14) {
-            HStack(spacing: 8) {
-                Image(systemName: "sparkles").accessibilityHidden(true)
-                Text("dino.example").accessibilityIdentifier("demo.heading")
-                Image(systemName: "sparkles").accessibilityHidden(true)
-            }
-            .font(.system(size: 13, weight: .heavy, design: .rounded))
-            .foregroundStyle(DinoStyle.green)
-            .frame(maxWidth: .infinity)
+            Text("dino.example")
+                .underline()
+                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                .foregroundStyle(DinoStyle.ink)
+                .frame(maxWidth: .infinity)
+                .accessibilityIdentifier("demo.heading")
             ScrollView {
                 content()
                     .frame(width: width)
@@ -965,8 +999,13 @@ struct DinoDemonstrationCard<Content: View, Actions: View>: View {
             actions().fixedSize(horizontal: false, vertical: true)
         }
         .frame(width: width, height: height - 40)
-        .dinoCard()
-        .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 28))
+        .padding(20)
+        .background {
+            JungleBackground(quiet: true)
+                .overlay(Color.white.opacity(0.2))
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 28))
+        .shadow(color: DinoStyle.ink.opacity(0.12), radius: 20, y: 8)
         .foregroundStyle(DinoStyle.ink)
     }
 }

@@ -244,6 +244,8 @@ final class DinoPlayer: ObservableObject {
 enum DinoAnswerRequirement: String {
     case chooseTile = "dino.answer.chooseTile"
     case changeTime = "dino.answer.changeTime"
+    case connectClocks = "dino.answer.connectClocks"
+    case selectClocks = "dino.answer.selectClocks"
 }
 
 struct DinoAnswerCheck: Equatable {
@@ -430,9 +432,13 @@ final class DinoSession: ObservableObject, Identifiable {
                                    requirement: submissionRequirement(for: answer))
         case .match:
             let pairs = question.relatedTimes.indices.compactMap { pairSelections[$0] }
-            return DinoAnswerCheck(titleKey: "dino.check.connections", enabled: pairs.count == question.relatedTimes.count, answer: .pairs(pairs))
+            let answer = ClockAnswer.pairs(pairs)
+            return DinoAnswerCheck(titleKey: "dino.check.connections", enabled: true, answer: answer,
+                                   requirement: submissionRequirement(for: answer))
         case .sortTimes:
-            return DinoAnswerCheck(titleKey: "dino.check.order", enabled: selectedOrder.count == question.options.count, answer: .ordering(selectedOrder))
+            let answer = ClockAnswer.ordering(selectedOrder)
+            return DinoAnswerCheck(titleKey: "dino.check.order", enabled: true, answer: answer,
+                                   requirement: submissionRequirement(for: answer))
         case .sayTime:
             guard let prompt = question.spokenPrompt else { return nil }
             let ids = prompt.slots.indices.map { index -> String in
@@ -462,6 +468,12 @@ final class DinoSession: ObservableObject, Identifiable {
                 }
             }
             return hasTile ? nil : .chooseTile
+        case .match:
+            guard case .pairs(let pairs) = answer, pairs.count == question.relatedTimes.count else { return .connectClocks }
+            return nil
+        case .sortTimes:
+            guard case .ordering(let times) = answer, times.count == question.options.count else { return .selectClocks }
+            return nil
         default:
             return nil
         }

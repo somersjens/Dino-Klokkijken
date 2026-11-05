@@ -47,13 +47,19 @@ struct DinoSettingsView: View {
                     if confirmReset {
                         Color.black.opacity(0.28).ignoresSafeArea()
                             .contentShape(Rectangle())
-                            .onTapGesture { confirmReset = false }
+                            .onTapGesture {
+                                DinoAnswerFeedback.shared.playSelect()
+                                confirmReset = false
+                            }
                         ScrollView {
                             ResetConfirmationPage(minimumHeight: resetHeight) {
                                 Color.clear
                                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                                     .contentShape(Rectangle())
-                                    .onTapGesture { confirmReset = false }
+                                    .onTapGesture {
+                                        DinoAnswerFeedback.shared.playSelect()
+                                        confirmReset = false
+                                    }
                                     .accessibilityHidden(true)
                                 resetCard(compact: resetHeight < 700)
                                     .padding(16)
@@ -135,7 +141,7 @@ struct DinoSettingsView: View {
                     .foregroundStyle(DinoStyle.warning)
                     .padding(.horizontal, 16).frame(minHeight: 60)
                     .contentShape(Rectangle())
-            }.buttonStyle(.plain).accessibilityIdentifier("settings.reset")
+            }.buttonStyle(DinoPlainButtonStyle()).accessibilityIdentifier("settings.reset")
         }
         .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 22))
         .padding(12)
@@ -258,11 +264,12 @@ struct DinoSettingsView: View {
             Button { settings.icloudSyncEnabled.toggle() } label: {
                 Color.clear.frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(DinoPlainButtonStyle())
             .accessibilityHidden(true)
             Toggle(isOn: $settings.icloudSyncEnabled) { EmptyView() }
                 .labelsHidden().toggleStyle(.switch).tint(DinoStyle.deepGreen)
                 .accessibilityLabel(Text("dino.settings.icloudSync"))
+                .simultaneousGesture(TapGesture().onEnded { DinoAnswerFeedback.shared.playSelect() })
         }
         .padding(.horizontal, 16).padding(.vertical, 10).frame(minHeight: 60)
         .accessibilityElement(children: .contain)
@@ -294,7 +301,7 @@ struct DinoSettingsView: View {
             .padding(.horizontal, 16).frame(minHeight: 60)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(DinoPlainButtonStyle())
         .accessibilityIdentifier(identifier)
     }
 
@@ -318,7 +325,7 @@ struct DinoSettingsView: View {
             }.font(.system(size: 17, weight: .semibold, design: .rounded))
                 .padding(.horizontal, 16).frame(minHeight: 60)
                 .contentShape(Rectangle())
-        }.buttonStyle(.plain).accessibilityIdentifier(identifier)
+        }.buttonStyle(DinoPlainButtonStyle()).accessibilityIdentifier(identifier)
     }
 }
 
@@ -368,8 +375,9 @@ private struct ResetChallenge {
 
 /// A button that never scales its label. The plain style shrinks text when the button hugs its contents.
 private struct SettingsRowButtonStyle: ButtonStyle {
+    var playsSelectSound = true
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
+        configuration.label.dinoSelectSound(pressed: configuration.isPressed, enabled: playsSelectSound)
     }
 }
 
@@ -391,9 +399,12 @@ private struct SettingsToggleStyle: ToggleStyle {
             Button { configuration.isOn.toggle() } label: {
                 configuration.label.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                     .contentShape(Rectangle())
-            }.buttonStyle(.plain)
+            }.buttonStyle(DinoPlainButtonStyle(playsSelectSound: false))
             Toggle(isOn: configuration.$isOn) { configuration.label }
                 .labelsHidden().toggleStyle(.switch).tint(DinoStyle.deepGreen)
+        }
+        .onValueChange(of: configuration.isOn) { _ in
+            DinoAnswerFeedback.shared.playSelect()
         }
     }
 }
@@ -555,6 +566,7 @@ struct DinoDayPartScheduleEditor: View {
         return Menu {
                 ForEach(options, id: \.self) { hour in
                     Button {
+                        DinoAnswerFeedback.shared.playSelect()
                         var next = schedule
                         next.setStart(edited, hour)
                         guard next.isValid else { return }

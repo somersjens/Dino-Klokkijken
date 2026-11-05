@@ -152,8 +152,8 @@ enum DinoQuestionTeaching {
             // Twelve hours apart gives the same time words; the day part alone must not make an answer wrong.
             allowed.remove(target.adding(minutes: 12 * 60))
         }
-        if kind == .timeSequence {
-            // The last given term is context, never an answer to the next term.
+        if [.addTime, .subtractTime, .timeSequence].contains(kind) {
+            // The reference time is context, never an answer option.
             allowed.remove(target.adding(minutes: -operation))
         }
         let twelveHour = !allowed.contains { $0.hour == 0 || $0.hour > 12 }
@@ -170,7 +170,19 @@ enum DinoQuestionTeaching {
             if index < lead.count { merged.append(lead[index]) }
             if index < follow.count { merged.append(follow[index]) }
         }
-        return merged + rest
+        return spacedDistractors(merged + rest, target: target, twelveHour: twelveHour)
+    }
+
+    /// Keep every pair of choices at least two minutes apart, including across twelve/midnight.
+    static func spacedDistractors(_ candidates: [ClockTime], target: ClockTime,
+                                  twelveHour: Bool = false) -> [ClockTime] {
+        var selected: [ClockTime] = []
+        for candidate in candidates {
+            guard ([target] + selected).allSatisfy({ dialGap($0, candidate, twelveHour: twelveHour) > 1 }) else { continue }
+            selected.append(candidate)
+            if selected.count == 3 { break }
+        }
+        return selected
     }
 
     private static func mistakeBands(target: ClockTime, kind: ClockQuestionKind, step: Int,

@@ -77,6 +77,11 @@ struct MapOpeningView: View {
                     .position(x: board.midX, y: board.midY)
                     .zIndex(2)
             }
+            .onValueChange(of: geometry.size) { _ in
+                // Native flight keyframes target the viewport at takeoff. If it
+                // rotates midair, reveal the newly positioned map immediately.
+                if jumpStartedAt != nil { finished() }
+            }
             .task(id: image != nil && scenePhase == .active) {
                 guard image != nil, scenePhase == .active, !emerged else { return }
                 do {

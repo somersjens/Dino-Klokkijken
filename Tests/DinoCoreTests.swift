@@ -44,6 +44,7 @@ struct DinoCoreTests {
                     let layout = DinoGameLayout(width: CGFloat(width), height: CGFloat(height), kind: kind, optionCount: 4)
                     expect(layout.clockSize.isFinite && layout.clockSize > 0, "finite positive clock size")
                     expect(layout.answerWidth > 0 && layout.contextWidth > 0, "positive content widths")
+                    expect(!layout.hasSideContext && !layout.pairedClocks, "questions keep context and input in one column")
                     if layout.hasSideContext {
                         expect(layout.contextWidth + layout.answerWidth + layout.spacing <= CGFloat(width) + 0.01,
                                "columns stay inside the available width")
@@ -76,6 +77,11 @@ struct DinoCoreTests {
     }
 
     static func main() async {
+        if CommandLine.arguments.contains("--minute-rules") {
+            testMinuteQuestionRules()
+            print("PASS: \(checks) minute question rules checks.")
+            return
+        }
         if CommandLine.arguments.contains("--game-layout") {
             testGameLayout()
             print("PASS: \(checks) adaptive game layout checks.")
@@ -199,6 +205,7 @@ struct DinoCoreTests {
         testGameLayout()
         testLevelCurriculum()
         testAdaptiveDifficulty()
+        testMinuteQuestionRules()
         testQuestionVariation()
         testClocks()
         testBossClockMotion()
@@ -401,6 +408,10 @@ struct DinoCoreTests {
                            "options and arithmetic context remain on the selected grid")
                     expect(AnswerValidator.isCorrect(q.expectedAnswer, for: q) && !AnswerValidator.isCorrect(wrongAnswer(for: q), for: q),
                            "every teaching step has a valid, discriminating answer")
+                    if [.addTime, .subtractTime].contains(q.kind) {
+                        expect(!q.options.contains(q.relatedTimes[0]),
+                               "addition and subtraction choices never repeat the reference time in any category")
+                    }
                     if q.kind.usesOptions {
                         expect(Set(q.responses).count == q.responses.count && q.responses.filter { $0 == q.expectedAnswer }.count == 1,
                                "all teaching steps offer unique choices and exactly one correct response")
@@ -418,7 +429,7 @@ struct DinoCoreTests {
                     case .subtractTime:
                         expect(q.relatedTimes[0].adding(minutes: -q.durationMinutes) == q.target, "all tiers preserve subtraction")
                     case .minutesBetween:
-                        let limit = category.difficulty == .introduction ? category.time.minuteStep : category.difficulty == .familiar ? 90 : 180
+                        let limit = category.difficulty == .introduction ? max(2, category.time.minuteStep) : category.difficulty == .familiar ? 90 : 180
                         expect(q.durationMinutes <= limit && q.relatedTimes[1].minutesOfDay - q.relatedTimes[0].minutesOfDay == q.durationMinutes,
                                "elapsed-time complexity changes independently of the minute grid")
                         expect(q.responses.allSatisfy { if case .duration(let value) = $0 { return value.isMultiple(of: category.time.minuteStep) }; return false },
@@ -1875,6 +1886,10 @@ struct DinoCoreTests {
                     expect(q.kind == kind && minutes.contains(q.target.minute), "expanded examples retain question type and minute family")
                     expect(q.target != previous, "expanded examples do not repeat their previous target")
                     expect(AnswerValidator.isCorrect(q.expectedAnswer, for: q), "each refreshed example has a valid worked answer")
+                    if [.addTime, .subtractTime].contains(kind) {
+                        expect(!q.options.contains(q.relatedTimes[0]),
+                               "addition and subtraction examples never offer the reference time")
+                    }
                     switch kind {
                     case .addTime, .advanceAnalog, .timeSequence:
                         expect(q.relatedTimes.last!.adding(minutes: q.durationMinutes) == q.target, "example addition and sequence answers agree with their context")
@@ -2600,6 +2615,59 @@ struct DinoCoreTests {
             live.advance()
             expect(live.question.id == 1 && !live.hasFeedback && !live.showsSpokenClockHints,
                    "one Next action starts the next question and clears its helpers")
+        }
+    }
+
+    static func testMinuteQuestionRules() {
+        for kind in [ClockQuestionKind.setAnalog, .advanceAnalog, .setDigital, .chooseAnalog] {
+            for hour in 0..<24 {
+                for minute in [0, 1, 29, 30, 58, 59] {
+                    let target = ClockTime(hour: hour, minute: minute)
+                    let q = ClockQuestion(id: 0, kind: kind, target: target, options: [], activity: nil, companionClocks: [])
+                    for offset in -2...2 {
+                        let analog = [.setAnalog, .advanceAnalog].contains(kind)
+                        expect(AnswerValidator.isCorrect(target.adding(minutes: offset), for: q)
+                               == (analog ? abs(offset) <= 1 : offset == 0),
+                               "only analog setting accepts one minute either side, including hour and day boundaries")
+                    }
+                    expect(!AnswerValidator.isCorrect(target.adding(minutes: 60), for: q),
+                           "analog tolerance never accepts a wrong hour")
+                }
+            }
+        }
+        for category in DinoQuestionCategory.all {
+            var generator = DinoPracticeGenerator(configuration: .init(time: category.time, order: .specific(category.type)), seed: 761)
+            for index in 0..<12 {
+                let q = generator.next(index: index, difficultyForKind: { _ in category.difficulty })
+                if [.addTime, .subtractTime, .advanceAnalog, .timeSequence, .minutesBetween].contains(q.kind) {
+                    expect(q.durationMinutes > 1, "minute calculations always use multiple minutes at every difficulty")
+                }
+                if let schedule = q.daySchedule {
+                    expect([schedule.firstMinutes, schedule.breakMinutes, schedule.secondMinutes].allSatisfy { $0 > 1 },
+                           "all train and transfer durations use multiple minutes")
+                }
+                let span = [.chooseAnalog, .chooseDigital, .readDigital, .spokenTime, .trueFalse, .match].contains(q.kind) ? 720 : 1440
+                for (position, first) in q.options.enumerated() {
+                    for second in q.options.dropFirst(position + 1) {
+                        let delta = abs(first.minutesOfDay % span - second.minutesOfDay % span)
+                        expect(min(delta, span - delta) > 1, "every pair of time choices is more than one minute apart")
+                    }
+                }
+                let totals = q.responses.compactMap { answer -> Int? in
+                    if case .duration(let value) = answer { return value }; return nil
+                }
+                for (position, first) in totals.enumerated() {
+                    expect(first > 1, "minute totals never offer a single minute")
+                    expect(totals.dropFirst(position + 1).allSatisfy { abs(first - $0) > 1 },
+                           "every pair of duration choices is more than one minute apart")
+                }
+                if q.kind.usesOptions {
+                    let count = q.kind == .trueFalse ? 2 : q.kind == .dayPart ? 4 : category.difficulty.optionCount
+                    expect(q.responses.count == count && Set(q.responses).count == count,
+                           "spacing preserves the full answer grid at every difficulty")
+                }
+                expect(AnswerValidator.isCorrect(q.expectedAnswer, for: q), "minute rules retain the correct answer")
+            }
         }
     }
 
@@ -3662,6 +3730,63 @@ struct DinoCoreTests {
                            "a changed clock still scores exactly once")
                     session.advance()
                 }
+            }
+            let matchingPlayer = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+            let matchingConfig = DinoPracticeConfiguration(time: family, order: .specific(.match))
+            var matchingFeedback = 0
+            let matching = DinoSession(level: matchingConfig.level, player: matchingPlayer, practice: matchingConfig,
+                                       answerFeedback: { _ in matchingFeedback += 1 })
+            for _ in 0..<2 {
+                let questionID = matching.question.id
+                let answered = matching.practiceAnswered
+                for index in matching.question.relatedTimes.indices {
+                    expect(matching.answerCheck?.enabled == true && matching.answerCheck?.requirement == .connectClocks,
+                           "empty and partial matching boards keep a tappable reminder")
+                    for _ in 0..<3 { matching.submit(matching.answerCheck!.answer); matching.advance() }
+                    expect(!matching.hasFeedback && matching.question.id == questionID && matching.practiceAnswered == answered
+                           && matchingFeedback == answered,
+                           "incomplete connections never score, advance or play wrong-answer feedback")
+                    matching.pairSelections[index] = matching.question.relatedTimes[index]
+                }
+                expect(matching.answerCheck?.requirement == nil, "connecting every clock clears the reminder")
+                matching.pairSelections.removeValue(forKey: 0)
+                expect(matching.answerCheck?.requirement == .connectClocks, "disconnecting a clock restores the requirement")
+                matching.pairSelections[0] = matching.question.relatedTimes[0]
+                matching.submit(matching.answerCheck!.answer)
+                expect(matching.correctFeedback && matching.practiceAnswered == answered + 1 && matchingFeedback == answered + 1,
+                       "a completed matching board scores exactly once")
+                matching.advance()
+                expect(matching.pairSelections.isEmpty && matching.answerCheck?.requirement == .connectClocks,
+                       "the next board starts with a fresh connection requirement")
+            }
+            let sortingPlayer = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))
+            let sortingConfig = DinoPracticeConfiguration(time: family, order: .specific(.sortTimes))
+            var sortingFeedback = 0
+            let sorting = DinoSession(level: sortingConfig.level, player: sortingPlayer, practice: sortingConfig,
+                                      answerFeedback: { _ in sortingFeedback += 1 })
+            for _ in 0..<2 {
+                let questionID = sorting.question.id
+                let answered = sorting.practiceAnswered
+                guard case .ordering(let order) = sorting.question.expectedAnswer else { fatalError("Expected clock order") }
+                for time in order {
+                    expect(sorting.answerCheck?.enabled == true && sorting.answerCheck?.requirement == .selectClocks,
+                           "empty and partial sorting selections keep a tappable reminder")
+                    for _ in 0..<3 { sorting.submit(sorting.answerCheck!.answer); sorting.advance() }
+                    expect(!sorting.hasFeedback && sorting.question.id == questionID && sorting.practiceAnswered == answered
+                           && sortingFeedback == answered,
+                           "incomplete sorting selections never score, advance or play wrong-answer feedback")
+                    sorting.selectedOrder.append(time)
+                }
+                expect(sorting.answerCheck?.requirement == nil, "selecting every clock clears the reminder")
+                sorting.selectedOrder.removeLast()
+                expect(sorting.answerCheck?.requirement == .selectClocks, "deselecting a clock restores the requirement")
+                sorting.selectedOrder.append(order.last!)
+                sorting.submit(sorting.answerCheck!.answer)
+                expect(sorting.correctFeedback && sorting.practiceAnswered == answered + 1 && sortingFeedback == answered + 1,
+                       "a complete clock order scores exactly once")
+                sorting.advance()
+                expect(sorting.selectedOrder.isEmpty && sorting.answerCheck?.requirement == .selectClocks,
+                       "each sorting question requires a fresh selection")
             }
             for code in ["nl", "en"] {
                 let player = DinoPlayer(store: DinoProgressStore(defaults: InMemoryKeyValueStore()))

@@ -171,7 +171,7 @@ struct LanguagePicker: View {
                                     .font(.system(size: 22, weight: .semibold))
                                     .foregroundStyle(selected ? DinoStyle.deepGreen : DinoStyle.muted)
                             }.padding(.horizontal, 16).frame(minHeight: 60).contentShape(Rectangle())
-                        }.buttonStyle(.plain)
+                        }.buttonStyle(DinoPlainButtonStyle())
                             .accessibilityIdentifier("language.option." + option.code)
                     }
                 }.background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 22))
@@ -183,7 +183,10 @@ struct LanguagePicker: View {
                 .searchable(text: $query, prompt: Text("dino.settings.languageSearch"))
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("dino.done") { dismiss() }.accessibilityIdentifier("language.done")
+                        Button("dino.done") {
+                            DinoAnswerFeedback.shared.playSelect()
+                            dismiss()
+                        }.accessibilityIdentifier("language.done")
                     }
                 }
         }.foregroundStyle(DinoStyle.ink)

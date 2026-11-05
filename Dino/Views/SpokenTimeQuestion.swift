@@ -147,34 +147,22 @@ struct SpokenTimeQuestion: View {
 
     private var prompt: SpokenTimePrompt? { session.question.spokenPrompt }
     private var prefix: String { isDemonstration ? "demo" : "question" }
-    private var horizontal: Bool { wideLayout && width >= 560 }
-    private var wordBankWidth: CGFloat { horizontal ? (width - 12) * 0.66 : width }
-    private var tablet: Bool { width >= 600 }
-    private var rowCount: CGFloat { CGFloat(max(1, prompt?.slots.count ?? 1)) }
-    private var wordRowHeight: CGFloat {
-        horizontal ? min(40, max(32, floor(availableHeight / rowCount))) : tablet && !compact ? 48 : 40
-    }
-    private var wordSpacing: CGFloat {
-        horizontal ? min(8, max(0, (availableHeight - rowCount * wordRowHeight - 16) / max(1, rowCount - 1)))
-            : tablet && compact ? 6 : 8
-    }
-    private var wordPadding: CGFloat {
-        horizontal ? min(8, max(0, (availableHeight - rowCount * wordRowHeight - (rowCount - 1) * wordSpacing) / 2))
-            : tablet ? (compact ? 8 : 12) : 10
-    }
-    private var sentenceHeight: CGFloat {
-        horizontal ? min(72, max(44, availableHeight - 96)) : tablet ? (compact ? 32 : 40) : 56
-    }
+    private var wordBankWidth: CGFloat { min(560, width) }
+    private var tablet: Bool { width >= 600 && !compact }
+    private var wordRowHeight: CGFloat { compact ? 36 : tablet ? 48 : 40 }
+    private var wordSpacing: CGFloat { compact ? 7 : 8 }
+    private var wordPadding: CGFloat { compact ? 9 : tablet ? 12 : 10 }
+    private var sentenceHeight: CGFloat { compact ? 26 : tablet ? 40 : 56 }
 
     var body: some View {
-        let arrangement = horizontal ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: compact ? 8 : 12))
+        let arrangement = AnyLayout(VStackLayout(spacing: compact ? 6 : 12))
         arrangement {
             if let prompt {
                 VStack(spacing: 8) {
                     clock
                     sentence(prompt)
                 }
-                .frame(width: horizontal ? width - wordBankWidth - 12 : width)
+                .frame(width: width)
                 wordBank(prompt).frame(width: wordBankWidth)
             }
         }

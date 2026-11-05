@@ -86,7 +86,7 @@ struct DinoTimeZoneMap: View {
                     .frame(width: 44, height: 44)
                     .contentShape(Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(DinoPlainButtonStyle())
             .accessibilityLabel(Text("dino.timeZone.replay"))
             .accessibilityIdentifier("\(prefix).timeZone.replay")
         } else {

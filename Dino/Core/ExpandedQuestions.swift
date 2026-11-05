@@ -266,15 +266,16 @@ enum DinoExpandedQuestions {
                                                    using rng: inout R) -> ClockQuestion {
         let family = DinoPracticeTime.allCases.first { $0.minuteStep == minuteStep } ?? .minutes
         let step = minuteStep
-        let arithmeticLimit = difficulty == .introduction ? step : difficulty == .familiar ? 90 : 240
+        let minimumDuration = max(2, step)
+        let arithmeticLimit = difficulty == .introduction ? minimumDuration : difficulty == .familiar ? 90 : 240
         let sequenceLimit = difficulty == .challenge ? 90 : arithmeticLimit
-        let durations = Array(stride(from: step, through: max(step, kind == .timeSequence ? sequenceLimit : arithmeticLimit), by: step))
+        let durations = Array(stride(from: minimumDuration, through: max(minimumDuration, kind == .timeSequence ? sequenceLimit : arithmeticLimit), by: step))
         let duration = DinoQuestionTeaching.varied(durations, recent: recentQuestions.map(\.durationMinutes), using: &rng)
         let scheduleDurations: [Int]
         if kind == .daySchedule {
             let legLimit = difficulty == .introduction ? max(20, step) : difficulty == .familiar ? 90 : 150
             let legs = Array(stride(from: max(step, ((10 + step - 1) / step) * step), through: max(step, legLimit), by: step))
-            let transfers = Array(stride(from: step, through: max(step, 30), by: step))
+            let transfers = Array(stride(from: minimumDuration, through: max(minimumDuration, 30), by: step))
             scheduleDurations = [
                 DinoQuestionTeaching.varied(legs, recent: recentQuestions.compactMap { $0.daySchedule?.firstMinutes }, using: &rng),
                 DinoQuestionTeaching.varied(transfers, recent: recentQuestions.compactMap { $0.daySchedule?.breakMinutes }, using: &rng),
@@ -398,11 +399,8 @@ enum DinoExpandedQuestions {
                 let reversed = target.adding(minutes: q.offsetMinutes)
                 let nudged = target.adding(minutes: q.offsetMinutes > 0 ? 60 : -60)
                 let slipped = [target.adding(minutes: -step), target.adding(minutes: step)]
-                var seen: Set<ClockTime> = [target]
-                var distractors = ([forgotten, reversed, nudged] + slipped).filter { seen.insert($0).inserted }
-                for candidate in other where distractors.count < count - 1 && seen.insert(candidate).inserted {
-                    distractors.append(candidate)
-                }
+                let distractors = DinoQuestionTeaching.spacedDistractors(
+                    [forgotten, reversed, nudged] + slipped + other + pool, target: target)
                 q.options = (Array(distractors.prefix(count - 1)) + [target]).shuffled(using: &rng)
             }
         case .daySchedule:
@@ -418,12 +416,12 @@ enum DinoExpandedQuestions {
                               target.adding(minutes: -schedule.breakMinutes), target.adding(minutes: step),
                               schedule.secondStart, target.adding(minutes: -schedule.firstMinutes), schedule.start,
                               target.adding(minutes: -60), target.adding(minutes: 60)] + other
-            var seen: Set<ClockTime> = [target]
-            let distractors = candidates.filter { minutes.contains($0.minute) && seen.insert($0).inserted }
+            let distractors = DinoQuestionTeaching.spacedDistractors(
+                (candidates + pool).filter { minutes.contains($0.minute) }, target: target)
             q.options = (Array(distractors.prefix(count - 1)) + [target]).shuffled(using: &rng)
         case .minutesBetween:
-            let maxGap = difficulty == .introduction ? step : difficulty == .familiar ? 90 : 180
-            let starts = (1...min(maxGap, target.minutesOfDay))
+            let maxGap = difficulty == .introduction ? minimumDuration : difficulty == .familiar ? 90 : 180
+            let starts = (minimumDuration...min(maxGap, target.minutesOfDay))
                 .map { target.adding(minutes: -$0) }
                 .filter { minutes.contains($0.minute) }
             let elapsedOptions = starts.map { target.minutesOfDay - $0.minutesOfDay }
@@ -433,7 +431,7 @@ enum DinoExpandedQuestions {
             q.relatedTimes = [start, target]
             q.durationMinutes = elapsed
             // A missed step, a forgotten hour, or the minutes left after a missed borrow.
-            let gap = minuteStep
+            let gap = max(2, minuteStep)
             let minuteGap = abs(target.minute - start.minute)
             let hourGap = abs(target.hour - start.hour) * 60
             var slips = [minuteGap, hourGap, elapsed % 60]
@@ -443,7 +441,12 @@ enum DinoExpandedQuestions {
             let nearby = (1...6).flatMap { [elapsed + $0 * gap, elapsed - $0 * gap] }
             var seen: Set<Int> = [elapsed]
             func accept(_ values: [Int]) -> [Int] {
-                values.filter { $0 > 0 && $0.isMultiple(of: gap) && seen.insert($0).inserted }
+                values.filter { value in
+                    guard value > 1, value.isMultiple(of: minuteStep),
+                          seen.allSatisfy({ abs($0 - value) > 1 }) else { return false }
+                    seen.insert(value)
+                    return true
+                }
             }
             let primary = accept([elapsed - gap, elapsed + gap, elapsed - 2 * gap, elapsed + 2 * gap])
                 .sorted { abs($0 - elapsed) == abs($1 - elapsed) ? $0 < $1 : abs($0 - elapsed) < abs($1 - elapsed) }

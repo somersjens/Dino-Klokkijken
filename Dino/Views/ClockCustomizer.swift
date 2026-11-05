@@ -20,6 +20,8 @@ struct ClockCustomizer: View {
     @Binding var theme: ClockTheme
     var page: ClockCustomizerPage = .both
     var onNavigate: ((Int) -> Void)? = nil
+    var showsPreview = true
+    var showsOptions = true
     private var compact: Bool { verticalSizeClass == .compact }
     private var inkSwatches: [(name: String, hex: UInt32)] { ClockInk.allCases.map { ($0.rawValue, $0.hex) } }
     private let digitalInkSwatches: [(name: String, hex: UInt32)] = [
@@ -47,16 +49,20 @@ struct ClockCustomizer: View {
                 let horizontal = compact || metrics.sideBySide
                 let layout = horizontal ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
                 layout {
+                    if showsPreview {
                     Group {
                         if page == .analog { analogPreview } else { digitalPreview }
                     }.padding(.vertical, CustomizationLayout.previewPadding)
                         .frame(maxWidth: compact ? (page == .analog ? 140 : 185) : metrics.sideBySide ? 320 : .infinity)
+                    }
+                    if showsOptions {
                     ScrollView {
                         Group {
                             if page == .analog { analogOptions } else { digitalOptions }
                         }.modifier(CustomizationOptionsCard())
                     }.clipped().id(page == .analog ? "analog" : "digital")
                         .accessibilityIdentifier(page == .analog ? "theme.options.analog" : "theme.options.digital")
+                    }
                 }.frame(maxWidth: compact ? 760 : metrics.sideBySide ? 1100 : .infinity).frame(maxWidth: .infinity)
             }
         }.foregroundStyle(DinoStyle.ink)
@@ -66,7 +72,7 @@ struct ClockCustomizer: View {
     private var analogPreview: some View {
         TimelineView(.dinoMinute) { context in
             VStack(spacing: 10) {
-                AnalogClock(time: ClockTime(date: context.date), theme: theme, size: compact ? 100 : metrics.previewSize)
+                AnalogClock(time: ClockTime(date: context.date), theme: theme, size: compact ? (showsOptions ? 100 : 156) : metrics.previewSize)
                     .accessibilityIdentifier("theme.analog.preview")
                     .modifier(PersonalizationPreviewNavigation(onNavigate: onNavigate))
                 if theme.analogColorsMatch { ClockColorWarning(analog: true) }
@@ -77,7 +83,7 @@ struct ClockCustomizer: View {
     private var digitalPreview: some View {
         TimelineView(.dinoMinute) { context in
             VStack(spacing: 10) {
-                DigitalClock(time: ClockTime(date: context.date), theme: theme, fontSize: compact ? 36 : metrics.spacious ? 68 : 48)
+                DigitalClock(time: ClockTime(date: context.date), theme: theme, fontSize: !showsOptions ? (compact ? 28 : 56) : compact ? 36 : metrics.spacious ? 68 : 48)
                     .accessibilityIdentifier("theme.digital.preview")
                     .modifier(PersonalizationPreviewNavigation(onNavigate: onNavigate))
                 if theme.digitalColorsMatch { ClockColorWarning(analog: false) }
@@ -145,7 +151,7 @@ struct ClockCustomizer: View {
                             .stroke(selectedHourNotation == notation ? DinoStyle.deepGreen : DinoStyle.ink.opacity(0.15),
                                     lineWidth: selectedHourNotation == notation ? 2 : 1))
                         .contentShape(Rectangle())
-                }.buttonStyle(.plain)
+                }.buttonStyle(DinoPlainButtonStyle())
                     .accessibilityIdentifier("theme.hourNotation." + notation.rawValue)
             }
         }.accessibilityIdentifier("theme.hourNotation")
@@ -163,7 +169,7 @@ struct ClockCustomizer: View {
             }.frame(height: 72).frame(maxWidth: .infinity)
                 .background(theme.numerals == style ? DinoStyle.green.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 14))
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(theme.numerals == style ? DinoStyle.deepGreen : DinoStyle.ink.opacity(0.15), lineWidth: theme.numerals == style ? 2 : 1))
-        }.buttonStyle(.plain)
+        }.buttonStyle(DinoPlainButtonStyle())
             .accessibilityIdentifier("theme.numerals." + style.rawValue)
     }
 
@@ -191,7 +197,7 @@ struct ClockCustomizer: View {
                             .frame(maxWidth: .infinity, minHeight: 40)
                             .background(selection.wrappedValue == value ? DinoStyle.green.opacity(0.22) : .clear,
                                         in: RoundedRectangle(cornerRadius: 10))
-                    }.buttonStyle(.plain)
+                    }.buttonStyle(DinoPlainButtonStyle())
                         .accessibilityIdentifier(identifier + "." + value.rawValue)
                 }
             }.padding(3).background(DinoStyle.ink.opacity(0.06), in: RoundedRectangle(cornerRadius: 13))
@@ -224,7 +230,7 @@ struct ClockCustomizer: View {
                             .stroke(theme.analogNumerals == numerals ? DinoStyle.deepGreen : DinoStyle.ink.opacity(0.15),
                                     lineWidth: theme.analogNumerals == numerals ? 2 : 1))
                         .contentShape(Rectangle())
-                }.buttonStyle(.plain)
+                }.buttonStyle(DinoPlainButtonStyle())
                     .accessibilityIdentifier("theme.analogNumerals." + numerals.rawValue)
             }
         }.accessibilityIdentifier("theme.analogNumerals")
@@ -239,7 +245,7 @@ struct ClockCustomizer: View {
             }.padding(.horizontal, 6).padding(.vertical, 8).frame(maxWidth: .infinity)
                 .background(selected ? DinoStyle.green.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 12))
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(selected ? DinoStyle.deepGreen : DinoStyle.ink.opacity(0.15), lineWidth: selected ? 2 : 1))
-        }.buttonStyle(.plain).accessibilityIdentifier(identifier)
+        }.buttonStyle(DinoPlainButtonStyle()).accessibilityIdentifier(identifier)
     }
 
     private func colorChoices(title: String, color: Binding<UInt32>, values: [(name: String, hex: UInt32)]) -> some View {
@@ -256,7 +262,7 @@ struct ClockCustomizer: View {
                                         .foregroundStyle(Color(dinoHex: ClockColorContrast.markingHex(on: value.hex)))
                                 }
                             }.frame(maxWidth: .infinity, minHeight: metrics.controlHeight).contentShape(Rectangle())
-                    }.buttonStyle(.plain)
+                    }.buttonStyle(DinoPlainButtonStyle())
                         .accessibilityIdentifier("theme." + title + "." + value.name)
                 }
                 ColorPicker(selection: systemColor(color), supportsOpacity: false) { Text("dino.customColor") }
@@ -331,7 +337,7 @@ struct ClockRestoreStyleButton: View {
         } label: {
             Label("dino.clock.restoreStyle", systemImage: "arrow.counterclockwise")
                 .modifier(CustomizationText()).frame(maxWidth: .infinity, minHeight: 44)
-        }.buttonStyle(.plain).foregroundStyle(DinoStyle.deepGreen)
+        }.buttonStyle(DinoPlainButtonStyle()).foregroundStyle(DinoStyle.deepGreen)
             .accessibilityIdentifier(analog ? "theme.resetAnalogStyle" : "theme.resetDigitalStyle")
     }
 }

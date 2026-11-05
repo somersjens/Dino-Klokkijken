@@ -81,8 +81,16 @@ struct DinoCharacter: View {
         }
         .task(id: clip) {
             start = Date(); finished = false; playbackClip = clip
+            let clapID = clip == .thumbsUp && !reduceMotion
+                ? DinoAnswerFeedback.shared.playClaps(at: DinoAnimation.correctAnswerClapContacts.map { max(0, $0 - 0.2) }) : nil
+            let impactID = clip == .stumble
+                ? DinoAnswerFeedback.shared.playGroundImpact(after: reduceMotion ? 0.05 : DinoAnimation.travelDuration(.stumble)) : nil
             guard clip != .idle else { return }
-            do { try await Task.sleep(for: .seconds(DinoAnimation.duration(clip))) } catch { return }
+            do { try await Task.sleep(for: .seconds(DinoAnimation.duration(clip))) } catch {
+                if let clapID { DinoAnswerFeedback.shared.cancelClaps(clapID) }
+                if let impactID { DinoAnswerFeedback.shared.cancelImpact(impactID) }
+                return
+            }
             finished = true
         }
     }
@@ -268,10 +276,15 @@ private struct DinoApplauseNeckMask: Shape {
 
 enum DinoCompanionPlacement { case game, result }
 
+struct DinoCompanionDestination {
+    let bounds: Anchor<CGRect>
+    var dimmingOpacity: Double = 0
+}
+
 struct DinoCompanionPreference: PreferenceKey {
-    static var defaultValue: [DinoCompanionPlacement: Anchor<CGRect>] { [:] }
-    static func reduce(value: inout [DinoCompanionPlacement: Anchor<CGRect>],
-                       nextValue: () -> [DinoCompanionPlacement: Anchor<CGRect>]) {
+    static var defaultValue: [DinoCompanionPlacement: DinoCompanionDestination] { [:] }
+    static func reduce(value: inout [DinoCompanionPlacement: DinoCompanionDestination],
+                       nextValue: () -> [DinoCompanionPlacement: DinoCompanionDestination]) {
         value.merge(nextValue(), uniquingKeysWith: { _, next in next })
     }
 }
@@ -282,7 +295,9 @@ struct DinoCompanionAnchor: View {
     let size: CGFloat
     var body: some View {
         Color.clear.frame(width: size, height: size)
-            .anchorPreference(key: DinoCompanionPreference.self, value: .bounds) { [placement: $0] }
+            .anchorPreference(key: DinoCompanionPreference.self, value: .bounds) {
+                [placement: DinoCompanionDestination(bounds: $0)]
+            }
             .allowsHitTesting(false).accessibilityHidden(true)
     }
 }
@@ -293,7 +308,9 @@ struct DinoCompanionLayer: View {
     let isResult: Bool
     var worldID = 1
     var compactPortrait = false
+    var entersFromAbove = false
     var reactionID = 0
+    var dimmingOpacity: Double = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var placement = CGRect.zero
     @State private var visible = false
@@ -338,6 +355,23 @@ struct DinoCompanionLayer: View {
                         let arriving = isResult && !atResult
                         atResult = isResult
                         showClip(clip)
+                        if arriving && entersFromAbove && !reduceMotion {
+                            var transaction = Transaction()
+                            transaction.disablesAnimations = true
+                            withTransaction(transaction) {
+                                placement = CGRect(x: target.minX, y: -target.height - 24,
+                                                   width: target.width, height: target.height)
+                                portraitAmount = 0
+                                visible = true
+                            }
+                            Task { @MainActor in
+                                // Commit the offscreen origin before animating to the podium.
+                                do { try await Task.sleep(for: .milliseconds(16)) } catch { return }
+                                guard atResult, destination == target else { return }
+                                arrive(at: target)
+                            }
+                            return
+                        }
                         guard visible, !reduceMotion else {
                             var transaction = Transaction()
                             transaction.disablesAnimations = true
@@ -348,27 +382,7 @@ struct DinoCompanionLayer: View {
                             return
                         }
                         if arriving {
-                            let delay = DinoAnimation.travelDelay(clip)
-                            let travel = DinoAnimation.travelDuration(clip) - delay
-                            // Unfold the bust into a full character as he leaves the circle.
-                            // Keep the same sprite and finish on the existing rock anchor.
-                            withAnimation(.easeOut(duration: 0.24).delay(delay)) { portraitAmount = 0 }
-                            let journey: Animation
-                            switch clip {
-                            case .stumble:
-                                // Accelerate down from the portrait; the contact
-                                // drawing and compression catch the fall on the rock.
-                                journey = .timingCurve(0.42, 0, 0.88, 0.55, duration: travel)
-                            case .openingJump:
-                                // Keep the opening jump's momentum through the
-                                // diagonal flight; its poses supply the landing.
-                                journey = .linear(duration: travel)
-                            case .pirouette:
-                                journey = .timingCurve(0.20, 0.65, 0.35, 1, duration: travel)
-                            default:
-                                journey = .easeInOut(duration: travel)
-                            }
-                            withAnimation(journey.delay(delay)) { placement = target }
+                            arrive(at: target)
                         } else {
                             // Track the portrait or result anchor immediately on layout changes.
                             var transaction = Transaction()
@@ -381,11 +395,39 @@ struct DinoCompanionLayer: View {
                     }
             }
         }
+        // This layer sits above screen overlays. Match their black scrim while
+        // preserving the portrait's transparent edges and overflowing spikes.
+        .colorMultiply(Color(white: 1 - dimmingOpacity))
+        .animation(.easeOut(duration: 0.18), value: dimmingOpacity)
         .onValueChange(of: clip, initial: true) { next in
             // Hold the last portrait pose while the result scene measures its rock.
             // Start the sprite and its journey together once that destination exists.
             if !isResult || destination != nil { showClip(next) }
         }
+    }
+
+    private func arrive(at target: CGRect) {
+        let delay = DinoAnimation.travelDelay(clip)
+        let travel = DinoAnimation.travelDuration(clip) - delay
+        // Unfold the bust into a full character as he leaves the circle.
+        // Keep the same sprite and finish on the existing rock anchor.
+        withAnimation(.easeOut(duration: 0.24).delay(delay)) { portraitAmount = 0 }
+        let journey: Animation
+        switch clip {
+        case .stumble:
+            // Accelerate down from the portrait; the contact
+            // drawing and compression catch the fall on the rock.
+            journey = .timingCurve(0.42, 0, 0.88, 0.55, duration: travel)
+        case .openingJump:
+            // Keep the opening jump's momentum through the
+            // diagonal flight; its poses supply the landing.
+            journey = .linear(duration: travel)
+        case .pirouette:
+            journey = .timingCurve(0.20, 0.65, 0.35, 1, duration: travel)
+        default:
+            journey = .easeInOut(duration: travel)
+        }
+        withAnimation(journey.delay(delay)) { placement = target }
     }
 
     private func showClip(_ next: DinoAnimation.Clip) {

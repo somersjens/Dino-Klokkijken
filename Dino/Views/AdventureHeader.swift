@@ -23,6 +23,7 @@ struct AdventureHeader: View {
     let stars: Int
     var worldID = 1
     var compact = false
+    var vertical = false
     var showsPracticeSubtitle = true
     var viewportHeight: CGFloat = 900
     var viewportWidth: CGFloat? = nil
@@ -38,6 +39,16 @@ struct AdventureHeader: View {
     var openStars: (() -> Void)?
     var action: () -> Void
 
+    private static let railFootprint: CGFloat = 102
+    private static let railPlateWidth: CGFloat = 68
+    private static let railSubtitleWidth: CGFloat = 36
+    // Cross the portrait's side margin and overlap the plaque rim by five points.
+    private static let railSubtitleSpacing: CGFloat = -22
+
+    static func railWidth(showsPracticeSubtitle: Bool) -> CGFloat {
+        railFootprint + (showsPracticeSubtitle ? railSubtitleWidth + railSubtitleSpacing : 0)
+    }
+
     private var palette: HUDPalette { HUDPalette(worldID: worldID) }
     private var titleKeys: [String] {
         [practiceStreak == nil ? "dino.levelLabel" : "dino.practice.streak", questionCounter == nil ? "dino.starsLabel" : "dino.questionsLabel",
@@ -49,6 +60,32 @@ struct AdventureHeader: View {
     }
 
     var body: some View {
+        Group {
+            if vertical {
+                HStack(spacing: Self.railSubtitleSpacing) {
+                    verticalHeader
+                    if let practiceConfiguration, showsPracticeSubtitle {
+                        HUDQuarterTurnLayout {
+                            HUDPracticeSubtitle(configuration: practiceConfiguration, record: practiceRecord, palette: palette,
+                                                compact: true, spacious: false, highContrast: highContrast)
+                                .rotationEffect(.degrees(-90))
+                        }
+                        .frame(width: Self.railSubtitleWidth)
+                    }
+                }
+            } else {
+                horizontalHeader
+            }
+        }
+        .sheet(isPresented: $showsPersonalizer) {
+            DinoPersonalizer().environmentObject(player).gameEnvironment()
+                .personalizerPresentation(width: viewportWidth, height: viewportHeight, compact: compact)
+                .presentationDetents([.large]).presentationDragIndicator(.visible)
+        }
+        .onValueChange(of: showsPersonalizer) { shown in personalizerChanged(shown) }
+    }
+
+    private var horizontalHeader: some View {
         GeometryReader { geometry in
             let scale = headerScale(width: geometry.size.width)
             let designWidth = min(390, geometry.size.width)
@@ -101,10 +138,9 @@ struct AdventureHeader: View {
             }
             .overlay(alignment: .bottom) {
                 if let practiceConfiguration, showsPracticeSubtitle {
-                    HUDPracticeSubtitle(configuration: practiceConfiguration, palette: palette,
+                    HUDPracticeSubtitle(configuration: practiceConfiguration, record: practiceRecord, palette: palette,
                                         compact: compact, spacious: metrics.spacious, highContrast: highContrast)
-                        .padding(.leading, metrics.leadingMargin + metrics.portraitFootprint * 0.48)
-                        .padding(.trailing, metrics.trailingMargin)
+                        // Center on the complete viewport, including the portrait.
                         .offset(y: (compact ? 9 : -6) + HUDPracticeSubtitle.addedHeight(compact: compact, spacious: metrics.spacious))
                 }
             }
@@ -118,11 +154,43 @@ struct AdventureHeader: View {
         .frame(height: headerHeight * headerScale(width: viewportWidth ?? availableWidth))
         .readGeometry(for: CGFloat.self) { $0.size.width } action: { availableWidth = $0 }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: worldID)
-        .sheet(isPresented: $showsPersonalizer) {
-            DinoPersonalizer().environmentObject(player).gameEnvironment()
-                .presentationDetents([.large]).presentationDragIndicator(.visible)
+    }
+
+    /// A narrow, fully operable HUD for windows with very little vertical room.
+    private var verticalHeader: some View {
+        let metrics = HUDMetrics(width: 410, compact: true, level: practiceStreak ?? level,
+                                 stars: stars, questionCounter: questionCounter, titles: localizedTitles, vertical: true)
+        // The portrait straddles the head of the same plaque, like the horizontal HUD.
+        return VStack(spacing: -50) {
+            portrait(metrics, diameter: 78, vertical: true)
+                .zIndex(1)
+            VStack(spacing: 2) {
+                levelCell(metrics)
+                railDivider
+                progressCell(metrics)
+                railDivider
+                helpButton(metrics)
+                railDivider
+                controlButton(metrics)
+            }
+            .padding(.top, 38)
+            .padding(.bottom, 8)
+            .frame(width: Self.railPlateWidth)
+            .background {
+                HUDPlate(palette: palette, highContrast: highContrast)
+                    .accessibilityIdentifier("header.railPlate")
+            }
         }
-        .onValueChange(of: showsPersonalizer) { shown in personalizerChanged(shown) }
+        .foregroundStyle(highContrast ? palette.contrastInk : palette.ink)
+        .frame(width: Self.railFootprint)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("header.rail")
+    }
+
+    private var railDivider: some View {
+        Capsule().fill(highContrast ? palette.outline : palette.divider)
+            .frame(width: 44, height: highContrast ? 2 : 1)
+            .accessibilityHidden(true)
     }
 
     private var headerHeight: CGFloat {
@@ -135,13 +203,14 @@ struct AdventureHeader: View {
         return min(maximumScale, max(1, width / 390), max(1, viewportHeight / 480))
     }
 
-    private func portrait(_ metrics: HUDMetrics) -> some View {
-        let size = metrics.avatar
+    private func portrait(_ metrics: HUDMetrics, diameter: CGFloat? = nil, vertical: Bool = false) -> some View {
+        let size = diameter ?? metrics.avatar
+        let footprint = vertical ? size * 1.3 : metrics.portraitFootprint
         return Button { showsPersonalizer = true } label: {
             ZStack {
                 HUDPortraitLeaves(diameter: size, palette: palette)
-                    .frame(width: metrics.portraitFootprint, height: metrics.portraitFootprint)
-                    .mask(HUDLeafClearance(plateHeight: metrics.plate).fill(style: FillStyle(eoFill: true)))
+                    .frame(width: footprint, height: footprint)
+                    .mask(HUDLeafClearance(plateHeight: vertical ? Self.railPlateWidth : metrics.plate, vertical: vertical).fill(style: FillStyle(eoFill: true)))
                 if sharedCompanion {
                     DinoCompanionAnchor(placement: .game, size: size)
                 } else {
@@ -154,13 +223,13 @@ struct AdventureHeader: View {
                     Circle().strokeBorder(palette.rim, lineWidth: 4)
                         .frame(width: size, height: size)
                     DinoBustImage(appearance: player.profile.dinoAppearance ?? .standard, diameter: size)
-                        .frame(width: metrics.portraitFootprint, height: metrics.portraitFootprint)
+                        .frame(width: footprint, height: footprint)
                         .mask(DinoBustOverflowMask(diameter: size))
                         .shadow(color: DinoStyle.ink.opacity(0.14), radius: 0.7, y: 0.7)
                 }
             }
-            .frame(width: metrics.portraitFootprint, height: metrics.portraitFootprint)
-            .frame(width: metrics.portraitSlot, height: metrics.portraitFootprint, alignment: .leading)
+            .frame(width: footprint, height: footprint)
+            .frame(width: vertical ? footprint : metrics.portraitSlot, height: footprint, alignment: vertical ? .center : .leading)
             .shadow(color: palette.outline.opacity(0.18), radius: 3, y: 2)
             .contentShape(Rectangle())
         }
@@ -175,15 +244,6 @@ struct AdventureHeader: View {
                 .accessibilityIdentifier(practiceStreak == nil ? "header.levelCount" : "practice.streak")
         }
         .frame(width: metrics.cellWidth, height: metrics.cell)
-        .overlay(alignment: .top) {
-            if practiceStreak != nil {
-                HUDRecordBadge(value: String(practiceRecord), trophy: true, palette: palette,
-                               compact: compact, spacious: metrics.spacious, highContrast: highContrast)
-                    .frame(maxWidth: metrics.cellWidth + 8)
-                    .offset(y: compact ? -15 : metrics.spacious ? -23 : -21)
-                    .accessibilityIdentifier("practice.bestStreak")
-            }
-        }
         .contentShape(Rectangle())
         .accessibilityIdentifier(practiceStreak == nil ? "header.level" : "header.streak")
     }
@@ -313,9 +373,24 @@ private struct HUDRecordBadge: View {
     }
 }
 
-/// A chapter-style plaque attached to the lower edge of the practice HUD.
+/// Reserves the actual footprint of a subtitle rotated to read bottom to top.
+private struct HUDQuarterTurnLayout: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard let subtitle = subviews.first else { return .zero }
+        let size = subtitle.sizeThatFits(ProposedViewSize(width: proposal.height, height: proposal.width))
+        return CGSize(width: size.height, height: size.width)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        subviews.first?.place(at: CGPoint(x: bounds.midX, y: bounds.midY), anchor: .center,
+                              proposal: ProposedViewSize(width: bounds.height, height: bounds.width))
+    }
+}
+
+/// The practice type and its trophy record share one chapter-style plaque.
 private struct HUDPracticeSubtitle: View {
     let configuration: DinoPracticeConfiguration
+    let record: Int
     let palette: HUDPalette
     let compact: Bool
     let spacious: Bool
@@ -354,7 +429,22 @@ private struct HUDPracticeSubtitle: View {
             Text(LocalizedStringKey(configuration.time.titleKey))
                 .font(.system(size: (compact ? 10 : spacious ? 15 : 12) * Self.enlargement, weight: .heavy, design: .rounded))
                 .lineLimit(1).fixedSize()
+                .accessibilityIdentifier("practice.hudTime")
+            Text(verbatim: "·")
+                .accessibilityHidden(true)
+            HStack(spacing: 4 * Self.enlargement) {
+                Image(systemName: "trophy.fill")
+                    .foregroundStyle(LinearGradient(colors: [Color(dinoHex: 0xD4AF5D), Color(dinoHex: 0x876128)],
+                                                    startPoint: .top, endPoint: .bottom))
+                    .accessibilityHidden(true)
+                Text(verbatim: String(record)).monospacedDigit()
+                    .offset(x: HUDNumberAlignment.offset(for: String(record), fontSize: (compact ? 11 : spacious ? 18 : 14) * Self.enlargement))
+                    .accessibilityIdentifier("practice.bestStreak")
+                    .accessibilityHint(Text("dino.practice.bestStreak"))
+            }
+            .font(.system(size: (compact ? 11 : spacious ? 18 : 14) * Self.enlargement, weight: .heavy, design: .rounded))
         }
+        .font(.system(size: (compact ? 11 : spacious ? 18 : 14) * Self.enlargement, weight: .heavy, design: .rounded))
         .foregroundStyle(highContrast ? palette.contrastInk : palette.ink)
         .padding(.leading, 8 * Self.enlargement)
         .padding(.trailing, (compact ? 10 : 14) * Self.enlargement)
@@ -365,6 +455,8 @@ private struct HUDPracticeSubtitle: View {
                 .overlay(Capsule().strokeBorder(palette.outline, lineWidth: (highContrast ? 2 : 1.5) * Self.enlargement))
                 .overlay(Capsule().strokeBorder(.white.opacity(0.7), lineWidth: 0.7 * Self.enlargement).padding(2 * Self.enlargement))
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text(verbatim: "\(markerTitle) · \(L(key: configuration.time.titleKey))"))
         .accessibilityIdentifier("practice.hudSubtitle")
     }
 }
@@ -422,12 +514,29 @@ private enum HUDNumberAlignment {
 /// leaves over a three-digit level number.
 private struct HUDLeafClearance: Shape {
     let plateHeight: CGFloat
+    var vertical = false
     func path(in rect: CGRect) -> Path {
         var path = Path(rect)
-        path.addPath(Capsule().path(in: CGRect(x: rect.width * 0.48,
-                                             y: (rect.height - plateHeight) / 2,
-                                             width: rect.width * 4, height: plateHeight)))
+        let clearance = vertical
+            ? CGRect(x: (rect.width - plateHeight) / 2, y: rect.height * 0.48,
+                     width: plateHeight, height: rect.height * 4)
+            : CGRect(x: rect.width * 0.48, y: (rect.height - plateHeight) / 2,
+                     width: rect.width * 4, height: plateHeight)
+        path.addPath(Capsule().path(in: clearance))
         return path
+    }
+}
+
+private extension View {
+    @ViewBuilder func personalizerPresentation(width: CGFloat?, height: CGFloat, compact: Bool) -> some View {
+        if #available(iOS 18, *), !compact, let width, width > height {
+            // A form-sized iPad sheet can still be portrait inside a landscape window.
+            // Give the editor the presenting viewport's actual wide proportions.
+            self.frame(width: max(1, width - 48), height: max(1, height - 48))
+                .presentationSizing(.fitted)
+        } else {
+            self.pagePresentation()
+        }
     }
 }
 
@@ -451,7 +560,7 @@ private struct HUDMetrics {
     // Shrink the map artwork without moving labels or reducing tap targets.
     var mapIcon: CGFloat { icon * 0.9 }
 
-    init(width: CGFloat, compact: Bool, level: Int, stars: Int, questionCounter: String?, titles: [String]) {
+    init(width: CGFloat, compact: Bool, level: Int, stars: Int, questionCounter: String?, titles: [String], vertical: Bool = false) {
         let width = width.isFinite ? max(0, width) : 0
         spacious = width >= 600 && !compact
         avatar = compact ? 52 : spacious ? 104 : 78
@@ -465,7 +574,7 @@ private struct HUDMetrics {
         labelGap = compact ? 2 : 4
 
         // SwiftUI can measure the header at zero width while changing screens.
-        cellWidth = max(0, (width - leadingMargin - trailingMargin - portraitSlot - gap * 7
+        cellWidth = vertical ? 60 : max(0, (width - leadingMargin - trailingMargin - portraitSlot - gap * 7
                            - 6 - (spacious ? 18 : 8)) / 4)
         let availableWidth = max(20, cellWidth - 6)
         let nominalLabel: CGFloat = spacious ? 16 : compact ? 10 : 11
@@ -681,6 +790,7 @@ private struct HUDPressStyle: ButtonStyle {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .dinoSelectSound(pressed: configuration.isPressed)
             .scaleEffect(configuration.isPressed && !reduceMotion ? 0.95 : 1)
             .opacity(configuration.isPressed ? 0.8 : 1)
             .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: configuration.isPressed)

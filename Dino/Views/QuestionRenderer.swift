@@ -15,6 +15,7 @@ struct QuestionRenderer: View {
     var answerClockSize: CGFloat = 210
     var availableHeight: CGFloat = 700
     var horizontalSequence = false
+    var clockReminderAttempt = 0
     private var comparing: Bool { session.hasFeedback && !session.correctFeedback }
     private var question: ClockQuestion { session.question }
     private var targetSize: CGFloat { min(clockSize, width - 20) }
@@ -58,7 +59,7 @@ struct QuestionRenderer: View {
                 ClockMatchingBoard(times: question.relatedTimes, options: question.options,
                                    selections: $session.pairSelections, theme: theme, width: width,
                                    hasFeedback: session.hasFeedback, availableHeight: availableHeight,
-                                   horizontalLayout: wideLayout)
+                                   horizontalLayout: wideLayout, reminderAttempt: clockReminderAttempt)
                     .environment(\.dinoClockReadingAssistance, false)
                     .id("question.answers")
                     .questionAnswerFocus()
@@ -67,7 +68,7 @@ struct QuestionRenderer: View {
                                          compactLayout: compactLayout || (wideLayout && question.kind == .timeZone),
                                          answerClockSize: answerClockSize,
                                          wideLayout: wideLayout, availableHeight: availableHeight,
-                                         horizontalSequence: horizontalSequence)
+                                         horizontalSequence: horizontalSequence, reminderAttempt: clockReminderAttempt)
             }
         }.frame(maxWidth: .infinity)
             .environment(\.dinoClockReadingAssistance, session.showsClockHandHints)
@@ -202,13 +203,15 @@ struct QuestionRenderer: View {
     }
 
     private var targetCard: some View {
-        VStack(spacing: 10) {
+        let baseFont: CGFloat = width < 350 ? 32 : 38
+        let font = question.kind == .setAnalog ? baseFont * min(1.2, sqrt(max(1, width / 370))) : baseFont
+        return VStack(spacing: 10) {
             if let activity = question.activity {
                 Label(LocalizedStringKey(activity.titleKey), systemImage: activity.symbol)
                     .font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(DinoStyle.deepGreen)
             }
-            DigitalClock(time: question.target, theme: theme, fontSize: width < 350 ? 32 : 38,
-                         reservesHandHintSpace: question.kind == .chooseAnalog)
+            // Reading help adds its own space only after a mistake.
+            DigitalClock(time: question.target, theme: theme, fontSize: font)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(theme.digitalReading(question.target, languageCode: language.effective.code))
                 .accessibilityIdentifier("question.targetClock")
@@ -318,7 +321,7 @@ struct QuestionRenderer: View {
                             .padding(2).background(.white, in: Circle()).offset(x: 5, y: -5)
                     }
                 }.shadow(color: DinoStyle.ink.opacity(0.06), radius: 7, y: 4)
-        }.buttonStyle(DinoAnswerButtonStyle()).disabled(!session.responseIsEnabled(response)).accessibilityIdentifier("question.option.\(index)")
+        }.buttonStyle(DinoAnswerButtonStyle(playsSelectSound: false)).disabled(!session.responseIsEnabled(response)).accessibilityIdentifier("question.option.\(index)")
     }
 }
 
@@ -677,10 +680,13 @@ struct ClockMatchingBoard: View {
     var isDemonstration = false
     var availableHeight: CGFloat? = nil
     var horizontalLayout = false
+    var reminderAttempt = 0
     @State private var pending: Endpoint?
     @GestureState private var drag: ConnectionDrag?
     @State private var demonstrationStep = -1
     @State private var demonstrationStopped = false
+    @State private var highlightsMissingConnections = false
+    @State private var reminderProgress: CGFloat = 0
 
     private enum Endpoint: Equatable {
         case clock(Int), time(Int)
@@ -775,6 +781,13 @@ struct ClockMatchingBoard: View {
             }.frame(width: width, height: boardHeight)
                 .coordinateSpace(name: "clockMatchingBoard")
         }.environment(\.layoutDirection, .leftToRight)
+            .task(id: reminderAttempt) {
+                highlightsMissingConnections = reminderAttempt > 0 && !hasFeedback
+                guard highlightsMissingConnections else { return }
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.55)) {
+                    reminderProgress += 1
+                }
+            }
             .task {
                 guard isDemonstration else { return }
                 do {
@@ -812,9 +825,12 @@ struct ClockMatchingBoard: View {
                 .overlay(alignment: .topTrailing) {
                     if isDemonstration, demonstrationStep == index * 2 { tapCue(1) }
                 }
+                .modifier(MissingClockReminder(visible: highlightsMissingConnections && selected == nil,
+                                                    progress: selected == nil ? reminderProgress : 0, cornerRadius: 20))
         }.buttonStyle(DinoAnswerButtonStyle()).disabled(hasFeedback)
             .highPriorityGesture(connectionDrag(from: .clock(index)))
             .accessibilityIdentifier("\(prefix).clock.\(index)")
+            .accessibilityValue(highlightsMissingConnections && selected == nil ? Text("dino.answer.connectClocks") : Text(""))
     }
 
     private func timeButton(_ index: Int) -> some View {
@@ -833,9 +849,12 @@ struct ClockMatchingBoard: View {
                     if isDemonstration, demonstrationStep >= 0, !demonstrationStep.isMultiple(of: 2),
                        demonstrationStep / 2 < times.count, options[index] == times[demonstrationStep / 2] { tapCue(2) }
                 }
+                .modifier(MissingClockReminder(visible: highlightsMissingConnections && owner == nil,
+                                                    progress: owner == nil ? reminderProgress : 0, cornerRadius: 18))
         }.buttonStyle(DinoAnswerButtonStyle()).disabled(hasFeedback)
             .highPriorityGesture(connectionDrag(from: .time(index)))
             .accessibilityIdentifier("\(prefix).time.\(index)")
+            .accessibilityValue(highlightsMissingConnections && owner == nil ? Text("dino.answer.connectClocks") : Text(""))
     }
 
     private func connectionDot(_ color: Color) -> some View {
@@ -947,6 +966,25 @@ struct ClockMatchingBoard: View {
             selections[clock] = options[option]
             pending = nil
         }
+    }
+}
+
+struct MissingClockReminder: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let visible: Bool
+    let progress: CGFloat
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .strokeBorder(DinoStyle.deepOrange, lineWidth: 3)
+                    .opacity(visible ? 1 : 0)
+                    .allowsHitTesting(false)
+            }
+            .modifier(DinoReminderNudge(progress: reduceMotion ? 0 : progress))
+            .animation(.easeOut(duration: 0.18), value: visible)
     }
 }
 

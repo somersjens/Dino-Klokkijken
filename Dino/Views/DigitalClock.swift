@@ -59,7 +59,7 @@ struct DigitalClockOutline: InsettableShape {
 }
 
 struct DigitalClock: View {
-    static let handHintHeight: CGFloat = 56
+    static let handHintHeight: CGFloat = 50
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.dinoClockReadingAssistance) private var readingAssistance
     @ObservedObject private var language = LanguageManager.shared

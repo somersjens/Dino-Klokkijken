@@ -110,8 +110,10 @@ enum AnswerValidator {
         isCorrect(.time(answer), for: question)
     }
     static func isCorrect(_ answer: ClockAnswer, for question: ClockQuestion) -> Bool {
-        if question.kind == .advanceAnalog, case .time(let time) = answer {
-            return time.hour % 12 == question.target.hour % 12 && time.minute == question.target.minute
+        if [.setAnalog, .advanceAnalog].contains(question.kind), case .time(let time) = answer {
+            let delta = abs((time.hour % 12) * 60 + time.minute
+                - (question.target.hour % 12) * 60 - question.target.minute)
+            return min(delta, 720 - delta) <= 1
         }
         if question.kind == .sayTime, case .spoken(let spoken) = answer, let prompt = question.spokenPrompt {
             if spoken == prompt.correct { return true }

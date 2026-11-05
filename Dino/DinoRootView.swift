@@ -33,10 +33,13 @@ struct DinoRootView: View {
         .overlayPreferenceValue(DinoCompanionPreference.self) { anchors in
             GeometryReader { geometry in
                 let anchor = startCard != nil ? nil : result != nil ? anchors[.result] : anchors[.game]
-                DinoCompanionLayer(destination: anchor.map { geometry[$0] },
+                DinoCompanionLayer(destination: anchor.map { geometry[$0.bounds] },
                                    clip: companionClip, isResult: result != nil && startCard == nil,
                                    worldID: result?.level.worldID ?? session?.level.worldID ?? 1,
-                                   compactPortrait: geometry.size.height < 430, reactionID: gameCompanionReactionID)
+                                   compactPortrait: geometry.size.height < 430,
+                                   entersFromAbove: geometry.size.width > geometry.size.height,
+                                   reactionID: gameCompanionReactionID,
+                                   dimmingOpacity: anchor?.dimmingOpacity ?? 0)
             }.allowsHitTesting(false)
         }
             .sheet(isPresented: $showsFriends) {
@@ -56,6 +59,9 @@ struct DinoRootView: View {
                 if friends.enabled { friends.refresh(); friends.scheduleSync() }
             }
             .onValueChange(of: player.profile.progressResetAt) { _ in showMap() }
+            .onValueChange(of: result?.level.id) { id in
+                if id == nil { DinoAnswerFeedback.shared.stopLevelOutcome() }
+            }
 #if DEBUG
             .task {
                 let environment = ProcessInfo.processInfo.environment

@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		DA011126AD01000000000002 /* DinoGameLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA011126AD01000000000001 /* DinoGameLayout.swift */; };
 		00BF1DDD8A1DDC39990EF9D2 /* Dino/Core/ProgressSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ED274EAFF7B807862126964 /* Dino/Core/ProgressSyncService.swift */; };
 		0E03B85644DFB788EEC72EB8 /* Dino/Views/LevelResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7BF4989C8E56DBDD0035B47 /* Dino/Views/LevelResult.swift */; };
 		113D4C997110CB7A3F76A105 /* Dino/Core/PlayerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56A2803CE327ECBD272C7D1 /* Dino/Core/PlayerProfile.swift */; };
@@ -43,6 +42,7 @@
 		C4C9AF12A9918F7F62561C4B /* Dino/Core/NameValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2373432652E69FC550C1E670 /* Dino/Core/NameValidator.swift */; };
 		CF65DC853F33210C13C32356 /* Dino/Core/LevelConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349A7C34F9172244294A0CFE /* Dino/Core/LevelConfiguration.swift */; };
 		CF7F3ACA697DBE04D5B1165A /* Dino/Views/Friends.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA69CB435385B9A4C726D862 /* Dino/Views/Friends.swift */; };
+		DA011126AD01000000000002 /* Dino/Core/DinoGameLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA011126AD01000000000001 /* Dino/Core/DinoGameLayout.swift */; };
 		DA1A20261011000000000002 /* Dino/Views/JungleLandscape.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1A20261011000000000001 /* Dino/Views/JungleLandscape.swift */; };
 		DA1A20261011000000000004 /* Dino/Views/AdventureHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA1A20261011000000000003 /* Dino/Views/AdventureHeader.swift */; };
 		DA202026BD02000000000002 /* Dino/Views/ResultWorldScenery.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA202026BD02000000000001 /* Dino/Views/ResultWorldScenery.swift */; };
@@ -68,6 +68,10 @@
 		DB192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift */; };
 		DB192026BD01000000000002 /* Dino/Views/TimeZoneMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000002 /* Dino/Views/TimeZoneMap.swift */; };
 		DB192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json in Resources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json */; };
+		F9AE9B4C309BDADA00C283F5 /* zero-stars-fall.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B48309BDADA00C283F5 /* zero-stars-fall.m4a */; };
+		F9AE9B4D309BDADA00C283F5 /* end-of-level.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B49309BDADA00C283F5 /* end-of-level.m4a */; };
+		F9AE9B4E309BDADA00C283F5 /* select-menu.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B4A309BDADA00C283F5 /* select-menu.m4a */; };
+		F9AE9B4F309BDADA00C283F5 /* single-clap.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B4B309BDADA00C283F5 /* single-clap.m4a */; };
 		DB202026BD01000000000001 /* Dino/Views/DinoDesert.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA202026BD01000000000001 /* Dino/Views/DinoDesert.swift */; };
 		DB212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift */; };
 		DB212026BD01000000000002 /* Dino/Views/TimeArithmeticExplanation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA212026BD01000000000002 /* Dino/Views/TimeArithmeticExplanation.swift */; };
@@ -103,7 +107,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		DA011126AD01000000000001 /* DinoGameLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/DinoGameLayout.swift; sourceTree = SOURCE_ROOT; };
 		01881B3B65886D0F9D53F6C8 /* Dino/Core/SocialProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/SocialProgress.swift; sourceTree = SOURCE_ROOT; };
 		0B80587E32D18C0831D8ACC9 /* Dino/Views/OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/OnboardingFlow.swift; sourceTree = SOURCE_ROOT; };
 		1BC06D8CEF6D4051A1A0BD11 /* Dino/Views/ResultLevelSign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/ResultLevelSign.swift; sourceTree = SOURCE_ROOT; };
@@ -136,6 +139,7 @@
 		B8A5B3DA16BFBAC637CDC6B5 /* Dino/Views/Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/Settings.swift; sourceTree = SOURCE_ROOT; };
 		BC133C676EDB22A21DC494C7 /* Documentation/Acceptance.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Documentation/Acceptance.md; sourceTree = SOURCE_ROOT; };
 		D133564D7720CB902ED7C582 /* Dino/Views/AnalogClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/AnalogClock.swift; sourceTree = SOURCE_ROOT; };
+		DA011126AD01000000000001 /* Dino/Core/DinoGameLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/DinoGameLayout.swift; sourceTree = SOURCE_ROOT; };
 		DA121026AB12000000000001 /* Dino/Core/DinoAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/DinoAppearance.swift; sourceTree = SOURCE_ROOT; };
 		DA121026AB12000000000002 /* Dino/Views/DinoAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/DinoAvatar.swift; sourceTree = SOURCE_ROOT; };
 		DA121026AB12000000000003 /* Dino/Views/DinoPersonalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/DinoPersonalizer.swift; sourceTree = SOURCE_ROOT; };
@@ -175,6 +179,10 @@
 		F951E652307BE03500FF04C4 /* DinoTimeAdventureApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoTimeAdventureApp.swift; sourceTree = "<group>"; };
 		F951E65C307BE03500FF04C4 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		F951E65D307BE03500FF04C4 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		F9AE9B48309BDADA00C283F5 /* zero-stars-fall.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = Dino/Resources/Sounds/zero-stars-fall.m4a; sourceTree = SOURCE_ROOT; };
+		F9AE9B49309BDADA00C283F5 /* end-of-level.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = Dino/Resources/Sounds/end-of-level.m4a; sourceTree = SOURCE_ROOT; };
+		F9AE9B4A309BDADA00C283F5 /* select-menu.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = Dino/Resources/Sounds/select-menu.m4a; sourceTree = SOURCE_ROOT; };
+		F9AE9B4B309BDADA00C283F5 /* single-clap.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = Dino/Resources/Sounds/single-clap.m4a; sourceTree = SOURCE_ROOT; };
 		FF502E855D8132CA2685C1B5 /* Dino/Social/FriendsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Social/FriendsManager.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -293,7 +301,7 @@
 				6006716CA601E3DD24C0D9F6 /* Dino/Views/QuestionRenderer.swift */,
 				6B1DFC98581D62FAF83297BD /* Dino/Views/ClockCustomizer.swift */,
 				8AAEBD1E16CB94C4F51E8B01 /* Dino/Views/DinoGameView.swift */,
-				DA011126AD01000000000001 /* DinoGameLayout.swift */,
+				DA011126AD01000000000001 /* Dino/Core/DinoGameLayout.swift */,
 				945545C5CAAF92265CBE1BFE /* Dino/Views/DinoCharacter.swift */,
 				9CC831804F11124D46221EE6 /* Dino/Views/DigitalClock.swift */,
 				B7BF4989C8E56DBDD0035B47 /* Dino/Views/LevelResult.swift */,
@@ -319,6 +327,10 @@
 				A1319120659071CDFDC06C3F /* README.md */,
 				F951E65D307BE03500FF04C4 /* Localization.swift */,
 				F951E642307BE03500FF04C4 /* Assets.xcassets */,
+				F9AE9B48309BDADA00C283F5 /* zero-stars-fall.m4a */,
+				F9AE9B49309BDADA00C283F5 /* end-of-level.m4a */,
+				F9AE9B4A309BDADA00C283F5 /* select-menu.m4a */,
+				F9AE9B4B309BDADA00C283F5 /* single-clap.m4a */,
 				81C5D0349885771256BBA84E /* Dino */,
 				C70D8D9AE8EF868E9779C09D /* Tests */,
 				254F130E4296744D7AC5C4A2 /* Documentation */,
@@ -417,6 +429,10 @@
 			files = (
 				9BB407718D9D26EDD1309082 /* PrivacyInfo.xcprivacy in Resources */,
 				DB192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json in Resources */,
+				F9AE9B4C309BDADA00C283F5 /* zero-stars-fall.m4a in Resources */,
+				F9AE9B4D309BDADA00C283F5 /* end-of-level.m4a in Resources */,
+				F9AE9B4E309BDADA00C283F5 /* select-menu.m4a in Resources */,
+				F9AE9B4F309BDADA00C283F5 /* single-clap.m4a in Resources */,
 				B8196F54F8B174235D7F48CC /* InfoPlist.xcstrings in Resources */,
 				F951E75B307BE03500FF04C4 /* Localizable.xcstrings in Resources */,
 				F951E7F1307BE03500FF04C4 /* Assets.xcassets in Resources */,
@@ -499,7 +515,7 @@
 				DDD392F183235DB51B76875F /* Dino/Views/ClockCustomizer.swift in Sources */,
 				3B68E92C41BE1E6926B1CD26 /* Dino/Views/DigitalClock.swift in Sources */,
 				A3A7FCEFEAA9FAF58F4BD046 /* Dino/Views/DinoGameView.swift in Sources */,
-				DA011126AD01000000000002 /* DinoGameLayout.swift in Sources */,
+				DA011126AD01000000000002 /* Dino/Core/DinoGameLayout.swift in Sources */,
 				3B04AE1E8CC46A033D379434 /* Dino/Views/DinoUI.swift in Sources */,
 				0E03B85644DFB788EEC72EB8 /* Dino/Views/LevelResult.swift in Sources */,
 				DA202026BD02000000000002 /* Dino/Views/ResultWorldScenery.swift in Sources */,
