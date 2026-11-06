@@ -23,7 +23,7 @@ enum DinoAppDownload {
 }
 
 private enum ParentAction: String, Identifiable {
-    case enable, access, invite, share, appleProfile
+    case enable, access, share, appleProfile
     var id: String { rawValue }
 }
 
@@ -59,77 +59,51 @@ struct DinoParentGate: View {
 }
 
 struct DinoFriendsView: View {
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @EnvironmentObject private var manager: FriendsManager
+    @EnvironmentObject private var player: DinoPlayer
     @Environment(\.dismiss) private var dismiss
     @State private var parentAction: ParentAction?
     @State private var approvedAction: ParentAction?
-    @State private var showsPrivacy = false
-    @State private var accessEpoch = 0
+    @State private var showsOnlineHelp = false
+    @State private var confirmsSignOut = false
     @State private var shareEpoch = 0
+
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
-                let spacious = geometry.size.width >= 650
+                let spacious = geometry.size.width >= 650 && verticalSizeClass != .compact
+                let horizontal = spacious && geometry.size.width > geometry.size.height
                 VStack(spacing: 0) {
-                    Text("dino.friends.title")
-                        .font(.system(size: spacious ? 34 : 28, weight: .heavy, design: .rounded))
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 28).padding(.bottom, 8)
-                        .accessibilityIdentifier("friends.title")
                     ScrollView {
-                        VStack(spacing: 20) {
-                            statusCard
-                            if manager.enabled { permissionCard }
-                            if manager.authenticated {
-                                Button { parentAction = .invite } label: {
-                                    Label("dino.friends.invite", systemImage: "person.crop.circle.badge.plus")
-                                }.buttonStyle(DinoButtonStyle()).disabled(!manager.canInvite)
-                                    .accessibilityIdentifier("friends.invite")
-                                if !manager.canInvite { Text("dino.friends.inviteRestricted").font(.footnote) }
-                                if manager.friendAccess, manager.state == .ready, manager.friends.isEmpty {
-                                    VStack(spacing: 14) {
-                                        DinoCharacter(size: 100)
-                                        Text("dino.friends.empty").font(.headline)
-                                        Text("dino.friends.emptyMessage").font(.subheadline).multilineTextAlignment(.center)
-                                    }.dinoCard().accessibilityIdentifier("friends.empty")
-                                }
-                                if manager.friendAccess {
-                                    LazyVStack(spacing: 12) {
-                                        ForEach(manager.friends) { friend in
-                                            NavigationLink(value: friend.id) { FriendListRow(friend: friend) }
-                                                .buttonStyle(DinoPlainButtonStyle()).accessibilityIdentifier("friends.profile.\(friend.id)")
-                                        }
-                                    }
-                                    Button { manager.refresh(); manager.scheduleSync(force: true) } label: {
-                                        Label("dino.friends.refresh", systemImage: "arrow.clockwise")
-                                    }.buttonStyle(DinoSecondaryButtonStyle()).accessibilityIdentifier("friends.refresh")
-                                }
-                                Button { parentAction = .appleProfile } label: {
-                                    Label("dino.friends.manage", systemImage: "person.crop.circle")
-                                }.buttonStyle(DinoSecondaryButtonStyle())
-                                Text("dino.friends.reportHelp").font(.footnote)
+                        VStack(spacing: spacious ? 20 : 14) {
+                            header(spacious: spacious)
+                            let layout = horizontal ? AnyLayout(HStackLayout(spacing: 24)) : AnyLayout(VStackLayout(spacing: spacious ? 20 : 14))
+                            layout {
+                                FriendsHero(appearance: player.profile.dinoAppearance ?? .standard,
+                                            size: spacious ? 228 : 178)
+                                    .frame(maxWidth: horizontal ? 320 : .infinity)
+                                menu(spacious: spacious)
                             }
-                            if let key = manager.actionMessageKey { Text(LocalizedStringKey(key)).font(.footnote).accessibilityIdentifier("friends.error") }
-                            Button("dino.friends.privacy") {
-                                DinoAnswerFeedback.shared.playSelect()
-                                showsPrivacy = true
-                            }.frame(minHeight: 44)
-                            if manager.enabled {
-                                Button("dino.friends.disable") {
-                                    DinoAnswerFeedback.shared.playSelect()
-                                    manager.disable()
-                                }.frame(minHeight: 44)
-                            }
-                        }.padding(20).frame(maxWidth: 560).frame(maxWidth: .infinity)
+                            if spacious { closeButton(spacious: true).frame(maxWidth: 520) }
+                        }
+                        .padding(.horizontal, spacious ? 28 : 20).padding(.top, 14).padding(.bottom, 22)
+                        .frame(maxWidth: horizontal ? 900 : spacious ? 720 : 540).frame(maxWidth: .infinity)
+                        .frame(minHeight: spacious ? geometry.size.height : nil)
                     }
-                    Button { dismiss() } label: {
-                        Label("dino.practice.backToLevels", systemImage: "map.fill")
+                    .bouncesOnlyWhenNeeded()
+                    if !spacious {
+                        closeButton(spacious: false)
+                            .padding(.horizontal, 20).padding(.vertical, 10)
+                            .frame(maxWidth: 540).frame(maxWidth: .infinity)
+                            .background(DinoStyle.paper.opacity(0.97))
                     }
-                        .buttonStyle(DinoSecondaryButtonStyle()).accessibilityIdentifier("friends.close")
-                        .padding(.horizontal, spacious ? 24 : 20).padding(.top, 12).padding(.bottom, 18)
-                        .frame(maxWidth: 760).frame(maxWidth: .infinity)
-                        .background(DinoStyle.paper.opacity(0.97))
-                }.background(JungleBackground(quiet: true))
+                }
+            }
+            .background {
+                LinearGradient(colors: [DinoStyle.paper, Color(dinoHex: 0xE4F1DC)],
+                               startPoint: .top, endPoint: .bottom)
+                    .ignoresSafeArea()
             }
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: String.self) { FriendProfileView(friendID: $0) }
@@ -140,67 +114,246 @@ struct DinoFriendsView: View {
                     approvedAction = action; parentAction = nil
                 }
             }
-            .sheet(isPresented: $showsPrivacy) { DinoSocialPrivacyView() }
+            .alert("dino.friends.onlineVisibility", isPresented: $showsOnlineHelp) {
+                Button("dino.done", role: .cancel) {}
+            } message: {
+                Text("dino.friends.onlineVisibilityHelp")
+            }
+            .alert("dino.friends.signOut", isPresented: $confirmsSignOut) {
+                Button("dino.cancel", role: .cancel) {}
+                Button("dino.friends.disconnect", role: .destructive) { manager.disable() }
+                    .accessibilityIdentifier("friends.disconnect")
+            } message: {
+                Text("dino.friends.signOutMessage")
+            }
         }.foregroundStyle(DinoStyle.ink)
     }
-    private var statusCard: some View {
-        VStack(spacing: 14) {
-            if manager.state == .authenticating || manager.state == .loading { ProgressView() }
-            Text(LocalizedStringKey(manager.state.messageKey)).multilineTextAlignment(.center)
-            if !manager.enabled {
-                Button("dino.friends.connect") { parentAction = .enable }
-                    .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("friends.connect")
-            } else if manager.state == .signedOut {
-                Button("dino.friends.signIn") { manager.authenticate() }.buttonStyle(DinoSecondaryButtonStyle())
-            } else if manager.state == .unavailable {
-                Button("dino.retry") { manager.refresh() }.buttonStyle(DinoSecondaryButtonStyle())
+
+    private func menu(spacious: Bool) -> some View {
+        VStack(spacing: spacious ? 18 : 14) {
+            invitation(spacious: spacious)
+            if manager.state == .ready, !manager.friends.isEmpty { friendList }
+            connectionStatus
+            if manager.enabled { permissions }
+            if manager.authenticated {
+                Button { parentAction = .appleProfile } label: {
+                    HStack(spacing: 12) {
+                        rowLabel("dino.friends.manage", icon: "gearshape.fill")
+                        Image(systemName: "arrow.up.right.square")
+                            .foregroundStyle(DinoStyle.muted).accessibilityHidden(true)
+                    }
+                }.buttonStyle(DinoSecondaryButtonStyle(spacious: spacious))
             }
-        }.dinoCard()
+            if manager.enabled {
+                Button { confirmsSignOut = true } label: {
+                    rowLabel("dino.friends.signOut", icon: "rectangle.portrait.and.arrow.right")
+                        .foregroundStyle(DinoStyle.warning)
+                }
+                .buttonStyle(DinoSecondaryButtonStyle(spacious: spacious))
+                .accessibilityIdentifier("friends.signOut")
+            }
+        }
     }
-    private var permissionCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            consentToggle("dino.friends.load", isOn: manager.friendAccess, epoch: $accessEpoch, identifier: "friends.access") { allowed in
-                if allowed { parentAction = .access }
-                else { manager.setFriendAccess(false) }
-            }
-            consentToggle("dino.friends.share", isOn: manager.sharing || manager.shareWhenConnected,
-                          enabled: !manager.authenticated || manager.canShare || manager.sharing || manager.shareWhenConnected,
-                          epoch: $shareEpoch, identifier: "friends.share") { allowed in
-                if allowed { parentAction = .share }
-                else { manager.stopSharing() }
-            }
-            if manager.accountConflict { Text("dino.friends.accountConflict").font(.footnote) }
-            else if manager.authenticated && !manager.canShare { Text("dino.friends.sharingRestricted").font(.footnote) }
-            else if manager.sharing || manager.shareWhenConnected {
-                if manager.syncing { ProgressView(L("dino.friends.syncing")) }
-                if let key = manager.syncMessageKey { Text(LocalizedStringKey(key)).font(.footnote) }
-                Text("dino.friends.stopSharingMessage").font(.footnote)
-            } else {
-                Text("dino.friends.sharingOff").font(.footnote)
-            }
-        }.dinoCard().accessibilityIdentifier("friends.permissions")
+
+    private func closeButton(spacious: Bool) -> some View {
+        Button { dismiss() } label: {
+            Label("dino.practice.backToLevels", systemImage: "map.fill")
+        }
+        .buttonStyle(DinoSecondaryButtonStyle(spacious: spacious))
+        .accessibilityIdentifier("friends.close")
     }
-    private func consentToggle(_ title: LocalizedStringKey, isOn: Bool, enabled: Bool = true, epoch: Binding<Int>, identifier: String, change: @escaping (Bool) -> Void) -> some View {
-        Toggle(isOn: Binding(get: { isOn }, set: { allowed in
-            guard allowed != isOn else { return }
-            DinoAnswerFeedback.shared.playSelect()
-            if allowed { epoch.wrappedValue += 1 }
-            change(allowed)
-        })) {
-            Text(title).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
-        }.tint(DinoStyle.deepGreen).frame(minHeight: 44).disabled(!enabled)
-            .id(epoch.wrappedValue).accessibilityIdentifier(identifier)
+
+    private func header(spacious: Bool) -> some View {
+        Text("dino.friends.title")
+            .font(spacious ? .system(size: 39, weight: .heavy, design: .rounded) : .system(.largeTitle, design: .rounded).weight(.heavy))
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityIdentifier("friends.title")
     }
+
+    @ViewBuilder private func invitation(spacious: Bool) -> some View {
+        if !manager.enabled {
+            invitationButton(first: true, spacious: spacious) { parentAction = .enable }
+                .accessibilityIdentifier("friends.connect")
+        } else if manager.authenticated {
+            let first = manager.state == .ready && manager.friends.isEmpty
+            if manager.canInvite {
+                invitationButton(first: first, spacious: spacious) { manager.invite() }
+                    .accessibilityIdentifier("friends.invite")
+            } else if first {
+                Text("dino.friends.empty")
+                    .font(.system(.headline, design: .rounded))
+                    .frame(maxWidth: .infinity).dinoCard(padding: 14)
+                    .accessibilityIdentifier("friends.empty")
+            }
+        }
+    }
+
+    private func invitationButton(first: Bool, spacious: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(LocalizedStringKey(first ? "dino.friends.empty" : "dino.friends.invite"),
+                  systemImage: "person.badge.plus")
+                .padding(.vertical, 8)
+                .multilineTextAlignment(.center)
+        }
+        .buttonStyle(DinoButtonStyle(customization: spacious))
+        .environment(\.customizationTypeScale, spacious ? 1.3 : 1)
+        .padding(5)
+        .background(.white.opacity(0.85), in: RoundedRectangle(cornerRadius: 24))
+    }
+
+    private var friendList: some View {
+        LazyVStack(spacing: 0) {
+            HStack {
+                rowLabel("dino.friends.yourFriends", icon: "person.2.fill")
+                    .font(.system(.headline, design: .rounded).weight(.heavy))
+                    .accessibilityAddTraits(.isHeader)
+                Text(manager.friends.count, format: .number)
+                    .font(.system(.subheadline, design: .rounded).weight(.heavy))
+                    .foregroundStyle(DinoStyle.deepGreen)
+                    .padding(.horizontal, 12).padding(.vertical, 4)
+                    .background(Color(dinoHex: 0xE0F1D5), in: Capsule())
+            }
+            .accessibilityElement(children: .combine)
+            .padding(.bottom, 6)
+
+            ForEach(manager.friends) { friend in
+                Divider()
+                NavigationLink(value: friend.id) { FriendListRow(friend: friend) }
+                    .buttonStyle(DinoPlainButtonStyle())
+                    .accessibilityIdentifier("friends.profile.\(friend.id)")
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 20).padding(.vertical, 14)
+        .dinoCard(padding: 0)
+    }
+
+    @ViewBuilder private var connectionStatus: some View {
+        switch manager.state {
+        case .inactive, .ready:
+            EmptyView()
+        case .authenticating, .loading:
+            ProgressView(LocalizedStringKey(manager.state.messageKey))
+                .font(.subheadline).frame(maxWidth: .infinity).dinoCard(padding: 14)
+        default:
+            VStack(spacing: 10) {
+                Text(LocalizedStringKey(manager.state.messageKey))
+                    .font(.subheadline).multilineTextAlignment(.center)
+                if manager.state == .signedOut {
+                    Button("dino.friends.signIn") { manager.authenticate() }.buttonStyle(DinoSecondaryButtonStyle())
+                } else if manager.state == .needsPermission {
+                    Button("dino.friends.load") { parentAction = .access }
+                        .buttonStyle(DinoSecondaryButtonStyle())
+                        .accessibilityIdentifier("friends.access")
+                }
+            }.frame(maxWidth: .infinity).dinoCard(padding: 14)
+        }
+        if let key = manager.actionMessageKey {
+            Text(LocalizedStringKey(key)).font(.footnote).multilineTextAlignment(.center)
+                .accessibilityIdentifier("friends.error")
+        } else if manager.authenticated && !manager.canInvite && manager.friends.isEmpty {
+            Text("dino.friends.inviteRestricted").font(.footnote).multilineTextAlignment(.center)
+        }
+    }
+
+    private var permissions: some View {
+        let sharesScores = manager.sharing || manager.shareWhenConnected
+        return VStack(spacing: 0) {
+            Toggle(isOn: Binding(get: { sharesScores }, set: { allowed in
+                guard allowed != sharesScores else { return }
+                DinoAnswerFeedback.shared.playSelect()
+                if allowed {
+                    shareEpoch += 1
+                    parentAction = .share
+                } else {
+                    manager.stopSharing()
+                }
+            })) {
+                rowLabel("dino.friends.share", icon: "trophy.fill")
+            }
+            .tint(DinoStyle.green)
+            .frame(minHeight: 48)
+            .disabled(manager.authenticated && !manager.canShare && !sharesScores)
+            .id(shareEpoch)
+            .accessibilityIdentifier("friends.share")
+            Divider()
+            Button { showsOnlineHelp = true } label: {
+                HStack(spacing: 12) {
+                    rowLabel("dino.friends.onlineVisibility", icon: "dot.radiowaves.left.and.right")
+                    Image(systemName: "chevron.forward")
+                        .font(.footnote.bold()).foregroundStyle(DinoStyle.muted).accessibilityHidden(true)
+                }
+                .frame(minHeight: 48)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(DinoPlainButtonStyle())
+            .accessibilityIdentifier("friends.onlineVisibility")
+        }
+        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+        .padding(.horizontal, 20).padding(.vertical, 8)
+        .dinoCard(padding: 0)
+    }
+
+    private func rowLabel(_ title: LocalizedStringKey, icon: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .frame(width: 24)
+                .accessibilityHidden(true)
+            Text(title)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private func performApprovedAction() {
         guard let action = approvedAction else { return }
         approvedAction = nil
         switch action {
         case .enable: manager.enable()
         case .access: manager.setFriendAccess(true)
-        case .invite: manager.invite()
         case .share: manager.allowSharing()
         case .appleProfile: manager.showAppleProfile()
         }
+    }
+}
+
+private struct FriendsHero: View {
+    let appearance: DinoAppearance
+    let size: CGFloat
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            Canvas { context, size in
+                let painter = JunglePainter(context: context)
+                let w = size.width, h = size.height
+                painter.ellipse(CGRect(x: w * 0.67 - 37, y: h * 0.17, width: 74, height: 74),
+                                color: Color(dinoHex: 0xFFF1BA))
+                painter.hill(x: -w * 0.18, y: h * 0.49, width: w * 0.72, height: h * 0.72,
+                             color: Color(dinoHex: 0xDFEFDA))
+                painter.hill(x: w * 0.51, y: h * 0.45, width: w * 0.64, height: h * 0.70,
+                             color: Color(dinoHex: 0xD7EBD4))
+                painter.hill(x: w * 0.06, y: h * 0.78, width: w * 0.88, height: h * 0.48,
+                             color: Color(dinoHex: 0xBEE3AD))
+            }
+            .mask {
+                LinearGradient(stops: [
+                    .init(color: .clear, location: 0), .init(color: .white, location: 0.20),
+                    .init(color: .white, location: 0.80), .init(color: .clear, location: 1)
+                ], startPoint: .leading, endPoint: .trailing)
+                .mask {
+                    LinearGradient(stops: [
+                        .init(color: .white, location: 0.94), .init(color: .clear, location: 1)
+                    ], startPoint: .top, endPoint: .bottom)
+                }
+            }
+            DinoAvatar(appearance: appearance)
+                .frame(width: size, height: size)
+                .padding(.bottom, 9)
+        }
+        .frame(height: size + 12)
+        .accessibilityHidden(true)
     }
 }
 
@@ -220,17 +373,23 @@ struct FriendAvatar: View {
 private struct FriendListRow: View {
     let friend: DinoFriend
     var body: some View {
-        HStack(spacing: 14) {
-            FriendAvatar(friend: friend, size: 52)
-            VStack(alignment: .leading, spacing: 6) {
-                Text(verbatim: friend.displayName).font(.headline).lineLimit(2)
-                if let next = friend.progress.nextLevel { Text("dino.friends.nextLevel \(next)").font(.subheadline) }
-                else { Text(LocalizedStringKey(friend.progress.allComplete ? "dino.worldComplete" : "dino.friends.notAvailable")).font(.subheadline) }
-                if let stars = friend.progress.totalStars { Text("dino.stars \(stars)").font(.footnote) }
+        HStack(spacing: 12) {
+            FriendAvatar(friend: friend, size: 48)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(verbatim: friend.displayName).font(.system(.headline, design: .rounded)).lineLimit(2)
+                if let next = friend.progress.nextLevel {
+                    Text("dino.levelNumber \(next)").font(.subheadline)
+                } else if friend.progress.allComplete {
+                    Text("dino.worldComplete").font(.subheadline)
+                }
             }
-            Spacer(minLength: 0)
-            Image(systemName: "chevron.right")
-        }.dinoCard()
+            Spacer(minLength: 4)
+            Image(systemName: "chevron.forward")
+                .font(.footnote.bold()).foregroundStyle(DinoStyle.muted)
+                .accessibilityHidden(true)
+        }
+        .padding(.vertical, 8)
+        .contentShape(Rectangle())
     }
 }
 
@@ -333,6 +492,7 @@ struct FriendMapAvatars: View {
             if group.additionalCount > 0 {
                 Button(action: openMore) { Text(verbatim: "+\(group.additionalCount)").font(.caption.bold()).frame(minWidth: 44, minHeight: 44) }
                     .buttonStyle(DinoPlainButtonStyle())
+                    .accessibilityLabel(Text("dino.friends.more \(group.additionalCount)"))
             }
         }.padding(.horizontal, 3).background(.white.opacity(0.95), in: Capsule())
     }
@@ -345,6 +505,7 @@ struct LevelFriendsView<Play: View>: View {
     @State private var showsAllFriends = false
     let levelID: Int
     var theme = LevelStartTheme(worldID: 1)
+    var spacious = false
     @ViewBuilder var play: () -> Play
     private let menuSpacing: CGFloat = 12
     var body: some View {
@@ -374,7 +535,7 @@ struct LevelFriendsView<Play: View>: View {
             } else {
                 Button { socialSheet = .connection } label: {
                     Label("dino.friends.connect", systemImage: "person.2.fill")
-                }.buttonStyle(DinoSecondaryButtonStyle())
+                }.buttonStyle(DinoSecondaryButtonStyle(spacious: spacious))
                     .accessibilityIdentifier("level.friends.connect")
             }
         }
@@ -408,13 +569,13 @@ struct LevelFriendsView<Play: View>: View {
                 ShareLink(item: url, subject: Text("dino.friends.shareGame"), message: Text("dino.friends.shareGame.message")) {
                     Label("dino.friends.shareGame", systemImage: "square.and.arrow.up")
                 }
-                .buttonStyle(DinoSecondaryButtonStyle())
+                .buttonStyle(DinoSecondaryButtonStyle(spacious: spacious))
                 .accessibilityIdentifier("level.friends.share")
             } else {
                 ShareLink(item: L("dino.friends.shareGame.message")) {
                     Label("dino.friends.shareGame", systemImage: "square.and.arrow.up")
                 }
-                .buttonStyle(DinoSecondaryButtonStyle())
+                .buttonStyle(DinoSecondaryButtonStyle(spacious: spacious))
                 .accessibilityIdentifier("level.friends.share")
             }
         }
@@ -488,6 +649,7 @@ struct LevelFriendsView<Play: View>: View {
 }
 
 struct DinoSocialPrivacyView: View {
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @ObservedObject private var language = LanguageManager.shared
@@ -508,30 +670,13 @@ struct DinoSocialPrivacyView: View {
     }
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("dino.friends.privacyBody").font(.body)
-                    Text("dino.friends.reportHelp").font(.body)
-                    // Developer-owned URLs are configurable; never invent contact details.
-                    if let url = localizedURL(for: .contact) {
-                        Button("dino.friends.contact") {
-                            DinoAnswerFeedback.shared.playSelect()
-                            parentPage = .contact
-                        }.frame(minHeight: 44)
-                            .accessibilityIdentifier("privacy.contact")
-                            .accessibilityValue(Text(verbatim: url.absoluteString))
-                    } else if let contact = Bundle.main.object(forInfoDictionaryKey: "DinoSafetyContact") as? String, !contact.isEmpty {
-                        Text(verbatim: contact).textSelection(.enabled)
-                    } else { Text("dino.friends.contactMissing").font(.footnote) }
-                    if let url = localizedURL(for: .privacy) {
-                        Button("dino.friends.fullPrivacy") {
-                            DinoAnswerFeedback.shared.playSelect()
-                            parentPage = .privacy
-                        }.frame(minHeight: 44)
-                            .accessibilityIdentifier("privacy.policy")
-                            .accessibilityValue(Text(verbatim: url.absoluteString))
-                    }
-                }.padding(24).frame(maxWidth: 560).frame(maxWidth: .infinity)
+            GeometryReader { geometry in
+                let spacious = geometry.size.width >= 650 && verticalSizeClass != .compact
+                ScrollView {
+                    privacyContent(spacious: spacious)
+                        .padding(24).frame(maxWidth: spacious ? 760 : 560).frame(maxWidth: .infinity)
+                        .frame(minHeight: spacious ? geometry.size.height : nil)
+                }.bouncesOnlyWhenNeeded()
             }.background(JungleBackground(quiet: true))
                 .navigationTitle(Text(verbatim: L("dino.friends.privacy")))
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("dino.done") {
@@ -548,5 +693,44 @@ struct DinoSocialPrivacyView: View {
                     }
                 }
         }.foregroundStyle(DinoStyle.ink).gameEnvironment()
+    }
+
+    private func privacyContent(spacious: Bool) -> some View {
+        VStack(alignment: .leading, spacing: spacious ? 26 : 20) {
+            Text("dino.friends.privacyBody")
+            Text("dino.friends.reportHelp")
+            // Developer-owned URLs are configurable; never invent contact details.
+            if let url = localizedURL(for: .contact) {
+                Button("dino.friends.contact") {
+                    DinoAnswerFeedback.shared.playSelect()
+                    parentPage = .contact
+                }.frame(minHeight: 44)
+                    .accessibilityIdentifier("privacy.contact")
+                    .accessibilityValue(Text(verbatim: url.absoluteString))
+            } else if let contact = Bundle.main.object(forInfoDictionaryKey: "DinoSafetyContact") as? String, !contact.isEmpty {
+                Text(verbatim: contact).textSelection(.enabled)
+            } else { Text("dino.friends.contactMissing").font(.footnote) }
+            if let url = localizedURL(for: .privacy) {
+                Button("dino.friends.fullPrivacy") {
+                    DinoAnswerFeedback.shared.playSelect()
+                    parentPage = .privacy
+                }.frame(minHeight: 44)
+                    .accessibilityIdentifier("privacy.policy")
+                    .accessibilityValue(Text(verbatim: url.absoluteString))
+            }
+        }
+        .font(spacious ? .system(size: 21, weight: .medium, design: .rounded) : .body)
+        .modifier(PrivacyContentCard(spacious: spacious))
+    }
+}
+
+private struct PrivacyContentCard: ViewModifier {
+    let spacious: Bool
+    func body(content: Content) -> some View {
+        if spacious {
+            content.dinoCard(padding: 28)
+        } else {
+            content
+        }
     }
 }

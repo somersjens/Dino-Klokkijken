@@ -23,10 +23,10 @@ final class DinoAnswerFeedback {
         audio.playSelect()
     }
 
-    /// Two palm contacts in the HUD applause, a little quieter than the correct-answer tone.
+    /// One recording holds both palm contacts. Start it so the first hit meets the first clap.
     @discardableResult
-    func playClaps(at times: [Double]) -> Int {
-        audio.playClaps(at: times)
+    func playClap(after delay: Double) -> Int {
+        audio.playClap(after: delay)
     }
 
     func playLevelComplete() {
@@ -40,6 +40,15 @@ final class DinoAnswerFeedback {
 
     func stopLevelOutcome() {
         audio.stopLevelOutcome()
+    }
+
+    /// Takeoff, the flight into the next world, and the landing share one clock.
+    func playWorldJourney(takeoff: Double, landing: Double) {
+        audio.playWorldJourney(takeoff: takeoff, landing: landing)
+    }
+
+    func stopWorldJourney() {
+        audio.stopWorldJourney()
     }
 
     func cancelClaps(_ generation: Int) {
@@ -127,10 +136,14 @@ private final class DinoAnswerAudio: @unchecked Sendable {
     private var clapPlayer: AVAudioPlayer?
     private var levelCompletePlayer: AVAudioPlayer?
     private var impactPlayer: AVAudioPlayer?
+    private var jumpPlayer: AVAudioPlayer?
+    private var landPlayer: AVAudioPlayer?
+    private var worldPlayer: AVAudioPlayer?
     private let generationLock = NSLock()
     private var soundEnabled = true
     private var clapGeneration = 0
     private var impactGeneration = 0
+    private var journeyGeneration = 0
     private var lastSelect = Date.distantPast
     private lazy var correctTone = Self.tone(frequencies: [659.25, 880])
     private lazy var incorrectTone = Self.tone(frequencies: [330, 261.63])
@@ -168,17 +181,15 @@ private final class DinoAnswerAudio: @unchecked Sendable {
     }
 
     @discardableResult
-    func playClaps(at times: [Double]) -> Int {
+    func playClap(after delay: Double) -> Int {
         let generation = nextGeneration(\.clapGeneration)
         queue.async { [self] in
             guard soundEnabled, generation == current(\.clapGeneration) else { return }
             preparePlayers()
-            for time in times {
-                queue.asyncAfter(deadline: .now() + time) { [self] in
-                    guard generation == current(\.clapGeneration), soundEnabled else { return }
-                    clapPlayer?.currentTime = 0
-                    clapPlayer?.play()
-                }
+            queue.asyncAfter(deadline: .now() + delay) { [self] in
+                guard generation == current(\.clapGeneration), soundEnabled else { return }
+                clapPlayer?.currentTime = 0
+                clapPlayer?.play()
             }
         }
         return generation
@@ -213,6 +224,34 @@ private final class DinoAnswerAudio: @unchecked Sendable {
             levelCompletePlayer?.stop()
             invalidate(\.impactGeneration)
             impactPlayer?.stop()
+        }
+    }
+
+    func playWorldJourney(takeoff: Double, landing: Double) {
+        let generation = nextGeneration(\.journeyGeneration)
+        queue.async { [self] in
+            guard soundEnabled, generation == current(\.journeyGeneration) else { return }
+            preparePlayers()
+            schedule(jumpPlayer, after: takeoff, generation: generation)
+            schedule(worldPlayer, after: takeoff + 0.08, generation: generation)
+            schedule(landPlayer, after: landing, generation: generation)
+        }
+    }
+
+    func stopWorldJourney() {
+        queue.async { [self] in
+            invalidate(\.journeyGeneration)
+            jumpPlayer?.stop()
+            worldPlayer?.stop()
+            landPlayer?.stop()
+        }
+    }
+
+    private func schedule(_ player: AVAudioPlayer?, after delay: Double, generation: Int) {
+        queue.asyncAfter(deadline: .now() + max(0, delay)) { [self] in
+            guard generation == current(\.journeyGeneration), soundEnabled else { return }
+            player?.currentTime = 0
+            player?.play()
         }
     }
 
@@ -257,17 +296,21 @@ private final class DinoAnswerAudio: @unchecked Sendable {
         dispatchPrecondition(condition: .onQueue(queue))
         let ready = correctPlayer != nil && incorrectPlayer != nil && selectPlayer != nil
             && clapPlayer != nil && levelCompletePlayer != nil && impactPlayer != nil
+            && jumpPlayer != nil && landPlayer != nil && worldPlayer != nil
         guard !ready else { return }
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
         try? session.setActive(true)
         if correctPlayer == nil { correctPlayer = try? makePlayer(data: correctTone, volume: 0.45) }
         if incorrectPlayer == nil { incorrectPlayer = try? makePlayer(data: incorrectTone, volume: 0.45) }
-        // Files are peaked at -10 dBFS. Clap stays under the correct-answer tone.
+        // The clap recording is already the softer two-hit take, so it plays at its own level.
         if selectPlayer == nil { selectPlayer = try? makePlayer(resource: "select-menu", volume: 0.85) }
-        if clapPlayer == nil { clapPlayer = try? makePlayer(resource: "single-clap", volume: 0.31) }
+        if clapPlayer == nil { clapPlayer = try? makePlayer(resource: "new-clap", volume: 1) }
         if levelCompletePlayer == nil { levelCompletePlayer = try? makePlayer(resource: "end-of-level", volume: 0.85) }
         if impactPlayer == nil { impactPlayer = try? makePlayer(resource: "zero-stars-fall", volume: 0.85) }
+        if jumpPlayer == nil { jumpPlayer = try? makePlayer(resource: "jump-jump", volume: 0.85) }
+        if landPlayer == nil { landPlayer = try? makePlayer(resource: "jump-land", volume: 0.85) }
+        if worldPlayer == nil { worldPlayer = try? makePlayer(resource: "to-new-world", volume: 0.85) }
     }
 
     private func makePlayer(data: Data, volume: Float, fileTypeHint: String? = nil) throws -> AVAudioPlayer {

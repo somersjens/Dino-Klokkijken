@@ -7,6 +7,7 @@ struct DinoRootView: View {
     @EnvironmentObject private var settings: DinoSettings
     @State private var session: DinoSession?
     @State private var result: DinoLevelResult?
+    @State private var resultCelebrationStart: Date?
     @State private var showsSettings = false
     @State private var worldTransition: DinoWorldTransition?
     @State private var requestsReviewAfterWorldArrival = false
@@ -39,16 +40,16 @@ struct DinoRootView: View {
                                    compactPortrait: geometry.size.height < 430,
                                    entersFromAbove: geometry.size.width > geometry.size.height,
                                    reactionID: gameCompanionReactionID,
-                                   dimmingOpacity: anchor?.dimmingOpacity ?? 0)
+                                   dimmingOpacity: anchor?.dimmingOpacity ?? 0,
+                                   onCelebrationStart: { resultCelebrationStart = $0 })
             }.allowsHitTesting(false)
         }
             .sheet(isPresented: $showsFriends) {
                 DinoFriendsView().environmentObject(friends).gameEnvironment()
             }
             .sheet(isPresented: $showsSettings) {
-                DinoSettingsView().environmentObject(player).gameEnvironment()
-                    .pagePresentation()
-                    .presentationDetents([.large]).presentationDragIndicator(.visible)
+                DinoSettingsView().settingsPresentation().environmentObject(player).gameEnvironment()
+                    .presentationDragIndicator(.visible)
             }
             .sheet(isPresented: $showsPractice) {
                 DinoPracticeView(initialQuestion: practiceEntry).gameEnvironment()
@@ -60,7 +61,10 @@ struct DinoRootView: View {
             }
             .onValueChange(of: player.profile.progressResetAt) { _ in showMap() }
             .onValueChange(of: result?.level.id) { id in
-                if id == nil { DinoAnswerFeedback.shared.stopLevelOutcome() }
+                if id == nil {
+                    resultCelebrationStart = nil
+                    DinoAnswerFeedback.shared.stopLevelOutcome()
+                }
             }
 #if DEBUG
             .task {
@@ -109,7 +113,7 @@ struct DinoRootView: View {
                 }, map: {
                     if result.level.isBoss && result.victory != .none { advanceWorld(after: result.level.worldID) }
                     else { showMap() }
-                }, sharedCompanion: true)
+                }, sharedCompanion: true, celebrationStart: resultCelebrationStart)
             } else if let session {
                 DinoGameView(session: session, onExit: showMap, onResult: { value in
                     withAnimation(.easeOut(duration: 0.24)) {

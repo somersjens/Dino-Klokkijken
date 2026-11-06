@@ -30,10 +30,12 @@ struct DinoPersonalizer: View {
         NavigationStack {
             GeometryReader { geometry in
                 let landscape = geometry.size.width > geometry.size.height
+                let shortLandscape = landscape && geometry.size.height < 500
                 let arrangement = landscape ? AnyLayout(HStackLayout(spacing: 8)) : AnyLayout(VStackLayout(spacing: 0))
                 arrangement {
                     if landscape {
                         VStack(spacing: 12) {
+                            if shortLandscape { landscapeButtons }
                             Group {
                                 switch page {
                                 case .dino: DinoAppearanceEditor(showsOptions: false)
@@ -41,20 +43,10 @@ struct DinoPersonalizer: View {
                                 case .digital: ClockCustomizer(theme: $theme, page: .digital, showsOptions: false)
                                 }
                             }.frame(maxWidth: .infinity, maxHeight: .infinity)
-                            VStack(spacing: 8) {
-                                HStack(spacing: 8) {
-                                    pageButton(.dino, compact: true)
-                                    pageButton(.analog, compact: true)
-                                }
-                                HStack(spacing: 8) {
-                                    doneButton(compact: true)
-                                    pageButton(.digital, compact: true)
-                                }
-                            }
-                            .environment(\.customizationTypeScale, 1)
+                            if !shortLandscape { landscapeButtons }
                         }
                         .padding(.vertical, 12).padding(.leading, 12)
-                        .frame(width: min(geometry.size.height < 500 ? 232 : 360, geometry.size.width * 0.32))
+                        .frame(width: min(shortLandscape ? 232 : 360, geometry.size.width * 0.32))
                     } else {
                         pageButtons(vertical: false)
                             .padding(.horizontal, 16).padding(.top, 32).padding(.bottom, 8)
@@ -78,6 +70,20 @@ struct DinoPersonalizer: View {
             .onAppear { page = .dino; theme = player.profile.clockTheme }
             .onValueChange(of: theme) { updated in player.setTheme(updated) }
             .onDisappear { player.completeClockCustomization(theme: theme) }
+    }
+
+    private var landscapeButtons: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 8) {
+                pageButton(.dino, compact: true)
+                pageButton(.analog, compact: true)
+            }
+            HStack(spacing: 8) {
+                doneButton(compact: true)
+                pageButton(.digital, compact: true)
+            }
+        }
+        .environment(\.customizationTypeScale, 1)
     }
 
     private func doneButton(compact: Bool = false) -> some View {
@@ -129,29 +135,27 @@ struct DinoAppearanceEditor: View {
     ]
 
     var body: some View {
-        let layout = metrics.sideBySide ? AnyLayout(HStackLayout(spacing: 16)) : AnyLayout(VStackLayout(spacing: 0))
-        layout {
+        CustomizationEditorLayout(horizontal: metrics.sideBySide, spacing: metrics.sideBySide ? 16 : 0,
+                                  maxWidth: metrics.sideBySide ? 1100 : .infinity,
+                                  identifier: "personalize.options", showsOptions: showsOptions) {
             if showsPreview { preview }
-            if showsOptions {
-            ScrollView {
-                VStack(spacing: CustomizationLayout.restoreSpacing) {
-                    VStack(spacing: CustomizationLayout.sectionSpacing * metrics.enlargement) {
-                        ForEach(DinoAppearance.Part.allCases, id: \.self) { part in
-                            colorChoice(part)
-                        }
+        } options: {
+            VStack(spacing: CustomizationLayout.restoreSpacing) {
+                VStack(spacing: CustomizationLayout.sectionSpacing * metrics.enlargement) {
+                    ForEach(DinoAppearance.Part.allCases, id: \.self) { part in
+                        colorChoice(part)
                     }
-                    Button {
-                        player.setDinoAppearance(.standard)
-                    } label: {
-                        Label("dino.appearance.reset", systemImage: "arrow.counterclockwise")
-                            .modifier(CustomizationText())
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                    }.buttonStyle(DinoPlainButtonStyle()).foregroundStyle(DinoStyle.deepGreen)
-                        .accessibilityIdentifier("personalize.resetColors")
-                }.modifier(CustomizationOptionsCard())
-            }.clipped().accessibilityIdentifier("personalize.options")
-            }
-        }.frame(maxWidth: metrics.sideBySide ? 1100 : .infinity).frame(maxWidth: .infinity)
+                }
+                Button {
+                    player.setDinoAppearance(.standard)
+                } label: {
+                    Label("dino.appearance.reset", systemImage: "arrow.counterclockwise")
+                        .modifier(CustomizationText())
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }.buttonStyle(DinoPlainButtonStyle()).foregroundStyle(DinoStyle.deepGreen)
+                    .accessibilityIdentifier("personalize.resetColors")
+            }.modifier(CustomizationOptionsCard())
+        }
     }
 
     private var preview: some View {
@@ -166,19 +170,8 @@ struct DinoAppearanceEditor: View {
     }
 
     private func colorChoice(_ part: DinoAppearance.Part) -> some View {
-        let arrangement = compact ? AnyLayout(HStackLayout(spacing: 6)) : AnyLayout(VStackLayout(spacing: 12 * metrics.enlargement))
-        return arrangement {
-            Group {
-                if compact {
-                    Text(LocalizedStringKey(part.labelKey))
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .multilineTextAlignment(.leading).lineLimit(2).minimumScaleFactor(0.85)
-                } else {
-                    Text(LocalizedStringKey(part.labelKey)).modifier(CustomizationText())
-                }
-            }
-                .frame(width: compact ? 64 : nil, alignment: compact ? .leading : .center)
-                .accessibilityIdentifier("personalize.\(part.rawValue).label")
+        CustomizationSection(title: part.labelKey, identifier: "personalize.\(part.rawValue).label",
+                             compactLabelWidth: compact ? 64 : nil) {
             HStack(spacing: 0) {
                 ForEach(swatches, id: \.name) { swatch in
                     Button { setColor(swatch.hex, for: part) } label: {

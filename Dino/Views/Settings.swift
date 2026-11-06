@@ -5,6 +5,7 @@ import Darwin
 
 /// One settings list: Game Center, language, preferences and a guarded reset.
 struct DinoSettingsView: View {
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @ObservedObject private var language = LanguageManager.shared
     @EnvironmentObject private var player: DinoPlayer
     @EnvironmentObject private var settings: DinoSettings
@@ -26,23 +27,35 @@ struct DinoSettingsView: View {
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
-                let spacious = geometry.size.width >= 650
+                let spacious = geometry.size.width >= 650 && verticalSizeClass != .compact
                 let resetHeight = resetPageHeight > 1 ? resetPageHeight : geometry.size.height
                 ZStack {
-                    VStack(spacing: 0) {
-                        Text("dino.settings")
-                            .font(.system(size: spacious ? 34 : 28, weight: .heavy, design: .rounded))
-                            .frame(maxWidth: .infinity).padding(.top, 28).padding(.bottom, 18)
-                            .accessibilityIdentifier("settings.title")
+                    if spacious {
+                        let columns = geometry.size.width >= 740 && geometry.size.width > geometry.size.height
                         ScrollView {
-                            menu.padding(.horizontal, spacious ? 24 : 16).padding(.bottom, 20)
-                                .frame(maxWidth: 760).frame(maxWidth: .infinity)
-                        }.accessibilityIdentifier("settings.options")
-                        Button("dino.done") { dismiss() }
-                            .buttonStyle(DinoButtonStyle()).accessibilityIdentifier("settings.done")
-                            .padding(.horizontal, spacious ? 24 : 20).padding(.top, 12).padding(.bottom, 18)
-                            .frame(maxWidth: 760).frame(maxWidth: .infinity)
-                            .background(DinoStyle.paper.opacity(0.97))
+                            VStack(spacing: 0) {
+                                heading(spacious: true)
+                                menu(spacious: true, columns: columns)
+                                done(spacious: true)
+                            }
+                            .padding(.bottom, 22)
+                            .frame(maxWidth: columns ? 900 : 820)
+                            .padding(.horizontal, 24).frame(maxWidth: .infinity)
+                            .modifier(ShortScrollCentering(height: geometry.size.height))
+                        }.centersShortContent().bouncesOnlyWhenNeeded()
+                            .accessibilityIdentifier("settings.options")
+                    } else {
+                        VStack(spacing: 0) {
+                            heading(spacious: false)
+                            ScrollView {
+                                menu(spacious: false).padding(.horizontal, 16).padding(.bottom, 20)
+                                    .frame(maxWidth: 760).frame(maxWidth: .infinity)
+                            }.accessibilityIdentifier("settings.options")
+                            done(spacious: false)
+                                .padding(.horizontal, 20).padding(.top, 12).padding(.bottom, 18)
+                                .frame(maxWidth: .infinity)
+                                .background(DinoStyle.paper.opacity(0.97))
+                        }
                     }
                     if confirmReset {
                         Color.black.opacity(0.28).ignoresSafeArea()
@@ -61,21 +74,21 @@ struct DinoSettingsView: View {
                                         confirmReset = false
                                     }
                                     .accessibilityHidden(true)
-                                resetCard(compact: resetHeight < 700)
+                                resetCard(compact: resetHeight < 700, spacious: spacious)
                                     .padding(16)
                                     .zIndex(1)
                             }
                         }.bouncesOnlyWhenNeeded()
-                            .frame(maxWidth: 460)
+                            .frame(maxWidth: spacious ? 580 : 460)
                     }
                 }.background(JungleBackground(quiet: true))
                     .onAppear { rememberResetPage(geometry.size) }
                     .onValueChange(of: geometry.size) { rememberResetPage($0) }
             }
             .toolbar(.hidden, for: .navigationBar)
-            .sheet(isPresented: $showsPrivacy) { DinoSocialPrivacyView() }
-            .sheet(isPresented: $showsGameCenter) { DinoFriendsView().gameEnvironment() }
-            .sheet(isPresented: $showsLanguages) { LanguagePicker() }
+            .sheet(isPresented: $showsPrivacy) { DinoSocialPrivacyView().pagePresentation() }
+            .sheet(isPresented: $showsGameCenter) { DinoFriendsView().gameEnvironment().pagePresentation() }
+            .sheet(isPresented: $showsLanguages) { LanguagePicker().pagePresentation() }
             .sheet(isPresented: $showsDayParts) {
                 DinoDayPartScheduleEditor(schedule: settings.dayPartSchedule)
                     .pagePresentation()
@@ -91,58 +104,107 @@ struct DinoSettingsView: View {
             }
     }
 
-    private var menu: some View {
-        VStack(spacing: 0) {
-            linkedRow(identifier: "settings.gameCenter") { showsGameCenter = true } icon: {
+    private func heading(spacious: Bool) -> some View {
+        Text("dino.settings")
+            .font(.system(size: spacious ? 39 : 28, weight: .heavy, design: .rounded))
+            .frame(maxWidth: .infinity).padding(.top, 28).padding(.bottom, 18)
+            .accessibilityIdentifier("settings.title")
+    }
+
+    private func done(spacious: Bool) -> some View {
+        Button("dino.done") { dismiss() }
+            .buttonStyle(DinoButtonStyle(customization: spacious))
+            .environment(\.customizationTypeScale, spacious ? 1.3 : 1)
+            .accessibilityIdentifier("settings.done")
+            .padding(.top, spacious ? 20 : 0)
+    }
+
+    private func menu(spacious: Bool, columns: Bool = false) -> some View {
+        Group {
+            if columns {
+                HStack(alignment: .top, spacing: 20) {
+                    menuCard {
+                        linkedRows(spacious: true)
+                        rowDivider
+                        privacyAndReset(spacious: true)
+                    }
+                    menuCard { preferenceRows(spacious: true) }
+                }
+            } else {
+                menuCard {
+                    linkedRows(spacious: spacious)
+                    rowDivider
+                    preferenceRows(spacious: spacious)
+                    rowDivider
+                    privacyAndReset(spacious: spacious)
+                }.frame(maxWidth: spacious ? .infinity : 760)
+            }
+        }.frame(maxWidth: .infinity)
+    }
+
+    private func linkedRows(spacious: Bool) -> some View {
+        Group {
+            linkedRow(identifier: "settings.gameCenter", spacious: spacious) { showsGameCenter = true } icon: {
                 Image(systemName: "person.crop.circle.fill")
             } title: {
                 if let name = friends.playerDisplayName {
                     Text(verbatim: name).accessibilityIdentifier("settings.gameCenterName")
                 } else {
-                    Text("dino.settings.gameCenter")
-                        .accessibilityIdentifier("settings.gameCenterSignedOut")
+                    Text("dino.settings.gameCenter").accessibilityIdentifier("settings.gameCenterSignedOut")
                 }
             }
             rowDivider
-            linkedRow(identifier: "settings.language") { showsLanguages = true } icon: {
+            linkedRow(identifier: "settings.language", spacious: spacious) { showsLanguages = true } icon: {
                 Text(verbatim: language.effective.flag)
             } title: {
                 Text(verbatim: language.effective.displayName)
             }
             rowDivider
             navigationRow(title: "dino.settings.dayParts", symbol: "sun.horizon.fill",
-                          identifier: "settings.dayParts") {
+                          identifier: "settings.dayParts", spacious: spacious) {
                 showsDayParts = true
             }
-            rowDivider
+        }
+    }
+
+    private func preferenceRows(spacious: Bool) -> some View {
+        Group {
             preference("dino.settings.soundEffects", symbol: "speaker.wave.2.fill",
-                       value: $settings.soundEffectsEnabled, identifier: "settings.soundEffects")
+                       value: $settings.soundEffectsEnabled, identifier: "settings.soundEffects", spacious: spacious)
             rowDivider
             preference("dino.settings.speakQuestionTitle", symbol: "speaker.wave.2.bubble.fill",
-                       value: $settings.speakQuestionTitles, identifier: "settings.speakQuestionTitle")
+                       value: $settings.speakQuestionTitles, identifier: "settings.speakQuestionTitle", spacious: spacious)
             rowDivider
             preference("dino.settings.haptics", symbol: "iphone.radiowaves.left.and.right",
-                       value: $settings.hapticsEnabled, identifier: "settings.haptics")
+                       value: $settings.hapticsEnabled, identifier: "settings.haptics", spacious: spacious)
             rowDivider
             preference("dino.settings.highContrast", symbol: "circle.lefthalf.filled",
-                       value: $settings.highContrastEnabled, identifier: "settings.highContrast")
+                       value: $settings.highContrastEnabled, identifier: "settings.highContrast", spacious: spacious)
             rowDivider
-            icloudRow
-            rowDivider
+            icloudRow(spacious: spacious)
+        }
+    }
+
+    private func privacyAndReset(spacious: Bool) -> some View {
+        Group {
             navigationRow(title: "dino.friends.privacy", symbol: "hand.raised.fill",
-                          identifier: "settings.privacy") { showsPrivacy = true }
+                          identifier: "settings.privacy", spacious: spacious) { showsPrivacy = true }
             rowDivider
             Button { confirmReset = true } label: {
                 HStack(spacing: 12) {
                     Image(systemName: "arrow.counterclockwise").frame(width: 26)
                     Text("dino.resetProgress")
                     Spacer(minLength: 4)
-                }.font(.system(size: 17, weight: .semibold, design: .rounded))
-                    .foregroundStyle(DinoStyle.warning)
-                    .padding(.horizontal, 16).frame(minHeight: 60)
-                    .contentShape(Rectangle())
+                }
+                .modifier(SettingsRowSizing(spacious: spacious))
+                .foregroundStyle(DinoStyle.warning)
+                .contentShape(Rectangle())
             }.buttonStyle(DinoPlainButtonStyle()).accessibilityIdentifier("settings.reset")
         }
+    }
+
+    private func menuCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        VStack(spacing: 0, content: content)
         .background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 22))
         .padding(12)
         .background(.white.opacity(highContrast ? 1 : 0.8), in: RoundedRectangle(cornerRadius: 28))
@@ -159,12 +221,12 @@ struct DinoSettingsView: View {
         Int(resetAnswer.filter(\.isNumber)) == challenge.answer
     }
 
-    private func resetCard(compact: Bool) -> some View {
+    private func resetCard(compact: Bool, spacious: Bool) -> some View {
         VStack(spacing: compact ? 12 : 16) {
-            DinoCharacter(size: compact ? 84 : 108)
-            Text("dino.resetTitle").font(.system(size: compact ? 24 : 28, weight: .heavy, design: .rounded))
+            DinoCharacter(size: compact ? 84 : spacious ? 136 : 108)
+            Text("dino.resetTitle").font(.system(size: compact ? 24 : spacious ? 34 : 28, weight: .heavy, design: .rounded))
                 .multilineTextAlignment(.center)
-            Text("dino.resetMessage").font(.system(size: 15, weight: .medium, design: .rounded))
+            Text("dino.resetMessage").font(.system(size: spacious ? 19 : 15, weight: .medium, design: .rounded))
                 .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -224,12 +286,11 @@ struct DinoSettingsView: View {
     }
 
     /// Same height as the other switches. The longer explanation opens beside the info button.
-    private var icloudRow: some View {
+    private func icloudRow(spacious: Bool) -> some View {
         HStack(spacing: 12) {
             HStack(spacing: 6) {
                 Button { settings.icloudSyncEnabled.toggle() } label: {
                     Label("dino.settings.icloudSync", systemImage: "icloud.fill")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
                         .lineLimit(1)
                         .fixedSize(horizontal: true, vertical: false)
                         .frame(minHeight: 44, alignment: .leading)
@@ -239,7 +300,7 @@ struct DinoSettingsView: View {
                 .accessibilityHidden(true)
                 Button { showsCloudHelp = true } label: {
                     Image(systemName: "info.circle")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.system(size: spacious ? 22 : 17, weight: .semibold))
                         .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
                         .frame(width: 28, height: 44)
                         .contentShape(Rectangle())
@@ -250,12 +311,12 @@ struct DinoSettingsView: View {
                 .accessibilityHint(Text("dino.settings.icloudDescription"))
                 .popover(isPresented: $showsCloudHelp, attachmentAnchor: .rect(.bounds)) {
                     Text("dino.settings.icloudDescription")
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .font(.system(size: spacious ? 18 : 15, weight: .medium, design: .rounded))
                         .foregroundStyle(DinoStyle.ink)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(16)
-                        .frame(width: 280)
+                        .frame(width: spacious ? 340 : 280)
                         .accessibilityIdentifier("settings.icloudStatus")
                         .modifier(CloudHelpPopover())
                 }
@@ -271,20 +332,20 @@ struct DinoSettingsView: View {
                 .accessibilityLabel(Text("dino.settings.icloudSync"))
                 .simultaneousGesture(TapGesture().onEnded { DinoAnswerFeedback.shared.playSelect() })
         }
-        .padding(.horizontal, 16).padding(.vertical, 10).frame(minHeight: 60)
+        .padding(.vertical, 10).modifier(SettingsRowSizing(spacious: spacious))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("settings.icloudSync")
     }
 
-    private func preference(_ key: LocalizedStringKey, symbol: String, value: Binding<Bool>, identifier: String) -> some View {
+    private func preference(_ key: LocalizedStringKey, symbol: String, value: Binding<Bool>, identifier: String, spacious: Bool) -> some View {
         Toggle(isOn: value) {
-            Label(key, systemImage: symbol).font(.system(size: 17, weight: .semibold, design: .rounded))
+            Label(key, systemImage: symbol)
                 .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
-        }.toggleStyle(SettingsToggleStyle()).padding(.horizontal, 16).padding(.vertical, 10).frame(minHeight: 60)
+        }.toggleStyle(SettingsToggleStyle()).padding(.vertical, 10).modifier(SettingsRowSizing(spacious: spacious))
             .accessibilityIdentifier(identifier)
     }
 
-    private func linkedRow<Icon: View, Title: View>(identifier: String, action: @escaping () -> Void,
+    private func linkedRow<Icon: View, Title: View>(identifier: String, spacious: Bool, action: @escaping () -> Void,
                                           @ViewBuilder icon: () -> Icon,
                                           @ViewBuilder title: () -> Title) -> some View {
         Button(action: action) {
@@ -297,8 +358,7 @@ struct DinoSettingsView: View {
                 Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold))
                     .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
             }
-            .font(.system(size: 17, weight: .semibold, design: .rounded))
-            .padding(.horizontal, 16).frame(minHeight: 60)
+            .modifier(SettingsRowSizing(spacious: spacious))
             .contentShape(Rectangle())
         }
         .buttonStyle(DinoPlainButtonStyle())
@@ -306,26 +366,58 @@ struct DinoSettingsView: View {
     }
 
     private func navigationRow(title: LocalizedStringKey, symbol: String, identifier: String,
-                               action: @escaping () -> Void) -> some View {
-        navigationRow(title: title, symbol: symbol, identifier: identifier, action: action) { EmptyView() }
-    }
-
-    private func navigationRow<Detail: View>(title: LocalizedStringKey, symbol: String, identifier: String,
-                                             action: @escaping () -> Void,
-                                             @ViewBuilder detail: () -> Detail) -> some View {
+                               spacious: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: symbol).frame(width: 26)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                    detail()
-                }.frame(maxWidth: .infinity, alignment: .leading)
+                Text(title).frame(maxWidth: .infinity, alignment: .leading)
                 Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold))
                     .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-            }.font(.system(size: 17, weight: .semibold, design: .rounded))
-                .padding(.horizontal, 16).frame(minHeight: 60)
-                .contentShape(Rectangle())
+            }
+            .modifier(SettingsRowSizing(spacious: spacious))
+            .contentShape(Rectangle())
         }.buttonStyle(DinoPlainButtonStyle()).accessibilityIdentifier(identifier)
+    }
+}
+
+extension DinoSettingsView {
+    @ViewBuilder func settingsPresentation() -> some View {
+        if #available(iOS 18, *) {
+            presentationSizing(SettingsPresentationSizing())
+                .presentationDetents([.custom(SettingsPresentationDetent.self)])
+        } else {
+            presentationDetents([.large])
+        }
+    }
+}
+
+@available(iOS 18, *)
+private struct SettingsPresentationDetent: CustomPresentationDetent {
+    static func height(in context: Context) -> CGFloat? {
+        let maximum = context.maxDetentValue
+        guard context.horizontalSizeClass == .regular, context.verticalSizeClass == .regular else { return maximum }
+        return min(maximum, maximum > 1050 ? 990 : 630)
+    }
+}
+
+@available(iOS 18, *)
+private struct SettingsPresentationSizing: PresentationSizing {
+    func proposedSize(for root: PresentationSizingRoot, context: PresentationSizingContext) -> ProposedViewSize {
+        let page = PagePresentationSizing.page.proposedSize(for: root, context: context)
+        guard let width = page.width, width >= 650 else { return page }
+        let height = page.height ?? 990
+        let preferredHeight: CGFloat = width >= 740 && width > height ? 630 : 990
+        return ProposedViewSize(width: width, height: min(height, preferredHeight))
+    }
+}
+
+private struct SettingsRowSizing: ViewModifier {
+    let spacious: Bool
+
+    func body(content: Content) -> some View {
+        content.font(.system(size: spacious ? 22 : 17, weight: .semibold, design: .rounded))
+            .padding(.horizontal, spacious ? 20 : 16)
+            .frame(minHeight: spacious ? 72 : 60)
     }
 }
 
@@ -411,6 +503,7 @@ private struct SettingsToggleStyle: ToggleStyle {
 
 /// Parents set the school’s hours for night, morning, afternoon and evening.
 struct DinoDayPartScheduleEditor: View {
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @EnvironmentObject private var settings: DinoSettings
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.dismiss) private var dismiss
@@ -430,81 +523,94 @@ struct DinoDayPartScheduleEditor: View {
     var body: some View {
         let _ = language.effective.code
         GeometryReader { geometry in
-            let spacious = geometry.size.width >= 650
+            let spacious = geometry.size.width >= 650 && verticalSizeClass != .compact
             let leading: CGFloat = spacious ? 28 : 20
             let trailing: CGFloat = spacious ? 40 : 32
-            let lineWidth = min(720, geometry.size.width) - leading - trailing
+            let lineWidth = max(1, min(800, geometry.size.width) - (spacious ? 56 : leading + trailing))
             let timeWidth = min(160, max(96, lineWidth * 0.28))
-            VStack(spacing: 0) {
-                Text("dino.settings.dayParts")
-                    .font(.system(size: spacious ? 34 : 28, weight: .heavy, design: .rounded))
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 28)
-                    .padding(.leading, leading)
-                    .padding(.trailing, trailing)
-                    .accessibilityIdentifier("settings.dayParts.editor")
-                Text("dino.settings.dayParts.help")
-                    .font(.system(size: spacious ? 17 : 15, weight: .medium, design: .rounded))
-                    .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 8)
-                    .padding(.leading, leading)
-                    .padding(.trailing, trailing)
-                    .accessibilityIdentifier("settings.dayParts.help")
-                DinoDayPartLine(time: ClockTime(hour: 0), width: lineWidth, isDemonstration: false,
-                                schedule: schedule, showsSelection: false)
-                    .padding(.top, 16)
-                    .padding(.leading, leading)
-                    .padding(.trailing, trailing)
-                    .frame(maxWidth: 720)
-                    .frame(maxWidth: .infinity)
-                ScrollView {
-                    VStack(spacing: spacious ? 12 : 10) {
-                        columnHeader(timeWidth: timeWidth, spacious: spacious)
-                        ForEach(DinoDayPart.allCases, id: \.self) { part in
-                            partRow(part, timeWidth: timeWidth, spacious: spacious)
+            Group {
+                if spacious {
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            scheduleHeading(lineWidth: lineWidth, spacious: true)
+                            scheduleRows(timeWidth: timeWidth, spacious: true)
+                            closeButton(spacious: true).frame(maxWidth: 540)
                         }
-                        if schedule != .standard {
-                            Button {
-                                schedule = .standard
-                            } label: {
-                                Label("dino.settings.dayParts.standard", systemImage: "arrow.counterclockwise")
-                            }
-                            .buttonStyle(DinoSecondaryButtonStyle())
-                            .accessibilityIdentifier("settings.dayParts.standard")
+                        .padding(.horizontal, 28).padding(.bottom, 24)
+                        .frame(maxWidth: 800).frame(maxWidth: .infinity)
+                        .modifier(ShortScrollCentering(height: geometry.size.height))
+                    }.centersShortContent().bouncesOnlyWhenNeeded()
+                } else {
+                    VStack(spacing: 0) {
+                        scheduleHeading(lineWidth: lineWidth, spacious: false)
+                            .padding(.leading, leading).padding(.trailing, trailing)
+                        ScrollView {
+                            scheduleRows(timeWidth: timeWidth, spacious: false)
+                                .padding(.leading, leading).padding(.trailing, trailing)
                         }
                     }
-                    .padding(.leading, leading)
-                    .padding(.trailing, trailing)
-                    .padding(.top, 16)
-                    .padding(.bottom, 24)
-                    .frame(maxWidth: 720)
-                    .frame(maxWidth: .infinity)
+                    .safeAreaInset(edge: .bottom) {
+                        closeButton(spacious: false)
+                            .padding(.leading, leading).padding(.trailing, trailing)
+                            .padding(.top, 12).padding(.bottom, 18)
+                            .background(DinoStyle.paper.opacity(0.97))
+                    }
                 }
-            }
-            .background(JungleBackground(quiet: true))
-            .safeAreaInset(edge: .bottom) {
-                Button(action: close) {
-                    Label(LocalizedStringKey(returnsToGame ? "dino.settings.dayParts.backToGame" : "dino.practice.backToLevels"),
-                          systemImage: returnsToGame ? "play.fill" : "map.fill")
-                }
-                .buttonStyle(DinoSecondaryButtonStyle())
-                .accessibilityIdentifier("settings.dayParts.close")
-                .padding(.leading, leading)
-                .padding(.trailing, trailing)
-                .padding(.top, 12)
-                .padding(.bottom, 18)
-                .frame(maxWidth: 760)
-                .frame(maxWidth: .infinity)
-                .background(DinoStyle.paper.opacity(0.97))
-            }
+            }.background(JungleBackground(quiet: true))
         }
         .toolbar(.hidden, for: .navigationBar)
         .foregroundStyle(DinoStyle.ink)
         .lightPalette()
         .onDisappear(perform: commit)
+    }
+
+    private func scheduleHeading(lineWidth: CGFloat, spacious: Bool) -> some View {
+        VStack(spacing: 0) {
+            Text("dino.settings.dayParts")
+                .font(.system(size: spacious ? 39 : 28, weight: .heavy, design: .rounded))
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 28)
+                .accessibilityIdentifier("settings.dayParts.editor")
+            Text("dino.settings.dayParts.help")
+                .font(.system(size: spacious ? 20 : 15, weight: .medium, design: .rounded))
+                .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 8)
+                .accessibilityIdentifier("settings.dayParts.help")
+            DinoDayPartLine(time: ClockTime(hour: 0), width: lineWidth, isDemonstration: false,
+                            schedule: schedule, showsSelection: false)
+                .padding(.top, 16)
+                .frame(maxWidth: .infinity)
+        }
+    }
+
+    private func scheduleRows(timeWidth: CGFloat, spacious: Bool) -> some View {
+        VStack(spacing: spacious ? 12 : 10) {
+            columnHeader(timeWidth: timeWidth, spacious: spacious)
+            ForEach(DinoDayPart.allCases, id: \.self) { part in
+                partRow(part, timeWidth: timeWidth, spacious: spacious)
+            }
+            if schedule != .standard {
+                Button {
+                    schedule = .standard
+                } label: {
+                    Label("dino.settings.dayParts.standard", systemImage: "arrow.counterclockwise")
+                }
+                .buttonStyle(DinoSecondaryButtonStyle(spacious: spacious))
+                .accessibilityIdentifier("settings.dayParts.standard")
+            }
+        }.padding(.top, 16).padding(.bottom, 24)
+    }
+
+    private func closeButton(spacious: Bool) -> some View {
+        Button(action: close) {
+            Label(LocalizedStringKey(returnsToGame ? "dino.settings.dayParts.backToGame" : "dino.practice.backToLevels"),
+                  systemImage: returnsToGame ? "play.fill" : "map.fill")
+        }
+        .buttonStyle(DinoSecondaryButtonStyle(spacious: spacious))
+        .accessibilityIdentifier("settings.dayParts.close")
     }
 
     private func close() {
@@ -529,7 +635,7 @@ struct DinoDayPartScheduleEditor: View {
             Text("dino.settings.dayParts.to")
                 .frame(width: timeWidth)
         }
-        .font(.system(size: spacious ? 16 : 14, weight: .bold, design: .rounded))
+        .font(.system(size: spacious ? 20 : 14, weight: .bold, design: .rounded))
         .foregroundStyle(DinoStyle.ink)
         .lineLimit(1)
         .minimumScaleFactor(0.7)
@@ -541,14 +647,14 @@ struct DinoDayPartScheduleEditor: View {
     private func partRow(_ part: DinoDayPart, timeWidth: CGFloat, spacious: Bool) -> some View {
         HStack(spacing: 0) {
             Text(LocalizedStringKey(part.titleKey))
-                .font(.system(size: spacious ? 16 : 14, weight: .bold, design: .rounded))
+                .font(.system(size: spacious ? 20 : 14, weight: .bold, design: .rounded))
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.leading, 16)
-            boundaryMenu(part, ending: false)
+            boundaryMenu(part, ending: false, spacious: spacious)
                 .frame(width: timeWidth)
-            boundaryMenu(part, ending: true)
+            boundaryMenu(part, ending: true, spacious: spacious)
                 .frame(width: timeWidth)
         }
         .frame(minHeight: spacious ? 76 : 68)
@@ -557,7 +663,7 @@ struct DinoDayPartScheduleEditor: View {
             .stroke(highContrast ? DinoStyle.ink : .white.opacity(0.7), lineWidth: highContrast ? 2 : 1))
     }
 
-    private func boundaryMenu(_ part: DinoDayPart, ending: Bool) -> some View {
+    private func boundaryMenu(_ part: DinoDayPart, ending: Bool, spacious: Bool) -> some View {
         let edited = ending ? part.next() : part
         let current = schedule.start(of: edited)
         let options = schedule.validStarts(for: edited)
@@ -583,7 +689,7 @@ struct DinoDayPartScheduleEditor: View {
             } label: {
                 HStack(spacing: 4) {
                     Text(verbatim: shown)
-                        .font(.system(size: 16, weight: .heavy, design: .rounded))
+                        .font(.system(size: spacious ? 21 : 16, weight: .heavy, design: .rounded))
                         .monospacedDigit()
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
@@ -593,7 +699,7 @@ struct DinoDayPartScheduleEditor: View {
                 }
                 .foregroundStyle(DinoStyle.ink)
                 .padding(.horizontal, 10)
-                .frame(minWidth: 92, minHeight: 44)
+                .frame(minWidth: spacious ? 118 : 92, minHeight: spacious ? 54 : 44)
                 .background(.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .stroke(DinoStyle.ink.opacity(highContrast ? 1 : 0.12), lineWidth: highContrast ? 2 : 1.5))

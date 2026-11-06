@@ -44,9 +44,10 @@ struct QuestionRenderer: View {
                 } else {
                     targetCard
                     analogInput.id("question.answers")
+                    let horizontalControls = layout.spacious && wideLayout && session.allowsMinutes
                     DinoAnalogClockControls(adjustingMinutes: $adjustingMinutes, allowsMinutes: session.allowsMinutes,
-                                            minuteStep: analogHandStep, adjust: adjustAnalog)
-                        .frame(width: min(320, width))
+                                            minuteStep: analogHandStep, horizontalLayout: horizontalControls, adjust: adjustAnalog)
+                        .frame(width: min(horizontalControls ? 520 : 320, width))
                         .modifier(AnswerControlVisibility(session: session, reduceMotion: reduceMotion))
                 }
             case .setDigital:
@@ -156,8 +157,10 @@ struct QuestionRenderer: View {
                                            onHandSelection: session.hasFeedback ? nil : { adjustingMinutes = $0 })
     }
 
+    private var reusesLowerControlSpace: Bool { layout.spacious && wideLayout && comparing }
+
     private var digitalInput: some View {
-        let font: CGFloat = width < 350 ? 32 : 38
+        let font: CGFloat = layout.spacious ? layout.editableDigitalFont : width < 350 ? 32 : 38
         let displacement = (width + 14) / 4
         // Scale the existing display, including its field anchors. Its vertical
         // control space stays reserved throughout the answer comparison.
@@ -171,6 +174,7 @@ struct QuestionRenderer: View {
                                 minuteStep: session.minuteStep, valueIdentifier: "question.digitalControl",
                                 feedbackCorrect: session.hasFeedback ? session.correctFeedback : nil,
                                 controlsEnabled: !session.hidesAnswerControls,
+                                reservesLowerControls: !reusesLowerControlSpace,
                                 feedbackRevealDelay: DinoQuestionFeedbackTiming.inputRevealDelay)
                 .scaleEffect(comparing ? scale : 1)
                 .offset(x: comparing ? -displacement : 0)
@@ -178,7 +182,7 @@ struct QuestionRenderer: View {
                     .delay(comparing ? DinoQuestionFeedbackTiming.controlExit : 0), value: comparing)
             DigitalClock(time: question.target, theme: theme, fontSize: font,
                          reservesHandHintSpace: true, feedbackCorrect: true)
-                .padding(.bottom, 48)
+                .padding(.bottom, reusesLowerControlSpace ? 0 : DigitalClockControl.adjustmentRowHeight)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(theme.digitalReading(question.target, languageCode: language.effective.code))
                 .scaleEffect(scale)
@@ -188,14 +192,16 @@ struct QuestionRenderer: View {
                 .accessibilityIdentifier("question.correctClock")
                 .animation(reduceMotion ? nil : .easeOut(duration: DinoQuestionFeedbackTiming.reveal)
                     .delay(comparing ? DinoQuestionFeedbackTiming.inputRevealDelay : 0), value: comparing)
-            HStack(spacing: 14) {
-                AnswerVerdictMark(correct: false).frame(maxWidth: .infinity)
-                AnswerVerdictMark(correct: true).frame(maxWidth: .infinity)
+            if !layout.spacious {
+                HStack(spacing: 14) {
+                    AnswerVerdictMark(correct: false).frame(maxWidth: .infinity)
+                    AnswerVerdictMark(correct: true).frame(maxWidth: .infinity)
+                }
+                .offset(y: font * 0.9 + 22)
+                .opacity(comparing ? 1 : 0).accessibilityHidden(true)
+                .animation(reduceMotion ? nil : .easeOut(duration: DinoQuestionFeedbackTiming.reveal)
+                    .delay(comparing ? DinoQuestionFeedbackTiming.inputRevealDelay : 0), value: comparing)
             }
-            .offset(y: font * 0.9 + 22)
-            .opacity(comparing ? 1 : 0).accessibilityHidden(true)
-            .animation(reduceMotion ? nil : .easeOut(duration: DinoQuestionFeedbackTiming.reveal)
-                .delay(comparing ? DinoQuestionFeedbackTiming.inputRevealDelay : 0), value: comparing)
         }
         .frame(width: width)
         .questionAnswerFocus()
@@ -204,11 +210,12 @@ struct QuestionRenderer: View {
 
     private var targetCard: some View {
         let baseFont: CGFloat = width < 350 ? 32 : 38
-        let font = question.kind == .setAnalog ? baseFont * min(1.2, sqrt(max(1, width / 370))) : baseFont
+        let compactFont = question.kind == .setAnalog ? baseFont * min(1.2, sqrt(max(1, width / 370))) : baseFont
+        let font = layout.spacious ? layout.targetDigitalFont : compactFont
         return VStack(spacing: 10) {
             if let activity = question.activity {
                 Label(LocalizedStringKey(activity.titleKey), systemImage: activity.symbol)
-                    .font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(DinoStyle.deepGreen)
+                    .font(.system(size: layout.spacious ? 21 : 16, weight: .bold, design: .rounded)).foregroundStyle(DinoStyle.deepGreen)
             }
             // Reading help adds its own space only after a mistake.
             DigitalClock(time: question.target, theme: theme, fontSize: font)
@@ -220,8 +227,11 @@ struct QuestionRenderer: View {
     }
 
     private var analogTarget: some View {
-        clockStage(height: targetSize) {
-            AnalogClock(time: question.target, theme: theme, size: targetSize,
+        // Give the analogue reference the space released by the lower adjustment arrows.
+        let extraHeight = reusesLowerControlSpace ? DigitalClockControl.adjustmentRowHeight : 0
+        let stageHeight = min(width - 20, targetSize + extraHeight)
+        return clockStage(height: stageHeight) {
+            AnalogClock(time: question.target, theme: theme, size: stageHeight,
                         readingHintWidth: width, reservesHandHintSpace: true)
                 .accessibilityIdentifier("question.targetClock")
         }
@@ -249,10 +259,10 @@ struct QuestionRenderer: View {
 
     private var analogOptions: some View {
         let columns = layout.answerColumns()
-        let available = min(answerClockSize, (width - CGFloat(columns - 1) * 12) / CGFloat(columns) - 18)
+        let available = min(answerClockSize, layout.answerCellWidth - 18)
         let cardHeight = max(84, available + 52)
         let size = max(32, available)
-        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 14) {
+        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: layout.spacing), count: columns), spacing: layout.spacious ? 16 : 14) {
             ForEach(Array(question.options.enumerated()), id: \.offset) { index, option in
                 let wrong = session.hasFeedback && session.rejectedResponses.contains(.time(option))
                 answerButton(option: option, index: index) {
@@ -260,11 +270,11 @@ struct QuestionRenderer: View {
                         if question.kind == .chooseAnalog {
                             AnalogChoiceAnswer(time: option, theme: theme,
                                                showsMinuteScale: session.missedFirstAnswer && !wrong,
-                                               showsExplanation: wrong, fontSize: min(24, max(18, available * 0.14)))
+                                               showsExplanation: wrong, fontSize: layout.spacious ? layout.answerReadoutFont : min(24, max(18, available * 0.14)))
                                 .frame(height: cardHeight - 12)
                         } else {
                             AnswerTimeExplanation(time: option, theme: theme, visible: wrong,
-                                                  fontSize: min(24, size * 0.19),
+                                                  fontSize: layout.spacious ? layout.answerReadoutFont : min(24, size * 0.19),
                                                   content: AnalogClock(time: option, theme: theme, size: size)
                                                     .allowsHitTesting(false))
                         }
@@ -284,11 +294,13 @@ struct QuestionRenderer: View {
     private var digitalOptions: some View {
         // Four digital displays need more width than four clock faces, especially with AM/PM.
         let columns = layout.answerColumns()
-        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 14) {
+        let font = min(layout.spacious ? 66 : 31, (layout.answerCellWidth - 24) / (layout.spacious ? 4.2 : 4.8))
+        return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: layout.spacing), count: columns), spacing: layout.spacious ? 16 : 14) {
             ForEach(Array(question.options.enumerated()), id: \.offset) { index, option in
                 answerButton(option: option, index: index) {
-                    DigitalClock(time: option, theme: theme, fontSize: min(31, ((layout.answerWidth - CGFloat(columns - 1) * 12) / CGFloat(columns) - 24) / 4.8))
-                        .padding(.vertical, 14).frame(maxWidth: .infinity)
+                    DigitalClock(time: option, theme: theme, fontSize: font)
+                        .padding(.horizontal, layout.spacious ? 12 : 0)
+                        .padding(.vertical, layout.spacious ? 22 : 14).frame(maxWidth: .infinity)
                 }
             }
         }
@@ -315,12 +327,9 @@ struct QuestionRenderer: View {
             content().environment(\.dinoClockReadingAssistance, false).frame(maxWidth: .infinity)
                 .background(.white, in: RoundedRectangle(cornerRadius: 22))
                 .overlay(RoundedRectangle(cornerRadius: 22).stroke(correct ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : wrong ? DinoStyle.wrong(highContrast) : DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: correct || wrong ? 4 : highContrast ? 3 : 1.5))
-                .overlay(alignment: .topTrailing) {
-                    if correct || wrong {
-                        AnswerVerdictMark(correct: correct)
-                            .padding(2).background(.white, in: Circle()).offset(x: 5, y: -5)
-                    }
-                }.shadow(color: DinoStyle.ink.opacity(0.06), radius: 7, y: 4)
+                .modifier(AnswerCornerVerdict(correct: correct || wrong ? correct : nil, cardWidth: layout.answerCellWidth,
+                                              compactOutset: 5))
+                .shadow(color: DinoStyle.ink.opacity(0.06), radius: 7, y: 4)
         }.buttonStyle(DinoAnswerButtonStyle(playsSelectSound: false)).disabled(!session.responseIsEnabled(response)).accessibilityIdentifier("question.option.\(index)")
     }
 }
@@ -597,6 +606,7 @@ struct DinoClockTapCue: View {
 struct AnalogClockAnswerComparison: View {
     @Environment(\.dinoClockReadingAssistance) private var readingAssistance
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dinoSpaciousQuestion) private var spaciousQuestion
     let answer: ClockTime
     let target: ClockTime
     let theme: ClockTheme
@@ -612,7 +622,9 @@ struct AnalogClockAnswerComparison: View {
 
     private var comparing: Bool { hasFeedback && !correct }
     private var cellWidth: CGFloat { (width - 14) / 2 }
-    private var comparisonScale: CGFloat { min(1, (cellWidth - 12) / (clockSize + 20), (stageHeight - 44) / (clockSize + 20)) }
+    private var verdictRowHeight: CGFloat { spaciousQuestion ? 12 : 44 }
+    private var cardWidth: CGFloat { sharedHintBounds == nil ? clockSize + 20 : hintWidth + 20 }
+    private var comparisonScale: CGFloat { min(1, (cellWidth - 12) / (clockSize + 20), (stageHeight - verdictRowHeight) / (clockSize + 20)) }
     private var scale: CGFloat { comparing ? comparisonScale : 1 }
     private var stageHeight: CGFloat { clockSize + 20 }
     private var displacement: CGFloat { (width + 14) / 4 }
@@ -621,9 +633,9 @@ struct AnalogClockAnswerComparison: View {
         return ClockHandHintGeometry.bounds(time: answer, shape: theme.analogShape, faceSize: 150)
             .union(ClockHandHintGeometry.bounds(time: target, shape: theme.analogShape, faceSize: 150))
     }
-    // Spend the reserved comparison stage on the faces and their actual arrows,
-    // leaving one row underneath for the verdicts instead of scaling a square twice.
-    private var hintHeight: CGFloat { sharedHintBounds == nil ? clockSize : (stageHeight - 44) / comparisonScale - 20 }
+    // Compact comparisons keep the verdicts below the clocks. On a wide card
+    // the corner badge leaves the height available for the face and guides.
+    private var hintHeight: CGFloat { sharedHintBounds == nil ? clockSize : (stageHeight - verdictRowHeight) / comparisonScale - 20 }
     private var hintWidth: CGFloat { (cellWidth - 20) / comparisonScale }
 
     var body: some View {
@@ -637,9 +649,13 @@ struct AnalogClockAnswerComparison: View {
                 .frame(width: sharedHintBounds == nil ? nil : hintWidth,
                        height: sharedHintBounds == nil ? nil : hintHeight)
                 .padding(10).modifier(ClockAnswerOutline(visible: hasFeedback, correct: correct))
+                .modifier(AnswerCornerVerdict(correct: spaciousQuestion && comparing ? false : nil,
+                                              cardWidth: cardWidth, revealDelay: DinoQuestionFeedbackTiming.revealDelay))
                 .scaleEffect(scale)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(verbatim: answer.digitalText))
                 .accessibilityIdentifier("question.analogControl")
-                .offset(x: comparing ? -displacement : 0, y: comparing ? -22 : 0)
+                .offset(x: comparing ? -displacement : 0, y: comparing ? -verdictRowHeight / 2 : 0)
             AnalogClock(time: target, theme: theme, size: sharedHintBounds == nil ? clockSize : hintHeight,
                         readingHintWidth: sharedHintBounds == nil ? nil : hintWidth,
                         readingHintBounds: sharedHintBounds)
@@ -647,18 +663,24 @@ struct AnalogClockAnswerComparison: View {
                        height: sharedHintBounds == nil ? nil : hintHeight)
                 .padding(10)
                 .modifier(ClockAnswerOutline(visible: true, correct: true))
+                .modifier(AnswerCornerVerdict(correct: spaciousQuestion && comparing ? true : nil,
+                                              cardWidth: cardWidth, revealDelay: DinoQuestionFeedbackTiming.revealDelay))
                 .scaleEffect(comparisonScale * (comparing || reduceMotion ? 1 : 0.94))
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(verbatim: target.digitalText))
                 .accessibilityIdentifier("question.correctClock")
-                .offset(x: displacement, y: -22)
+                .offset(x: displacement, y: -verdictRowHeight / 2)
                 .opacity(comparing ? 1 : 0).allowsHitTesting(false).accessibilityHidden(!comparing)
                 .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: comparing)
-            HStack(spacing: 14) {
-                AnswerVerdictMark(correct: false).frame(maxWidth: .infinity)
-                AnswerVerdictMark(correct: true).frame(maxWidth: .infinity)
+            if !spaciousQuestion {
+                HStack(spacing: 14) {
+                    AnswerVerdictMark(correct: false).frame(maxWidth: .infinity)
+                    AnswerVerdictMark(correct: true).frame(maxWidth: .infinity)
+                }
+                .offset(y: stageHeight / 2 - 14)
+                .opacity(comparing ? 1 : 0).accessibilityHidden(true)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: comparing)
             }
-            .offset(y: stageHeight / 2 - 14)
-            .opacity(comparing ? 1 : 0).accessibilityHidden(true)
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.16).delay(0.2), value: comparing)
         }
         .frame(width: width, height: stageHeight)
         .questionAnswerFocus()
@@ -697,7 +719,7 @@ struct ClockMatchingBoard: View {
     }
     private var prefix: String { isDemonstration ? "demo.match" : "question.match" }
     private var leftWidth: CGFloat {
-        horizontalLayout ? width / CGFloat(max(1, times.count)) - 24 : width * 0.42
+        horizontalLayout ? width / CGFloat(max(1, times.count)) - 2 * DinoGameLayout.matchingCardInset : width * 0.42
     }
     private var rightWidth: CGFloat { leftWidth }
     private var faceSize: CGFloat {
@@ -713,7 +735,8 @@ struct ClockMatchingBoard: View {
     private var digitalFont: CGFloat {
         let heightLimit = horizontalLayout
             ? ((availableHeight ?? 480) - connectionGap) / 2 : .infinity
-        return min(40, width * 0.067, max(14, (heightLimit - 20) / 1.7))
+        let preferred = width > 620 ? min(66, (rightWidth - 20) / 4.4) : min(40, width * 0.067)
+        return min(preferred, max(14, (heightLimit - 20) / 1.7))
     }
     private var digitalHeight: CGFloat {
         digitalFont * 1.7 + 20 + (readingAssistance ? 48 * min(1, digitalFont / 30) : 0)
@@ -997,6 +1020,37 @@ struct ClockAnswerOutline: ViewModifier {
             .background(.white.opacity(visible ? 0.8 : 0), in: RoundedRectangle(cornerRadius: 22))
             .overlay(RoundedRectangle(cornerRadius: 22)
                 .stroke(correct ? (highContrast ? DinoStyle.deepGreen : DinoStyle.green) : DinoStyle.wrong(highContrast), lineWidth: visible ? 4 : 0))
+    }
+}
+
+/// Align the badge with the curve of the card and keep its rim clear of neighboring cards.
+struct AnswerCornerVerdict: ViewModifier {
+    @Environment(\.dinoSpaciousQuestion) private var spaciousQuestion
+    let correct: Bool?
+    let cardWidth: CGFloat
+    var compactOutset: CGFloat = 4
+    var compactRim: CGFloat = 2
+    var revealDelay: Double? = nil
+
+    func body(content: Content) -> some View {
+        content.overlay(alignment: .topTrailing) {
+            if let correct {
+                let diameter = spaciousQuestion ? DinoQuestionClockMetrics.verdictDiameter(in: cardWidth) : 26
+                let rim = spaciousQuestion ? max(2, diameter * 0.065) : compactRim
+                let outset = spaciousQuestion ? 5 : compactOutset
+                let badge = AnswerVerdictMark(correct: correct, size: diameter)
+                    .padding(rim)
+                    .background(.white, in: Circle())
+                    .offset(x: outset, y: -outset)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                if let revealDelay {
+                    badge.modifier(DinoFeedbackReveal(delay: revealDelay))
+                } else {
+                    badge
+                }
+            }
+        }
     }
 }
 

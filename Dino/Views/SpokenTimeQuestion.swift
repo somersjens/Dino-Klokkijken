@@ -140,6 +140,7 @@ struct SpokenTimeQuestion: View {
     @ObservedObject var session: DinoSession
     let theme: ClockTheme
     let width: CGFloat
+    let wordBankWidth: CGFloat
     var isDemonstration = false
     var compact = false
     var wideLayout = false
@@ -147,12 +148,18 @@ struct SpokenTimeQuestion: View {
 
     private var prompt: SpokenTimePrompt? { session.question.spokenPrompt }
     private var prefix: String { isDemonstration ? "demo" : "question" }
-    private var wordBankWidth: CGFloat { min(560, width) }
+    private var spacious: Bool { width > 620 }
+    private var slotLabelWidth: CGFloat { spacious ? 90 : 64 }
     private var tablet: Bool { width >= 600 && !compact }
-    private var wordRowHeight: CGFloat { compact ? 36 : tablet ? 48 : 40 }
+    private var wordRowHeight: CGFloat {
+        guard spacious && !compact else { return compact ? 36 : tablet ? 48 : 40 }
+        let rows = CGFloat(max(1, prompt?.slots.count ?? 1))
+        let spaceForRows = availableHeight - 204 - (rows - 1) * wordSpacing
+        return min(58, max(42, spaceForRows / rows))
+    }
     private var wordSpacing: CGFloat { compact ? 7 : 8 }
     private var wordPadding: CGFloat { compact ? 9 : tablet ? 12 : 10 }
-    private var sentenceHeight: CGFloat { compact ? 26 : tablet ? 40 : 56 }
+    private var sentenceHeight: CGFloat { compact ? 26 : spacious ? 58 : tablet ? 40 : 56 }
 
     var body: some View {
         let arrangement = AnyLayout(VStackLayout(spacing: compact ? 6 : 12))
@@ -195,11 +202,11 @@ struct SpokenTimeQuestion: View {
         return Group {
             if text.isEmpty {
                 Text("dino.spoken.hint")
-                    .font(.system(size: tablet ? 17 : 15, weight: .medium, design: .rounded))
+                    .font(.system(size: spacious ? 23 : tablet ? 17 : 15, weight: .medium, design: .rounded))
                     .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
             } else {
                 Text(verbatim: text)
-                    .font(.system(size: tablet ? 24 : 22, weight: .heavy, design: .rounded))
+                    .font(.system(size: spacious ? 30 : tablet ? 24 : 22, weight: .heavy, design: .rounded))
                     .foregroundStyle(showsAnswer && !isDemonstration ? DinoStyle.deepGreen : DinoStyle.ink)
                     .accessibilityIdentifier(isDemonstration ? "demo.answer" : showsAnswer ? "question.spoken.phrase" : "question.spoken.draft")
             }
@@ -212,7 +219,7 @@ struct SpokenTimeQuestion: View {
     }
 
     private var clock: some View {
-        DigitalClock(time: session.question.target, theme: theme, fontSize: min(tablet ? (compact ? 38 : 46) : compact ? 36 : 46, width * 0.13))
+        DigitalClock(time: session.question.target, theme: theme, fontSize: min(spacious ? 58 : compact ? 36 : 46, width * 0.13))
             .frame(maxWidth: .infinity)
             .accessibilityIdentifier("\(prefix).targetClock")
     }
@@ -222,9 +229,9 @@ struct SpokenTimeQuestion: View {
         let titles = prompt.slots.flatMap(\.choices).map(buttonTitle)
         let longest = titles.max { Self.textWidth($0, size: 100) < Self.textWidth($1, size: 100) } ?? ""
         let columns = max(1, prompt.slots.map(\.choices.count).max() ?? 1)
-        let buttonWidth = (wordBankWidth - 24 - 64 - 8 - CGFloat(columns - 1) * 6) / CGFloat(columns)
+        let buttonWidth = (wordBankWidth - 24 - slotLabelWidth - 8 - CGFloat(columns - 1) * 6) / CGFloat(columns)
         let available = max(20, buttonWidth - 8 - 18)
-        var size: CGFloat = tablet ? (compact ? 18 : 20) : 16
+        var size: CGFloat = spacious ? 26 : tablet ? 20 : 16
         while size > 10, Self.textWidth(longest, size: size) > available { size -= 0.5 }
         return size
     }
@@ -238,11 +245,11 @@ struct SpokenTimeQuestion: View {
     private func slotRow(_ slot: SpokenTimeSlot, index: Int, prompt: SpokenTimePrompt, fontSize: CGFloat) -> some View {
         HStack(alignment: .center, spacing: 8) {
             Text(verbatim: slot.title)
-                .font(.system(size: tablet ? 14 : 12, weight: .bold, design: .rounded))
+                .font(.system(size: spacious ? 19 : tablet ? 14 : 12, weight: .bold, design: .rounded))
                 .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-                .frame(width: 64, alignment: .leading)
+                .frame(width: slotLabelWidth, alignment: .leading)
                 .accessibilityIdentifier("\(prefix).spoken.slot.\(index)")
             HStack(spacing: 6) {
                 ForEach(Array(slot.choices.enumerated()), id: \.element.id) { choiceIndex, choice in

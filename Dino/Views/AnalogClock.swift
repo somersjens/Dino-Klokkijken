@@ -1,7 +1,13 @@
 import SwiftUI
 
+private struct SpaciousQuestionKey: EnvironmentKey { static let defaultValue = false }
 private struct ClockReadingAssistanceKey: EnvironmentKey { static let defaultValue = false }
 extension EnvironmentValues {
+    var dinoSpaciousQuestion: Bool {
+        get { self[SpaciousQuestionKey.self] }
+        set { self[SpaciousQuestionKey.self] = newValue }
+    }
+
     var dinoClockReadingAssistance: Bool {
         get { self[ClockReadingAssistanceKey.self] }
         set { self[ClockReadingAssistanceKey.self] = newValue }
@@ -132,6 +138,7 @@ struct AnalogClock: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dinoClockReadingAssistance) private var readingAssistance
+    @Environment(\.dinoSpaciousQuestion) private var spaciousQuestion
     @GestureState private var touchingClock = false
     @State private var draggingMinutes: Bool?
     @State private var revealedReadingGuide: String?
@@ -190,7 +197,7 @@ struct AnalogClock: View {
     var body: some View {
         let size = drawingSize
         let handHintBounds = displaysHandHints || reservesHandHintSpace
-            ? readingHintBounds ?? ClockHandHintGeometry.bounds(time: time, shape: theme.analogShape, faceSize: size) : nil
+            ? readingHintBounds ?? ClockHandHintGeometry.bounds(time: time, shape: theme.analogShape, faceSize: size, spacious: spaciousQuestion) : nil
         let minuteScaleBounds = CGRect(x: -0.64, y: -0.64, width: 1.28, height: 1.28)
         ZStack {
             dialArtwork
@@ -544,6 +551,7 @@ private struct AnalogClockTicks: View, Equatable {
 }
 
 private struct ClockHandHint: View {
+    @Environment(\.dinoSpaciousQuestion) private var spaciousQuestion
     let number: Int
     let pointer: ClockHandHintGeometry.Pointer
     let ink: UInt32
@@ -554,7 +562,7 @@ private struct ClockHandHint: View {
     }
 
     var body: some View {
-        let scale = min(1, size / 150)
+        let scale = ClockHandHintGeometry.badgeScale(faceSize: size, spacious: spaciousQuestion)
         let width = size * bounds.width
         let height = size * bounds.height
         let scaled: (CGPoint) -> CGPoint = { value in

@@ -68,10 +68,6 @@
 		DB192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift */; };
 		DB192026BD01000000000002 /* Dino/Views/TimeZoneMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000002 /* Dino/Views/TimeZoneMap.swift */; };
 		DB192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json in Resources */ = {isa = PBXBuildFile; fileRef = DA192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json */; };
-		F9AE9B4C309BDADA00C283F5 /* zero-stars-fall.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B48309BDADA00C283F5 /* zero-stars-fall.m4a */; };
-		F9AE9B4D309BDADA00C283F5 /* end-of-level.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B49309BDADA00C283F5 /* end-of-level.m4a */; };
-		F9AE9B4E309BDADA00C283F5 /* select-menu.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B4A309BDADA00C283F5 /* select-menu.m4a */; };
-		F9AE9B4F309BDADA00C283F5 /* single-clap.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B4B309BDADA00C283F5 /* single-clap.m4a */; };
 		DB202026BD01000000000001 /* Dino/Views/DinoDesert.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA202026BD01000000000001 /* Dino/Views/DinoDesert.swift */; };
 		DB212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA212026BD01000000000001 /* Dino/Views/MinutesBetweenQuestion.swift */; };
 		DB212026BD01000000000002 /* Dino/Views/TimeArithmeticExplanation.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA212026BD01000000000002 /* Dino/Views/TimeArithmeticExplanation.swift */; };
@@ -94,6 +90,13 @@
 		F951E834307BE03500FF04C4 /* DinoTimeAdventureApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E652307BE03500FF04C4 /* DinoTimeAdventureApp.swift */; };
 		F951E835307BE03500FF04C4 /* Dino/Core/SeededGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E650307BE03500FF04C4 /* Dino/Core/SeededGenerator.swift */; };
 		F951E836307BE03500FF04C4 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = F951E65D307BE03500FF04C4 /* Localization.swift */; };
+		F9AE9B4C309BDADA00C283F5 /* Dino/Resources/Sounds/zero-stars-fall.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B48309BDADA00C283F5 /* Dino/Resources/Sounds/zero-stars-fall.m4a */; };
+		F9AE9B4D309BDADA00C283F5 /* Dino/Resources/Sounds/end-of-level.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B49309BDADA00C283F5 /* Dino/Resources/Sounds/end-of-level.m4a */; };
+		F9AE9B4E309BDADA00C283F5 /* Dino/Resources/Sounds/select-menu.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B4A309BDADA00C283F5 /* Dino/Resources/Sounds/select-menu.m4a */; };
+		F9AE9B4F309BDADA00C283F5 /* Dino/Resources/Sounds/new-clap.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B4B309BDADA00C283F5 /* Dino/Resources/Sounds/new-clap.m4a */; };
+		F9AE9B54309C607600C283F5 /* Dino/Resources/Sounds/jump-jump.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B4E309C607600C283F5 /* Dino/Resources/Sounds/jump-jump.m4a */; };
+		F9AE9B55309C607600C283F5 /* Dino/Resources/Sounds/jump-land.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B4F309C607600C283F5 /* Dino/Resources/Sounds/jump-land.m4a */; };
+		F9AE9B56309C607600C283F5 /* Dino/Resources/Sounds/to-new-world.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B50309C607600C283F5 /* Dino/Resources/Sounds/to-new-world.m4a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -179,10 +182,13 @@
 		F951E652307BE03500FF04C4 /* DinoTimeAdventureApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoTimeAdventureApp.swift; sourceTree = "<group>"; };
 		F951E65C307BE03500FF04C4 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		F951E65D307BE03500FF04C4 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
-		F9AE9B48309BDADA00C283F5 /* zero-stars-fall.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = Dino/Resources/Sounds/zero-stars-fall.m4a; sourceTree = SOURCE_ROOT; };
-		F9AE9B49309BDADA00C283F5 /* end-of-level.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = Dino/Resources/Sounds/end-of-level.m4a; sourceTree = SOURCE_ROOT; };
-		F9AE9B4A309BDADA00C283F5 /* select-menu.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = Dino/Resources/Sounds/select-menu.m4a; sourceTree = SOURCE_ROOT; };
-		F9AE9B4B309BDADA00C283F5 /* single-clap.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = Dino/Resources/Sounds/single-clap.m4a; sourceTree = SOURCE_ROOT; };
+		F9AE9B48309BDADA00C283F5 /* Dino/Resources/Sounds/zero-stars-fall.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = "Dino/Resources/Sounds/zero-stars-fall.m4a"; sourceTree = SOURCE_ROOT; };
+		F9AE9B49309BDADA00C283F5 /* Dino/Resources/Sounds/end-of-level.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = "Dino/Resources/Sounds/end-of-level.m4a"; sourceTree = SOURCE_ROOT; };
+		F9AE9B4A309BDADA00C283F5 /* Dino/Resources/Sounds/select-menu.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = "Dino/Resources/Sounds/select-menu.m4a"; sourceTree = SOURCE_ROOT; };
+		F9AE9B4B309BDADA00C283F5 /* Dino/Resources/Sounds/new-clap.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = "Dino/Resources/Sounds/new-clap.m4a"; sourceTree = SOURCE_ROOT; };
+		F9AE9B4E309C607600C283F5 /* Dino/Resources/Sounds/jump-jump.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = "Dino/Resources/Sounds/jump-jump.m4a"; sourceTree = SOURCE_ROOT; };
+		F9AE9B4F309C607600C283F5 /* Dino/Resources/Sounds/jump-land.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = "Dino/Resources/Sounds/jump-land.m4a"; sourceTree = SOURCE_ROOT; };
+		F9AE9B50309C607600C283F5 /* Dino/Resources/Sounds/to-new-world.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = "Dino/Resources/Sounds/to-new-world.m4a"; sourceTree = SOURCE_ROOT; };
 		FF502E855D8132CA2685C1B5 /* Dino/Social/FriendsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Social/FriendsManager.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -327,10 +333,13 @@
 				A1319120659071CDFDC06C3F /* README.md */,
 				F951E65D307BE03500FF04C4 /* Localization.swift */,
 				F951E642307BE03500FF04C4 /* Assets.xcassets */,
-				F9AE9B48309BDADA00C283F5 /* zero-stars-fall.m4a */,
-				F9AE9B49309BDADA00C283F5 /* end-of-level.m4a */,
-				F9AE9B4A309BDADA00C283F5 /* select-menu.m4a */,
-				F9AE9B4B309BDADA00C283F5 /* single-clap.m4a */,
+				F9AE9B48309BDADA00C283F5 /* Dino/Resources/Sounds/zero-stars-fall.m4a */,
+				F9AE9B49309BDADA00C283F5 /* Dino/Resources/Sounds/end-of-level.m4a */,
+				F9AE9B4A309BDADA00C283F5 /* Dino/Resources/Sounds/select-menu.m4a */,
+				F9AE9B4B309BDADA00C283F5 /* Dino/Resources/Sounds/new-clap.m4a */,
+				F9AE9B4E309C607600C283F5 /* Dino/Resources/Sounds/jump-jump.m4a */,
+				F9AE9B4F309C607600C283F5 /* Dino/Resources/Sounds/jump-land.m4a */,
+				F9AE9B50309C607600C283F5 /* Dino/Resources/Sounds/to-new-world.m4a */,
 				81C5D0349885771256BBA84E /* Dino */,
 				C70D8D9AE8EF868E9779C09D /* Tests */,
 				254F130E4296744D7AC5C4A2 /* Documentation */,
@@ -429,10 +438,13 @@
 			files = (
 				9BB407718D9D26EDD1309082 /* PrivacyInfo.xcprivacy in Resources */,
 				DB192026BD01000000000003 /* Dino/Resources/TimeZoneMap.json in Resources */,
-				F9AE9B4C309BDADA00C283F5 /* zero-stars-fall.m4a in Resources */,
-				F9AE9B4D309BDADA00C283F5 /* end-of-level.m4a in Resources */,
-				F9AE9B4E309BDADA00C283F5 /* select-menu.m4a in Resources */,
-				F9AE9B4F309BDADA00C283F5 /* single-clap.m4a in Resources */,
+				F9AE9B4C309BDADA00C283F5 /* Dino/Resources/Sounds/zero-stars-fall.m4a in Resources */,
+				F9AE9B4D309BDADA00C283F5 /* Dino/Resources/Sounds/end-of-level.m4a in Resources */,
+				F9AE9B4E309BDADA00C283F5 /* Dino/Resources/Sounds/select-menu.m4a in Resources */,
+				F9AE9B4F309BDADA00C283F5 /* Dino/Resources/Sounds/new-clap.m4a in Resources */,
+				F9AE9B54309C607600C283F5 /* Dino/Resources/Sounds/jump-jump.m4a in Resources */,
+				F9AE9B55309C607600C283F5 /* Dino/Resources/Sounds/jump-land.m4a in Resources */,
+				F9AE9B56309C607600C283F5 /* Dino/Resources/Sounds/to-new-world.m4a in Resources */,
 				B8196F54F8B174235D7F48CC /* InfoPlist.xcstrings in Resources */,
 				F951E75B307BE03500FF04C4 /* Localizable.xcstrings in Resources */,
 				F951E7F1307BE03500FF04C4 /* Assets.xcassets in Resources */,

@@ -287,12 +287,17 @@ enum ClockHandHintGeometry {
         return best
     }
 
+    static func badgeScale(faceSize: Double, spacious: Bool) -> Double {
+        min(spacious ? 1.65 : 1, faceSize / 150)
+    }
+
     /// Reserve only the scale and the two arrows present at this time.
     /// Badge and stroke margins match the scaled artwork, including small faces.
-    static func bounds(time: ClockTime, shape: AnalogClockShape, faceSize: Double) -> CGRect {
-        let scale = max(1, faceSize)
-        let badgeRadius = 14.5 / max(150, scale) + 0.012
-        let strokeRadius = 3.75 / max(150, scale) + 0.012
+    static func bounds(time: ClockTime, shape: AnalogClockShape, faceSize: Double, spacious: Bool = false) -> CGRect {
+        let face = max(1, faceSize)
+        let normalizedScale = badgeScale(faceSize: face, spacious: spacious) / face
+        let badgeRadius = 14.5 * normalizedScale + 0.012
+        let strokeRadius = 3.75 * normalizedScale + 0.012
         var bounds = CGRect(x: -0.5, y: -0.5, width: 1, height: 1)
         for mark in minuteMarks(shape: shape) {
             let label = CGRect(x: mark.label.x - 0.052, y: mark.label.y - 0.048,

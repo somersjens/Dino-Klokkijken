@@ -22,6 +22,7 @@ struct ClockCustomizer: View {
     var onNavigate: ((Int) -> Void)? = nil
     var showsPreview = true
     var showsOptions = true
+    var welcomeChrome: (title: AnyView, action: AnyView)? = nil
     private var compact: Bool { verticalSizeClass == .compact }
     private var inkSwatches: [(name: String, hex: UInt32)] { ClockInk.allCases.map { ($0.rawValue, $0.hex) } }
     private let digitalInkSwatches: [(name: String, hex: UInt32)] = [
@@ -33,40 +34,90 @@ struct ClockCustomizer: View {
 
     var body: some View {
         Group {
-            switch page {
-            case .both:
-                VStack(spacing: 20) {
-                    VStack(spacing: 20) {
-                        analogPreview
-                        analogOptions
-                    }.dinoCard()
-                    VStack(spacing: 20) {
-                        digitalPreview
-                        digitalOptions
-                    }.dinoCard()
-                }
-            case .analog, .digital:
-                let horizontal = compact || metrics.sideBySide
-                let layout = horizontal ? AnyLayout(HStackLayout(spacing: 0)) : AnyLayout(VStackLayout(spacing: 0))
-                layout {
-                    if showsPreview {
-                    Group {
-                        if page == .analog { analogPreview } else { digitalPreview }
-                    }.padding(.vertical, CustomizationLayout.previewPadding)
-                        .frame(maxWidth: compact ? (page == .analog ? 140 : 185) : metrics.sideBySide ? 320 : .infinity)
-                    }
-                    if showsOptions {
-                    ScrollView {
-                        Group {
-                            if page == .analog { analogOptions } else { digitalOptions }
-                        }.modifier(CustomizationOptionsCard())
-                    }.clipped().id(page == .analog ? "analog" : "digital")
-                        .accessibilityIdentifier(page == .analog ? "theme.options.analog" : "theme.options.digital")
-                    }
-                }.frame(maxWidth: compact ? 760 : metrics.sideBySide ? 1100 : .infinity).frame(maxWidth: .infinity)
+            if let welcomeChrome {
+                welcomeEditor(title: welcomeChrome.title, action: welcomeChrome.action)
+                    .id(page == .analog ? "analog" : "digital")
+            } else {
+                standardEditor
             }
         }.foregroundStyle(DinoStyle.ink)
             .onAppear { theme = theme.applyingFixedStyles() }
+    }
+
+    @ViewBuilder private var standardEditor: some View {
+        switch page {
+        case .both:
+            VStack(spacing: 20) {
+                VStack(spacing: 20) {
+                    analogPreview
+                    analogOptions
+                }.dinoCard()
+                VStack(spacing: 20) {
+                    digitalPreview
+                    digitalOptions
+                }.dinoCard()
+            }
+        case .analog, .digital:
+            let identifier = page == .analog ? "theme.options.analog" : "theme.options.digital"
+            CustomizationEditorLayout(horizontal: compact || metrics.sideBySide, spacing: 0,
+                                      maxWidth: compact ? 760 : metrics.sideBySide ? 1100 : .infinity,
+                                      identifier: identifier, showsOptions: showsOptions) {
+                if showsPreview {
+                    Group {
+                        if page == .analog { analogPreview } else { digitalPreview }
+                    }.padding(.vertical, CustomizationLayout.previewPadding)
+                        .frame(maxWidth: compact ? compactPreviewWidth : metrics.sideBySide ? 320 : .infinity)
+                }
+            } options: {
+                Group {
+                    if page == .analog { analogOptions } else { digitalOptions }
+                }.modifier(CustomizationOptionsCard())
+            }.id(page == .analog ? "analog" : "digital")
+        }
+    }
+
+    private func welcomeEditor(title: AnyView, action: AnyView) -> some View {
+        GeometryReader { geometry in
+            let horizontal = metrics.sideBySide
+            let previewWidth = min(340, geometry.size.width * 0.29)
+            let availableWidth = max(1, min(1120, geometry.size.width - 40))
+            let controlsWidth = horizontal ? max(1, min(740, availableWidth - previewWidth - 24))
+                : min(metrics.contentWidth - 32, availableWidth)
+            let layout = horizontal ? AnyLayout(HStackLayout(spacing: 24)) : AnyLayout(VStackLayout(spacing: 20))
+            ScrollView {
+                VStack(spacing: 16) {
+                    title
+                    layout {
+                        Group {
+                            if page == .analog { analogPreview } else { digitalPreview }
+                        }.frame(width: horizontal ? previewWidth : nil)
+                        VStack(spacing: 16) {
+                            Group {
+                                if page == .analog {
+                                    analogOptions(useColorGrid: controlsWidth >= (horizontal ? 610 : 700))
+                                } else {
+                                    digitalOptions
+                                }
+                            }
+                            .dinoCard(padding: 24)
+                            .accessibilityElement(children: .contain)
+                            .accessibilityIdentifier("theme.welcome.optionsCard")
+                            action
+                        }.frame(width: controlsWidth)
+                    }
+                }
+                .padding(.horizontal, 20).padding(.vertical, 20)
+                .frame(maxWidth: .infinity)
+                .modifier(ShortScrollCentering(height: geometry.size.height))
+            }
+            .centersShortContent().bouncesOnlyWhenNeeded()
+            .accessibilityIdentifier(page == .analog ? "theme.options.analog" : "theme.options.digital")
+        }
+    }
+
+    private var compactPreviewWidth: CGFloat {
+        if page == .analog { return 140 }
+        return showsOptions ? 185 : 232
     }
 
     private var analogPreview: some View {
@@ -83,7 +134,7 @@ struct ClockCustomizer: View {
     private var digitalPreview: some View {
         TimelineView(.dinoMinute) { context in
             VStack(spacing: 10) {
-                DigitalClock(time: ClockTime(date: context.date), theme: theme, fontSize: !showsOptions ? (compact ? 28 : 56) : compact ? 36 : metrics.spacious ? 68 : 48)
+                DigitalClock(time: ClockTime(date: context.date), theme: theme, fontSize: !showsOptions ? 56 : compact ? 36 : metrics.spacious ? 68 : 48)
                     .accessibilityIdentifier("theme.digital.preview")
                     .modifier(PersonalizationPreviewNavigation(onNavigate: onNavigate))
                 if theme.digitalColorsMatch { ClockColorWarning(analog: false) }
@@ -91,18 +142,39 @@ struct ClockCustomizer: View {
                     ClockNotationWarning()
                 }
             }
-        }.padding(.horizontal, 16).frame(maxWidth: metrics.contentWidth)
+        }.padding(.horizontal, compact && !showsOptions ? 4 : 16).frame(maxWidth: metrics.contentWidth)
     }
 
     private var analogOptions: some View {
-        VStack(spacing: CustomizationLayout.restoreSpacing) {
+        analogOptions(useColorGrid: showsPreview && metrics.usesColorGrid)
+    }
+
+    private func analogOptions(useColorGrid: Bool) -> some View {
+        let hour = colorChoices(title: "dino.hourHand", color: analogColor(\.customHourHex, preset: \.hourInk), values: inkSwatches)
+        let minute = colorChoices(title: "dino.minuteHand", color: analogColor(\.customMinuteHex, preset: \.minuteInk), values: inkSwatches)
+        let face = colorChoices(title: "dino.face", color: faceColor, values: faceSwatches)
+        let rim = colorChoices(title: "dino.rim", color: analogColor(\.customRimHex, preset: \.rimInk), values: inkSwatches)
+        return VStack(spacing: CustomizationLayout.restoreSpacing) {
             VStack(spacing: CustomizationLayout.sectionSpacing * metrics.enlargement) {
                 analogNumeralChoices
                 analogShapeChoices.padding(.bottom, CustomizationLayout.swatchInset)
-                colorChoices(title: "dino.hourHand", color: analogColor(\.customHourHex, preset: \.hourInk), values: inkSwatches)
-                colorChoices(title: "dino.minuteHand", color: analogColor(\.customMinuteHex, preset: \.minuteInk), values: inkSwatches)
-                colorChoices(title: "dino.face", color: faceColor, values: faceSwatches)
-                colorChoices(title: "dino.rim", color: analogColor(\.customRimHex, preset: \.rimInk), values: inkSwatches)
+                if useColorGrid {
+                    Grid(horizontalSpacing: 24, verticalSpacing: 18) {
+                        GridRow {
+                            hour
+                            minute
+                        }
+                        GridRow {
+                            face
+                            rim
+                        }
+                    }
+                } else {
+                    hour
+                    minute
+                    face
+                    rim
+                }
                 // Re-enable alongside ClockTheme.applyingFixedStyles() if hand styles return.
                 // styleChoice(title: "dino.hands", selection: $theme.hands, values: ClockHandStyle.allCases,
                 //             keyPrefix: "dino.hands.", identifier: "theme.hands")
@@ -249,11 +321,13 @@ struct ClockCustomizer: View {
     }
 
     private func colorChoices(title: String, color: Binding<UInt32>, values: [(name: String, hex: UInt32)]) -> some View {
-        CustomizationSection(title: title, identifier: "theme." + title + ".label") {
+        let swatchSize = compact ? 24 : metrics.swatchSize
+        return CustomizationSection(title: title, identifier: "theme." + title + ".label",
+                                    compactLabelWidth: compact ? 90 : nil) {
             HStack(spacing: 0) {
                 ForEach(values, id: \.name) { value in
                     Button { color.wrappedValue = value.hex } label: {
-                        Circle().fill(Color(dinoHex: value.hex)).frame(width: metrics.swatchSize, height: metrics.swatchSize)
+                        Circle().fill(Color(dinoHex: value.hex)).frame(width: swatchSize, height: swatchSize)
                             .overlay(Circle().stroke(DinoStyle.ink.opacity(0.18), lineWidth: 1))
                             .overlay {
                                 if color.wrappedValue == value.hex {

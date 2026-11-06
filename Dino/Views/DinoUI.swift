@@ -510,16 +510,20 @@ private struct CustomizationMetricsKey: EnvironmentKey { static let defaultValue
 struct CustomizationMetrics {
     var spacious = false
     var sideBySide = false
-    var contentWidth: CGFloat { spacious ? 740 : 520 }
-    var footerWidth: CGFloat { spacious ? 760 : 540 }
+    var usesColorGrid = false
+    var groupsWelcomeClock = false
+    var contentWidth: CGFloat { spacious ? 820 : 520 }
+    var footerWidth: CGFloat { spacious ? 660 : 540 }
     var enlargement: CGFloat { spacious ? 1.3 : 1 }
-    var previewSize: CGFloat { spacious ? 270 : 180 }
-    var swatchSize: CGFloat { spacious ? 40 : 28 }
-    var controlHeight: CGFloat { spacious ? 60 : 44 }
+    var previewSize: CGFloat { spacious ? (sideBySide ? 280 : 320) : 180 }
+    var swatchSize: CGFloat { spacious ? (sideBySide ? 40 : 46) : 28 }
+    var controlHeight: CGFloat { spacious ? 64 : 44 }
 
     init(size: CGSize = .zero) {
         spacious = size.width >= 650 && size.height >= 500
-        sideBySide = (size.width >= 500 && size.height < 500) || (size.width >= 900 && size.height < 900)
+        sideBySide = (size.width >= 500 && size.height < 500) || (size.width >= 900 && size.width > size.height)
+        usesColorGrid = spacious && !sideBySide && size.width >= 760
+        groupsWelcomeClock = spacious && size.height >= (sideBySide ? 640 : 840)
     }
 }
 
@@ -534,20 +538,75 @@ enum CustomizationLayout {
     static let previewPadding: CGFloat = 8
 }
 
-/// Every option heading shares its typography and distance to the controls below.
+/// Use a leading label when the color controls need a shorter row.
 struct CustomizationSection<Content: View>: View {
     @Environment(\.customizationMetrics) private var metrics
     let title: String
     let identifier: String
     var controlSpacing: CGFloat = CustomizationLayout.labelSpacing
+    var compactLabelWidth: CGFloat? = nil
     @ViewBuilder var content: Content
 
     var body: some View {
-        VStack(spacing: controlSpacing * metrics.enlargement) {
-            Text(LocalizedStringKey(title)).modifier(CustomizationText())
-                .frame(maxWidth: .infinity).accessibilityIdentifier(identifier)
+        let layout = compactLabelWidth == nil
+            ? AnyLayout(VStackLayout(spacing: controlSpacing * metrics.enlargement))
+            : AnyLayout(HStackLayout(spacing: 6))
+        layout {
+            Group {
+                if let compactLabelWidth {
+                    Text(LocalizedStringKey(title))
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.leading).lineLimit(2).minimumScaleFactor(0.85)
+                        .frame(width: compactLabelWidth, alignment: .leading)
+                } else {
+                    Text(LocalizedStringKey(title)).modifier(CustomizationText())
+                        .frame(maxWidth: .infinity)
+                }
+            }.accessibilityIdentifier(identifier)
             content
         }.frame(maxWidth: .infinity)
+    }
+}
+
+/// In a tall window, keep the preview with its controls and center the group when it fits.
+struct CustomizationEditorLayout<Preview: View, Options: View>: View {
+    @Environment(\.customizationMetrics) private var metrics
+    let horizontal: Bool
+    let spacing: CGFloat
+    let maxWidth: CGFloat
+    let identifier: String
+    let showsOptions: Bool
+    @ViewBuilder var preview: () -> Preview
+    @ViewBuilder var options: () -> Options
+
+    var body: some View {
+        if metrics.spacious && !horizontal && showsOptions {
+            GeometryReader { geometry in
+                ScrollView {
+                    VStack(spacing: spacing) {
+                        preview()
+                        options()
+                    }
+                    .modifier(ShortScrollCentering(height: geometry.size.height))
+                }
+                .centersShortContent().bouncesOnlyWhenNeeded().clipped()
+                .accessibilityIdentifier(identifier)
+            }
+        } else {
+            let layout = horizontal ? AnyLayout(HStackLayout(spacing: spacing)) : AnyLayout(VStackLayout(spacing: spacing))
+            layout {
+                preview()
+                if showsOptions {
+                    Group {
+                        if metrics.spacious {
+                            ScrollView { options() }.centersShortContent().bouncesOnlyWhenNeeded()
+                        } else {
+                            ScrollView { options() }
+                        }
+                    }.clipped().accessibilityIdentifier(identifier)
+                }
+            }.frame(maxWidth: maxWidth).frame(maxWidth: .infinity)
+        }
     }
 }
 
@@ -707,7 +766,6 @@ struct DinoClockControlButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .dinoSelectSound(pressed: configuration.isPressed)
             .font(.system(size: compact ? 15 : 17, weight: .bold, design: .rounded))
             .foregroundStyle(isEnabled ? (selected ? Color.white : DinoStyle.ink) : DinoStyle.disabledInk(highContrast))
             .lineLimit(1)
@@ -758,13 +816,14 @@ struct DinoButtonStyle: ButtonStyle {
 struct DinoSecondaryButtonStyle: ButtonStyle {
     @Environment(\.dinoHighContrast) private var highContrast
     var outlined = false
+    var spacious = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .dinoSelectSound(pressed: configuration.isPressed)
-            .font(.system(size: 17, weight: .bold, design: .rounded))
+            .font(.system(size: spacious ? 21 : 17, weight: .bold, design: .rounded))
             .foregroundStyle(DinoStyle.ink)
             .padding(.horizontal, 20)
-            .frame(minHeight: 52)
+            .frame(minHeight: spacious ? 62 : 52)
             .frame(maxWidth: .infinity)
             .background(.white.opacity(highContrast ? 1 : configuration.isPressed ? 0.6 : 0.95), in: RoundedRectangle(cornerRadius: 18))
             .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(DinoStyle.ink.opacity(highContrast || outlined ? 1 : 0.1),
@@ -774,7 +833,8 @@ struct DinoSecondaryButtonStyle: ButtonStyle {
 
 /// Disabled choices retain their contrast so the child can inspect the answer.
 struct DinoAnswerButtonStyle: ButtonStyle {
-    var playsSelectSound = true
+    /// Answer tiles, clocks and hand controls stay quiet. Map stones opt in.
+    var playsSelectSound = false
     func makeBody(configuration: Configuration) -> some View {
         // Press feedback must not add a second transform while a rejected answer's
         // contents and its siblings animate into their reading-help layout.
@@ -1081,22 +1141,23 @@ private struct ValueChangeProbe<T: Equatable>: ViewModifier {
     }
 }
 
-/// Only the question illustration scales down; answers and tap targets keep their normal size.
+/// Fit the question illustration independently of its answer buttons.
 struct DinoQuestionContext<Content: View>: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let maxHeight: CGFloat?
     var animatesHeight = false
+    var magnification: CGFloat = 1
     @ViewBuilder var content: () -> Content
     @State private var naturalHeight: CGFloat = 0
-    private var scale: CGFloat { maxHeight.map { min(1, $0 / max(1, naturalHeight)) } ?? 1 }
+    private var scale: CGFloat { maxHeight.map { min(magnification, $0 / max(1, naturalHeight)) } ?? magnification }
 
     @ViewBuilder var body: some View {
         if let maxHeight, #available(iOS 17, *) {
-            DinoFittedQuestionContextLayout(maximumHeight: maxHeight) {
+            DinoFittedQuestionContextLayout(maximumHeight: maxHeight, magnification: magnification) {
                 content()
                     .fixedSize(horizontal: false, vertical: true)
-                    .visualEffect { effect, geometry in
-                        let fit = min(1, maxHeight / max(1, geometry.size.height))
+                    .visualEffect { [magnification] effect, geometry in
+                        let fit = min(magnification, maxHeight / max(1, geometry.size.height))
                         return effect.scaleEffect(x: fit, y: fit, anchor: .center)
                     }
             }
@@ -1117,11 +1178,12 @@ struct DinoQuestionContext<Content: View>: View {
 /// complete lesson, rather than becoming a gap between its illustration and answers.
 private struct DinoFittedQuestionContextLayout: Layout {
     let maximumHeight: CGFloat
+    let magnification: CGFloat
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         guard let content = subviews.first else { return .zero }
         let natural = content.sizeThatFits(.init(width: proposal.width, height: nil))
-        return CGSize(width: proposal.width ?? natural.width, height: min(natural.height, maximumHeight))
+        return CGSize(width: proposal.width ?? natural.width * magnification, height: min(natural.height * magnification, maximumHeight))
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
@@ -1149,8 +1211,9 @@ struct DinoQuestionComposition<Context: View, Answers: View>: View {
         arrangement {
             if hasContext {
                 DinoQuestionContext(maxHeight: fitsAvailableHeight ? max(24, layout.height - (layout.hasSideContext ? 0 : answerHeight + layout.spacing)) : nil,
-                                    animatesHeight: [.addTime, .subtractTime].contains(layout.kind)) {
-                    context().frame(width: layout.contextWidth)
+                                    animatesHeight: [.addTime, .subtractTime].contains(layout.kind),
+                                    magnification: fitsAvailableHeight ? layout.contextMagnification : 1) {
+                    context().frame(width: fitsAvailableHeight ? layout.contextWidth / layout.contextMagnification : layout.contextWidth)
                 }
                 .frame(width: layout.contextWidth)
             }

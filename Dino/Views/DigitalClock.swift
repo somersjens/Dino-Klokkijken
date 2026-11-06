@@ -59,9 +59,9 @@ struct DigitalClockOutline: InsettableShape {
 }
 
 struct DigitalClock: View {
-    static let handHintHeight: CGFloat = 50
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.dinoClockReadingAssistance) private var readingAssistance
+    @Environment(\.dinoSpaciousQuestion) private var spaciousQuestion
     @ObservedObject private var language = LanguageManager.shared
     @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
     let time: ClockTime
@@ -80,7 +80,10 @@ struct DigitalClock: View {
     var reservesFeedbackOutline = false
     var feedbackRevealDelay = DinoQuestionFeedbackTiming.revealDelay
     private var displaysHandHints: Bool { showHandHints || readingAssistance }
-    private var hintHeight: CGFloat { displaysHandHints || reservesHandHintSpace ? Self.handHintHeight * min(1, fontSize / 30) : 0 }
+    private var hintHeight: CGFloat {
+        displaysHandHints || reservesHandHintSpace
+            ? DinoQuestionClockMetrics.digitalHintHeight(font: fontSize, spacious: spaciousQuestion) : 0
+    }
     private var reading: DigitalClockReading {
         time.digitalReading(notation: notation ?? theme.resolvedHourNotation(device: deviceHourFormat.notation),
                             languageCode: language.effective.code)
@@ -155,6 +158,9 @@ struct DigitalClock: View {
                 }
             }
         }
+        .modifier(AnswerCornerVerdict(correct: spaciousQuestion && showsDisplay ? feedbackCorrect : nil,
+                                      cardWidth: fontSize * (reading.period == nil ? 3.8 : 4.4),
+                                      revealDelay: feedbackRevealDelay))
         // Reserve the ring even before feedback so checking cannot move the clock.
         .padding(showsDisplay ? 4 : 0)
         .fixedSize(horizontal: true, vertical: true)
@@ -173,7 +179,7 @@ struct DigitalClock: View {
             }
             .overlay(alignment: .top) {
                 if displaysHandHints {
-                    let scale = min(1, fontSize / 30)
+                    let scale = DinoQuestionClockMetrics.digitalHintScale(font: fontSize, spacious: spaciousQuestion)
                     ClockHintBadgeArrow(number: number, badge: CGPoint(x: 15, y: 14.5),
                                         tip: CGPoint(x: 15, y: 43.75),
                                         wings: [CGPoint(x: 10.5, y: 38), CGPoint(x: 19.5, y: 38)],
@@ -298,7 +304,9 @@ private struct SevenSegmentDigit: View {
 }
 
 struct DigitalClockControl: View {
+    static let adjustmentRowHeight: CGFloat = 48
     @Environment(\.dinoClockReadingAssistance) private var readingAssistance
+    @Environment(\.dinoSpaciousQuestion) private var spaciousQuestion
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.isEnabled) private var isEnabled
@@ -315,10 +323,14 @@ struct DigitalClockControl: View {
     var feedbackCorrect: Bool? = nil
     /// Hide adjustment arrows without collapsing their space during answer feedback.
     var controlsEnabled = true
+    var reservesLowerControls = true
     var notation: DigitalHourNotation? = nil
     var controlsBelow = false
     var displayHeight: CGFloat? = nil
     var feedbackRevealDelay = DinoQuestionFeedbackTiming.revealDelay
+    private var exampleHintScale: CGFloat {
+        spaciousQuestion ? max(1, DinoQuestionClockMetrics.digitalHintScale(font: fontSize, spacious: true)) : 1
+    }
     private var displaysHandHints: Bool { showHandHints || readingAssistance }
     private var time: ClockTime { ClockTime(hour: hour, minute: minute) }
     private var reading: DigitalClockReading {
@@ -366,8 +378,8 @@ struct DigitalClockControl: View {
             .environment(\.dinoClockReadingAssistance, false)
             .accessibilityIdentifier(valueIdentifier)
             // In examples the reading pointers share the upper controls' space.
-            .padding(.top, showHandHints ? 48 : 0)
-            .padding(.bottom, 48)
+            .padding(.top, showHandHints ? 48 * exampleHintScale : 0)
+            .padding(.bottom, reservesLowerControls ? Self.adjustmentRowHeight : 0)
             .overlayPreferenceValue(DigitalClockFieldAnchors.self) { anchors in
                 GeometryReader { geometry in
                     ForEach(DigitalClockField.allCases, id: \.self) { field in
@@ -389,7 +401,8 @@ struct DigitalClockControl: View {
                                                     ink: field == .minutes ? theme.minuteHex : theme.hourHex,
                                                     bounds: CGSize(width: 30, height: 48))
                                     // Example pointers need no room for an answer outline.
-                                    .position(x: center, y: 26)
+                                    .scaleEffect(exampleHintScale)
+                                    .position(x: center, y: 26 * exampleHintScale)
                                     .allowsHitTesting(false)
                                     .accessibilityHidden(true)
                             }

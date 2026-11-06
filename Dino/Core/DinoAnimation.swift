@@ -62,22 +62,22 @@ enum DinoAnimation {
     // Seconds after the result fade: read the crouch, launch quickly, let every
     // turn drawing register at a brisk pace, then let the planted recovery breathe.
     static let pirouetteTakeoff = 0.30
-    static let pirouetteLanding = 0.965
+    static let pirouetteLanding = 0.832
     static let pirouetteFrames: [TimedPose] = [
         TimedPose(start: 0, pose: Pose(asset: "dino-result-pirouette-01", offsetX: -0.017, offsetY: -0.017)),
         TimedPose(start: 0.08, pose: Pose(asset: "dino-result-pirouette-02", offsetX: -0.036, offsetY: -0.018)),
         TimedPose(start: 0.22, pose: Pose(asset: "dino-result-pirouette-03", paintedYaw: 15, offsetX: -0.023, offsetY: -0.034)),
         TimedPose(start: pirouetteTakeoff, pose: Pose(asset: "dino-result-pirouette-04", paintedYaw: 30, offsetX: -0.033, offsetY: 0.018)),
-        TimedPose(start: 0.36, pose: Pose(asset: "dino-result-pirouette-05", paintedYaw: 65, offsetX: -0.030, offsetY: 0.019)),
-        TimedPose(start: 0.425, pose: Pose(asset: "dino-result-pirouette-06", paintedYaw: 100, offsetX: -0.051, offsetY: 0.012)),
-        TimedPose(start: 0.50, pose: Pose(asset: "dino-result-pirouette-07", paintedYaw: 140, offsetX: -0.090, offsetY: 0.006)),
-        TimedPose(start: 0.575, pose: Pose(asset: "dino-result-pirouette-08", paintedYaw: 180, offsetX: -0.029)),
-        TimedPose(start: 0.64, pose: Pose(asset: "dino-result-pirouette-09", paintedYaw: 202.5, offsetX: -0.053, offsetY: -0.001)),
-        TimedPose(start: 0.69, pose: Pose(asset: "dino-result-pirouette-10", paintedYaw: 225, offsetX: -0.046)),
-        TimedPose(start: 0.74, pose: Pose(asset: "dino-result-pirouette-11", paintedYaw: 247.5, offsetX: -0.021, offsetY: 0.009)),
-        TimedPose(start: 0.79, pose: Pose(asset: "dino-result-pirouette-12", paintedYaw: 270, offsetX: -0.007, offsetY: 0.017)),
-        TimedPose(start: 0.86, pose: Pose(asset: "dino-result-pirouette-13", paintedYaw: 310, offsetX: 0, offsetY: 0.004)),
-        TimedPose(start: 0.915, pose: Pose(asset: "dino-result-pirouette-14", paintedYaw: 325, offsetX: -0.041, offsetY: -0.014)),
+        TimedPose(start: 0.348, pose: Pose(asset: "dino-result-pirouette-05", paintedYaw: 65, offsetX: -0.030, offsetY: 0.019)),
+        TimedPose(start: 0.40, pose: Pose(asset: "dino-result-pirouette-06", paintedYaw: 100, offsetX: -0.051, offsetY: 0.012)),
+        TimedPose(start: 0.46, pose: Pose(asset: "dino-result-pirouette-07", paintedYaw: 140, offsetX: -0.090, offsetY: 0.006)),
+        TimedPose(start: 0.52, pose: Pose(asset: "dino-result-pirouette-08", paintedYaw: 180, offsetX: -0.029)),
+        TimedPose(start: 0.572, pose: Pose(asset: "dino-result-pirouette-09", paintedYaw: 202.5, offsetX: -0.053, offsetY: -0.001)),
+        TimedPose(start: 0.612, pose: Pose(asset: "dino-result-pirouette-10", paintedYaw: 225, offsetX: -0.046)),
+        TimedPose(start: 0.652, pose: Pose(asset: "dino-result-pirouette-11", paintedYaw: 247.5, offsetX: -0.021, offsetY: 0.009)),
+        TimedPose(start: 0.692, pose: Pose(asset: "dino-result-pirouette-12", paintedYaw: 270, offsetX: -0.007, offsetY: 0.017)),
+        TimedPose(start: 0.748, pose: Pose(asset: "dino-result-pirouette-13", paintedYaw: 310, offsetX: 0, offsetY: 0.004)),
+        TimedPose(start: 0.792, pose: Pose(asset: "dino-result-pirouette-14", paintedYaw: 325, offsetX: -0.041, offsetY: -0.014)),
         TimedPose(start: pirouetteLanding, pose: Pose(asset: "dino-result-pirouette-15", paintedYaw: 340, offsetX: -0.031, offsetY: -0.012)),
         TimedPose(start: pirouetteLanding + 0.13, pose: Pose(asset: "dino-result-pirouette-16", paintedYaw: 350, offsetX: -0.019, offsetY: -0.022)),
         TimedPose(start: pirouetteLanding + 0.28, pose: Pose(asset: "dino-result-pirouette-17", paintedYaw: 360, offsetX: -0.012, offsetY: -0.031)),

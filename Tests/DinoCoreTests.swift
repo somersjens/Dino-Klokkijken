@@ -56,14 +56,41 @@ struct DinoCoreTests {
                 }
             }
         }
+        expect(DinoGameLayout.contentWidth(availableWidth: 820, playHeight: 900, spacious: true) == 820,
+               "tall tablet lessons use the available width")
+        expect(DinoGameLayout.contentWidth(availableWidth: 1100, playHeight: 500, spacious: true) == 700,
+               "shorter tablet lessons grow within their height budget")
+        expect(DinoGameLayout.contentWidth(availableWidth: 820, playHeight: 350, spacious: false) == 620,
+               "compact lessons retain their previous width limit")
         for kind in [ClockQuestionKind.chooseDigital, .trueFalse, .readDigital] {
             let phone = DinoGameLayout(width: 370, height: 600, kind: kind, optionCount: 4)
             let tablet = DinoGameLayout(width: 1000, height: 1000, kind: kind, optionCount: 4)
             let short = DinoGameLayout(width: 700, height: 160, kind: kind, optionCount: 4)
             expect(abs(phone.clockSize - 210) < 0.01, "reading clock keeps familiar phone proportions")
-            expect(tablet.clockSize <= phone.clockSize * 1.2 + 0.01, "large windows cannot inflate a reading clock")
+            expect(tablet.clockSize >= 400 && tablet.clockSize <= 470,
+                   "tablet reading clocks use the available space within their height budget")
             expect(short.clockSize < phone.clockSize, "a preferred clock still yields to short windows")
         }
+        let digitalChoice = DinoGameLayout(width: 880, height: 950, kind: .chooseDigital, optionCount: 2)
+        expect(digitalChoice.answerWidth == 660 && digitalChoice.clockSize > 400,
+               "two digital answers stay compact under a prominent reading clock")
+        let analogChoice = DinoGameLayout(width: 880, height: 950, kind: .chooseAnalog, optionCount: 2)
+        let fourAcross = DinoGameLayout(width: 880, height: 490, kind: .chooseAnalog, optionCount: 4)
+        expect(analogChoice.targetDigitalFont >= 75 && analogChoice.answerReadoutFont >= 42,
+               "large analog tiles get a readable target and rejected time")
+        expect(fourAcross.answerColumns() == 4 && fourAcross.answerReadoutFont < analogChoice.answerReadoutFont,
+               "the rejected time fits the individual card, including four across")
+        expect(DinoQuestionClockMetrics.verdictDiameter(in: analogChoice.answerCellWidth) > 40
+               && DinoQuestionClockMetrics.verdictDiameter(in: fourAcross.answerCellWidth) <= 30,
+               "verdicts stay proportional to the card and fit its corner")
+        expect(DinoQuestionClockMetrics.digitalHintScale(font: 38, spacious: false) == 1
+               && DinoQuestionClockMetrics.digitalHintScale(font: analogChoice.targetDigitalFont, spacious: true) > 1.5,
+               "the numbers follow the larger display while preserving phone proportions")
+        expect(ClockHandHintGeometry.badgeScale(faceSize: 320, spacious: true) == 1.65,
+               "large analog hints grow within a bounded envelope")
+        let journey = DinoGameLayout(width: 880, height: 950, kind: .daySchedule, optionCount: 4)
+        expect(journey.contextMagnification > 1 && journey.contextMagnification <= 1.5,
+               "illustrated lessons enlarge as a unit")
         expect(DinoQuestionFeedbackTiming.revealDelay >= DinoQuestionFeedbackTiming.layout,
                "new explanation waits for the existing content to finish moving")
         expect(DinoQuestionFeedbackTiming.replacementFadeOut < DinoQuestionFeedbackTiming.revealDelay,
@@ -3078,7 +3105,7 @@ struct DinoCoreTests {
                "the result transition gets a standing lead-in before the short preparation poses")
         for (frame, next) in zip(DinoAnimation.pirouetteFrames, DinoAnimation.pirouetteFrames.dropFirst()) {
             let hold = next.start - frame.start
-            expect(hold >= 0.05 - 0.000001 && hold <= 0.18,
+            expect(hold >= 0.04 - 0.000001 && hold <= 0.18,
                    "every active drawing has readable exposure without a quarter-second freeze")
             let boundary = DinoAnimation.leadIn(.pirouette) + next.start
             expect(DinoAnimation.sample(.pirouette, elapsed: boundary).pose.asset == next.pose.asset

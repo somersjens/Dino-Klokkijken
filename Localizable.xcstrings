@@ -2406,13 +2406,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This turns on Game Center, friends access and sharing your results together. Friends access lets Apple show friends who also allow this game. Sharing publishes this device’s best level results, measured playing times, stars and progress to Game Center leaderboards under the Apple display name. Apple leaderboards may show these results to other players, not only friends. You can turn each switch off afterwards without another question. Turning a switch back on asks this question again. Apple’s account restrictions still apply. This parental gate is not legal consent."
+            "value" : "This turns on Game Center, friends access and sharing your results together. Friends access lets Apple show friends who also allow this game. Sharing publishes this device’s best level results, measured playing times, stars and progress to Game Center leaderboards under the Apple display name. Apple leaderboards may show these results to other players, not only friends. You can turn each switch off afterwards without another question. Turning a switch back on asks this question again. Friends can be invited through Apple Messages. Apple’s account restrictions still apply. This parental gate is not legal consent."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dit zet Game Center, vriendentoegang en het delen van je resultaten samen aan. Met vriendentoegang toont Apple vrienden die deze game ook toegang geven. Delen publiceert de beste levelresultaten, gemeten speeltijden, sterren en voortgang van dit apparaat op Game Center-leaderboards onder de Apple-displaynaam. Apple-leaderboards kunnen deze resultaten aan andere spelers tonen, niet alleen aan vrienden. Je kunt elk schuifje daarna uitzetten zonder een nieuwe som. Een schuifje weer aanzetten vraagt deze som opnieuw. De beperkingen van het Apple-account blijven gelden. Dit ouderscherm is geen juridische toestemming."
+            "value" : "Dit zet Game Center, vriendentoegang en het delen van je resultaten samen aan. Met vriendentoegang toont Apple vrienden die deze game ook toegang geven. Delen publiceert de beste levelresultaten, gemeten speeltijden, sterren en voortgang van dit apparaat op Game Center-leaderboards onder de Apple-displaynaam. Apple-leaderboards kunnen deze resultaten aan andere spelers tonen, niet alleen aan vrienden. Je kunt elk schuifje daarna uitzetten zonder een nieuwe som. Een schuifje weer aanzetten vraagt deze som opnieuw. Vrienden uitnodigen kan via Apple Berichten. De beperkingen van het Apple-account blijven gelden. Dit ouderscherm is geen juridische toestemming."
           }
         }
       }
@@ -2451,19 +2451,19 @@
         }
       }
     },
-    "dino.friends.disable" : {
+    "dino.friends.disconnect" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Turn off friends on this device"
+            "value" : "Disconnect"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vrienden uitschakelen op dit apparaat"
+            "value" : "Loskoppelen"
           }
         }
       }
@@ -2474,13 +2474,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your adventure together starts here"
+            "value" : "Add your first friend"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hier begint jullie avontuur samen"
+            "value" : "Voeg je eerste vriend toe"
           }
         }
       }
@@ -2644,13 +2644,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Friend invitations are unavailable for this account or parental settings."
+            "value" : "This account can’t send friend requests."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vrienden uitnodigen is niet beschikbaar voor dit account of deze ouderlijke instellingen."
+            "value" : "Dit account kan geen vriendschapsverzoeken sturen."
           }
         }
       }
@@ -2695,13 +2695,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Allow friends access"
+            "value" : "Show friends"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vriendentoegang toestaan"
+            "value" : "Vrienden tonen"
           }
         }
       }
@@ -2729,13 +2729,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Manage friends in Game Center"
+            "value" : "Manage Game Center"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vrienden beheren in Game Center"
+            "value" : "Game Center beheren"
           }
         }
       }
@@ -2855,6 +2855,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nog niet gespeeld"
+          }
+        }
+      }
+    },
+    "dino.friends.onlineVisibility" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Let friends see when I’m online"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laat vrienden zien als ik online ben"
+          }
+        }
+      }
+    },
+    "dino.friends.onlineVisibilityHelp" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Settings, go to Game Center → Activity Sharing and choose Friends Only for your game activity."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ga naar Instellingen → Game Center → Activiteit-deling en kies ‘Alleen vrienden’ voor je gameactiviteit."
           }
         }
       }
@@ -3012,23 +3046,6 @@
         }
       }
     },
-    "dino.friends.refresh" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Refresh friends and results"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vrienden en resultaten vernieuwen"
-          }
-        }
-      }
-    },
     "dino.friends.reportHelp" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3086,13 +3103,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choose to share results"
+            "value" : "Friends can see my score"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kiezen om resultaten te delen"
+            "value" : "Vrienden mogen score zien"
           }
         }
       }
@@ -3171,13 +3188,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sharing is unavailable for this account or parental settings. Your progress stays on this device."
+            "value" : "This account can’t share results."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Delen is niet beschikbaar voor dit account of deze ouderlijke instellingen. Je voortgang blijft op dit apparaat."
+            "value" : "Dit account kan geen resultaten delen."
           }
         }
       }
@@ -3250,6 +3267,40 @@
         }
       }
     },
+    "dino.friends.signOut" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign out of Game Center"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afmelden bij Game Center"
+          }
+        }
+      }
+    },
+    "dino.friends.signOutMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnect Game Center from Dino Time. To sign out on this device, go to Settings → Game Center → Sign Out."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Koppel Game Center los van Dino Klokkijken. Wil je afmelden op dit apparaat? Ga naar Instellingen → Game Center → Log uit."
+          }
+        }
+      }
+    },
     "dino.friends.state.authenticating" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3273,13 +3324,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Friends access is off. You can change this in your Game Center privacy settings."
+            "value" : "Allow friends access in Game Center settings."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vriendentoegang staat uit. Je kunt dit aanpassen in de privacyinstellingen van Game Center."
+            "value" : "Geef toegang tot vrienden in je Game Center-instellingen."
           }
         }
       }
@@ -3324,13 +3375,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You choose whether this game may see your available Game Center friends."
+            "value" : "Allow access to see your friends here."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Jij kiest of deze game je beschikbare Game Center-vrienden mag zien."
+            "value" : "Geef toegang om je vrienden hier te zien."
           }
         }
       }
@@ -3358,13 +3409,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple or parental settings restrict access to friends. You can keep playing."
+            "value" : "This account has limited friends access."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple of ouderlijke instellingen beperken de toegang tot vrienden. Je kunt gewoon verder spelen."
+            "value" : "Dit account heeft beperkte toegang tot vrienden."
           }
         }
       }
@@ -3375,13 +3426,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sign in to Game Center in Settings. If Apple does not offer sign-in here, return to the game after signing in there."
+            "value" : "Sign in to Game Center in Settings."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Log in bij Game Center via Instellingen. Als Apple hier geen inlogscherm aanbiedt, kom dan na het inloggen terug naar de game."
+            "value" : "Log in bij Game Center via Instellingen."
           }
         }
       }
@@ -3392,13 +3443,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Game Center is currently unavailable. Check your connection and try again later. Your local progress is safe."
+            "value" : "Game Center is temporarily unavailable."
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Game Center is nu niet beschikbaar. Controleer je verbinding en probeer het later opnieuw. Je lokale voortgang blijft bewaard."
+            "value" : "Game Center is tijdelijk niet beschikbaar."
           }
         }
       }
@@ -3586,6 +3637,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jij"
+          }
+        }
+      }
+    },
+    "dino.friends.yourFriends" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your friends"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je vrienden"
           }
         }
       }

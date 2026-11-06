@@ -144,6 +144,7 @@ final class FriendsManager: NSObject, ObservableObject {
         enabled = false; defaults.set(0, forKey: Self.enabledKey)
         friendAccess = false; defaults.set(0, forKey: Self.friendAccessKey)
         invalidateFriends(); state = .inactive
+        actionMessageKey = nil
         authenticationController?.dismiss(animated: true); authenticationController = nil
     }
     /// Friends access can be switched off immediately. Switching it on happens only after the parental question.

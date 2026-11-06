@@ -250,9 +250,14 @@ struct WorldMap: View {
                 // Allow the result-to-map fade to finish before the anticipation.
                 try await Task.sleep(for: .milliseconds(250))
                 worldJumpStartedAt = Date()
+                let takeoff = reduceMotion ? 0 : DinoAnimation.travelDelay(.worldJump)
+                let landing = reduceMotion ? 0.2 : DinoAnimation.travelDuration(.worldJump)
+                DinoAnswerFeedback.shared.playWorldJourney(takeoff: takeoff, landing: landing)
                 try await Task.sleep(for: .seconds(reduceMotion ? 0.05 : DinoAnimation.duration(.worldJump)))
                 worldJumpFinished = true
-            } catch { /* Leaving the map cancels the journey. */ }
+            } catch {
+                DinoAnswerFeedback.shared.stopWorldJourney()
+            }
         }
         .task(id: readyForReviewRequest) {
             guard readyForReviewRequest, !reviewRequestHandled else { return }
@@ -949,7 +954,7 @@ struct LevelNode: View {
                 }.frame(width: level.isBoss ? 90 : 72, height: level.isBoss ? 90 : 72)
                     .contentShape(Circle())
             }
-            .buttonStyle(DinoAnswerButtonStyle()).disabled(!unlocked)
+            .buttonStyle(DinoAnswerButtonStyle(playsSelectSound: true)).disabled(!unlocked)
             .accessibilityIdentifier("map.level.\(level.id)")
             .overlay(alignment: .bottom) {
                 DinoStars(count: record.stars, size: 26, showEmpty: record.stars > 0)
@@ -1520,32 +1525,37 @@ struct LevelInfoPanel: View {
     let level: LevelConfiguration
     var start: () -> Void
     var close: (() -> Void)? = nil
+    var spacious = false
+    var prefersStacked = false
+    var onContentHeightChange: (CGFloat) -> Void = { _ in }
     var openPractice: (DinoPracticeConfiguration) -> Void
     private var theme: LevelStartTheme { .init(worldID: level.worldID) }
     var body: some View {
         GeometryReader { geometry in
-            let landscape = geometry.size.width > geometry.size.height
+            let landscape = !prefersStacked && geometry.size.width > geometry.size.height
             Group {
                 if landscape {
                     HStack(alignment: .top, spacing: 16) {
                         ScrollView {
                             LevelDetailsDisclosure(level: level, theme: theme, highContrast: highContrast,
-                                                   expanded: true, openPractice: openPractice)
+                                                   expanded: true, spacious: spacious, openPractice: openPractice)
                         }.bouncesOnlyWhenNeeded()
                             .accessibilityIdentifier("level.outlineViewport")
                             .frame(width: (geometry.size.width - 48) * 0.52)
-                        ScrollView { levelActions(compact: true) }
+                        ScrollView { levelActions(compact: !spacious) }
                             .bouncesOnlyWhenNeeded()
                             .accessibilityIdentifier("level.actionsViewport")
                     }.padding(16)
                 } else {
                     ScrollView {
-                        VStack(spacing: 12) {
+                        VStack(spacing: spacious ? 16 : 12) {
                             LevelDetailsDisclosure(level: level, theme: theme, highContrast: highContrast,
-                                                   openPractice: openPractice)
+                                                   spacious: spacious, openPractice: openPractice)
                             levelActions(compact: false)
                         }
-                        .padding(26).frame(maxWidth: 450).frame(maxWidth: .infinity, alignment: .top)
+                        .padding(spacious ? 30 : 26)
+                        .frame(maxWidth: spacious ? 640 : 450).frame(maxWidth: .infinity)
+                        .readGeometry(for: CGFloat.self, of: { ceil($0.size.height) }, action: onContentHeightChange)
                     }.bouncesOnlyWhenNeeded()
                 }
             }
@@ -1554,16 +1564,17 @@ struct LevelInfoPanel: View {
     }
 
     private func levelActions(compact: Bool) -> some View {
-        VStack(spacing: 12) {
-            LevelFriendsView(levelID: level.id, theme: theme) {
+        VStack(spacing: spacious ? 16 : 12) {
+            LevelFriendsView(levelID: level.id, theme: theme, spacious: spacious) {
                 Button(action: start) { Label("dino.play", systemImage: "play.fill") }
-                    .buttonStyle(DinoButtonStyle(color: theme.accent, compact: compact, inkLabel: true))
+                    .buttonStyle(DinoButtonStyle(color: theme.accent, compact: compact, customization: spacious, inkLabel: true))
+                    .environment(\.customizationTypeScale, spacious ? 1.35 : 1)
                     .accessibilityIdentifier("level.play")
             }
             Button { if let close { close() } else { dismiss() } } label: {
                 Label("dino.map", systemImage: "map.fill")
             }
-                .buttonStyle(DinoSecondaryButtonStyle())
+                .buttonStyle(DinoSecondaryButtonStyle(spacious: spacious))
                 .accessibilityIdentifier("level.map")
         }
     }
@@ -1608,19 +1619,21 @@ private struct LevelDetailsDisclosure: View {
     let theme: LevelStartTheme
     let highContrast: Bool
     var expanded = false
+    var spacious = false
     var openPractice: (DinoPracticeConfiguration) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var open = false
+    @State private var open: Bool?
     @State private var retainsDetails = false
 
-    private var isOpen: Bool { expanded || open }
+    private var isOpen: Bool { expanded || (open ?? spacious) }
 
     var body: some View {
         VStack(spacing: 0) {
             Button {
                 guard !expanded else { return }
-                if !open { retainsDetails = true }
-                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.34)) { open.toggle() }
+                let opens = !isOpen
+                retainsDetails = true
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.34)) { open = opens }
             } label: {
                 HStack(spacing: 12) {
                     Image(systemName: theme.symbol)
@@ -1628,7 +1641,7 @@ private struct LevelDetailsDisclosure: View {
                         .frame(width: 30)
                         .accessibilityHidden(true)
                     Text("dino.levelNumber \(level.id)")
-                        .font(.system(size: 28, weight: .heavy, design: .rounded))
+                        .font(.system(size: spacious ? 35 : 28, weight: .heavy, design: .rounded))
                         .lineLimit(1).minimumScaleFactor(0.7)
                         .frame(maxWidth: .infinity)
                         .shadow(color: theme.ground, radius: 0, y: 1)
@@ -1636,7 +1649,7 @@ private struct LevelDetailsDisclosure: View {
                     if !expanded {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 14, weight: .bold))
-                        .rotationEffect(.degrees(open ? 90 : 0))
+                        .rotationEffect(.degrees(isOpen ? 90 : 0))
                         .frame(width: 30, height: 30)
                         .background(theme.shade.opacity(0.08), in: Circle())
                         .accessibilityHidden(true)
@@ -1644,7 +1657,7 @@ private struct LevelDetailsDisclosure: View {
                 }
                 .foregroundStyle(theme.ink)
                 .padding(.horizontal, 18)
-                .frame(minHeight: expanded ? 52 : 64)
+                .frame(minHeight: spacious ? 76 : expanded ? 52 : 64)
                 .contentShape(Rectangle())
             }
             .buttonStyle(DinoPlainButtonStyle())
@@ -1655,13 +1668,13 @@ private struct LevelDetailsDisclosure: View {
             .accessibilityLabel(Text("dino.levelNumber \(level.id)") + Text(", ") + Text("dino.level.details"))
             .accessibilityValue(Text(LocalizedStringKey(isOpen ? "dino.level.detailsOpen" : "dino.level.detailsClosed")))
             .accessibilityHint(Text(LocalizedStringKey(theme.world.titleKey)))
-            if expanded || retainsDetails {
+            if isOpen || retainsDetails {
                 VStack(alignment: .leading, spacing: expanded ? 10 : 12) {
                     Rectangle().fill(theme.shade.opacity(0.18)).frame(height: 1)
                     Text("dino.level.details")
-                        .font(.system(size: 14, weight: .heavy, design: .rounded))
+                        .font(.system(size: spacious ? 28 : 14, weight: .heavy, design: .rounded))
                         .foregroundStyle(theme.ink)
-                    LevelQuestionOutlineList(items: level.questionOutline, theme: theme, openPractice: openPractice)
+                    LevelQuestionOutlineList(items: level.questionOutline, theme: theme, spacious: spacious, openPractice: openPractice)
                 }
                 .padding(.horizontal, 18).padding(.bottom, expanded ? 12 : 18)
                 .fixedSize(horizontal: false, vertical: true)
@@ -1683,8 +1696,8 @@ private struct LevelDetailsDisclosure: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("level.outlineCard")
         .id(level.id)
-        .task(id: open) {
-            guard !expanded, !open, retainsDetails else { return }
+        .task(id: isOpen) {
+            guard !isOpen, retainsDetails else { return }
             // Keep the full text laid out while the clipped height retracts it.
             if !reduceMotion {
                 do { try await Task.sleep(nanoseconds: 340_000_000) }
@@ -1700,36 +1713,37 @@ private struct LevelDetailsDisclosure: View {
 private struct LevelQuestionOutlineList: View {
     let items: [LevelQuestionOutline]
     let theme: LevelStartTheme
+    let spacious: Bool
     var openPractice: (DinoPracticeConfiguration) -> Void
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: spacious ? 12 : 8) {
             ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                 Rectangle().fill(theme.shade.opacity(0.18)).frame(height: 1)
                 Button {
                     if let configuration = item.practiceConfiguration { openPractice(configuration) }
                 } label: {
                     HStack(spacing: 8) {
-                        VStack(alignment: .leading, spacing: 3) {
+                        VStack(alignment: .leading, spacing: spacious ? 5 : 3) {
                             Text(LocalizedStringKey(item.titleKey))
-                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .font(.system(size: spacious ? 28 : 15, weight: .semibold, design: .rounded))
                                 .foregroundStyle(DinoStyle.ink)
-                                .lineLimit(1).minimumScaleFactor(0.65)
+                                .lineLimit(spacious ? 2 : 1).minimumScaleFactor(spacious ? 0.85 : 0.65)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             (Text(verbatim: item.practiceNumber.map(String.init) ?? "–")
                                 + Text(verbatim: " | ")
                                 + Text(LocalizedStringKey(item.timeTitleKey)))
-                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .font(.system(size: spacious ? 22 : 13, weight: .bold, design: .rounded))
                                 .foregroundStyle(theme.ink)
                                 .lineLimit(1).minimumScaleFactor(0.8)
                                 .accessibilityIdentifier("level.question.\(index).number")
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.system(size: spacious ? 15 : 10, weight: .bold))
                             .foregroundStyle(theme.ink.opacity(0.7))
                             .accessibilityHidden(true)
                     }
-                    .padding(.vertical, 4).frame(minHeight: 44)
+                    .padding(.vertical, 4).frame(minHeight: spacious ? 76 : 44)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(DinoPlainButtonStyle())
@@ -1819,13 +1833,17 @@ struct LevelStartOverlay: View {
     var openPractice: (DinoPracticeConfiguration) -> Void
     @EnvironmentObject private var player: DinoPlayer
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var contentHeight: CGFloat?
     @State private var dragOffset: CGFloat = 0
 
     var body: some View {
         GeometryReader { geometry in
             let landscape = geometry.size.width > geometry.size.height
-            let top = landscape ? CGFloat(12) : min(hudHeight + 14, max(14, geometry.size.height - 180))
-            let landscapeHeight = min(700, max(360, CGFloat(level.questionOutline.count) * 64 + 132))
+            let spacious = geometry.size.width >= 700 && geometry.size.height >= 550
+            let top = landscape ? CGFloat(12) : min(hudHeight + (spacious ? 30 : 14), max(14, geometry.size.height - 180))
+            let landscapeHeight = min(spacious ? 780 : 700,
+                                      max(360, CGFloat(level.questionOutline.count) * (spacious ? 92 : 64) + (spacious ? 142 : 132)))
+            let portraitHeight = spacious ? (contentHeight ?? 500) + 28 : level.isBoss ? 640 : 570
             ZStack(alignment: .top) {
                 Color.black.opacity(0.28).ignoresSafeArea()
                     .onTapGesture {
@@ -1842,11 +1860,13 @@ struct LevelStartOverlay: View {
                                 else { withAnimation(.easeOut(duration: 0.2)) { dragOffset = 0 } }
                             })
                         .accessibilityHidden(true)
-                    LevelInfoPanel(level: level, start: start, close: close, openPractice: openPractice)
+                    LevelInfoPanel(level: level, start: start, close: close, spacious: spacious,
+                                   prefersStacked: spacious && !landscape, onContentHeightChange: { if spacious { contentHeight = $0 } },
+                                   openPractice: openPractice)
                 }
-                .frame(width: min(landscape ? 1000 : 540, geometry.size.width - 24),
-                       height: min(landscape ? landscapeHeight : level.isBoss ? 640 : 570,
-                                   geometry.size.height - top - 16))
+                .frame(width: min(landscape ? 1000 : spacious ? 700 : 540, max(1, geometry.size.width - 24)),
+                       height: max(1, min(landscape ? landscapeHeight : portraitHeight,
+                                          geometry.size.height - top - 16)))
                 .background(LevelStartTheme(worldID: level.worldID).paper)
                 .clipShape(RoundedRectangle(cornerRadius: 28))
                 .shadow(color: .black.opacity(0.14), radius: 20, y: 8)
