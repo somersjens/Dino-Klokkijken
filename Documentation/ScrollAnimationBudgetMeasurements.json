@@ -1,0 +1,129 @@
+{
+  "date": "2026-11-01",
+  "configuration": "Debug, iOS 27 simulator, same dedicated device",
+  "profile": "5 completed worlds; warm XCTest performance iterations",
+  "gestures": "2 fast swipeUp + 2 fast swipeDown; 3 measured iterations after warm-up",
+  "metrics": {
+    "before": {
+      "Duration (Scroll_DraggingAndDeceleration), s": {
+        "average": 2.668,
+        "values": [
+          2.645765,
+          2.587668,
+          2.771324
+        ]
+      },
+      "Absolute Memory Physical (Dino-Klokkijken), kB": {
+        "average": 213803.421,
+        "values": [
+          213503.048,
+          213699.656,
+          214207.56
+        ]
+      },
+      "CPU Time (Dino-Klokkijken), s": {
+        "average": 4.808,
+        "values": [
+          5.170169,
+          4.637548,
+          4.616777
+        ]
+      },
+      "CPU Instructions Retired (Dino-Klokkijken), kI": {
+        "average": 67003197.677,
+        "values": [
+          70204522.454,
+          65251914.984,
+          65553155.592
+        ]
+      },
+      "Memory Physical (Dino-Klokkijken), kB": {
+        "average": 611.669,
+        "values": [
+          589.824,
+          196.608,
+          1048.576
+        ]
+      },
+      "CPU Cycles (Dino-Klokkijken), kC": {
+        "average": 20597735.967,
+        "values": [
+          22113143.143,
+          19881964.234,
+          19798100.524
+        ]
+      },
+      "Memory Peak Physical (Dino-Klokkijken), kB": {
+        "average": 215469.128,
+        "values": [
+          214846.536,
+          216058.952,
+          215501.896
+        ]
+      }
+    },
+    "after": {
+      "Duration (Scroll_DraggingAndDeceleration), s": {
+        "average": 2.63,
+        "values": [
+          2.65918,
+          2.569107,
+          2.662746
+        ]
+      },
+      "Absolute Memory Physical (Dino-Klokkijken), kB": {
+        "average": 187965.613,
+        "values": [
+          187861.848,
+          188517.208,
+          187517.784
+        ]
+      },
+      "CPU Time (Dino-Klokkijken), s": {
+        "average": 4.868,
+        "values": [
+          5.179077,
+          4.660308,
+          4.764525
+        ]
+      },
+      "CPU Instructions Retired (Dino-Klokkijken), kI": {
+        "average": 69639906.085,
+        "values": [
+          73595225.61,
+          68019273.056,
+          67305219.59
+        ]
+      },
+      "Memory Physical (Dino-Klokkijken), kB": {
+        "average": 109.227,
+        "values": [
+          163.84,
+          622.592,
+          -458.752
+        ]
+      },
+      "CPU Cycles (Dino-Klokkijken), kC": {
+        "average": 20805526.681,
+        "values": [
+          22178297.691,
+          19921521.628,
+          20316760.724
+        ]
+      },
+      "Memory Peak Physical (Dino-Klokkijken), kB": {
+        "average": 190171.992,
+        "values": [
+          189172.568,
+          190876.504,
+          190466.904
+        ]
+      }
+    }
+  },
+  "limitations": [
+    "One before/after session; simulator metrics are not physical-device FPS.",
+    "Total CPU time includes gesture automation and idle periods between swipes.",
+    "No claim that cold-rasterization hitches are fully resolved."
+  ]
+}

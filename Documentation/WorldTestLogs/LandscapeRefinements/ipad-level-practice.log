@@ -1,0 +1,348 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -destination "platform=iOS Simulator,id=E4D02593-2E8B-4161-B400-2DDABCD14ECD" -derivedDataPath /tmp/dino-landscape-build CODE_SIGNING_ALLOWED=NO -resultBundlePath /tmp/dino-panels-tablet-final.xcresult "-only-testing:DinoUITests/DinoUITests/testLandscapeLevelAndPracticePanels"
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Writing result bundle at path:
+	/tmp/dino-panels-tablet-final.xcresult
+
+2026-11-04 18:17:56.036987+0100 DinoUITests-Runner[48870:7065195] [Default] Running tests...
+2026-11-04 18:17:56.074346+0100 DinoUITests-Runner[48870:7065195] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Landscape Right
+Test Suite 'Selected tests' started at 2026-11-04 18:17:56.758.
+Test Suite 'DinoUITests.xctest' started at 2026-11-04 18:17:56.758.
+Test Suite 'DinoUITests' started at 2026-11-04 18:17:56.759.
+Test Case '-[DinoUITests.DinoUITests testLandscapeLevelAndPracticePanels]' started.
+    t =     0.00s Start Test at 2026-11-04 18:17:56.759
+    t =     0.03s Set Up
+    t =     0.03s     Setting device orientation to Portrait
+    t =     0.03s         Device orientation changed to Portrait
+    t =     0.16s         Interface orientation changed to Portrait
+    t =     0.17s         Wait for com.apple.DocumentManager.DockFolderViewService to idle
+objc[48870]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x109f48310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x109ea8398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.55s         Wait for com.apple.springboard to idle
+    t =     0.57s     Open Hakketjak.Dino-Klokkijken
+    t =     0.57s         Launch Hakketjak.Dino-Klokkijken
+2026-11-04 18:17:57.416 xcodebuild[48768:7063344] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 18:17:57.416 xcodebuild[48768:7063344] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.47s             Setting up automation session
+    t =     2.48s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     4.02s Terminate Hakketjak.Dino-Klokkijken:48881
+    t =     5.11s Setting device orientation to Landscape Left
+    t =     5.11s     Device orientation changed to Landscape Left
+    t =     5.17s     Interface orientation changed to Landscape Right
+    t =     5.17s     Wait for com.apple.DocumentManager.DockFolderViewService to idle
+    t =     5.57s     Wait for com.apple.springboard to idle
+    t =     5.59s Open Hakketjak.Dino-Klokkijken
+    t =     5.59s     Launch Hakketjak.Dino-Klokkijken
+2026-11-04 18:18:02.349 xcodebuild[48768:7063344] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 18:18:02.349 xcodebuild[48768:7063344] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     5.80s         Setting up automation session
+    t =     6.80s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     8.19s Waiting 10.0s for "header.settings" Button to exist
+    t =     9.23s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =     9.23s         Checking existence of `"header.settings" Button`
+    t =    11.86s Checking existence of `"map.preparing" Any`
+    t =    12.86s Checking existence of `"map.preparing" Any`
+    t =    13.83s Checking existence of `"map.preparing" Any`
+    t =    14.83s Checking existence of `"map.preparing" Any`
+    t =    15.23s Checking existence of `"map.level.11" Any`
+    t =    15.47s Checking existence of `"onboarding.next" Button`
+    t =    15.86s Checking existence of `"onboarding.customClock" Button`
+    t =    16.22s Checking existence of `"personalize.done" Button`
+    t =    16.56s Checking existence of `"theme.done" Button`
+    t =    16.91s Find the "map.level.11" Any
+    t =    17.31s Tap "map.level.11" Button
+    t =    17.31s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    17.33s     Find the "map.level.11" Button
+    t =    17.59s     Check for interrupting elements affecting "map.level.11" Button
+    t =    17.81s         Wait for com.apple.springboard to idle
+    t =    17.84s     Synthesize event
+    t =    18.28s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.30s Waiting 5.0s for "level.details" Any to exist
+    t =    19.34s     Checking `Expect predicate `existsNoRetry == 1` for object "level.details" Any`
+    t =    19.34s         Checking existence of `"level.details" Any`
+    t =    19.41s Find the "level.details" Any
+    t =    19.48s Find the "level.question.0" Button
+    t =    19.54s Find the "level.play" Button
+    t =    19.59s Find the "level.map" Button
+    t =    19.68s Find the "level.question.0" Button
+    t =    19.73s Find the "level.play" Button
+    t =    20.00s Added attachment named 'landscape-level-expanded-left'
+    t =    20.00s Checking existence of `"level.question.0" Any`
+    t =    20.11s Checking existence of `"onboarding.next" Button`
+    t =    20.16s Checking existence of `"onboarding.customClock" Button`
+    t =    20.20s Checking existence of `"personalize.done" Button`
+    t =    20.25s Checking existence of `"theme.done" Button`
+    t =    20.30s Find the "level.question.0" Any
+    t =    20.43s Tap "level.question.0" Button
+    t =    20.44s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    20.47s     Find the "level.question.0" Button
+    t =    20.59s     Check for interrupting elements affecting "level.question.0" Button
+    t =    20.64s         Wait for com.apple.springboard to idle
+    t =    20.69s     Synthesize event
+    t =    20.98s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.69s Waiting 6.0s for "practice.start" Button to exist
+    t =    22.73s     Checking `Expect predicate `existsNoRetry == 1` for object "practice.start" Button`
+    t =    22.73s         Checking existence of `"practice.start" Button`
+    t =    22.86s Find the "practice.time.whole" Button
+    t =    22.98s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.04s Find the "practice.time.whole" Button
+    t =    23.16s Find the "practice.time.half" Button
+    t =    23.30s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.37s Find the "practice.time.half" Button
+    t =    23.47s Find the "practice.time.quarter" Button
+    t =    23.60s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.65s Find the "practice.time.quarter" Button
+    t =    23.76s Find the "practice.time.tenMinutes" Button
+    t =    23.90s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.95s Find the "practice.time.tenMinutes" Button
+    t =    24.08s Find the "practice.time.fiveMinutes" Button
+    t =    24.22s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    24.27s Find the "practice.time.fiveMinutes" Button
+    t =    24.41s Find the "practice.time.minutes" Button
+    t =    24.55s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    24.61s Find the "practice.time.minutes" Button
+    t =    24.77s Find the "practice.time.whole" Button
+    t =    24.89s Find the "practice.time.quarter" Button
+    t =    25.02s Find the "practice.time.tenMinutes" Button
+    t =    25.16s Find the "practice.time.minutes" Button
+    t =    25.30s Find the "practice.time.tenMinutes" Button
+    t =    25.44s Find the "practice.time.whole" Button
+    t =    25.55s Find the "practice.start" Button
+    t =    25.67s Find the "practice.time.minutes" Button
+    t =    25.79s Find the "practice.close" Button
+    t =    25.89s Find the "practice.start" Button
+    t =    26.01s Find the "practice.start" Button
+    t =    26.23s Find the "practice.options" ScrollView
+    t =    26.34s Find the "practice.start" Button
+    t =    26.48s Find the "practice.close" Button
+    t =    26.81s Added attachment named 'landscape-practice-clocks-left'
+    t =    26.82s Find the "practice.options" ScrollView
+    t =    26.97s Find the "practice.start" Button
+    t =    27.08s Find the "practice.options" ScrollView
+    t =    27.35s Find the "practice.options" ScrollView
+    t =    27.45s Checking existence of `"practice.type.flightArrival" Button`
+    t =    27.53s Checking existence of `"practice.type.flightArrival" Button`
+    t =    27.63s Checking existence of `"practice.type.flightArrival" Button`
+    t =    27.75s Press "practice.options" ScrollView[0.50, 0.70] for 0.1 seconds, then drag to "practice.options" ScrollView[0.50, 0.40] with velocity of 250.00 pixels per second, and then hold for 0.1 seconds 
+    t =    27.75s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    27.75s     Find the "practice.options" ScrollView
+    t =    27.84s     Check for interrupting elements affecting "practice.options" ScrollView
+    t =    27.89s         Wait for com.apple.springboard to idle
+    t =    27.92s     Synthesize event
+    t =    27.92s         Find the "practice.options" ScrollView
+    t =    28.01s         Find the "practice.options" ScrollView
+    t =    28.11s         Find the "practice.options" ScrollView
+    t =    28.21s         Find the "practice.options" ScrollView
+    t =    28.30s         Find the "practice.options" ScrollView
+    t =    29.50s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    29.51s Find the "practice.options" ScrollView
+    t =    29.61s Find the "practice.start" Button
+    t =    29.69s Find the "practice.options" ScrollView
+    t =    29.79s Find the "practice.options" ScrollView
+    t =    29.89s Checking existence of `"practice.type.flightArrival" Button`
+    t =    29.98s Checking existence of `"practice.type.flightArrival" Button`
+    t =    30.06s Checking existence of `"practice.type.flightArrival" Button`
+    t =    30.14s Press "practice.options" ScrollView[0.50, 0.70] for 0.1 seconds, then drag to "practice.options" ScrollView[0.50, 0.40] with velocity of 250.00 pixels per second, and then hold for 0.1 seconds 
+    t =    30.14s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    30.14s     Find the "practice.options" ScrollView
+    t =    30.22s     Check for interrupting elements affecting "practice.options" ScrollView
+    t =    30.27s         Wait for com.apple.springboard to idle
+    t =    30.29s     Synthesize event
+    t =    30.29s         Find the "practice.options" ScrollView
+    t =    30.37s         Find the "practice.options" ScrollView
+    t =    30.45s         Find the "practice.options" ScrollView
+    t =    30.54s         Find the "practice.options" ScrollView
+    t =    30.62s         Find the "practice.options" ScrollView
+    t =    31.80s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    31.81s Find the "practice.options" ScrollView
+    t =    31.89s Find the "practice.start" Button
+    t =    31.97s Find the "practice.options" ScrollView
+    t =    32.04s Find the "practice.options" ScrollView
+    t =    32.11s Checking existence of `"practice.type.flightArrival" Button`
+    t =    32.17s Checking existence of `"practice.type.flightArrival" Button`
+    t =    32.25s Checking existence of `"practice.type.flightArrival" Button`
+    t =    32.32s Press "practice.options" ScrollView[0.50, 0.70] for 0.1 seconds, then drag to "practice.options" ScrollView[0.50, 0.40] with velocity of 250.00 pixels per second, and then hold for 0.1 seconds 
+    t =    32.32s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    32.32s     Find the "practice.options" ScrollView
+    t =    32.40s     Check for interrupting elements affecting "practice.options" ScrollView
+    t =    32.43s         Wait for com.apple.springboard to idle
+    t =    32.46s     Synthesize event
+    t =    32.46s         Find the "practice.options" ScrollView
+    t =    32.54s         Find the "practice.options" ScrollView
+    t =    32.62s         Find the "practice.options" ScrollView
+    t =    32.69s         Find the "practice.options" ScrollView
+    t =    32.77s         Find the "practice.options" ScrollView
+    t =    33.96s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    33.97s Find the "practice.options" ScrollView
+    t =    34.04s Find the "practice.start" Button
+    t =    34.10s Find the "practice.options" ScrollView
+    t =    34.18s Find the "practice.options" ScrollView
+    t =    34.25s Checking existence of `"practice.type.flightArrival" Button`
+    t =    34.33s Checking existence of `"practice.type.flightArrival" Button`
+    t =    34.41s Checking existence of `"practice.type.flightArrival" Button`
+    t =    34.50s Press "practice.options" ScrollView[0.50, 0.70] for 0.1 seconds, then drag to "practice.options" ScrollView[0.50, 0.40] with velocity of 250.00 pixels per second, and then hold for 0.1 seconds 
+    t =    34.50s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    34.51s     Find the "practice.options" ScrollView
+    t =    34.59s     Check for interrupting elements affecting "practice.options" ScrollView
+    t =    34.65s         Wait for com.apple.springboard to idle
+    t =    34.67s     Synthesize event
+    t =    34.67s         Find the "practice.options" ScrollView
+    t =    34.75s         Find the "practice.options" ScrollView
+    t =    34.84s         Find the "practice.options" ScrollView
+    t =    34.93s         Find the "practice.options" ScrollView
+    t =    35.02s         Find the "practice.options" ScrollView
+    t =    36.22s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    36.22s Find the "practice.options" ScrollView
+    t =    36.30s Find the "practice.start" Button
+    t =    36.39s Find the "practice.options" ScrollView
+    t =    36.47s Find the "practice.options" ScrollView
+    t =    36.56s Checking existence of `"practice.type.flightArrival" Button`
+    t =    36.67s Checking existence of `"practice.type.flightArrival" Button`
+    t =    36.76s Checking existence of `"practice.type.flightArrival" Button`
+    t =    36.85s Press "practice.options" ScrollView[0.50, 0.70] for 0.1 seconds, then drag to "practice.options" ScrollView[0.50, 0.40] with velocity of 250.00 pixels per second, and then hold for 0.1 seconds 
+    t =    36.85s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    36.86s     Find the "practice.options" ScrollView
+    t =    36.95s     Check for interrupting elements affecting "practice.options" ScrollView
+    t =    37.01s         Wait for com.apple.springboard to idle
+    t =    37.03s     Synthesize event
+    t =    37.03s         Find the "practice.options" ScrollView
+    t =    37.12s         Find the "practice.options" ScrollView
+    t =    37.23s         Find the "practice.options" ScrollView
+    t =    37.34s         Find the "practice.options" ScrollView
+    t =    37.44s         Find the "practice.options" ScrollView
+    t =    38.65s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    38.65s Find the "practice.options" ScrollView
+    t =    38.73s Find the "practice.start" Button
+    t =    38.80s Find the "practice.options" ScrollView
+    t =    38.88s Find the "practice.options" ScrollView
+    t =    38.96s Checking existence of `"practice.type.flightArrival" Button`
+    t =    39.02s Checking existence of `"practice.type.flightArrival" Button`
+    t =    39.09s Checking existence of `"practice.type.flightArrival" Button`
+    t =    39.17s Press "practice.options" ScrollView[0.50, 0.70] for 0.1 seconds, then drag to "practice.options" ScrollView[0.50, 0.40] with velocity of 250.00 pixels per second, and then hold for 0.1 seconds 
+    t =    39.17s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    39.17s     Find the "practice.options" ScrollView
+    t =    39.24s     Check for interrupting elements affecting "practice.options" ScrollView
+    t =    39.28s         Wait for com.apple.springboard to idle
+    t =    39.30s     Synthesize event
+    t =    39.30s         Find the "practice.options" ScrollView
+    t =    39.39s         Find the "practice.options" ScrollView
+    t =    39.48s         Find the "practice.options" ScrollView
+    t =    39.57s         Find the "practice.options" ScrollView
+    t =    39.65s         Find the "practice.options" ScrollView
+    t =    40.86s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    40.87s Find the "practice.options" ScrollView
+    t =    40.95s Find the "practice.start" Button
+    t =    41.02s Find the "practice.options" ScrollView
+    t =    41.10s Find the "practice.options" ScrollView
+    t =    41.19s Checking existence of `"practice.type.flightArrival" Button`
+    t =    41.26s Find the "practice.type.flightArrival" Button
+    t =    41.39s Checking existence of `"practice.type.flightArrival" Button`
+    t =    41.46s Find the "practice.type.flightArrival" Button
+    t =    41.56s Tap "practice.type.flightArrival" Button
+    t =    41.56s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    41.57s     Find the "practice.type.flightArrival" Button
+    t =    41.66s     Check for interrupting elements affecting "practice.type.flightArrival" Button
+    t =    41.70s         Wait for com.apple.springboard to idle
+    t =    41.72s     Synthesize event
+    t =    42.01s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    42.17s Added attachment named 'landscape-practice-last-type'
+    t =    42.17s Checking existence of `"practice.start" Any`
+    t =    42.22s Checking existence of `"onboarding.next" Button`
+    t =    42.31s Checking existence of `"onboarding.customClock" Button`
+    t =    42.39s Checking existence of `"personalize.done" Button`
+    t =    42.48s Checking existence of `"theme.done" Button`
+    t =    42.55s Find the "practice.start" Any
+    t =    42.65s Tap "practice.start" Button
+    t =    42.65s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    42.65s     Find the "practice.start" Button
+    t =    42.70s     Check for interrupting elements affecting "practice.start" Button
+    t =    42.76s         Wait for com.apple.springboard to idle
+    t =    42.78s     Synthesize event
+    t =    43.08s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    43.57s Checking existence of `"demo.ready" Button`
+    t =    43.68s Waiting 6.0s for "header.pause" Button to exist
+    t =    44.72s     Checking `Expect predicate `existsNoRetry == 1` for object "header.pause" Button`
+    t =    44.72s         Checking existence of `"header.pause" Button`
+    t =    44.85s Checking existence of `"header.pause" Any`
+    t =    44.90s Checking existence of `"onboarding.next" Button`
+    t =    45.04s Checking existence of `"onboarding.customClock" Button`
+    t =    45.16s Checking existence of `"personalize.done" Button`
+    t =    45.29s Checking existence of `"theme.done" Button`
+    t =    45.43s Find the "header.pause" Any
+    t =    45.49s Tap "header.pause" Button
+    t =    45.49s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    45.51s     Find the "header.pause" Button
+    t =    45.55s     Check for interrupting elements affecting "header.pause" Button
+    t =    45.63s         Wait for com.apple.springboard to idle
+    t =    45.67s     Synthesize event
+    t =    45.97s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    46.30s Waiting 6.0s for "practice.close" Button to exist
+    t =    47.32s     Checking `Expect predicate `existsNoRetry == 1` for object "practice.close" Button`
+    t =    47.32s         Checking existence of `"practice.close" Button`
+    t =    47.41s Checking existence of `"practice.close" Any`
+    t =    47.48s Checking existence of `"onboarding.next" Button`
+    t =    47.58s Checking existence of `"onboarding.customClock" Button`
+    t =    47.66s Checking existence of `"personalize.done" Button`
+    t =    47.75s Checking existence of `"theme.done" Button`
+    t =    47.85s Find the "practice.close" Any
+    t =    47.92s Tap "practice.close" Button
+    t =    47.92s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    47.92s     Find the "practice.close" Button
+    t =    47.98s     Check for interrupting elements affecting "practice.close" Button
+    t =    48.04s         Wait for com.apple.springboard to idle
+    t =    48.08s     Synthesize event
+    t =    48.37s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    48.71s Waiting 6.0s for "header.settings" Button to exist
+    t =    49.74s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =    49.74s         Checking existence of `"header.settings" Button`
+    t =    50.03s Checking existence of `"map.level.11" Any`
+    t =    50.21s Checking existence of `"onboarding.next" Button`
+    t =    50.49s Checking existence of `"onboarding.customClock" Button`
+    t =    50.77s Checking existence of `"personalize.done" Button`
+    t =    51.03s Checking existence of `"theme.done" Button`
+    t =    51.29s Find the "map.level.11" Any
+    t =    51.62s Tap "map.level.11" Button
+    t =    51.62s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    51.62s     Find the "map.level.11" Button
+    t =    51.80s     Check for interrupting elements affecting "map.level.11" Button
+    t =    51.99s         Wait for com.apple.springboard to idle
+    t =    52.02s     Synthesize event
+    t =    52.43s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    52.44s Checking existence of `"level.play" Any`
+    t =    52.49s Checking existence of `"onboarding.next" Button`
+    t =    52.52s Checking existence of `"onboarding.customClock" Button`
+    t =    52.55s Checking existence of `"personalize.done" Button`
+    t =    52.60s Checking existence of `"theme.done" Button`
+    t =    52.64s Find the "level.play" Any
+    t =    52.71s Tap "level.play" Button
+    t =    52.71s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    52.71s     Find the "level.play" Button
+    t =    52.76s     Check for interrupting elements affecting "level.play" Button
+    t =    52.79s         Wait for com.apple.springboard to idle
+    t =    52.82s     Synthesize event
+    t =    53.13s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    53.21s Checking existence of `"demo.ready" Button`
+    t =    53.28s Waiting 6.0s for "header.pause" Button to exist
+    t =    54.28s     Checking `Expect predicate `existsNoRetry == 1` for object "header.pause" Button`
+    t =    54.28s         Checking existence of `"header.pause" Button`
+    t =    54.32s Tear Down
+Test Case '-[DinoUITests.DinoUITests testLandscapeLevelAndPracticePanels]' passed (54.748 seconds).
+Test Suite 'DinoUITests' passed at 2026-11-04 18:18:51.508.
+	 Executed 1 test, with 0 failures (0 unexpected) in 54.748 (54.749) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-11-04 18:18:51.508.
+	 Executed 1 test, with 0 failures (0 unexpected) in 54.748 (54.749) seconds
+Test Suite 'Selected tests' passed at 2026-11-04 18:18:51.508.
+	 Executed 1 test, with 0 failures (0 unexpected) in 54.748 (54.750) seconds
+2026-11-04 18:18:51.826 xcodebuild[48768:7063344] [MT] IDETestOperationsObserverDebug: 56.887 elapsed -- Testing started completed.
+2026-11-04 18:18:51.826 xcodebuild[48768:7063344] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-04 18:18:51.826 xcodebuild[48768:7063344] [MT] IDETestOperationsObserverDebug: 56.887 sec, +56.887 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-panels-tablet-final.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

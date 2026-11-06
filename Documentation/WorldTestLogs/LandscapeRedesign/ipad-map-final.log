@@ -1,0 +1,116 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -configuration Debug -destination "platform=iOS Simulator,id=E4D02593-2E8B-4161-B400-2DDABCD14ECD" -derivedDataPath /tmp/dino-landscape-build -resultBundlePath /tmp/dino-landscape-tablet-map-final.xcresult CODE_SIGNING_ALLOWED=NO "-only-testing:DinoUITests/DinoUITests/testLandscapeMapOpeningAndBounds"
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Writing result bundle at path:
+	/tmp/dino-landscape-tablet-map-final.xcresult
+
+2026-11-04 17:05:09.352239+0100 DinoUITests-Runner[15288:6754043] [Default] Running tests...
+2026-11-04 17:05:09.368476+0100 DinoUITests-Runner[15288:6754043] [UIKit App Config] Update the Info.plist: Launch screens will soon be required.
+    t =      nans Interface orientation changed to Landscape Left
+Test Suite 'Selected tests' started at 2026-11-04 17:05:09.732.
+Test Suite 'DinoUITests.xctest' started at 2026-11-04 17:05:09.732.
+Test Suite 'DinoUITests' started at 2026-11-04 17:05:09.732.
+Test Case '-[DinoUITests.DinoUITests testLandscapeMapOpeningAndBounds]' started.
+    t =     0.00s Start Test at 2026-11-04 17:05:09.733
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.02s         Device orientation changed to Portrait
+    t =     0.09s         Interface orientation changed to Portrait
+    t =     0.09s         Wait for com.apple.DocumentManager.DockFolderViewService to idle
+objc[15288]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x106e04310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x106d64398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =     0.49s         Wait for com.apple.springboard to idle
+    t =     0.51s     Open Hakketjak.Dino-Klokkijken
+    t =     0.51s         Launch Hakketjak.Dino-Klokkijken
+2026-11-04 17:05:10.293 xcodebuild[15068:6752390] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 17:05:10.293 xcodebuild[15068:6752390] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.17s             Setting up automation session
+    t =     1.68s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     2.95s Terminate Hakketjak.Dino-Klokkijken:15324
+    t =     4.03s Setting device orientation to Landscape Left
+    t =     4.04s     Device orientation changed to Landscape Left
+    t =     4.08s     Interface orientation changed to Landscape Right
+    t =     4.10s     Wait for com.apple.DocumentManager.DockFolderViewService to idle
+    t =     4.49s     Wait for com.apple.springboard to idle
+    t =     4.51s Open Hakketjak.Dino-Klokkijken
+    t =     4.51s     Launch Hakketjak.Dino-Klokkijken
+2026-11-04 17:05:14.241 xcodebuild[15068:6752390] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 17:05:14.241 xcodebuild[15068:6752390] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     4.72s         Setting up automation session
+    t =     5.25s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     6.56s Waiting 8.0s for "map.preparing" Any to exist
+    t =     7.60s     Checking `Expect predicate `existsNoRetry == 1` for object "map.preparing" Any`
+    t =     7.60s         Checking existence of `"map.preparing" Any`
+    t =     8.37s Added attachment named 'landscape-welcome-0'
+    t =     8.63s Added attachment named 'landscape-welcome-1'
+    t =     8.90s Added attachment named 'landscape-welcome-2'
+    t =     9.17s Added attachment named 'landscape-welcome-3'
+    t =     9.44s Added attachment named 'landscape-welcome-4'
+    t =     9.76s Added attachment named 'landscape-welcome-5'
+    t =    10.04s Added attachment named 'landscape-welcome-6'
+    t =    10.30s Added attachment named 'landscape-welcome-7'
+    t =    10.62s Added attachment named 'landscape-welcome-8'
+    t =    10.91s Added attachment named 'landscape-welcome-9'
+    t =    11.17s Added attachment named 'landscape-welcome-10'
+    t =    11.44s Added attachment named 'landscape-welcome-11'
+    t =    11.71s Added attachment named 'landscape-welcome-12'
+    t =    11.98s Added attachment named 'landscape-welcome-13'
+    t =    12.25s Added attachment named 'landscape-welcome-14'
+    t =    12.52s Added attachment named 'landscape-welcome-15'
+    t =    12.82s Added attachment named 'landscape-welcome-16'
+    t =    13.09s Added attachment named 'landscape-welcome-17'
+    t =    13.36s Added attachment named 'landscape-welcome-18'
+    t =    13.63s Added attachment named 'landscape-welcome-19'
+    t =    14.79s Checking existence of `"map.preparing" Any`
+    t =    15.04s Setting device orientation to Landscape Left
+    t =    15.04s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    15.05s     Wait for com.apple.springboard to idle
+    t =    16.05s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    16.20s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    16.34s Find the "map.route" ScrollView
+    t =    16.56s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    16.69s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    16.83s Find the "header.dino" Button
+    t =    17.05s Find the "header.settings" Button
+    t =    17.26s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    17.40s Find the "map.dino.11" Any
+    t =    17.63s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    17.76s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    18.04s Added attachment named 'landscape-full-map-3'
+    t =    18.04s Setting device orientation to Landscape Right
+    t =    18.04s     Device orientation changed to Landscape Right
+    t =    18.07s     Interface orientation changed to Landscape Left
+    t =    18.07s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.07s     Wait for com.apple.springboard to idle
+    t =    19.08s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.22s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.36s Find the "map.route" ScrollView
+    t =    19.58s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.73s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.87s Find the "header.dino" Button
+    t =    20.09s Find the "header.settings" Button
+    t =    20.31s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    20.44s Find the "map.dino.11" Any
+    t =    20.69s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    20.83s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    21.12s Added attachment named 'landscape-full-map-4'
+    t =    21.12s Tear Down
+Test Case '-[DinoUITests.DinoUITests testLandscapeMapOpeningAndBounds]' passed (21.421 seconds).
+Test Suite 'DinoUITests' passed at 2026-11-04 17:05:31.154.
+	 Executed 1 test, with 0 failures (0 unexpected) in 21.421 (21.421) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-11-04 17:05:31.154.
+	 Executed 1 test, with 0 failures (0 unexpected) in 21.421 (21.422) seconds
+Test Suite 'Selected tests' passed at 2026-11-04 17:05:31.154.
+	 Executed 1 test, with 0 failures (0 unexpected) in 21.421 (21.422) seconds
+2026-11-04 17:05:31.460 xcodebuild[15068:6752390] [MT] IDETestOperationsObserverDebug: 22.764 elapsed -- Testing started completed.
+2026-11-04 17:05:31.460 xcodebuild[15068:6752390] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-04 17:05:31.460 xcodebuild[15068:6752390] [MT] IDETestOperationsObserverDebug: 22.764 sec, +22.764 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-landscape-tablet-map-final.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

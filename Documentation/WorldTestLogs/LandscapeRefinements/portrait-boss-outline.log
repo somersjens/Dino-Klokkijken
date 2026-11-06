@@ -1,0 +1,111 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test-without-building -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -destination "platform=iOS Simulator,id=A0728CFE-00E6-4890-B461-C2C042FFBAE0" -derivedDataPath /tmp/dino-landscape-build CODE_SIGNING_ALLOWED=NO -resultBundlePath /tmp/dino-panels-portrait-regression.xcresult "-only-testing:DinoUITests/DinoUITests/testLevelStartBossOutlineScrollsInEnglish"
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Writing result bundle at path:
+	/tmp/dino-panels-portrait-regression.xcresult
+
+2026-11-04 18:18:03.294363+0100 DinoUITests-Runner[48918:7066156] [Default] Running tests...
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-04 18:18:03.996.
+Test Suite 'DinoUITests.xctest' started at 2026-11-04 18:18:03.996.
+Test Suite 'DinoUITests' started at 2026-11-04 18:18:03.997.
+Test Case '-[DinoUITests.DinoUITests testLevelStartBossOutlineScrollsInEnglish]' started.
+    t =     0.00s Start Test at 2026-11-04 18:18:03.997
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.02s         Device orientation changed to Portrait
+    t =     0.03s         Wait for com.apple.springboard to idle
+    t =     0.03s     Open Hakketjak.Dino-Klokkijken
+    t =     0.03s         Launch Hakketjak.Dino-Klokkijken
+2026-11-04 18:18:04.083 xcodebuild[48778:7063607] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 18:18:04.083 xcodebuild[48778:7063607] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.90s             Setting up automation session
+    t =     2.09s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.54s Terminate Hakketjak.Dino-Klokkijken:48925
+    t =     4.59s Open Hakketjak.Dino-Klokkijken
+    t =     4.60s     Launch Hakketjak.Dino-Klokkijken
+2026-11-04 18:18:08.594 xcodebuild[48778:7063607] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 18:18:08.594 xcodebuild[48778:7063607] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     4.81s         Setting up automation session
+    t =     5.73s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     7.11s Waiting 8.0s for "header.settings" Button to exist
+    t =     8.15s     Checking `Expect predicate `existsNoRetry == 1` for object "header.settings" Button`
+    t =     8.15s         Checking existence of `"header.settings" Button`
+    t =    10.04s Find the "header.settings" Button
+    t =    11.08s Find the "map.level.20" Button
+    t =    11.51s Checking existence of `"map.level.20" Button`
+    t =    11.87s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    12.10s Checking existence of `"map.level.20" Button`
+    t =    12.48s Find the "map.level.20" Button
+    t =    12.88s Find the "map.level.20" Button
+    t =    13.35s Find the "header.settings" Button
+    t =    13.86s Find the "map.level.20" Button
+    t =    14.34s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    14.74s Tap "map.level.20" Button
+    t =    14.74s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    14.75s     Find the "map.level.20" Button
+    t =    15.20s     Check for interrupting elements affecting "map.level.20" Button
+    t =    15.57s     Synthesize event
+    t =    16.07s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    16.10s Waiting 5.0s for "level.details" Button to exist
+    t =    17.14s     Checking `Expect predicate `existsNoRetry == 1` for object "level.details" Button`
+    t =    17.14s         Checking existence of `"level.details" Button`
+    t =    17.20s Find the "level.details" Button
+    t =    17.25s Find the "level.details" Button
+    t =    17.31s Tap "level.details" Button
+    t =    17.31s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    17.32s     Find the "level.details" Button
+    t =    17.37s     Check for interrupting elements affecting "level.details" Button
+    t =    17.46s     Synthesize event
+    t =    17.77s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    17.77s Find the "level.details" Button
+    t =    17.86s Get number of matches for: Elements matching predicate 'identifier MATCHES "level.question.[0-9]+"'
+    t =    18.05s Added attachment named 'start-card-desert-boss-english'
+    t =    18.05s Find the "level.play" Button
+    t =    18.16s Swipe up ScrollView (First Match)
+    t =    18.16s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.16s     Find the ScrollView (First Match)
+    t =    18.23s     Check for interrupting elements affecting "level.startCard" ScrollView
+    t =    18.29s     Synthesize event
+    t =    18.77s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    19.73s Find the "level.play" Button
+    t =    19.82s Find the "level.play" Button
+    t =    19.91s Find the "level.question.9" Any
+    t =    20.28s Added attachment named 'start-card-desert-boss-scrolled'
+    t =    20.28s Checking existence of `"level.play" Any`
+    t =    20.33s Checking existence of `"onboarding.next" Button`
+    t =    20.39s Checking existence of `"onboarding.customClock" Button`
+    t =    20.46s Checking existence of `"personalize.done" Button`
+    t =    20.52s Checking existence of `"theme.done" Button`
+    t =    20.59s Find the "level.play" Any
+    t =    20.66s Tap "level.play" Button
+    t =    20.66s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    20.67s     Find the "level.play" Button
+    t =    20.71s     Check for interrupting elements affecting "level.play" Button
+    t =    20.84s     Synthesize event
+    t =    21.14s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.23s Waiting 5.0s for "header.pause" Button to exist
+    t =    22.26s     Checking `Expect predicate `existsNoRetry == 1` for object "header.pause" Button`
+    t =    22.26s         Checking existence of `"header.pause" Button`
+    t =    22.30s Checking existence of `"level.details" Button`
+    t =    22.33s Tear Down
+Test Case '-[DinoUITests.DinoUITests testLevelStartBossOutlineScrollsInEnglish]' passed (22.576 seconds).
+Test Suite 'DinoUITests' passed at 2026-11-04 18:18:26.573.
+	 Executed 1 test, with 0 failures (0 unexpected) in 22.576 (22.577) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-11-04 18:18:26.574.
+	 Executed 1 test, with 0 failures (0 unexpected) in 22.576 (22.577) seconds
+Test Suite 'Selected tests' passed at 2026-11-04 18:18:26.574.
+	 Executed 1 test, with 0 failures (0 unexpected) in 22.576 (22.578) seconds
+2026-11-04 18:18:26.887 xcodebuild[48778:7063607] [MT] IDETestOperationsObserverDebug: 24.755 elapsed -- Testing started completed.
+2026-11-04 18:18:26.887 xcodebuild[48778:7063607] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-04 18:18:26.887 xcodebuild[48778:7063607] [MT] IDETestOperationsObserverDebug: 24.755 sec, +24.755 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-panels-portrait-regression.xcresult
+
+** TEST EXECUTE SUCCEEDED **
+
+Testing started

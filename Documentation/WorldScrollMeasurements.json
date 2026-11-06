@@ -1,0 +1,99 @@
+{
+  "date": "2026-11-01",
+  "configuration": "Debug, iOS 27 simulator",
+  "measurement": "maximum main-thread display-link callback interval, milliseconds; not FPS",
+  "limitations": [
+    "Single runs, shared host CPU/GPU; another simulator app was active during part of the session.",
+    "No valid comparative CPU/memory result: original six-swipe performance test did not reach its required world.",
+    "Full core run encountered an unrelated AppIcon-for-promo asset inventory failure.",
+    "Experiments were reverted; their measurements do not describe the retained code."
+  ],
+  "runs": [
+    {
+      "name": "baseline",
+      "description": "original",
+      "log": ".build/scroll-baseline.log",
+      "complete_run": true,
+      "targeted_maximum_ms": 866.9,
+      "broad_maximum_ms": null,
+      "test_outcomes": [
+        [
+          "-[DinoUITests.DinoUITests testColdSleepValleyScrollKeepsMainThreadResponsive]",
+          "failed"
+        ]
+      ],
+      "automation_timeout": false
+    },
+    {
+      "name": "cache",
+      "description": "metro/request cache and hysteresis",
+      "log": ".build/scroll-verified.log",
+      "complete_run": true,
+      "targeted_maximum_ms": 505.7,
+      "broad_maximum_ms": null,
+      "test_outcomes": [
+        [
+          "-[DinoUITests.DinoUITests testColdSleepValleyScrollKeepsMainThreadResponsive]",
+          "failed"
+        ],
+        [
+          "-[DinoUITests.DinoUITests testHUDThemeFollowsScrollInsteadOfPlayerLevel]",
+          "passed"
+        ],
+        [
+          "-[DinoUITests.DinoUITests testPreparedMapArtworkStaysStableDuringScrolling]",
+          "passed"
+        ]
+      ],
+      "automation_timeout": false
+    },
+    {
+      "name": "water",
+      "description": "retained implementation including waterfall geometry",
+      "log": ".build/scroll-water-verified.log",
+      "complete_run": true,
+      "targeted_maximum_ms": 503.0,
+      "broad_maximum_ms": 733.8,
+      "test_outcomes": [
+        [
+          "-[DinoUITests.DinoUITests testColdScrollAcrossEveryWorld]",
+          "passed"
+        ],
+        [
+          "-[DinoUITests.DinoUITests testColdSleepValleyScrollKeepsMainThreadResponsive]",
+          "failed"
+        ]
+      ],
+      "automation_timeout": false
+    },
+    {
+      "name": "async_experiment",
+      "description": "asynchronous canvases; reverted",
+      "log": ".build/scroll-final.log",
+      "complete_run": false,
+      "targeted_maximum_ms": null,
+      "broad_maximum_ms": null,
+      "test_outcomes": [],
+      "automation_timeout": false
+    },
+    {
+      "name": "facade_experiment",
+      "description": "viewport-limited facades; reverted",
+      "log": ".build/scroll-city-verified.log",
+      "complete_run": false,
+      "targeted_maximum_ms": null,
+      "broad_maximum_ms": null,
+      "test_outcomes": [
+        [
+          "-[DinoUITests.DinoUITests testCityMetroRouteRemainsPlayable]",
+          "passed"
+        ],
+        [
+          "-[DinoUITests.DinoUITests testColdSleepValleyScrollKeepsMainThreadResponsive]",
+          "failed"
+        ]
+      ],
+      "automation_timeout": true
+    }
+  ]
+}

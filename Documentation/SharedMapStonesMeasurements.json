@@ -1,0 +1,134 @@
+{
+  "date": "2026-11-01",
+  "configuration": "Debug, same iOS 27 simulator",
+  "procedure": "testCityScrollRenderingBudgetPerformance; profile 5 completed worlds; 3 measured iterations after warm-up; 2 fast swipes up and 2 down per iteration",
+  "runs": {
+    "before": {
+      "log": ".build/scroll-stones-baseline.log",
+      "metrics": {
+        "Duration (Scroll_DraggingAndDeceleration), s": {
+          "average": 2.671,
+          "values": [
+            2.615991,
+            2.84028,
+            2.557545
+          ]
+        },
+        "Absolute Memory Physical (Dino-Klokkijken), kB": {
+          "average": 194863.205,
+          "values": [
+            194513.68,
+            194956.048,
+            195119.888
+          ]
+        },
+        "CPU Time (Dino-Klokkijken), s": {
+          "average": 8.832,
+          "values": [
+            8.670334,
+            9.097067,
+            8.729231
+          ]
+        },
+        "CPU Instructions Retired (Dino-Klokkijken), kI": {
+          "average": 67729954.098,
+          "values": [
+            63925974.231,
+            67468480.567,
+            71795407.495
+          ]
+        },
+        "Memory Physical (Dino-Klokkijken), kB": {
+          "average": 950.272,
+          "values": [
+            2277.376,
+            393.216,
+            180.224
+          ]
+        },
+        "CPU Cycles (Dino-Klokkijken), kC": {
+          "average": 26584301.502,
+          "values": [
+            25727054.055,
+            27829137.903,
+            26196712.549
+          ]
+        },
+        "Memory Peak Physical (Dino-Klokkijken), kB": {
+          "average": 197817.787,
+          "values": [
+            197430.032,
+            198232.848,
+            197790.48
+          ]
+        }
+      }
+    },
+    "after": {
+      "log": ".build/scroll-stones-verified.log",
+      "metrics": {
+        "Duration (Scroll_DraggingAndDeceleration), s": {
+          "average": 2.568,
+          "values": [
+            2.610961,
+            2.541,
+            2.552187
+          ]
+        },
+        "Absolute Memory Physical (Dino-Klokkijken), kB": {
+          "average": 182291.24,
+          "values": [
+            181881.64,
+            182487.848,
+            182504.232
+          ]
+        },
+        "CPU Time (Dino-Klokkijken), s": {
+          "average": 4.987,
+          "values": [
+            5.777379,
+            4.60403,
+            4.580817
+          ]
+        },
+        "CPU Instructions Retired (Dino-Klokkijken), kI": {
+          "average": 64179865.505,
+          "values": [
+            66643652.793,
+            63678511.709,
+            62217432.013
+          ]
+        },
+        "Memory Physical (Dino-Klokkijken), kB": {
+          "average": 731.819,
+          "values": [
+            1294.336,
+            884.736,
+            16.384
+          ]
+        },
+        "CPU Cycles (Dino-Klokkijken), kC": {
+          "average": 20254530.515,
+          "values": [
+            21675805.261,
+            19540988.344,
+            19546797.94
+          ]
+        },
+        "Memory Peak Physical (Dino-Klokkijken), kB": {
+          "average": 184841.683,
+          "values": [
+            184077.096,
+            185240.36,
+            185207.592
+          ]
+        }
+      }
+    }
+  },
+  "limitations": [
+    "Single before/after session, not physical-device FPS.",
+    "After-run CPU variation was 11.2%; inspect all three values.",
+    "Cold terrain captures are still individual main-actor operations; scheduling prevents adjacent captures from forming a continuous burst."
+  ]
+}

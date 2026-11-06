@@ -1,0 +1,1608 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test -project "Dino Klokkijken.xcodeproj" -scheme "Dino Klokkijken" -configuration Debug -destination "platform=iOS Simulator,id=0D4F8BFB-9889-4D74-B318-7E4ACF222190" -derivedDataPath /tmp/dino-landscape-build -resultBundlePath /tmp/dino-landscape-refine-phone.xcresult CODE_SIGNING_ALLOWED=NO "-only-testing:DinoUITests/DinoUITests/testLandscapeSingleColumnAndPersonalizer" "-only-testing:DinoUITests/DinoUITests/testLandscapeResultHasLargeStageAndReachableActions" "-only-testing:DinoUITests/DinoUITests/testLandscapeWaterfallSpring"
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Writing result bundle at path:
+	/tmp/dino-landscape-refine-phone.xcresult
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (2 targets)
+    Target 'DinoUITests' in project 'Dino Klokkijken'
+        ➜ Explicit dependency on target 'Dino Klokkijken' in project 'Dino Klokkijken'
+    Target 'Dino Klokkijken' in project 'Dino Klokkijken' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/xcstringstool compile --dry-run --output-directory /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build /Users/jenssomers/Desktop/Dino Klokkijken/InfoPlist.xcstrings
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/xcstringstool compile --dry-run --output-directory /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build /Users/jenssomers/Desktop/Dino Klokkijken/Localizable.xcstrings
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 30642d682301d03eb9bf6d01e9cb29f3
+Build description path: /tmp/dino-landscape-build/Build/Intermediates.noindex/XCBuildData/30642d682301d03eb9bf6d01e9cb29f3.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk /tmp/dino-landscape-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino\ Klokkijken.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -o /tmp/dino-landscape-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache
+
+GenerateStringSymbols /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedStringSymbols_Localizable.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Localizable.xcstrings (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcstringstool generate-symbols --language swift --output-directory /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources /Users/jenssomers/Desktop/Dino\ Klokkijken/Localizable.xcstrings
+
+CompileAssetCatalogVariant thinned /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app /Users/jenssomers/Desktop/Dino\ Klokkijken/Assets.xcassets (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/usr/bin/actool /Users/jenssomers/Desktop/Dino\ Klokkijken/Assets.xcassets --compile /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_output/thinned --output-format human-readable-text --notices --warnings --export-dependency-info /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_dependencies_thinned --output-partial-info-plist /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_generated_info.plist_thinned --app-icon AppIcon --accent-color AccentColor --compress-pngs --enable-on-demand-resources YES --filter-for-thinning-device-configuration iPhone18,1 --filter-for-device-os-version 26.5 --development-region en --target-device iphone --target-device ipad --minimum-deployment-target 16.0 --platform iphonesimulator
+/* com.apple.actool.compilation-results */
+/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/assetcatalog_generated_info.plist_thinned
+/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/assetcatalog_output/thinned/AppIcon60x60@2x.png
+/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/assetcatalog_output/thinned/AppIcon76x76@2x~ipad.png
+/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/assetcatalog_output/thinned/Assets.car
+
+
+SwiftDriver Dino\ Klokkijken normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Dino_Time -Onone @/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios16.0-simulator -g -module-cache-path /tmp/dino-landscape-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-landscape-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -F /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-landscape-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-landscape-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-landscape-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-landscape-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-landscape-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-generated-files.hmap -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-own-target-headers.hmap -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-project-headers.hmap -Xcc -I/tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources-normal/arm64 -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/arm64 -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+SwiftCompile normal arm64 Compiling\ DinoGameView.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoGameView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoGameView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoGameView.swift
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ Dino_Time (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    
+
+SwiftCompile normal arm64 Compiling\ DinoGameModel.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/DinoGameModel.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/DinoGameModel.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoGameModel.swift
+
+SwiftCompile normal arm64 Compiling\ GeneratedStringSymbols_Localizable.swift /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedStringSymbols_Localizable.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedStringSymbols_Localizable.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile GeneratedStringSymbols_Localizable.swift
+
+SwiftCompile normal arm64 Compiling\ QuestionRenderer.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/QuestionRenderer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/QuestionRenderer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile QuestionRenderer.swift
+
+SwiftCompile normal arm64 Compiling\ LevelResult.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/LevelResult.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/LevelResult.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile LevelResult.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling GeneratedStringSymbols_Localizable.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling DinoGameModel.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ DinoRootView.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/DinoRootView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/DinoRootView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoRootView.swift
+
+SwiftCompile normal arm64 Compiling\ Practice.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Practice.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Practice.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile Practice.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling LevelResult.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling DinoRootView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling Practice.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling QuestionRenderer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ ResultLevelSign.swift,\ OnboardingFlow.swift,\ Settings.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ResultLevelSign.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/OnboardingFlow.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Settings.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ResultLevelSign.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ResultLevelSign.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/OnboardingFlow.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile OnboardingFlow.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Settings.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile Settings.swift
+
+SwiftCompile normal arm64 Compiling\ MinutesBetweenQuestion.swift,\ TimeArithmeticExplanation.swift,\ StarsOverview.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/MinutesBetweenQuestion.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/TimeArithmeticExplanation.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/StarsOverview.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/MinutesBetweenQuestion.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile MinutesBetweenQuestion.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/TimeArithmeticExplanation.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile TimeArithmeticExplanation.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/StarsOverview.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile StarsOverview.swift
+
+SwiftCompile normal arm64 Compiling\ ClockTime.swift,\ LevelConfiguration.swift,\ PlayerProfile.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ClockTime.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/LevelConfiguration.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/PlayerProfile.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ClockTime.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ClockTime.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/LevelConfiguration.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile LevelConfiguration.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/PlayerProfile.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile PlayerProfile.swift
+
+SwiftCompile normal arm64 Compiling\ DinoCharacter.swift,\ GeneratedAssetSymbols.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoCharacter.swift /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoCharacter.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoCharacter.swift
+
+SwiftCompile normal arm64 /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile GeneratedAssetSymbols.swift
+
+SwiftCompile normal arm64 Compiling\ DinoAvatarMask.swift,\ DinoPersonalizer.swift,\ DinoAvatar.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAvatarMask.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoPersonalizer.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoAvatar.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAvatarMask.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoAvatarMask.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoPersonalizer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoPersonalizer.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoAvatar.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoAvatar.swift
+
+SwiftCompile normal arm64 Compiling\ ProgressManager.swift,\ QuestionGenerator.swift,\ AnalogClock.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ProgressManager.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/QuestionGenerator.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/AnalogClock.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ProgressManager.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ProgressManager.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/QuestionGenerator.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile QuestionGenerator.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/AnalogClock.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile AnalogClock.swift
+
+SwiftCompile normal arm64 Compiling\ JungleMapLayout.swift,\ ExpandedQuestions.swift,\ SpokenTime.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/JungleMapLayout.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ExpandedQuestions.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SpokenTime.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/JungleMapLayout.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile JungleMapLayout.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ExpandedQuestions.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ExpandedQuestions.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SpokenTime.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile SpokenTime.swift
+
+SwiftCompile normal arm64 Compiling\ DinoTimeAdventureApp.swift,\ Localization.swift,\ ClockTheme.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/DinoTimeAdventureApp.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Localization.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ClockTheme.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/DinoTimeAdventureApp.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoTimeAdventureApp.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Localization.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile Localization.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ClockTheme.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ClockTheme.swift
+
+SwiftCompile normal arm64 Compiling\ TimeZoneMap.swift,\ PracticeConfiguration.swift,\ ExpandedQuestionView.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/TimeZoneMap.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/PracticeConfiguration.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ExpandedQuestionView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/TimeZoneMap.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile TimeZoneMap.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/PracticeConfiguration.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile PracticeConfiguration.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ExpandedQuestionView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ExpandedQuestionView.swift
+
+SwiftCompile normal arm64 Compiling\ WorldBossArt.swift,\ DinoDesert.swift,\ AdventureHeader.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/WorldBossArt.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoDesert.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/AdventureHeader.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/WorldBossArt.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile WorldBossArt.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoDesert.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoDesert.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/AdventureHeader.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile AdventureHeader.swift
+
+SwiftCompile normal arm64 Compiling\ FriendsManager.swift,\ NameValidator.swift,\ ProgressSyncService.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Social/FriendsManager.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/NameValidator.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ProgressSyncService.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Social/FriendsManager.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile FriendsManager.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/NameValidator.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile NameValidator.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/ProgressSyncService.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ProgressSyncService.swift
+
+SwiftCompile normal arm64 Compiling\ MapOpeningView.swift,\ WorldMap.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/MapOpeningView.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/WorldMap.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/MapOpeningView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile MapOpeningView.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/WorldMap.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile WorldMap.swift
+
+SwiftCompile normal arm64 Compiling\ DinoUI.swift,\ ResultWorldScenery.swift,\ ResultWorldPodium.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoUI.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ResultWorldScenery.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ResultWorldPodium.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DinoUI.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoUI.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ResultWorldScenery.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ResultWorldScenery.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ResultWorldPodium.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ResultWorldPodium.swift
+
+SwiftCompile normal arm64 Compiling\ DinoAppearance.swift,\ DinoSettings.swift,\ QuestionSpeech.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAppearance.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoSettings.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/QuestionSpeech.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAppearance.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoAppearance.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoSettings.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoSettings.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/QuestionSpeech.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile QuestionSpeech.swift
+
+SwiftCompile normal arm64 Compiling\ ClockCustomizer.swift,\ DigitalClock.swift,\ DinoGameLayout.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ClockCustomizer.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DigitalClock.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoGameLayout.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/ClockCustomizer.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile ClockCustomizer.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/DigitalClock.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DigitalClock.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoGameLayout.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoGameLayout.swift
+
+SwiftCompile normal arm64 Compiling\ SocialProgress.swift,\ DinoAnimation.swift,\ JungleLandscape.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SocialProgress.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAnimation.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/JungleLandscape.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/SocialProgress.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile SocialProgress.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/DinoAnimation.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoAnimation.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/JungleLandscape.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile JungleLandscape.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling DinoAppearance.swift, DinoSettings.swift, QuestionSpeech.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ CloudProgress.swift,\ AnswerFeedback.swift,\ Friends.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/CloudProgress.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/AnswerFeedback.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Friends.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/CloudProgress.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile CloudProgress.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/AnswerFeedback.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile AnswerFeedback.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/Friends.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile Friends.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling DinoGameView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 Compiling\ QuestionDifficulty.swift,\ SpokenTimeQuestion.swift,\ TimeZoneQuestions.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/QuestionDifficulty.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/SpokenTimeQuestion.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/TimeZoneQuestions.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/QuestionDifficulty.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile QuestionDifficulty.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Views/SpokenTimeQuestion.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile SpokenTimeQuestion.swift
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Dino/Core/TimeZoneQuestions.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile TimeZoneQuestions.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling ClockTime.swift, LevelConfiguration.swift, PlayerProfile.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+CompileXCStrings /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/ /Users/jenssomers/Desktop/Dino\ Klokkijken/Localizable.xcstrings (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcstringstool compile --output-directory /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build /Users/jenssomers/Desktop/Dino\ Klokkijken/Localizable.xcstrings
+
+SwiftDriverJobDiscovery normal arm64 Compiling FriendsManager.swift, NameValidator.swift, ProgressSyncService.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+LinkAssetCatalog /Users/jenssomers/Desktop/Dino\ Klokkijken/Assets.xcassets (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-linkAssetCatalog --thinned /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_output/thinned --thinned-dependencies /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_dependencies_thinned --thinned-info-plist-content /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_generated_info.plist_thinned --unthinned /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_output/unthinned --unthinned-dependencies /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_dependencies_unthinned --unthinned-info-plist-content /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_generated_info.plist_unthinned --output /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app --plist-output /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_generated_info.plist
+note: Emplaced /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino Time.app/AppIcon76x76@2x~ipad.png (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+note: Emplaced /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino Time.app/AppIcon60x60@2x.png (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+note: Emplaced /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino Time.app/Assets.car (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+CopyStringsFile /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/nl.lproj/Localizable.strings /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/nl.lproj/Localizable.strings (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copyStrings --validate --outputencoding binary --outfilename Localizable.strings --outdir /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/nl.lproj -- /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/nl.lproj/Localizable.strings
+/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/nl.lproj/Localizable.strings:1:1: note: detected encoding of input file as Unicode (UTF-8) (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+CopyStringsFile /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/en.lproj/Localizable.strings /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/en.lproj/Localizable.strings (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copyStrings --validate --outputencoding binary --outfilename Localizable.strings --outdir /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/en.lproj -- /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/en.lproj/Localizable.strings
+/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/en.lproj/Localizable.strings:1:1: note: detected encoding of input file as Unicode (UTF-8) (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling DinoTimeAdventureApp.swift, Localization.swift, ClockTheme.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling DinoCharacter.swift, GeneratedAssetSymbols.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling JungleMapLayout.swift, ExpandedQuestions.swift, SpokenTime.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling ProgressManager.swift, QuestionGenerator.swift, AnalogClock.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling QuestionDifficulty.swift, SpokenTimeQuestion.swift, TimeZoneQuestions.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling DinoAvatarMask.swift, DinoPersonalizer.swift, DinoAvatar.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling MinutesBetweenQuestion.swift, TimeArithmeticExplanation.swift, StarsOverview.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for Dino_Time (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriver\ Compilation\ Requirements Dino\ Klokkijken normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Dino_Time -Onone @/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios16.0-simulator -g -module-cache-path /tmp/dino-landscape-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-landscape-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -F /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-landscape-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-landscape-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-landscape-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-landscape-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-landscape-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-generated-files.hmap -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-own-target-headers.hmap -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-project-headers.hmap -Xcc -I/tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources-normal/arm64 -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/arm64 -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+Copy /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/arm64-apple-ios-simulator.abi.json /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.abi.json (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.abi.json /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/arm64-apple-ios-simulator.abi.json
+
+Copy /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/arm64-apple-ios-simulator.swiftdoc /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftdoc (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftdoc /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/arm64-apple-ios-simulator.swiftdoc
+
+Copy /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/arm64-apple-ios-simulator.swiftmodule /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/arm64-apple-ios-simulator.swiftmodule
+
+Copy /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftsourceinfo (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftsourceinfo /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino_Time.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo
+
+SwiftDriverJobDiscovery normal arm64 Compiling ClockCustomizer.swift, DigitalClock.swift, DinoGameLayout.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling CloudProgress.swift, AnswerFeedback.swift, Friends.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling DinoUI.swift, ResultWorldScenery.swift, ResultWorldPodium.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling WorldBossArt.swift, DinoDesert.swift, AdventureHeader.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling ResultLevelSign.swift, OnboardingFlow.swift, Settings.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling MapOpeningView.swift, WorldMap.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling TimeZoneMap.swift, PracticeConfiguration.swift, ExpandedQuestionView.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriverJobDiscovery normal arm64 Compiling SocialProgress.swift, DinoAnimation.swift, JungleLandscape.swift (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+SwiftDriver\ Compilation Dino\ Klokkijken normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Dino_Time -Onone @/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftFileList -DDEBUG -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios16.0-simulator -g -module-cache-path /tmp/dino-landscape-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-landscape-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -F /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64 -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-landscape-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-landscape-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-landscape-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-landscape-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-landscape-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Klokkijken_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-generated-files.hmap -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-own-target-headers.hmap -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-project-headers.hmap -Xcc -I/tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources-normal/arm64 -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources/arm64 -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+Ld /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time.debug.dylib normal (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0-simulator -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/dino-landscape-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -L/tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -F/tmp/dino-landscape-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -F/tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -filelist /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.LinkFileList -install_name @rpath/Dino\ Time.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @executable_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino_Time.swiftmodule -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -o /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time.debug.dylib
+
+ConstructStubExecutorLinkFileList /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-ExecutorLinkFileList-normal-arm64.txt (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    construct-stub-executor-link-file-list /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+
+Ld /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time normal (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0-simulator -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -F/tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time-ExecutorLinkFileList-normal-arm64.txt /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time.debug.dylib -o /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time
+
+ExtractAppIntentsMetadata (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name Dino_Time --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk --xcode-version 27A266a --platform-family iOS --deployment-target 16.0 --bundle-identifier Hakketjak.Dino-Klokkijken --output /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app --target-triple arm64-apple-ios16.0-simulator --binary-file /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time --dependency-file /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time_dependency_info.dat --stringsdata-file /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftFileList --metadata-file-list /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time.DependencyMetadataFileList --static-metadata-file-list /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Dino\ Time.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/Objects-normal/arm64/Dino\ Time.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --no-app-shortcuts-localization
+2026-11-04 17:32:31.685 appintentsmetadataprocessor[28208:6869737] Starting appintentsmetadataprocessor export
+2026-11-04 17:32:31.687 appintentsmetadataprocessor[28208:6869737] warning: Metadata extraction skipped, no AppIntents.framework dependency found
+
+ProcessInfoPlistFile /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Info.plist /Users/jenssomers/Desktop/Dino\ Klokkijken/DinoInfo.plist (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-infoPlistUtility /Users/jenssomers/Desktop/Dino\ Klokkijken/DinoInfo.plist -producttype com.apple.product-type.application -genpkginfo /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/PkgInfo -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/assetcatalog_generated_info.plist -o /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Info.plist
+
+SwiftDriver DinoUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DinoUITests' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DinoUITests -Onone @/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios16.0-simulator -g -module-cache-path /tmp/dino-landscape-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-landscape-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk/Developer/Library/Frameworks -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-landscape-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-landscape-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-landscape-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-landscape-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-landscape-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DinoUITests-generated-files.hmap -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DinoUITests-own-target-headers.hmap -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DinoUITests-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DinoUITests-project-headers.hmap -Xcc -I/tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DerivedSources/arm64 -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+CopySwiftLibs /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Dino\ Time.debug.dylib --scan-folder /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Frameworks --scan-folder /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/PlugIns --scan-folder /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/SystemExtensions --scan-folder /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Extensions --platform iphonesimulator --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/Dino\ Time.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/Dino\ Klokkijken.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+Ignoring --strip-bitcode because --sign was not passed
+
+ProcessInfoPlistFile /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/Info.plist /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/empty-DinoUITests.plist (in target 'DinoUITests' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-infoPlistUtility /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/empty-DinoUITests.plist -producttype com.apple.product-type.bundle.ui-testing -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/ProductTypeInfoPlistAdditions.plist -o /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/Info.plist
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ DinoUITests (in target 'DinoUITests' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 (in target 'DinoUITests' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    
+
+SwiftCompile normal arm64 Compiling\ DinoUITests.swift /Users/jenssomers/Desktop/Dino\ Klokkijken/Tests/DinoUITests.swift (in target 'DinoUITests' from project 'Dino Klokkijken')
+
+SwiftCompile normal arm64 /Users/jenssomers/Desktop/Dino\ Klokkijken/Tests/DinoUITests.swift (in target 'DinoUITests' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-SwiftPerFileCompile DinoUITests.swift
+
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:4961:14: warning: immutable value 'part' was never used; consider replacing with '_' or removing it [#NoUsage]
+4959 |         saveScreenshot("hud-dino-no-name")
+4960 |         tap("header.dino")
+4961 |         for (part, color) in [("bandana", "blue"), ("spikes", "purple"), ("body", "pink"), ("belly", "orange")] {
+     |              `- warning: immutable value 'part' was never used; consider replacing with '_' or removing it [#NoUsage]
+4962 |         }
+4963 |         XCTAssertEqual(app.textFields.count, 0)
+
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:4961:20: warning: immutable value 'color' was never used; consider replacing with '_' or removing it [#NoUsage]
+4959 |         saveScreenshot("hud-dino-no-name")
+4960 |         tap("header.dino")
+4961 |         for (part, color) in [("bandana", "blue"), ("spikes", "purple"), ("body", "pink"), ("belly", "orange")] {
+     |                    `- warning: immutable value 'color' was never used; consider replacing with '_' or removing it [#NoUsage]
+4962 |         }
+4963 |         XCTAssertEqual(app.textFields.count, 0)
+
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:5061:20: warning: immutable value 'color' was never used; consider replacing with '_' or removing it [#NoUsage]
+5059 |         tap("header.dino")
+5060 |         XCTAssertTrue(app.buttons["personalize.bandana.red"].waitForExistence(timeout: 5))
+5061 |         for (part, color) in [("bandana", "red"), ("spikes", "darkGreen"), ("body", "green"), ("belly", "yellow")] {
+     |                    `- warning: immutable value 'color' was never used; consider replacing with '_' or removing it [#NoUsage]
+5062 |             XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "personalize.color.\(part)").firstMatch.exists)
+5063 |         }
+
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:5081:14: warning: immutable value 'part' was never used; consider replacing with '_' or removing it [#NoUsage]
+5079 |         XCTAssertEqual(app.buttons["header.dino"].label, "Mijn dino")
+5080 |         tap("header.dino")
+5081 |         for (part, color) in [("bandana", "blue"), ("spikes", "purple"), ("body", "pink"), ("belly", "orange")] {
+     |              `- warning: immutable value 'part' was never used; consider replacing with '_' or removing it [#NoUsage]
+5082 |         }
+5083 |         tap("personalize.resetColors")
+
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:5081:20: warning: immutable value 'color' was never used; consider replacing with '_' or removing it [#NoUsage]
+5079 |         XCTAssertEqual(app.buttons["header.dino"].label, "Mijn dino")
+5080 |         tap("header.dino")
+5081 |         for (part, color) in [("bandana", "blue"), ("spikes", "purple"), ("body", "pink"), ("belly", "orange")] {
+     |                    `- warning: immutable value 'color' was never used; consider replacing with '_' or removing it [#NoUsage]
+5082 |         }
+5083 |         tap("personalize.resetColors")
+
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:5084:14: warning: immutable value 'part' was never used; consider replacing with '_' or removing it [#NoUsage]
+5082 |         }
+5083 |         tap("personalize.resetColors")
+5084 |         for (part, color) in [("bandana", "red"), ("spikes", "darkGreen"), ("body", "green"), ("belly", "yellow")] {
+     |              `- warning: immutable value 'part' was never used; consider replacing with '_' or removing it [#NoUsage]
+5085 |         }
+5086 |         tap("personalize.done")
+
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:5084:20: warning: immutable value 'color' was never used; consider replacing with '_' or removing it [#NoUsage]
+5082 |         }
+5083 |         tap("personalize.resetColors")
+5084 |         for (part, color) in [("bandana", "red"), ("spikes", "darkGreen"), ("body", "green"), ("belly", "yellow")] {
+     |                    `- warning: immutable value 'color' was never used; consider replacing with '_' or removing it [#NoUsage]
+5085 |         }
+5086 |         tap("personalize.done")
+
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:5622:46: warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used
+5620 |             return String(format: "%02d:%02d", components.hour!, components.minute!)
+5621 |         }
+5622 |         XCTAssertTrue(expected.contains(time ?? ""), "Preview must show current local time: \(time ?? "missing") vs \(expected)")
+     |                                              `- warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used
+5623 |     }
+5624 | 
+
+/Users/jenssomers/Desktop/Dino Klokkijken/Tests/DinoUITests.swift:5622:100: warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used
+5620 |             return String(format: "%02d:%02d", components.hour!, components.minute!)
+5621 |         }
+5622 |         XCTAssertTrue(expected.contains(time ?? ""), "Preview must show current local time: \(time ?? "missing") vs \(expected)")
+     |                                                                                                    `- warning: left side of nil coalescing operator '??' has non-optional type 'String', so the right side is never used
+5623 |     }
+5624 | 
+
+[#NoUsage]: <https://docs.swift.org/compiler/documentation/diagnostics/no-usage>
+SwiftDriverJobDiscovery normal arm64 Emitting module for DinoUITests (in target 'DinoUITests' from project 'Dino Klokkijken')
+
+SwiftDriver\ Compilation\ Requirements DinoUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DinoUITests' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DinoUITests -Onone @/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios16.0-simulator -g -module-cache-path /tmp/dino-landscape-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-landscape-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk/Developer/Library/Frameworks -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-landscape-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-landscape-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-landscape-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-landscape-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-landscape-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DinoUITests-generated-files.hmap -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DinoUITests-own-target-headers.hmap -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DinoUITests-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DinoUITests-project-headers.hmap -Xcc -I/tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DerivedSources/arm64 -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+Copy /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.swiftsourceinfo (in target 'DinoUITests' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.swiftsourceinfo /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo
+
+Copy /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests.swiftmodule/arm64-apple-ios-simulator.abi.json /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.abi.json (in target 'DinoUITests' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.abi.json /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests.swiftmodule/arm64-apple-ios-simulator.abi.json
+
+Copy /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests.swiftmodule/arm64-apple-ios-simulator.swiftmodule /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.swiftmodule (in target 'DinoUITests' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.swiftmodule /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests.swiftmodule/arm64-apple-ios-simulator.swiftmodule
+
+SwiftDriverJobDiscovery normal arm64 Compiling DinoUITests.swift (in target 'DinoUITests' from project 'Dino Klokkijken')
+
+SwiftDriver\ Compilation DinoUITests normal arm64 com.apple.xcode.tools.swift.compiler (in target 'DinoUITests' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name DinoUITests -Onone @/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.SwiftFileList -DDEBUG -module-alias Testing\=_Testing_Unavailable -plugin-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -target arm64-apple-ios16.0-simulator -g -module-cache-path /tmp/dino-landscape-build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -enable-testing -index-store-path /tmp/dino-landscape-build/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -Isystem /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -F /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk/Developer/Library/Frameworks -c -j18 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/dino-landscape-build/SDKStatCaches.noindex/iphonesimulator27.0-24A430-8dc58220667be655e1bcc261a7455254.sdkstatcache -output-file-map /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/dino-landscape-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/dino-landscape-build/ModuleCache.noindex -sdk-module-cache-path /tmp/dino-landscape-build/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/dino-landscape-build/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DinoUITests-generated-files.hmap -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DinoUITests-own-target-headers.hmap -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DinoUITests-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DinoUITests-project-headers.hmap -Xcc -I/tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/include -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DerivedSources-normal/arm64 -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DerivedSources/arm64 -Xcc -I/tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests-Swift.h -working-directory /Users/jenssomers/Desktop/Dino\ Klokkijken -experimental-emit-module-separately -disable-cmo
+
+Ld /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/DinoUITests normal (in target 'DinoUITests' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios16.0-simulator -bundle -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/dino-landscape-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -L/tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -L/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib -F/tmp/dino-landscape-build/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphonesimulator -F/tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/Library/Frameworks -iframework /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk/Developer/Library/Frameworks -filelist /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.LinkFileList -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @loader_path/Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -objc_abi_version -Xlinker 2 -Xlinker -dependency_info -Xlinker /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests_dependency_info.dat -fobjc-link-runtime -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphonesimulator -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.swiftmodule -Xlinker -needed_framework -Xlinker XCTest -framework XCTest -Xlinker -needed-lXCTestSwiftSupport -lXCTestSwiftSupport -o /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/DinoUITests
+/Users/jenssomers/Desktop/Dino Klokkijken/Dino Klokkijken.xcodeproj: DinoUITests: ld: warning: building for iOS-simulator-16.0, but linking with dylib '@rpath/XCTest.framework/XCTest' which was built for newer version 17.0
+/Users/jenssomers/Desktop/Dino Klokkijken/Dino Klokkijken.xcodeproj: DinoUITests: ld: warning: building for iOS-simulator-16.0, but linking with dylib '@rpath/libXCTestSwiftSupport.dylib' which was built for newer version 17.0
+/Users/jenssomers/Desktop/Dino Klokkijken/Dino Klokkijken.xcodeproj: DinoUITests: ld: warning: building for iOS-simulator-16.0, but linking with dylib '@rpath/XCUIAutomation.framework/XCUIAutomation' which was built for newer version 17.0
+
+CopySwiftLibs /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest (in target 'DinoUITests' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/DinoUITests --scan-folder /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/Frameworks --scan-folder /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/PlugIns --scan-folder /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/SystemExtensions --scan-folder /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/Extensions --platform iphonesimulator --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/Frameworks --strip-bitcode --scan-executable /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/usr/lib/libXCTestSwiftSupport.dylib --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+Ignoring --strip-bitcode because --sign was not passed
+
+ExtractAppIntentsMetadata (in target 'DinoUITests' from project 'Dino Klokkijken')
+    cd /Users/jenssomers/Desktop/Dino\ Klokkijken
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name DinoUITests --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk --xcode-version 27A266a --platform-family iOS --deployment-target 16.0 --bundle-identifier Hakketjak.Dino-Klokkijken.UITests --output /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest --target-triple arm64-apple-ios16.0-simulator --binary-file /tmp/dino-landscape-build/Build/Products/Debug-iphonesimulator/DinoUITests-Runner.app/PlugIns/DinoUITests.xctest/DinoUITests --dependency-file /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests_dependency_info.dat --stringsdata-file /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.SwiftFileList --metadata-file-list /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DinoUITests.DependencyMetadataFileList --static-metadata-file-list /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/DinoUITests.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/dino-landscape-build/Build/Intermediates.noindex/Dino\ Klokkijken.build/Debug-iphonesimulator/DinoUITests.build/Objects-normal/arm64/DinoUITests.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --no-app-shortcuts-localization
+2026-11-04 17:32:36.074 appintentsmetadataprocessor[28307:6870286] Starting appintentsmetadataprocessor export
+2026-11-04 17:32:36.075 appintentsmetadataprocessor[28307:6870286] warning: Metadata extraction skipped, no AppIntents.framework dependency found
+
+PruneExplicitPrecompiledModules /tmp/dino-landscape-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/dino-landscape-build/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/dino-landscape-build/SDKExplicitPrecompiledModules
+
+note: Disabling hardened runtime with ad-hoc codesigning. (in target 'Dino Klokkijken' from project 'Dino Klokkijken')
+2026-11-04 17:32:40.115622+0100 DinoUITests-Runner[28328:6870659] [Default] Running tests...
+objc[28328]: Class UIAccessibilityLoaderWebShared is implemented in both /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebCore.axbundle/WebCore (0x108740310) and /Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime/Contents/Resources/RuntimeRoot/System/Library/AccessibilityBundles/WebKit.axbundle/WebKit (0x1086a0398). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+    t =      nans Interface orientation changed to Portrait
+Test Suite 'Selected tests' started at 2026-11-04 17:32:41.537.
+Test Suite 'DinoUITests.xctest' started at 2026-11-04 17:32:41.537.
+Test Suite 'DinoUITests' started at 2026-11-04 17:32:41.537.
+Test Case '-[DinoUITests.DinoUITests testLandscapeResultHasLargeStageAndReachableActions]' started.
+    t =     0.00s Start Test at 2026-11-04 17:32:41.538
+    t =     0.02s Set Up
+    t =     0.03s     Setting device orientation to Portrait
+    t =     0.03s         Device orientation changed to Portrait
+    t =     0.04s         Wait for com.apple.springboard to idle
+    t =     0.07s     Open Hakketjak.Dino-Klokkijken
+    t =     0.07s         Launch Hakketjak.Dino-Klokkijken
+2026-11-04 17:32:41.682 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 17:32:41.682 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     0.96s             Setting up automation session
+    t =     1.59s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     2.99s Terminate Hakketjak.Dino-Klokkijken:28408
+    t =     4.04s Setting device orientation to Landscape Left
+    t =     4.04s     Device orientation changed to Landscape Left
+    t =     4.05s     Wait for com.apple.springboard to idle
+    t =     4.05s Open Hakketjak.Dino-Klokkijken
+    t =     4.05s     Launch Hakketjak.Dino-Klokkijken
+2026-11-04 17:32:45.588 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 17:32:45.588 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     4.26s         Interface orientation changed to Landscape Right
+    t =     4.26s         Setting up automation session
+    t =     4.90s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     6.85s Waiting 10.0s for "result.retry" Button to exist
+    t =     7.89s     Checking `Expect predicate `existsNoRetry == 1` for object "result.retry" Button`
+    t =     7.89s         Checking existence of `"result.retry" Button`
+    t =    10.45s Checking existence of `Any (First Match)`
+    t =    10.46s Find the Any (First Match)
+    t =    10.48s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    10.49s Find the "dino.stumble" Other
+    t =    10.51s Find the "result.score" Any
+    t =    10.53s Find the "result.next" Button
+    t =    10.55s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    10.57s Find the "result.next" Button
+    t =    10.59s Find the "result.next" Button
+    t =    10.61s Find the "dino.stumble" Other
+    t =    10.63s Find the "result.retry" Button
+    t =    10.65s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    10.67s Find the "result.retry" Button
+    t =    10.69s Find the "result.retry" Button
+    t =    10.72s Find the "dino.stumble" Other
+    t =    10.73s Find the "result.map" Button
+    t =    10.76s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    10.77s Find the "result.map" Button
+    t =    10.79s Find the "result.map" Button
+    t =    10.81s Find the "dino.stumble" Other
+    t =    10.98s Added attachment named 'result-landscape-large-stage-2'
+    t =    10.98s Setting device orientation to Portrait
+    t =    10.99s     Device orientation changed to Portrait
+    t =    11.01s     Interface orientation changed to Portrait
+    t =    11.01s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    12.09s Find the "result.retry" Button
+    t =    12.29s Added attachment named 'result-return-portrait-2'
+    t =    12.29s Terminate Hakketjak.Dino-Klokkijken:28428
+    t =    13.37s Setting device orientation to Landscape Left
+    t =    13.37s     Device orientation changed to Landscape Left
+    t =    13.37s     Wait for com.apple.springboard to idle
+    t =    13.38s Open Hakketjak.Dino-Klokkijken
+    t =    13.38s     Launch Hakketjak.Dino-Klokkijken
+2026-11-04 17:32:54.914 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 17:32:54.914 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    13.58s         Interface orientation changed to Landscape Right
+    t =    13.58s         Setting up automation session
+    t =    14.20s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    16.76s Waiting 10.0s for "result.retry" Button to exist
+    t =    17.80s     Checking `Expect predicate `existsNoRetry == 1` for object "result.retry" Button`
+    t =    17.80s         Checking existence of `"result.retry" Button`
+    t =    20.35s Checking existence of `Any (First Match)`
+    t =    20.36s Find the Any (First Match)
+    t =    20.37s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    20.39s Find the "dino.openingJump" Other
+    t =    20.40s Find the "result.score" Any
+    t =    20.42s Find the "result.next" Button
+    t =    20.45s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    20.47s Find the "result.next" Button
+    t =    20.49s Find the "result.next" Button
+    t =    20.52s Find the "dino.openingJump" Other
+    t =    20.53s Find the "result.retry" Button
+    t =    20.56s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    20.57s Find the "result.retry" Button
+    t =    20.60s Find the "result.retry" Button
+    t =    20.64s Find the "dino.openingJump" Other
+    t =    20.65s Find the "result.map" Button
+    t =    20.69s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    20.70s Find the "result.map" Button
+    t =    20.73s Find the "result.map" Button
+    t =    20.76s Find the "dino.openingJump" Other
+    t =    20.94s Added attachment named 'result-landscape-large-stage-3'
+    t =    20.94s Setting device orientation to Portrait
+    t =    20.94s     Device orientation changed to Portrait
+    t =    20.98s     Interface orientation changed to Portrait
+    t =    20.98s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    22.07s Find the "result.retry" Button
+    t =    22.26s Added attachment named 'result-return-portrait-3'
+    t =    22.26s Terminate Hakketjak.Dino-Klokkijken:28527
+    t =    23.28s Setting device orientation to Landscape Left
+    t =    23.29s     Device orientation changed to Landscape Left
+    t =    23.29s     Wait for com.apple.springboard to idle
+    t =    23.30s Open Hakketjak.Dino-Klokkijken
+    t =    23.30s     Launch Hakketjak.Dino-Klokkijken
+2026-11-04 17:33:04.837 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 17:33:04.837 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    23.51s         Interface orientation changed to Landscape Right
+    t =    23.51s         Setting up automation session
+    t =    24.58s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    27.08s Waiting 10.0s for "result.retry" Button to exist
+    t =    28.12s     Checking `Expect predicate `existsNoRetry == 1` for object "result.retry" Button`
+    t =    28.12s         Checking existence of `"result.retry" Button`
+    t =    30.66s Checking existence of `Any (First Match)`
+    t =    30.67s Find the Any (First Match)
+    t =    30.68s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.69s Find the "dino.pirouette" Other
+    t =    30.71s Find the "result.score" Any
+    t =    30.73s Find the "result.next" Button
+    t =    30.75s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.76s Find the "result.next" Button
+    t =    30.78s Find the "result.next" Button
+    t =    30.81s Find the "dino.pirouette" Other
+    t =    30.82s Find the "result.retry" Button
+    t =    30.84s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.85s Find the "result.retry" Button
+    t =    30.88s Find the "result.retry" Button
+    t =    30.90s Find the "dino.pirouette" Other
+    t =    30.91s Find the "result.map" Button
+    t =    30.94s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.95s Find the "result.map" Button
+    t =    30.97s Find the "result.map" Button
+    t =    31.00s Find the "dino.pirouette" Other
+    t =    31.15s Added attachment named 'result-landscape-large-stage-4'
+    t =    31.16s Setting device orientation to Portrait
+    t =    31.16s     Device orientation changed to Portrait
+    t =    31.18s     Interface orientation changed to Portrait
+    t =    31.18s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    32.24s Find the "result.retry" Button
+    t =    32.39s Added attachment named 'result-return-portrait-4'
+    t =    32.40s Terminate Hakketjak.Dino-Klokkijken:28735
+    t =    33.47s Setting device orientation to Landscape Left
+    t =    33.47s     Device orientation changed to Landscape Left
+    t =    33.48s     Wait for com.apple.springboard to idle
+    t =    33.48s Open Hakketjak.Dino-Klokkijken
+    t =    33.48s     Launch Hakketjak.Dino-Klokkijken
+2026-11-04 17:33:15.018 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 17:33:15.019 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =    33.69s         Interface orientation changed to Landscape Right
+    t =    33.69s         Setting up automation session
+    t =    34.41s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    36.45s Waiting 10.0s for "result.retry" Button to exist
+    t =    37.48s     Checking `Expect predicate `existsNoRetry == 1` for object "result.retry" Button`
+    t =    37.48s         Checking existence of `"result.retry" Button`
+    t =    40.03s Checking existence of `Any (First Match)`
+    t =    40.06s Find the Any (First Match)
+    t =    40.09s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    40.11s Find the "dino.backflip" Other
+    t =    40.13s Find the "result.score" Any
+    t =    40.16s Find the "result.next" Button
+    t =    40.20s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    40.22s Find the "result.next" Button
+    t =    40.25s Find the "result.next" Button
+    t =    40.30s Find the "dino.backflip" Other
+    t =    40.33s Find the "result.retry" Button
+    t =    40.40s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    40.42s Find the "result.retry" Button
+    t =    40.46s Find the "result.retry" Button
+    t =    40.51s Find the "dino.backflip" Other
+    t =    40.53s Find the "result.map" Button
+    t =    40.58s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    40.60s Find the "result.map" Button
+    t =    40.64s Find the "result.map" Button
+    t =    40.68s Find the "dino.backflip" Other
+    t =    40.94s Added attachment named 'result-landscape-large-stage-5'
+    t =    40.94s Setting device orientation to Portrait
+    t =    40.95s     Device orientation changed to Portrait
+    t =    40.99s     Interface orientation changed to Portrait
+    t =    41.00s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    42.21s Find the "result.retry" Button
+    t =    42.51s Added attachment named 'result-return-portrait-5'
+    t =    42.53s Tear Down
+Test Case '-[DinoUITests.DinoUITests testLandscapeResultHasLargeStageAndReachableActions]' passed (43.265 seconds).
+Test Case '-[DinoUITests.DinoUITests testLandscapeSingleColumnAndPersonalizer]' started.
+    t =     0.00s Start Test at 2026-11-04 17:33:24.804
+    t =     0.02s Set Up
+    t =     0.02s     Setting device orientation to Portrait
+    t =     0.03s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     0.03s     Open Hakketjak.Dino-Klokkijken
+    t =     0.03s         Launch Hakketjak.Dino-Klokkijken
+    t =     0.03s             Terminate Hakketjak.Dino-Klokkijken:28869
+2026-11-04 17:33:25.893 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 17:33:25.893 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.30s             Setting up automation session
+    t =     2.22s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     3.53s Terminate Hakketjak.Dino-Klokkijken:29041
+    t =     4.58s Open Hakketjak.Dino-Klokkijken
+    t =     4.58s     Launch Hakketjak.Dino-Klokkijken
+2026-11-04 17:33:29.388 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 17:33:29.388 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     4.79s         Setting up automation session
+    t =     5.49s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     7.01s Waiting 10.0s for "question.title" StaticText to exist
+    t =     8.02s     Checking `Expect predicate `existsNoRetry == 1` for object "question.title" StaticText`
+    t =     8.02s         Checking existence of `"question.title" StaticText`
+    t =     8.07s Setting device orientation to Landscape Left
+    t =     8.08s     Device orientation changed to Landscape Left
+    t =     8.10s     Interface orientation changed to Landscape Right
+    t =     8.10s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     9.14s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =     9.15s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =     9.97s Find the "game.questions" ScrollView
+    t =    10.00s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    10.01s Find the "question.title" StaticText
+    t =    10.04s Find the "question.title" StaticText
+    t =    10.08s Get all elements bound by index for: Descendants matching type Button
+    t =    10.10s Find the Button (Element at index 0)
+    t =    10.11s Find the "question.confirm" Button
+    t =    10.13s Find the "question.confirm" Button
+    t =    10.15s Find the "question.confirm" Button
+    t =    10.17s Find the "question.confirm" Button
+    t =    10.19s Find the "question.confirm" Button
+    t =    10.21s Find the "question.confirm" Button
+    t =    10.23s Find the "question.confirm" Button
+    t =    10.25s Find the "question.confirm" Button
+    t =    10.26s Find the Button (Element at index 1)
+    t =    10.28s Find the "question.example" Button
+    t =    10.30s Find the "question.example" Button
+    t =    10.32s Find the "question.example" Button
+    t =    10.34s Find the "question.example" Button
+    t =    10.36s Find the "question.example" Button
+    t =    10.39s Find the "question.example" Button
+    t =    10.41s Find the "question.example" Button
+    t =    10.44s Find the "question.example" Button
+    t =    10.45s Find the Button (Element at index 2)
+    t =    10.47s Find the "header.pause" Button
+    t =    10.49s Find the "header.pause" Button
+    t =    10.51s Find the "header.pause" Button
+    t =    10.53s Find the "header.pause" Button
+    t =    10.55s Find the "header.pause" Button
+    t =    10.57s Find the "header.pause" Button
+    t =    10.59s Find the "header.pause" Button
+    t =    10.61s Find the "header.pause" Button
+    t =    10.63s Find the Button (Element at index 3)
+    t =    10.65s Find the "header.dino" Button
+    t =    10.67s Find the "header.dino" Button
+    t =    10.70s Find the "header.dino" Button
+    t =    10.71s Find the "header.dino" Button
+    t =    10.73s Find the "header.dino" Button
+    t =    10.75s Find the "header.dino" Button
+    t =    10.77s Find the "header.dino" Button
+    t =    10.79s Find the "header.dino" Button
+    t =    10.80s Find the Button (Element at index 4)
+    t =    10.83s Find the "question.spoken.0.0" Button
+    t =    10.85s Find the "question.spoken.0.0" Button
+    t =    10.87s Find the "question.spoken.0.0" Button
+    t =    10.88s Find the "question.spoken.0.0" Button
+    t =    10.90s Find the Button (Element at index 5)
+    t =    10.92s Find the "question.spoken.0.1" Button
+    t =    10.93s Find the "question.spoken.0.1" Button
+    t =    10.95s Find the "question.spoken.0.1" Button
+    t =    10.97s Find the "question.spoken.0.1" Button
+    t =    10.99s Find the Button (Element at index 6)
+    t =    11.01s Find the "question.spoken.0.2" Button
+    t =    11.03s Find the "question.spoken.0.2" Button
+    t =    11.05s Find the "question.spoken.0.2" Button
+    t =    11.06s Find the "question.spoken.0.2" Button
+    t =    11.08s Find the Button (Element at index 7)
+    t =    11.09s Find the "question.spoken.1.0" Button
+    t =    11.11s Find the "question.spoken.1.0" Button
+    t =    11.13s Find the "question.spoken.1.0" Button
+    t =    11.14s Find the "question.spoken.1.0" Button
+    t =    11.16s Find the Button (Element at index 8)
+    t =    11.18s Find the "question.spoken.1.1" Button
+    t =    11.19s Find the "question.spoken.1.1" Button
+    t =    11.21s Find the "question.spoken.1.1" Button
+    t =    11.23s Find the "question.spoken.1.1" Button
+    t =    11.25s Find the Button (Element at index 9)
+    t =    11.27s Find the "question.spoken.2.0" Button
+    t =    11.29s Find the "question.spoken.2.0" Button
+    t =    11.30s Find the "question.spoken.2.0" Button
+    t =    11.32s Find the "question.spoken.2.0" Button
+    t =    11.34s Find the Button (Element at index 10)
+    t =    11.36s Find the "question.spoken.3.0" Button
+    t =    11.38s Find the "question.spoken.3.0" Button
+    t =    11.40s Find the "question.spoken.3.0" Button
+    t =    11.42s Find the "question.spoken.3.0" Button
+    t =    11.44s Find the Button (Element at index 11)
+    t =    11.47s Find the "question.spoken.3.1" Button
+    t =    11.49s Find the "question.spoken.3.1" Button
+    t =    11.51s Find the "question.spoken.3.1" Button
+    t =    11.53s Find the "question.spoken.3.1" Button
+    t =    11.55s Find the Button (Element at index 12)
+    t =    11.57s Find the "question.spoken.3.2" Button
+    t =    11.59s Find the "question.spoken.3.2" Button
+    t =    11.61s Find the "question.spoken.3.2" Button
+    t =    11.63s Find the "question.spoken.3.2" Button
+    t =    11.65s Find the Button (Element at index 13)
+    t =    11.67s Find the "question.spoken.4.0" Button
+    t =    11.69s Find the "question.spoken.4.0" Button
+    t =    11.71s Find the "question.spoken.4.0" Button
+    t =    11.73s Find the "question.spoken.4.0" Button
+    t =    11.75s Find the "question.spoken.0.0" Button
+    t =    11.77s Find the "question.spoken.0.0" Button
+    t =    11.82s Find the "question.spoken.0.1" Button
+    t =    11.86s Find the "question.spoken.0.1" Button
+    t =    11.89s Find the "question.spoken.0.2" Button
+    t =    11.93s Find the "question.spoken.0.2" Button
+    t =    11.97s Find the "question.spoken.1.0" Button
+    t =    11.99s Find the "question.spoken.1.0" Button
+    t =    12.03s Find the "question.spoken.1.1" Button
+    t =    12.06s Find the "question.spoken.1.1" Button
+    t =    12.09s Find the "question.spoken.2.0" Button
+    t =    12.11s Find the "question.spoken.2.0" Button
+    t =    12.15s Find the "question.spoken.3.0" Button
+    t =    12.17s Find the "question.spoken.3.0" Button
+    t =    12.21s Find the "question.spoken.3.1" Button
+    t =    12.24s Find the "question.spoken.3.1" Button
+    t =    12.28s Find the "question.spoken.3.2" Button
+    t =    12.30s Find the "question.spoken.3.2" Button
+    t =    12.34s Find the "question.spoken.4.0" Button
+    t =    12.36s Find the "question.spoken.4.0" Button
+    t =    12.40s Find the "question.spoken.0.0" Button
+    t =    12.42s Find the "question.spoken.0.1" Button
+    t =    12.44s Find the "question.spoken.0.2" Button
+    t =    12.46s Find the "question.spoken.1.0" Button
+    t =    12.49s Find the "question.spoken.1.1" Button
+    t =    12.52s Find the "question.spoken.2.0" Button
+    t =    12.54s Find the "question.spoken.3.0" Button
+    t =    12.56s Find the "question.spoken.3.1" Button
+    t =    12.59s Find the "question.spoken.3.2" Button
+    t =    12.61s Find the "question.spoken.4.0" Button
+    t =    12.63s Checking existence of `"question.analogControl" Any`
+    t =    12.72s Checking existence of `"question.digitalControl" Any`
+    t =    12.81s Checking existence of `"question.targetClock" Any`
+    t =    12.87s Find the "question.targetClock" Any
+    t =    12.93s Find the "question.targetClock" Other
+    t =    12.99s Checking existence of `"question.correctClock" Any`
+    t =    13.08s Checking existence of `"question.flight.ticket" Any`
+    t =    13.17s Checking existence of `"question.schedule.card" Any`
+    t =    13.26s Checking existence of `"question.minutesBetween.card" Any`
+    t =    13.34s Checking existence of `"question.sequence.unknown" Any`
+    t =    13.42s Checking existence of `"question.confirm" Button`
+    t =    13.44s Find the "question.confirm" Button
+    t =    13.48s Find the "question.confirm" Button
+    t =    13.51s Find the "question.confirm" Button
+    t =    13.54s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.56s Checking existence of `"question.next" Button`
+    t =    13.58s Checking existence of `"question.showAnswer" Button`
+    t =    13.60s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.62s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.80s Added attachment named 'adaptive-fit-sayTime-single-column-3'
+    t =    13.80s Find the "question.title" StaticText
+    t =    13.83s Find the "question.targetClock" Any
+    t =    13.89s Find the "question.spoken.0.0" Button
+    t =    13.91s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.93s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.95s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    13.96s Checking existence of `"header.rail" Other`
+    t =    13.98s Find the "header.rail" Other
+    t =    14.00s Checking existence of `"header.dino" Any`
+    t =    14.03s Checking existence of `"onboarding.next" Button`
+    t =    14.06s Checking existence of `"onboarding.customClock" Button`
+    t =    14.08s Checking existence of `"personalize.done" Button`
+    t =    14.10s Checking existence of `"theme.done" Button`
+    t =    14.13s Find the "header.dino" Any
+    t =    14.18s Tap "header.dino" Button
+    t =    14.18s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    14.18s     Find the "header.dino" Button
+    t =    14.22s     Check for interrupting elements affecting "header.dino" Button
+    t =    14.25s     Synthesize event
+    t =    14.65s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    14.72s Checking existence of `"personalize.page.dino" Any`
+    t =    14.90s Checking existence of `"onboarding.next" Button`
+    t =    14.98s Checking existence of `"onboarding.customClock" Button`
+    t =    15.04s Checking existence of `"personalize.done" Button`
+    t =    15.11s Find the "personalize.page.dino" Any
+    t =    15.26s Tap "personalize.page.dino" Button
+    t =    15.26s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    15.27s     Find the "personalize.page.dino" Button
+    t =    15.41s     Check for interrupting elements affecting "personalize.page.dino" Button
+    t =    15.47s     Synthesize event
+    t =    15.78s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    15.79s Find the "personalize.done" Button
+    t =    15.85s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    15.88s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    15.92s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    15.95s Find the "personalize.page.dino" Button
+    t =    16.00s Find the "personalize.page.analog" Button
+    t =    16.06s Find the "personalize.page.digital" Button
+    t =    16.14s Find the "personalize.done" Button
+    t =    16.20s Checking existence of `"personalize.preview" Any`
+    t =    16.34s Find the "personalize.preview" Any
+    t =    16.46s Find the "personalize.preview" Image
+    t =    16.82s Added attachment named 'landscape-editor-dino-3'
+    t =    16.83s Checking existence of `"personalize.page.analog" Any`
+    t =    16.94s Checking existence of `"onboarding.next" Button`
+    t =    16.99s Checking existence of `"onboarding.customClock" Button`
+    t =    17.06s Checking existence of `"personalize.done" Button`
+    t =    17.13s Find the "personalize.page.analog" Any
+    t =    17.27s Tap "personalize.page.analog" Button
+    t =    17.27s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    17.27s     Find the "personalize.page.analog" Button
+    t =    17.40s     Check for interrupting elements affecting "personalize.page.analog" Button
+    t =    17.47s     Synthesize event
+    t =    17.76s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    17.77s Find the "personalize.done" Button
+    t =    17.87s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    17.91s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    17.94s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    17.98s Find the "personalize.page.dino" Button
+    t =    18.03s Find the "personalize.page.analog" Button
+    t =    18.09s Find the "personalize.page.digital" Button
+    t =    18.15s Find the "personalize.done" Button
+    t =    18.22s Checking existence of `"theme.analog.preview" Any`
+    t =    18.33s Find the "theme.analog.preview" Any
+    t =    18.44s Find the "theme.analog.preview" Other
+    t =    18.70s Added attachment named 'landscape-editor-analog-3'
+    t =    18.70s Checking existence of `"personalize.page.digital" Any`
+    t =    18.81s Checking existence of `"onboarding.next" Button`
+    t =    18.85s Checking existence of `"onboarding.customClock" Button`
+    t =    18.89s Checking existence of `"personalize.done" Button`
+    t =    18.94s Find the "personalize.page.digital" Any
+    t =    19.03s Tap "personalize.page.digital" Button
+    t =    19.03s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    19.04s     Find the "personalize.page.digital" Button
+    t =    19.12s     Check for interrupting elements affecting "personalize.page.digital" Button
+    t =    19.16s     Synthesize event
+    t =    19.45s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    19.45s Find the "personalize.done" Button
+    t =    19.51s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.54s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.58s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    19.60s Find the "personalize.page.dino" Button
+    t =    19.64s Find the "personalize.page.analog" Button
+    t =    19.67s Find the "personalize.page.digital" Button
+    t =    19.71s Find the "personalize.done" Button
+    t =    19.74s Checking existence of `"theme.digital.preview" Any`
+    t =    19.81s Find the "theme.digital.preview" Any
+    t =    19.89s Find the "theme.digital.preview" Other
+    t =    20.09s Added attachment named 'landscape-editor-digital-3'
+    t =    20.09s Checking existence of `"personalize.done" Any`
+    t =    20.19s Checking existence of `"onboarding.next" Button`
+    t =    20.23s Checking existence of `"onboarding.customClock" Button`
+    t =    20.27s Checking existence of `"personalize.done" Button`
+    t =    20.32s Find the "personalize.done" Any
+    t =    20.44s Tap "personalize.done" Button
+    t =    20.44s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    20.44s     Find the "personalize.done" Button
+    t =    20.54s     Check for interrupting elements affecting "personalize.done" Button
+    t =    20.60s     Synthesize event
+    t =    20.90s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    21.25s Setting device orientation to Landscape Right
+    t =    21.25s     Device orientation changed to Landscape Right
+    t =    21.26s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    22.26s Interface orientation changed to Landscape Left
+    t =    22.27s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    22.28s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.10s Find the "game.questions" ScrollView
+    t =    23.13s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    23.14s Find the "question.title" StaticText
+    t =    23.17s Find the "question.title" StaticText
+    t =    23.19s Get all elements bound by index for: Descendants matching type Button
+    t =    23.20s Find the Button (Element at index 0)
+    t =    23.22s Find the "question.confirm" Button
+    t =    23.23s Find the "question.confirm" Button
+    t =    23.25s Find the "question.confirm" Button
+    t =    23.27s Find the "question.confirm" Button
+    t =    23.28s Find the "question.confirm" Button
+    t =    23.30s Find the "question.confirm" Button
+    t =    23.31s Find the "question.confirm" Button
+    t =    23.32s Find the "question.confirm" Button
+    t =    23.33s Find the Button (Element at index 1)
+    t =    23.35s Find the "question.example" Button
+    t =    23.36s Find the "question.example" Button
+    t =    23.37s Find the "question.example" Button
+    t =    23.39s Find the "question.example" Button
+    t =    23.40s Find the "question.example" Button
+    t =    23.42s Find the "question.example" Button
+    t =    23.43s Find the "question.example" Button
+    t =    23.45s Find the "question.example" Button
+    t =    23.46s Find the Button (Element at index 2)
+    t =    23.47s Find the "header.pause" Button
+    t =    23.49s Find the "header.pause" Button
+    t =    23.50s Find the "header.pause" Button
+    t =    23.52s Find the "header.pause" Button
+    t =    23.54s Find the "header.pause" Button
+    t =    23.55s Find the "header.pause" Button
+    t =    23.57s Find the "header.pause" Button
+    t =    23.58s Find the "header.pause" Button
+    t =    23.59s Find the Button (Element at index 3)
+    t =    23.61s Find the "header.dino" Button
+    t =    23.62s Find the "header.dino" Button
+    t =    23.64s Find the "header.dino" Button
+    t =    23.65s Find the "header.dino" Button
+    t =    23.67s Find the "header.dino" Button
+    t =    23.69s Find the "header.dino" Button
+    t =    23.70s Find the "header.dino" Button
+    t =    23.72s Find the "header.dino" Button
+    t =    23.73s Find the Button (Element at index 4)
+    t =    23.74s Find the "question.spoken.0.0" Button
+    t =    23.76s Find the "question.spoken.0.0" Button
+    t =    23.78s Find the "question.spoken.0.0" Button
+    t =    23.79s Find the "question.spoken.0.0" Button
+    t =    23.80s Find the Button (Element at index 5)
+    t =    23.82s Find the "question.spoken.0.1" Button
+    t =    23.84s Find the "question.spoken.0.1" Button
+    t =    23.85s Find the "question.spoken.0.1" Button
+    t =    23.87s Find the "question.spoken.0.1" Button
+    t =    23.88s Find the Button (Element at index 6)
+    t =    23.90s Find the "question.spoken.0.2" Button
+    t =    23.92s Find the "question.spoken.0.2" Button
+    t =    23.93s Find the "question.spoken.0.2" Button
+    t =    23.95s Find the "question.spoken.0.2" Button
+    t =    23.96s Find the Button (Element at index 7)
+    t =    23.98s Find the "question.spoken.1.0" Button
+    t =    24.00s Find the "question.spoken.1.0" Button
+    t =    24.01s Find the "question.spoken.1.0" Button
+    t =    24.03s Find the "question.spoken.1.0" Button
+    t =    24.05s Find the Button (Element at index 8)
+    t =    24.07s Find the "question.spoken.1.1" Button
+    t =    24.09s Find the "question.spoken.1.1" Button
+    t =    24.11s Find the "question.spoken.1.1" Button
+    t =    24.12s Find the "question.spoken.1.1" Button
+    t =    24.14s Find the Button (Element at index 9)
+    t =    24.16s Find the "question.spoken.2.0" Button
+    t =    24.17s Find the "question.spoken.2.0" Button
+    t =    24.19s Find the "question.spoken.2.0" Button
+    t =    24.20s Find the "question.spoken.2.0" Button
+    t =    24.22s Find the Button (Element at index 10)
+    t =    24.24s Find the "question.spoken.3.0" Button
+    t =    24.25s Find the "question.spoken.3.0" Button
+    t =    24.27s Find the "question.spoken.3.0" Button
+    t =    24.29s Find the "question.spoken.3.0" Button
+    t =    24.31s Find the Button (Element at index 11)
+    t =    24.33s Find the "question.spoken.3.1" Button
+    t =    24.35s Find the "question.spoken.3.1" Button
+    t =    24.37s Find the "question.spoken.3.1" Button
+    t =    24.39s Find the "question.spoken.3.1" Button
+    t =    24.40s Find the Button (Element at index 12)
+    t =    24.43s Find the "question.spoken.3.2" Button
+    t =    24.45s Find the "question.spoken.3.2" Button
+    t =    24.48s Find the "question.spoken.3.2" Button
+    t =    24.51s Find the "question.spoken.3.2" Button
+    t =    24.53s Find the Button (Element at index 13)
+    t =    24.55s Find the "question.spoken.4.0" Button
+    t =    24.58s Find the "question.spoken.4.0" Button
+    t =    24.61s Find the "question.spoken.4.0" Button
+    t =    24.63s Find the "question.spoken.4.0" Button
+    t =    24.66s Find the "question.spoken.0.0" Button
+    t =    24.68s Find the "question.spoken.0.0" Button
+    t =    24.72s Find the "question.spoken.0.1" Button
+    t =    24.74s Find the "question.spoken.0.1" Button
+    t =    24.77s Find the "question.spoken.0.2" Button
+    t =    24.81s Find the "question.spoken.0.2" Button
+    t =    24.84s Find the "question.spoken.1.0" Button
+    t =    24.87s Find the "question.spoken.1.0" Button
+    t =    24.90s Find the "question.spoken.1.1" Button
+    t =    24.93s Find the "question.spoken.1.1" Button
+    t =    24.96s Find the "question.spoken.2.0" Button
+    t =    24.99s Find the "question.spoken.2.0" Button
+    t =    25.03s Find the "question.spoken.3.0" Button
+    t =    25.05s Find the "question.spoken.3.0" Button
+    t =    25.10s Find the "question.spoken.3.1" Button
+    t =    25.13s Find the "question.spoken.3.1" Button
+    t =    25.17s Find the "question.spoken.3.2" Button
+    t =    25.20s Find the "question.spoken.3.2" Button
+    t =    25.24s Find the "question.spoken.4.0" Button
+    t =    25.27s Find the "question.spoken.4.0" Button
+    t =    25.31s Find the "question.spoken.0.0" Button
+    t =    25.34s Find the "question.spoken.0.1" Button
+    t =    25.36s Find the "question.spoken.0.2" Button
+    t =    25.39s Find the "question.spoken.1.0" Button
+    t =    25.41s Find the "question.spoken.1.1" Button
+    t =    25.44s Find the "question.spoken.2.0" Button
+    t =    25.46s Find the "question.spoken.3.0" Button
+    t =    25.49s Find the "question.spoken.3.1" Button
+    t =    25.52s Find the "question.spoken.3.2" Button
+    t =    25.55s Find the "question.spoken.4.0" Button
+    t =    25.57s Checking existence of `"question.analogControl" Any`
+    t =    25.67s Checking existence of `"question.digitalControl" Any`
+    t =    25.76s Checking existence of `"question.targetClock" Any`
+    t =    25.82s Find the "question.targetClock" Any
+    t =    25.89s Find the "question.targetClock" Other
+    t =    25.96s Checking existence of `"question.correctClock" Any`
+    t =    26.06s Checking existence of `"question.flight.ticket" Any`
+    t =    26.16s Checking existence of `"question.schedule.card" Any`
+    t =    26.26s Checking existence of `"question.minutesBetween.card" Any`
+    t =    26.38s Checking existence of `"question.sequence.unknown" Any`
+    t =    26.51s Checking existence of `"question.confirm" Button`
+    t =    26.54s Find the "question.confirm" Button
+    t =    26.58s Find the "question.confirm" Button
+    t =    26.61s Find the "question.confirm" Button
+    t =    26.64s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    26.67s Checking existence of `"question.next" Button`
+    t =    26.69s Checking existence of `"question.showAnswer" Button`
+    t =    26.72s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    26.74s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    26.92s Added attachment named 'adaptive-fit-sayTime-single-column-4'
+    t =    26.92s Find the "question.title" StaticText
+    t =    26.95s Find the "question.targetClock" Any
+    t =    27.01s Find the "question.spoken.0.0" Button
+    t =    27.04s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    27.05s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    27.07s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    27.08s Checking existence of `"header.rail" Other`
+    t =    27.09s Find the "header.rail" Other
+    t =    27.11s Checking existence of `"header.dino" Any`
+    t =    27.14s Checking existence of `"onboarding.next" Button`
+    t =    27.16s Checking existence of `"onboarding.customClock" Button`
+    t =    27.18s Checking existence of `"personalize.done" Button`
+    t =    27.21s Checking existence of `"theme.done" Button`
+    t =    27.23s Find the "header.dino" Any
+    t =    27.28s Tap "header.dino" Button
+    t =    27.28s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    27.28s     Find the "header.dino" Button
+    t =    27.31s     Check for interrupting elements affecting "header.dino" Button
+    t =    27.34s     Synthesize event
+    t =    27.63s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    28.01s Checking existence of `"personalize.page.dino" Any`
+    t =    28.09s Checking existence of `"onboarding.next" Button`
+    t =    28.14s Checking existence of `"onboarding.customClock" Button`
+    t =    28.18s Checking existence of `"personalize.done" Button`
+    t =    28.21s Find the "personalize.page.dino" Any
+    t =    28.31s Tap "personalize.page.dino" Button
+    t =    28.31s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    28.32s     Find the "personalize.page.dino" Button
+    t =    28.41s     Check for interrupting elements affecting "personalize.page.dino" Button
+    t =    28.45s     Synthesize event
+    t =    28.74s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    28.75s Find the "personalize.done" Button
+    t =    28.79s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    28.82s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    28.84s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    28.86s Find the "personalize.page.dino" Button
+    t =    28.90s Find the "personalize.page.analog" Button
+    t =    28.93s Find the "personalize.page.digital" Button
+    t =    28.97s Find the "personalize.done" Button
+    t =    29.01s Checking existence of `"personalize.preview" Any`
+    t =    29.08s Find the "personalize.preview" Any
+    t =    29.15s Find the "personalize.preview" Image
+    t =    29.37s Added attachment named 'landscape-editor-dino-4'
+    t =    29.37s Checking existence of `"personalize.page.analog" Any`
+    t =    29.46s Checking existence of `"onboarding.next" Button`
+    t =    29.50s Checking existence of `"onboarding.customClock" Button`
+    t =    29.53s Checking existence of `"personalize.done" Button`
+    t =    29.57s Find the "personalize.page.analog" Any
+    t =    29.66s Tap "personalize.page.analog" Button
+    t =    29.66s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    29.67s     Find the "personalize.page.analog" Button
+    t =    29.77s     Check for interrupting elements affecting "personalize.page.analog" Button
+    t =    29.82s     Synthesize event
+    t =    30.11s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    30.11s Find the "personalize.done" Button
+    t =    30.22s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.26s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.30s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    30.34s Find the "personalize.page.dino" Button
+    t =    30.41s Find the "personalize.page.analog" Button
+    t =    30.47s Find the "personalize.page.digital" Button
+    t =    30.53s Find the "personalize.done" Button
+    t =    30.59s Checking existence of `"theme.analog.preview" Any`
+    t =    30.69s Find the "theme.analog.preview" Any
+    t =    30.81s Find the "theme.analog.preview" Other
+    t =    31.10s Added attachment named 'landscape-editor-analog-4'
+    t =    31.11s Checking existence of `"personalize.page.digital" Any`
+    t =    31.21s Checking existence of `"onboarding.next" Button`
+    t =    31.26s Checking existence of `"onboarding.customClock" Button`
+    t =    31.32s Checking existence of `"personalize.done" Button`
+    t =    31.37s Find the "personalize.page.digital" Any
+    t =    31.49s Tap "personalize.page.digital" Button
+    t =    31.49s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    31.50s     Find the "personalize.page.digital" Button
+    t =    31.61s     Check for interrupting elements affecting "personalize.page.digital" Button
+    t =    31.67s     Synthesize event
+    t =    31.96s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    31.97s Find the "personalize.done" Button
+    t =    32.06s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    32.10s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    32.13s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    32.16s Find the "personalize.page.dino" Button
+    t =    32.22s Find the "personalize.page.analog" Button
+    t =    32.27s Find the "personalize.page.digital" Button
+    t =    32.33s Find the "personalize.done" Button
+    t =    32.38s Checking existence of `"theme.digital.preview" Any`
+    t =    32.49s Find the "theme.digital.preview" Any
+    t =    32.61s Find the "theme.digital.preview" Other
+    t =    32.97s Added attachment named 'landscape-editor-digital-4'
+    t =    32.98s Checking existence of `"personalize.done" Any`
+    t =    33.15s Checking existence of `"onboarding.next" Button`
+    t =    33.22s Checking existence of `"onboarding.customClock" Button`
+    t =    33.30s Checking existence of `"personalize.done" Button`
+    t =    33.37s Find the "personalize.done" Any
+    t =    33.65s Tap "personalize.done" Button
+    t =    33.65s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    33.65s     Find the "personalize.done" Button
+    t =    33.83s     Check for interrupting elements affecting "personalize.done" Button
+    t =    33.94s     Synthesize event
+    t =    34.25s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    34.62s Setting device orientation to Portrait
+    t =    34.62s     Device orientation changed to Portrait
+    t =    34.67s     Interface orientation changed to Portrait
+    t =    34.67s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    35.72s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    35.89s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    36.74s Find the "game.questions" ScrollView
+    t =    36.88s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    36.91s Find the "question.title" StaticText
+    t =    37.32s Find the "question.title" StaticText
+    t =    37.53s Get all elements bound by index for: Descendants matching type Button
+    t =    37.59s Find the Button (Element at index 0)
+    t =    37.67s Find the "header.dino" Button
+    t =    37.75s Find the "header.dino" Button
+    t =    37.78s Find the "header.dino" Button
+    t =    37.82s Find the "header.dino" Button
+    t =    37.86s Find the "header.dino" Button
+    t =    37.89s Find the "header.dino" Button
+    t =    37.93s Find the "header.dino" Button
+    t =    37.96s Find the "header.dino" Button
+    t =    37.99s Find the Button (Element at index 1)
+    t =    38.02s Find the "question.example" Button
+    t =    38.06s Find the "question.example" Button
+    t =    38.09s Find the "question.example" Button
+    t =    38.13s Find the "question.example" Button
+    t =    38.17s Find the "question.example" Button
+    t =    38.20s Find the "question.example" Button
+    t =    38.23s Find the "question.example" Button
+    t =    38.27s Find the "question.example" Button
+    t =    38.30s Find the Button (Element at index 2)
+    t =    38.35s Find the "header.pause" Button
+    t =    38.40s Find the "header.pause" Button
+    t =    38.44s Find the "header.pause" Button
+    t =    38.48s Find the "header.pause" Button
+    t =    38.52s Find the "header.pause" Button
+    t =    38.56s Find the "header.pause" Button
+    t =    38.59s Find the "header.pause" Button
+    t =    38.62s Find the "header.pause" Button
+    t =    38.65s Find the Button (Element at index 3)
+    t =    38.69s Find the "question.confirm" Button
+    t =    38.72s Find the "question.confirm" Button
+    t =    38.76s Find the "question.confirm" Button
+    t =    38.79s Find the "question.confirm" Button
+    t =    38.82s Find the "question.confirm" Button
+    t =    38.86s Find the "question.confirm" Button
+    t =    38.89s Find the "question.confirm" Button
+    t =    38.93s Find the "question.confirm" Button
+    t =    38.96s Find the Button (Element at index 4)
+    t =    39.00s Find the "question.spoken.0.0" Button
+    t =    39.06s Find the "question.spoken.0.0" Button
+    t =    39.10s Find the "question.spoken.0.0" Button
+    t =    39.14s Find the "question.spoken.0.0" Button
+    t =    39.16s Find the Button (Element at index 5)
+    t =    39.20s Find the "question.spoken.0.1" Button
+    t =    39.24s Find the "question.spoken.0.1" Button
+    t =    39.27s Find the "question.spoken.0.1" Button
+    t =    39.30s Find the "question.spoken.0.1" Button
+    t =    39.33s Find the Button (Element at index 6)
+    t =    39.36s Find the "question.spoken.0.2" Button
+    t =    39.40s Find the "question.spoken.0.2" Button
+    t =    39.44s Find the "question.spoken.0.2" Button
+    t =    39.47s Find the "question.spoken.0.2" Button
+    t =    39.50s Find the Button (Element at index 7)
+    t =    39.54s Find the "question.spoken.1.0" Button
+    t =    39.58s Find the "question.spoken.1.0" Button
+    t =    39.63s Find the "question.spoken.1.0" Button
+    t =    39.67s Find the "question.spoken.1.0" Button
+    t =    39.70s Find the Button (Element at index 8)
+    t =    39.74s Find the "question.spoken.1.1" Button
+    t =    39.78s Find the "question.spoken.1.1" Button
+    t =    39.82s Find the "question.spoken.1.1" Button
+    t =    39.85s Find the "question.spoken.1.1" Button
+    t =    39.88s Find the Button (Element at index 9)
+    t =    39.92s Find the "question.spoken.2.0" Button
+    t =    39.97s Find the "question.spoken.2.0" Button
+    t =    40.01s Find the "question.spoken.2.0" Button
+    t =    40.06s Find the "question.spoken.2.0" Button
+    t =    40.09s Find the Button (Element at index 10)
+    t =    40.13s Find the "question.spoken.3.0" Button
+    t =    40.18s Find the "question.spoken.3.0" Button
+    t =    40.22s Find the "question.spoken.3.0" Button
+    t =    40.25s Find the "question.spoken.3.0" Button
+    t =    40.28s Find the Button (Element at index 11)
+    t =    40.31s Find the "question.spoken.3.1" Button
+    t =    40.35s Find the "question.spoken.3.1" Button
+    t =    40.40s Find the "question.spoken.3.1" Button
+    t =    40.44s Find the "question.spoken.3.1" Button
+    t =    40.48s Find the Button (Element at index 12)
+    t =    40.52s Find the "question.spoken.3.2" Button
+    t =    40.55s Find the "question.spoken.3.2" Button
+    t =    40.66s Find the "question.spoken.3.2" Button
+    t =    40.71s Find the "question.spoken.3.2" Button
+    t =    40.74s Find the Button (Element at index 13)
+    t =    40.78s Find the "question.spoken.4.0" Button
+    t =    40.81s Find the "question.spoken.4.0" Button
+    t =    40.84s Find the "question.spoken.4.0" Button
+    t =    40.88s Find the "question.spoken.4.0" Button
+    t =    40.91s Find the "question.spoken.0.0" Button
+    t =    40.96s Find the "question.spoken.0.0" Button
+    t =    41.02s Find the "question.spoken.0.1" Button
+    t =    41.06s Find the "question.spoken.0.1" Button
+    t =    41.12s Find the "question.spoken.0.2" Button
+    t =    41.17s Find the "question.spoken.0.2" Button
+    t =    41.23s Find the "question.spoken.1.0" Button
+    t =    41.28s Find the "question.spoken.1.0" Button
+    t =    41.33s Find the "question.spoken.1.1" Button
+    t =    41.38s Find the "question.spoken.1.1" Button
+    t =    41.43s Find the "question.spoken.2.0" Button
+    t =    41.48s Find the "question.spoken.2.0" Button
+    t =    41.54s Find the "question.spoken.3.0" Button
+    t =    41.58s Find the "question.spoken.3.0" Button
+    t =    41.64s Find the "question.spoken.3.1" Button
+    t =    41.69s Find the "question.spoken.3.1" Button
+    t =    41.76s Find the "question.spoken.3.2" Button
+    t =    41.81s Find the "question.spoken.3.2" Button
+    t =    41.90s Find the "question.spoken.4.0" Button
+    t =    41.99s Find the "question.spoken.4.0" Button
+    t =    42.47s Find the "question.spoken.0.0" Button
+    t =    42.51s Find the "question.spoken.0.1" Button
+    t =    42.56s Find the "question.spoken.0.2" Button
+    t =    42.60s Find the "question.spoken.1.0" Button
+    t =    42.63s Find the "question.spoken.1.1" Button
+    t =    42.66s Find the "question.spoken.2.0" Button
+    t =    42.71s Find the "question.spoken.3.0" Button
+    t =    42.79s Find the "question.spoken.3.1" Button
+    t =    42.82s Find the "question.spoken.3.2" Button
+    t =    42.87s Find the "question.spoken.4.0" Button
+    t =    42.90s Checking existence of `"question.analogControl" Any`
+    t =    43.03s Checking existence of `"question.digitalControl" Any`
+    t =    43.18s Checking existence of `"question.targetClock" Any`
+    t =    43.27s Find the "question.targetClock" Any
+    t =    43.36s Find the "question.targetClock" Other
+    t =    43.46s Checking existence of `"question.correctClock" Any`
+    t =    43.58s Checking existence of `"question.flight.ticket" Any`
+    t =    43.70s Checking existence of `"question.schedule.card" Any`
+    t =    43.82s Checking existence of `"question.minutesBetween.card" Any`
+    t =    43.93s Checking existence of `"question.sequence.unknown" Any`
+    t =    44.05s Checking existence of `"question.confirm" Button`
+    t =    44.09s Find the "question.confirm" Button
+    t =    44.14s Find the "question.confirm" Button
+    t =    44.19s Find the "question.confirm" Button
+    t =    44.23s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    44.25s Checking existence of `"question.next" Button`
+    t =    44.29s Checking existence of `"question.showAnswer" Button`
+    t =    44.32s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    44.34s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    44.59s Added attachment named 'adaptive-fit-sayTime-single-column-1'
+    t =    44.59s Find the "question.title" StaticText
+    t =    44.64s Find the "question.targetClock" Any
+    t =    44.74s Find the "question.spoken.0.0" Button
+    t =    44.78s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    44.81s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    44.83s Checking existence of `"header.rail" Other`
+    t =    44.94s Checking existence of `"header.dino" Any`
+    t =    44.96s Checking existence of `"onboarding.next" Button`
+    t =    45.00s Checking existence of `"onboarding.customClock" Button`
+    t =    45.04s Checking existence of `"personalize.done" Button`
+    t =    45.08s Checking existence of `"theme.done" Button`
+    t =    45.12s Find the "header.dino" Any
+    t =    45.16s Tap "header.dino" Button
+    t =    45.16s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    45.16s     Find the "header.dino" Button
+    t =    45.18s     Check for interrupting elements affecting "header.dino" Button
+    t =    45.23s     Synthesize event
+    t =    45.53s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    45.96s Checking existence of `"personalize.page.dino" Any`
+    t =    46.13s Checking existence of `"onboarding.next" Button`
+    t =    46.24s Checking existence of `"onboarding.customClock" Button`
+    t =    46.32s Checking existence of `"personalize.done" Button`
+    t =    46.40s Find the "personalize.page.dino" Any
+    t =    46.56s Tap "personalize.page.dino" Button
+    t =    46.56s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    46.57s     Find the "personalize.page.dino" Button
+    t =    46.73s     Check for interrupting elements affecting "personalize.page.dino" Button
+    t =    46.82s     Synthesize event
+    t =    47.14s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    47.16s Find the "personalize.done" Button
+    t =    47.26s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    47.30s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    47.54s Added attachment named 'landscape-editor-dino-1'
+    t =    47.54s Checking existence of `"personalize.page.analog" Any`
+    t =    47.77s Checking existence of `"onboarding.next" Button`
+    t =    47.89s Checking existence of `"onboarding.customClock" Button`
+    t =    47.97s Checking existence of `"personalize.done" Button`
+    t =    48.05s Find the "personalize.page.analog" Any
+    t =    48.28s Tap "personalize.page.analog" Button
+    t =    48.28s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    48.29s     Find the "personalize.page.analog" Button
+    t =    48.99s     Check for interrupting elements affecting "personalize.page.analog" Button
+    t =    49.24s     Synthesize event
+    t =    49.56s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    49.58s Find the "personalize.done" Button
+    t =    49.85s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    49.91s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    50.12s Added attachment named 'landscape-editor-analog-1'
+    t =    50.12s Checking existence of `"personalize.page.digital" Any`
+    t =    50.32s Checking existence of `"onboarding.next" Button`
+    t =    50.40s Checking existence of `"onboarding.customClock" Button`
+    t =    50.48s Checking existence of `"personalize.done" Button`
+    t =    50.59s Find the "personalize.page.digital" Any
+    t =    50.79s Tap "personalize.page.digital" Button
+    t =    50.79s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    50.79s     Find the "personalize.page.digital" Button
+    t =    50.94s     Check for interrupting elements affecting "personalize.page.digital" Button
+    t =    51.05s     Synthesize event
+    t =    51.36s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    51.36s Find the "personalize.done" Button
+    t =    51.51s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    51.56s Find the Target Application 'Hakketjak.Dino-Klokkijken'
+    t =    51.81s Added attachment named 'landscape-editor-digital-1'
+    t =    51.81s Checking existence of `"personalize.done" Any`
+    t =    51.99s Checking existence of `"onboarding.next" Button`
+    t =    52.07s Checking existence of `"onboarding.customClock" Button`
+    t =    52.17s Checking existence of `"personalize.done" Button`
+    t =    52.27s Find the "personalize.done" Any
+    t =    52.56s Tap "personalize.done" Button
+    t =    52.56s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    52.57s     Find the "personalize.done" Button
+    t =    52.80s     Check for interrupting elements affecting "personalize.done" Button
+    t =    52.90s     Synthesize event
+    t =    53.21s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    53.67s Tear Down
+Test Case '-[DinoUITests.DinoUITests testLandscapeSingleColumnAndPersonalizer]' passed (54.437 seconds).
+Test Case '-[DinoUITests.DinoUITests testLandscapeWaterfallSpring]' started.
+    t =     0.00s Start Test at 2026-11-04 17:34:19.241
+    t =     0.03s Set Up
+    t =     0.03s     Setting device orientation to Portrait
+    t =     0.04s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     0.04s     Open Hakketjak.Dino-Klokkijken
+    t =     0.04s         Launch Hakketjak.Dino-Klokkijken
+    t =     0.05s             Terminate Hakketjak.Dino-Klokkijken:29082
+2026-11-04 17:34:20.369 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 17:34:20.369 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     1.34s             Setting up automation session
+    t =     2.95s             Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     5.23s Terminate Hakketjak.Dino-Klokkijken:29864
+    t =     6.25s Setting device orientation to Landscape Left
+    t =     6.26s     Device orientation changed to Landscape Left
+    t =     6.26s     Wait for com.apple.springboard to idle
+    t =     6.27s Open Hakketjak.Dino-Klokkijken
+    t =     6.27s     Launch Hakketjak.Dino-Klokkijken
+2026-11-04 17:34:25.511 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: debugger version lookup failed for path '<nil>': noURL
+2026-11-04 17:34:25.511 xcodebuild[27029:6859586] [MT] IDELaunchParametersSnapshot: no debugger version
+    t =     6.48s         Interface orientation changed to Landscape Right
+    t =     6.48s         Setting up automation session
+    t =     7.68s         Wait for Hakketjak.Dino-Klokkijken to idle
+    t =     9.24s Waiting 10.0s for "header.level" Button to exist
+    t =    10.26s     Checking `Expect predicate `existsNoRetry == 1` for object "header.level" Button`
+    t =    10.26s         Checking existence of `"header.level" Button`
+    t =    13.01s Checking existence of `"map.preparing" Any`
+    t =    14.00s Checking existence of `"map.preparing" Any`
+    t =    15.01s Checking existence of `"map.preparing" Any`
+    t =    16.05s Checking existence of `"map.preparing" Any`
+    t =    16.45s Setting device orientation to Landscape Left
+    t =    16.46s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    17.26s Find the "map.level.3" Button
+    t =    17.85s Added attachment named 'landscape-waterfall-spring-3'
+    t =    17.85s Setting device orientation to Landscape Right
+    t =    17.86s     Device orientation changed to Landscape Right
+    t =    17.89s     Interface orientation changed to Landscape Left
+    t =    17.89s     Wait for Hakketjak.Dino-Klokkijken to idle
+    t =    18.70s Find the "map.level.3" Button
+    t =    19.39s Added attachment named 'landscape-waterfall-spring-4'
+    t =    19.39s Tear Down
+Test Case '-[DinoUITests.DinoUITests testLandscapeWaterfallSpring]' passed (19.697 seconds).
+Test Suite 'DinoUITests' passed at 2026-11-04 17:34:38.938.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 117.398 (117.401) seconds
+Test Suite 'DinoUITests.xctest' passed at 2026-11-04 17:34:38.938.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 117.398 (117.401) seconds
+Test Suite 'Selected tests' passed at 2026-11-04 17:34:38.938.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 117.398 (117.402) seconds
+2026-11-04 17:34:39.329 xcodebuild[27029:6859586] [MT] IDETestOperationsObserverDebug: 123.239 elapsed -- Testing started completed.
+2026-11-04 17:34:39.329 xcodebuild[27029:6859586] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-11-04 17:34:39.329 xcodebuild[27029:6859586] [MT] IDETestOperationsObserverDebug: 123.239 sec, +123.239 sec -- end
+
+Test session results, code coverage, and logs:
+	/tmp/dino-landscape-refine-phone.xcresult
+
+** TEST SUCCEEDED **
+
+Testing started

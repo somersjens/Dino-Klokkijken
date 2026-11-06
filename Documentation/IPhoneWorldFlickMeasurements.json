@@ -1,0 +1,405 @@
+{
+  "date": "2026-11-02",
+  "device": "iPhone 17 Pro",
+  "os": "iOS 26.6.1",
+  "build": "Release -O with DEBUG enabled only for isolated test fixtures",
+  "route": "12 fast swipes up to castle, 12 down; fresh app and cache on every invocation; warm-up discarded, 1 measured iteration",
+  "limitations": [
+    "One measured iteration per variant, not a population estimate.",
+    "XCTest incurs accessibility work.",
+    "Application-wide XCTHitchMetric reported zero while native scroll signposts detected hitches; zero is not used as evidence of smoothness.",
+    "Frame-count counter reported zero; frame-rate counter is not presented as a guarantee."
+  ],
+  "runs": {
+    "baseline": {
+      "log": ".build/iphone-flick-full-baseline.log",
+      "completedSuccessfully": true,
+      "scrollCallbackGapsMs": [
+        217.8,
+        261.7
+      ],
+      "metrics": [
+        {
+          "metric": "Hitch Time Ratio (Scroll_DraggingAndDeceleration), ms per s",
+          "average": 402.553,
+          "values": [
+            402.552552
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.hitch.time.ratio"
+        },
+        {
+          "metric": "Hitches Total Duration (Dino-Klokkijken), s",
+          "average": 0.0,
+          "values": [
+            0.0
+          ],
+          "id": "com.apple.dt.XCTMetric_Hitch-Dino-Klokkijken.total.duration"
+        },
+        {
+          "metric": "Memory Physical (Dino-Klokkijken), kB",
+          "average": 406128.064,
+          "values": [
+            406128.064
+          ],
+          "id": "com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical"
+        },
+        {
+          "metric": "CPU Cycles (Dino-Klokkijken), kC",
+          "average": 120059047.747,
+          "values": [
+            120059047.747
+          ],
+          "id": "com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.cycles"
+        },
+        {
+          "metric": "Hitch Time Ratio (Dino-Klokkijken), ms per s",
+          "average": 0.0,
+          "values": [
+            0.0
+          ],
+          "id": "com.apple.dt.XCTMetric_Hitch-Dino-Klokkijken.time.ratio"
+        },
+        {
+          "metric": "Number of Hitches (Scroll_DraggingAndDeceleration), hitches",
+          "average": 63.0,
+          "values": [
+            63.0
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.hitch.number"
+        },
+        {
+          "metric": "Frame Count (Scroll_DraggingAndDeceleration), frames",
+          "average": 0.0,
+          "values": [
+            0.0
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.frame.count"
+        },
+        {
+          "metric": "CPU Instructions Retired (Dino-Klokkijken), kI",
+          "average": 395539459.136,
+          "values": [
+            395539459.136
+          ],
+          "id": "com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.instructions_retired"
+        },
+        {
+          "metric": "Hitches Total Duration (Scroll_DraggingAndDeceleration), ms",
+          "average": 1004.333,
+          "values": [
+            1004.333156
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.hitches.total.duration"
+        },
+        {
+          "metric": "Memory Peak Physical (Dino-Klokkijken), kB",
+          "average": 644302.2,
+          "values": [
+            644302.2
+          ],
+          "id": "com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical_peak"
+        },
+        {
+          "metric": "Absolute Memory Physical (Dino-Klokkijken), kB",
+          "average": 406128.064,
+          "values": [
+            406128.064
+          ],
+          "id": "com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical_absolute"
+        },
+        {
+          "metric": "Frame Rate (Scroll_DraggingAndDeceleration), fps",
+          "average": 34.47,
+          "values": [
+            34.470154
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.frame.rate"
+        },
+        {
+          "metric": "CPU Time (Dino-Klokkijken), s",
+          "average": 42.3,
+          "values": [
+            42.300203
+          ],
+          "id": "com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.time"
+        },
+        {
+          "metric": "Duration (Scroll_DraggingAndDeceleration), s",
+          "average": 2.495,
+          "values": [
+            2.494912
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration"
+        },
+        {
+          "metric": "Number of Hitches (Dino-Klokkijken), hitches",
+          "average": 0.0,
+          "values": [
+            0.0
+          ],
+          "id": "com.apple.dt.XCTMetric_Hitch-Dino-Klokkijken.number"
+        }
+      ]
+    },
+    "rejectedDeferredMounts": {
+      "log": ".build/iphone-flick-full-deferred.log",
+      "completedSuccessfully": true,
+      "scrollCallbackGapsMs": [
+        294.5,
+        271.4
+      ],
+      "metrics": [
+        {
+          "metric": "Hitch Time Ratio (Scroll_DraggingAndDeceleration), ms per s",
+          "average": 458.868,
+          "values": [
+            458.867887
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.hitch.time.ratio"
+        },
+        {
+          "metric": "Hitches Total Duration (Dino-Klokkijken), s",
+          "average": 0.0,
+          "values": [
+            0.0
+          ],
+          "id": "com.apple.dt.XCTMetric_Hitch-Dino-Klokkijken.total.duration"
+        },
+        {
+          "metric": "Memory Physical (Dino-Klokkijken), kB",
+          "average": 427460.032,
+          "values": [
+            427460.032
+          ],
+          "id": "com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical"
+        },
+        {
+          "metric": "CPU Cycles (Dino-Klokkijken), kC",
+          "average": 111976413.545,
+          "values": [
+            111976413.545
+          ],
+          "id": "com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.cycles"
+        },
+        {
+          "metric": "Hitch Time Ratio (Dino-Klokkijken), ms per s",
+          "average": 0.0,
+          "values": [
+            0.0
+          ],
+          "id": "com.apple.dt.XCTMetric_Hitch-Dino-Klokkijken.time.ratio"
+        },
+        {
+          "metric": "Number of Hitches (Scroll_DraggingAndDeceleration), hitches",
+          "average": 67.0,
+          "values": [
+            67.0
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.hitch.number"
+        },
+        {
+          "metric": "Frame Count (Scroll_DraggingAndDeceleration), frames",
+          "average": 0.0,
+          "values": [
+            0.0
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.frame.count"
+        },
+        {
+          "metric": "CPU Instructions Retired (Dino-Klokkijken), kI",
+          "average": 373680025.76,
+          "values": [
+            373680025.76
+          ],
+          "id": "com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.instructions_retired"
+        },
+        {
+          "metric": "Hitches Total Duration (Scroll_DraggingAndDeceleration), ms",
+          "average": 1200.203,
+          "values": [
+            1200.202622
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.hitches.total.duration"
+        },
+        {
+          "metric": "Memory Peak Physical (Dino-Klokkijken), kB",
+          "average": 642811.232,
+          "values": [
+            642811.232
+          ],
+          "id": "com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical_peak"
+        },
+        {
+          "metric": "Absolute Memory Physical (Dino-Klokkijken), kB",
+          "average": 427460.032,
+          "values": [
+            427460.032
+          ],
+          "id": "com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical_absolute"
+        },
+        {
+          "metric": "Frame Rate (Scroll_DraggingAndDeceleration), fps",
+          "average": 37.85,
+          "values": [
+            37.850208
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.frame.rate"
+        },
+        {
+          "metric": "CPU Time (Dino-Klokkijken), s",
+          "average": 44.596,
+          "values": [
+            44.595507
+          ],
+          "id": "com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.time"
+        },
+        {
+          "metric": "Duration (Scroll_DraggingAndDeceleration), s",
+          "average": 2.616,
+          "values": [
+            2.615573
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration"
+        },
+        {
+          "metric": "Number of Hitches (Dino-Klokkijken), hitches",
+          "average": 0.0,
+          "values": [
+            0.0
+          ],
+          "id": "com.apple.dt.XCTMetric_Hitch-Dino-Klokkijken.number"
+        }
+      ]
+    },
+    "geometryCaches": {
+      "log": ".build/iphone-flick-coast-cache.log",
+      "completedSuccessfully": true,
+      "scrollCallbackGapsMs": [
+        236.6,
+        260.5
+      ],
+      "metrics": [
+        {
+          "metric": "Hitch Time Ratio (Scroll_DraggingAndDeceleration), ms per s",
+          "average": 142.479,
+          "values": [
+            142.478768
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.hitch.time.ratio"
+        },
+        {
+          "metric": "Hitches Total Duration (Dino-Klokkijken), s",
+          "average": 0.0,
+          "values": [
+            0.0
+          ],
+          "id": "com.apple.dt.XCTMetric_Hitch-Dino-Klokkijken.total.duration"
+        },
+        {
+          "metric": "Memory Physical (Dino-Klokkijken), kB",
+          "average": 435160.56,
+          "values": [
+            435160.56
+          ],
+          "id": "com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical"
+        },
+        {
+          "metric": "CPU Cycles (Dino-Klokkijken), kC",
+          "average": 119086691.792,
+          "values": [
+            119086691.792
+          ],
+          "id": "com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.cycles"
+        },
+        {
+          "metric": "Hitch Time Ratio (Dino-Klokkijken), ms per s",
+          "average": 0.0,
+          "values": [
+            0.0
+          ],
+          "id": "com.apple.dt.XCTMetric_Hitch-Dino-Klokkijken.time.ratio"
+        },
+        {
+          "metric": "Number of Hitches (Scroll_DraggingAndDeceleration), hitches",
+          "average": 25.0,
+          "values": [
+            25.0
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.hitch.number"
+        },
+        {
+          "metric": "Frame Count (Scroll_DraggingAndDeceleration), frames",
+          "average": 0.0,
+          "values": [
+            0.0
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.frame.count"
+        },
+        {
+          "metric": "CPU Instructions Retired (Dino-Klokkijken), kI",
+          "average": 401683173.392,
+          "values": [
+            401683173.392
+          ],
+          "id": "com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.instructions_retired"
+        },
+        {
+          "metric": "Hitches Total Duration (Scroll_DraggingAndDeceleration), ms",
+          "average": 362.557,
+          "values": [
+            362.557318
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.hitches.total.duration"
+        },
+        {
+          "metric": "Memory Peak Physical (Dino-Klokkijken), kB",
+          "average": 639714.68,
+          "values": [
+            639714.68
+          ],
+          "id": "com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical_peak"
+        },
+        {
+          "metric": "Absolute Memory Physical (Dino-Klokkijken), kB",
+          "average": 435160.56,
+          "values": [
+            435160.56
+          ],
+          "id": "com.apple.dt.XCTMetric_Memory-Hakketjak.Dino-Klokkijken.physical_absolute"
+        },
+        {
+          "metric": "Frame Rate (Scroll_DraggingAndDeceleration), fps",
+          "average": 22.007,
+          "values": [
+            22.007034
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.animation.frame.rate"
+        },
+        {
+          "metric": "CPU Time (Dino-Klokkijken), s",
+          "average": 39.834,
+          "values": [
+            39.833812
+          ],
+          "id": "com.apple.dt.XCTMetric_CPU-Hakketjak.Dino-Klokkijken.time"
+        },
+        {
+          "metric": "Duration (Scroll_DraggingAndDeceleration), s",
+          "average": 2.545,
+          "values": [
+            2.544641
+          ],
+          "id": "com.apple.dt.XCTMetric_OSSignpost-Scroll_DraggingAndDeceleration.duration"
+        },
+        {
+          "metric": "Number of Hitches (Dino-Klokkijken), hitches",
+          "average": 0.0,
+          "values": [
+            0.0
+          ],
+          "id": "com.apple.dt.XCTMetric_Hitch-Dino-Klokkijken.number"
+        }
+      ]
+    }
+  }
+}
