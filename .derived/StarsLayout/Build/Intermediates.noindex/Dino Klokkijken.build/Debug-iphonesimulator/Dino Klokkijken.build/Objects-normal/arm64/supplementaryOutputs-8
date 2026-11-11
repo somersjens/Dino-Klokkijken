@@ -1,0 +1,30 @@
+{
+  "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Core/SeededGenerator.swift" : {
+    "const-values" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/SeededGenerator.swiftconstvalues",
+    "dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/SeededGenerator.d",
+    "diagnostics" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/SeededGenerator.dia",
+    "object" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/SeededGenerator.o",
+    "swift-dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/SeededGenerator.swiftdeps"
+  },
+  "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/AdventureHeader.swift" : {
+    "const-values" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/AdventureHeader.swiftconstvalues",
+    "dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/AdventureHeader.d",
+    "diagnostics" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/AdventureHeader.dia",
+    "object" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/AdventureHeader.o",
+    "swift-dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/AdventureHeader.swiftdeps"
+  },
+  "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/DinoDesert.swift" : {
+    "const-values" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/DinoDesert.swiftconstvalues",
+    "dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/DinoDesert.d",
+    "diagnostics" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/DinoDesert.dia",
+    "object" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/DinoDesert.o",
+    "swift-dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/DinoDesert.swiftdeps"
+  },
+  "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/WorldBossArt.swift" : {
+    "const-values" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/WorldBossArt.swiftconstvalues",
+    "dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/WorldBossArt.d",
+    "diagnostics" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/WorldBossArt.dia",
+    "object" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/WorldBossArt.o",
+    "swift-dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/WorldBossArt.swiftdeps"
+  }
+}

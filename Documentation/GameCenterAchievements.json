@@ -1,0 +1,362 @@
+{
+  "bundleID": "Hakketjak.Dino-Klokkijken",
+  "totalPoints": 750,
+  "achievements": [
+    {
+      "id": "dino.achievement.stars.50.v1",
+      "referenceName": "50 sterren",
+      "points": 10,
+      "hidden": false,
+      "repeatable": false,
+      "stars": 50,
+      "image": "GameCenterAchievementImages/stars-50.png",
+      "localizations": {
+        "en-GB": {
+          "name": "50 stars",
+          "before": "Collect 50 stars across the adventure.",
+          "after": "You collected 50 stars!"
+        },
+        "nl-NL": {
+          "name": "50 sterren",
+          "before": "Verzamel 50 sterren tijdens je avontuur.",
+          "after": "Je hebt 50 sterren verzameld!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.stars.100.v1",
+      "referenceName": "100 sterren",
+      "points": 20,
+      "hidden": false,
+      "repeatable": false,
+      "stars": 100,
+      "image": "GameCenterAchievementImages/stars-100.png",
+      "localizations": {
+        "en-GB": {
+          "name": "100 stars",
+          "before": "Collect 100 stars across the adventure.",
+          "after": "You collected 100 stars!"
+        },
+        "nl-NL": {
+          "name": "100 sterren",
+          "before": "Verzamel 100 sterren tijdens je avontuur.",
+          "after": "Je hebt 100 sterren verzameld!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.stars.150.v1",
+      "referenceName": "150 sterren",
+      "points": 30,
+      "hidden": false,
+      "repeatable": false,
+      "stars": 150,
+      "image": "GameCenterAchievementImages/stars-150.png",
+      "localizations": {
+        "en-GB": {
+          "name": "150 stars",
+          "before": "Collect 150 stars across the adventure.",
+          "after": "You collected 150 stars!"
+        },
+        "nl-NL": {
+          "name": "150 sterren",
+          "before": "Verzamel 150 sterren tijdens je avontuur.",
+          "after": "Je hebt 150 sterren verzameld!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.stars.200.v1",
+      "referenceName": "200 sterren",
+      "points": 40,
+      "hidden": false,
+      "repeatable": false,
+      "stars": 200,
+      "image": "GameCenterAchievementImages/stars-200.png",
+      "localizations": {
+        "en-GB": {
+          "name": "200 stars",
+          "before": "Collect 200 stars across the adventure.",
+          "after": "You collected 200 stars!"
+        },
+        "nl-NL": {
+          "name": "200 sterren",
+          "before": "Verzamel 200 sterren tijdens je avontuur.",
+          "after": "Je hebt 200 sterren verzameld!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.stars.250.v1",
+      "referenceName": "250 sterren",
+      "points": 50,
+      "hidden": false,
+      "repeatable": false,
+      "stars": 250,
+      "image": "GameCenterAchievementImages/stars-250.png",
+      "localizations": {
+        "en-GB": {
+          "name": "250 stars",
+          "before": "Collect 250 stars across the adventure.",
+          "after": "You collected 250 stars!"
+        },
+        "nl-NL": {
+          "name": "250 sterren",
+          "before": "Verzamel 250 sterren tijdens je avontuur.",
+          "after": "Je hebt 250 sterren verzameld!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.stars.300.v1",
+      "referenceName": "300 sterren",
+      "points": 100,
+      "hidden": false,
+      "repeatable": false,
+      "stars": 300,
+      "image": "GameCenterAchievementImages/stars-300.png",
+      "localizations": {
+        "en-GB": {
+          "name": "300 stars",
+          "before": "Collect 300 stars across the adventure.",
+          "after": "You collected 300 stars!"
+        },
+        "nl-NL": {
+          "name": "300 sterren",
+          "before": "Verzamel 300 sterren tijdens je avontuur.",
+          "after": "Je hebt 300 sterren verzameld!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.boss.1.v1",
+      "referenceName": "Baas level 10 verslagen",
+      "points": 50,
+      "hidden": true,
+      "repeatable": false,
+      "worldID": 1,
+      "bossLevel": 10,
+      "bossAsset": "boss-jungle",
+      "image": "GameCenterAchievementImages/boss-1.png",
+      "localizations": {
+        "en-GB": {
+          "name": "Tiko defeated",
+          "before": "Defeat Tiko the Jungle Guardian in level 10.",
+          "after": "You defeated Tiko the Jungle Guardian!"
+        },
+        "nl-NL": {
+          "name": "Tiko verslagen",
+          "before": "Versla Tiko de Junglewachter in level 10.",
+          "after": "Je hebt Tiko de Junglewachter verslagen!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.boss.2.v1",
+      "referenceName": "Baas level 20 verslagen",
+      "points": 50,
+      "hidden": true,
+      "repeatable": false,
+      "worldID": 2,
+      "bossLevel": 20,
+      "bossAsset": "boss-desert",
+      "image": "GameCenterAchievementImages/boss-2.png",
+      "localizations": {
+        "en-GB": {
+          "name": "Sandtail defeated",
+          "before": "Defeat Sandtail the Desert Guardian in level 20.",
+          "after": "You defeated Sandtail the Desert Guardian!"
+        },
+        "nl-NL": {
+          "name": "Zandstaart verslagen",
+          "before": "Versla Zandstaart de Woestijnwachter in level 20.",
+          "after": "Je hebt Zandstaart de Woestijnwachter verslagen!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.boss.3.v1",
+      "referenceName": "Baas level 30 verslagen",
+      "points": 50,
+      "hidden": true,
+      "repeatable": false,
+      "worldID": 3,
+      "bossLevel": 30,
+      "bossAsset": "boss-volcano",
+      "image": "GameCenterAchievementImages/boss-3.png",
+      "localizations": {
+        "en-GB": {
+          "name": "Magma defeated",
+          "before": "Defeat Magma the Fire Triceratops in level 30.",
+          "after": "You defeated Magma the Fire Triceratops!"
+        },
+        "nl-NL": {
+          "name": "Magma verslagen",
+          "before": "Versla Magma de Vuurtriceratops in level 30.",
+          "after": "Je hebt Magma de Vuurtriceratops verslagen!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.boss.4.v1",
+      "referenceName": "Baas level 40 verslagen",
+      "points": 50,
+      "hidden": true,
+      "repeatable": false,
+      "worldID": 4,
+      "bossLevel": 40,
+      "bossAsset": "boss-clock-village",
+      "image": "GameCenterAchievementImages/boss-4.png",
+      "localizations": {
+        "en-GB": {
+          "name": "Mayor Tick-Tock defeated",
+          "before": "Defeat Mayor Tick-Tock in level 40.",
+          "after": "You defeated Mayor Tick-Tock!"
+        },
+        "nl-NL": {
+          "name": "Burgemeester Tik-Tak verslagen",
+          "before": "Versla Burgemeester Tik-Tak in level 40.",
+          "after": "Je hebt Burgemeester Tik-Tak verslagen!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.boss.5.v1",
+      "referenceName": "Baas level 50 verslagen",
+      "points": 50,
+      "hidden": true,
+      "repeatable": false,
+      "worldID": 5,
+      "bossLevel": 50,
+      "bossAsset": "boss-crystal-cave",
+      "image": "GameCenterAchievementImages/boss-5.png",
+      "localizations": {
+        "en-GB": {
+          "name": "Prisma defeated",
+          "before": "Defeat Prisma the Crystal Guardian in level 50.",
+          "after": "You defeated Prisma the Crystal Guardian!"
+        },
+        "nl-NL": {
+          "name": "Prisma verslagen",
+          "before": "Versla Prisma de Kristalbewaker in level 50.",
+          "after": "Je hebt Prisma de Kristalbewaker verslagen!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.boss.6.v1",
+      "referenceName": "Baas level 60 verslagen",
+      "points": 50,
+      "hidden": true,
+      "repeatable": false,
+      "worldID": 6,
+      "bossLevel": 60,
+      "bossAsset": "boss-clock-city",
+      "image": "GameCenterAchievementImages/boss-6.png",
+      "localizations": {
+        "en-GB": {
+          "name": "Neon defeated",
+          "before": "Defeat Neon the Clock Robot in level 60.",
+          "after": "You defeated Neon the Clock Robot!"
+        },
+        "nl-NL": {
+          "name": "Neon verslagen",
+          "before": "Versla Neon de Klokrobot in level 60.",
+          "after": "Je hebt Neon de Klokrobot verslagen!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.boss.7.v1",
+      "referenceName": "Baas level 70 verslagen",
+      "points": 50,
+      "hidden": true,
+      "repeatable": false,
+      "worldID": 7,
+      "bossLevel": 70,
+      "bossAsset": "boss-sleep-valley",
+      "image": "GameCenterAchievementImages/boss-7.png",
+      "localizations": {
+        "en-GB": {
+          "name": "Dozy defeated",
+          "before": "Defeat Dozy the Dreamsaurus in level 70.",
+          "after": "You defeated Dozy the Dreamsaurus!"
+        },
+        "nl-NL": {
+          "name": "Dommel verslagen",
+          "before": "Versla Dommel de Droomsaurus in level 70.",
+          "after": "Je hebt Dommel de Droomsaurus verslagen!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.boss.8.v1",
+      "referenceName": "Baas level 80 verslagen",
+      "points": 50,
+      "hidden": true,
+      "repeatable": false,
+      "worldID": 8,
+      "bossLevel": 80,
+      "bossAsset": "boss-time-machine",
+      "image": "GameCenterAchievementImages/boss-8.png",
+      "localizations": {
+        "en-GB": {
+          "name": "Professor Pendulum defeated",
+          "before": "Defeat Professor Pendulum in level 80.",
+          "after": "You defeated Professor Pendulum!"
+        },
+        "nl-NL": {
+          "name": "Professor Pendel verslagen",
+          "before": "Versla Professor Pendel in level 80.",
+          "after": "Je hebt Professor Pendel verslagen!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.boss.9.v1",
+      "referenceName": "Baas level 90 verslagen",
+      "points": 50,
+      "hidden": true,
+      "repeatable": false,
+      "worldID": 9,
+      "bossLevel": 90,
+      "bossAsset": "boss-pirates",
+      "image": "GameCenterAchievementImages/boss-9.png",
+      "localizations": {
+        "en-GB": {
+          "name": "Captain Hourglass defeated",
+          "before": "Defeat Captain Hourglass in level 90.",
+          "after": "You defeated Captain Hourglass!"
+        },
+        "nl-NL": {
+          "name": "Kapitein Zandloper verslagen",
+          "before": "Versla Kapitein Zandloper in level 90.",
+          "after": "Je hebt Kapitein Zandloper verslagen!"
+        }
+      }
+    },
+    {
+      "id": "dino.achievement.boss.10.v1",
+      "referenceName": "Baas level 100 verslagen",
+      "points": 50,
+      "hidden": true,
+      "repeatable": false,
+      "worldID": 10,
+      "bossLevel": 100,
+      "bossAsset": "boss-castle",
+      "image": "GameCenterAchievementImages/boss-10.png",
+      "localizations": {
+        "en-GB": {
+          "name": "King Chronos defeated",
+          "before": "Defeat King Chronos in level 100.",
+          "after": "You defeated King Chronos!"
+        },
+        "nl-NL": {
+          "name": "Koning Chronos verslagen",
+          "before": "Versla Koning Chronos in level 100.",
+          "after": "Je hebt Koning Chronos verslagen!"
+        }
+      }
+    }
+  ]
+}

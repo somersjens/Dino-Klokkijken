@@ -1,0 +1,23 @@
+{
+  "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/DinoCharacter.swift" : {
+    "const-values" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/DinoCharacter.swiftconstvalues",
+    "dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/DinoCharacter.d",
+    "diagnostics" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/DinoCharacter.dia",
+    "object" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/DinoCharacter.o",
+    "swift-dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/DinoCharacter.swiftdeps"
+  },
+  "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/MapOpeningView.swift" : {
+    "const-values" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/MapOpeningView.swiftconstvalues",
+    "dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/MapOpeningView.d",
+    "diagnostics" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/MapOpeningView.dia",
+    "object" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/MapOpeningView.o",
+    "swift-dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/MapOpeningView.swiftdeps"
+  },
+  "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/WorldMap.swift" : {
+    "const-values" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/WorldMap.swiftconstvalues",
+    "dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/WorldMap.d",
+    "diagnostics" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/WorldMap.dia",
+    "object" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/WorldMap.o",
+    "swift-dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/RotationAudit/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/WorldMap.swiftdeps"
+  }
+}

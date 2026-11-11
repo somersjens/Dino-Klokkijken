@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>FormatVersion</key>
+	<integer>1</integer>
+	<key>Store</key>
+	<dict>
+		<key>DinoUITests</key>
+		<dict>
+			<key>DinoUITests</key>
+			<dict>
+				<key>testLandscapeClockControlsStayCenteredBeforeAndAfterAnswering</key>
+				<dict>
+					<key>mrnet</key>
+					<real>111.92137110233307</real>
+				</dict>
+				<key>testPreparedMapArtworkStaysStableDuringScrolling</key>
+				<dict>
+					<key>mrnet</key>
+					<real>75.816277027130127</real>
+				</dict>
+				<key>testTabletMapFocusSurvivesRotationDuringLongTrip</key>
+				<dict>
+					<key>mrnet</key>
+					<real>86.389928936958313</real>
+				</dict>
+				<key>testTabletMapZoomKeepsCurrentLevelInFocus</key>
+				<dict>
+					<key>mrnet</key>
+					<real>60.307684063911438</real>
+				</dict>
+			</dict>
+		</dict>
+	</dict>
+</dict>
+</plist>

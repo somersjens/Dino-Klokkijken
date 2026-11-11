@@ -1,0 +1,985 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>dino.activity.breakfast</key>
+	<string>Breakfast</string>
+	<key>dino.activity.fruit</key>
+	<string>Fruit time</string>
+	<key>dino.activity.lunch</key>
+	<string>Lunch</string>
+	<key>dino.activity.nest</key>
+	<string>To the nest</string>
+	<key>dino.activity.play</key>
+	<string>Playtime</string>
+	<key>dino.adventure</key>
+	<string>YOUR TIME ADVENTURE</string>
+	<key>dino.afterHundred</key>
+	<string>More adventures are on their way.</string>
+	<key>dino.analog</key>
+	<string>Analog clock</string>
+	<key>dino.analog.sameColors</key>
+	<string>Oh no, now you can't see the time!</string>
+	<key>dino.analogNumerals</key>
+	<string>Numbers</string>
+	<key>dino.analogNumerals.normal</key>
+	<string>Normal</string>
+	<key>dino.analogNumerals.roman</key>
+	<string>Roman</string>
+	<key>dino.answer.changeTime</key>
+	<string>Change the time to continue</string>
+	<key>dino.answer.chooseTile</key>
+	<string>Press at least 1 tile to continue</string>
+	<key>dino.answer.connectClocks</key>
+	<string>Connect all clocks first</string>
+	<key>dino.answer.selectClocks</key>
+	<string>Select all clocks first</string>
+	<key>dino.appearance.bandana</key>
+	<string>Bandana</string>
+	<key>dino.appearance.belly</key>
+	<string>Belly &amp; toes</string>
+	<key>dino.appearance.body</key>
+	<string>Body</string>
+	<key>dino.appearance.choose</key>
+	<string>Choose the colors for your Dino</string>
+	<key>dino.appearance.color.blue</key>
+	<string>Blue</string>
+	<key>dino.appearance.color.darkGreen</key>
+	<string>Dark green</string>
+	<key>dino.appearance.color.green</key>
+	<string>Green</string>
+	<key>dino.appearance.color.orange</key>
+	<string>Orange</string>
+	<key>dino.appearance.color.pink</key>
+	<string>Pink</string>
+	<key>dino.appearance.color.purple</key>
+	<string>Purple</string>
+	<key>dino.appearance.color.red</key>
+	<string>Red</string>
+	<key>dino.appearance.color.yellow</key>
+	<string>Yellow</string>
+	<key>dino.appearance.open</key>
+	<string>Personalize your dino and clocks</string>
+	<key>dino.appearance.preview</key>
+	<string>Preview of your Dino</string>
+	<key>dino.appearance.reset</key>
+	<string>Restore original colors</string>
+	<key>dino.appearance.spikes</key>
+	<string>Spikes</string>
+	<key>dino.appearance.title</key>
+	<string>My Dino</string>
+	<key>dino.appearance.welcome</key>
+	<string>Make your dino</string>
+	<key>dino.back</key>
+	<string>Back</string>
+	<key>dino.boss</key>
+	<string>BOSS</string>
+	<key>dino.bossName</key>
+	<string>Tiko the Jungle Guardian</string>
+	<key>dino.bossNormalRule</key>
+	<string>9 levels with a star + 5/10 → victory</string>
+	<key>dino.bossPerfectRule</key>
+	<string>10/10 → complete the world right away</string>
+	<key>dino.bossShortcut</key>
+	<string>Try it now · 10 challenges</string>
+	<key>dino.bossWon</key>
+	<string>Gate unlocked!</string>
+	<key>dino.cancel</key>
+	<string>Cancel</string>
+	<key>dino.character</key>
+	<string>Dino</string>
+	<key>dino.check.answer</key>
+	<string>Check my answer</string>
+	<key>dino.check.connections</key>
+	<string>Check my connections</string>
+	<key>dino.check.order</key>
+	<string>Check my order</string>
+	<key>dino.clock.arrowControls</key>
+	<string>Use the arrows above and below each number to adjust the hours and minutes.</string>
+	<key>dino.clock.check</key>
+	<string>Check my clock</string>
+	<key>dino.clock.colors</key>
+	<string>Colors</string>
+	<key>dino.clock.design</key>
+	<string>Design</string>
+	<key>dino.clock.resetAnalog</key>
+	<string>Reset analog clock</string>
+	<key>dino.clock.resetDigital</key>
+	<string>Reset digital clock</string>
+	<key>dino.clock.restoreStyle</key>
+	<string>Restore original style</string>
+	<key>dino.clockCase</key>
+	<string>Clock face &amp; rim</string>
+	<key>dino.color.beige</key>
+	<string>Beige</string>
+	<key>dino.color.black</key>
+	<string>Black</string>
+	<key>dino.color.blue</key>
+	<string>Light blue</string>
+	<key>dino.color.charcoal</key>
+	<string>Dark gray</string>
+	<key>dino.color.green</key>
+	<string>Green</string>
+	<key>dino.color.navy</key>
+	<string>Dark blue</string>
+	<key>dino.color.orange</key>
+	<string>Orange</string>
+	<key>dino.color.purple</key>
+	<string>Purple</string>
+	<key>dino.color.red</key>
+	<string>Red</string>
+	<key>dino.color.teal</key>
+	<string>Teal</string>
+	<key>dino.color.white</key>
+	<string>White</string>
+	<key>dino.color.yellow</key>
+	<string>Warm yellow</string>
+	<key>dino.comingSoon</key>
+	<string>Coming soon</string>
+	<key>dino.confirm</key>
+	<string>Confirm answer</string>
+	<key>dino.correctAnswers</key>
+	<string>Correct answers</string>
+	<key>dino.correctTime</key>
+	<string>The correct answer</string>
+	<key>dino.customColor</key>
+	<string>Choose your own color</string>
+	<key>dino.dayPart.afternoon</key>
+	<string>Afternoon</string>
+	<key>dino.dayPart.changeSettings</key>
+	<string>Change settings</string>
+	<key>dino.dayPart.evening</key>
+	<string>Evening</string>
+	<key>dino.dayPart.morning</key>
+	<string>Morning</string>
+	<key>dino.dayPart.night</key>
+	<string>Night</string>
+	<key>dino.demoSet</key>
+	<string>Try it here. Then tap ✓ in the game.</string>
+	<key>dino.demoTap</key>
+	<string>These clocks show the same time. Tap to choose.</string>
+	<key>dino.digitColor</key>
+	<string>Digit color</string>
+	<key>dino.digital</key>
+	<string>Digital clock</string>
+	<key>dino.digital.differentNotation</key>
+	<string>Note: the time format is different from this device</string>
+	<key>dino.digital.sameColors</key>
+	<string>Oh no, now you can't see the time!</string>
+	<key>dino.display</key>
+	<string>Background</string>
+	<key>dino.done</key>
+	<string>Done</string>
+	<key>dino.example</key>
+	<string>Example</string>
+	<key>dino.example.another</key>
+	<string>Show another example</string>
+	<key>dino.example.hours</key>
+	<string>1 · Hours</string>
+	<key>dino.example.minutes</key>
+	<string>2 · Minutes</string>
+	<key>dino.example.rule.addTime</key>
+	<string>Add the duration to the start time. Every 60 minutes makes another hour. After 23:59 comes 00:00.</string>
+	<key>dino.example.rule.advanceAnalog</key>
+	<string>Start with the clock shown. Move its hour and minute hands forward by the given duration, then confirm.</string>
+	<key>dino.example.rule.dayPart</key>
+	<string>Night: 00:00–05:59. Morning: 06:00–11:59. Afternoon: 12:00–17:59. Evening: 18:00–23:59.</string>
+	<key>dino.example.rule.flightArrival</key>
+	<string>Add the flight duration to the departure time. These times use the same time zone.</string>
+	<key>dino.example.rule.read24Hour</key>
+	<string>Subtract 12 from an hour above 12 to read the clock in words. Keep its part of day. 00:00 is twelve at night.</string>
+	<key>dino.example.rule.readDigital</key>
+	<string>Read the hands and say the time in words. The colors group phrases that use the same wording.</string>
+	<key>dino.example.rule.sortTimes</key>
+	<string>Compare the hours first, then the minutes. Tap all four times from earliest to latest and confirm.</string>
+	<key>dino.example.rule.spokenTime</key>
+	<string>Look for the hour in the sentence. Quarter past is :15, half past is :30 and quarter to is :45.</string>
+	<key>dino.example.rule.subtractTime</key>
+	<string>Subtract the duration from the start time. Before 00:00, continue on the previous day.</string>
+	<key>dino.example.rule.timeSequence</key>
+	<string>Find the equal step between times. Add that step once more to the last time.</string>
+	<key>dino.example.rule.timeZone</key>
+	<string>Use the stated difference: add hours when city B is later; subtract hours when it is earlier.</string>
+	<key>dino.example.rule.trueFalse</key>
+	<string>Read the short hour hand and the long minute hand. Choose True only when the sentence describes the same time.</string>
+	<key>dino.exit</key>
+	<string>Leave level</string>
+	<key>dino.exitMessage</key>
+	<string>This unfinished attempt won’t count. Your best score stays saved.</string>
+	<key>dino.exitTitle</key>
+	<string>Back to the map?</string>
+	<key>dino.expanded.arithmetic.hours</key>
+	<string>Hours</string>
+	<key>dino.expanded.arithmetic.minutes</key>
+	<string>Minutes</string>
+	<key>dino.expanded.arithmetic.newTime</key>
+	<string>New time</string>
+	<key>dino.expanded.arithmetic.split</key>
+	<string>Split</string>
+	<key>dino.expanded.arrival</key>
+	<string>Arrival</string>
+	<key>dino.expanded.choose</key>
+	<string>Choose a time</string>
+	<key>dino.expanded.cityA</key>
+	<string>City A</string>
+	<key>dino.expanded.cityB</key>
+	<string>City B</string>
+	<key>dino.expanded.correctOrder</key>
+	<string>Correct order</string>
+	<key>dino.expanded.departure</key>
+	<string>Departure</string>
+	<key>dino.expanded.earlier</key>
+	<string>earlier</string>
+	<key>dino.expanded.end</key>
+	<string>End time</string>
+	<key>dino.expanded.false</key>
+	<string>False</string>
+	<key>dino.expanded.flight</key>
+	<string>The flight takes this long:</string>
+	<key>dino.expanded.flightDuration</key>
+	<string>Flight duration</string>
+	<key>dino.expanded.flightTicket</key>
+	<string>Flight ticket</string>
+	<key>dino.expanded.flightTotalAdded</key>
+	<string>Total</string>
+	<key>dino.expanded.flightTotalRemoved</key>
+	<string>Total time to subtract</string>
+	<key>dino.expanded.flightZone</key>
+	<string>Departure and arrival use the same time zone.</string>
+	<key>dino.expanded.flightZoneDifference</key>
+	<string>Time zone difference</string>
+	<key>dino.expanded.givenOffset</key>
+	<string>Use the given time difference between these two cities.</string>
+	<key>dino.expanded.later</key>
+	<string>later</string>
+	<key>dino.expanded.playground</key>
+	<string>Playing starts at:</string>
+	<key>dino.expanded.sameDay</key>
+	<string>All clocks are on the same day. Tap the earliest first. Tap again to remove a choice.</string>
+	<key>dino.expanded.sameZone</key>
+	<string>City B has the same time as city A.</string>
+	<key>dino.expanded.start</key>
+	<string>Start time</string>
+	<key>dino.expanded.statement</key>
+	<string>The sentence says:</string>
+	<key>dino.expanded.true</key>
+	<string>True</string>
+	<key>dino.expanded.unknownArrival</key>
+	<string>Arrival time: unknown</string>
+	<key>dino.face</key>
+	<string>Clock face</string>
+	<key>dino.friends.accountConflict</key>
+	<string>This local save was linked to another Game Center account. Sharing is paused to protect that player. Return to that account, or reset local progress before linking a new account.</string>
+	<key>dino.friends.allowSharing</key>
+	<string>Publish results with Apple</string>
+	<key>dino.friends.appleProfile</key>
+	<string>Open Apple profile</string>
+	<key>dino.friends.beFirstHere</key>
+	<string>Be the first of your friends to finish this level!</string>
+	<key>dino.friends.completed</key>
+	<string>Completed</string>
+	<key>dino.friends.completedHere</key>
+	<string>Friends who completed this level</string>
+	<key>dino.friends.connect</key>
+	<string>Use Game Center</string>
+	<key>dino.friends.connectDisclosure</key>
+	<string>This turns on Game Center, friends access and sharing your results together. Friends access lets Apple show friends who also allow this game. Sharing publishes this device’s best level results, measured playing times, stars and progress to Game Center leaderboards under the Apple display name. Apple leaderboards may show these results to other players, not only friends. You can turn each switch off afterwards without another question. Turning a switch back on asks this question again. Friends can be invited through Apple Messages. Apple’s account restrictions still apply. This parental gate is not legal consent.</string>
+	<key>dino.friends.contact</key>
+	<string>Contact the developer</string>
+	<key>dino.friends.contactMissing</key>
+	<string>Contact details for this game are not available yet. You can report Game Center profiles directly to Apple.</string>
+	<key>dino.friends.disconnect</key>
+	<string>Disconnect</string>
+	<key>dino.friends.empty</key>
+	<string>Add your first friend</string>
+	<key>dino.friends.emptyMessage</key>
+	<string>Invite a friend through Apple. Both friends must allow this game to access their friends list before they can appear here.</string>
+	<key>dino.friends.externalContact</key>
+	<string>An adult can open the game’s contact page in the browser.</string>
+	<key>dino.friends.externalPolicy</key>
+	<string>An adult can open the game’s privacy policy in the browser.</string>
+	<key>dino.friends.firstHere</key>
+	<string>You are the first of your friends to finish this level!</string>
+	<key>dino.friends.fullPrivacy</key>
+	<string>Read the full privacy policy</string>
+	<key>dino.friends.highestKnown</key>
+	<string>Highest known completed level</string>
+	<key>dino.friends.incomplete</key>
+	<string>Not yet completed</string>
+	<key>dino.friends.invite</key>
+	<string>Add a friend</string>
+	<key>dino.friends.inviteFailed</key>
+	<string>Apple could not open the friend invitation. Please try again later.</string>
+	<key>dino.friends.inviteRestricted</key>
+	<string>This account can’t send friend requests.</string>
+	<key>dino.friends.levelResults</key>
+	<string>Results</string>
+	<key>dino.friends.levels</key>
+	<string>Level overview</string>
+	<key>dino.friends.load</key>
+	<string>Show friends</string>
+	<key>dino.friends.loading</key>
+	<string>Loading friends</string>
+	<key>dino.friends.manage</key>
+	<string>Manage Game Center</string>
+	<key>dino.friends.maximum</key>
+	<string>Maximum on completed levels</string>
+	<key>dino.friends.more %lld</key>
+	<string>%lld more friends</string>
+	<key>dino.friends.next</key>
+	<string>Next level to complete</string>
+	<key>dino.friends.nextLevel %lld</key>
+	<string>Next level: %lld</string>
+	<key>dino.friends.noResultsHere</key>
+	<string>No completed results are available from your friends for this level yet.</string>
+	<key>dino.friends.notAvailable</key>
+	<string>Not available</string>
+	<key>dino.friends.notPlayed</key>
+	<string>Not yet played</string>
+	<key>dino.friends.openProfile</key>
+	<string>Open progress overview</string>
+	<key>dino.friends.parentAnswer</key>
+	<string>Your answer</string>
+	<key>dino.friends.parentMessage</key>
+	<string>This opens Apple’s social features or asks for friends access. An adult can continue below. Apple’s account restrictions still apply.</string>
+	<key>dino.friends.parentTitle</key>
+	<string>For a parent or guardian</string>
+	<key>dino.friends.percentage</key>
+	<string>Stars earned</string>
+	<key>dino.friends.privacy</key>
+	<string>Privacy and safety</string>
+	<key>dino.friends.privacyBody</key>
+	<string>Your clocks and progress are stored on this device. Your name comes from your Game Center account. Friends are optional. Apple manages sign-in, friendships, display names and avatars. The first time an adult turns on Game Center, friends access and result sharing turn on together. Only friends Apple permits are shown. Either switch can be turned off without another question. Turning a switch back on asks the question again. Friends’ data is held in memory and cleared when the app goes into the background, access changes, or you turn off friends.
+
+If you enable iCloud sync, only your level results, measured playing times, stars and game progress are shared through your own iCloud account between your devices. Your dino colors, clocks and settings stay on this device. Turning it off stops new iCloud updates on this device; it does not delete previously saved cloud progress.
+
+While sharing is on, the game sends best level results, measured playing times, stars and progress to Apple Game Center leaderboards. These results may be visible to other Game Center players according to Apple’s settings; the app does not offer private, friends-only storage. Your date of birth, location, email and phone number are never uploaded by this game. No chat, custom messages, ads, analytics or tracking are included.
+
+You can stop future uploads on this device. Published scores are retained by Apple; stopping sharing or resetting the local game does not delete them. Visibility, reporting, friendships and Apple data requests are managed through Apple Games, Game Center and Apple’s privacy controls. Publishing again can restore your previous best results.
+
+Restricted and underage accounts cannot publish progress through this game. A parental gate does not replace legally required parental consent.</string>
+	<key>dino.friends.profile</key>
+	<string>Friend profile</string>
+	<key>dino.friends.profileUnavailable</key>
+	<string>Friends access, friendship or results may have changed. Refresh the friends list to see available information.</string>
+	<key>dino.friends.reportHelp</key>
+	<string>To report an inappropriate name or avatar, or remove a friend, open their profile in Apple Games and choose Report User or Remove Friend. For further blocking options, use Apple account and Screen Time settings.</string>
+	<key>dino.friends.resetMessage</key>
+	<string>The connection and sharing on this device will be turned off. Published Game Center scores remain stored by Apple.</string>
+	<key>dino.friends.resultsUnavailable</key>
+	<string>Some results are unavailable. No scores have been guessed.</string>
+	<key>dino.friends.scoreHidden</key>
+	<string>This friend shares their level only.</string>
+	<key>dino.friends.scoreInfo</key>
+	<string>About sharing your score</string>
+	<key>dino.friends.scoreInfoMessage</key>
+	<string>Turn this off to let friends see only your level in this game. Your stars and times will be hidden. Apple keeps results previously published in Game Center; older versions of the game may still show them.</string>
+	<key>dino.friends.share</key>
+	<string>Show my score</string>
+	<key>dino.friends.shareGame</key>
+	<string>Share the game with friends</string>
+	<key>dino.friends.shareGame.message</key>
+	<string>Play Dino Time with me.</string>
+	<key>dino.friends.sharingDisclosure</key>
+	<string>Optional: publish this device’s best level results, measured playing times, stars and progress to Game Center leaderboards under the Apple display name. Apple leaderboards may show these results to other players, not only friends. Existing results from this Apple account are merged by taking the best result per level. Stopping sharing does not delete published results. This parental gate is not legal consent.</string>
+	<key>dino.friends.sharingOff</key>
+	<string>Sharing is off. Friends cannot see results from this device until an adult chooses to publish them.</string>
+	<key>dino.friends.sharingRestricted</key>
+	<string>This account can’t share results.</string>
+	<key>dino.friends.sharingTitle</key>
+	<string>Share your progress</string>
+	<key>dino.friends.showAllScores</key>
+	<string>All scores</string>
+	<key>dino.friends.showFewerScores</key>
+	<string>Fewer scores</string>
+	<key>dino.friends.signIn</key>
+	<string>Sign in with Apple</string>
+	<key>dino.friends.signOut</key>
+	<string>Sign out of Game Center</string>
+	<key>dino.friends.signOutMessage</key>
+	<string>Disconnect Game Center from Dino Time. To sign out on this device, go to Settings → Game Center → Sign Out.</string>
+	<key>dino.friends.state.authenticating</key>
+	<string>Connecting to Game Center…</string>
+	<key>dino.friends.state.denied</key>
+	<string>Allow friends access in Game Center settings.</string>
+	<key>dino.friends.state.inactive</key>
+	<string>See friends who also allow this game to access their Game Center friends. Playing always works without Game Center.</string>
+	<key>dino.friends.state.loading</key>
+	<string>Loading your available friends…</string>
+	<key>dino.friends.state.needsPermission</key>
+	<string>Allow access to see your friends here.</string>
+	<key>dino.friends.state.ready</key>
+	<string>Only friends made available by Apple appear here. Results appear after friends choose to share them.</string>
+	<key>dino.friends.state.restricted</key>
+	<string>This account has limited friends access.</string>
+	<key>dino.friends.state.signedOut</key>
+	<string>Sign in to Game Center in Settings.</string>
+	<key>dino.friends.state.unavailable</key>
+	<string>Game Center is temporarily unavailable.</string>
+	<key>dino.friends.stopSharing</key>
+	<string>Stop sending results</string>
+	<key>dino.friends.stopSharingMessage</key>
+	<string>This stops future uploads on this device. Previously published scores stay in Game Center. Manage their visibility and your data with Apple.</string>
+	<key>dino.friends.syncDone</key>
+	<string>Your available results are synchronized.</string>
+	<key>dino.friends.syncPending</key>
+	<string>Results stay saved locally and will sync when Game Center is available.</string>
+	<key>dino.friends.syncing</key>
+	<string>Saving results with Apple…</string>
+	<key>dino.friends.time</key>
+	<string>Time</string>
+	<key>dino.friends.timeUnavailable</key>
+	<string>Time unavailable</string>
+	<key>dino.friends.title</key>
+	<string>Friends</string>
+	<key>dino.friends.totalStars</key>
+	<string>Total stars</string>
+	<key>dino.friends.turnOn</key>
+	<string>Turn everything on</string>
+	<key>dino.friends.visibilityPending</key>
+	<string>Your change will be visible to friends once it has synced with Game Center.</string>
+	<key>dino.friends.visibilityUnavailable</key>
+	<string>Score visibility is waiting for Game Center configuration. Until it is available, this version of the game hides friends’ scores.</string>
+	<key>dino.friends.you</key>
+	<string>You</string>
+	<key>dino.friends.yourFriends</key>
+	<string>Your friends</string>
+	<key>dino.hands</key>
+	<string>Hands</string>
+	<key>dino.hands.playful</key>
+	<string>Playful</string>
+	<key>dino.hands.rounded</key>
+	<string>Rounded</string>
+	<key>dino.hands.straight</key>
+	<string>Straight</string>
+	<key>dino.hello %@</key>
+	<string>Hi, %@!</string>
+	<key>dino.hourHand</key>
+	<string>Short hour hand</string>
+	<key>dino.hourLess</key>
+	<string>One hour back</string>
+	<key>dino.hourMore</key>
+	<string>One hour forward</string>
+	<key>dino.hourNotation.twelve</key>
+	<string>12-hour</string>
+	<key>dino.hourNotation.twentyFour</key>
+	<string>24-hour</string>
+	<key>dino.hours</key>
+	<string>Hours</string>
+	<key>dino.jungle</key>
+	<string>Jungle</string>
+	<key>dino.keepPlaying</key>
+	<string>Keep playing</string>
+	<key>dino.keepPracticing</key>
+	<string>Another adventure?</string>
+	<key>dino.language</key>
+	<string>Language</string>
+	<key>dino.launch.title.firstLine</key>
+	<string>Dino</string>
+	<key>dino.launch.title.secondLine</key>
+	<string>Time</string>
+	<key>dino.level.1</key>
+	<string>Find the clock</string>
+	<key>dino.level.10</key>
+	<string>Tiko the Jungle Guardian</string>
+	<key>dino.level.2</key>
+	<string>Clock explorer</string>
+	<key>dino.level.3</key>
+	<string>Read the hands</string>
+	<key>dino.level.4</key>
+	<string>Time detective</string>
+	<key>dino.level.5</key>
+	<string>A day with Dino</string>
+	<key>dino.level.6</key>
+	<string>Turn the hand</string>
+	<key>dino.level.7</key>
+	<string>Set the time</string>
+	<key>dino.level.8</key>
+	<string>Make a match</string>
+	<key>dino.level.9</key>
+	<string>Ready for the gate</string>
+	<key>dino.level.details</key>
+	<string>In this level</string>
+	<key>dino.level.detailsClosed</key>
+	<string>Closed</string>
+	<key>dino.level.detailsOpen</key>
+	<string>Open</string>
+	<key>dino.level.time.minute</key>
+	<string>Minute</string>
+	<key>dino.levelLabel</key>
+	<string>Level</string>
+	<key>dino.levelNumber %lld</key>
+	<string>Level %lld</string>
+	<key>dino.locked</key>
+	<string>Locked</string>
+	<key>dino.makeAnalogClock</key>
+	<string>Make your analog clock</string>
+	<key>dino.makeClock</key>
+	<string>Make it your clock</string>
+	<key>dino.makeDigitalClock</key>
+	<string>Make your digital clock</string>
+	<key>dino.map</key>
+	<string>Level map</string>
+	<key>dino.match.demo.clock</key>
+	<string>1. Tap a clock.</string>
+	<key>dino.match.demo.connected</key>
+	<string>The lines connect each clock to its matching time. Try it yourself!</string>
+	<key>dino.match.demo.time</key>
+	<string>2. Tap the matching time to draw a line.</string>
+	<key>dino.match.hint</key>
+	<string>Tap a clock, then its matching time. You can also start with a time.</string>
+	<key>dino.minuteHand</key>
+	<string>Long minute hand</string>
+	<key>dino.minuteLess</key>
+	<string>One minute back</string>
+	<key>dino.minuteMore</key>
+	<string>One minute forward</string>
+	<key>dino.minutes</key>
+	<string>Minutes</string>
+	<key>dino.minutesBetween.borrow.format</key>
+	<string>Borrow 1 hour: %1$lld h %2$lld min = %3$lld h %4$lld min</string>
+	<key>dino.minutesBetween.from</key>
+	<string>From</string>
+	<key>dino.minutesBetween.until</key>
+	<string>Until</string>
+	<key>dino.myClocks</key>
+	<string>My clocks</string>
+	<key>dino.needFive</key>
+	<string>Get 6 out of 10 to earn a star.</string>
+	<key>dino.needPerfectOrRoute</key>
+	<string>Get 10/10, or first earn a star in all 9 levels.</string>
+	<key>dino.needThree</key>
+	<string>Get 3 out of 5 to earn a star.</string>
+	<key>dino.next</key>
+	<string>Next</string>
+	<key>dino.nextAdventure</key>
+	<string>A new adventure on the horizon</string>
+	<key>dino.nextWorld</key>
+	<string>Go to the next world</string>
+	<key>dino.numerals</key>
+	<string>Number style</string>
+	<key>dino.numerals.classic</key>
+	<string>Classic</string>
+	<key>dino.numerals.digital</key>
+	<string>Digital</string>
+	<key>dino.numerals.modern</key>
+	<string>Modern</string>
+	<key>dino.numerals.rounded</key>
+	<string>Playful</string>
+	<key>dino.pause</key>
+	<string>Pause</string>
+	<key>dino.paused</key>
+	<string>A little break!</string>
+	<key>dino.perfectBoss</key>
+	<string>Perfect boss victory!</string>
+	<key>dino.personalize.analog</key>
+	<string>Analog</string>
+	<key>dino.personalize.digital</key>
+	<string>Digital</string>
+	<key>dino.personalize.dino</key>
+	<string>Dino</string>
+	<key>dino.play</key>
+	<string>Play</string>
+	<key>dino.playAgain</key>
+	<string>Play again</string>
+	<key>dino.practice.ascending</key>
+	<string>Increasing difficulty</string>
+	<key>dino.practice.backToLevels</key>
+	<string>Back to the level overview</string>
+	<key>dino.practice.bestStreak</key>
+	<string>Best streak</string>
+	<key>dino.practice.correct</key>
+	<string>Correct answers</string>
+	<key>dino.practice.description</key>
+	<string>Keep practicing for as long as you like. Practice does not change your stars or level progress.</string>
+	<key>dino.practice.easyToHard</key>
+	<string>From easy to difficult</string>
+	<key>dino.practice.exitMessage</key>
+	<string>Return to your practice choices? You can start again whenever you like.</string>
+	<key>dino.practice.hand</key>
+	<string>Choose a hand</string>
+	<key>dino.practice.mix</key>
+	<string>Mix all question types</string>
+	<key>dino.practice.question.activity</key>
+	<string>Choose the clock for the activity</string>
+	<key>dino.practice.question.addTime</key>
+	<string>Calculate a later time</string>
+	<key>dino.practice.question.advanceAnalog</key>
+	<string>Move the clock forward</string>
+	<key>dino.practice.question.analogFour</key>
+	<string>Choose an analog clock · 4 choices</string>
+	<key>dino.practice.question.analogTwo</key>
+	<string>Choose an analog clock · 2 choices</string>
+	<key>dino.practice.question.chooseAnalog</key>
+	<string>Choose the analog clock</string>
+	<key>dino.practice.question.chooseDigital</key>
+	<string>Choose the digital clock</string>
+	<key>dino.practice.question.dayPart</key>
+	<string>Choose the part of the day</string>
+	<key>dino.practice.question.daySchedule</key>
+	<string>What time does the train arrive?</string>
+	<key>dino.practice.question.digitalFour</key>
+	<string>Choose a digital time · 4 choices</string>
+	<key>dino.practice.question.digitalTwo</key>
+	<string>Choose a digital time · 2 choices</string>
+	<key>dino.practice.question.flightArrival</key>
+	<string>What time does the plane arrive?</string>
+	<key>dino.practice.question.match</key>
+	<string>Connect clocks and times</string>
+	<key>dino.practice.question.minutesBetween</key>
+	<string>Calculate the difference in minutes</string>
+	<key>dino.practice.question.read24Hour</key>
+	<string>Read the clock after noon</string>
+	<key>dino.practice.question.readDigital</key>
+	<string>How do you say this time?</string>
+	<key>dino.practice.question.sayTime</key>
+	<string>Build the time in words</string>
+	<key>dino.practice.question.setAnalog</key>
+	<string>Set the analog clock</string>
+	<key>dino.practice.question.setDigital</key>
+	<string>Set the digital clock</string>
+	<key>dino.practice.question.sortTimes</key>
+	<string>Put the times in order</string>
+	<key>dino.practice.question.spokenTime</key>
+	<string>Choose the clock for the time in words</string>
+	<key>dino.practice.question.subtractTime</key>
+	<string>Calculate an earlier time</string>
+	<key>dino.practice.question.timeSequence</key>
+	<string>Complete the time pattern</string>
+	<key>dino.practice.question.timeZone</key>
+	<string>Calculate the time in another time zone</string>
+	<key>dino.practice.question.trueFalse</key>
+	<string>Does the time match the clock?</string>
+	<key>dino.practice.questionNumber</key>
+	<string>Question</string>
+	<key>dino.practice.questionType</key>
+	<string>Practice question type</string>
+	<key>dino.practice.setAnalog</key>
+	<string>Set both clocks to the same time</string>
+	<key>dino.practice.setDigital</key>
+	<string>Set the digital clock to the same time</string>
+	<key>dino.practice.settingsDescription</key>
+	<string>Choose times and question types</string>
+	<key>dino.practice.shortTitle</key>
+	<string>Practice</string>
+	<key>dino.practice.start</key>
+	<string>Start practicing</string>
+	<key>dino.practice.streak</key>
+	<string>Streak</string>
+	<key>dino.practice.time</key>
+	<string>Times to practice</string>
+	<key>dino.practice.time.fiveMinutes</key>
+	<string>5 minutes</string>
+	<key>dino.practice.time.half</key>
+	<string>Half hours</string>
+	<key>dino.practice.time.minutes</key>
+	<string>Minutes</string>
+	<key>dino.practice.time.quarter</key>
+	<string>Quarter hours</string>
+	<key>dino.practice.time.tenMinutes</key>
+	<string>10 minutes</string>
+	<key>dino.practice.time.whole</key>
+	<string>Whole hours</string>
+	<key>dino.practice.title</key>
+	<string>Practice levels</string>
+	<key>dino.question.activity</key>
+	<string>Which clock shows this time?</string>
+	<key>dino.question.addTime</key>
+	<string>What time will it be?</string>
+	<key>dino.question.addTime.format</key>
+	<string>It is %@. What time will it be %@ %@?</string>
+	<key>dino.question.advanceAnalog</key>
+	<string>Move the hands forward</string>
+	<key>dino.question.advanceAnalog.format</key>
+	<string>Move the clock hands %@ %@.</string>
+	<key>dino.question.chooseAnalog</key>
+	<string>Which clock shows this time?</string>
+	<key>dino.question.chooseClock.format</key>
+	<string>Which of the %@ clocks shows %@?</string>
+	<key>dino.question.chooseClock.short</key>
+	<string>Which clock shows %@?</string>
+	<key>dino.question.chooseDigital</key>
+	<string>What time is it?</string>
+	<key>dino.question.dayPart</key>
+	<string>Which part of the day does this time fall in?</string>
+	<key>dino.question.daySchedule</key>
+	<string>Look at the schedule. What time does the train arrive?</string>
+	<key>dino.question.daySchedule.format</key>
+	<string>The train leaves at %@. Add %@, %@ and %@. What time does it arrive?</string>
+	<key>dino.question.flightArrival</key>
+	<string>What time does the plane arrive?</string>
+	<key>dino.question.flightArrival.format</key>
+	<string>The plane leaves at %@. What time does it arrive?</string>
+	<key>dino.question.match</key>
+	<string>Connect the clocks to the times</string>
+	<key>dino.question.minutesBetween</key>
+	<string>How many minutes are there between the two times?</string>
+	<key>dino.question.minutesBetween.format</key>
+	<string>How many minutes are there between %@ and %@?</string>
+	<key>dino.question.read24Hour</key>
+	<string>What time is it?</string>
+	<key>dino.question.readDigital</key>
+	<string>How do you say this time?</string>
+	<key>dino.question.sayTime</key>
+	<string>Complete the time sentence for the clock</string>
+	<key>dino.question.setAnalog</key>
+	<string>Set both clocks to the same time</string>
+	<key>dino.question.setDigital</key>
+	<string>Set the digital clock to the same time</string>
+	<key>dino.question.sortTimes</key>
+	<string>Tap the clocks in order from earliest to latest</string>
+	<key>dino.question.spokenClock.format</key>
+	<string>Which of the %@ clocks shows %@?</string>
+	<key>dino.question.spokenTime</key>
+	<string>Which clock shows this time?</string>
+	<key>dino.question.spokenTime.format</key>
+	<string>Which of the clocks shows:
+%@</string>
+	<key>dino.question.subtractTime</key>
+	<string>What time was it earlier?</string>
+	<key>dino.question.subtractTime.format</key>
+	<string>It is %@. What time was it %@ %@?</string>
+	<key>dino.question.timeSequence</key>
+	<string>What time completes the pattern?</string>
+	<key>dino.question.timeSequence.format</key>
+	<string>Look at the pattern. What time comes after %@?</string>
+	<key>dino.question.timeZone</key>
+	<string>What time is it in the other city?</string>
+	<key>dino.question.timeZone.ahead.format</key>
+	<string>It is %@ in %@. %@ is %@ %@. What time is it there?</string>
+	<key>dino.question.timeZone.behind.format</key>
+	<string>It is %@ in %@. %@ is %@ %@. What time is it there?</string>
+	<key>dino.question.timeZone.format</key>
+	<string>What time is it in %@?</string>
+	<key>dino.question.timeZone.same.format</key>
+	<string>It is %@ in %@. What time is it in %@?</string>
+	<key>dino.question.trueFalse</key>
+	<string>Does the time match the clock?</string>
+	<key>dino.question.trueFalse.correction</key>
+	<string>It is %@.</string>
+	<key>dino.question.trueFalse.format</key>
+	<string>The clock shows %@. Is that correct?</string>
+	<key>dino.questionProgress</key>
+	<string>Your adventure</string>
+	<key>dino.questionsLabel</key>
+	<string>Question</string>
+	<key>dino.ready</key>
+	<string>Let’s play</string>
+	<key>dino.resetAnswer</key>
+	<string>Answer</string>
+	<key>dino.resetMessage</key>
+	<string>Progress, colors, clocks, language and settings on this device will be erased. Saved iCloud progress is erased too.</string>
+	<key>dino.resetProgress</key>
+	<string>Reset progress</string>
+	<key>dino.resetTitle</key>
+	<string>Start again?</string>
+	<key>dino.retry</key>
+	<string>Try again</string>
+	<key>dino.rim</key>
+	<string>Clock rim</string>
+	<key>dino.schedule.activity.building</key>
+	<string>Building</string>
+	<key>dino.schedule.activity.drawing</key>
+	<string>Drawing</string>
+	<key>dino.schedule.activity.music</key>
+	<string>Making music</string>
+	<key>dino.schedule.activity.puzzles</key>
+	<string>Puzzles</string>
+	<key>dino.schedule.activity.reading</key>
+	<string>Reading</string>
+	<key>dino.schedule.activity.sports</key>
+	<string>Sports</string>
+	<key>dino.schedule.break</key>
+	<string>Break</string>
+	<key>dino.schedule.finish</key>
+	<string>Finished</string>
+	<key>dino.schedule.title</key>
+	<string>Day planner</string>
+	<key>dino.settings</key>
+	<string>Settings</string>
+	<key>dino.settings.dayParts</key>
+	<string>Parts of the day</string>
+	<key>dino.settings.dayParts.backToGame</key>
+	<string>Back to the game</string>
+	<key>dino.settings.dayParts.column</key>
+	<string>Part of the day</string>
+	<key>dino.settings.dayParts.from</key>
+	<string>From</string>
+	<key>dino.settings.dayParts.help</key>
+	<string>Set when each part of the day starts and ends. The end of one part is the start of the next. Questions are marked right or wrong with these times.</string>
+	<key>dino.settings.dayParts.standard</key>
+	<string>Standard times</string>
+	<key>dino.settings.dayParts.to</key>
+	<string>To</string>
+	<key>dino.settings.gameCenter</key>
+	<string>Game Center</string>
+	<key>dino.settings.gameCenter.nameSource</key>
+	<string>Your name comes from Game Center. You can change it there.</string>
+	<key>dino.settings.gameCenter.noAccount</key>
+	<string>Not signed in to Game Center</string>
+	<key>dino.settings.gameCenter.open</key>
+	<string>Game Center &amp; friends</string>
+	<key>dino.settings.haptics</key>
+	<string>Vibration on answers</string>
+	<key>dino.settings.highContrast</key>
+	<string>High contrast</string>
+	<key>dino.settings.icloud.active</key>
+	<string>On. Same iCloud account on both devices.</string>
+	<key>dino.settings.icloud.off</key>
+	<string>Off. Saved on this device.</string>
+	<key>dino.settings.icloud.unavailable</key>
+	<string>Unavailable for now. Saved on this device.</string>
+	<key>dino.settings.icloudDescription</key>
+	<string>Turn sync on to save your progress in iCloud and keep playing on other devices. If it's off, your progress stays only on this device and you can lose it if you lose the device.</string>
+	<key>dino.settings.icloudSync</key>
+	<string>iCloud sync</string>
+	<key>dino.settings.languageEmpty</key>
+	<string>No language found</string>
+	<key>dino.settings.languageSearch</key>
+	<string>Search languages</string>
+	<key>dino.settings.play</key>
+	<string>Play and display</string>
+	<key>dino.settings.soundEffects</key>
+	<string>Sound effects</string>
+	<key>dino.settings.speakQuestionTitle</key>
+	<string>Speak the question title</string>
+	<key>dino.shape</key>
+	<string>Shape</string>
+	<key>dino.shape.circle</key>
+	<string>Round</string>
+	<key>dino.shape.octagon</key>
+	<string>Octagon</string>
+	<key>dino.shape.oval</key>
+	<string>Oval</string>
+	<key>dino.shape.rectangle</key>
+	<string>Square corners</string>
+	<key>dino.shape.roundedRectangle</key>
+	<string>Rounded corners</string>
+	<key>dino.shape.square</key>
+	<string>Square</string>
+	<key>dino.showAnswer</key>
+	<string>Show answer</string>
+	<key>dino.smallAdventure</key>
+	<string>Ready for an adventure?</string>
+	<key>dino.spoken.hint</key>
+	<string>Tap the right tiles below</string>
+	<key>dino.standardClock</key>
+	<string>Restore standard clock</string>
+	<key>dino.stars %lld</key>
+	<string>%lld stars</string>
+	<key>dino.stars.total</key>
+	<string>Total</string>
+	<key>dino.starsLabel</key>
+	<string>Stars</string>
+	<key>dino.start</key>
+	<string>Start</string>
+	<key>dino.startPoint</key>
+	<string>Starting point</string>
+	<key>dino.subtitle</key>
+	<string>Learn to Tell Time with Dino</string>
+	<key>dino.timeZone.atlas</key>
+	<string>TIME ZONES</string>
+	<key>dino.timeZone.earlier</key>
+	<string>%@ h earlier</string>
+	<key>dino.timeZone.format</key>
+	<string>24-hour clock</string>
+	<key>dino.timeZone.later</key>
+	<string>%@ h later</string>
+	<key>dino.timeZone.legend</key>
+	<string>Simplified time zones</string>
+	<key>dino.timeZone.reference</key>
+	<string>Given time</string>
+	<key>dino.timeZone.replay</key>
+	<string>Replay the time change</string>
+	<key>dino.title</key>
+	<string>Learn to Tell Time with Dino</string>
+	<key>dino.train.arrival</key>
+	<string>Arrival</string>
+	<key>dino.train.departure</key>
+	<string>Departure</string>
+	<key>dino.train.one</key>
+	<string>Train 1</string>
+	<key>dino.train.transfer</key>
+	<string>Transfer</string>
+	<key>dino.train.two</key>
+	<string>Train 2</string>
+	<key>dino.tryAgainLater</key>
+	<string>Keep exploring!</string>
+	<key>dino.unlocked</key>
+	<string>Available</string>
+	<key>dino.useMyClock</key>
+	<string>Use my clocks</string>
+	<key>dino.useStandard</key>
+	<string>Use the standard clock</string>
+	<key>dino.wellDone</key>
+	<string>Great adventure!</string>
+	<key>dino.wholeHours</key>
+	<string>Whole hours</string>
+	<key>dino.world.10.boss</key>
+	<string>King Chronos</string>
+	<key>dino.world.10.name</key>
+	<string>Time Castle</string>
+	<key>dino.world.10.skill</key>
+	<string>All clock skills</string>
+	<key>dino.world.2.boss</key>
+	<string>Dozy the Dreamsaurus</string>
+	<key>dino.world.2.name</key>
+	<string>Sleep Valley</string>
+	<key>dino.world.2.skill</key>
+	<string>Half hours</string>
+	<key>dino.world.3.boss</key>
+	<string>Magma the Fire Triceratops</string>
+	<key>dino.world.3.name</key>
+	<string>Volcano Land</string>
+	<key>dino.world.3.skill</key>
+	<string>Quarter hours</string>
+	<key>dino.world.4.boss</key>
+	<string>Mayor Tick-Tock</string>
+	<key>dino.world.4.name</key>
+	<string>Clock Village</string>
+	<key>dino.world.4.skill</key>
+	<string>10-minute steps</string>
+	<key>dino.world.5.boss</key>
+	<string>Prisma the Crystal Guardian</string>
+	<key>dino.world.5.name</key>
+	<string>Crystal Cave</string>
+	<key>dino.world.5.skill</key>
+	<string>5-minute steps</string>
+	<key>dino.world.6.boss</key>
+	<string>Neon the Clock Robot</string>
+	<key>dino.world.6.name</key>
+	<string>Clock City</string>
+	<key>dino.world.6.skill</key>
+	<string>Individual minutes</string>
+	<key>dino.world.7.boss</key>
+	<string>Sandtail the Desert Guardian</string>
+	<key>dino.world.7.name</key>
+	<string>Desert</string>
+	<key>dino.world.7.skill</key>
+	<string>Reading and calculating time</string>
+	<key>dino.world.8.boss</key>
+	<string>Professor Pendulum</string>
+	<key>dino.world.8.name</key>
+	<string>Time Machine</string>
+	<key>dino.world.8.skill</key>
+	<string>Combining clock skills</string>
+	<key>dino.world.9.boss</key>
+	<string>Captain Hourglass</string>
+	<key>dino.world.9.name</key>
+	<string>Time Pirates</string>
+	<key>dino.world.9.skill</key>
+	<string>Advanced time calculations</string>
+	<key>dino.worldComplete</key>
+	<string>World complete!</string>
+	<key>dino.worldNumber %lld</key>
+	<string>World %lld</string>
+	<key>dino.worldOne</key>
+	<string>WORLD 1</string>
+	<key>dino.worldTwo</key>
+	<string>World 2</string>
+	<key>dino.worldTwoSoon</key>
+	<string>World 2 · Coming soon</string>
+	<key>dino.yourAnswer</key>
+	<string>Your answer</string>
+</dict>
+</plist>

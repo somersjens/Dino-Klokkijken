@@ -1,0 +1,66 @@
+{
+  "buildCommand" : {
+    "command" : "build",
+    "skipDependencies" : false,
+    "style" : "buildOnly"
+  },
+  "configuredTargets" : [
+    {
+      "guid" : "9de2bd87ffe14d84229f232d27b0c3c17768b8e751fd659542a4c4026d279da5"
+    },
+    {
+      "guid" : "9de2bd87ffe14d84229f232d27b0c3c108820980947c9f4ac07a833c9ada1fb2"
+    }
+  ],
+  "containerPath" : "/Users/jenssomers/Desktop/Dino Klokkijken/Dino Klokkijken.xcodeproj",
+  "continueBuildingAfterErrors" : false,
+  "dependencyScope" : "workspace",
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "build",
+    "activeArchitecture" : "undefined_arch",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : true,
+      "hostTargetedPlatform" : null,
+      "platform" : "iphonesimulator",
+      "sdk" : "iphonesimulator27.0",
+      "sdkVariant" : "iphonesimulator",
+      "supportedArchitectures" : [
+        "i386",
+        "x86_64"
+      ],
+      "targetArchitecture" : "undefined_arch"
+    },
+    "arenaInfo" : {
+      "buildIntermediatesPath" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Products",
+      "derivedDataPath" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout",
+      "indexDataStoreFolderPath" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Index.noindex/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Index.noindex/PrecompiledHeaders",
+      "pchPath" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "configurationName" : "Debug",
+    "overrides" : {
+      "commandLine" : {
+        "table" : {
+          "CODE_SIGNING_ALLOWED" : "NO",
+          "SDKROOT" : "iphonesimulator27.0"
+        }
+      },
+      "synthesized" : {
+        "table" : {
+          "ENABLE_PREVIEWS" : "NO",
+          "ENABLE_XOJIT_PREVIEWS" : "YES"
+        }
+      }
+    }
+  },
+  "schemeCommand" : "test",
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : true,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : true
+}

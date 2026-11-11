@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>FormatVersion</key>
+	<integer>1</integer>
+	<key>Store</key>
+	<dict>
+		<key>DinoUITests</key>
+		<dict>
+			<key>DinoUITests</key>
+			<dict>
+				<key>testCompactClockExamplesKeepTheirActionsVisible</key>
+				<dict>
+					<key>mrnet</key>
+					<real>19.732772946357727</real>
+				</dict>
+				<key>testNumberedExamplesAdvanceWholeHours</key>
+				<dict>
+					<key>mrnet</key>
+					<real>59.364534020423889</real>
+				</dict>
+				<key>testTabletExamplesReflowAfterRotation</key>
+				<dict>
+					<key>mrnet</key>
+					<real>228.74428606033325</real>
+				</dict>
+			</dict>
+		</dict>
+	</dict>
+</dict>
+</plist>

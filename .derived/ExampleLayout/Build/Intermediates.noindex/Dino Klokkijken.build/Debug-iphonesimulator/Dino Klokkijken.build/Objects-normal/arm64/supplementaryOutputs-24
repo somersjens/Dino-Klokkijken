@@ -1,0 +1,23 @@
+{
+  "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "object" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps"
+  },
+  "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/DerivedSources/GeneratedStringSymbols_InfoPlist.swift" : {
+    "const-values" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedStringSymbols_InfoPlist.swiftconstvalues",
+    "dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedStringSymbols_InfoPlist.d",
+    "diagnostics" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedStringSymbols_InfoPlist.dia",
+    "object" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedStringSymbols_InfoPlist.o",
+    "swift-dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedStringSymbols_InfoPlist.swiftdeps"
+  },
+  "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/DerivedSources/GeneratedStringSymbols_Localizable.swift" : {
+    "const-values" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedStringSymbols_Localizable.swiftconstvalues",
+    "dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedStringSymbols_Localizable.d",
+    "diagnostics" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedStringSymbols_Localizable.dia",
+    "object" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedStringSymbols_Localizable.o",
+    "swift-dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/arm64/GeneratedStringSymbols_Localizable.swiftdeps"
+  }
+}

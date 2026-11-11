@@ -1,0 +1,664 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>colors</key>
+	<array>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameAccentColor</string>
+			<key>relativePath</key>
+			<string>./AccentColor.colorset</string>
+			<key>swiftSymbol</key>
+			<string>accent</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACColorNameLaunchBackground</string>
+			<key>relativePath</key>
+			<string>./LaunchBackground.colorset</string>
+			<key>swiftSymbol</key>
+			<string>launchBackground</string>
+		</dict>
+	</array>
+	<key>images</key>
+	<array>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameBossCastle</string>
+			<key>relativePath</key>
+			<string>./boss-castle.imageset</string>
+			<key>swiftSymbol</key>
+			<string>bossCastle</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameBossClockCity</string>
+			<key>relativePath</key>
+			<string>./boss-clock-city.imageset</string>
+			<key>swiftSymbol</key>
+			<string>bossClockCity</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameBossClockVillage</string>
+			<key>relativePath</key>
+			<string>./boss-clock-village.imageset</string>
+			<key>swiftSymbol</key>
+			<string>bossClockVillage</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameBossCrystalCave</string>
+			<key>relativePath</key>
+			<string>./boss-crystal-cave.imageset</string>
+			<key>swiftSymbol</key>
+			<string>bossCrystalCave</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameBossDesert</string>
+			<key>relativePath</key>
+			<string>./boss-desert.imageset</string>
+			<key>swiftSymbol</key>
+			<string>bossDesert</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameBossJungle</string>
+			<key>relativePath</key>
+			<string>./boss-jungle.imageset</string>
+			<key>swiftSymbol</key>
+			<string>bossJungle</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameBossPirates</string>
+			<key>relativePath</key>
+			<string>./boss-pirates.imageset</string>
+			<key>swiftSymbol</key>
+			<string>bossPirates</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameBossSleepValley</string>
+			<key>relativePath</key>
+			<string>./boss-sleep-valley.imageset</string>
+			<key>swiftSymbol</key>
+			<string>bossSleepValley</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameBossTimeMachine</string>
+			<key>relativePath</key>
+			<string>./boss-time-machine.imageset</string>
+			<key>swiftSymbol</key>
+			<string>bossTimeMachine</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameBossVolcano</string>
+			<key>relativePath</key>
+			<string>./boss-volcano.imageset</string>
+			<key>swiftSymbol</key>
+			<string>bossVolcano</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoAnswerClap01</string>
+			<key>relativePath</key>
+			<string>./dino-answer-clap-01.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoAnswerClap01</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoAnswerClap02</string>
+			<key>relativePath</key>
+			<string>./dino-answer-clap-02.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoAnswerClap02</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoAnswerClap03</string>
+			<key>relativePath</key>
+			<string>./dino-answer-clap-03.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoAnswerClap03</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoAnswerClap04</string>
+			<key>relativePath</key>
+			<string>./dino-answer-clap-04.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoAnswerClap04</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoAnswerClap05</string>
+			<key>relativePath</key>
+			<string>./dino-answer-clap-05.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoAnswerClap05</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoAnswerClap06</string>
+			<key>relativePath</key>
+			<string>./dino-answer-clap-06.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoAnswerClap06</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoAnswerWrong</string>
+			<key>relativePath</key>
+			<string>./dino-answer-wrong.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoAnswerWrong</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoIdle</string>
+			<key>relativePath</key>
+			<string>./dino-idle.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoIdle</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoOpeningJump01</string>
+			<key>relativePath</key>
+			<string>./dino-opening-jump-01.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoOpeningJump01</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoOpeningJump02</string>
+			<key>relativePath</key>
+			<string>./dino-opening-jump-02.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoOpeningJump02</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoOpeningJump03</string>
+			<key>relativePath</key>
+			<string>./dino-opening-jump-03.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoOpeningJump03</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoOpeningJump04</string>
+			<key>relativePath</key>
+			<string>./dino-opening-jump-04.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoOpeningJump04</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoOpeningJump05</string>
+			<key>relativePath</key>
+			<string>./dino-opening-jump-05.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoOpeningJump05</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoOpeningJump06</string>
+			<key>relativePath</key>
+			<string>./dino-opening-jump-06.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoOpeningJump06</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoOpeningJump07</string>
+			<key>relativePath</key>
+			<string>./dino-opening-jump-07.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoOpeningJump07</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoOpeningJump08</string>
+			<key>relativePath</key>
+			<string>./dino-opening-jump-08.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoOpeningJump08</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultBackflipAirborne</string>
+			<key>relativePath</key>
+			<string>./dino-result-backflip-airborne.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultBackflipAirborne</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultBackflipCrouch</string>
+			<key>relativePath</key>
+			<string>./dino-result-backflip-crouch.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultBackflipCrouch</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultBackflipLanding</string>
+			<key>relativePath</key>
+			<string>./dino-result-backflip-landing.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultBackflipLanding</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultBackflipRecover</string>
+			<key>relativePath</key>
+			<string>./dino-result-backflip-recover.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultBackflipRecover</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultFall02</string>
+			<key>relativePath</key>
+			<string>./dino-result-fall-02.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultFall02</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultFall03</string>
+			<key>relativePath</key>
+			<string>./dino-result-fall-03.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultFall03</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultFall04</string>
+			<key>relativePath</key>
+			<string>./dino-result-fall-04.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultFall04</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultFall05</string>
+			<key>relativePath</key>
+			<string>./dino-result-fall-05.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultFall05</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultFall06</string>
+			<key>relativePath</key>
+			<string>./dino-result-fall-06.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultFall06</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultFall07</string>
+			<key>relativePath</key>
+			<string>./dino-result-fall-07.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultFall07</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultFall08</string>
+			<key>relativePath</key>
+			<string>./dino-result-fall-08.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultFall08</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultFall09</string>
+			<key>relativePath</key>
+			<string>./dino-result-fall-09.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultFall09</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultFall10</string>
+			<key>relativePath</key>
+			<string>./dino-result-fall-10.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultFall10</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette01</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-01.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette01</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette02</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-02.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette02</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette03</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-03.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette03</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette04</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-04.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette04</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette05</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-05.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette05</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette06</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-06.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette06</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette07</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-07.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette07</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette08</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-08.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette08</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette09</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-09.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette09</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette10</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-10.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette10</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette11</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-11.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette11</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette12</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-12.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette12</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette13</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-13.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette13</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette14</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-14.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette14</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette15</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-15.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette15</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette16</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-16.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette16</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette17</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-17.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette17</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoResultPirouette18</string>
+			<key>relativePath</key>
+			<string>./dino-result-pirouette-18.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoResultPirouette18</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoWorldJumpAirborne</string>
+			<key>relativePath</key>
+			<string>./dino-world-jump-airborne.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoWorldJumpAirborne</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoWorldJumpCrouch</string>
+			<key>relativePath</key>
+			<string>./dino-world-jump-crouch.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoWorldJumpCrouch</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoWorldJumpLanding</string>
+			<key>relativePath</key>
+			<string>./dino-world-jump-landing.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoWorldJumpLanding</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoWorldJumpRecover</string>
+			<key>relativePath</key>
+			<string>./dino-world-jump-recover.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoWorldJumpRecover</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameDinoWorldJumpTakeoff</string>
+			<key>relativePath</key>
+			<string>./dino-world-jump-takeoff.imageset</string>
+			<key>swiftSymbol</key>
+			<string>dinoWorldJumpTakeoff</string>
+		</dict>
+		<dict>
+			<key>catalogPath</key>
+			<string>/Users/jenssomers/Desktop/Dino Klokkijken/Assets.xcassets</string>
+			<key>objcSymbol</key>
+			<string>ACImageNameRewardStar</string>
+			<key>relativePath</key>
+			<string>./reward-star.imageset</string>
+			<key>swiftSymbol</key>
+			<string>rewardStar</string>
+		</dict>
+	</array>
+	<key>symbols</key>
+	<array/>
+</dict>
+</plist>

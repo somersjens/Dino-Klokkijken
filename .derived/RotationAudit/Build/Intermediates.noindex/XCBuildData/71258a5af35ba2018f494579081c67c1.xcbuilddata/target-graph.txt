@@ -1,0 +1,4 @@
+Target dependency graph (2 targets)
+Target 'DinoUITests' in project 'Dino Klokkijken'
+➜ Explicit dependency on target 'Dino Klokkijken' in project 'Dino Klokkijken'
+Target 'Dino Klokkijken' in project 'Dino Klokkijken' (no dependencies)

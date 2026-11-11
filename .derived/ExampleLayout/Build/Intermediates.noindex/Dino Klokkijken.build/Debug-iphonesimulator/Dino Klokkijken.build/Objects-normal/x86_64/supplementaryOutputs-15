@@ -1,0 +1,30 @@
+{
+  "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Core/ExpandedQuestions.swift" : {
+    "const-values" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/ExpandedQuestions.swiftconstvalues",
+    "dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/ExpandedQuestions.d",
+    "diagnostics" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/ExpandedQuestions.dia",
+    "object" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/ExpandedQuestions.o",
+    "swift-dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/ExpandedQuestions.swiftdeps"
+  },
+  "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Core/JungleMapLayout.swift" : {
+    "const-values" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/JungleMapLayout.swiftconstvalues",
+    "dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/JungleMapLayout.d",
+    "diagnostics" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/JungleMapLayout.dia",
+    "object" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/JungleMapLayout.o",
+    "swift-dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/JungleMapLayout.swiftdeps"
+  },
+  "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Core/QuestionDifficulty.swift" : {
+    "const-values" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/QuestionDifficulty.swiftconstvalues",
+    "dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/QuestionDifficulty.d",
+    "diagnostics" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/QuestionDifficulty.dia",
+    "object" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/QuestionDifficulty.o",
+    "swift-dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/QuestionDifficulty.swiftdeps"
+  },
+  "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Core/SpokenTime.swift" : {
+    "const-values" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/SpokenTime.swiftconstvalues",
+    "dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/SpokenTime.d",
+    "diagnostics" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/SpokenTime.dia",
+    "object" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/SpokenTime.o",
+    "swift-dependencies" : "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/Objects-normal/x86_64/SpokenTime.swiftdeps"
+  }
+}

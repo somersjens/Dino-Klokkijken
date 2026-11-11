@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>logFormatVersion</key>
+	<integer>13</integer>
+	<key>logs</key>
+	<dict>
+		<key>259FB2FF-0F43-49FE-8AE2-7F1776BAA4D7</key>
+		<dict>
+			<key>auxiliaryLogUniqueIdentifier</key>
+			<string>436A3B3E-66A7-4C0C-A712-FCA3735C0C56</string>
+			<key>auxiliaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>12</integer>
+			</dict>
+			<key>className</key>
+			<string>IDESchemeActionsInvocationRecord</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>com.apple.dt.unit.cocoaUnitTest</string>
+			<key>fileName</key>
+			<string>Test-Dino Klokkijken-2026.11.07_16-50-15-+0100.xcresult</string>
+			<key>hasAuxiliaryLog</key>
+			<true/>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>12</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>Dino Klokkijken project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>Dino Klokkijken</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Test Dino Klokkijken</string>
+			<key>timeStartedRecording</key>
+			<real>815759415.69225597</real>
+			<key>timeStoppedRecording</key>
+			<real>815759544.12836802</real>
+			<key>title</key>
+			<string>Test Dino Klokkijken</string>
+			<key>uniqueIdentifier</key>
+			<string>259FB2FF-0F43-49FE-8AE2-7F1776BAA4D7</string>
+		</dict>
+		<key>F7F41062-5B7C-4597-B885-BEFD2D3C59C2</key>
+		<dict>
+			<key>auxiliaryLogUniqueIdentifier</key>
+			<string>A891B094-E412-4FD8-8FFD-B40464DF9ABE</string>
+			<key>auxiliaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>12</integer>
+			</dict>
+			<key>className</key>
+			<string>IDESchemeActionsInvocationRecord</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>com.apple.dt.unit.cocoaUnitTest</string>
+			<key>fileName</key>
+			<string>Test-Dino Klokkijken-2026.11.07_16-53-35-+0100.xcresult</string>
+			<key>hasAuxiliaryLog</key>
+			<true/>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>12</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>Dino Klokkijken project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>Dino Klokkijken</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Test Dino Klokkijken</string>
+			<key>timeStartedRecording</key>
+			<real>815759615.42064905</real>
+			<key>timeStoppedRecording</key>
+			<real>815759929.50658906</real>
+			<key>title</key>
+			<string>Test Dino Klokkijken</string>
+			<key>uniqueIdentifier</key>
+			<string>F7F41062-5B7C-4597-B885-BEFD2D3C59C2</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

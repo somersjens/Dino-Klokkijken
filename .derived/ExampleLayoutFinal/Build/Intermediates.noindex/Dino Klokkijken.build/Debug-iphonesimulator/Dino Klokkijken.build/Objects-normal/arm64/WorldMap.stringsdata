@@ -1,0 +1,120 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/WorldMap.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.done",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 329
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.title",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 366
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.bossName",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 386
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.bossShortcut",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 387
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.comingSoon",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 407
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.afterHundred",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 409
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.play",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 1587
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.map",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 1593
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.levelNumber %lld",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 1686
+        }
+      },
+      {
+        "comment": "",
+        "key": ", ",
+        "location": {
+          "startingColumn": 77,
+          "startingLine": 1686
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.details",
+        "location": {
+          "startingColumn": 90,
+          "startingLine": 1686
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.levelNumber %lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1661
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.details",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1692
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.title",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 1770
+        }
+      }
+    ]
+  },
+  "version": 1
+}

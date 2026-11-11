@@ -1,0 +1,3914 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/ExampleLayoutFinal/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/DerivedSources/GeneratedStringSymbols_Localizable.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.activity.breakfast",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 25
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.activity.fruit",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 32
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.activity.lunch",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 39
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.activity.nest",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 46
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.activity.play",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 53
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.adventure",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 60
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.afterHundred",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 67
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.analog",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 74
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.analog.sameColors",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 81
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.analogNumerals",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 88
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.analogNumerals.normal",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 95
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.analogNumerals.roman",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 102
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.answer.changeTime",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 109
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.answer.chooseTile",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 116
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.answer.connectClocks",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 123
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.answer.selectClocks",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 130
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.bandana",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 137
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.belly",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 144
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.body",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 151
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.choose",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 158
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.color.blue",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 165
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.color.darkGreen",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 172
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.color.green",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 179
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.color.orange",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 186
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.color.pink",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 193
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.color.purple",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 200
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.color.red",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 207
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.color.yellow",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 214
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.open",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 221
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.preview",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 228
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.reset",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 235
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.spikes",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 242
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.title",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 249
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.welcome",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 256
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.back",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 263
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.boss",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 270
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.bossName",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 277
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.bossNormalRule",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 284
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.bossPerfectRule",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 291
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.bossShortcut",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 298
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.bossWon",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 305
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.cancel",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 312
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.character",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 319
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.check.answer",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 326
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.check.connections",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 333
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.check.order",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 340
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.clock.arrowControls",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 347
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.clock.check",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 354
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.clock.colors",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 361
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.clock.design",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 368
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.clock.resetAnalog",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 375
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.clock.resetDigital",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 382
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.clock.restoreStyle",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 389
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.clockCase",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 396
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.color.beige",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 403
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.color.black",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 410
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.color.blue",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 417
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.color.charcoal",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 424
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.color.green",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 431
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.color.navy",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 438
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.color.orange",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 445
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.color.purple",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 452
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.color.red",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 459
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.color.teal",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 466
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.color.white",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 473
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.color.yellow",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 480
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.comingSoon",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 487
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.confirm",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 494
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.correctAnswers",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 501
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.correctTime",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 508
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.customColor",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 515
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.dayPart.afternoon",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 522
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.dayPart.changeSettings",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 529
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.dayPart.evening",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 536
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.dayPart.morning",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 543
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.dayPart.night",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 550
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.demoSet",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 557
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.demoTap",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 564
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.digitColor",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 571
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.digital",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 578
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.digital.differentNotation",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 585
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.digital.sameColors",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 592
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.display",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 599
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.done",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 606
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 613
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.another",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 620
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.hours",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 627
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.minutes",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 634
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.rule.addTime",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 641
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.rule.advanceAnalog",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 648
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.rule.dayPart",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 655
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.rule.flightArrival",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 662
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.rule.read24Hour",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 669
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.rule.readDigital",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 676
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.rule.sortTimes",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 683
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.rule.spokenTime",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 690
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.rule.subtractTime",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 697
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.rule.timeSequence",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 704
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.rule.timeZone",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 711
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.rule.trueFalse",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 718
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.exit",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 725
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.exitMessage",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 732
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.exitTitle",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 739
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.arithmetic.hours",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 746
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.arithmetic.minutes",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 753
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.arithmetic.newTime",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 760
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.arithmetic.split",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 767
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.arrival",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 774
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.choose",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 781
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.cityA",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 788
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.cityB",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 795
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.correctOrder",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 802
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.departure",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 809
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.earlier",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 816
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.end",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 823
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.false",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 830
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.flight",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 837
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.flightDuration",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 844
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.flightTicket",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 851
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.flightTotalAdded",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 858
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.flightTotalRemoved",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 865
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.flightZone",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 872
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.flightZoneDifference",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 879
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.givenOffset",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 886
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.later",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 893
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.playground",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 900
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.sameDay",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 907
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.sameZone",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 914
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.start",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 921
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.statement",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 928
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.true",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 935
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.unknownArrival",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 942
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.face",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 949
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.accountConflict",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 956
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.allowSharing",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 963
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.appleProfile",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 970
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.beFirstHere",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 977
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.completed",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 984
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.completedHere",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 991
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.connect",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 998
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.connectDisclosure",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1005
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.contact",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1012
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.contactMissing",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1019
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.disconnect",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1026
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.empty",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1033
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.emptyMessage",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1040
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.externalContact",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1047
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.externalPolicy",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1054
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.firstHere",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1061
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.fullPrivacy",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1068
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.highestKnown",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1075
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.incomplete",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1082
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.invite",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1089
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.inviteFailed",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1096
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.inviteRestricted",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1103
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.levelResults",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1110
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.levels",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1117
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.load",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1124
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.loading",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1131
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.manage",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1138
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.maximum",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1145
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.more %lld",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1152
+        },
+        "value": "%lld"
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.next",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1159
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.nextLevel %lld",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1166
+        },
+        "value": "%lld"
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.noResultsHere",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1173
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.notAvailable",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1180
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.notPlayed",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1187
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.openProfile",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1194
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.parentAnswer",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1201
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.parentMessage",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1208
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.parentTitle",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1215
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.percentage",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1222
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.privacy",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1229
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.privacyBody",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1236
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.profile",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1243
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.profileUnavailable",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1250
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.reportHelp",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1257
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.resetMessage",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1264
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.resultsUnavailable",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1271
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.scoreHidden",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1278
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.scoreInfo",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1285
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.scoreInfoMessage",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1292
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.share",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1299
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.shareGame",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1306
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.shareGame.message",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1313
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.sharingDisclosure",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1320
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.sharingOff",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1327
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.sharingRestricted",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1334
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.sharingTitle",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1341
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.showAllScores",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1348
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.showFewerScores",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1355
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.signIn",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1362
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.signOut",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1369
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.signOutMessage",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1376
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.state.authenticating",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1383
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.state.denied",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1390
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.state.inactive",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1397
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.state.loading",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1404
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.state.needsPermission",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1411
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.state.ready",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1418
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.state.restricted",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1425
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.state.signedOut",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1432
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.state.unavailable",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1439
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.stopSharing",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1446
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.stopSharingMessage",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1453
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.syncDone",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1460
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.syncPending",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1467
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.syncing",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1474
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.time",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1481
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.timeUnavailable",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1488
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.title",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1495
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.totalStars",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1502
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.turnOn",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1509
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.visibilityPending",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1516
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.visibilityUnavailable",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1523
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.you",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1530
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.yourFriends",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1537
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.hands",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1544
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.hands.playful",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1551
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.hands.rounded",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1558
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.hands.straight",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1565
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.hello %@",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1572
+        },
+        "value": "%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.hourHand",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1579
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.hourLess",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1586
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.hourMore",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1593
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.hourNotation.twelve",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1600
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.hourNotation.twentyFour",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1607
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.hours",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1614
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.jungle",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1621
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.keepPlaying",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1628
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.keepPracticing",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1635
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.language",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1642
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.launch.title.firstLine",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1651
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.launch.title.secondLine",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1660
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.1",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1667
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.10",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1674
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.2",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1681
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.3",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1688
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.4",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1695
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.5",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1702
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.6",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1709
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.7",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1716
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.8",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1723
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.9",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1730
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.details",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1737
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.detailsClosed",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1744
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.detailsOpen",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1751
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.level.time.minute",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1758
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.levelLabel",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1765
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.levelNumber %lld",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1772
+        },
+        "value": "%lld"
+      },
+      {
+        "comment": "",
+        "key": "dino.locked",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1779
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.makeAnalogClock",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1786
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.makeClock",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1793
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.makeDigitalClock",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1800
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.map",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1807
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.match.demo.clock",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1814
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.match.demo.connected",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1821
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.match.demo.time",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1828
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.match.hint",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1835
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.minuteHand",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1842
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.minuteLess",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1849
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.minuteMore",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1856
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.minutes",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1863
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.minutesBetween.borrow.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1870
+        },
+        "value": "%lld%lld%lld%lld"
+      },
+      {
+        "comment": "",
+        "key": "dino.minutesBetween.from",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1877
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.minutesBetween.until",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1884
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.myClocks",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1891
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.needFive",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1898
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.needPerfectOrRoute",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1905
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.needThree",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1912
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.next",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1919
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.nextAdventure",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1926
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.nextWorld",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1933
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.numerals",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1940
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.numerals.classic",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1947
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.numerals.digital",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1954
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.numerals.modern",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1961
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.numerals.rounded",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1968
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.pause",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1975
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.paused",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1982
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.perfectBoss",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1989
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.personalize.analog",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 1996
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.personalize.digital",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2003
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.personalize.dino",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2010
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.play",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2017
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.playAgain",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2024
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.ascending",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2031
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.backToLevels",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2038
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.bestStreak",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2045
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.correct",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2052
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.description",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2059
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.easyToHard",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2066
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.exitMessage",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2073
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.hand",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2080
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.mix",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2087
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.activity",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2094
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.addTime",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2101
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.advanceAnalog",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2108
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.analogFour",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2115
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.analogTwo",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2122
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.chooseAnalog",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2129
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.chooseDigital",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2136
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.dayPart",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2143
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.daySchedule",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2150
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.digitalFour",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2157
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.digitalTwo",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2164
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.flightArrival",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2171
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.match",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2178
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.minutesBetween",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2185
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.read24Hour",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2192
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.readDigital",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2199
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.sayTime",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2206
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.setAnalog",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2213
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.setDigital",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2220
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.sortTimes",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2227
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.spokenTime",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2234
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.subtractTime",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2241
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.timeSequence",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2248
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.timeZone",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2255
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.question.trueFalse",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2262
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.questionNumber",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2269
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.questionType",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2276
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.setAnalog",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2283
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.setDigital",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2290
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.settingsDescription",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2297
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.shortTitle",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2304
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.start",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2311
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.streak",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2318
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.time",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2325
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.time.fiveMinutes",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2332
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.time.half",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2339
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.time.minutes",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2346
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.time.quarter",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2353
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.time.tenMinutes",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2360
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.time.whole",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2367
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.title",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2374
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.activity",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2381
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.addTime",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2388
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.addTime.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2395
+        },
+        "value": "%@%@%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.advanceAnalog",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2402
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.advanceAnalog.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2409
+        },
+        "value": "%@%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.chooseAnalog",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2416
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.chooseClock.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2423
+        },
+        "value": "%@%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.chooseClock.short",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2430
+        },
+        "value": "%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.chooseDigital",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2437
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.dayPart",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2444
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.daySchedule",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2451
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.daySchedule.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2458
+        },
+        "value": "%@%@%@%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.flightArrival",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2465
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.flightArrival.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2472
+        },
+        "value": "%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.match",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2479
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.minutesBetween",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2486
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.minutesBetween.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2493
+        },
+        "value": "%@%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.read24Hour",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2500
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.readDigital",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2507
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.sayTime",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2514
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.setAnalog",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2521
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.setDigital",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2528
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.sortTimes",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2535
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.spokenClock.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2542
+        },
+        "value": "%@%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.spokenTime",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2549
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.spokenTime.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2556
+        },
+        "value": "%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.subtractTime",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2563
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.subtractTime.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2570
+        },
+        "value": "%@%@%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.timeSequence",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2577
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.timeSequence.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2584
+        },
+        "value": "%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.timeZone",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2591
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.timeZone.ahead.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2598
+        },
+        "value": "%@%@%@%@%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.timeZone.behind.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2605
+        },
+        "value": "%@%@%@%@%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.timeZone.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2612
+        },
+        "value": "%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.timeZone.same.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2619
+        },
+        "value": "%@%@%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.trueFalse",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2626
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.trueFalse.correction",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2633
+        },
+        "value": "%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.question.trueFalse.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2640
+        },
+        "value": "%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.questionProgress",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2647
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.questionsLabel",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2654
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.ready",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2661
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.resetAnswer",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2668
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.resetMessage",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2675
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.resetProgress",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2682
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.resetTitle",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2689
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.retry",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2696
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.rim",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2703
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.schedule.activity.building",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2710
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.schedule.activity.drawing",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2717
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.schedule.activity.music",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2724
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.schedule.activity.puzzles",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2731
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.schedule.activity.reading",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2738
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.schedule.activity.sports",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2745
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.schedule.break",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2752
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.schedule.finish",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2759
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.schedule.title",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2766
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2773
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.dayParts",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2780
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.dayParts.backToGame",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2787
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.dayParts.column",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2794
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.dayParts.from",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2801
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.dayParts.help",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2808
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.dayParts.standard",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2815
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.dayParts.to",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2822
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.gameCenter",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2829
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.gameCenter.nameSource",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2836
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.gameCenter.noAccount",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2843
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.gameCenter.open",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2850
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.haptics",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2857
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.highContrast",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2864
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.icloud.active",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2871
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.icloud.off",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2878
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.icloud.unavailable",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2885
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.icloudDescription",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2892
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.icloudSync",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2899
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.languageEmpty",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2906
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.languageSearch",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2913
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.play",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2920
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.soundEffects",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2927
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.speakQuestionTitle",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2934
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.shape",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2941
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.shape.circle",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2948
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.shape.octagon",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2955
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.shape.oval",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2962
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.shape.rectangle",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2969
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.shape.roundedRectangle",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2976
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.shape.square",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2983
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.showAnswer",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2990
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.smallAdventure",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 2997
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.spoken.hint",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3004
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.standardClock",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3011
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.stars %lld",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3018
+        },
+        "value": "%lld"
+      },
+      {
+        "comment": "",
+        "key": "dino.stars.total",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3025
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.starsLabel",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3032
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.start",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3039
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.startPoint",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3046
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.subtitle",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3053
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.timeZone.atlas",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3060
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.timeZone.earlier",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3067
+        },
+        "value": "%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.timeZone.format",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3074
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.timeZone.later",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3081
+        },
+        "value": "%@"
+      },
+      {
+        "comment": "",
+        "key": "dino.timeZone.legend",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3088
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.timeZone.reference",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3095
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.timeZone.replay",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3102
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.title",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3109
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.train.arrival",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3116
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.train.departure",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3123
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.train.one",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3130
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.train.transfer",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3137
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.train.two",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3144
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.tryAgainLater",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3151
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.unlocked",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3158
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.useMyClock",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3165
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.useStandard",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3172
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.wellDone",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3179
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.wholeHours",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3186
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.10.boss",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3193
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.10.name",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3200
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.10.skill",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3207
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.2.boss",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3214
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.2.name",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3221
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.2.skill",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3228
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.3.boss",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3235
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.3.name",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3242
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.3.skill",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3249
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.4.boss",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3256
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.4.name",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3263
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.4.skill",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3270
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.5.boss",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3277
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.5.name",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3284
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.5.skill",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3291
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.6.boss",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3298
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.6.name",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3305
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.6.skill",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3312
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.7.boss",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3319
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.7.name",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3326
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.7.skill",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3333
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.8.boss",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3340
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.8.name",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3347
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.8.skill",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3354
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.9.boss",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3361
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.9.name",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3368
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.world.9.skill",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3375
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.worldComplete",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3382
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.worldNumber %lld",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3389
+        },
+        "value": "%lld"
+      },
+      {
+        "comment": "",
+        "key": "dino.worldOne",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3396
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.worldTwo",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3403
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.worldTwoSoon",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3410
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.yourAnswer",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 3417
+        }
+      }
+    ]
+  },
+  "version": 1
+}

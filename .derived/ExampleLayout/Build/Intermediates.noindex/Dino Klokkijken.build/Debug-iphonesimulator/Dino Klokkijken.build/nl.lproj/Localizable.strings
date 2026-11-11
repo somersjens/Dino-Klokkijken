@@ -1,0 +1,979 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>dino.activity.breakfast</key>
+	<string>Ontbijten</string>
+	<key>dino.activity.fruit</key>
+	<string>Fruit eten</string>
+	<key>dino.activity.lunch</key>
+	<string>Lunchen</string>
+	<key>dino.activity.nest</key>
+	<string>Naar het nest</string>
+	<key>dino.activity.play</key>
+	<string>Spelen</string>
+	<key>dino.adventure</key>
+	<string>JOUW TIJDAVONTUUR</string>
+	<key>dino.afterHundred</key>
+	<string>Het avontuur gaat binnenkort verder.</string>
+	<key>dino.analog</key>
+	<string>Analoge klok</string>
+	<key>dino.analog.sameColors</key>
+	<string>O nee, nu kun je de tijd niet zien!</string>
+	<key>dino.analogNumerals</key>
+	<string>Cijfers</string>
+	<key>dino.analogNumerals.normal</key>
+	<string>Normaal</string>
+	<key>dino.analogNumerals.roman</key>
+	<string>Romeins</string>
+	<key>dino.answer.changeTime</key>
+	<string>Verander de tijd om verder te gaan</string>
+	<key>dino.answer.chooseTile</key>
+	<string>Kies minstens 1 steen om verder te gaan</string>
+	<key>dino.answer.connectClocks</key>
+	<string>Verbind eerst alle klokken</string>
+	<key>dino.answer.selectClocks</key>
+	<string>Selecteer eerst alle klokken</string>
+	<key>dino.appearance.bandana</key>
+	<string>Bandana</string>
+	<key>dino.appearance.belly</key>
+	<string>Buikje &amp; tenen</string>
+	<key>dino.appearance.body</key>
+	<string>Lichaam</string>
+	<key>dino.appearance.choose</key>
+	<string>Kies de kleuren van jouw dino</string>
+	<key>dino.appearance.color.blue</key>
+	<string>Blauw</string>
+	<key>dino.appearance.color.darkGreen</key>
+	<string>Donkergroen</string>
+	<key>dino.appearance.color.green</key>
+	<string>Groen</string>
+	<key>dino.appearance.color.orange</key>
+	<string>Oranje</string>
+	<key>dino.appearance.color.pink</key>
+	<string>Roze</string>
+	<key>dino.appearance.color.purple</key>
+	<string>Paars</string>
+	<key>dino.appearance.color.red</key>
+	<string>Rood</string>
+	<key>dino.appearance.color.yellow</key>
+	<string>Geel</string>
+	<key>dino.appearance.open</key>
+	<string>Pas jouw dino en klokken aan</string>
+	<key>dino.appearance.preview</key>
+	<string>Voorbeeld van jouw dino</string>
+	<key>dino.appearance.reset</key>
+	<string>Oorspronkelijke kleuren</string>
+	<key>dino.appearance.spikes</key>
+	<string>Stekels</string>
+	<key>dino.appearance.title</key>
+	<string>Mijn dino</string>
+	<key>dino.appearance.welcome</key>
+	<string>Maak jouw dino</string>
+	<key>dino.back</key>
+	<string>Terug</string>
+	<key>dino.boss</key>
+	<string>BOSS</string>
+	<key>dino.bossName</key>
+	<string>Tiko de Junglewachter</string>
+	<key>dino.bossNormalRule</key>
+	<string>9 levels met een ster + 5/10 → winst</string>
+	<key>dino.bossPerfectRule</key>
+	<string>10/10 → voltooi de wereld meteen</string>
+	<key>dino.bossShortcut</key>
+	<string>Probeer hem nu · 10 uitdagingen</string>
+	<key>dino.bossWon</key>
+	<string>Poort geopend!</string>
+	<key>dino.cancel</key>
+	<string>Annuleren</string>
+	<key>dino.character</key>
+	<string>Dino</string>
+	<key>dino.check.answer</key>
+	<string>Controleer mijn antwoord</string>
+	<key>dino.check.connections</key>
+	<string>Controleer mijn verbindingen</string>
+	<key>dino.check.order</key>
+	<string>Controleer mijn volgorde</string>
+	<key>dino.clock.arrowControls</key>
+	<string>Gebruik de pijltjes boven en onder de cijfers om de uren en minuten in te stellen.</string>
+	<key>dino.clock.check</key>
+	<string>Controleer mijn klok</string>
+	<key>dino.clock.colors</key>
+	<string>Kleuren</string>
+	<key>dino.clock.design</key>
+	<string>Ontwerp</string>
+	<key>dino.clock.resetAnalog</key>
+	<string>Analoge klok resetten</string>
+	<key>dino.clock.resetDigital</key>
+	<string>Digitale klok resetten</string>
+	<key>dino.clock.restoreStyle</key>
+	<string>Herstel oorspronkelijke stijl</string>
+	<key>dino.clockCase</key>
+	<string>Wijzerplaat en rand</string>
+	<key>dino.color.beige</key>
+	<string>Beige</string>
+	<key>dino.color.black</key>
+	<string>Zwart</string>
+	<key>dino.color.blue</key>
+	<string>Lichtblauw</string>
+	<key>dino.color.charcoal</key>
+	<string>Donkergrijs</string>
+	<key>dino.color.green</key>
+	<string>Groen</string>
+	<key>dino.color.navy</key>
+	<string>Donkerblauw</string>
+	<key>dino.color.orange</key>
+	<string>Oranje</string>
+	<key>dino.color.purple</key>
+	<string>Paars</string>
+	<key>dino.color.red</key>
+	<string>Rood</string>
+	<key>dino.color.teal</key>
+	<string>Turquoise</string>
+	<key>dino.color.white</key>
+	<string>Wit</string>
+	<key>dino.color.yellow</key>
+	<string>Warmgeel</string>
+	<key>dino.comingSoon</key>
+	<string>Coming soon</string>
+	<key>dino.confirm</key>
+	<string>Bevestig antwoord</string>
+	<key>dino.correctAnswers</key>
+	<string>Goede antwoorden</string>
+	<key>dino.correctTime</key>
+	<string>Het juiste antwoord</string>
+	<key>dino.customColor</key>
+	<string>Kies zelf een kleur</string>
+	<key>dino.dayPart.afternoon</key>
+	<string>Middag</string>
+	<key>dino.dayPart.changeSettings</key>
+	<string>Instellingen wijzigen</string>
+	<key>dino.dayPart.evening</key>
+	<string>Avond</string>
+	<key>dino.dayPart.morning</key>
+	<string>Ochtend</string>
+	<key>dino.dayPart.night</key>
+	<string>Nacht</string>
+	<key>dino.demoSet</key>
+	<string>Probeer het hier. Tik straks op ✓.</string>
+	<key>dino.demoTap</key>
+	<string>Deze klokken tonen dezelfde tijd. Tik om te kiezen.</string>
+	<key>dino.digitColor</key>
+	<string>Kleur van de cijfers</string>
+	<key>dino.digital</key>
+	<string>Digitale klok</string>
+	<key>dino.digital.differentNotation</key>
+	<string>Let op: tijdweergave is anders dan op dit apparaat</string>
+	<key>dino.digital.sameColors</key>
+	<string>O nee, nu kun je de tijd niet zien!</string>
+	<key>dino.display</key>
+	<string>Achtergrond</string>
+	<key>dino.done</key>
+	<string>Klaar</string>
+	<key>dino.example</key>
+	<string>Voorbeeld</string>
+	<key>dino.example.another</key>
+	<string>Een ander voorbeeld laten zien</string>
+	<key>dino.example.hours</key>
+	<string>1 · Uren</string>
+	<key>dino.example.minutes</key>
+	<string>2 · Minuten</string>
+	<key>dino.example.rule.addTime</key>
+	<string>Tel de duur bij de begintijd op. Elke 60 minuten is een uur erbij. Na 23:59 komt 00:00.</string>
+	<key>dino.example.rule.advanceAnalog</key>
+	<string>Begin bij de getoonde klok. Zet de uur- en minutenwijzer de gegeven tijd vooruit en bevestig.</string>
+	<key>dino.example.rule.dayPart</key>
+	<string>Nacht: 00:00–05:59. Ochtend: 06:00–11:59. Middag: 12:00–17:59. Avond: 18:00–23:59.</string>
+	<key>dino.example.rule.flightArrival</key>
+	<string>Tel de vluchtduur bij de vertrektijd op. Deze tijden gebruiken dezelfde tijdzone.</string>
+	<key>dino.example.rule.read24Hour</key>
+	<string>Bij een uur boven 12 trek je 12 af om de tijd in woorden te lezen. Houd rekening met het dagdeel. 00:00 is twaalf uur ’s nachts.</string>
+	<key>dino.example.rule.readDigital</key>
+	<string>Lees de wijzers en zeg de tijd in woorden. De kleuren groeperen tijden die je op dezelfde manier zegt.</string>
+	<key>dino.example.rule.sortTimes</key>
+	<string>Vergelijk eerst de uren en daarna de minuten. Tik alle vier tijden van vroeg naar laat aan en bevestig.</string>
+	<key>dino.example.rule.spokenTime</key>
+	<string>Zoek het uur in de zin. Kwart over is :15, half is :30 van het uur ervoor en kwart voor is :45 van het uur ervoor.</string>
+	<key>dino.example.rule.subtractTime</key>
+	<string>Trek de duur van de begintijd af. Vóór 00:00 reken je verder op de vorige dag.</string>
+	<key>dino.example.rule.timeSequence</key>
+	<string>Zoek de gelijke stap tussen de tijden. Tel die stap nog één keer bij de laatste tijd op.</string>
+	<key>dino.example.rule.timeZone</key>
+	<string>Gebruik het gegeven verschil: tel uren op als stad B later is en trek uren af als stad B eerder is.</string>
+	<key>dino.example.rule.trueFalse</key>
+	<string>Lees de korte uurwijzer en de lange minutenwijzer af. Kies Goed als de zin dezelfde tijd beschrijft.</string>
+	<key>dino.exit</key>
+	<string>Level verlaten</string>
+	<key>dino.exitMessage</key>
+	<string>Deze onafgemaakte poging telt niet mee. Je beste score blijft bewaard.</string>
+	<key>dino.exitTitle</key>
+	<string>Terug naar de kaart?</string>
+	<key>dino.expanded.arithmetic.hours</key>
+	<string>Uren</string>
+	<key>dino.expanded.arithmetic.minutes</key>
+	<string>Minuten</string>
+	<key>dino.expanded.arithmetic.newTime</key>
+	<string>Nieuwe tijd</string>
+	<key>dino.expanded.arithmetic.split</key>
+	<string>Splitsom</string>
+	<key>dino.expanded.arrival</key>
+	<string>Aankomst</string>
+	<key>dino.expanded.choose</key>
+	<string>Kies een tijd</string>
+	<key>dino.expanded.cityA</key>
+	<string>Stad A</string>
+	<key>dino.expanded.cityB</key>
+	<string>Stad B</string>
+	<key>dino.expanded.correctOrder</key>
+	<string>Goede volgorde</string>
+	<key>dino.expanded.departure</key>
+	<string>Vertrek</string>
+	<key>dino.expanded.earlier</key>
+	<string>eerder</string>
+	<key>dino.expanded.end</key>
+	<string>Eindtijd</string>
+	<key>dino.expanded.false</key>
+	<string>Fout</string>
+	<key>dino.expanded.flight</key>
+	<string>De vlucht duurt:</string>
+	<key>dino.expanded.flightDuration</key>
+	<string>Vluchtduur</string>
+	<key>dino.expanded.flightTicket</key>
+	<string>Vliegticket</string>
+	<key>dino.expanded.flightTotalAdded</key>
+	<string>Totaal</string>
+	<key>dino.expanded.flightTotalRemoved</key>
+	<string>Totale tijd eraf</string>
+	<key>dino.expanded.flightZone</key>
+	<string>Vertrek en aankomst zijn in dezelfde tijdzone.</string>
+	<key>dino.expanded.flightZoneDifference</key>
+	<string>Tijdzoneverschil</string>
+	<key>dino.expanded.givenOffset</key>
+	<string>Gebruik het gegeven tijdverschil tussen deze twee steden.</string>
+	<key>dino.expanded.later</key>
+	<string>later</string>
+	<key>dino.expanded.playground</key>
+	<string>Het spelen begint om:</string>
+	<key>dino.expanded.sameDay</key>
+	<string>Alle klokken horen bij dezelfde dag. Tik eerst de vroegste tijd aan. Tik nogmaals om een keuze te verwijderen.</string>
+	<key>dino.expanded.sameZone</key>
+	<string>Stad B heeft dezelfde tijd als stad A.</string>
+	<key>dino.expanded.start</key>
+	<string>Begintijd</string>
+	<key>dino.expanded.statement</key>
+	<string>De zin zegt:</string>
+	<key>dino.expanded.true</key>
+	<string>Goed</string>
+	<key>dino.expanded.unknownArrival</key>
+	<string>Aankomsttijd: onbekend</string>
+	<key>dino.face</key>
+	<string>Wijzerplaat</string>
+	<key>dino.friends.accountConflict</key>
+	<string>Deze lokale opslag was gekoppeld aan een ander Game Center-account. Delen is gepauzeerd om die speler te beschermen. Keer terug naar dat account of reset de lokale voortgang voordat je een nieuw account koppelt.</string>
+	<key>dino.friends.allowSharing</key>
+	<string>Resultaten publiceren bij Apple</string>
+	<key>dino.friends.appleProfile</key>
+	<string>Apple-profiel openen</string>
+	<key>dino.friends.beFirstHere</key>
+	<string>Haal dit level als eerste van je vrienden!</string>
+	<key>dino.friends.completed</key>
+	<string>Voltooid</string>
+	<key>dino.friends.completedHere</key>
+	<string>Vrienden die dit level voltooiden</string>
+	<key>dino.friends.connect</key>
+	<string>Game Center gebruiken</string>
+	<key>dino.friends.connectDisclosure</key>
+	<string>Dit zet Game Center, vriendentoegang en het delen van je resultaten samen aan. Met vriendentoegang toont Apple vrienden die deze game ook toegang geven. Delen publiceert de beste levelresultaten, gemeten speeltijden, sterren en voortgang van dit apparaat op Game Center-leaderboards onder de Apple-displaynaam. Apple-leaderboards kunnen deze resultaten aan andere spelers tonen, niet alleen aan vrienden. Je kunt elk schuifje daarna uitzetten zonder een nieuwe som. Een schuifje weer aanzetten vraagt deze som opnieuw. Vrienden uitnodigen kan via Apple Berichten. De beperkingen van het Apple-account blijven gelden. Dit ouderscherm is geen juridische toestemming.</string>
+	<key>dino.friends.contact</key>
+	<string>Contact met de ontwikkelaar</string>
+	<key>dino.friends.contactMissing</key>
+	<string>Contactgegevens voor deze game zijn nog niet beschikbaar. Je kunt Game Center-profielen rechtstreeks bij Apple melden.</string>
+	<key>dino.friends.disconnect</key>
+	<string>Loskoppelen</string>
+	<key>dino.friends.empty</key>
+	<string>Voeg je eerste vriend toe</string>
+	<key>dino.friends.emptyMessage</key>
+	<string>Nodig een vriend uit via Apple. Jullie moeten allebei deze game toegang tot de vriendenlijst geven om hier te verschijnen.</string>
+	<key>dino.friends.externalContact</key>
+	<string>Een volwassene kan de contactpagina van de game in de browser openen.</string>
+	<key>dino.friends.externalPolicy</key>
+	<string>Een volwassene kan het privacybeleid van de game in de browser openen.</string>
+	<key>dino.friends.firstHere</key>
+	<string>Jij bent de eerste van je vrienden die dit level heeft gehaald!</string>
+	<key>dino.friends.fullPrivacy</key>
+	<string>Volledig privacybeleid lezen</string>
+	<key>dino.friends.highestKnown</key>
+	<string>Hoogst bekend voltooid level</string>
+	<key>dino.friends.incomplete</key>
+	<string>Nog niet voltooid</string>
+	<key>dino.friends.invite</key>
+	<string>Vriend toevoegen</string>
+	<key>dino.friends.inviteFailed</key>
+	<string>Apple kon de vriendenuitnodiging niet openen. Probeer het later opnieuw.</string>
+	<key>dino.friends.inviteRestricted</key>
+	<string>Dit account kan geen vriendschapsverzoeken sturen.</string>
+	<key>dino.friends.levelResults</key>
+	<string>Resultaten</string>
+	<key>dino.friends.levels</key>
+	<string>Leveloverzicht</string>
+	<key>dino.friends.load</key>
+	<string>Vrienden tonen</string>
+	<key>dino.friends.loading</key>
+	<string>Vrienden laden</string>
+	<key>dino.friends.manage</key>
+	<string>Game Center beheren</string>
+	<key>dino.friends.maximum</key>
+	<string>Maximum op voltooide levels</string>
+	<key>dino.friends.more %lld</key>
+	<string>Nog %lld vrienden</string>
+	<key>dino.friends.next</key>
+	<string>Eerstvolgende te voltooien level</string>
+	<key>dino.friends.nextLevel %lld</key>
+	<string>Volgend level: %lld</string>
+	<key>dino.friends.noResultsHere</key>
+	<string>Er zijn nog geen voltooide resultaten van je vrienden beschikbaar voor dit level.</string>
+	<key>dino.friends.notAvailable</key>
+	<string>Niet beschikbaar</string>
+	<key>dino.friends.notPlayed</key>
+	<string>Nog niet gespeeld</string>
+	<key>dino.friends.onlineVisibility</key>
+	<string>Laat vrienden zien als ik online ben</string>
+	<key>dino.friends.onlineVisibilityHelp</key>
+	<string>Ga naar Instellingen → Game Center → Activiteit-deling en kies ‘Alleen vrienden’ voor je gameactiviteit.</string>
+	<key>dino.friends.openProfile</key>
+	<string>Voortgangsoverzicht openen</string>
+	<key>dino.friends.parentAnswer</key>
+	<string>Je antwoord</string>
+	<key>dino.friends.parentMessage</key>
+	<string>Dit opent Apples sociale functies of vraagt om vriendentoegang. Een volwassene kan hieronder doorgaan. De beperkingen van het Apple-account blijven gelden.</string>
+	<key>dino.friends.parentTitle</key>
+	<string>Voor een ouder of verzorger</string>
+	<key>dino.friends.percentage</key>
+	<string>Sterren behaald</string>
+	<key>dino.friends.privacy</key>
+	<string>Privacy en veiligheid</string>
+	<key>dino.friends.privacyBody</key>
+	<string>Je klokken en voortgang staan op dit apparaat. Je naam komt uit je Game Center-account. Vrienden zijn optioneel. Apple beheert het inloggen, vriendschappen, displaynamen en avatars. De eerste keer dat een volwassene Game Center aanzet, gaan vriendentoegang en het delen van resultaten samen aan. Alleen vrienden die Apple toestaat worden getoond. Elk schuifje kan uit zonder een nieuwe som. Een schuifje weer aanzetten vraagt de som opnieuw. Gegevens van vrienden staan alleen in het geheugen en worden gewist wanneer de app naar de achtergrond gaat, toegang verandert of je vrienden uitschakelt.
+
+Als je iCloud-sync aanzet, worden alleen je levelresultaten, gemeten speeltijden, sterren en spelvoortgang met je eigen iCloud-account gedeeld tussen je apparaten. Je dinokleuren, klokken en instellingen blijven op dit apparaat. Uitzetten stopt nieuwe iCloud-updates op dit apparaat; het verwijdert eerder opgeslagen cloudvoortgang niet.
+
+Zolang delen aanstaat, verstuurt de game de beste levelresultaten, gemeten speeltijden, sterren en voortgang naar Apple Game Center-leaderboards. Deze resultaten kunnen volgens Apples instellingen zichtbaar zijn voor andere Game Center-spelers; de app biedt geen besloten opslag voor alleen vrienden. Je geboortedatum, locatie, e-mailadres en telefoonnummer worden nooit door deze game verstuurd. Er is geen chat, eigen berichten, reclame, analyse of tracking.
+
+Je kunt nieuwe uploads op dit apparaat stoppen. Gepubliceerde scores blijven bij Apple; stoppen met delen of de lokale game resetten verwijdert ze niet. Zichtbaarheid, meldingen, vriendschappen en Apple-gegevensverzoeken regel je via Apple Games, Game Center en Apples privacyinstellingen. Opnieuw publiceren kan je eerdere beste resultaten herstellen.
+
+Accounts met beperkingen en minderjarige accounts kunnen via deze game geen voortgang publiceren. Een ouderscherm vervangt geen wettelijk vereiste ouderlijke toestemming.</string>
+	<key>dino.friends.profile</key>
+	<string>Vriendenprofiel</string>
+	<key>dino.friends.profileUnavailable</key>
+	<string>Vriendentoegang, de vriendschap of resultaten kunnen zijn veranderd. Vernieuw de vriendenlijst om beschikbare informatie te bekijken.</string>
+	<key>dino.friends.reportHelp</key>
+	<string>Open voor het melden van een ongepaste naam of avatar, of het verwijderen van een vriend, het profiel in Apple Games en kies Meld gebruiker of Verwijder vriend. Gebruik voor verdere blokkeringen je Apple-account en Schermtijdinstellingen.</string>
+	<key>dino.friends.resetMessage</key>
+	<string>De koppeling en het delen op dit apparaat worden uitgezet. De gepubliceerde Game Center-scores blijven bij Apple bewaard.</string>
+	<key>dino.friends.resultsUnavailable</key>
+	<string>Sommige resultaten zijn niet beschikbaar. Er worden geen scores geschat.</string>
+	<key>dino.friends.share</key>
+	<string>Vrienden mogen score zien</string>
+	<key>dino.friends.shareGame</key>
+	<string>Deel het spel met vrienden</string>
+	<key>dino.friends.shareGame.message</key>
+	<string>Speel Dino Klokkijken met mij.</string>
+	<key>dino.friends.sharingDisclosure</key>
+	<string>Optioneel: publiceer de beste levelresultaten, gemeten speeltijden, sterren en voortgang van dit apparaat op Game Center-leaderboards onder de Apple-displaynaam. Apple-leaderboards kunnen deze resultaten aan andere spelers tonen, niet alleen aan vrienden. Bestaande resultaten van dit Apple-account worden samengevoegd met het beste resultaat per level. Stoppen met delen verwijdert gepubliceerde resultaten niet. Dit ouderscherm is geen juridische toestemming.</string>
+	<key>dino.friends.sharingOff</key>
+	<string>Delen staat uit. Vrienden zien geen resultaten van dit apparaat totdat een volwassene ervoor kiest ze te publiceren.</string>
+	<key>dino.friends.sharingRestricted</key>
+	<string>Dit account kan geen resultaten delen.</string>
+	<key>dino.friends.sharingTitle</key>
+	<string>Je voortgang delen</string>
+	<key>dino.friends.showAllScores</key>
+	<string>Alle scores</string>
+	<key>dino.friends.showFewerScores</key>
+	<string>Minder scores</string>
+	<key>dino.friends.signIn</key>
+	<string>Inloggen via Apple</string>
+	<key>dino.friends.signOut</key>
+	<string>Afmelden bij Game Center</string>
+	<key>dino.friends.signOutMessage</key>
+	<string>Koppel Game Center los van Dino Klokkijken. Wil je afmelden op dit apparaat? Ga naar Instellingen → Game Center → Log uit.</string>
+	<key>dino.friends.state.authenticating</key>
+	<string>Verbinden met Game Center…</string>
+	<key>dino.friends.state.denied</key>
+	<string>Geef toegang tot vrienden in je Game Center-instellingen.</string>
+	<key>dino.friends.state.inactive</key>
+	<string>Bekijk vrienden die deze game ook toegang tot hun Game Center-vrienden geven. Je kunt altijd zonder Game Center spelen.</string>
+	<key>dino.friends.state.loading</key>
+	<string>Je beschikbare vrienden laden…</string>
+	<key>dino.friends.state.needsPermission</key>
+	<string>Geef toegang om je vrienden hier te zien.</string>
+	<key>dino.friends.state.ready</key>
+	<string>Hier verschijnen alleen vrienden die Apple beschikbaar stelt. Resultaten verschijnen nadat vrienden ervoor kiezen ze te delen.</string>
+	<key>dino.friends.state.restricted</key>
+	<string>Dit account heeft beperkte toegang tot vrienden.</string>
+	<key>dino.friends.state.signedOut</key>
+	<string>Log in bij Game Center via Instellingen.</string>
+	<key>dino.friends.state.unavailable</key>
+	<string>Game Center is tijdelijk niet beschikbaar.</string>
+	<key>dino.friends.stopSharing</key>
+	<string>Resultaten niet meer versturen</string>
+	<key>dino.friends.stopSharingMessage</key>
+	<string>Dit stopt nieuwe uploads op dit apparaat. Eerder gepubliceerde scores blijven in Game Center. Beheer hun zichtbaarheid en je gegevens bij Apple.</string>
+	<key>dino.friends.syncDone</key>
+	<string>Je beschikbare resultaten zijn gesynchroniseerd.</string>
+	<key>dino.friends.syncPending</key>
+	<string>Resultaten blijven lokaal bewaard en worden gesynchroniseerd zodra Game Center beschikbaar is.</string>
+	<key>dino.friends.syncing</key>
+	<string>Resultaten opslaan bij Apple…</string>
+	<key>dino.friends.time</key>
+	<string>Tijd</string>
+	<key>dino.friends.timeUnavailable</key>
+	<string>Tijd niet beschikbaar</string>
+	<key>dino.friends.title</key>
+	<string>Vrienden</string>
+	<key>dino.friends.totalStars</key>
+	<string>Totaal sterren</string>
+	<key>dino.friends.turnOn</key>
+	<string>Zet alles aan</string>
+	<key>dino.friends.you</key>
+	<string>Jij</string>
+	<key>dino.friends.yourFriends</key>
+	<string>Je vrienden</string>
+	<key>dino.hands</key>
+	<string>Wijzers</string>
+	<key>dino.hands.playful</key>
+	<string>Speels</string>
+	<key>dino.hands.rounded</key>
+	<string>Rond</string>
+	<key>dino.hands.straight</key>
+	<string>Recht</string>
+	<key>dino.hello %@</key>
+	<string>Hoi, %@!</string>
+	<key>dino.hourHand</key>
+	<string>Korte urenwijzer</string>
+	<key>dino.hourLess</key>
+	<string>Een uur terug</string>
+	<key>dino.hourMore</key>
+	<string>Een uur vooruit</string>
+	<key>dino.hourNotation.twelve</key>
+	<string>12 uur</string>
+	<key>dino.hourNotation.twentyFour</key>
+	<string>24 uur</string>
+	<key>dino.hours</key>
+	<string>Uren</string>
+	<key>dino.jungle</key>
+	<string>Oerwoud</string>
+	<key>dino.keepPlaying</key>
+	<string>Verder spelen</string>
+	<key>dino.keepPracticing</key>
+	<string>Nog een avontuur?</string>
+	<key>dino.language</key>
+	<string>Taal</string>
+	<key>dino.launch.title.firstLine</key>
+	<string>Dino</string>
+	<key>dino.launch.title.secondLine</key>
+	<string>Klokkijken</string>
+	<key>dino.level.1</key>
+	<string>Vind de klok</string>
+	<key>dino.level.10</key>
+	<string>Tiko de Junglewachter</string>
+	<key>dino.level.2</key>
+	<string>Klokverkenner</string>
+	<key>dino.level.3</key>
+	<string>Lees de wijzers</string>
+	<key>dino.level.4</key>
+	<string>Tijddetective</string>
+	<key>dino.level.5</key>
+	<string>Een dag met Dino</string>
+	<key>dino.level.6</key>
+	<string>Draai de wijzer</string>
+	<key>dino.level.7</key>
+	<string>Stel de tijd in</string>
+	<key>dino.level.8</key>
+	<string>Maak een paar</string>
+	<key>dino.level.9</key>
+	<string>Klaar voor de poort</string>
+	<key>dino.level.details</key>
+	<string>In dit level</string>
+	<key>dino.level.detailsClosed</key>
+	<string>Dicht</string>
+	<key>dino.level.detailsOpen</key>
+	<string>Open</string>
+	<key>dino.level.time.minute</key>
+	<string>Minuut</string>
+	<key>dino.levelLabel</key>
+	<string>Level</string>
+	<key>dino.levelNumber %lld</key>
+	<string>Level %lld</string>
+	<key>dino.locked</key>
+	<string>Vergrendeld</string>
+	<key>dino.makeAnalogClock</key>
+	<string>Maak jouw analoge klok</string>
+	<key>dino.makeClock</key>
+	<string>Maak jouw klok</string>
+	<key>dino.makeDigitalClock</key>
+	<string>Maak jouw digitale klok</string>
+	<key>dino.map</key>
+	<string>Levelkaart</string>
+	<key>dino.match.demo.clock</key>
+	<string>1. Tik op een klok.</string>
+	<key>dino.match.demo.connected</key>
+	<string>De lijnen verbinden elke klok met de juiste tijd. Probeer het zelf!</string>
+	<key>dino.match.demo.time</key>
+	<string>2. Tik op de bijbehorende tijd om een lijn te trekken.</string>
+	<key>dino.match.hint</key>
+	<string>Tik op een klok en daarna op de bijbehorende tijd. Je mag ook met een tijd beginnen.</string>
+	<key>dino.minuteHand</key>
+	<string>Lange minutenwijzer</string>
+	<key>dino.minuteLess</key>
+	<string>Een minuut terug</string>
+	<key>dino.minuteMore</key>
+	<string>Een minuut vooruit</string>
+	<key>dino.minutes</key>
+	<string>Minuten</string>
+	<key>dino.minutesBetween.borrow.format</key>
+	<string>Leen 1 uur: %1$lld uur %2$lld min = %3$lld uur %4$lld min</string>
+	<key>dino.minutesBetween.from</key>
+	<string>Van</string>
+	<key>dino.minutesBetween.until</key>
+	<string>Tot</string>
+	<key>dino.myClocks</key>
+	<string>Mijn klokken</string>
+	<key>dino.needFive</key>
+	<string>Met 6 van de 10 verdien je een ster.</string>
+	<key>dino.needPerfectOrRoute</key>
+	<string>Haal 10/10, of verdien eerst een ster in alle 9 levels.</string>
+	<key>dino.needThree</key>
+	<string>Met 3 van de 5 verdien je een ster.</string>
+	<key>dino.next</key>
+	<string>Verder</string>
+	<key>dino.nextAdventure</key>
+	<string>Een nieuw avontuur aan de horizon</string>
+	<key>dino.nextWorld</key>
+	<string>Naar de volgende wereld</string>
+	<key>dino.numerals</key>
+	<string>Cijferstijl</string>
+	<key>dino.numerals.classic</key>
+	<string>Klassiek</string>
+	<key>dino.numerals.digital</key>
+	<string>Digitaal</string>
+	<key>dino.numerals.modern</key>
+	<string>Modern</string>
+	<key>dino.numerals.rounded</key>
+	<string>Speels</string>
+	<key>dino.pause</key>
+	<string>Pauze</string>
+	<key>dino.paused</key>
+	<string>Even pauze!</string>
+	<key>dino.perfectBoss</key>
+	<string>Perfecte boss-overwinning!</string>
+	<key>dino.personalize.analog</key>
+	<string>Analoog</string>
+	<key>dino.personalize.digital</key>
+	<string>Digitaal</string>
+	<key>dino.personalize.dino</key>
+	<string>Dino</string>
+	<key>dino.play</key>
+	<string>Spelen</string>
+	<key>dino.playAgain</key>
+	<string>Opnieuw spelen</string>
+	<key>dino.practice.ascending</key>
+	<string>Oplopend</string>
+	<key>dino.practice.backToLevels</key>
+	<string>Terug naar het leveloverzicht</string>
+	<key>dino.practice.bestStreak</key>
+	<string>Hoogste reeks</string>
+	<key>dino.practice.correct</key>
+	<string>Goede antwoorden</string>
+	<key>dino.practice.description</key>
+	<string>Oefen zo lang als je wilt. Oefenen verandert je sterren en levelvoortgang niet.</string>
+	<key>dino.practice.easyToHard</key>
+	<string>Van makkelijk naar moeilijk</string>
+	<key>dino.practice.exitMessage</key>
+	<string>Terug naar je oefenkeuzes? Je kunt altijd opnieuw beginnen.</string>
+	<key>dino.practice.hand</key>
+	<string>Kies een wijzer</string>
+	<key>dino.practice.mix</key>
+	<string>Mix van alle vraagtypen</string>
+	<key>dino.practice.question.activity</key>
+	<string>Kies de klok bij de activiteit</string>
+	<key>dino.practice.question.addTime</key>
+	<string>Bereken een latere tijd</string>
+	<key>dino.practice.question.advanceAnalog</key>
+	<string>Zet de klok vooruit</string>
+	<key>dino.practice.question.analogFour</key>
+	<string>Analoge klok kiezen · 4 keuzes</string>
+	<key>dino.practice.question.analogTwo</key>
+	<string>Analoge klok kiezen · 2 keuzes</string>
+	<key>dino.practice.question.chooseAnalog</key>
+	<string>Kies de analoge klok</string>
+	<key>dino.practice.question.chooseDigital</key>
+	<string>Kies de digitale klok</string>
+	<key>dino.practice.question.dayPart</key>
+	<string>Kies het dagdeel</string>
+	<key>dino.practice.question.daySchedule</key>
+	<string>Hoe laat komt de trein aan?</string>
+	<key>dino.practice.question.digitalFour</key>
+	<string>Digitale tijd kiezen · 4 keuzes</string>
+	<key>dino.practice.question.digitalTwo</key>
+	<string>Digitale tijd kiezen · 2 keuzes</string>
+	<key>dino.practice.question.flightArrival</key>
+	<string>Hoe laat komt het vliegtuig aan?</string>
+	<key>dino.practice.question.match</key>
+	<string>Verbind klokken en tijden</string>
+	<key>dino.practice.question.minutesBetween</key>
+	<string>Bereken het verschil in minuten</string>
+	<key>dino.practice.question.read24Hour</key>
+	<string>Lees de klok na 12 uur</string>
+	<key>dino.practice.question.readDigital</key>
+	<string>Hoe zeg je deze tijd?</string>
+	<key>dino.practice.question.sayTime</key>
+	<string>Stel de tijd in woorden samen</string>
+	<key>dino.practice.question.setAnalog</key>
+	<string>Stel de analoge klok in</string>
+	<key>dino.practice.question.setDigital</key>
+	<string>Stel de digitale klok in</string>
+	<key>dino.practice.question.sortTimes</key>
+	<string>Zet de tijden op volgorde</string>
+	<key>dino.practice.question.spokenTime</key>
+	<string>Kies de klok bij de tijd in woorden</string>
+	<key>dino.practice.question.subtractTime</key>
+	<string>Bereken een eerdere tijd</string>
+	<key>dino.practice.question.timeSequence</key>
+	<string>Maak de tijdreeks af</string>
+	<key>dino.practice.question.timeZone</key>
+	<string>Bereken de tijd in een andere tijdzone</string>
+	<key>dino.practice.question.trueFalse</key>
+	<string>Klopt de tijd bij de klok?</string>
+	<key>dino.practice.questionNumber</key>
+	<string>Vraag</string>
+	<key>dino.practice.questionType</key>
+	<string>Type vraag oefenen</string>
+	<key>dino.practice.setAnalog</key>
+	<string>Zet beide klokken op dezelfde tijd</string>
+	<key>dino.practice.setDigital</key>
+	<string>Zet de digitale klok op dezelfde tijd</string>
+	<key>dino.practice.settingsDescription</key>
+	<string>Kies tijden en vraagtypen</string>
+	<key>dino.practice.shortTitle</key>
+	<string>Oefenen</string>
+	<key>dino.practice.start</key>
+	<string>Start oefenen</string>
+	<key>dino.practice.streak</key>
+	<string>Reeks</string>
+	<key>dino.practice.time</key>
+	<string>Soort tijd oefenen</string>
+	<key>dino.practice.time.fiveMinutes</key>
+	<string>5 minuten</string>
+	<key>dino.practice.time.half</key>
+	<string>Halve uren</string>
+	<key>dino.practice.time.minutes</key>
+	<string>Minuten</string>
+	<key>dino.practice.time.quarter</key>
+	<string>Kwartieren</string>
+	<key>dino.practice.time.tenMinutes</key>
+	<string>10 minuten</string>
+	<key>dino.practice.time.whole</key>
+	<string>Hele uren</string>
+	<key>dino.practice.title</key>
+	<string>Levels oefenen</string>
+	<key>dino.question.activity</key>
+	<string>Welke klok geeft deze tijd aan?</string>
+	<key>dino.question.addTime</key>
+	<string>Hoe laat is het daarna?</string>
+	<key>dino.question.addTime.format</key>
+	<string>Het is %@. Hoe laat is het %@ %@?</string>
+	<key>dino.question.advanceAnalog</key>
+	<string>Zet de wijzers vooruit</string>
+	<key>dino.question.advanceAnalog.format</key>
+	<string>Zet de wijzers %@ %@.</string>
+	<key>dino.question.chooseAnalog</key>
+	<string>Welke klok geeft deze tijd aan?</string>
+	<key>dino.question.chooseClock.format</key>
+	<string>Welke van de %@ klokken geeft %@ aan?</string>
+	<key>dino.question.chooseClock.short</key>
+	<string>Welke klok geeft %@ aan?</string>
+	<key>dino.question.chooseDigital</key>
+	<string>Hoe laat is het?</string>
+	<key>dino.question.dayPart</key>
+	<string>Bij welk dagdeel hoort deze tijd?</string>
+	<key>dino.question.daySchedule</key>
+	<string>Bekijk het reisschema. Hoe laat komt de trein aan?</string>
+	<key>dino.question.daySchedule.format</key>
+	<string>De trein vertrekt om %@. Tel %@, %@ en %@ erbij. Hoe laat komt hij aan?</string>
+	<key>dino.question.flightArrival</key>
+	<string>Hoe laat komt het vliegtuig aan?</string>
+	<key>dino.question.flightArrival.format</key>
+	<string>Het vliegtuig vertrekt om %@. Hoe laat komt het aan?</string>
+	<key>dino.question.match</key>
+	<string>Verbind de klokken met de tijden</string>
+	<key>dino.question.minutesBetween</key>
+	<string>Hoeveel minuten zitten er tussen de twee tijden?</string>
+	<key>dino.question.minutesBetween.format</key>
+	<string>Hoeveel minuten zitten er tussen %@ en %@?</string>
+	<key>dino.question.read24Hour</key>
+	<string>Hoe laat is het?</string>
+	<key>dino.question.readDigital</key>
+	<string>Hoe zeg je deze tijd?</string>
+	<key>dino.question.sayTime</key>
+	<string>Maak de tijdzin bij de klok af</string>
+	<key>dino.question.setAnalog</key>
+	<string>Zet beide klokken op dezelfde tijd</string>
+	<key>dino.question.setDigital</key>
+	<string>Zet de digitale klok op dezelfde tijd</string>
+	<key>dino.question.sortTimes</key>
+	<string>Tik de klokken op volgorde van vroeg naar laat</string>
+	<key>dino.question.spokenClock.format</key>
+	<string>Welke van de %@ klokken geeft %@ aan?</string>
+	<key>dino.question.spokenTime</key>
+	<string>Welke klok geeft deze tijd aan?</string>
+	<key>dino.question.spokenTime.format</key>
+	<string>Welke klok geeft deze tijd aan:
+%@</string>
+	<key>dino.question.subtractTime</key>
+	<string>Hoe laat was het eerder?</string>
+	<key>dino.question.subtractTime.format</key>
+	<string>Het is %@. Hoe laat was het %@ %@?</string>
+	<key>dino.question.timeSequence</key>
+	<string>Welke tijd maakt de reeks af?</string>
+	<key>dino.question.timeSequence.format</key>
+	<string>Kijk naar de reeks. Welke tijd komt na %@?</string>
+	<key>dino.question.timeZone</key>
+	<string>Hoe laat is het in de andere stad?</string>
+	<key>dino.question.timeZone.ahead.format</key>
+	<string>Het is %@ in %@. In %@ is het %@ %@. Hoe laat is het daar?</string>
+	<key>dino.question.timeZone.behind.format</key>
+	<string>Het is %@ in %@. In %@ is het %@ %@. Hoe laat is het daar?</string>
+	<key>dino.question.timeZone.format</key>
+	<string>Hoe laat is het in %@?</string>
+	<key>dino.question.timeZone.same.format</key>
+	<string>Het is %@ in %@. Hoe laat is het in %@?</string>
+	<key>dino.question.trueFalse</key>
+	<string>Klopt de tijd bij de klok?</string>
+	<key>dino.question.trueFalse.correction</key>
+	<string>Het is %@.</string>
+	<key>dino.question.trueFalse.format</key>
+	<string>De klok geeft %@ aan. Klopt dat?</string>
+	<key>dino.questionProgress</key>
+	<string>Jouw avontuur</string>
+	<key>dino.questionsLabel</key>
+	<string>Vraag</string>
+	<key>dino.ready</key>
+	<string>Ik ben er klaar voor</string>
+	<key>dino.resetAnswer</key>
+	<string>Antwoord</string>
+	<key>dino.resetMessage</key>
+	<string>Voortgang, kleuren, klokken, taal en instellingen op dit apparaat worden gewist. Ook de opgeslagen iCloud-voortgang wordt gewist.</string>
+	<key>dino.resetProgress</key>
+	<string>Voortgang resetten</string>
+	<key>dino.resetTitle</key>
+	<string>Opnieuw beginnen?</string>
+	<key>dino.retry</key>
+	<string>Opnieuw</string>
+	<key>dino.rim</key>
+	<string>Klokrand</string>
+	<key>dino.schedule.activity.building</key>
+	<string>Bouwen</string>
+	<key>dino.schedule.activity.drawing</key>
+	<string>Tekenen</string>
+	<key>dino.schedule.activity.music</key>
+	<string>Muziek maken</string>
+	<key>dino.schedule.activity.puzzles</key>
+	<string>Puzzelen</string>
+	<key>dino.schedule.activity.reading</key>
+	<string>Lezen</string>
+	<key>dino.schedule.activity.sports</key>
+	<string>Sporten</string>
+	<key>dino.schedule.break</key>
+	<string>Pauze</string>
+	<key>dino.schedule.finish</key>
+	<string>Klaar</string>
+	<key>dino.schedule.title</key>
+	<string>Dagplanning</string>
+	<key>dino.settings</key>
+	<string>Instellingen</string>
+	<key>dino.settings.dayParts</key>
+	<string>Dagdelen</string>
+	<key>dino.settings.dayParts.backToGame</key>
+	<string>Terug naar het spel</string>
+	<key>dino.settings.dayParts.column</key>
+	<string>Dagdeel</string>
+	<key>dino.settings.dayParts.from</key>
+	<string>Van</string>
+	<key>dino.settings.dayParts.help</key>
+	<string>Stel in van hoe laat tot hoe laat elk dagdeel duurt. Het einde van het ene dagdeel is het begin van het volgende. Vragen rekenen goed of fout met deze tijden.</string>
+	<key>dino.settings.dayParts.standard</key>
+	<string>Standaardtijden</string>
+	<key>dino.settings.dayParts.to</key>
+	<string>Tot</string>
+	<key>dino.settings.gameCenter</key>
+	<string>Game Center</string>
+	<key>dino.settings.gameCenter.nameSource</key>
+	<string>Je naam komt uit Game Center. Je kunt hem daar aanpassen.</string>
+	<key>dino.settings.gameCenter.noAccount</key>
+	<string>Niet aangemeld bij Game Center</string>
+	<key>dino.settings.gameCenter.open</key>
+	<string>Game Center en vrienden</string>
+	<key>dino.settings.haptics</key>
+	<string>Trillingen bij antwoorden</string>
+	<key>dino.settings.highContrast</key>
+	<string>Hoog contrast</string>
+	<key>dino.settings.icloud.active</key>
+	<string>Aan. Hetzelfde iCloud-account op beide apparaten.</string>
+	<key>dino.settings.icloud.off</key>
+	<string>Uit. Alleen op dit apparaat.</string>
+	<key>dino.settings.icloud.unavailable</key>
+	<string>Nu niet beschikbaar. Alleen op dit apparaat.</string>
+	<key>dino.settings.icloudDescription</key>
+	<string>Zet synchronisatie aan om je voortgang in iCloud te bewaren en op andere apparaten verder te spelen. Staat het uit? Dan blijft je voortgang alleen op dit apparaat en kun je die kwijtraken als je het apparaat verliest.</string>
+	<key>dino.settings.icloudSync</key>
+	<string>iCloud-sync</string>
+	<key>dino.settings.languageEmpty</key>
+	<string>Geen taal gevonden</string>
+	<key>dino.settings.languageSearch</key>
+	<string>Zoek een taal</string>
+	<key>dino.settings.play</key>
+	<string>Spel en weergave</string>
+	<key>dino.settings.soundEffects</key>
+	<string>Geluidseffecten</string>
+	<key>dino.settings.speakQuestionTitle</key>
+	<string>Somtitel voorlezen</string>
+	<key>dino.shape</key>
+	<string>Vorm</string>
+	<key>dino.shape.circle</key>
+	<string>Rond</string>
+	<key>dino.shape.octagon</key>
+	<string>Achthoek</string>
+	<key>dino.shape.oval</key>
+	<string>Ovaal</string>
+	<key>dino.shape.rectangle</key>
+	<string>Rechte hoeken</string>
+	<key>dino.shape.roundedRectangle</key>
+	<string>Ronde hoeken</string>
+	<key>dino.shape.square</key>
+	<string>Vierkant</string>
+	<key>dino.showAnswer</key>
+	<string>Toon antwoord</string>
+	<key>dino.smallAdventure</key>
+	<string>Klaar voor een avontuur?</string>
+	<key>dino.spoken.hint</key>
+	<string>Klik op de juiste stenen hieronder</string>
+	<key>dino.standardClock</key>
+	<string>Herstel standaardklok</string>
+	<key>dino.stars %lld</key>
+	<string>%lld sterren</string>
+	<key>dino.stars.total</key>
+	<string>Totaal</string>
+	<key>dino.starsLabel</key>
+	<string>Sterren</string>
+	<key>dino.start</key>
+	<string>Start</string>
+	<key>dino.startPoint</key>
+	<string>Beginpunt</string>
+	<key>dino.subtitle</key>
+	<string>Leer klokkijken met Dino</string>
+	<key>dino.timeZone.atlas</key>
+	<string>TIJDZONES</string>
+	<key>dino.timeZone.earlier</key>
+	<string>%@ uur eerder</string>
+	<key>dino.timeZone.format</key>
+	<string>24-uursklok</string>
+	<key>dino.timeZone.later</key>
+	<string>%@ uur later</string>
+	<key>dino.timeZone.legend</key>
+	<string>Vereenvoudigde tijdzones</string>
+	<key>dino.timeZone.reference</key>
+	<string>Gegeven tijd</string>
+	<key>dino.timeZone.replay</key>
+	<string>Speel de tijdsprong opnieuw af</string>
+	<key>dino.title</key>
+	<string>Leer klokkijken met Dino</string>
+	<key>dino.train.arrival</key>
+	<string>Aankomst</string>
+	<key>dino.train.departure</key>
+	<string>Vertrek</string>
+	<key>dino.train.one</key>
+	<string>Trein 1</string>
+	<key>dino.train.transfer</key>
+	<string>Overstap</string>
+	<key>dino.train.two</key>
+	<string>Trein 2</string>
+	<key>dino.tryAgainLater</key>
+	<string>Blijf oefenen!</string>
+	<key>dino.unlocked</key>
+	<string>Speelbaar</string>
+	<key>dino.useMyClock</key>
+	<string>Gebruik mijn klokken</string>
+	<key>dino.useStandard</key>
+	<string>Gebruik standaardklok</string>
+	<key>dino.wellDone</key>
+	<string>Goed gedaan!</string>
+	<key>dino.wholeHours</key>
+	<string>Hele uren</string>
+	<key>dino.world.10.boss</key>
+	<string>Koning Chronos</string>
+	<key>dino.world.10.name</key>
+	<string>Tijdkasteel</string>
+	<key>dino.world.10.skill</key>
+	<string>Alle vaardigheden</string>
+	<key>dino.world.2.boss</key>
+	<string>Dommel de Droomsaurus</string>
+	<key>dino.world.2.name</key>
+	<string>Slaapvallei</string>
+	<key>dino.world.2.skill</key>
+	<string>Halve uren</string>
+	<key>dino.world.3.boss</key>
+	<string>Magma de Vuurtriceratops</string>
+	<key>dino.world.3.name</key>
+	<string>Vulkaanland</string>
+	<key>dino.world.3.skill</key>
+	<string>Kwartieren</string>
+	<key>dino.world.4.boss</key>
+	<string>Burgemeester Tik-Tak</string>
+	<key>dino.world.4.name</key>
+	<string>Klokdorp</string>
+	<key>dino.world.4.skill</key>
+	<string>Stappen van 10 minuten</string>
+	<key>dino.world.5.boss</key>
+	<string>Prisma de Kristalbewaker</string>
+	<key>dino.world.5.name</key>
+	<string>Kristalgrot</string>
+	<key>dino.world.5.skill</key>
+	<string>Stappen van 5 minuten</string>
+	<key>dino.world.6.boss</key>
+	<string>Neon de Klokrobot</string>
+	<key>dino.world.6.name</key>
+	<string>Klokstad</string>
+	<key>dino.world.6.skill</key>
+	<string>Losse minuten</string>
+	<key>dino.world.7.boss</key>
+	<string>Zandstaart de Woestijnwachter</string>
+	<key>dino.world.7.name</key>
+	<string>Woestijn</string>
+	<key>dino.world.7.skill</key>
+	<string>Tijd lezen en tijdrekenen</string>
+	<key>dino.world.8.boss</key>
+	<string>Professor Pendel</string>
+	<key>dino.world.8.name</key>
+	<string>Tijdmachine</string>
+	<key>dino.world.8.skill</key>
+	<string>Alle klokvaardigheden combineren</string>
+	<key>dino.world.9.boss</key>
+	<string>Kapitein Zandloper</string>
+	<key>dino.world.9.name</key>
+	<string>Tijdpiraten</string>
+	<key>dino.world.9.skill</key>
+	<string>Uitdagend tijdrekenen</string>
+	<key>dino.worldComplete</key>
+	<string>Wereld voltooid!</string>
+	<key>dino.worldNumber %lld</key>
+	<string>Wereld %lld</string>
+	<key>dino.worldOne</key>
+	<string>WERELD 1</string>
+	<key>dino.worldTwo</key>
+	<string>Wereld 2</string>
+	<key>dino.worldTwoSoon</key>
+	<string>Wereld 2 · Binnenkort</string>
+	<key>dino.yourAnswer</key>
+	<string>Jouw antwoord</string>
+</dict>
+</plist>

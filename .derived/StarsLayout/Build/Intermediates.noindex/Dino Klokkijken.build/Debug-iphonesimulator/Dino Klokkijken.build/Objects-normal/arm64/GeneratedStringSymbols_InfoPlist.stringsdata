@@ -1,0 +1,32 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/.derived/StarsLayout/Build/Intermediates.noindex/Dino Klokkijken.build/Debug-iphonesimulator/Dino Klokkijken.build/DerivedSources/GeneratedStringSymbols_InfoPlist.swift",
+  "tables": {
+    "InfoPlist": [
+      {
+        "comment": "",
+        "key": "CFBundleDisplayName",
+        "location": {
+          "startingColumn": 37,
+          "startingLine": 29
+        }
+      },
+      {
+        "comment": "",
+        "key": "CFBundleName",
+        "location": {
+          "startingColumn": 37,
+          "startingLine": 38
+        }
+      },
+      {
+        "comment": "",
+        "key": "NSGKFriendListUsageDescription",
+        "location": {
+          "startingColumn": 37,
+          "startingLine": 45
+        }
+      }
+    ]
+  },
+  "version": 1
+}

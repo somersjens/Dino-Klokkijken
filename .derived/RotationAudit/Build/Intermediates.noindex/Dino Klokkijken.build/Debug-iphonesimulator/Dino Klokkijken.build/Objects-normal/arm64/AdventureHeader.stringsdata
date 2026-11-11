@@ -1,0 +1,32 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/AdventureHeader.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.practice.ascending",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 408
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.mix",
+        "location": {
+          "startingColumn": 29,
+          "startingLine": 409
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.bestStreak",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 443
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>FormatVersion</key>
+	<integer>1</integer>
+	<key>Store</key>
+	<dict>
+		<key>DinoUITests</key>
+		<dict>
+			<key>DinoUITests</key>
+			<dict>
+				<key>testStarsOverviewEnglishAndTabletLayout</key>
+				<dict>
+					<key>mrnet</key>
+					<real>49.893257975578308</real>
+				</dict>
+				<key>testStarsOverviewFitsPortraitAndLandscape</key>
+				<dict>
+					<key>mrnet</key>
+					<real>60.941426992416382</real>
+				</dict>
+				<key>testStarsOverviewLandscapeSwipeDismissal</key>
+				<dict>
+					<key>mrnet</key>
+					<real>36.91888689994812</real>
+				</dict>
+				<key>testStarsOverviewWorldCountsAndReturn</key>
+				<dict>
+					<key>mrnet</key>
+					<real>37.705112934112549</real>
+				</dict>
+			</dict>
+		</dict>
+	</dict>
+</dict>
+</plist>

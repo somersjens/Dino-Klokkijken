@@ -1,0 +1,48 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/QuestionRenderer.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.match.hint",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 754
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.answer.connectClocks",
+        "location": {
+          "startingColumn": 88,
+          "startingLine": 857
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 124,
+          "startingLine": 857
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.answer.connectClocks",
+        "location": {
+          "startingColumn": 85,
+          "startingLine": 881
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 121,
+          "startingLine": 881
+        }
+      }
+    ]
+  },
+  "version": 1
+}

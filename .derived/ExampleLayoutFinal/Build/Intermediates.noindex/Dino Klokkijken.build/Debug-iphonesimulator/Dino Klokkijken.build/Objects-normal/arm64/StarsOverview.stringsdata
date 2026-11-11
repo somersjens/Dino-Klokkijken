@@ -1,0 +1,32 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/StarsOverview.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.starsLabel",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 15
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.stars.total",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 50
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.backToLevels",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 60
+        }
+      }
+    ]
+  },
+  "version": 1
+}

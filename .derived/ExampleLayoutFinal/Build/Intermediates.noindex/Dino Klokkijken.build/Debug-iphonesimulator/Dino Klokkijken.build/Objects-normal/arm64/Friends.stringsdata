@@ -1,0 +1,448 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/Friends.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.friends.parentTitle",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 44
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.parentAnswer",
+        "location": {
+          "startingColumn": 33,
+          "startingLine": 48
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.cancel",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 53
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.share",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 117
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.signOut",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 127
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.title",
+        "location": {
+          "startingColumn": 14,
+          "startingLine": 155
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.done",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 118
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.scoreInfoMessage",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 120
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.visibilityUnavailable",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 122
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.visibilityPending",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 124
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.cancel",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 128
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.disconnect",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 129
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.signOutMessage",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 132
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.empty",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 173
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.inviteRestricted",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 245
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.practice.backToLevels",
+        "location": {
+          "startingColumn": 19,
+          "startingLine": 148
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.yourFriends",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 197
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.signIn",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 233
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.load",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 235
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.manage",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 256
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.signOut",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 267
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.share",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 284
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.scoreInfo",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 295
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.share",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 298
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.levelNumber %lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 399
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.worldComplete",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 401
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.profileUnavailable",
+        "location": {
+          "startingColumn": 140,
+          "startingLine": 418
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.notAvailable",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 418
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.profileUnavailable",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 425
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.notAvailable",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 424
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.profile",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 489
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.reportHelp",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 482
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.appleProfile",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 481
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.scoreHidden",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 451
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.worldComplete",
+        "location": {
+          "startingColumn": 139,
+          "startingLine": 444
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.levels",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 458
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.levelNumber %lld",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 461
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.notAvailable",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 475
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.notAvailable",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 499
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.more %lld",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 521
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.connect",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 563
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.done",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 576
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.shareGame",
+        "location": {
+          "startingColumn": 52,
+          "startingLine": 595
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.shareGame.message",
+        "location": {
+          "startingColumn": 93,
+          "startingLine": 595
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.shareGame.message",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 601
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.shareGame",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 596
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.shareGame",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 602
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.you",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 662
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.privacy",
+        "location": {
+          "startingColumn": 51,
+          "startingLine": 707
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.done",
+        "location": {
+          "startingColumn": 81,
+          "startingLine": 708
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.privacyBody",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 726
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.reportHelp",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 727
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.contactMissing",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 738
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.contact",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 730
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.fullPrivacy",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 740
+        }
+      }
+    ]
+  },
+  "version": 1
+}

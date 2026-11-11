@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>logFormatVersion</key>
+	<integer>13</integer>
+	<key>logs</key>
+	<dict>
+		<key>054C31F6-133B-4C5B-A429-40D0408C25F3</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>054C31F6-133B-4C5B-A429-40D0408C25F3.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>12</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>Dino Klokkijken project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>Dino Klokkijken</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Building project Dino Klokkijken for testing with scheme Dino Klokkijken</string>
+			<key>timeStartedRecording</key>
+			<real>815759611.15989995</real>
+			<key>timeStoppedRecording</key>
+			<real>815759658.70410097</real>
+			<key>title</key>
+			<string>Building project Dino Klokkijken for testing with scheme Dino Klokkijken</string>
+			<key>uniqueIdentifier</key>
+			<string>054C31F6-133B-4C5B-A429-40D0408C25F3</string>
+		</dict>
+		<key>DB1722B0-90CB-4B69-A96F-17BE9E91D656</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>DB1722B0-90CB-4B69-A96F-17BE9E91D656.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>12</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>Dino Klokkijken project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>Dino Klokkijken</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Testing project Dino Klokkijken with scheme Dino Klokkijken</string>
+			<key>timeStartedRecording</key>
+			<real>815760198.77718306</real>
+			<key>timeStoppedRecording</key>
+			<real>815760268.21887398</real>
+			<key>title</key>
+			<string>Testing project Dino Klokkijken with scheme Dino Klokkijken</string>
+			<key>uniqueIdentifier</key>
+			<string>DB1722B0-90CB-4B69-A96F-17BE9E91D656</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

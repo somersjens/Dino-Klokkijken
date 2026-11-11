@@ -1,0 +1,64 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/LevelResult.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.perfectBoss",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 98
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.correctAnswers",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 93
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.nextWorld",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 210
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.map",
+        "location": {
+          "startingColumn": 49,
+          "startingLine": 215
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.next",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 224
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.playAgain",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 243
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.map",
+        "location": {
+          "startingColumn": 37,
+          "startingLine": 249
+        }
+      }
+    ]
+  },
+  "version": 1
+}

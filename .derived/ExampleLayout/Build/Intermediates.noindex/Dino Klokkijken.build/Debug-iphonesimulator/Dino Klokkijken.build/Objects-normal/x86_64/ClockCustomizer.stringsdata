@@ -1,0 +1,40 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/ClockCustomizer.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.customColor",
+        "location": {
+          "startingColumn": 91,
+          "startingLine": 342
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.digital.differentNotation",
+        "location": {
+          "startingColumn": 14,
+          "startingLine": 386
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.clock.restoreStyle",
+        "location": {
+          "startingColumn": 19,
+          "startingLine": 412
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.done",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 430
+        }
+      }
+    ]
+  },
+  "version": 1
+}

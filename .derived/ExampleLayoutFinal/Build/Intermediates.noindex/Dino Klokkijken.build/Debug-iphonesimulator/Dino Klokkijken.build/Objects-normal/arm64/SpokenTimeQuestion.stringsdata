@@ -1,0 +1,16 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/SpokenTimeQuestion.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.spoken.hint",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 205
+        }
+      }
+    ]
+  },
+  "version": 1
+}

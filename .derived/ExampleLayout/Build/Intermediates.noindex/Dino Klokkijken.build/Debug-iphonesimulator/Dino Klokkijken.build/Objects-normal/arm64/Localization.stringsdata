@@ -1,0 +1,16 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Localization.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.language",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 140
+        }
+      }
+    ]
+  },
+  "version": 1
+}
