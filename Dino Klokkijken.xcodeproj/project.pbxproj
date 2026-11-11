@@ -93,7 +93,6 @@
 		F9AE9B4C309BDADA00C283F5 /* Dino/Resources/Sounds/zero-stars-fall.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B48309BDADA00C283F5 /* Dino/Resources/Sounds/zero-stars-fall.m4a */; };
 		F9AE9B4D309BDADA00C283F5 /* Dino/Resources/Sounds/end-of-level.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B49309BDADA00C283F5 /* Dino/Resources/Sounds/end-of-level.m4a */; };
 		F9AE9B4E309BDADA00C283F5 /* Dino/Resources/Sounds/select-menu.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B4A309BDADA00C283F5 /* Dino/Resources/Sounds/select-menu.m4a */; };
-		F9AE9B4F309BDADA00C283F5 /* Dino/Resources/Sounds/new-clap.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B4B309BDADA00C283F5 /* Dino/Resources/Sounds/new-clap.m4a */; };
 		F9AE9B54309C607600C283F5 /* Dino/Resources/Sounds/jump-jump.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B4E309C607600C283F5 /* Dino/Resources/Sounds/jump-jump.m4a */; };
 		F9AE9B55309C607600C283F5 /* Dino/Resources/Sounds/jump-land.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B4F309C607600C283F5 /* Dino/Resources/Sounds/jump-land.m4a */; };
 		F9AE9B56309C607600C283F5 /* Dino/Resources/Sounds/to-new-world.m4a in Resources */ = {isa = PBXBuildFile; fileRef = F9AE9B50309C607600C283F5 /* Dino/Resources/Sounds/to-new-world.m4a */; };
@@ -185,7 +184,6 @@
 		F9AE9B48309BDADA00C283F5 /* Dino/Resources/Sounds/zero-stars-fall.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = "Dino/Resources/Sounds/zero-stars-fall.m4a"; sourceTree = SOURCE_ROOT; };
 		F9AE9B49309BDADA00C283F5 /* Dino/Resources/Sounds/end-of-level.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = "Dino/Resources/Sounds/end-of-level.m4a"; sourceTree = SOURCE_ROOT; };
 		F9AE9B4A309BDADA00C283F5 /* Dino/Resources/Sounds/select-menu.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = "Dino/Resources/Sounds/select-menu.m4a"; sourceTree = SOURCE_ROOT; };
-		F9AE9B4B309BDADA00C283F5 /* Dino/Resources/Sounds/new-clap.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = "Dino/Resources/Sounds/new-clap.m4a"; sourceTree = SOURCE_ROOT; };
 		F9AE9B4E309C607600C283F5 /* Dino/Resources/Sounds/jump-jump.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = "Dino/Resources/Sounds/jump-jump.m4a"; sourceTree = SOURCE_ROOT; };
 		F9AE9B4F309C607600C283F5 /* Dino/Resources/Sounds/jump-land.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = "Dino/Resources/Sounds/jump-land.m4a"; sourceTree = SOURCE_ROOT; };
 		F9AE9B50309C607600C283F5 /* Dino/Resources/Sounds/to-new-world.m4a */ = {isa = PBXFileReference; lastKnownFileType = audio.mp4; path = "Dino/Resources/Sounds/to-new-world.m4a"; sourceTree = SOURCE_ROOT; };
@@ -336,7 +334,6 @@
 				F9AE9B48309BDADA00C283F5 /* Dino/Resources/Sounds/zero-stars-fall.m4a */,
 				F9AE9B49309BDADA00C283F5 /* Dino/Resources/Sounds/end-of-level.m4a */,
 				F9AE9B4A309BDADA00C283F5 /* Dino/Resources/Sounds/select-menu.m4a */,
-				F9AE9B4B309BDADA00C283F5 /* Dino/Resources/Sounds/new-clap.m4a */,
 				F9AE9B4E309C607600C283F5 /* Dino/Resources/Sounds/jump-jump.m4a */,
 				F9AE9B4F309C607600C283F5 /* Dino/Resources/Sounds/jump-land.m4a */,
 				F9AE9B50309C607600C283F5 /* Dino/Resources/Sounds/to-new-world.m4a */,
@@ -441,7 +438,6 @@
 				F9AE9B4C309BDADA00C283F5 /* Dino/Resources/Sounds/zero-stars-fall.m4a in Resources */,
 				F9AE9B4D309BDADA00C283F5 /* Dino/Resources/Sounds/end-of-level.m4a in Resources */,
 				F9AE9B4E309BDADA00C283F5 /* Dino/Resources/Sounds/select-menu.m4a in Resources */,
-				F9AE9B4F309BDADA00C283F5 /* Dino/Resources/Sounds/new-clap.m4a in Resources */,
 				F9AE9B54309C607600C283F5 /* Dino/Resources/Sounds/jump-jump.m4a in Resources */,
 				F9AE9B55309C607600C283F5 /* Dino/Resources/Sounds/jump-land.m4a in Resources */,
 				F9AE9B56309C607600C283F5 /* Dino/Resources/Sounds/to-new-world.m4a in Resources */,
@@ -711,7 +707,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Hakketjak.Dino-Klokkijken.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 4283ACUG4Y;
 				DINO_APP_STORE_URL = "";
 				DINO_PRIVACY_POLICY_URL = "https://www.hakketjak.com/dino-time/privacy/";
@@ -768,7 +764,7 @@
 				ASSETCATALOG_COMPILER_OPTIMIZATION = space;
 				CODE_SIGN_ENTITLEMENTS = "Hakketjak.Dino-Klokkijken.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 4283ACUG4Y;
 				DINO_APP_STORE_URL = "";
 				DINO_PRIVACY_POLICY_URL = "https://www.hakketjak.com/dino-time/privacy/";

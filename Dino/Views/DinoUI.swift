@@ -103,10 +103,14 @@ struct PreparedMapArtwork<Content: View>: View {
     var body: some View {
         let cached = rendered?.key == key ? rendered?.image : DinoMapArtworkCache.shared.cached(key)
         Group {
-            if let image = cached ?? rendered?.image {
+            if let image = cached {
                 Image(uiImage: image).resizable().frame(width: size.width, height: size.height)
-            } else if nativeFallback { content() }
-            else if let ground { Color(dinoHex: ground) }
+            } else if rendered != nil || nativeFallback {
+                // A bitmap belongs to one exact layout. During rotation, draw
+                // the new geometry until its cache is ready instead of stretching
+                // the previous terrain underneath the repositioned live actors.
+                content()
+            } else if let ground { Color(dinoHex: ground) }
             else { Color.clear }
         }
         .transaction { $0.animation = nil }
@@ -508,22 +512,28 @@ private struct CustomizationMetricsKey: EnvironmentKey { static let defaultValue
 
 /// Use the available window, including iPad split view, rather than the device model.
 struct CustomizationMetrics {
+    var welcome = false
+    private var shorterWelcome = false
     var spacious = false
     var sideBySide = false
     var usesColorGrid = false
-    var groupsWelcomeClock = false
     var contentWidth: CGFloat { spacious ? 820 : 520 }
-    var footerWidth: CGFloat { spacious ? 660 : 540 }
-    var enlargement: CGFloat { spacious ? 1.3 : 1 }
-    var previewSize: CGFloat { spacious ? (sideBySide ? 280 : 320) : 180 }
+    var footerWidth: CGFloat { welcome ? contentWidth : spacious ? 660 : 540 }
+    var enlargement: CGFloat { spacious ? (welcome ? 1.45 : 1.3) : 1 }
+    var restoreSpacing: CGFloat { welcome && spacious ? 20 : CustomizationLayout.restoreSpacing }
+    var sectionSpacing: CGFloat { welcome && spacious ? (shorterWelcome ? 6 : 8) : CustomizationLayout.sectionSpacing }
+    var labelSpacing: CGFloat { welcome && spacious ? (shorterWelcome ? 4 : 6) : CustomizationLayout.labelSpacing }
+    var dinoPreviewSize: CGFloat { welcome && spacious ? (sideBySide ? 320 : shorterWelcome ? 350 : 380) : previewSize }
+    var previewSize: CGFloat { spacious ? (sideBySide ? 280 : welcome ? (shorterWelcome ? 250 : 300) : 320) : 180 }
     var swatchSize: CGFloat { spacious ? (sideBySide ? 40 : 46) : 28 }
-    var controlHeight: CGFloat { spacious ? 64 : 44 }
+    var controlHeight: CGFloat { spacious ? (welcome ? 58 : 64) : 44 }
 
-    init(size: CGSize = .zero) {
+    init(size: CGSize = .zero, welcome: Bool = false) {
+        self.welcome = welcome
+        shorterWelcome = welcome && size.height < 1250
         spacious = size.width >= 650 && size.height >= 500
         sideBySide = (size.width >= 500 && size.height < 500) || (size.width >= 900 && size.width > size.height)
         usesColorGrid = spacious && !sideBySide && size.width >= 760
-        groupsWelcomeClock = spacious && size.height >= (sideBySide ? 640 : 840)
     }
 }
 
@@ -543,13 +553,13 @@ struct CustomizationSection<Content: View>: View {
     @Environment(\.customizationMetrics) private var metrics
     let title: String
     let identifier: String
-    var controlSpacing: CGFloat = CustomizationLayout.labelSpacing
+    var controlSpacing: CGFloat? = nil
     var compactLabelWidth: CGFloat? = nil
     @ViewBuilder var content: Content
 
     var body: some View {
         let layout = compactLabelWidth == nil
-            ? AnyLayout(VStackLayout(spacing: controlSpacing * metrics.enlargement))
+            ? AnyLayout(VStackLayout(spacing: (controlSpacing ?? metrics.labelSpacing) * metrics.enlargement))
             : AnyLayout(HStackLayout(spacing: 6))
         layout {
             Group {
@@ -565,6 +575,48 @@ struct CustomizationSection<Content: View>: View {
             }.accessibilityIdentifier(identifier)
             content
         }.frame(maxWidth: .infinity)
+    }
+}
+
+/// Keep each tablet welcome page together, with the action aligned to its card.
+struct CustomizationWelcomeLayout<Title: View, Preview: View, Options: View, Action: View>: View {
+    @Environment(\.customizationMetrics) private var metrics
+    let identifier: String
+    let cardIdentifier: String
+    @ViewBuilder var title: () -> Title
+    @ViewBuilder var preview: () -> Preview
+    @ViewBuilder var options: () -> Options
+    @ViewBuilder var action: () -> Action
+
+    var body: some View {
+        GeometryReader { geometry in
+            let horizontal = metrics.sideBySide
+            let shorter = geometry.size.height < 1250
+            let previewWidth = min(360, geometry.size.width * 0.29)
+            let availableWidth = max(1, min(1120, geometry.size.width - 40))
+            let controlsWidth = horizontal ? max(1, min(740, availableWidth - previewWidth - 24))
+                : min(metrics.contentWidth - 32, availableWidth)
+            let layout = horizontal ? AnyLayout(HStackLayout(spacing: 24)) : AnyLayout(VStackLayout(spacing: shorter ? 12 : 20))
+            ScrollView {
+                VStack(spacing: shorter ? 12 : 16) {
+                    title()
+                    layout {
+                        preview().frame(width: horizontal ? previewWidth : nil)
+                        VStack(spacing: 16) {
+                            options().dinoCard(padding: 24)
+                                .accessibilityElement(children: .contain)
+                                .accessibilityIdentifier(cardIdentifier)
+                            action()
+                        }.frame(width: controlsWidth)
+                    }
+                }
+                .padding(.horizontal, 20).padding(.vertical, shorter ? 16 : 20)
+                .frame(maxWidth: .infinity)
+                .modifier(ShortScrollCentering(height: geometry.size.height))
+            }
+            .centersShortContent().bouncesOnlyWhenNeeded()
+            .accessibilityIdentifier(identifier)
+        }
     }
 }
 
@@ -644,10 +696,11 @@ struct CustomizationTypography: ViewModifier {
     @ObservedObject private var language = LanguageManager.shared
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     var optionsInset: CGFloat = 64
+    var welcome = false
 
     func body(content: Content) -> some View {
         GeometryReader { geometry in
-            let metrics = CustomizationMetrics(size: geometry.size)
+            let metrics = CustomizationMetrics(size: geometry.size, welcome: welcome)
             content.environment(\.customizationMetrics, metrics)
                 .environment(\.customizationTypeScale, scale(for: geometry.size.width, metrics: metrics))
         }
@@ -755,6 +808,7 @@ struct ClockHintBadgeArrow: View {
 
 /// Clock controls keep the same colors regardless of the player's clock theme.
 struct DinoClockControlButtonStyle: ButtonStyle {
+    @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.isEnabled) private var isEnabled
     var selected = true
@@ -766,12 +820,13 @@ struct DinoClockControlButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: compact ? 15 : 17, weight: .bold, design: .rounded))
+            .font(.system(size: demonstrationLayout.spacious ? 22 : compact ? 15 : 17, weight: .bold, design: .rounded))
             .foregroundStyle(isEnabled ? (selected ? Color.white : DinoStyle.ink) : DinoStyle.disabledInk(highContrast))
             .lineLimit(1)
             .padding(.horizontal, width == nil ? (compact ? 12 : 18) : 0)
-            .frame(width: width, height: height)
-            .frame(minHeight: height ?? (compact ? 40 : 48))
+            .frame(width: width.map { demonstrationLayout.spacious ? $0 * 1.2 : $0 },
+                   height: height.map { demonstrationLayout.spacious ? max(64, $0) : $0 })
+            .frame(minHeight: height ?? (demonstrationLayout.spacious ? 64 : compact ? 40 : 48))
             .frame(maxWidth: expands ? .infinity : nil)
             .background(isEnabled ? (selected ? DinoStyle.ink : .white) : DinoStyle.disabledBackground,
                         in: RoundedRectangle(cornerRadius: cornerRadius))
@@ -787,6 +842,7 @@ struct DinoClockControlButtonStyle: ButtonStyle {
 }
 
 struct DinoButtonStyle: ButtonStyle {
+    @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.customizationTypeScale) private var customizationScale
     var color = DinoStyle.green
@@ -797,10 +853,10 @@ struct DinoButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .dinoSelectSound(pressed: configuration.isPressed, enabled: playsSelectSound)
-            .font(.system(size: customization ? 17 * customizationScale : compact ? 17 : 20, weight: .bold, design: .rounded))
+            .font(.system(size: customization ? 17 * customizationScale : demonstrationLayout.spacious ? 24 : compact ? 17 : 20, weight: .bold, design: .rounded))
             .foregroundStyle(inkLabel || color == DinoStyle.green ? DinoStyle.ink : .white)
             .padding(.horizontal, compact ? 16 : 24)
-            .frame(minHeight: customization ? max(58, 58 * customizationScale) : compact ? 48 : 58)
+            .frame(minHeight: customization ? max(58, 58 * customizationScale) : demonstrationLayout.spacious ? 70 : compact ? 48 : 58)
             .frame(maxWidth: .infinity)
             .background {
                 RoundedRectangle(cornerRadius: 20)
@@ -1200,12 +1256,15 @@ struct DinoQuestionComposition<Context: View, Answers: View>: View {
     let layout: DinoGameLayout
     var hasContext = true
     var fitsAvailableHeight = true
+    var sideBySide = false
     @ViewBuilder var context: () -> Context
     @ViewBuilder var answers: () -> Answers
     @State private var answerHeight: CGFloat = 0
 
     var body: some View {
-        let arrangement = layout.hasSideContext
+        let contextWidth = sideBySide ? (layout.width - layout.spacing) / 2 : layout.contextWidth
+        let answerWidth = sideBySide ? contextWidth : layout.answerWidth
+        let arrangement = layout.hasSideContext || sideBySide
             ? AnyLayout(HStackLayout(alignment: .center, spacing: layout.spacing))
             : AnyLayout(VStackLayout(spacing: layout.spacing))
         arrangement {
@@ -1213,13 +1272,13 @@ struct DinoQuestionComposition<Context: View, Answers: View>: View {
                 DinoQuestionContext(maxHeight: fitsAvailableHeight ? max(24, layout.height - (layout.hasSideContext ? 0 : answerHeight + layout.spacing)) : nil,
                                     animatesHeight: [.addTime, .subtractTime].contains(layout.kind),
                                     magnification: fitsAvailableHeight ? layout.contextMagnification : 1) {
-                    context().frame(width: fitsAvailableHeight ? layout.contextWidth / layout.contextMagnification : layout.contextWidth)
+                    context().frame(width: fitsAvailableHeight ? contextWidth / layout.contextMagnification : contextWidth)
                 }
-                .frame(width: layout.contextWidth)
+                .frame(width: contextWidth)
             }
             VStack(spacing: layout.spacing) { answers() }
                 .fixedSize(horizontal: false, vertical: true)
-                .frame(width: layout.answerWidth)
+                .frame(width: answerWidth)
                 .readGeometry(for: CGFloat.self) { ceil($0.size.height) } action: { answerHeight = $0 }
         }
         .frame(width: layout.width)

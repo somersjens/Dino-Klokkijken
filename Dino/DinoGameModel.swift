@@ -12,6 +12,7 @@ final class DinoPlayer: ObservableObject {
     private var learningProgress: [String: DinoLearningProgress]
     var progressChanged: (() -> Void)?
     var progressReset: (() -> Void)?
+    var appearanceChanged: (() -> Void)?
     init(store: DinoProgressStore? = nil) {
         let resolved: DinoProgressStore
 #if DEBUG
@@ -111,6 +112,7 @@ final class DinoPlayer: ObservableObject {
     func setDinoAppearance(_ appearance: DinoAppearance) {
         guard appearance != (profile.dinoAppearance ?? .standard) else { return }
         update { $0.dinoAppearance = appearance }
+        appearanceChanged?()
     }
     func completeOnboarding(theme: ClockTheme) {
         update { $0.clockTheme = theme.replacingUnreadableClocks().applyingFixedStyles(); $0.onboardingComplete = true }

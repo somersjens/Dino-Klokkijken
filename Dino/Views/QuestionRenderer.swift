@@ -506,6 +506,7 @@ extension View {
 
 /// The game and its worked example share the exact same hand selector and buttons.
 struct DinoAnalogClockControls: View {
+    @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.isEnabled) private var isEnabled
@@ -547,10 +548,10 @@ struct DinoAnalogClockControls: View {
         let action = DinoAnalogSettingExample.Action.selectMinutes(minutes)
         return Button { adjustingMinutes = minutes } label: {
             Text(LocalizedStringKey(minutes ? "dino.minutes" : "dino.hours"))
-                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .font(.system(size: demonstrationLayout.spacious ? 22 : 17, weight: .bold, design: .rounded))
                 .minimumScaleFactor(0.75).lineLimit(1)
                 .foregroundStyle(isEnabled ? (selected ? Color.white : DinoStyle.ink) : DinoStyle.disabledInk(highContrast))
-                .frame(maxWidth: .infinity, minHeight: 44)
+                .frame(maxWidth: .infinity, minHeight: demonstrationLayout.spacious ? 58 : 44)
                 .contentShape(Rectangle())
                 .background {
                     if selected {

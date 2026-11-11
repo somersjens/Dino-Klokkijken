@@ -212,6 +212,10 @@ struct WorldMap: View {
                         .accessibilityIdentifier("map.completionConfetti")
                 }
             }.coordinateSpace(name: "adventure.map.viewport")
+                .sheet(isPresented: $showsStars) {
+                    DinoStarsOverview(landscape: landscape).starsPresentation().gameEnvironment()
+                        .presentationDragIndicator(.visible)
+                }
         }
         .overlayPreferenceValue(MapDinoAnchorKey.self) { anchor in
             if animatesOpening && !introFinished {
@@ -332,10 +336,6 @@ struct WorldMap: View {
                         }.accessibilityIdentifier("friend.close")
                     } }
             }.environmentObject(friends).gameEnvironment()
-        }
-        .sheet(isPresented: $showsStars) {
-            DinoStarsOverview().gameEnvironment()
-                .presentationDetents([.large]).presentationDragIndicator(.visible)
         }
     }
 
@@ -649,6 +649,7 @@ private struct MapViewportObserver: UIViewRepresentable {
         private var completedFocus = 0
         private var focusOffset: CGFloat?
         private var snapshot: UIView?
+        private var snapshotViewportSize: CGSize?
 
         private struct Layout: Equatable {
             let size: CGSize
@@ -682,6 +683,7 @@ private struct MapViewportObserver: UIViewRepresentable {
         }
         override func layoutSubviews() {
             super.layoutSubviews()
+            removeSnapshotIfResized()
             if window != nil { attach() }
         }
 
@@ -716,6 +718,19 @@ private struct MapViewportObserver: UIViewRepresentable {
             snapshot?.layer.removeAllAnimations()
             snapshot?.removeFromSuperview()
             snapshot = nil
+            snapshotViewportSize = nil
+        }
+
+        private func removeSnapshotIfResized() {
+            guard let snapshotViewportSize, let scrollView,
+                  snapshotViewportSize != scrollView.bounds.size else { return }
+            // A focus-trip cover contains the old layout. Let the live map
+            // handle rotation rather than resizing that frozen picture.
+            removeSnapshot()
+            // Rotation can also interrupt the cover's final fade. Recheck the
+            // destination before reporting arrival in the new viewport.
+            completedFocus = 0
+            startObserving()
         }
 
         private func coverViewport(_ scroll: UIScrollView) {
@@ -727,10 +742,12 @@ private struct MapViewportObserver: UIViewRepresentable {
             image.isUserInteractionEnabled = true
             parent.insertSubview(image, aboveSubview: scroll)
             snapshot = image
+            snapshotViewportSize = scroll.bounds.size
         }
 
         @objc private func tick() {
             guard let scroll = scrollView, window != nil else { detach(); return }
+            removeSnapshotIfResized()
             guard scroll.bounds.height > 0, bounds.height > 0,
                   scroll.contentSize.height >= scroll.bounds.height else { return }
             let target = convert(bounds, to: scroll)
@@ -790,6 +807,7 @@ private struct MapViewportObserver: UIViewRepresentable {
                                       self.configuration.focusRequest == request else { return }
                                 image?.removeFromSuperview()
                                 self.snapshot = nil
+                                self.snapshotViewportSize = nil
                                 self.configuration.focused(request)
                             })
                         } else {

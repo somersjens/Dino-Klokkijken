@@ -1,6 +1,21 @@
 import Foundation
 
 @MainActor
+private final class TestAchievementTransport: AchievementTransport {
+    var values: [String: Double] = [:]
+    var reports: [AchievementProgress] = []
+    var afterLoad: (() -> Void)?
+    func loadProgress() async throws -> [String: Double] {
+        afterLoad?()
+        return values
+    }
+    func report(_ progress: [AchievementProgress]) async throws {
+        reports += progress
+        for value in progress { values[value.identifier] = value.percentComplete }
+    }
+}
+
+@MainActor
 private final class TestLeaderboards: ProgressLeaderboardTransport {
     enum Failure: Error { case offline }
     var availableTimingLeaderboardIDs: Set<String> = []
@@ -8,12 +23,24 @@ private final class TestLeaderboards: ProgressLeaderboardTransport {
     var failLoad = false
     var failSubmission: Int?
     var submitted: [String] = []
+    var resultLoads = 0
     var afterLoad: (() -> Void)?
     var afterSubmit: (() -> Void)?
     func loadOwnResults() async throws -> [String: LeaderboardValue] {
         if failLoad { throw Failure.offline }
+        resultLoads += 1
         afterLoad?()
         return values
+    }
+    func loadOwnVisibility() async throws -> LeaderboardValue? {
+        if failLoad { throw Failure.offline }
+        afterLoad?()
+        return values[SharedScoreVisibility.leaderboardID]
+    }
+    func loadOwnAppearance() async throws -> [String: LeaderboardValue] {
+        if failLoad { throw Failure.offline }
+        afterLoad?()
+        return values.filter { SharedDinoAppearance.leaderboardIDs.contains($0.key) }
     }
     func submit(score: Int, context: Int, leaderboardID: String) async throws {
         if failSubmission == submitted.count { throw Failure.offline }
@@ -40,7 +67,201 @@ enum DinoSocialTests {
         testLegacyProfileMigration()
         await testSync()
         await testTimedSync()
+        await testScoreVisibility()
+        await testAchievements()
+        await testAppearanceSharing()
         return checks
+    }
+
+    private static func testAppearanceSharing() async {
+        func values(_ snapshot: SharedDinoAppearance) -> [String: LeaderboardValue] {
+            [SharedDinoAppearance.primaryID: .init(score: snapshot.revision, context: snapshot.primaryContext),
+             SharedDinoAppearance.secondaryID: .init(score: snapshot.revision, context: snapshot.secondaryContext)]
+        }
+        for channel in 0...255 {
+            let colors = DinoAppearance(bandana: UInt32(channel) * 0x010101, spikes: 0xFA2090,
+                                        body: 0x029BFF, belly: 0xFFFFFE)
+            let snapshot = SharedDinoAppearance(revision: channel + 1, appearance: colors)
+            expect(SharedDinoAppearance(values: values(snapshot)) == snapshot,
+                   "all RGB channels round trip exactly without palette quantization")
+        }
+        let colors = DinoAppearance(bandana: 0xFF3267, spikes: 0xAA11CC, body: 0x1098FF, belly: 0xFFFEDD)
+        let remote = SharedDinoAppearance(revision: 100, appearance: colors)
+        var broken = values(remote)
+        broken[SharedDinoAppearance.primaryID] = .init(score: 99, context: remote.primaryContext)
+        expect(SharedDinoAppearance(values: broken) == nil, "mixed revisions cannot produce a hybrid Dino")
+        broken = values(remote); broken[SharedDinoAppearance.primaryID] = nil
+        expect(SharedDinoAppearance(values: broken) == nil, "partial colors remain unknown")
+        broken = values(remote); broken[SharedDinoAppearance.secondaryID] = .init(score: 100, context: -1)
+        expect(SharedDinoAppearance(values: broken) == nil, "invalid color schema is rejected")
+
+        let transport = TestLeaderboards()
+        transport.values = values(remote)
+        var choice = DinoAppearancePublication(appearance: .standard)
+        func sync() async throws {
+            try await DinoAppearanceSyncService.synchronize(transport: transport, current: { choice },
+                resolve: { choice = $0 }, allowed: { true })
+        }
+        try! await sync()
+        expect(choice.appearance == colors && transport.submitted.isEmpty,
+               "an unchanged older device does not overwrite newer published colors")
+        choice = DinoAppearancePublication(appearance: .standard, revision: 1, pending: true)
+        transport.failSubmission = 1
+        do { try await sync(); expect(false, "partial color upload should fail") }
+        catch { expect(choice.pending && choice.revision == 101, "a failed upload preserves its durable retry revision") }
+        expect(SharedDinoAppearance(values: transport.values) == nil,
+               "readers reject a half-published new palette")
+        transport.failSubmission = nil
+        try! await sync()
+        expect(SharedDinoAppearance(values: transport.values)?.appearance == .standard && !choice.pending,
+               "retry commits the exact palette and clears the pending flag")
+        expect(transport.submitted.last == SharedDinoAppearance.primaryID,
+               "primary colors are the final commit record")
+        let submitted = transport.submitted.count
+        try! await sync()
+        expect(transport.submitted.count == submitted, "unchanged palette is not uploaded repeatedly")
+        let revoked = TestLeaderboards()
+        var allowed = true
+        revoked.afterLoad = { allowed = false }
+        try! await DinoAppearanceSyncService.synchronize(transport: revoked, current: { choice },
+            resolve: { choice = $0 }, allowed: { allowed })
+        expect(revoked.submitted.isEmpty, "account revocation prevents color uploads")
+
+        let memory = InMemoryKeyValueStore()
+        let player = DinoPlayer(store: DinoProgressStore(defaults: memory))
+        var changes = 0
+        player.appearanceChanged = { changes += 1 }
+        player.setDinoAppearance(colors)
+        player.setDinoAppearance(colors)
+        expect(changes == 1 && DinoProgressStore(defaults: memory).load().dinoAppearance == colors,
+               "a real saved color change triggers one publication, and survives relaunch")
+        player.resetAllData(at: Date(timeIntervalSince1970: 100))
+        let reset = DinoProgressStore(defaults: memory).load()
+        expect(reset.totalStars == 0 && reset.levels.isEmpty && reset.timedAttempts == nil && reset.dinoAppearance == nil,
+               "full reset removes local score history and customization")
+        var stale = PlayerProfile(); stale.recordCompletedAttempt(levelID: 1, correct: 5)
+        var afterReset = reset
+        afterReset.mergeCloudProgress(DinoCloudProgress(stale))
+        expect(afterReset.levels.isEmpty && afterReset.progressResetAt == reset.progressResetAt,
+               "pre-reset cloud scores cannot return after full reset")
+    }
+
+    private static func testAchievements() async {
+        var profile = PlayerProfile()
+        expect(DinoAchievements.progress(profile, includeScores: true).isEmpty, "new saves have no invented achievements")
+        for world in DinoWorldCatalog.worlds {
+            for level in world.levels {
+                profile.recordCompletedAttempt(levelID: level, correct: level.isMultiple(of: 10) ? 10 : 5)
+            }
+            let bosses = DinoAchievements.progress(profile, includeScores: false)
+            expect(bosses.count == world.id && bosses.last?.identifier == DinoAchievements.boss(world.id),
+                   "each actual boss victory unlocks its own achievement")
+            expect(bosses.allSatisfy { $0.percentComplete == 100 }, "boss achievements require completion")
+        }
+        expect(profile.totalStars == 300, "the final star milestone is reachable")
+        let all = DinoAchievements.progress(profile, includeScores: true)
+        expect(all.count == 16 && Set(all.map(\.identifier)).count == 16, "six star and ten boss achievements use unique identifiers")
+        expect(all.allSatisfy { $0.percentComplete == 100 }, "a perfect adventure completes every achievement")
+        let transport = TestAchievementTransport()
+        try! await AchievementSyncService.synchronize(transport: transport, current: { profile },
+            includeScores: { true }, allowed: { true })
+        expect(transport.reports.count == 16, "existing progress earns achievements after an update")
+        try! await AchievementSyncService.synchronize(transport: transport, current: { profile },
+            includeScores: { true }, allowed: { true })
+        expect(transport.reports.count == 16, "retries do not report earned achievements twice")
+        let hidden = TestAchievementTransport()
+        try! await AchievementSyncService.synchronize(transport: hidden, current: { profile },
+            includeScores: { false }, allowed: { true })
+        expect(hidden.reports.count == 10 && hidden.reports.allSatisfy { $0.identifier.contains(".boss.") },
+               "hiding scores also stops star-count achievement publication")
+        let revoked = TestAchievementTransport()
+        var allowed = true
+        revoked.afterLoad = { allowed = false }
+        try! await AchievementSyncService.synchronize(transport: revoked, current: { profile },
+            includeScores: { true }, allowed: { allowed })
+        expect(revoked.reports.isEmpty, "revoked access prevents achievement reporting")
+    }
+
+    private static func testScoreVisibility() async {
+        var profile = PlayerProfile()
+        profile.recordCompletedAttempt(levelID: 1, correct: 5, questionSeconds: [2, 2, 2, 2, 2])
+        let visible = SharedScoreVisibility(revision: 10, profile: profile, showsScores: true)
+        let hidden = SharedScoreVisibility(revision: 10, profile: profile, showsScores: false)
+        expect(SharedScoreVisibility(score: visible.score, context: 1) == visible, "visible profile round trips")
+        expect(SharedScoreVisibility(score: hidden.score, context: 1) == hidden, "hidden profile round trips")
+        expect(hidden.score > visible.score, "hiding wins a simultaneous preference change")
+        expect(SharedScoreVisibility(revision: 11, profile: profile, showsScores: true).score > hidden.score,
+               "a newer explicit choice can show scores again")
+        for score in [-1, 0, 1, Int.max] {
+            expect(SharedScoreVisibility(score: score, context: 1) == nil, "malformed visibility is rejected")
+        }
+        expect(SharedScoreVisibility(score: visible.score, context: 2) == nil, "unknown visibility schema is rejected")
+        var progress = FriendProgress()
+        for level in DinoLeaderboards.publishedLevels {
+            progress.merge(FriendProgress.local(profile).levels[level.id]!)
+        }
+        expect(progress.totalStars == nil, "partial world results cannot masquerade as the adventure total")
+        progress.applyVisibility(visible)
+        progress.applyTotalStars(150)
+        expect(progress.totalStars == 150 && progress.starPercentage == nil,
+               "the aggregate includes later worlds without inventing a percentage from partial level data")
+        progress.applyTotalStars(301)
+        expect(progress.totalStars == 150, "invalid aggregate star counts are rejected")
+        progress.applyVisibility(hidden)
+        expect(progress.nextLevel == profile.mapLevel && progress.levels.isEmpty && progress.totalStars == nil,
+               "level-only profiles retain their level and remove every result")
+        progress.merge(FriendProgress.local(profile).levels[1]!)
+        progress.applyTotalStars(150)
+        expect(progress.levels.isEmpty, "late score responses cannot repopulate a hidden profile")
+        expect(progress.totalStars == nil && progress.highestCompletedLevel == nil,
+               "late aggregate responses cannot expose hidden scores")
+        progress.applyVisibility(visible)
+        expect(progress.totalStars == nil, "showing scores again does not resurrect previously cleared aggregates")
+        progress.applyVisibility(nil, fallbackLevel: 2)
+        expect(!progress.scoresVisible && progress.nextLevel == 2, "missing settings hide historical scores")
+
+        let transport = TestLeaderboards()
+        transport.values[SharedScoreVisibility.leaderboardID] = LeaderboardValue(score: visible.score, context: 1)
+        var choice = ScoreSharingChoice(revision: 11, showsScores: false, pending: true)
+        let service = ProgressSyncService()
+        func sync() async throws {
+            try await service.synchronizeSharing(transport: transport, current: { profile }, merge: { profile.mergeSharedProgress($0) },
+                choice: { choice }, resolve: { choice = $0 }, allowed: { true })
+        }
+        try! await sync()
+        expect(transport.resultLoads == 0 && transport.submitted == [SharedScoreVisibility.leaderboardID],
+               "hiding uploads only the level and preference")
+        choice.pending = false
+        profile.recordCompletedAttempt(levelID: 2, correct: 5)
+        try! await sync()
+        let published = transport.values[SharedScoreVisibility.leaderboardID]!
+        expect(SharedScoreVisibility(score: published.score, context: published.context)?.levelID == profile.mapLevel,
+               "level advances while score sharing is off")
+        expect(transport.resultLoads == 0, "level-only updates do not read or submit result boards")
+
+        choice = ScoreSharingChoice(revision: 1, showsScores: true, pending: false)
+        transport.submitted = []
+        try! await sync()
+        expect(!choice.showsScores && choice.revision == 11 && transport.submitted.isEmpty,
+               "an older device adopts the newer hidden preference")
+        choice = ScoreSharingChoice(revision: 1, showsScores: true, pending: true)
+        transport.failSubmission = 0
+        do { try await sync(); expect(false, "offline result submission must fail") }
+        catch { expect(true, "failed publication remains retryable") }
+        expect(choice.revision == 12, "a new explicit choice advances past the remote revision")
+        expect(transport.values[SharedScoreVisibility.leaderboardID] == published,
+               "a failed result sync does not expose older scores")
+        transport.failSubmission = nil
+        try! await sync()
+        expect(transport.submitted.last == SharedScoreVisibility.leaderboardID && transport.resultLoads > 0,
+               "the visible marker is published after all result submissions")
+
+        let revoked = TestLeaderboards()
+        var allowed = true
+        revoked.afterLoad = { allowed = false }
+        try! await service.synchronizeSharing(transport: revoked, current: { profile }, merge: { _ in },
+            choice: { choice }, resolve: { choice = $0 }, allowed: { allowed })
+        expect(revoked.submitted.isEmpty && revoked.resultLoads == 0, "revoking access stops metadata and results")
     }
     private static func testNames() {
         for name in ["Sam", "José", "Jo\u{0308}rg", "O’Neil", "Anne-Marie", "محمد", "می\u{200C}نا", "李", "王小明", "さくら", "김민수", "София", "Σοφία", "דניאל", "आरव", "क्\u{200D}षितिज"] {

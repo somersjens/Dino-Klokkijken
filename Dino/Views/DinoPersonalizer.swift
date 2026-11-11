@@ -134,33 +134,51 @@ struct DinoAppearanceEditor: View {
         ("purple", 0xA77BE0), ("pink", 0xF48EB6)
     ]
 
+    var welcomeChrome: (title: AnyView, action: AnyView)? = nil
+
     var body: some View {
-        CustomizationEditorLayout(horizontal: metrics.sideBySide, spacing: metrics.sideBySide ? 16 : 0,
-                                  maxWidth: metrics.sideBySide ? 1100 : .infinity,
-                                  identifier: "personalize.options", showsOptions: showsOptions) {
-            if showsPreview { preview }
-        } options: {
-            VStack(spacing: CustomizationLayout.restoreSpacing) {
-                VStack(spacing: CustomizationLayout.sectionSpacing * metrics.enlargement) {
-                    ForEach(DinoAppearance.Part.allCases, id: \.self) { part in
-                        colorChoice(part)
-                    }
+        if let welcomeChrome {
+            CustomizationWelcomeLayout(identifier: "personalize.options", cardIdentifier: "personalize.welcome.optionsCard") {
+                welcomeChrome.title
+            } preview: {
+                preview
+            } options: {
+                options
+            } action: {
+                welcomeChrome.action
+            }
+        } else {
+            CustomizationEditorLayout(horizontal: metrics.sideBySide, spacing: metrics.sideBySide ? 16 : 0,
+                                      maxWidth: metrics.sideBySide ? 1100 : .infinity,
+                                      identifier: "personalize.options", showsOptions: showsOptions) {
+                if showsPreview { preview }
+            } options: {
+                options.modifier(CustomizationOptionsCard())
+            }
+        }
+    }
+
+    private var options: some View {
+        VStack(spacing: metrics.restoreSpacing) {
+            VStack(spacing: metrics.sectionSpacing * metrics.enlargement) {
+                ForEach(DinoAppearance.Part.allCases, id: \.self) { part in
+                    colorChoice(part)
                 }
-                Button {
-                    player.setDinoAppearance(.standard)
-                } label: {
-                    Label("dino.appearance.reset", systemImage: "arrow.counterclockwise")
-                        .modifier(CustomizationText())
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                }.buttonStyle(DinoPlainButtonStyle()).foregroundStyle(DinoStyle.deepGreen)
-                    .accessibilityIdentifier("personalize.resetColors")
-            }.modifier(CustomizationOptionsCard())
+            }
+            Button {
+                player.setDinoAppearance(.standard)
+            } label: {
+                Label("dino.appearance.reset", systemImage: "arrow.counterclockwise")
+                    .modifier(CustomizationText())
+                    .frame(maxWidth: .infinity, minHeight: 44)
+            }.buttonStyle(DinoPlainButtonStyle()).foregroundStyle(DinoStyle.deepGreen)
+                .accessibilityIdentifier("personalize.resetColors")
         }
     }
 
     private var preview: some View {
         ZStack { DinoAvatar(appearance: appearance) }
-            .frame(width: compact ? (showsOptions ? 120 : 156) : metrics.previewSize, height: compact ? (showsOptions ? 120 : 156) : metrics.previewSize)
+            .frame(width: compact ? (showsOptions ? 120 : 156) : metrics.dinoPreviewSize, height: compact ? (showsOptions ? 120 : 156) : metrics.dinoPreviewSize)
             .shadow(color: DinoStyle.deepGreen.opacity(0.10), radius: 8, y: 5)
             .accessibilityHidden(false)
             .accessibilityIdentifier("personalize.preview")

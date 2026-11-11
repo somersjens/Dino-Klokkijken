@@ -8,6 +8,7 @@ struct DinoFriend: Identifiable {
     let displayName: String
     var progress = FriendProgress()
     var avatar: UIImage?
+    var appearance: DinoAppearance?
 }
 
 enum FriendsState: String {
@@ -18,10 +19,48 @@ enum FriendsState: String {
 enum GameCenterFailure: Error { case configuration, unavailable }
 
 @MainActor
+final class GameKitAchievementTransport: AchievementTransport {
+    func loadProgress() async throws -> [String: Double] {
+        let achievements = try await GKAchievement.loadAchievements()
+        return Dictionary(achievements.map { ($0.identifier, $0.percentComplete) },
+                          uniquingKeysWith: max)
+    }
+
+    func report(_ progress: [AchievementProgress]) async throws {
+        let achievements = progress.map { progress in
+            let achievement = GKAchievement(identifier: progress.identifier)
+            achievement.percentComplete = progress.percentComplete
+            achievement.showsCompletionBanner = progress.percentComplete == 100
+            return achievement
+        }
+        try await GKAchievement.report(achievements)
+    }
+}
+
+@MainActor
 final class GameKitProgressTransport: ProgressLeaderboardTransport {
     private(set) var availableTimingLeaderboardIDs: Set<String> = []
     private let player: GKLocalPlayer
     init(player: GKLocalPlayer = .local) { self.player = player }
+
+    func loadOwnVisibility() async throws -> LeaderboardValue? {
+        let boards = try await GKLeaderboard.loadLeaderboards(IDs: [SharedScoreVisibility.leaderboardID])
+        guard let board = boards.first, board.type == .classic else { throw GameCenterFailure.configuration }
+        let (entry, _) = try await board.loadEntries(for: [player], timeScope: .allTime)
+        return entry.map { LeaderboardValue(score: $0.score, context: $0.context) }
+    }
+
+    func loadOwnAppearance() async throws -> [String: LeaderboardValue] {
+        let boards = try await GKLeaderboard.loadLeaderboards(IDs: SharedDinoAppearance.leaderboardIDs)
+        guard Set(boards.map(\.baseLeaderboardID)) == Set(SharedDinoAppearance.leaderboardIDs),
+              boards.allSatisfy({ $0.type == .classic }) else { throw GameCenterFailure.configuration }
+        var values: [String: LeaderboardValue] = [:]
+        for board in boards {
+            let (entry, _) = try await board.loadEntries(for: [player], timeScope: .allTime)
+            if let entry { values[board.baseLeaderboardID] = LeaderboardValue(score: entry.score, context: entry.context) }
+        }
+        return values
+    }
 
     func loadOwnResults() async throws -> [String: LeaderboardValue] {
         let boards = try await GKLeaderboard.loadLeaderboards(IDs: DinoLeaderboards.allIDs)
@@ -84,12 +123,17 @@ final class FriendsManager: NSObject, ObservableObject {
     private var startedAuthentication = false
     private var authenticatedID: String?
     private var authenticationController: UIViewController?
+    private var sharingGeneration = UUID()
     private let syncService = ProgressSyncService()
     private static let enabledKey = "dino.social.enabled.v1"
     private static let ownerKey = "dino.social.saveOwner.v1"
     private static let friendAccessKey = "dino.social.friendAccess.v1"
     private static let shareOnConnectKey = "dino.social.shareOnConnect.v1"
     private static func sharingKey(_ id: String) -> String { "dino.social.sharing.v1.\(id)" }
+    private static func visibilityRevisionKey(_ id: String) -> String { "dino.social.visibilityRevision.v1.\(id)" }
+    private static func visibilityPendingKey(_ id: String) -> String { "dino.social.visibilityPending.v1.\(id)" }
+    private static func appearanceKey(_ id: String) -> String { "dino.social.appearance.v1.\(id)" }
+    private static let appearanceBeforeConnectKey = "dino.social.appearanceBeforeConnect.v1"
 
     override init() {
         var store: KeyValueStore = UserDefaults.standard
@@ -123,6 +167,7 @@ final class FriendsManager: NSObject, ObservableObject {
         guard self.player == nil else { return }
         self.player = player
         player.progressChanged = { [weak self] in self?.progressDirty = true; self?.scheduleSync() }
+        player.appearanceChanged = { [weak self] in self?.publishAppearanceChange() }
         player.progressReset = { [weak self] in
             self?.stopSharing()
             self?.defaults.removeObject(forKey: Self.ownerKey)
@@ -137,10 +182,11 @@ final class FriendsManager: NSObject, ObservableObject {
         enabled = true; defaults.set(1, forKey: Self.enabledKey)
         friendAccess = true; defaults.set(1, forKey: Self.friendAccessKey)
         shareWhenConnected = true; defaults.set(1, forKey: Self.shareOnConnectKey)
+        defaults.set(1, forKey: Self.appearanceBeforeConnectKey)
         authenticate()
     }
     func disable() {
-        stopSharing()
+        stopSharing(publishVisibility: false)
         enabled = false; defaults.set(0, forKey: Self.enabledKey)
         friendAccess = false; defaults.set(0, forKey: Self.friendAccessKey)
         invalidateFriends(); state = .inactive
@@ -188,6 +234,7 @@ final class FriendsManager: NSObject, ObservableObject {
         let local = GKLocalPlayer.local
         let id = local.isAuthenticated ? local.gamePlayerID : nil
         if id != authenticatedID {
+            sharingGeneration = UUID()
             invalidateFriends(); syncTask?.cancel(); syncTask = nil; retryTask?.cancel(); retryTask = nil
             syncing = false; sharing = false
             authenticatedID = id
@@ -196,6 +243,9 @@ final class FriendsManager: NSObject, ObservableObject {
         guard let id else { state = .signedOut; return }
         accountConflict = defaults.string(forKey: Self.ownerKey).map { $0 != id } ?? false
         sharing = canShare && defaults.integer(forKey: Self.sharingKey(id)) == 1
+        if !(1..<((Int.max - 1_023) / 1_024)).contains(defaults.integer(forKey: Self.visibilityRevisionKey(id))) {
+            recordVisibilityChoice(account: id, pending: false)
+        }
         if defaults.integer(forKey: Self.shareOnConnectKey) == 1 {
             defaults.set(0, forKey: Self.shareOnConnectKey)
             shareWhenConnected = false
@@ -270,10 +320,16 @@ final class FriendsManager: NSObject, ObservableObject {
                 var unique: [String: GKPlayer] = [:]
                 for friend in players where friend.gamePlayerID != account { unique[friend.gamePlayerID] = friend }
                 self.gamePlayers = unique
-                self.friends = unique.values.map { DinoFriend(id: $0.gamePlayerID, displayName: $0.displayName) }
+                self.friends = unique.values.map {
+                    var progress = FriendProgress()
+                    progress.applyVisibility(nil)
+                    return DinoFriend(id: $0.gamePlayerID, displayName: $0.displayName, progress: progress)
+                }
                     .sorted { $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending }
                 self.state = .ready
                 guard !unique.isEmpty else { return }
+                await self.loadAppearances(players: Array(unique.values), token: token, account: account)
+                guard self.valid(token, account) else { return }
                 await self.loadProgress(players: Array(unique.values), token: token, account: account)
                 guard self.valid(token, account) else { return }
                 // Load photos in bounded batches, rather than N serial requests.
@@ -306,25 +362,39 @@ final class FriendsManager: NSObject, ObservableObject {
     }
     private func loadProgress(players: [GKPlayer], token: UUID, account: String) async {
         do {
-            let boards = try await GKLeaderboard.loadLeaderboards(IDs: DinoLeaderboards.publishedLevels.map { DinoLeaderboards.level($0.id) })
+            try await refreshFriendVisibility(players: players, token: token, account: account)
             guard valid(token, account) else { return }
-            if boards.count != DinoLeaderboards.publishedLevels.count { actionMessageKey = "dino.friends.resultsUnavailable" }
+            let visiblePlayers = players.filter { player in
+                friends.first { $0.id == player.gamePlayerID }?.progress.scoresVisible == true
+            }
+            guard !visiblePlayers.isEmpty else { return }
+            let resultIDs = DinoLeaderboards.publishedLevels.map { DinoLeaderboards.level($0.id) }
+            let boards = try await GKLeaderboard.loadLeaderboards(IDs: resultIDs + [DinoLeaderboards.totalStars])
+            guard valid(token, account) else { return }
+            if boards.count != resultIDs.count + 1 { actionMessageKey = "dino.friends.resultsUnavailable" }
             let timedBoards = (try? await GKLeaderboard.loadLeaderboards(IDs: DinoLeaderboards.timedIDs)) ?? []
             guard valid(token, account) else { return }
             for board in boards + timedBoards where board.type == .classic {
-                guard let level = DinoLevelCatalog.levels.first(where: {
+                let level = DinoLevelCatalog.levels.first(where: {
                     board.baseLeaderboardID == DinoLeaderboards.level($0.id) || board.baseLeaderboardID == DinoLeaderboards.timedLevel($0.id)
-                }) else { continue }
-                let isTimed = board.baseLeaderboardID == DinoLeaderboards.timedLevel(level.id)
+                })
+                let isTotal = board.baseLeaderboardID == DinoLeaderboards.totalStars
+                guard isTotal || level != nil else { continue }
+                let isTimed = level.map { board.baseLeaderboardID == DinoLeaderboards.timedLevel($0.id) } ?? false
                 // Explicit friends, in batches; never fetch a global ranked list.
-                for offset in stride(from: 0, to: players.count, by: 50) {
+                for offset in stride(from: 0, to: visiblePlayers.count, by: 50) {
                     guard valid(token, account) else { return }
-                    let batch = Array(players[offset..<min(offset + 50, players.count)])
+                    let batch = Array(visiblePlayers[offset..<min(offset + 50, visiblePlayers.count)])
                     do {
                         let (_, entries) = try await board.loadEntries(for: batch, timeScope: .allTime)
                         guard valid(token, account) else { return }
                         for entry in entries {
-                            guard let index = friends.firstIndex(where: { $0.id == entry.player.gamePlayerID }),
+                            guard let index = friends.firstIndex(where: { $0.id == entry.player.gamePlayerID }) else { continue }
+                            if isTotal {
+                                if entry.context == DinoLeaderboards.context { friends[index].progress.applyTotalStars(entry.score) }
+                                continue
+                            }
+                            guard let level,
                                   let result = isTimed ? DinoLeaderboards.decodeTimed(levelID: level.id, score: entry.score, context: entry.context)
                                     : DinoLeaderboards.decode(levelID: level.id, score: entry.score, context: entry.context) else { continue }
                             friends[index].progress.merge(result)
@@ -332,7 +402,102 @@ final class FriendsManager: NSObject, ObservableObject {
                     } catch { if valid(token, account) { actionMessageKey = "dino.friends.resultsUnavailable" } }
                 }
             }
-        } catch { if valid(token, account) { actionMessageKey = "dino.friends.resultsUnavailable" } }
+            try await refreshFriendVisibility(players: players, token: token, account: account)
+        } catch {
+            if valid(token, account) {
+                for index in friends.indices {
+                    let level = friends[index].progress.nextLevel
+                    friends[index].progress.applyVisibility(nil, fallbackLevel: level)
+                }
+                actionMessageKey = "dino.friends.resultsUnavailable"
+            }
+        }
+    }
+
+    private func loadAppearances(players: [GKPlayer], token: UUID, account: String) async {
+        do {
+            let boards = try await GKLeaderboard.loadLeaderboards(IDs: SharedDinoAppearance.leaderboardIDs)
+            guard valid(token, account) else { return }
+            for offset in stride(from: 0, to: players.count, by: 50) {
+                let batch = Array(players[offset..<min(offset + 50, players.count)])
+                var values: [String: [String: LeaderboardValue]] = [:]
+                for board in boards where board.type == .classic {
+                    let (_, entries) = try await board.loadEntries(for: batch, timeScope: .allTime)
+                    guard valid(token, account) else { return }
+                    for entry in entries {
+                        values[entry.player.gamePlayerID, default: [:]][board.baseLeaderboardID] =
+                            LeaderboardValue(score: entry.score, context: entry.context)
+                    }
+                }
+                for native in batch {
+                    guard let index = friends.firstIndex(where: { $0.id == native.gamePlayerID }) else { continue }
+                    friends[index].appearance = SharedDinoAppearance(values: values[native.gamePlayerID] ?? [:])?.appearance
+                }
+            }
+        } catch {
+            // Unknown or partially uploaded colors must not be shown as a confirmed palette.
+            guard valid(token, account) else { return }
+            for index in friends.indices { friends[index].appearance = nil }
+        }
+    }
+
+    private func appearancePublication(account: String) -> DinoAppearancePublication {
+        let colors = player?.profile.dinoAppearance ?? .standard
+        let saved = (defaults.object(forKey: Self.appearanceKey(account)) as? Data)
+            .flatMap { try? JSONDecoder().decode(DinoAppearancePublication.self, from: $0) }
+        if defaults.integer(forKey: Self.appearanceBeforeConnectKey) == 1 {
+            return DinoAppearancePublication(appearance: colors, revision: saved?.revision ?? 0, pending: true)
+        }
+        return saved ?? DinoAppearancePublication(appearance: colors)
+    }
+
+    private func saveAppearancePublication(_ value: DinoAppearancePublication, account: String) {
+        guard let data = try? JSONEncoder().encode(value) else { return }
+        defaults.set(data, forKey: Self.appearanceKey(account))
+        if !value.pending { defaults.set(0, forKey: Self.appearanceBeforeConnectKey) }
+    }
+
+    private func publishAppearanceChange() {
+        if let account = authenticatedID, let player {
+            let previous = appearancePublication(account: account)
+            saveAppearancePublication(DinoAppearancePublication(appearance: player.profile.dinoAppearance ?? .standard,
+                revision: max(0, min(previous.revision, Int.max - 2)) + 1, pending: true), account: account)
+        } else { defaults.set(1, forKey: Self.appearanceBeforeConnectKey) }
+        cancelSharingSync()
+        progressDirty = true
+        scheduleSync()
+    }
+
+    private func refreshFriendVisibility(players: [GKPlayer], token: UUID, account: String) async throws {
+        let boards = try await GKLeaderboard.loadLeaderboards(IDs: [SharedScoreVisibility.leaderboardID, DinoLeaderboards.highestLevel])
+        guard valid(token, account) else { return }
+        let visibilityBoard = boards.first { $0.baseLeaderboardID == SharedScoreVisibility.leaderboardID && $0.type == .classic }
+        let levelBoard = boards.first { $0.baseLeaderboardID == DinoLeaderboards.highestLevel && $0.type == .classic }
+        for offset in stride(from: 0, to: players.count, by: 50) {
+            let batch = Array(players[offset..<min(offset + 50, players.count)])
+            var visibility: [String: SharedScoreVisibility] = [:]
+            var fallbackLevels: [String: Int] = [:]
+            if let levelBoard {
+                let (_, entries) = try await levelBoard.loadEntries(for: batch, timeScope: .allTime)
+                guard valid(token, account) else { return }
+                for entry in entries where entry.context == DinoLeaderboards.context {
+                    guard (0...DinoLevelCatalog.levels.count).contains(entry.score) else { continue }
+                    fallbackLevels[entry.player.gamePlayerID] = min(entry.score + 1, DinoLevelCatalog.levels.count)
+                }
+            }
+            if let visibilityBoard {
+                let (_, entries) = try await visibilityBoard.loadEntries(for: batch, timeScope: .allTime)
+                guard valid(token, account) else { return }
+                for entry in entries {
+                    visibility[entry.player.gamePlayerID] = SharedScoreVisibility(score: entry.score, context: entry.context)
+                }
+            }
+            for player in batch {
+                guard let index = friends.firstIndex(where: { $0.id == player.gamePlayerID }) else { continue }
+                friends[index].progress.applyVisibility(visibility[player.gamePlayerID], fallbackLevel: fallbackLevels[player.gamePlayerID])
+            }
+        }
+        guard visibilityBoard != nil else { throw GameCenterFailure.configuration }
     }
 
     func allowSharing() {
@@ -348,46 +513,96 @@ final class FriendsManager: NSObject, ObservableObject {
         let id = GKLocalPlayer.local.gamePlayerID
         defaults.set(id, forKey: Self.ownerKey)
         defaults.set(1, forKey: Self.sharingKey(id))
-        sharing = true; retryDelay = 5
+        recordVisibilityChoice(account: id)
+        cancelSharingSync()
+        sharing = true; retryDelay = 5; progressDirty = true
         scheduleSync()
     }
-    func stopSharing() {
+    func stopSharing(publishVisibility: Bool = true) {
         shareWhenConnected = false
         defaults.set(0, forKey: Self.shareOnConnectKey)
-        if let id = authenticatedID { defaults.set(0, forKey: Self.sharingKey(id)) }
+        if let id = authenticatedID {
+            defaults.set(0, forKey: Self.sharingKey(id))
+            recordVisibilityChoice(account: id)
+        }
         sharing = false; syncing = false; syncMessageKey = nil
+        cancelSharingSync()
+        progressDirty = true
+        if publishVisibility { scheduleSync(force: true) }
+    }
+
+    private func recordVisibilityChoice(account: String, pending: Bool = true) {
+        let key = Self.visibilityRevisionKey(account)
+        let saved = defaults.integer(forKey: key)
+        let validRevision = (0..<((Int.max - 1_023) / 1_024 - 1)).contains(saved) ? saved : 0
+        let revision = max(validRevision + 1, Int(Date().timeIntervalSince1970 * 1_000))
+        defaults.set(revision, forKey: key)
+        defaults.set(pending ? 1 : 0, forKey: Self.visibilityPendingKey(account))
+    }
+
+    private func cancelSharingSync() {
+        sharingGeneration = UUID()
         syncTask?.cancel(); syncTask = nil; retryTask?.cancel(); retryTask = nil
     }
+
     func scheduleSync(force: Bool = false) {
-        guard appActive, sharing, canShare, let player else { return }
+        guard appActive, canShare, let player else { return }
         guard force || progressDirty || lastSuccessfulSync.map({ Date().timeIntervalSince($0) >= 300 }) ?? true else { return }
         guard syncTask == nil else { syncAgain = true; return }
         syncAgain = false
         progressDirty = false
         let account = GKLocalPlayer.local.gamePlayerID
-        let token = generation
+        let token = sharingGeneration
         syncing = true; syncMessageKey = nil
         syncTask = Task { [weak self, weak player] in
             guard let self, let player else { return }
             do {
-                try await self.syncService.synchronize(transport: GameKitProgressTransport(), current: { player.profile },
-                    merge: { player.mergeSharedProgress($0) }, allowed: { self.sharing && self.canShare && self.validAccount(account) && !Task.isCancelled })
-                guard !Task.isCancelled, self.validAccount(account) else { return }
+                let synchronized = try await self.syncService.synchronizeSharing(transport: GameKitProgressTransport(), current: { player.profile },
+                    merge: { player.mergeSharedProgress($0) },
+                    choice: {
+                        ScoreSharingChoice(revision: self.defaults.integer(forKey: Self.visibilityRevisionKey(account)),
+                                           showsScores: self.sharing,
+                                           pending: self.defaults.integer(forKey: Self.visibilityPendingKey(account)) == 1)
+                    },
+                    resolve: { choice in
+                        self.sharing = choice.showsScores
+                        self.defaults.set(choice.showsScores ? 1 : 0, forKey: Self.sharingKey(account))
+                        self.defaults.set(choice.revision, forKey: Self.visibilityRevisionKey(account))
+                        self.defaults.set(choice.pending ? 1 : 0, forKey: Self.visibilityPendingKey(account))
+                    },
+                    allowed: { self.canShare && self.validAccount(account) && self.sharingGeneration == token && !Task.isCancelled })
+                guard !Task.isCancelled, self.validAccount(account), self.sharingGeneration == token else { return }
+                guard synchronized else {
+                    self.syncing = false; self.syncTask = nil; self.progressDirty = true
+                    return
+                }
+                self.defaults.set(0, forKey: Self.visibilityPendingKey(account))
+                try await DinoAppearanceSyncService.synchronize(transport: GameKitProgressTransport(),
+                    current: { self.appearancePublication(account: account) },
+                    resolve: { self.saveAppearancePublication($0, account: account) },
+                    allowed: { self.canShare && self.validAccount(account) && self.sharingGeneration == token && !Task.isCancelled })
+                try await AchievementSyncService.synchronize(transport: GameKitAchievementTransport(),
+                    current: { player.profile }, includeScores: { self.sharing },
+                    allowed: { self.canShare && self.validAccount(account) && self.sharingGeneration == token && !Task.isCancelled })
+                guard !Task.isCancelled, self.validAccount(account), self.sharingGeneration == token else { return }
                 self.syncing = false; self.syncTask = nil; self.retryDelay = 5
                 self.lastSuccessfulSync = Date()
                 self.syncMessageKey = "dino.friends.syncDone"
                 if self.syncAgain { self.scheduleSync(force: true) }
             } catch {
-                guard !Task.isCancelled, self.validAccount(account) else { return }
+                guard !Task.isCancelled, self.validAccount(account), self.sharingGeneration == token else { return }
                 self.syncing = false; self.syncTask = nil
                 self.progressDirty = true
                 self.syncMessageKey = "dino.friends.syncPending"
+                if case .configuration? = error as? GameCenterFailure {
+                    self.syncMessageKey = "dino.friends.visibilityUnavailable"
+                }
                 self.retryTask = Task { [weak self] in
                     guard let self else { return }
                     do { try await Task.sleep(for: .seconds(self.retryDelay)) } catch { return }
                     self.retryDelay = min(self.retryDelay * 2, 300)
                     self.retryTask = nil
-                    guard self.generation == token else { return }
+                    guard self.sharingGeneration == token else { return }
                     self.scheduleSync()
                 }
             }
@@ -441,7 +656,13 @@ final class FriendsManager: NSObject, ObservableObject {
         friends = names.enumerated().map { index, name in
             var saved = PlayerProfile()
             saved.recordCompletedAttempt(levelID: 1, correct: 5 - index % 3, questionSeconds: Array(repeating: 4 + index * 3, count: 5))
-            return DinoFriend(id: "test-\(index)", displayName: name, progress: .local(saved))
+            let palettes: [DinoAppearance] = [
+                .init(bandana: 0xFF6299, spikes: 0xFF6299, body: 0x008EDD, belly: 0xFFE6A8),
+                .init(bandana: 0x8057CD, spikes: 0xEF9050, body: 0x76BD56, belly: 0xFFE6A8),
+                .init(bandana: 0x00AFAB, spikes: 0x8057CD, body: 0xEF9050, belly: 0xFFF1D3)
+            ]
+            return DinoFriend(id: "test-\(index)", displayName: name, progress: .local(saved),
+                              appearance: palettes[index % palettes.count])
         }
         friends.append(DinoFriend(id: "test-missing", displayName: "Alex"))
         state = .ready

@@ -103,11 +103,12 @@ struct PracticeClockPreview: View {
 
 /// The ordinary hour face pairs with the second half of a 24-hour day outside its rim.
 struct Dino24HourReadingClock: View {
+    @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     let time: ClockTime
     let theme: ClockTheme
     let width: CGFloat
 
-    private var face: CGFloat { min(200, width / 1.5) }
+    private var face: CGFloat { min(demonstrationLayout.spacious ? 300 : 200, width / 1.5) }
 
     var body: some View {
         ZStack {

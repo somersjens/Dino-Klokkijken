@@ -1,5 +1,109 @@
 import Foundation
 
+/// Two records preserve four full 24-bit RGB colors without quantization.
+/// Matching revisions are required; the first record is the commit marker.
+struct SharedDinoAppearance: Equatable, Sendable {
+    static let primaryID = "dino.appearance.primary.v1"
+    static let secondaryID = "dino.appearance.secondary.v1"
+    static let leaderboardIDs = [primaryID, secondaryID]
+    private static let schema = 1 << 48
+    let revision: Int
+    let appearance: DinoAppearance
+
+    var primaryContext: Int { Self.schema | Int(appearance.bandana) << 24 | Int(appearance.spikes) }
+    var secondaryContext: Int { Self.schema | Int(appearance.body) << 24 | Int(appearance.belly) }
+
+    init(revision: Int, appearance: DinoAppearance) {
+        self.revision = revision
+        var clean = appearance
+        for part in DinoAppearance.Part.allCases { clean[part] = appearance[part] }
+        self.appearance = clean
+    }
+
+    init?(values: [String: LeaderboardValue]) {
+        guard let first = values[Self.primaryID], let second = values[Self.secondaryID],
+              first.score > 0, first.score < Int.max, first.score == second.score,
+              first.context >> 48 == 1, second.context >> 48 == 1 else { return nil }
+        revision = first.score
+        appearance = DinoAppearance(bandana: UInt32((first.context >> 24) & 0xFFFFFF),
+                                    spikes: UInt32(first.context & 0xFFFFFF),
+                                    body: UInt32((second.context >> 24) & 0xFFFFFF),
+                                    belly: UInt32(second.context & 0xFFFFFF))
+    }
+}
+
+struct DinoAppearancePublication: Codable, Equatable {
+    var appearance: DinoAppearance
+    var revision: Int = 0
+    var pending = false
+}
+
+struct AchievementProgress: Equatable, Sendable {
+    let identifier: String
+    let percentComplete: Double
+}
+
+enum DinoAchievements {
+    static let starMilestones = [50, 100, 150, 200, 250, 300]
+    static func stars(_ count: Int) -> String { "dino.achievement.stars.\(count).v1" }
+    static func boss(_ worldID: Int) -> String { "dino.achievement.boss.\(worldID).v1" }
+
+    static func progress(_ profile: PlayerProfile, includeScores: Bool) -> [AchievementProgress] {
+        var results: [AchievementProgress] = []
+        if includeScores && profile.totalStars > 0 {
+            results = starMilestones.map {
+                AchievementProgress(identifier: stars($0),
+                                    percentComplete: min(100, Double(profile.totalStars) * 100 / Double($0)))
+            }
+        }
+        results += DinoWorldCatalog.worlds.filter { profile.worldComplete($0.id) }.map {
+            AchievementProgress(identifier: boss($0.id), percentComplete: 100)
+        }
+        return results
+    }
+}
+
+struct ScoreSharingChoice: Equatable, Sendable {
+    var revision: Int
+    var showsScores: Bool
+    var pending: Bool
+}
+
+/// A newer preference always wins over progress submitted under an older preference.
+/// At equal revisions, hiding scores wins over showing them.
+struct SharedScoreVisibility: Equatable, Sendable {
+    static let leaderboardID = "dino.progress.visibility.v1"
+    static let context = 1
+    let revision: Int
+    let levelID: Int
+    let showsScores: Bool
+    let allComplete: Bool
+
+    var score: Int {
+        revision * 1_024 + (showsScores ? 0 : 512) + levelID * 2 + (allComplete ? 1 : 0)
+    }
+
+    init(revision: Int, profile: PlayerProfile, showsScores: Bool) {
+        self.revision = revision
+        levelID = profile.mapLevel
+        self.showsScores = showsScores
+        allComplete = profile.adventureComplete
+    }
+
+    init?(score: Int, context: Int) {
+        guard context == Self.context, score > 0 else { return nil }
+        let payload = score % 1_024
+        let level = (payload % 512) / 2
+        guard score / 1_024 > 0, score / 1_024 < (Int.max - 1_023) / 1_024,
+              DinoLevelCatalog.level(level) != nil else { return nil }
+        revision = score / 1_024
+        levelID = level
+        showsScores = payload < 512
+        allComplete = payload % 2 == 1
+        guard !allComplete || level == DinoLevelCatalog.levels.last?.id else { return nil }
+    }
+}
+
 /// A projection of the existing save, not a second source of player progress.
 struct SharedLevelResult: Equatable, Sendable {
     let levelID: Int
@@ -100,25 +204,37 @@ enum DinoLeaderboards {
 
 struct FriendProgress: Equatable, Sendable {
     var levels: [Int: SharedLevelResult] = [:]
+    private(set) var scoresVisible = true
+    private(set) var sharedLevel: Int?
+    private var sharedAdventureComplete = false
+    private var reportedTotalStars: Int?
     var highestCompletedLevel: Int? {
+        guard scoresVisible else { return nil }
+        if let sharedLevel { return sharedAdventureComplete ? sharedLevel : sharedLevel - 1 }
         guard !levels.isEmpty else { return nil }
         return levels.values.filter(\.completed).map(\.levelID).max() ?? (levels.count == DinoLevelCatalog.levels.count ? 0 : nil)
     }
     /// Stop at an unknown level; never guess a friend's map position.
     var nextLevel: Int? {
+        if let sharedLevel { return sharedAdventureComplete ? nil : sharedLevel }
+        guard scoresVisible else { return nil }
         for level in DinoLevelCatalog.levels {
             guard let result = levels[level.id] else { return nil }
             if !result.completed { return level.id }
         }
         return nil
     }
-    var allComplete: Bool { DinoLevelCatalog.levels.allSatisfy { levels[$0.id]?.completed == true } }
+    var allComplete: Bool { sharedAdventureComplete || (scoresVisible && DinoLevelCatalog.levels.allSatisfy { levels[$0.id]?.completed == true }) }
     var totalStars: Int? {
-        guard (1...9).allSatisfy({ levels[$0] != nil }) else { return nil }
+        guard scoresVisible else { return nil }
+        if let reportedTotalStars { return reportedTotalStars }
+        guard DinoLevelCatalog.levels.allSatisfy({ levels[$0.id] != nil }) else { return nil }
         return levels.values.reduce(0) { $0 + $1.stars }
     }
     var maximumStarsSoFar: Int? {
         guard totalStars != nil else { return nil }
+        if let reportedTotalStars,
+           levels.count != DinoLevelCatalog.levels.count || levels.values.reduce(0, { $0 + $1.stars }) != reportedTotalStars { return nil }
         return levels.values.filter { $0.completed || $0.stars > 0 }.count * 3
     }
     var starPercentage: Int? {
@@ -126,6 +242,7 @@ struct FriendProgress: Equatable, Sendable {
         return Int((Double(stars) / Double(maximum) * 100).rounded())
     }
     mutating func merge(_ incoming: SharedLevelResult) {
+        guard scoresVisible else { return }
         if let existing = levels[incoming.levelID] {
             let oldPoints = existing.attempted ? existing.resultPoints : 0
             let newPoints = incoming.attempted ? incoming.resultPoints : 0
@@ -133,6 +250,18 @@ struct FriendProgress: Equatable, Sendable {
             if oldPoints == newPoints, (existing.seconds ?? Int.max) <= (incoming.seconds ?? Int.max) { return }
         }
         levels[incoming.levelID] = incoming
+    }
+
+    mutating func applyVisibility(_ visibility: SharedScoreVisibility?, fallbackLevel: Int? = nil) {
+        scoresVisible = visibility?.showsScores == true
+        sharedLevel = visibility?.levelID ?? fallbackLevel
+        sharedAdventureComplete = visibility?.allComplete == true
+        if !scoresVisible { levels = [:]; reportedTotalStars = nil }
+    }
+
+    mutating func applyTotalStars(_ count: Int) {
+        guard scoresVisible, (0...DinoLevelCatalog.levels.count * 3).contains(count) else { return }
+        reportedTotalStars = count
     }
 
     static func local(_ profile: PlayerProfile) -> FriendProgress {

@@ -75,21 +75,21 @@
       "titleNL": "Level 10 — resultaatpunten",
       "titleEN": "Level 10 — result points",
       "minimum": 0,
-      "maximum": 59
+      "maximum": 251
     },
     {
       "id": "dino.progress.highest.v1",
       "titleNL": "Hoogste behaalde level",
       "titleEN": "Highest completed level",
       "minimum": 0,
-      "maximum": 10
+      "maximum": 100
     },
     {
       "id": "dino.progress.stars.v1",
       "titleNL": "Verzamelde sterren",
       "titleEN": "Collected stars",
       "minimum": 0,
-      "maximum": 27
+      "maximum": 300
     }
   ],
   "timingNote": "Additive optional boards. Same best-score descending integer settings; quality first, then fastest time. Existing result boards remain required and unchanged.",
@@ -162,7 +162,51 @@
       "titleNL": "Level 10 — resultaat en tijd",
       "titleEN": "Level 10 — result and time",
       "minimum": 1000,
-      "maximum": 59591
+      "maximum": 251591
+    }
+  ],
+  "visibilityLeaderboard": {
+    "id": "dino.progress.visibility.v1",
+    "titleNL": "Dino vriendenprofiel",
+    "titleEN": "Dino friends profile",
+    "type": "classic",
+    "submission": "bestScore",
+    "sort": "highToLow",
+    "scoreFormat": "integer",
+    "hidden": true,
+    "scoreRange": null,
+    "contextVersion": 1,
+    "encoding": "preferenceRevisionMilliseconds * 1024 + (showsScores ? 0 : 512) + currentLevel * 2 + (adventureComplete ? 1 : 0)"
+  },
+  "defaultLeaderboardID": "dino.progress.stars.v1",
+  "appearanceLeaderboards": [
+    {
+      "id": "dino.appearance.primary.v1",
+      "titleNL": "Dino bandana en stekels",
+      "titleEN": "Dino bandana and spikes",
+      "type": "classic",
+      "submission": "bestScore",
+      "sort": "highToLow",
+      "scoreFormat": "integer",
+      "hidden": true,
+      "scoreRange": null,
+      "score": "Monotonic palette revision; both records must match",
+      "context": "(1 << 48) | (bandanaRGB << 24) | spikesRGB",
+      "referenceName": "Dino kleuren — bandana en stekels"
+    },
+    {
+      "id": "dino.appearance.secondary.v1",
+      "titleNL": "Dino lijf en buik",
+      "titleEN": "Dino body and belly",
+      "type": "classic",
+      "submission": "bestScore",
+      "sort": "highToLow",
+      "scoreFormat": "integer",
+      "hidden": true,
+      "scoreRange": null,
+      "score": "Monotonic palette revision; submit this record before the primary record",
+      "context": "(1 << 48) | (bodyRGB << 24) | bellyRGB",
+      "referenceName": "Dino kleuren — lijf en buik"
     }
   ]
 }

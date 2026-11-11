@@ -3,6 +3,7 @@ import SwiftUI
 /// Offline atlas: Natural Earth country outlines and simplified time-zone
 /// geometry. The task's two offsets always come from Foundation's IANA zones.
 struct DinoTimeZoneMap: View {
+    @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     @ObservedObject private var language = LanguageManager.shared
     @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
     @Environment(\.dinoHighContrast) private var highContrast
@@ -17,6 +18,7 @@ struct DinoTimeZoneMap: View {
     var replay: (() -> Void)? = nil
     var replayCompletion = 0
 
+    private var labelSize: CGSize { demonstrationLayout.spacious ? CGSize(width: 200, height: 108) : CGSize(width: 132, height: 80) }
     private let originColor = Color(dinoHex: 0x25674C)
     private var destinationColor: Color {
         DinoTimeDirection.color(later: journey.offsetMinutes > 0, highContrast: highContrast)
@@ -32,7 +34,7 @@ struct DinoTimeZoneMap: View {
                 let origin = viewport.point(journey.origin, size: size)
                 let destination = viewport.point(journey.destination, size: size)
                 let labels = DinoTimeZoneLabelLayout(origin: origin, destination: destination, size: size,
-                                                      offsetMinutes: journey.offsetMinutes)
+                                                      offsetMinutes: journey.offsetMinutes, cardSize: labelSize)
                 let labelWidth = labels.width
                 let originLabel = labels.origin
                 let destinationLabel = labels.destination
@@ -59,7 +61,7 @@ struct DinoTimeZoneMap: View {
                     .stroke(highContrast ? DinoStyle.ink : Color(dinoHex: 0x83ADB4).opacity(0.65), lineWidth: highContrast ? 2 : 1)
                     .allowsHitTesting(false))
             }
-            .frame(height: isDemonstration ? 224 : compactLayout ? 184 : 252)
+            .frame(height: demonstrationLayout.spacious ? min(400, demonstrationLayout.lessonHeight - 110) : isDemonstration ? 224 : compactLayout ? 184 : 252)
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("\(prefix).timeZone.map")
     }
@@ -102,20 +104,20 @@ struct DinoTimeZoneMap: View {
         let offset = isOrigin ? L(key: "dino.timeZone.reference") : differenceText(difference)
         return VStack(spacing: 2) {
             Text(verbatim: capital.name(language: code))
-                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                .font(.system(size: demonstrationLayout.spacious ? 20 : 13, weight: .heavy, design: .rounded))
                 .lineLimit(1).minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity)
-                .frame(height: 18)
+                .frame(height: demonstrationLayout.spacious ? 26 : 18)
                 .foregroundStyle(isOrigin ? color : direction)
                 .accessibilityIdentifier("\(prefix).timeZone.\(isOrigin ? "originName" : "destinationName")")
             Text(verbatim: time)
-                .font(.system(size: 23, weight: .heavy, design: .rounded)).monospacedDigit()
+                .font(.system(size: demonstrationLayout.spacious ? 32 : 23, weight: .heavy, design: .rounded)).monospacedDigit()
                 .lineLimit(1).minimumScaleFactor(0.55)
                 .foregroundStyle(isOrigin ? color : direction)
                 .numericTextTransition()
                 .accessibilityIdentifier("\(prefix).timeZone.\(isOrigin ? "referenceTime" : "targetTime")")
             Text(verbatim: offset)
-                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .font(.system(size: demonstrationLayout.spacious ? 15 : 10, weight: .bold, design: .rounded))
                 .lineLimit(1).minimumScaleFactor(0.75)
                 .foregroundStyle(isOrigin ? color : direction)
                 .padding(.horizontal, isOrigin ? 0 : 6)
@@ -127,7 +129,7 @@ struct DinoTimeZoneMap: View {
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 6)
-        .frame(width: width, height: DinoTimeZoneLabelLayout.cardHeight)
+        .frame(width: width, height: labelSize.height)
         .background(.white.opacity(0.96), in: RoundedRectangle(cornerRadius: 13))
         .overlay(RoundedRectangle(cornerRadius: 13).stroke(color.opacity(0.5), lineWidth: 1).allowsHitTesting(false))
         .accessibilityElement(children: .contain)
@@ -145,8 +147,8 @@ struct DinoTimeZoneMap: View {
     private func drawLeader(context: inout GraphicsContext, from point: CGPoint, to label: CGPoint, labelWidth: CGFloat, color: Color) {
         var path = Path()
         path.move(to: point)
-        let bounds = CGRect(x: label.x - labelWidth / 2, y: label.y - DinoTimeZoneLabelLayout.cardHeight / 2,
-                            width: labelWidth, height: DinoTimeZoneLabelLayout.cardHeight)
+        let bounds = CGRect(x: label.x - labelWidth / 2, y: label.y - labelSize.height / 2,
+                            width: labelWidth, height: labelSize.height)
         path.addLine(to: CGPoint(x: min(bounds.maxX, max(bounds.minX, point.x)),
                                 y: min(bounds.maxY, max(bounds.minY, point.y))))
         context.stroke(path, with: .color(color.opacity(0.85)), style: StrokeStyle(lineWidth: 1.3, lineCap: .round))

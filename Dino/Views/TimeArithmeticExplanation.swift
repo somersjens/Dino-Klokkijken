@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Hours and minutes sit beside the ordinary clock, the difference level with the bar, then the totals.
 struct DinoTimeArithmeticExplanation: View {
+    @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
@@ -49,8 +50,8 @@ struct DinoTimeArithmeticExplanation: View {
     private var operation: DinoClockOperation { subtracting ? .subtract : .add }
     private var operationInk: Color { DinoTimeDirection.color(later: !subtracting, highContrast: highContrast) }
     private var blue: Color { DinoStyle.ink }
-    private var layoutWidth: CGFloat { min(600, width) }
-    private var layoutScale: CGFloat { min(1, layoutWidth / 320) }
+    private var layoutWidth: CGFloat { min(demonstrationLayout.spacious ? 760 : 600, width) }
+    private var layoutScale: CGFloat { demonstrationLayout.spacious ? 1.25 : min(1, layoutWidth / 320) }
     private var digitFont: CGFloat { (layoutWidth < 360 ? 18 : 20) * layoutScale }
     private var blockHeight: CGFloat { digitFont + 16 * layoutScale }
     private func boxWidth(slots: Int) -> CGFloat { digitFont * 0.92 * CGFloat(max(slots, 2)) + 20 * layoutScale }

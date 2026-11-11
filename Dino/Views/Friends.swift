@@ -65,7 +65,7 @@ struct DinoFriendsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var parentAction: ParentAction?
     @State private var approvedAction: ParentAction?
-    @State private var showsOnlineHelp = false
+    @State private var showsScoreInfo = false
     @State private var confirmsSignOut = false
     @State private var shareEpoch = 0
 
@@ -114,10 +114,15 @@ struct DinoFriendsView: View {
                     approvedAction = action; parentAction = nil
                 }
             }
-            .alert("dino.friends.onlineVisibility", isPresented: $showsOnlineHelp) {
+            .alert("dino.friends.share", isPresented: $showsScoreInfo) {
                 Button("dino.done", role: .cancel) {}
             } message: {
-                Text("dino.friends.onlineVisibilityHelp")
+                Text("dino.friends.scoreInfoMessage")
+                if manager.syncMessageKey == "dino.friends.visibilityUnavailable" {
+                    Text("dino.friends.visibilityUnavailable")
+                } else if manager.syncing || manager.syncMessageKey == "dino.friends.syncPending" {
+                    Text("dino.friends.visibilityPending")
+                }
             }
             .alert("dino.friends.signOut", isPresented: $confirmsSignOut) {
                 Button("dino.cancel", role: .cancel) {}
@@ -134,24 +139,7 @@ struct DinoFriendsView: View {
             invitation(spacious: spacious)
             if manager.state == .ready, !manager.friends.isEmpty { friendList }
             connectionStatus
-            if manager.enabled { permissions }
-            if manager.authenticated {
-                Button { parentAction = .appleProfile } label: {
-                    HStack(spacing: 12) {
-                        rowLabel("dino.friends.manage", icon: "gearshape.fill")
-                        Image(systemName: "arrow.up.right.square")
-                            .foregroundStyle(DinoStyle.muted).accessibilityHidden(true)
-                    }
-                }.buttonStyle(DinoSecondaryButtonStyle(spacious: spacious))
-            }
-            if manager.enabled {
-                Button { confirmsSignOut = true } label: {
-                    rowLabel("dino.friends.signOut", icon: "rectangle.portrait.and.arrow.right")
-                        .foregroundStyle(DinoStyle.warning)
-                }
-                .buttonStyle(DinoSecondaryButtonStyle(spacious: spacious))
-                .accessibilityIdentifier("friends.signOut")
-            }
+            if manager.enabled { accountControls(spacious: spacious) }
         }
     }
 
@@ -258,10 +246,56 @@ struct DinoFriendsView: View {
         }
     }
 
-    private var permissions: some View {
+    private func accountControls(spacious: Bool) -> some View {
+        VStack(spacing: 0) {
+            scoreControl(spacious: spacious)
+            if manager.authenticated {
+                Divider()
+                Button { parentAction = .appleProfile } label: {
+                    HStack(spacing: 12) {
+                        rowLabel("dino.friends.manage", icon: "gearshape.fill")
+                        Image(systemName: "arrow.up.right.square")
+                            .foregroundStyle(DinoStyle.muted).accessibilityHidden(true)
+                    }
+                    .frame(minHeight: spacious ? 64 : 52)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(DinoPlainButtonStyle())
+            }
+            Divider()
+            Button { confirmsSignOut = true } label: {
+                rowLabel("dino.friends.signOut", icon: "rectangle.portrait.and.arrow.right")
+                    .foregroundStyle(DinoStyle.warning)
+                    .frame(minHeight: spacious ? 64 : 52)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(DinoPlainButtonStyle())
+            .accessibilityIdentifier("friends.signOut")
+        }
+        .font(.system(size: spacious ? 21 : 16, weight: .semibold, design: .rounded))
+        .padding(.horizontal, 20).padding(.vertical, 6)
+        .dinoCard(padding: 0)
+    }
+
+    private func scoreControl(spacious: Bool) -> some View {
         let sharesScores = manager.sharing || manager.shareWhenConnected
-        return VStack(spacing: 0) {
-            Toggle(isOn: Binding(get: { sharesScores }, set: { allowed in
+        return HStack(spacing: 8) {
+            Image(systemName: "trophy.fill").frame(width: 24).accessibilityHidden(true)
+            Text("dino.friends.share")
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityHidden(true)
+            Button { showsScoreInfo = true } label: {
+                Image(systemName: "info.circle")
+                    .font(.system(size: spacious ? 21 : 18, weight: .semibold))
+                    .foregroundStyle(DinoStyle.muted)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(DinoPlainButtonStyle())
+            .accessibilityLabel(Text("dino.friends.scoreInfo"))
+            .accessibilityIdentifier("friends.scoreInfo")
+            Spacer(minLength: 0)
+            Toggle("dino.friends.share", isOn: Binding(get: { sharesScores }, set: { allowed in
                 guard allowed != sharesScores else { return }
                 DinoAnswerFeedback.shared.playSelect()
                 if allowed {
@@ -270,30 +304,14 @@ struct DinoFriendsView: View {
                 } else {
                     manager.stopSharing()
                 }
-            })) {
-                rowLabel("dino.friends.share", icon: "trophy.fill")
-            }
+            }))
+            .labelsHidden()
             .tint(DinoStyle.green)
-            .frame(minHeight: 48)
             .disabled(manager.authenticated && !manager.canShare && !sharesScores)
             .id(shareEpoch)
             .accessibilityIdentifier("friends.share")
-            Divider()
-            Button { showsOnlineHelp = true } label: {
-                HStack(spacing: 12) {
-                    rowLabel("dino.friends.onlineVisibility", icon: "dot.radiowaves.left.and.right")
-                    Image(systemName: "chevron.forward")
-                        .font(.footnote.bold()).foregroundStyle(DinoStyle.muted).accessibilityHidden(true)
-                }
-                .frame(minHeight: 48)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(DinoPlainButtonStyle())
-            .accessibilityIdentifier("friends.onlineVisibility")
         }
-        .font(.system(.subheadline, design: .rounded).weight(.semibold))
-        .padding(.horizontal, 20).padding(.vertical, 8)
-        .dinoCard(padding: 0)
+        .frame(minHeight: spacious ? 64 : 52)
     }
 
     private func rowLabel(_ title: LocalizedStringKey, icon: String) -> some View {
@@ -362,7 +380,10 @@ struct FriendAvatar: View {
     var size: CGFloat = 44
     var body: some View {
         Group {
-            if let image = friend.avatar { Image(uiImage: image).resizable().scaledToFill() }
+            if let appearance = friend.appearance {
+                DinoAvatar(appearance: appearance, portrait: true).id(appearance)
+            }
+            else if let image = friend.avatar { Image(uiImage: image).resizable().scaledToFill() }
             else { Image("dino-idle").resizable().scaledToFit().padding(size * 0.06) }
         }.frame(width: size, height: size).background(DinoStyle.paper)
             .clipShape(Circle()).overlay(Circle().stroke(DinoStyle.deepGreen, lineWidth: 1.5))
@@ -423,35 +444,47 @@ struct FriendProfileView: View {
                     VStack(spacing: 14) {
                         FriendAvatar(friend: friend, size: 88)
                         Text(verbatim: friend.displayName).font(.title.bold()).multilineTextAlignment(.center)
-                        metric("dino.friends.highestKnown", value: friend.progress.highestCompletedLevel.map(String.init))
                         metric("dino.friends.next", value: friend.progress.nextLevel.map(String.init) ?? (friend.progress.allComplete ? L("dino.worldComplete") : nil))
-                        metric("dino.friends.totalStars", value: friend.progress.totalStars.map(String.init))
-                        metric("dino.friends.maximum", value: friend.progress.maximumStarsSoFar.map(String.init))
-                        metric("dino.friends.percentage", value: friend.progress.starPercentage.map { "\($0)%" })
-                    }.dinoCard()
-                    VStack(spacing: 16) {
-                        Text("dino.friends.levels").font(.headline)
-                        ForEach(DinoLevelCatalog.levels) { level in
-                            HStack(spacing: 12) {
-                                Text("dino.levelNumber \(level.id)").font(.headline)
-                                Spacer(minLength: 0)
-                                if let result = friend.progress.levels[level.id] {
-                                    VStack(alignment: .trailing, spacing: 8) {
-                                        Text(LocalizedStringKey(result.completed ? "dino.friends.completed" : result.attempted ? "dino.friends.incomplete" : "dino.friends.notPlayed"))
-                                            .font(.caption)
-                                        if result.attempted {
-                                            DinoStars(count: result.stars, size: 18)
-                                            Text(verbatim: "\(result.bestCorrect)/\(level.questionCount)").font(.caption).monospacedDigit()
-                                            if let seconds = result.seconds {
-                                                Label(DinoQuestionTiming.text(seconds), systemImage: "stopwatch").font(.caption).monospacedDigit()
-                                            }
-                                        }
-                                    }
-                                } else { Text("dino.friends.notAvailable").font(.caption) }
-                            }.accessibilityIdentifier("friend.level.\(level.id)")
-                            if level.id != 10 { Divider() }
+                        if friend.progress.scoresVisible {
+                            metric("dino.friends.highestKnown", value: friend.progress.highestCompletedLevel.map(String.init))
+                            metric("dino.friends.totalStars", value: friend.progress.totalStars.map(String.init))
+                            if let maximum = friend.progress.maximumStarsSoFar {
+                                metric("dino.friends.maximum", value: String(maximum))
+                            }
+                            if let percentage = friend.progress.starPercentage {
+                                metric("dino.friends.percentage", value: "\(percentage)%")
+                            }
+                        } else {
+                            Text("dino.friends.scoreHidden")
+                                .font(.subheadline).foregroundStyle(DinoStyle.muted)
+                                .accessibilityIdentifier("friend.scoresHidden")
                         }
                     }.dinoCard()
+                    if friend.progress.scoresVisible {
+                        VStack(spacing: 16) {
+                            Text("dino.friends.levels").font(.headline)
+                            ForEach(DinoLevelCatalog.levels) { level in
+                                HStack(spacing: 12) {
+                                    Text("dino.levelNumber \(level.id)").font(.headline)
+                                    Spacer(minLength: 0)
+                                    if let result = friend.progress.levels[level.id] {
+                                        VStack(alignment: .trailing, spacing: 8) {
+                                            Text(LocalizedStringKey(result.completed ? "dino.friends.completed" : result.attempted ? "dino.friends.incomplete" : "dino.friends.notPlayed"))
+                                                .font(.caption)
+                                            if result.attempted {
+                                                DinoStars(count: result.stars, size: 18)
+                                                Text(verbatim: "\(result.bestCorrect)/\(level.questionCount)").font(.caption).monospacedDigit()
+                                                if let seconds = result.seconds {
+                                                    Label(DinoQuestionTiming.text(seconds), systemImage: "stopwatch").font(.caption).monospacedDigit()
+                                                }
+                                            }
+                                        }
+                                    } else { Text("dino.friends.notAvailable").font(.caption) }
+                                }.accessibilityIdentifier("friend.level.\(level.id)")
+                                if level.id != DinoLevelCatalog.levels.last?.id { Divider() }
+                            }
+                        }.dinoCard()
+                    }
                     Button("dino.friends.appleProfile") { showsParent = true }.buttonStyle(DinoSecondaryButtonStyle())
                     Text("dino.friends.reportHelp").font(.footnote)
                 }.padding(20).frame(maxWidth: 560).frame(maxWidth: .infinity)

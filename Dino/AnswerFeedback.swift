@@ -23,12 +23,6 @@ final class DinoAnswerFeedback {
         audio.playSelect()
     }
 
-    /// One recording holds both palm contacts. Start it so the first hit meets the first clap.
-    @discardableResult
-    func playClap(after delay: Double) -> Int {
-        audio.playClap(after: delay)
-    }
-
     func playLevelComplete() {
         audio.playLevelComplete()
     }
@@ -49,10 +43,6 @@ final class DinoAnswerFeedback {
 
     func stopWorldJourney() {
         audio.stopWorldJourney()
-    }
-
-    func cancelClaps(_ generation: Int) {
-        audio.cancelClaps(generation)
     }
 
     func cancelImpact(_ generation: Int) {
@@ -133,7 +123,6 @@ private final class DinoAnswerAudio: @unchecked Sendable {
     private var correctPlayer: AVAudioPlayer?
     private var incorrectPlayer: AVAudioPlayer?
     private var selectPlayer: AVAudioPlayer?
-    private var clapPlayer: AVAudioPlayer?
     private var levelCompletePlayer: AVAudioPlayer?
     private var impactPlayer: AVAudioPlayer?
     private var jumpPlayer: AVAudioPlayer?
@@ -141,7 +130,6 @@ private final class DinoAnswerAudio: @unchecked Sendable {
     private var worldPlayer: AVAudioPlayer?
     private let generationLock = NSLock()
     private var soundEnabled = true
-    private var clapGeneration = 0
     private var impactGeneration = 0
     private var journeyGeneration = 0
     private var lastSelect = Date.distantPast
@@ -178,21 +166,6 @@ private final class DinoAnswerAudio: @unchecked Sendable {
             selectPlayer?.currentTime = 0
             selectPlayer?.play()
         }
-    }
-
-    @discardableResult
-    func playClap(after delay: Double) -> Int {
-        let generation = nextGeneration(\.clapGeneration)
-        queue.async { [self] in
-            guard soundEnabled, generation == current(\.clapGeneration) else { return }
-            preparePlayers()
-            queue.asyncAfter(deadline: .now() + delay) { [self] in
-                guard generation == current(\.clapGeneration), soundEnabled else { return }
-                clapPlayer?.currentTime = 0
-                clapPlayer?.play()
-            }
-        }
-        return generation
     }
 
     func playLevelComplete() {
@@ -255,14 +228,6 @@ private final class DinoAnswerAudio: @unchecked Sendable {
         }
     }
 
-    func cancelClaps(_ generation: Int) {
-        queue.async { [self] in
-            guard current(\.clapGeneration) == generation else { return }
-            invalidate(\.clapGeneration)
-            clapPlayer?.stop()
-        }
-    }
-
     func cancelImpact(_ generation: Int) {
         queue.async { [self] in
             guard current(\.impactGeneration) == generation else { return }
@@ -295,7 +260,7 @@ private final class DinoAnswerAudio: @unchecked Sendable {
     private func preparePlayers() {
         dispatchPrecondition(condition: .onQueue(queue))
         let ready = correctPlayer != nil && incorrectPlayer != nil && selectPlayer != nil
-            && clapPlayer != nil && levelCompletePlayer != nil && impactPlayer != nil
+            && levelCompletePlayer != nil && impactPlayer != nil
             && jumpPlayer != nil && landPlayer != nil && worldPlayer != nil
         guard !ready else { return }
         let session = AVAudioSession.sharedInstance()
@@ -303,9 +268,7 @@ private final class DinoAnswerAudio: @unchecked Sendable {
         try? session.setActive(true)
         if correctPlayer == nil { correctPlayer = try? makePlayer(data: correctTone, volume: 0.45) }
         if incorrectPlayer == nil { incorrectPlayer = try? makePlayer(data: incorrectTone, volume: 0.45) }
-        // The clap recording is already the softer two-hit take, so it plays at its own level.
         if selectPlayer == nil { selectPlayer = try? makePlayer(resource: "select-menu", volume: 0.85) }
-        if clapPlayer == nil { clapPlayer = try? makePlayer(resource: "new-clap", volume: 1) }
         if levelCompletePlayer == nil { levelCompletePlayer = try? makePlayer(resource: "end-of-level", volume: 0.85) }
         if impactPlayer == nil { impactPlayer = try? makePlayer(resource: "zero-stars-fall", volume: 0.85) }
         if jumpPlayer == nil { jumpPlayer = try? makePlayer(resource: "jump-jump", volume: 0.85) }

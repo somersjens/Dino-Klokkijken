@@ -2,6 +2,7 @@ import SwiftUI
 
 /// The original arrow lowers into a worked timeline while both endpoint clocks stay visible.
 struct DinoMinutesBetweenCard: View {
+    @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     @Environment(\.dinoHighContrast) private var highContrast
     let start: ClockTime
     let end: ClockTime
@@ -15,7 +16,7 @@ struct DinoMinutesBetweenCard: View {
     var showsHint = false
 
     private var prefix: String { isDemonstration ? "demo" : "question" }
-    private var clockFont: CGFloat { min(compact ? 28 : 38, (width - 52) / 7.8) }
+    private var clockFont: CGFloat { min(demonstrationLayout.spacious ? 54 : compact ? 28 : 38, (width - 52) / 7.8) }
     private var secondaryInk: Color { highContrast ? DinoStyle.ink : DinoStyle.muted }
 
     var body: some View {
@@ -47,7 +48,7 @@ struct DinoMinutesBetweenCard: View {
     private func endpoint(_ time: ClockTime, title: String, identifier: String) -> some View {
         VStack(spacing: compact ? 4 : 6) {
             Text(LocalizedStringKey(title))
-                .font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle(secondaryInk)
+                .font(.system(size: demonstrationLayout.spacious ? 20 : 13, weight: .bold, design: .rounded)).foregroundStyle(secondaryInk)
             DigitalClock(time: time, theme: theme, fontSize: clockFont)
                 .accessibilityIdentifier("\(prefix).minutesBetween.\(identifier)")
         }.frame(maxWidth: .infinity)
@@ -56,6 +57,7 @@ struct DinoMinutesBetweenCard: View {
 
 /// One continuous track: initially an arrow through the unknown total, then a lower timeline.
 struct DinoMinutesBetweenTimeline: View {
+    @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
@@ -72,8 +74,8 @@ struct DinoMinutesBetweenTimeline: View {
     private var total: Int { segments.reduce(0, +) }
     private var restingY: CGFloat { compact ? 20 : 22 }
     private var restingHeight: CGFloat { compact ? 40 : 44 }
-    private var expandedY: CGFloat { compact ? 50 : 54 }
-    private var expandedHeight: CGFloat { expandedY + 74 }
+    private var expandedY: CGFloat { demonstrationLayout.spacious ? 74 : compact ? 50 : 54 }
+    private var expandedHeight: CGFloat { expandedY + (demonstrationLayout.spacious ? 96 : 74) }
     private var trackInk: Color { highContrast ? DinoStyle.deepGreen : Color(dinoHex: 0x9ABF78) }
 
     private func segmentWidths(length: CGFloat) -> [CGFloat] {
@@ -135,9 +137,9 @@ struct DinoMinutesBetweenTimeline: View {
                         ForEach(Array(timeline.times.enumerated()), id: \.offset) { index, time in
                             if index > 0 { dot.position(x: points[index], y: lineY).opacity(expansion) }
                             Text(verbatim: theme.digitalReading(time, languageCode: language))
-                                .font(.system(size: compact ? 12 : 14, weight: .bold, design: .rounded))
+                                .font(.system(size: demonstrationLayout.spacious ? 20 : compact ? 12 : 14, weight: .bold, design: .rounded))
                                 .monospacedDigit().lineLimit(1).minimumScaleFactor(0.5)
-                                .frame(width: labelWidth, height: 20)
+                                .frame(width: labelWidth, height: demonstrationLayout.spacious ? 30 : 20)
                                 .position(x: points[index], y: lineY + 16)
                                 .opacity(expansion)
                                 .accessibilityIdentifier("\(prefix).minutesBetween.stop.\(index)")
@@ -150,10 +152,10 @@ struct DinoMinutesBetweenTimeline: View {
                                 .position(x: center, y: lineY + 34)
                                 .opacity(expansion).accessibilityHidden(true)
                             Text(verbatim: "\(minutes) min")
-                                .font(.system(size: compact ? 13 : 15, weight: .heavy, design: .rounded))
+                                .font(.system(size: demonstrationLayout.spacious ? 22 : compact ? 13 : 15, weight: .heavy, design: .rounded))
                                 .monospacedDigit().lineLimit(1).minimumScaleFactor(0.65)
                                 .foregroundStyle(DinoStyle.ink)
-                                .frame(width: max(1, widths[index] - 6), height: compact ? 26 : 28)
+                                .frame(width: max(1, widths[index] - 6), height: demonstrationLayout.spacious ? 38 : compact ? 26 : 28)
                                 .background(segmentColor(index), in: RoundedRectangle(cornerRadius: 10))
                                 .overlay(RoundedRectangle(cornerRadius: 10)
                                     .strokeBorder(highContrast ? DinoStyle.ink : .clear, lineWidth: 1.5))
@@ -195,7 +197,7 @@ struct DinoMinutesBetweenTimeline: View {
             Image(systemName: "stopwatch")
                 .font(.system(size: 17, weight: .semibold)).accessibilityHidden(true)
             Text(verbatim: showsAnswer ? DinoTimeWords.minutes(total, language: language) : "? min")
-                .font(.system(size: compact ? 18 : 20, weight: .heavy, design: .rounded))
+                .font(.system(size: demonstrationLayout.spacious ? 28 : compact ? 18 : 20, weight: .heavy, design: .rounded))
                 .monospacedDigit().lineLimit(1).minimumScaleFactor(0.75)
         }
         .foregroundStyle(showsAnswer ? DinoTimeDirection.color(later: true, highContrast: highContrast) : DinoStyle.ink)

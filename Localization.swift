@@ -125,37 +125,25 @@ extension View {
     }
 }
 
-/// A searchable language list, ready for the full set of translations.
+/// A compact language sheet; selecting a language saves it and dismisses the sheet.
 struct LanguagePicker: View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @ObservedObject private var language = LanguageManager.shared
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.dismiss) private var dismiss
-    @State private var query = ""
-
-    private var options: [AppLanguage] {
-        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
-            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: language.locale)
-        guard !needle.isEmpty else { return AppLanguage.all }
-        return AppLanguage.all.filter { option in
-            let name = option.displayName.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: language.locale)
-            return name.contains(needle) || option.code.localizedCaseInsensitiveContains(needle)
-        }
-    }
 
     var body: some View {
-        NavigationStack {
-            GeometryReader { geometry in
-                let spacious = geometry.size.width >= 650 && verticalSizeClass != .compact
-                ScrollView {
+        GeometryReader { geometry in
+            let spacious = geometry.size.width >= 500 && verticalSizeClass != .compact
+            ScrollView {
+                VStack(spacing: spacious ? 24 : 20) {
+                    Text("dino.language")
+                        .font(.system(size: spacious ? 34 : 28, weight: .heavy, design: .rounded))
+                        .frame(maxWidth: .infinity)
+                        .accessibilityAddTraits(.isHeader)
+                        .accessibilityIdentifier("language.title")
                     VStack(spacing: 0) {
-                        if options.isEmpty {
-                            Text("dino.settings.languageEmpty")
-                                .font(.system(size: spacious ? 21 : 16, weight: .medium, design: .rounded))
-                                .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-                                .frame(maxWidth: .infinity, minHeight: 72)
-                        }
-                        ForEach(Array(options.enumerated()), id: \.element.id) { index, option in
+                        ForEach(Array(AppLanguage.all.enumerated()), id: \.element.id) { index, option in
                             if index > 0 {
                                 Rectangle().fill(DinoStyle.ink.opacity(highContrast ? 0.5 : 0.08))
                                     .frame(height: 1).padding(.horizontal, 16).accessibilityHidden(true)
@@ -175,27 +163,37 @@ struct LanguagePicker: View {
                                         .foregroundStyle(selected ? DinoStyle.deepGreen : DinoStyle.muted)
                                 }.padding(.horizontal, 16).frame(minHeight: spacious ? 76 : 60).contentShape(Rectangle())
                             }.buttonStyle(DinoPlainButtonStyle())
+                                .accessibilityAddTraits(selected ? .isSelected : [])
                                 .accessibilityIdentifier("language.option." + option.code)
                         }
                     }.background(DinoStyle.paper, in: RoundedRectangle(cornerRadius: 22))
-                        .padding(spacious ? 24 : 16).frame(maxWidth: spacious ? 760 : 640).frame(maxWidth: .infinity)
-                }.accessibilityIdentifier("language.picker")
-            }
-                .background(JungleBackground(quiet: true))
-                .navigationTitle(Text("dino.language"))
-                .navigationBarTitleDisplayMode(.inline)
-                .searchable(text: $query, prompt: Text("dino.settings.languageSearch"))
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("dino.done") {
-                            DinoAnswerFeedback.shared.playSelect()
-                            dismiss()
-                        }.accessibilityIdentifier("language.done")
-                    }
                 }
+                .padding(.horizontal, spacious ? 28 : 20)
+                .padding(.top, 28)
+                .padding(.bottom, 24)
+                .frame(maxWidth: 560).frame(maxWidth: .infinity)
+            }.bouncesOnlyWhenNeeded()
+                .accessibilityIdentifier("language.picker")
         }.foregroundStyle(DinoStyle.ink)
+            .background(JungleBackground(quiet: true))
             .lightPalette()
-            .presentationDetents([.medium, .large])
+            .presentationDetents([.height(320), .large])
             .presentationDragIndicator(.visible)
+    }
+
+    @ViewBuilder func languagePresentation() -> some View {
+        if #available(iOS 18, *) {
+            presentationSizing(LanguagePresentationSizing())
+        } else {
+            self
+        }
+    }
+}
+
+@available(iOS 18, *)
+private struct LanguagePresentationSizing: PresentationSizing {
+    func proposedSize(for root: PresentationSizingRoot, context: PresentationSizingContext) -> ProposedViewSize {
+        let page = PagePresentationSizing.page.proposedSize(for: root, context: context)
+        return ProposedViewSize(width: min(page.width ?? 560, 560), height: min(page.height ?? 320, 320))
     }
 }

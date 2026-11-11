@@ -88,7 +88,7 @@ struct DinoSettingsView: View {
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showsPrivacy) { DinoSocialPrivacyView().pagePresentation() }
             .sheet(isPresented: $showsGameCenter) { DinoFriendsView().gameEnvironment().pagePresentation() }
-            .sheet(isPresented: $showsLanguages) { LanguagePicker().pagePresentation() }
+            .sheet(isPresented: $showsLanguages) { LanguagePicker().languagePresentation() }
             .sheet(isPresented: $showsDayParts) {
                 DinoDayPartScheduleEditor(schedule: settings.dayPartSchedule)
                     .pagePresentation()

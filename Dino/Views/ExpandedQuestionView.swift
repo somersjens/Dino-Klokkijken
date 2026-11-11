@@ -3,6 +3,7 @@ import SwiftUI
 /// The session's missed-answer state drives the same expansion used by the train lesson.
 /// Rebuilding the view after rotation therefore starts with the hint already open.
 private struct DinoAfterNoonReadingClock: View {
+    @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var deviceHourFormat = DeviceHourFormat.shared
@@ -20,7 +21,7 @@ private struct DinoAfterNoonReadingClock: View {
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 0) {
-            DigitalClock(time: time, theme: theme, fontSize: explains ? conversionFont : 38)
+            DigitalClock(time: time, theme: theme, fontSize: explains ? conversionFont : demonstrationLayout.spacious ? 54 : 38)
                 .accessibilityIdentifier("\(prefix).targetClock")
             DinoTrainExpansion(axis: .horizontal, fraction: explains ? 1 : 0) {
                 HStack(spacing: 4) {
@@ -67,6 +68,7 @@ private struct SequenceClockAnchors: PreferenceKey {
 }
 
 struct DinoExpandedQuestionView: View {
+    @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject var session: DinoSession
@@ -91,7 +93,11 @@ struct DinoExpandedQuestionView: View {
         DinoGameLayout(width: width, height: availableHeight, kind: q.kind, optionCount: q.responses.count)
     }
     private var lessonWidth: CGFloat { isDemonstration ? width : gameLayout.contextWidth }
-    private var contextWidth: CGFloat { lessonWidth / gameLayout.contextMagnification }
+    private var paired24HourExample: Bool { isDemonstration && q.kind == .read24Hour && demonstrationLayout.sideBySide }
+    private var contextWidth: CGFloat {
+        if paired24HourExample { return (width - gameLayout.spacing) / 2 }
+        return isDemonstration ? lessonWidth : lessonWidth / gameLayout.contextMagnification
+    }
     private var responseWidth: CGFloat { isDemonstration ? width : gameLayout.answerWidth }
     private var showsDayPartExplanation: Bool {
         q.kind == .dayPart && !isDemonstration && session.showsWorkedExplanation
@@ -107,7 +113,8 @@ struct DinoExpandedQuestionView: View {
 
     var body: some View {
         let _ = deviceHourFormat.notation
-        DinoQuestionComposition(layout: gameLayout, hasContext: hasContext, fitsAvailableHeight: !isDemonstration) {
+        DinoQuestionComposition(layout: gameLayout, hasContext: hasContext, fitsAvailableHeight: !isDemonstration,
+                                sideBySide: paired24HourExample) {
             context
         } answers: {
             switch q.kind {
@@ -115,7 +122,7 @@ struct DinoExpandedQuestionView: View {
                 if !isDemonstration { responses }
             case .spokenTime:
                 if isDemonstration {
-                    DinoTimeReadingClock(time: q.target, theme: theme, width: min(440, width),
+                    DinoTimeReadingClock(time: q.target, theme: theme, width: demonstrationLayout.spacious ? demonstrationLayout.readingWidth : min(440, width),
                                          faceSize: min(clockSize, width - 52), language: code, showsGuide: true)
                         .environment(\.dinoClockReadingAssistance, false)
                 } else { responses }
@@ -152,9 +159,10 @@ struct DinoExpandedQuestionView: View {
                 }
             case .read24Hour:
                 if isDemonstration {
-                    Dino24HourReadingClock(time: q.target, theme: theme, width: min(300, width))
+                    Dino24HourReadingClock(time: q.target, theme: theme,
+                                           width: demonstrationLayout.spacious ? min(contextWidth, 440, max(280, availableHeight - 240)) : min(300, width))
                     Text(verbatim: responseText(q.expectedAnswer))
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .font(.system(size: demonstrationLayout.spacious ? 28 : 20, weight: .bold, design: .rounded))
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("demo.answer")
                 } else { responses }
@@ -175,13 +183,13 @@ struct DinoExpandedQuestionView: View {
         switch q.kind {
         case .readDigital:
                 DinoTimeReadingClock(time: q.target, theme: theme,
-                                     width: isDemonstration ? min(440, lessonWidth) : lessonWidth,
+                                     width: isDemonstration ? (demonstrationLayout.spacious ? demonstrationLayout.readingWidth : min(440, lessonWidth)) : lessonWidth,
                                      faceSize: min(clockSize, lessonWidth - 52), language: code,
                                      showsGuide: isDemonstration,
                                      showsSpokenHint: !isDemonstration && session.showsSpokenClockHints)
                     .environment(\.dinoClockReadingAssistance, false)
         case .read24Hour:
-            DinoAfterNoonReadingClock(time: q.target, theme: theme, width: min(420, contextWidth),
+            DinoAfterNoonReadingClock(time: q.target, theme: theme, width: min(demonstrationLayout.spacious ? 600 : 420, contextWidth),
                                       showsHint: session.missedFirstAnswer && !isDemonstration,
                                       isDemonstration: isDemonstration)
         case .dayPart:
@@ -254,7 +262,7 @@ struct DinoExpandedQuestionView: View {
         }
     }
 
-    private var timeChangeClockFont: CGFloat { isDemonstration ? 32 : min(wideLayout ? 32 : 48, contextWidth * 0.14) }
+    private var timeChangeClockFont: CGFloat { isDemonstration ? (demonstrationLayout.spacious ? 48 : 32) : min(wideLayout ? 32 : 48, contextWidth * 0.14) }
 
     private func spokenReadingClock(_ time: ClockTime, identifier: String, showsGuide: Bool = true) -> some View {
         let envelope = clockSize * SpokenClockGuideLayout.extent(shape: theme.analogShape) * 2
@@ -940,6 +948,7 @@ private struct SequencePatternArcs: View {
 
 /// Vertical journey: departure, two trains, the transfer between them, and the arrival to find.
 private struct DinoTrainJourneyCard: View {
+    @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let schedule: DinoDaySchedule
@@ -960,11 +969,11 @@ private struct DinoTrainJourneyCard: View {
     private var compactColumns: Bool { width < 340 || (twelveHourClock && width < 384) }
     private var twelveHourClock: Bool { theme.resolvedHourNotation() == .twelve }
     private var stackedRows: Bool { width < 300 || (twelveHourClock && width < 340) }
-    private var durationFont: CGFloat { compactColumns ? 12 : 14 }
-    private var titleFont: CGFloat { compactColumns ? 12 : 15 }
+    private var durationFont: CGFloat { demonstrationLayout.spacious ? 20 : compactColumns ? 12 : 14 }
+    private var titleFont: CGFloat { demonstrationLayout.spacious ? 22 : compactColumns ? 12 : 15 }
     private var columnScale: CGFloat { durationFont / 14 }
-    private var valueSpacing: CGFloat { compactColumns ? 6 : 8 }
-    private var clockColumnWidth: CGFloat { twelveHourClock ? (compactColumns ? 78 : 90) : (compactColumns ? 56 : 64) }
+    private var valueSpacing: CGFloat { demonstrationLayout.spacious ? 14 : compactColumns ? 6 : 8 }
+    private var clockColumnWidth: CGFloat { (twelveHourClock ? (compactColumns ? 78 : 90) : (compactColumns ? 56 : 64)) * (demonstrationLayout.spacious ? 1.45 : 1) }
     private var showsHoursColumn: Bool { schedule.totalMinutes >= 60 }
 
     private let ride = Color(dinoHex: 0x6A4300)
@@ -1385,6 +1394,7 @@ private enum DinoFlightInk {
 }
 
 private struct DinoFlightTicket: View {
+    @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let work: DinoFlightArrivalWork
@@ -1403,13 +1413,13 @@ private struct DinoFlightTicket: View {
     private var prefix: String { isDemonstration ? "demo" : "question" }
     private var secondaryInk: Color { highContrast ? DinoStyle.ink : DinoStyle.muted }
     private var pathWidth: CGFloat { min(88, max(36, width * 0.16)) }
-    private var compactTicket: Bool { width < 430 || isDemonstration || compactLayout }
-    private var timeSize: CGFloat { compactTicket ? 22 : 26 }
+    private var compactTicket: Bool { width < 430 || (isDemonstration && !demonstrationLayout.spacious) || compactLayout }
+    private var timeSize: CGFloat { demonstrationLayout.spacious ? 36 : compactTicket ? 22 : 26 }
     private var totalInk: Color { highContrast ? DinoStyle.ink : DinoFlightInk.total }
-    private var factIcon: CGFloat { compactTicket ? 24 : 28 }
-    private var headerIcon: CGFloat { compactTicket ? 34 : 36 }
-    private var rowPadding: CGFloat { compactTicket ? 5 : 7 }
-    private var rowInset: CGFloat { compactTicket ? 10 : 12 }
+    private var factIcon: CGFloat { demonstrationLayout.spacious ? 36 : compactTicket ? 24 : 28 }
+    private var headerIcon: CGFloat { demonstrationLayout.spacious ? 48 : compactTicket ? 34 : 36 }
+    private var rowPadding: CGFloat { demonstrationLayout.spacious ? 12 : compactTicket ? 5 : 7 }
+    private var rowInset: CGFloat { demonstrationLayout.spacious ? 18 : compactTicket ? 10 : 12 }
     private var shownArrival: ClockTime { work.departure.adding(minutes: appliedMinutes) }
     private var totalExpanded: Bool { showsTotal && work.offsetMinutes != 0 }
 
@@ -1796,6 +1806,7 @@ private struct DinoFlightTicketShape: Shape {
 
 /// A 24-hour ruler for the day-part example. Each stretch keeps its name, and the clock time marks the answer.
 struct DinoDayPartLine: View {
+    @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     @Environment(\.dinoHighContrast) private var highContrast
     @ObservedObject private var language = LanguageManager.shared
     let time: ClockTime
@@ -1809,7 +1820,7 @@ struct DinoDayPartLine: View {
     private var active: DinoDayPart { schedule.part(at: time.hour) }
     private var segments: [DinoDayPartSchedule.Segment] { schedule.timeline() }
     private var fraction: CGFloat { CGFloat(time.minutesOfDay) / (24 * 60) }
-    private var barHeight: CGFloat { 36 }
+    private var barHeight: CGFloat { demonstrationLayout.spacious ? 52 : 36 }
     private var markerHeadroom: CGFloat { 12 }
     private var markerFootroom: CGFloat { 2 }
     private var edgeInset: CGFloat { barHeight / 2 }
@@ -1870,7 +1881,7 @@ struct DinoDayPartLine: View {
                 .accessibilityHidden(!exposes(segment))
             }
         }
-        .frame(height: 44)
+        .frame(height: demonstrationLayout.spacious ? 62 : 44)
     }
 
     private var bar: some View {
@@ -1895,12 +1906,12 @@ struct DinoDayPartLine: View {
     private func nameLabel(_ part: DinoDayPart, chosen: Bool, showsName: Bool) -> some View {
         VStack(spacing: 1) {
             Image(systemName: part.symbol)
-                .font(.system(size: 13, weight: .bold))
+                .font(.system(size: demonstrationLayout.spacious ? 20 : 13, weight: .bold))
                 .foregroundStyle(part.symbolInk)
-                .frame(height: 16)
+                .frame(height: demonstrationLayout.spacious ? 24 : 16)
             if showsName {
                 Text(verbatim: L(key: part.titleKey))
-                    .font(.system(size: width < 280 ? 12 : 14, weight: .heavy, design: .rounded))
+                    .font(.system(size: demonstrationLayout.spacious ? 21 : width < 280 ? 12 : 14, weight: .heavy, design: .rounded))
                     .foregroundStyle(chosen ? DinoStyle.deepGreen : DinoStyle.ink)
                     .lineLimit(1)
                     .fixedSize(horizontal: true, vertical: false)
@@ -1912,13 +1923,13 @@ struct DinoDayPartLine: View {
         ZStack {
             ForEach(hourPositions, id: \.hour) { mark in
                 Text(verbatim: hourText(mark.hour))
-                    .font(.system(size: 12, weight: .heavy, design: .rounded))
+                    .font(.system(size: demonstrationLayout.spacious ? 18 : 12, weight: .heavy, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(hourInk(mark.hour))
-                    .position(x: mark.x, y: 8)
+                    .position(x: mark.x, y: demonstrationLayout.spacious ? 12 : 8)
             }
         }
-        .frame(width: width, height: 16)
+        .frame(width: width, height: demonstrationLayout.spacious ? 24 : 16)
         .accessibilityHidden(true)
     }
 
@@ -2058,29 +2069,34 @@ struct DinoExpandedDemonstration: View {
     let done: () -> Void
     @State private var sample: DinoSession?
     @State private var exampleIndex = 0
+    private var layout: DinoDemonstrationLayout { .init(width: width, height: height) }
 
     var body: some View {
         DinoDemonstrationCard(width: width, height: height) {
-            VStack(spacing: 18) {
+            VStack(spacing: layout.spacious ? 26 : 18) {
                 if let sample {
                     if kind == .trueFalse {
                         DinoTrueFalseQuestionTitle(question: sample.question,
                                                   showsCorrection: sample.question.expectedAnswer == .truth(false),
-                                                  announces: true, fontSize: 22, prefix: "demo")
+                                                  announces: true, fontSize: layout.spacious ? 30 : 22, prefix: "demo")
                             .id(sample.question.id)
                     } else {
-                        DinoQuestionTitle(question: sample.question, fontSize: 22, speechScope: "demo")
+                        DinoQuestionTitle(question: sample.question, fontSize: layout.spacious ? 30 : 22, speechScope: "demo")
                             .accessibilityIdentifier("demo.title")
                     }
-                    DinoExpandedQuestionView(session: sample, theme: theme, width: width, clockSize: 150, isDemonstration: true)
-                        .id(sample.question.id)
+                    DinoExpandedQuestionView(session: sample, theme: theme, width: width,
+                                             clockSize: layout.spacious ? layout.faceSize : 150, isDemonstration: true,
+                                             availableHeight: layout.lessonHeight, horizontalSequence: layout.spacious)
+                        // Reading clocks retain their revealed scale between examples.
+                        // Scripted lessons still restart their local animation state.
+                        .id([.readDigital, .spokenTime, .trueFalse, .read24Hour].contains(kind) ? 0 : sample.question.id)
                     if !kind.usesOptions && ![.sortTimes, .advanceAnalog, .sayTime].contains(kind) {
-                        Text(verbatim: answer(sample.question)).font(.system(size: 15, weight: .medium, design: .rounded))
+                        Text(verbatim: answer(sample.question)).font(.system(size: layout.spacious ? 23 : 15, weight: .medium, design: .rounded))
                             .multilineTextAlignment(.center).accessibilityIdentifier("demo.answer")
                     }
                     if kind == .daySchedule, let schedule = sample.question.daySchedule {
                         scheduleCalculation(schedule)
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .font(.system(size: layout.spacious ? 21 : 14, weight: .semibold, design: .rounded))
                             .fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.center)
                             .accessibilityIdentifier("demo.schedule.calculation")
                     }

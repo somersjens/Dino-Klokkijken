@@ -83,14 +83,10 @@ struct DinoCharacter: View {
         .task(id: clip) {
             guard journeyElapsed == nil else { return }
             start = Date(); finished = false; playbackClip = clip
-            // The file's first hit is about 0.01s in, and the second follows 0.38s later.
-            let clapID = clip == .thumbsUp && !reduceMotion
-                ? DinoAnswerFeedback.shared.playClap(after: max(0, DinoAnimation.correctAnswerClapContacts[0] - 0.21)) : nil
             let impactID = clip == .stumble
                 ? DinoAnswerFeedback.shared.playGroundImpact(after: reduceMotion ? 0.05 : DinoAnimation.travelDuration(.stumble)) : nil
             guard clip != .idle else { return }
             do { try await Task.sleep(for: .seconds(DinoAnimation.duration(clip))) } catch {
-                if let clapID { DinoAnswerFeedback.shared.cancelClaps(clapID) }
                 if let impactID { DinoAnswerFeedback.shared.cancelImpact(impactID) }
                 return
             }
@@ -321,6 +317,7 @@ struct DinoCompanionLayer: View {
     @State private var visible = false
     @State private var atResult = false
     @State private var portraitAmount: CGFloat = 1
+    @State private var portraitReturnOpacity: CGFloat = 1
     @State private var presentedClip: DinoAnimation.Clip = .idle
     @State private var celebrationStart: Date?
     @State private var celebrationFinished = false
@@ -402,6 +399,22 @@ struct DinoCompanionLayer: View {
         // preserving the portrait's transparent edges and overflowing spikes.
         .colorMultiply(Color(white: 1 - dimmingOpacity))
         .animation(.easeOut(duration: 0.18), value: dimmingOpacity)
+        .task(id: isResult) {
+            if isResult {
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) { portraitReturnOpacity = 0 }
+                return
+            }
+            guard portraitReturnOpacity == 0 else { return }
+            if reduceMotion {
+                portraitReturnOpacity = 1
+                return
+            }
+            // Let the next level settle into its HUD before the small rim fades in.
+            do { try await Task.sleep(for: .milliseconds(240)) } catch { return }
+            withAnimation(.easeInOut(duration: 0.20)) { portraitReturnOpacity = 1 }
+        }
         .task(id: celebrationStart) {
             guard let celebrationStart else { return }
             let remaining = DinoAnimation.duration(clip) + celebrationStart.timeIntervalSinceNow
@@ -423,6 +436,7 @@ struct DinoCompanionLayer: View {
                           performsStumble: presentedClip == .stumble, performsOpeningJump: presentedClip == .openingJump,
                           givesThumbsUp: presentedClip == .thumbsUp, exposesAnimationIdentifier: false,
                           companionPresentation: DinoCompanionPresentation(portraitAmount: portrait,
+                              decorationVisibility: isResult ? 1 : portraitReturnOpacity,
                               fadesBeforeTakeoff: celebrates, palette: HUDPalette(worldID: worldID),
                               rimRatio: 4 / (compactPortrait ? 52 : 78)), journeyElapsed: elapsed)
                 .id("\(presentedClip.rawValue)-\(reactionID)")
@@ -490,19 +504,20 @@ struct DinoCompanionLayer: View {
 /// The HUD and the result share one drawing buffer. Only its crop changes on takeoff.
 struct DinoCompanionPresentation: AnimatableModifier {
     var portraitAmount: CGFloat
+    var decorationVisibility: CGFloat
     let fadesBeforeTakeoff: Bool
     let palette: HUDPalette
     let rimRatio: CGFloat
-    var animatableData: CGFloat {
-        get { portraitAmount }
-        set { portraitAmount = newValue }
+    var animatableData: AnimatablePair<CGFloat, CGFloat> {
+        get { AnimatablePair(portraitAmount, decorationVisibility) }
+        set { portraitAmount = newValue.first; decorationVisibility = newValue.second }
     }
 
     func body(content: Content) -> some View {
         // On a jump the first third fades the decoration at HUD size.
         // The remaining two thirds open the crop as Dino takes off.
         let crop = fadesBeforeTakeoff ? pow(min(1, portraitAmount * 1.5), 2) : portraitAmount
-        let decorationOpacity = fadesBeforeTakeoff ? max(0, portraitAmount * 3 - 2) : portraitAmount
+        let decorationOpacity = (fadesBeforeTakeoff ? max(0, portraitAmount * 3 - 2) : portraitAmount) * decorationVisibility
         let drawing = content
             .scaleEffect(1 + (1 / 0.62 - 1) * crop)
             .offset(x: -210 * 0.065 * crop, y: 210 * 0.339 * crop)

@@ -8,7 +8,7 @@ struct OnboardingFlow: View {
     @State private var theme = ClockTheme.standard
 
     var body: some View {
-        content.modifier(CustomizationTypography())
+        content.modifier(CustomizationTypography(welcome: true))
             .onAppear { theme = player.profile.clockTheme }
     }
 
@@ -35,9 +35,14 @@ private struct OnboardingPages: View {
 
     var body: some View {
         let page: ClockCustomizerPage = step == 1 ? .analog : .digital
-        if step > 0 && metrics.groupsWelcomeClock {
-            ClockCustomizer(theme: $theme, page: page, onNavigate: navigate,
-                            welcomeChrome: (AnyView(title), AnyView(action)))
+        if metrics.spacious {
+            if step == 0 {
+                DinoAppearanceEditor(onNavigate: navigate,
+                                     welcomeChrome: (AnyView(title), AnyView(action)))
+            } else {
+                ClockCustomizer(theme: $theme, page: page, onNavigate: navigate,
+                                welcomeChrome: (AnyView(title), AnyView(action)))
+            }
         } else {
             VStack(spacing: 0) {
                 title

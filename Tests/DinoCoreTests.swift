@@ -13,6 +13,29 @@ private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
 @MainActor
 struct DinoCoreTests {
     static func testGameLayout() {
+        for width in stride(from: 320, through: 1400, by: 37) {
+            for height in stride(from: 320, through: 1400, by: 43) {
+                let size = CGSize(width: CGFloat(width), height: CGFloat(height))
+                let lesson = DinoDemonstrationLayout.fitting(size)
+                expect(lesson.width + lesson.padding * 2 <= size.width, "example card fits the window width")
+                expect(lesson.height <= size.height, "example card fits the safe-area height")
+                expect(lesson.faceSize > 0 && lesson.readingWidth > 0, "example clocks have positive native sizes")
+                if lesson.sideBySide {
+                    expect(lesson.spacious, "only roomy lessons use two columns")
+                }
+            }
+        }
+        let portraitLesson = DinoDemonstrationLayout.fitting(CGSize(width: 834, height: 1150))
+        let landscapeLesson = DinoDemonstrationLayout.fitting(CGSize(width: 1194, height: 790))
+        let splitLesson = DinoDemonstrationLayout.fitting(CGSize(width: 507, height: 1150))
+        let largeLandscapeLesson = DinoDemonstrationLayout.fitting(CGSize(width: 1376, height: 984))
+        expect(largeLandscapeLesson.sideBySide, "13-inch landscape uses the lesson viewport after reserving its fixed actions")
+        expect(portraitLesson.spacious && !portraitLesson.sideBySide && portraitLesson.faceSize >= 280,
+               "portrait iPad gives the clocks a larger, vertical composition")
+        expect(landscapeLesson.sideBySide && landscapeLesson.digitalFont > 44,
+               "landscape iPad reflows clocks and controls into columns")
+        expect(!splitLesson.spacious && splitLesson.width == 380,
+               "narrow split view retains the phone composition")
         // These intermediate proposals used to produce a negative diameter/height
         // in the actual time-reading view, even though final device sizes fitted.
         let proposals: [CGFloat] = [-100, -1, 0, 1, 15, 16, 24, 51, 52, 53, 280, 370, 1024, .nan, .infinity, -.infinity]
@@ -2269,12 +2292,14 @@ struct DinoCoreTests {
             for destination in catalog where destination.id != reference.id {
                 let journey = DinoTimeZoneJourney(origin: reference, destination: destination)
                 for size in [CGSize(width: 230, height: 224), CGSize(width: 340, height: 252), CGSize(width: 760, height: 252),
-                             CGSize(width: 600, height: 184), CGSize(width: 760, height: 184)] {
+                             CGSize(width: 600, height: 184), CGSize(width: 760, height: 184),
+                             CGSize(width: 640, height: 330), CGSize(width: 840, height: 400)] {
+                    let cardSize = size.height >= 330 ? CGSize(width: 200, height: 108) : CGSize(width: 132, height: 80)
                     let viewport = DinoTimeZoneViewport(journey: journey, size: size)
                     let labels = DinoTimeZoneLabelLayout(origin: viewport.point(reference, size: size),
                                                         destination: viewport.point(destination, size: size), size: size,
-                                                        offsetMinutes: journey.offsetMinutes)
-                    let height = DinoTimeZoneLabelLayout.cardHeight
+                                                        offsetMinutes: journey.offsetMinutes, cardSize: cardSize)
+                    let height = cardSize.height
                     let a = CGRect(x: labels.origin.x - labels.width / 2, y: labels.origin.y - height / 2, width: labels.width, height: height)
                     let b = CGRect(x: labels.destination.x - labels.width / 2, y: labels.destination.y - height / 2, width: labels.width, height: height)
                     expect(!a.intersects(b), "capital labels never overlap, including narrow worked examples")

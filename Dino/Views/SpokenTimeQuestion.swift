@@ -3,6 +3,7 @@ import UIKit
 
 /// Only examples show the complete phrase ring. Live questions keep their answer stones.
 struct DinoTimeReadingClock: View {
+    @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let time: ClockTime
@@ -35,7 +36,7 @@ struct DinoTimeReadingClock: View {
                     .position(center)
                     .accessibilityIdentifier("\(prefix).targetClock")
                 if hasLabels {
-                    ForEach(labelTimes, id: \.self) { labelTime in
+                    ForEach(labelTimes, id: \.minute) { labelTime in
                         guideLabel(labelTime.minute)
                             .transition(.opacity)
                     }
@@ -70,7 +71,7 @@ struct DinoTimeReadingClock: View {
         let border = color.opacity(selected || highContrast ? 1 : 0.28)
         let background = color.opacity(highContrast ? 0.10 : 0.08)
         return Text(verbatim: phrase)
-            .font(.system(size: max(10, min(16, layout.width * 0.037)), weight: .bold, design: .rounded))
+            .font(.system(size: max(10, min(demonstrationLayout.spacious ? 22 : 16, layout.width * 0.037)), weight: .bold, design: .rounded))
             .foregroundStyle(color)
             .multilineTextAlignment(.center)
             .lineLimit(3).minimumScaleFactor(0.75)

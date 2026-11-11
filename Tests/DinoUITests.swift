@@ -151,10 +151,15 @@ final class DinoUITests: XCTestCase {
         XCTAssertGreaterThan(answer, 10_000)
         let field = app.textFields["settings.reset.answer"]
         XCTAssertTrue(field.waitForExistence(timeout: 5))
-        field.tap()
+        let confirm = app.buttons["settings.reset.confirm"]
+        XCTAssertFalse(confirm.isEnabled, "an empty answer cannot erase progress")
+        field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+        field.typeText("0")
+        XCTAssertFalse(confirm.isEnabled, "an incorrect calculation cannot erase progress")
+        field.typeText(XCUIKeyboardKey.delete.rawValue)
         field.typeText(String(answer))
         saveScreenshot("reset-answer-keyboard")
-        let confirm = app.buttons["settings.reset.confirm"]
         let ready = NSPredicate { _, _ in confirm.exists && confirm.isEnabled }
         expectation(for: ready, evaluatedWith: nil)
         waitForExpectations(timeout: 5)
@@ -361,32 +366,32 @@ final class DinoUITests: XCTestCase {
             app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = String(completedLevel)
             app.launch()
             XCTAssertTrue(app.buttons["header.stars"].waitForExistence(timeout: 8))
+            waitForMapOpeningToFinish()
             tap("header.stars")
             let overview = app.scrollViews["stars.overview"]
             XCTAssertTrue(overview.waitForExistence(timeout: 5))
             for world in 1...10 {
                 let firstLevel = (world - 1) * 10 + 1
-                let expected = min(9, max(0, completedLevel - firstLevel + 1)) * 3
+                let expected = min(10, max(0, completedLevel - firstLevel + 1)) * 3
                 let unlocked = world <= completedLevel / 10 + 1
                 let row = app.descendants(matching: .any)["stars.world.\(world)"]
                 XCTAssertTrue(row.exists)
                 XCTAssertEqual(row.staticTexts["\(expected)"].exists, unlocked)
                 XCTAssertFalse(app.buttons["stars.world.\(world)"].exists)
             }
-            let expectedTotal = (completedLevel - completedLevel / 10) * 3
+            let expectedTotal = completedLevel * 3
             let total = app.descendants(matching: .any)["stars.total"]
             XCTAssertTrue(total.staticTexts["\(expectedTotal)"].exists)
-            XCTAssertTrue(app.buttons["stars.close"].isHittable)
             saveScreenshot("stars-overview-\(completedLevel)")
-            overview.swipeUp()
+            revealStarsActions()
             XCTAssertTrue(app.descendants(matching: .any)["stars.world.10"].isHittable)
             XCTAssertTrue(app.buttons["stars.close"].isHittable)
             XCTAssertTrue(total.staticTexts["\(expectedTotal)"].exists)
             saveScreenshot("stars-overview-\(completedLevel)-bottom")
             tap("stars.close")
             XCTAssertTrue(app.buttons["header.stars"].waitForExistence(timeout: 5))
-            XCTAssertFalse(overview.exists)
-            XCTAssertEqual(app.descendants(matching: .any)["header.starCount"].label, "\(expectedTotal)")
+            XCTAssertTrue(overview.waitForNonExistence(timeout: 5))
+            XCTAssertTrue(app.buttons["header.stars"].label.hasSuffix(", \(expectedTotal)"))
         }
     }
 
@@ -396,27 +401,107 @@ final class DinoUITests: XCTestCase {
         app.launchArguments = ["-settings.languageOverride", "en"]
         app.launch()
         XCTAssertTrue(app.buttons["header.stars"].waitForExistence(timeout: 8))
+        waitForMapOpeningToFinish()
         app.buttons["header.stars"].tap()
         let overview = app.scrollViews["stars.overview"]
         XCTAssertTrue(overview.waitForExistence(timeout: 5))
         let total = app.descendants(matching: .any)["stars.total"]
         XCTAssertTrue(total.staticTexts["Total"].exists)
-        XCTAssertTrue(total.staticTexts["66"].exists)
+        XCTAssertTrue(total.staticTexts["72"].exists)
         XCTAssertTrue(app.descendants(matching: .any)["stars.world.3"].staticTexts["12"].exists)
         XCTAssertFalse(app.descendants(matching: .any)["stars.world.4"].staticTexts["12"].exists)
         XCTAssertEqual(app.buttons["stars.close"].label, "Back to the level overview")
+        revealStarsActions()
         saveScreenshot("stars-overview-english-portrait")
         if UIDevice.current.userInterfaceIdiom == .pad {
             XCUIDevice.shared.orientation = .landscapeLeft
-            XCTAssertTrue(app.buttons["stars.close"].isHittable)
-            overview.swipeUp()
+            revealStarsActions()
             XCTAssertTrue(app.descendants(matching: .any)["stars.world.10"].isHittable)
             XCTAssertFalse(app.descendants(matching: .any)["stars.world.10"].staticTexts["12"].exists)
-            XCTAssertTrue(total.staticTexts["66"].exists)
+            XCTAssertTrue(total.staticTexts["72"].exists)
             saveScreenshot("stars-overview-english-landscape")
         }
         app.buttons["stars.close"].tap()
-        XCTAssertFalse(overview.exists)
+        XCTAssertTrue(overview.waitForNonExistence(timeout: 5))
+    }
+
+    private func revealStarsActions() {
+        let overview = app.scrollViews["stars.overview"]
+        let close = app.buttons["stars.close"]
+        for _ in 0..<8 {
+            if close.isHittable && close.frame.maxY <= overview.frame.maxY { return }
+            overview.swipeUp()
+        }
+        XCTAssertTrue(close.isHittable)
+    }
+
+    func testStarsOverviewFitsPortraitAndLandscape() {
+        onboard()
+        tap("header.stars")
+        let overview = app.scrollViews["stars.overview"]
+        XCTAssertTrue(overview.waitForExistence(timeout: 5))
+        for orientation in [UIDeviceOrientation.portrait, .landscapeLeft, .landscapeRight] {
+            XCUIDevice.shared.orientation = orientation
+            let close = app.buttons["stars.close"]
+            let first = app.descendants(matching: .any)["stars.world.1"]
+            let second = app.descendants(matching: .any)["stars.world.2"]
+            let last = app.descendants(matching: .any)["stars.world.10"]
+            let total = app.descendants(matching: .any)["stars.total"]
+            for _ in 0..<8 {
+                if first.isHittable && first.frame.minY >= overview.frame.minY { break }
+                overview.swipeDown()
+            }
+            XCTAssertGreaterThanOrEqual(first.frame.minX, overview.frame.minX)
+            XCTAssertLessThanOrEqual(second.frame.maxX, overview.frame.maxX)
+            let twoColumns = abs(first.frame.minY - second.frame.minY) < 1
+            if orientation != .portrait && overview.frame.width >= 500 {
+                XCTAssertTrue(twoColumns, "Landscape also uses two columns in a phone-sized sheet")
+            }
+            if UIDevice.current.userInterfaceIdiom == .pad && orientation == .portrait {
+                XCTAssertGreaterThan(overview.frame.width, 650)
+                XCTAssertGreaterThan(first.frame.height, 70)
+            }
+            revealStarsActions()
+            XCTAssertTrue(last.isHittable)
+            XCTAssertTrue(close.isHittable)
+            XCTAssertTrue(app.frame.contains(close.frame))
+            XCTAssertEqual(total.frame.width, first.frame.width, accuracy: 1)
+            XCTAssertEqual(close.frame.width, first.frame.width, accuracy: 1)
+            XCTAssertGreaterThan(total.frame.minY, last.frame.maxY,
+                                 "The actions follow the world stones inside the list")
+            if orientation != .portrait && twoColumns {
+                XCTAssertEqual(total.frame.midY, close.frame.midY, accuracy: 1)
+                XCTAssertLessThan(total.frame.maxX, close.frame.minX)
+            } else {
+                XCTAssertGreaterThanOrEqual(close.frame.minY, total.frame.maxY)
+            }
+            if orientation != .portrait {
+                XCTAssertGreaterThanOrEqual(overview.frame.minY, app.frame.minY + 24,
+                                     "Landscape retains visible map space above the sheet")
+            }
+            saveScreenshot("stars-responsive-\(orientation.rawValue)")
+        }
+        tap("stars.close")
+        XCTAssertTrue(overview.waitForNonExistence(timeout: 5))
+    }
+
+    func testStarsOverviewLandscapeSwipeDismissal() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        XCUIDevice.shared.orientation = .landscapeLeft
+        app.launch()
+        XCTAssertTrue(app.buttons["header.stars"].waitForExistence(timeout: 8))
+        waitForMapOpeningToFinish()
+        tap("header.stars")
+        let overview = app.scrollViews["stars.overview"]
+        XCTAssertTrue(overview.waitForExistence(timeout: 5))
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        let start = CGPoint(x: overview.frame.midX, y: overview.frame.minY + 8)
+        origin.withOffset(CGVector(dx: start.x, dy: start.y))
+            .press(forDuration: 0.1, thenDragTo: origin.withOffset(CGVector(
+                dx: start.x, dy: min(app.frame.maxY - 20, start.y + overview.frame.height * 0.8))))
+        XCTAssertTrue(overview.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["header.stars"].isHittable)
     }
 
     func testAllTenBossesHaveClockArtwork() {
@@ -2661,7 +2746,12 @@ final class DinoUITests: XCTestCase {
             tap("demo.nextExample")
             let expected = String(format: "%02d:00", hour)
             XCTAssertEqual(digital.label, expected)
-            XCTAssertEqual(analog.frame, analogFrame, "All arrow directions use the same initial reservation")
+            for (actual, expected) in zip(
+                [analog.frame.minX, analog.frame.minY, analog.frame.width, analog.frame.height],
+                [analogFrame.minX, analogFrame.minY, analogFrame.width, analogFrame.height]
+            ) {
+                XCTAssertEqual(actual, expected, accuracy: 0.34, "All arrow directions use the same initial reservation")
+            }
             XCTAssertEqual(digital.frame, digitalFrame)
             XCTAssertEqual(app.buttons["demo.nextExample"].frame, nextFrame)
             XCTAssertEqual(app.buttons["demo.ready"].frame, readyFrame)
@@ -4848,6 +4938,47 @@ final class DinoUITests: XCTestCase {
         return DinoDayPartSchedule(night: starts[0], morning: starts[1], afternoon: starts[2], evening: starts[3])
     }
 
+    func testTabletExamplesReflowAfterRotation() throws {
+        guard UIDevice.current.userInterfaceIdiom == .pad else { throw XCTSkip("iPad composition") }
+        for type in [DinoPracticeQuestion.chooseDigital, .setDigital, .setAnalog, .readDigital, .read24Hour, .timeSequence, .match, .timeZone, .minutesBetween, .daySchedule, .dayPart, .flightArrival] {
+            app.terminate()
+            XCUIDevice.shared.orientation = .portrait
+            app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.tablet-example.\(UUID().uuidString)"
+            app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+            app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = type.rawValue
+            app.launch()
+            tap("question.example")
+            let ready = app.buttons["demo.ready"]
+            XCTAssertTrue(ready.waitForExistence(timeout: 5))
+            for orientation in [UIDeviceOrientation.portrait, .landscapeLeft] {
+                XCUIDevice.shared.orientation = orientation
+                RunLoop.current.run(until: Date().addingTimeInterval(0.7))
+                let viewport = app.scrollViews["demo.content"].frame
+                XCTAssertGreaterThan(viewport.width, 620)
+                XCTAssertGreaterThanOrEqual(ready.frame.height, 68)
+                XCTAssertTrue(ready.isHittable)
+                XCTAssertTrue(app.buttons["demo.nextExample"].isHittable)
+                XCTAssertLessThan(viewport.maxY, app.buttons["demo.nextExample"].frame.minY)
+                if type == .chooseDigital || type == .setDigital {
+                    let analog = app.descendants(matching: .any)["demo.analog"].frame
+                    let digital = app.descendants(matching: .any)["demo.digital"].frame
+                    XCTAssertGreaterThan(analog.width, 320)
+                    XCTAssertTrue(viewport.insetBy(dx: -1, dy: -1).contains(analog))
+                    XCTAssertTrue(viewport.insetBy(dx: -1, dy: -1).contains(digital))
+                    if orientation == .landscapeLeft {
+                        XCTAssertLessThan(analog.maxX, digital.minX)
+                    } else {
+                        XCTAssertLessThan(analog.maxY, digital.minY)
+                    }
+                }
+                saveScreenshot("tablet-example-\(type.rawValue)-\(orientation.rawValue)")
+                let fixedActions = ready.frame
+                tap("demo.nextExample")
+                XCTAssertEqual(ready.frame, fixedActions)
+            }
+        }
+    }
+
     func testExampleActionsStayFixedAcrossAllQuestionTypes() {
         for type in DinoPracticeQuestion.allCases {
             app.terminate()
@@ -4869,7 +5000,14 @@ final class DinoUITests: XCTestCase {
                 tap("demo.nextExample")
                 XCTAssertEqual(another.frame, nextFrame, "\(type) reserves its action row before refresh")
                 XCTAssertEqual(heading.frame, headingFrame, "\(type) keeps the modal in place")
-                XCTAssertEqual(app.scrollViews["demo.content"].frame, lessonFrame)
+                let refreshedLesson = app.scrollViews["demo.content"].frame
+                // AX can round identical geometry differently at fractional points.
+                for (actual, expected) in zip(
+                    [refreshedLesson.minX, refreshedLesson.minY, refreshedLesson.width, refreshedLesson.height],
+                    [lessonFrame.minX, lessonFrame.minY, lessonFrame.width, lessonFrame.height]
+                ) {
+                    XCTAssertEqual(actual, expected, accuracy: 0.1, "\(type) keeps the lesson viewport in place")
+                }
             }
             app.scrollViews["demo.content"].swipeUp()
             XCTAssertEqual(another.frame, nextFrame, "\(type) scrolls only the explanation")
@@ -4908,7 +5046,8 @@ final class DinoUITests: XCTestCase {
                 let digital = app.descendants(matching: .any)["demo.digital"].frame
                 XCTAssertGreaterThanOrEqual(analog.minY, viewport.minY)
                 XCTAssertLessThanOrEqual(digital.maxY, viewport.maxY)
-                XCTAssertTrue(app.scrollViews["demo.content"].buttons["clock.minute.more"].isHittable)
+                XCTAssertTrue(app.scrollViews["demo.content"].buttons["clock.minute.more"].isHittable,
+                              app.scrollViews["demo.content"].debugDescription)
             }
             if type == .read24Hour {
                 let analog = app.descendants(matching: .any)["demo.24Hour.analog"]
@@ -5307,18 +5446,18 @@ final class DinoUITests: XCTestCase {
         profile.tap()
         XCTAssertTrue(app.staticTexts["Sophie"].waitForExistence(timeout: 5))
         app.navigationBars.buttons.element(boundBy: 0).tap()
-        let online = app.buttons["friends.onlineVisibility"]
+        let info = app.buttons["friends.scoreInfo"]
         for _ in 0..<4 {
-            if online.isHittable { break }
+            if info.isHittable { break }
             app.swipeUp()
         }
-        XCTAssertTrue(online.isHittable)
-        XCTAssertEqual(online.label, "Laat vrienden zien als ik online ben")
-        XCTAssertEqual(app.switches["friends.share"].label, "Vrienden mogen score zien")
+        XCTAssertTrue(info.isHittable)
+        XCTAssertFalse(app.buttons["friends.onlineVisibility"].exists)
+        XCTAssertEqual(app.switches["friends.share"].label, "Toon mijn score")
         saveScreenshot("friends-permissions")
-        tap("friends.onlineVisibility")
-        let activityHelp = app.alerts.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Alleen vrienden"))
-        XCTAssertTrue(activityHelp.firstMatch.waitForExistence(timeout: 5))
+        tap("friends.scoreInfo")
+        let scoreHelp = app.alerts.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "alleen je level"))
+        XCTAssertTrue(scoreHelp.firstMatch.waitForExistence(timeout: 5))
         app.alerts.buttons.firstMatch.tap()
         XCTAssertFalse(app.buttons["friends.settings"].exists)
         tap("friends.signOut")
@@ -6837,6 +6976,41 @@ final class DinoUITests: XCTestCase {
             XCTAssertEqual(scroll.frame.maxX, app.frame.maxX, accuracy: 1)
             saveScreenshot("ipad-map-focus-\(orientation.rawValue)")
         }
+    }
+
+    func testTabletMapFocusSurvivesRotationDuringLongTrip() throws {
+        guard UIDevice.current.userInterfaceIdiom == .pad else { throw XCTSkip("iPad rotation") }
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.rotating-map-trip.\(UUID().uuidString)"
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "34"
+        app.launch()
+        waitForMapOpeningToFinish()
+        let firstWorld = app.descendants(matching: .any)["header.world.1"].firstMatch
+        for _ in 0..<30 {
+            if firstWorld.exists { break }
+            app.swipeDown(velocity: .fast)
+        }
+        XCTAssertTrue(firstWorld.exists)
+        XCTAssertFalse(app.buttons["map.level.35"].isHittable)
+
+        // Rotate immediately after requesting a long return. The destination
+        // and its arrival callback must follow the new viewport.
+        tap("header.level")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        let arrived = NSPredicate { _, _ in
+            self.app.frame.width > self.app.frame.height
+                && self.app.descendants(matching: .any)["map.levelPointer.35"].exists
+                && self.app.buttons["map.level.35"].isHittable
+        }
+        expectation(for: arrived, evaluatedWith: nil)
+        waitForExpectations(timeout: 15)
+        let level = app.buttons["map.level.35"]
+        XCTAssertGreaterThan(level.frame.minY, app.buttons["header.settings"].frame.maxY)
+        XCTAssertLessThan(level.frame.maxY, app.frame.maxY)
+        level.tap()
+        XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5))
+        saveScreenshot("ipad-rotating-map-trip-arrived")
     }
 
     private func checkQuestionFits(_ type: DinoPracticeQuestion, name: String) {

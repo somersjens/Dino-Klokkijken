@@ -213,25 +213,27 @@ struct DinoTimeZoneLabelLayout {
     let destination: CGPoint
     let width: CGFloat
 
-    init(origin: CGPoint, destination: CGPoint, size: CGSize, offsetMinutes: Int) {
-        let width = min(132, (size.width - 20) / 2)
+    init(origin: CGPoint, destination: CGPoint, size: CGSize, offsetMinutes: Int,
+         cardSize: CGSize = CGSize(width: 132, height: 80)) {
+        let height = cardSize.height
+        let width = min(cardSize.width, (size.width - 20) / 2)
         self.width = width
         func clamp(_ point: CGPoint) -> CGPoint {
             CGPoint(x: min(size.width - width / 2 - 7, max(width / 2 + 7, point.x)),
-                    y: min(size.height - Self.cardHeight / 2 - 7, max(Self.cardHeight / 2 + 7, point.y)))
+                    y: min(size.height - height / 2 - 7, max(height / 2 + 7, point.y)))
         }
         func rect(_ point: CGPoint) -> CGRect {
-            CGRect(x: point.x - width / 2, y: point.y - Self.cardHeight / 2, width: width, height: Self.cardHeight)
+            CGRect(x: point.x - width / 2, y: point.y - height / 2, width: width, height: height)
         }
         func candidates(_ point: CGPoint, below: Bool) -> [CGPoint] {
             let direction: CGFloat = below ? 1 : -1
-            let markerClearance = Self.cardHeight / 2 + 17
+            let markerClearance = height / 2 + 17
             var points = [CGPoint(x: point.x, y: point.y + markerClearance * direction),
                           CGPoint(x: point.x - width / 2 - 20, y: point.y),
                           CGPoint(x: point.x + width / 2 + 20, y: point.y),
                           CGPoint(x: point.x, y: point.y - markerClearance * direction)]
             for x in [width / 2 + 7, size.width / 2, size.width - width / 2 - 7] {
-                for y in [Self.cardHeight / 2 + 7, size.height / 2, size.height - Self.cardHeight / 2 - 7] {
+                for y in [height / 2 + 7, size.height / 2, size.height - height / 2 - 7] {
                     points.append(CGPoint(x: x, y: y))
                 }
             }

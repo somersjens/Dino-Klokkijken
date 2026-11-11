@@ -1,5 +1,33 @@
 import Foundation
 
+/// Worked lessons use the window's space, with separate budgets for the face,
+/// reading, controls and fixed actions. Narrow split views retain the phone layout.
+struct DinoDemonstrationLayout {
+    let width: CGFloat
+    let height: CGFloat
+
+    static func fitting(_ size: CGSize) -> Self {
+        let roomy = size.width >= 700 && size.height >= 550
+        return Self(width: min(roomy ? 840 : 380, max(230, size.width - (roomy ? 104 : 80))),
+                    height: min(roomy ? 1080 : 800, max(240, size.height - 56)))
+    }
+
+    var spacious: Bool { width >= 600 }
+    var sideBySide: Bool { spacious && width > lessonHeight * 1.15 }
+    var padding: CGFloat { spacious ? 28 : 20 }
+    var spacing: CGFloat { spacious ? 22 : 14 }
+    var titleFont: CGFloat { spacious ? 30 : 24 }
+    var digitalFont: CGFloat { spacious ? min(54, width * 0.07) : 30 }
+    var lessonHeight: CGFloat { max(80, height - padding * 2 - (spacious ? 210 : 164)) }
+    var readingWidth: CGFloat {
+        spacious ? min(600, width, (lessonHeight - 100) / 1.14) : min(440, width)
+    }
+    var faceSize: CGFloat {
+        spacious ? min(320, width * 0.44, lessonHeight * 0.48) : 180
+    }
+    var controlWidth: CGFloat { spacious ? min(440, width * 0.55) : width }
+}
+
 /// A lesson is sized in the safe-area viewport left after the HUD, title and actions.
 /// These are content requirements, independent of device names and size classes.
 struct DinoGameLayout {

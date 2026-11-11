@@ -77,41 +77,15 @@ struct ClockCustomizer: View {
     }
 
     private func welcomeEditor(title: AnyView, action: AnyView) -> some View {
-        GeometryReader { geometry in
-            let horizontal = metrics.sideBySide
-            let previewWidth = min(340, geometry.size.width * 0.29)
-            let availableWidth = max(1, min(1120, geometry.size.width - 40))
-            let controlsWidth = horizontal ? max(1, min(740, availableWidth - previewWidth - 24))
-                : min(metrics.contentWidth - 32, availableWidth)
-            let layout = horizontal ? AnyLayout(HStackLayout(spacing: 24)) : AnyLayout(VStackLayout(spacing: 20))
-            ScrollView {
-                VStack(spacing: 16) {
-                    title
-                    layout {
-                        Group {
-                            if page == .analog { analogPreview } else { digitalPreview }
-                        }.frame(width: horizontal ? previewWidth : nil)
-                        VStack(spacing: 16) {
-                            Group {
-                                if page == .analog {
-                                    analogOptions(useColorGrid: controlsWidth >= (horizontal ? 610 : 700))
-                                } else {
-                                    digitalOptions
-                                }
-                            }
-                            .dinoCard(padding: 24)
-                            .accessibilityElement(children: .contain)
-                            .accessibilityIdentifier("theme.welcome.optionsCard")
-                            action
-                        }.frame(width: controlsWidth)
-                    }
-                }
-                .padding(.horizontal, 20).padding(.vertical, 20)
-                .frame(maxWidth: .infinity)
-                .modifier(ShortScrollCentering(height: geometry.size.height))
-            }
-            .centersShortContent().bouncesOnlyWhenNeeded()
-            .accessibilityIdentifier(page == .analog ? "theme.options.analog" : "theme.options.digital")
+        CustomizationWelcomeLayout(identifier: page == .analog ? "theme.options.analog" : "theme.options.digital",
+                                   cardIdentifier: "theme.welcome.optionsCard") {
+            title
+        } preview: {
+            if page == .analog { analogPreview } else { digitalPreview }
+        } options: {
+            if page == .analog { analogOptions(useColorGrid: false) } else { digitalOptions }
+        } action: {
+            action
         }
     }
 
@@ -154,8 +128,8 @@ struct ClockCustomizer: View {
         let minute = colorChoices(title: "dino.minuteHand", color: analogColor(\.customMinuteHex, preset: \.minuteInk), values: inkSwatches)
         let face = colorChoices(title: "dino.face", color: faceColor, values: faceSwatches)
         let rim = colorChoices(title: "dino.rim", color: analogColor(\.customRimHex, preset: \.rimInk), values: inkSwatches)
-        return VStack(spacing: CustomizationLayout.restoreSpacing) {
-            VStack(spacing: CustomizationLayout.sectionSpacing * metrics.enlargement) {
+        return VStack(spacing: metrics.restoreSpacing) {
+            VStack(spacing: metrics.sectionSpacing * metrics.enlargement) {
                 analogNumeralChoices
                 analogShapeChoices.padding(.bottom, CustomizationLayout.swatchInset)
                 if useColorGrid {
@@ -184,8 +158,8 @@ struct ClockCustomizer: View {
     }
 
     private var digitalOptions: some View {
-        VStack(spacing: CustomizationLayout.restoreSpacing) {
-            VStack(spacing: CustomizationLayout.sectionSpacing * metrics.enlargement) {
+        VStack(spacing: metrics.restoreSpacing) {
+            VStack(spacing: metrics.sectionSpacing * metrics.enlargement) {
                 hourNotationChoices
                 colorChoices(title: "dino.digitColor", color: $theme.digitalInkHex, values: digitalInkSwatches)
                 colorChoices(title: "dino.display", color: displayColor, values: displaySwatches)
