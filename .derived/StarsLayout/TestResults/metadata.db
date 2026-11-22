@@ -13,17 +13,17 @@
 				<key>testStarsOverviewEnglishAndTabletLayout</key>
 				<dict>
 					<key>mrnet</key>
-					<real>49.893257975578308</real>
+					<real>34.011063933372498</real>
 				</dict>
 				<key>testStarsOverviewFitsPortraitAndLandscape</key>
 				<dict>
 					<key>mrnet</key>
-					<real>60.941426992416382</real>
+					<real>65.456622004508972</real>
 				</dict>
 				<key>testStarsOverviewLandscapeSwipeDismissal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>36.91888689994812</real>
+					<real>21.424442052841187</real>
 				</dict>
 				<key>testStarsOverviewWorldCountsAndReturn</key>
 				<dict>

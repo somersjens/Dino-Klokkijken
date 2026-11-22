@@ -43,6 +43,8 @@ struct PlayerProfile: Codable, Equatable, Sendable {
     var name = ""
     var nameChangedAt: Date?
     var dinoAppearance: DinoAppearance?
+    var characterSlots: [DinoIdentity]?
+    var pendingCharacterUnlock: DinoIdentity?
     var onboardingComplete = false
     var clockTheme = ClockTheme.standard
     var levels: [String: LevelRecord] = [:]
@@ -58,6 +60,33 @@ struct PlayerProfile: Codable, Equatable, Sendable {
     var progressResetAt: Date?
 
     var normalLevelsComplete: Bool { normalLevelsComplete(in: 1) }
+    var activeCharacter: DinoIdentity {
+        let saved = (dinoAppearance ?? .standard).identity
+        return isCharacterUnlocked(saved) ? saved : .main
+    }
+    func isCharacterUnlocked(_ character: DinoIdentity) -> Bool {
+        character == .main || (character.isPlayable && worldComplete(character.rawValue))
+    }
+    /// The active character lives in the preview; selecting a tile swaps it into that tile.
+    var collectionCharacters: [DinoIdentity] {
+        if let characterSlots, characterSlots.count == 10,
+           Set(characterSlots).count == 10, !characterSlots.contains(activeCharacter) {
+            return characterSlots
+        }
+        return DinoIdentity.allCases.filter { $0 != activeCharacter }
+    }
+    @discardableResult
+    mutating func selectCharacter(_ character: DinoIdentity) -> Bool {
+        guard character != activeCharacter, isCharacterUnlocked(character),
+              let index = collectionCharacters.firstIndex(of: character) else { return false }
+        var slots = collectionCharacters
+        slots[index] = activeCharacter
+        var colors = dinoAppearance ?? .standard
+        colors.character = character == .main ? nil : character
+        characterSlots = slots
+        dinoAppearance = colors
+        return true
+    }
     func normalLevelsComplete(in worldID: Int) -> Bool {
         guard let world = DinoWorldCatalog.world(worldID) else { return false }
         return world.normalLevels.allSatisfy { record($0).stars >= 1 }
@@ -154,6 +183,8 @@ struct PlayerProfile: Codable, Equatable, Sendable {
         levels = [:]; bossResults = []; timedAttempts = nil
         perfectBossVictory = false; worldOneComplete = false
         completedWorlds = nil; perfectWorlds = nil
+        dinoAppearance = dinoAppearance?.mainAppearance
+        characterSlots = nil; pendingCharacterUnlock = nil
         demonstratedInteractions = []
         progressResetAt = date
     }

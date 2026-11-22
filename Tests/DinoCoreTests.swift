@@ -13,6 +13,21 @@ private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
 @MainActor
 struct DinoCoreTests {
     static func testGameLayout() {
+        for size in [CGSize(width: 1024, height: 724), CGSize(width: 1376, height: 984),
+                     CGSize(width: 750, height: 354)] {
+            expect(DinoGameLayout.usesSideHUD(in: size), "tablet questions and short landscape windows reserve a left HUD rail")
+        }
+        for size in [CGSize(width: 768, height: 980), CGSize(width: 834, height: 1150),
+                     CGSize(width: 390, height: 763), CGSize(width: 507, height: 1150),
+                     CGSize(width: 699, height: 900), CGSize(width: 700, height: 549)] {
+            expect(!DinoGameLayout.usesSideHUD(in: size), "narrow portrait and split-view windows retain their question width")
+        }
+        expect(DinoGameLayout.sideHUDScale(in: CGSize(width: 1024, height: 724)) > 1.6,
+               "tablet landscape enlarges the entire HUD to match the lesson")
+        expect(DinoGameLayout.sideHUDScale(in: CGSize(width: 1376, height: 984)) == 2.1,
+               "large tablets cap HUD magnification to leave room for the question")
+        expect(DinoGameLayout.sideHUDScale(in: CGSize(width: 750, height: 354)) == 1,
+               "short phone windows retain the compact rail")
         for width in stride(from: 320, through: 1400, by: 37) {
             for height in stride(from: 320, through: 1400, by: 43) {
                 let size = CGSize(width: CGFloat(width), height: CGFloat(height))
@@ -127,6 +142,12 @@ struct DinoCoreTests {
     }
 
     static func main() async {
+        if CommandLine.arguments.contains("--characters") {
+            testCharacterUnlocks()
+            testJungleMotion()
+            print("PASS: \(checks) character unlock, swap and save checks.")
+            return
+        }
         if CommandLine.arguments.contains("--minute-rules") {
             testMinuteQuestionRules()
             print("PASS: \(checks) minute question rules checks.")
@@ -300,6 +321,8 @@ struct DinoCoreTests {
         testClockThemes()
         testFixedClockStyles()
         testDinoAppearance()
+        testCharacterUnlocks()
+        testJungleMotion()
         testDinoAvatarMask()
         testDinoSpriteColors()
         testPaleBandanaLettering()
@@ -433,10 +456,10 @@ struct DinoCoreTests {
         }
         expect(DinoPracticeTime.quarter.minutes == [0, 15, 30, 45], "quarter practice also reviews whole and half hours")
         expect(DinoPracticeTime.minutes.minuteStep == 1 && DinoPracticeTime.minutes.minutes.count == 60, "Minutes practices individual minutes")
-        expect(DinoTimeWords.time(.init(hour: 3, minute: 1), language: "nl") == "1 minuut over drie", "single-minute Dutch questions use the singular")
-        expect(DinoTimeWords.time(.init(hour: 3, minute: 59), language: "nl") == "1 minuut voor vier", "late Dutch minutes refer to the next hour")
-        expect(DinoTimeWords.time(.init(hour: 3, minute: 1), language: "en") == "1 minute past three", "single-minute English questions use the singular")
-        expect(DinoTimeWords.time(.init(hour: 3, minute: 59), language: "en") == "1 minute to four", "late English minutes refer to the next hour")
+        expect(DinoTimeWords.time(.init(hour: 3, minute: 1), language: "nl") == "1 over drie", "Dutch clock descriptions omit the minute unit")
+        expect(DinoTimeWords.time(.init(hour: 3, minute: 59), language: "nl") == "1 voor vier", "late Dutch minutes refer to the next hour")
+        expect(DinoTimeWords.time(.init(hour: 3, minute: 1), language: "en") == "1 past three", "English clock descriptions omit the minute unit")
+        expect(DinoTimeWords.time(.init(hour: 3, minute: 59), language: "en") == "1 to four", "late English minutes refer to the next hour")
         for language in ["nl", "en"] {
             for category in DinoQuestionCategory.all {
                 let configuration = DinoPracticeConfiguration(time: category.time, order: .specific(category.type))
@@ -458,6 +481,10 @@ struct DinoCoreTests {
                            "options and arithmetic context remain on the selected grid")
                     expect(AnswerValidator.isCorrect(q.expectedAnswer, for: q) && !AnswerValidator.isCorrect(wrongAnswer(for: q), for: q),
                            "every teaching step has a valid, discriminating answer")
+                    if q.kind == .advanceAnalog {
+                        expect(q.durationMinutes >= 2 * category.time.minuteStep,
+                               "question 13 requires at least two selected time units at every difficulty")
+                    }
                     if [.addTime, .subtractTime].contains(q.kind) {
                         expect(!q.options.contains(q.relatedTimes[0]),
                                "addition and subtraction choices never repeat the reference time in any category")
@@ -1830,14 +1857,12 @@ struct DinoCoreTests {
                "moving the hands backward is a negative deviation")
         expect(DinoAnalogAdvanceExample.enteredMinutes(from: ClockTime(hour: 12, minute: 50), to: ClockTime(hour: 1, minute: 5)) == 15,
                "the entered deviation follows the hands across twelve")
-        expect(DinoPracticeTime.analogHandStep(30) == 15 && DinoPracticeTime.half.analogHandStep == 15,
-               "half-hour practice turns the analog hand by quarters")
-        expect(DinoPracticeTime.analogHandStep(10) == 5 && DinoPracticeTime.tenMinutes.analogHandStep == 5,
-               "ten-minute practice turns the analog hand five minutes at a time")
-        for family in DinoPracticeTime.allCases where family != .half && family != .tenMinutes {
-            expect(family.analogHandStep == family.minuteStep, "analog hand step matches \(family.rawValue)")
+        expect(DinoPracticeTime.whole.analogHandStep == 60, "whole-hour questions keep minute input disabled")
+        for family in DinoPracticeTime.allCases where family != .whole {
+            expect(family.analogHandStep == (family == .minutes ? 1 : 5),
+                   "analog hands use five-minute steps except for exact-minute questions: \(family)")
         }
-        for family in [DinoPracticeTime.half, .tenMinutes] {
+        for family in DinoPracticeTime.allCases {
             let question = DinoExpandedQuestions.example(kind: .advanceAnalog, time: family)
             let script = DinoAnalogAdvanceExample(question: question, minuteStep: family.analogHandStep)
             expect(question.durationMinutes.isMultiple(of: family.analogHandStep), "finer analog steps still reach the family turn")
@@ -2602,10 +2627,10 @@ struct DinoCoreTests {
                    "the full example groups all twelve positions by the language's actual phrasing")
         }
         for (minute, region, phrase) in [
-            (14, DinoTimeReading.Region.past, "14 minuten over twaalf"),
-            (16, .beforeHalf, "14 minuten voor half een"), (29, .beforeHalf, "1 minuut voor half een"),
-            (30, .half, "half een"), (31, .afterHalf, "1 minuut over half een"),
-            (44, .afterHalf, "14 minuten over half een"), (46, .to, "14 minuten voor een")
+            (14, DinoTimeReading.Region.past, "14 over twaalf"),
+            (16, .beforeHalf, "14 voor half een"), (29, .beforeHalf, "1 voor half een"),
+            (30, .half, "half een"), (31, .afterHalf, "1 over half een"),
+            (44, .afterHalf, "14 over half een"), (46, .to, "14 voor een")
         ] {
             expect(DinoTimeReading.region(minute: minute, language: "nl") == region,
                    "Dutch color boundaries also handle individual minutes")
@@ -2754,7 +2779,7 @@ struct DinoCoreTests {
                         if kind == .advanceAnalog {
                             let face = ClockTime(hour: q.target.hour % 12 == 0 ? 12 : q.target.hour % 12, minute: q.target.minute)
                             expect(AnswerValidator.isCorrect(face, for: q), "analog answers accept the matching 12-hour face")
-                            expect((1...240).contains(q.durationMinutes) && q.durationMinutes.isMultiple(of: time.minuteStep),
+                            expect((2 * time.minuteStep...240).contains(q.durationMinutes) && q.durationMinutes.isMultiple(of: time.minuteStep),
                                    "forward turns stay within four hours and the selected minute family")
                             if time.minuteStep >= 60 {
                                 expect(q.durationMinutes.isMultiple(of: 60), "whole-hour practice moves whole hours")
@@ -2806,7 +2831,7 @@ struct DinoCoreTests {
                 if time == .whole && [.addTime, .advanceAnalog, .flightArrival, .subtractTime].contains(kind) {
                     expect(sawMidnight, "generated whole-hour arithmetic covers midnight: \(kind)")
                 }
-                if kind == .advanceAnalog && time.minuteStep < 60 {
+                if kind == .advanceAnalog && time.minuteStep < 30 {
                     expect(sawAdvanceCombination && sawAdvanceShort, "minute practice mixes hour combinations with shorter gaps")
                 }
             }
@@ -3163,6 +3188,57 @@ struct DinoCoreTests {
             let result = DinoLevelResult(level: boss, correct: correct,
                                          stars: StarCalculator.stars(correct: correct, questionCount: 10), victory: .none)
             expect(result.stars == stars && result.animationClip == clip, "boss stars use the same reward animations")
+        }
+        // Landscape must retain the visible HUD origin for all four outcomes.
+        // Sample the actual journey used by the UI at both common refresh rates.
+        for size in [CGSize(width: 1024, height: 724), CGSize(width: 1194, height: 790),
+                     CGSize(width: 1376, height: 984), CGSize(width: 750, height: 354)] {
+            let origin = CGRect(x: 24, y: size.height * 0.32, width: 92, height: 92)
+            let side = min(400, size.height * 0.48)
+            let target = CGRect(x: size.width * 0.28 - side / 2, y: size.height * 0.50 - side / 2,
+                                width: side, height: side)
+            for clip in DinoResultJourney.clips {
+                let takeoff = DinoAnimation.travelDelay(clip)
+                let landing = DinoAnimation.travelDuration(clip)
+                let heightScale = DinoResultJourney.heightScale(clip: clip, origin: origin, target: target)
+                expect((0...1).contains(heightScale), "the landscape arc only reduces lift, without changing timing")
+                for step in 0...600 {
+                    let time = takeoff + (landing - takeoff) * Double(step) / 600
+                    let frame = DinoResultJourney.frame(clip: clip, elapsed: time, origin: origin, target: target)
+                    let sample = DinoAnimation.sample(clip, elapsed: time)
+                    let top = frame.minY + min(0, sample.pose.offsetY) * frame.width
+                        + sample.height * frame.width * heightScale
+                    expect(top >= 15.9, "even the full lifted drawing buffer clears the landscape top edge")
+                }
+                for time in [0, takeoff / 2, takeoff] {
+                    expect(DinoResultJourney.frame(clip: clip, elapsed: time, origin: origin, target: target) == origin,
+                           "all outcomes prepare in the visible portrait, without an offscreen landscape reset")
+                }
+                for time in [landing, DinoAnimation.duration(clip), DinoAnimation.duration(clip) + 1] {
+                    expect(DinoResultJourney.frame(clip: clip, elapsed: time, origin: origin, target: target) == target,
+                           "contact, recovery and final pose stay registered to the podium")
+                }
+                for fps in [30.0, 60.0] {
+                    var previous = origin
+                    for step in 0...Int(ceil(DinoAnimation.duration(clip) * fps)) {
+                        let time = Double(step) / fps
+                        let frame = DinoResultJourney.frame(clip: clip, elapsed: time, origin: origin, target: target)
+                        expect(CGRect(origin: .zero, size: size).contains(frame),
+                               "landscape shows the entire journey buffer, including the fall")
+                        expect(hypot(frame.midX - previous.midX, frame.midY - previous.midY) < 55
+                               && abs(frame.width - previous.width) < 65,
+                               "every outcome travels continuously without skipping to the destination")
+                        previous = frame
+                    }
+                }
+                // A destination remeasurement must not replace the origin.
+                let time = (takeoff + landing) / 2
+                let before = DinoResultJourney.frame(clip: clip, elapsed: time, origin: origin, target: target)
+                let updated = DinoResultJourney.frame(clip: clip, elapsed: time, origin: origin,
+                    target: target.offsetBy(dx: 1, dy: 1))
+                expect(hypot(updated.midX - before.midX, updated.midY - before.midY) < 1.5,
+                       "a small layout update cannot truncate the running animation")
+            }
         }
         let stumbleLeadIn = DinoAnimation.leadIn(.stumble)
         let stumbleLanding = DinoAnimation.travelDuration(.stumble)
@@ -4415,6 +4491,135 @@ struct DinoCoreTests {
         subscription.cancel()
     }
 
+    static func testJungleMotion() {
+        let clips: [DinoAnimation.Clip] = [.idle, .thumbsUp, .wrongAnswer, .stumble, .openingJump, .backflip, .pirouette, .worldJump]
+        for clip in clips {
+            let duration = DinoAnimation.duration(clip)
+            for step in 0...Int(ceil((duration + 0.1) * 120)) {
+                let elapsed = Double(step) / 120
+                let sample = DinoJungleAnimation.sample(clip, elapsed: elapsed)
+                expect(sample.angle.isFinite && sample.height.isFinite && (0...1).contains(sample.poseBlend),
+                       "jungle motion stays finite with bounded continuous opacity")
+                expect(DinoJungleArtwork.assets.contains(sample.pose.asset), "every displayed jungle pose is prepared before playback")
+                if let previous = sample.previousPose {
+                    expect(DinoJungleArtwork.assets.contains(previous.asset), "dissolve predecessors are also prepared")
+                }
+                let shared = DinoAnimation.sample(clip, elapsed: elapsed)
+                expect(sample.angle == shared.angle && sample.height == shared.height,
+                       "jungle clips retain the main character's flight path and reward choreography")
+            }
+        }
+        for (clip, boundary) in [(DinoAnimation.Clip.backflip, 0.20), (.worldJump, 1.10), (.wrongAnswer, DinoAnimation.answerGestureStart)] {
+            let before = DinoJungleAnimation.sample(clip, elapsed: boundary - 0.001)
+            let after = DinoJungleAnimation.sample(clip, elapsed: boundary + 0.001)
+            expect(before.previousPose != nil && after.previousPose != nil && abs(before.poseBlend - after.poseBlend) < 0.05,
+                   "pose changes dissolve continuously instead of switching paintings in one frame")
+        }
+        let flight = DinoWelcomeFlight(source: CGPoint(x: 190, y: 300), sourceSide: 360,
+            destination: CGRect(x: 90, y: 460, width: 170, height: 170), character: .jungle)
+        for boundary in [DinoWelcomeJump.crouchBottom, DinoWelcomeJump.flightHandoff, DinoWelcomeJump.landing,
+                         DinoWelcomeJump.landing + 0.10, DinoWelcomeJump.duration] {
+            let before = DinoWelcomeJump.tracking(elapsed: boundary - 0.00001, flight: flight).head.center
+            let after = DinoWelcomeJump.tracking(elapsed: boundary + 0.00001, flight: flight).head.center
+            expect(hypot(after.x - before.x, after.y - before.y) < 0.001,
+                   "the jungle welcome's tracked face never teleports at takeoff, landing or recovery")
+        }
+        expect(DinoJungleArtwork.asset(for: "dino-opening-jump-02") == "jungle-crouch"
+               && DinoJungleArtwork.asset(for: "dino-opening-jump-03") == "jungle-takeoff",
+               "the welcome bends before launching instead of switching into a tucked salto")
+        let url = URL(fileURLWithPath: "Assets.xcassets/jungle-idle.imageset/jungle-idle.png")
+        let original = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
+        let mirrored = DinoSpriteColorRenderer.facingRight(original)!
+        let restored = DinoSpriteColorRenderer.facingRight(mirrored)!
+        expect(original.width == mirrored.width && original.height == mirrored.height
+               && restored.width == original.width, "reflection preserves the sprite's registration canvas")
+    }
+
+    static func testCharacterUnlocks() {
+        var profile = PlayerProfile()
+        expect(profile.activeCharacter == .main && profile.collectionCharacters == Array(DinoIdentity.allCases.dropFirst()),
+               "new players have ten boss slots and the main dinosaur stays outside the collection")
+        expect(DinoIdentity.desert.unlockLevel == 20 && DinoIdentity.valley.unlockLevel == 70,
+               "collection tiles follow the playable world's order rather than illustration export IDs")
+        expect(!profile.selectCharacter(.jungle), "the jungle character cannot be selected before winning its world")
+        profile.recordCompletedAttempt(levelID: 10, correct: 9)
+        expect(!profile.isCharacterUnlocked(.jungle), "earning boss stars without the route is not a world victory")
+        profile.recordCompletedAttempt(levelID: 10, correct: 10)
+        expect(profile.selectCharacter(.jungle) && profile.activeCharacter == .jungle, "a perfect shortcut unlocks the first character")
+        expect(profile.collectionCharacters[0] == .main && !profile.collectionCharacters.contains(.jungle),
+               "the outgoing main dinosaur takes exactly the selected boss's slot")
+        expect(profile.collectionCharacters.count == 10 && Set(profile.collectionCharacters).count == 10,
+               "swaps preserve ten unique collection tiles")
+        let saved = try! JSONDecoder().decode(PlayerProfile.self, from: JSONEncoder().encode(profile))
+        expect(saved.activeCharacter == .jungle && saved.collectionCharacters == profile.collectionCharacters,
+               "active character and exact slot arrangement survive save decoding")
+        expect(profile.selectCharacter(.main) && profile.collectionCharacters[0] == .jungle,
+               "choosing the main dinosaur returns the jungle boss to that same tile")
+        profile.recordCompletedAttempt(levelID: 20, correct: 10)
+        expect(!profile.selectCharacter(.desert), "future characters stay locked until their playable art is implemented")
+        var normal = PlayerProfile()
+        for level in 1...9 { normal.recordCompletedAttempt(levelID: level, correct: 3) }
+        normal.recordCompletedAttempt(levelID: 10, correct: 6)
+        expect(normal.isCharacterUnlocked(.jungle), "a normal world victory unlocks the same character")
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        var first = PlayerProfile()
+        first.dinoAppearance = DinoAppearance(body: 0xF48EB6)
+        store.save(first)
+        let player = DinoPlayer(store: store)
+        var rng = SeededGenerator(seed: 42)
+        let questions = DinoQuestionGenerator.generate(level: DinoLevelCatalog.level(10)!, using: &rng)
+        var attempt = LevelAttempt(levelID: 10, questions: questions)
+        while !attempt.isComplete {
+            _ = attempt.submit(attempt.current.answer ?? .time(attempt.current.target))
+            attempt.advance()
+        }
+        expect(player.finish(attempt)?.victory == .perfect && player.profile.pendingCharacterUnlock == .jungle,
+               "a first boss victory stages the transformation without changing the result character")
+        expect(player.profile.activeCharacter == .main, "the original dinosaur performs the start of the world salto")
+        player.completeCharacterUnlock()
+        expect(player.profile.activeCharacter == .jungle && player.profile.pendingCharacterUnlock == nil,
+               "landing commits the unlocked character once")
+        expect(DinoPlayer(store: store).profile.activeCharacter == .jungle, "the new character survives a cold start")
+        player.selectCharacter(.main)
+        _ = player.finish(attempt)
+        expect(player.profile.activeCharacter == .main && player.profile.pendingCharacterUnlock == nil,
+               "replaying level ten does not overwrite a later character choice")
+        player.selectCharacter(.jungle)
+        player.resetProgress()
+        expect(player.profile.activeCharacter == .main && !player.profile.isCharacterUnlocked(.jungle)
+               && player.profile.dinoAppearance?.body == 0xF48EB6,
+               "progress reset relocks the collection and preserves the main dinosaur's colors")
+        for pose in Set(DinoAnimation.spriteAssets + DinoAnimation.worldJumpAssets) {
+            let name = DinoJungleArtwork.asset(for: pose)
+            expect(FileManager.default.fileExists(atPath: "Assets.xcassets/\(name).imageset/\(name).png"),
+                   "every shared animation pose has jungle artwork: \(pose)")
+        }
+        let url = URL(fileURLWithPath: "Assets.xcassets/jungle-idle.imageset/jungle-idle.png")
+        let image = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
+        let defaultArt = DinoSpriteColorRenderer.recoloredJungle(image, appearance: DinoAppearance(character: .jungle))!
+        let pinkArt = DinoSpriteColorRenderer.recoloredJungle(image, appearance: DinoAppearance(body: 0xF48EB6, character: .jungle))!
+        func pixels(_ image: CGImage) -> [UInt8] {
+            var bytes = [UInt8](repeating: 0, count: image.width * image.height * 4)
+            bytes.withUnsafeMutableBytes { buffer in
+                let context = CGContext(data: buffer.baseAddress, width: image.width, height: image.height,
+                    bitsPerComponent: 8, bytesPerRow: image.width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                    bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue)!
+                context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+            }
+            return bytes
+        }
+        let originalPixels = pixels(image), defaultPixels = pixels(defaultArt), pinkPixels = pixels(pinkArt)
+        expect(defaultPixels == originalPixels, "default jungle colors preserve the original generated artwork")
+        expect(pinkPixels != originalPixels, "body customization recolors the jungle character")
+        expect(stride(from: 3, to: originalPixels.count, by: 4).allSatisfy { originalPixels[$0] == pinkPixels[$0] },
+               "jungle color choices retain every silhouette alpha value")
+        for (index, contact) in DinoAnimation.correctAnswerClapContacts.enumerated() {
+            let sample = DinoAnimation.sample(.thumbsUp, elapsed: contact + 0.01)
+            expect(DinoJungleArtwork.asset(for: sample.pose.asset) == (index == 0 ? "jungle-clap-contact" : "jungle-clap-contact-2"),
+                   "the jungle palms meet exactly on each shared clap beat")
+        }
+    }
+
     static func testDinoAppearance() {
         let memory = InMemoryKeyValueStore()
         let store = DinoProgressStore(defaults: memory)
@@ -4466,7 +4671,8 @@ struct DinoCoreTests {
             String(bossSource[Range($0.range, in: bossSource)!].dropFirst().dropLast())
         })
         expect(bosses.count == 10, "all ten world boss illustrations are accounted for")
-        let expected = sprites.union(bosses).union(["reward-star"])
+        let jungle = Set(preloaded.map { DinoJungleArtwork.asset(for: $0) })
+        let expected = sprites.union(bosses).union(jungle).union(["reward-star"])
         let root = URL(fileURLWithPath: "Assets.xcassets")
         let actual = Set(try! FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
             .filter { $0.pathExtension == "imageset" }.map { $0.deletingPathExtension().lastPathComponent })
@@ -4478,7 +4684,7 @@ struct DinoCoreTests {
                 fatalError("Missing or invalid asset: \(asset)")
             }
             let side = asset == "dino-idle" || asset.hasPrefix("dino-opening-jump-") ? 1254
-                : bosses.contains(asset) ? 640 : asset == "reward-star" ? 384 : 768
+                : bosses.contains(asset) ? 640 : jungle.contains(asset) ? 512 : asset == "reward-star" ? 384 : 768
             expect(image.width == side && image.height == side, "\(asset) retains its intended iPad raster budget")
             let contents = try! Data(contentsOf: url.deletingLastPathComponent().appendingPathComponent("Contents.json"))
             let manifest = try! JSONSerialization.jsonObject(with: contents) as! [String: Any]
@@ -4711,18 +4917,19 @@ struct DinoCoreTests {
         let four = (1...4).map { ClockTime(hour: $0) }
         let matching = question(kind: .chooseAnalog, target: ClockTime(hour: 3), options: four)
         let englishMatch = prompt(matching, "en")
-        expect(sentence(englishMatch, "en") == "Which of the four clocks shows three o’clock?", "question 1 names the clock time")
+        expect(sentence(englishMatch, "en") == "Which clock shows three o’clock?", "question 1 names the clock time")
         expect(englishMatch.arguments.allSatisfy { $0.emphasis == .plain }, "clock times use the title's base color")
-        expect(sentence(prompt(matching, "nl"), "nl") == "Welke van de vier klokken geeft drie uur aan?", "Dutch question 1 names the time")
+        expect(sentence(prompt(matching, "nl"), "nl") == "Welke klok geeft drie uur aan?", "Dutch question 1 names the time")
         let two = question(kind: .chooseAnalog, target: ClockTime(hour: 3), options: Array(four.prefix(2)))
-        expect(sentence(prompt(two, "en"), "en") == "Which of the two clocks shows three o’clock?", "two choices are counted honestly")
+        expect(sentence(prompt(two, "en"), "en") == "Which clock shows three o’clock?", "two choices use the same concise question")
         let single = question(kind: .chooseAnalog, target: ClockTime(hour: 3))
         expect(sentence(prompt(single, "nl"), "nl") == "Welke klok geeft drie uur aan?", "an example without choices does not invent a count")
 
         let spoken = question(kind: .spokenTime, target: ClockTime(hour: 3), options: four)
         expect(sentence(prompt(spoken, "en"), "en") == "Which of the clocks shows:\nthree o’clock", "a spoken time appears on its own line")
         let claim = question(kind: .trueFalse, target: ClockTime(hour: 4), statement: ClockTime(hour: 3))
-        expect(sentence(prompt(claim, "nl"), "nl") == "De klok geeft drie uur aan. Klopt dat?", "a true-or-false title is the claim, not the verdict")
+        expect(sentence(prompt(claim, "nl"), "nl") == "Klopt de tijd met de klok?\ndrie uur", "Dutch question 3 puts the claimed time below the question")
+        expect(sentence(prompt(claim, "en"), "en") == "Does the time match the clock?\nthree o’clock", "English question 3 puts the claimed time below the question")
         expect(prompt(claim, "nl").arguments.map(\.emphasis) == [.plain], "the claimed time uses the title's base color")
 
         for kind in [ClockQuestionKind.chooseDigital, .readDigital, .sayTime, .setAnalog, .setDigital, .read24Hour, .dayPart, .match, .sortTimes] {
@@ -4740,16 +4947,31 @@ struct DinoCoreTests {
 
         let added = question(kind: .addTime, target: ClockTime(hour: 16), related: [ClockTime(hour: 15)], duration: 90)
         let addedTitle = prompt(added, "nl")
-        expect(sentence(addedTitle, "nl") == "Het is drie uur. Hoe laat is het 1 uur en 30 minuten later?",
+        expect(sentence(addedTitle, "nl") == "Het is drie uur. Hoe laat is het over 1 uur en 30 minuten?",
                "adding time repeats the start and the step")
-        expect(addedTitle.arguments.map(\.emphasis) == [.plain, .plain, .forward], "only later is green; the time and duration stay plain")
+        expect(addedTitle.arguments.map(\.emphasis) == [.plain, .forward, .plain], "only over is green; the time and duration stay plain")
         expect(!sentence(addedTitle, "nl").contains("vier"), "the later time is not spoken")
 
         let earlier = question(kind: .subtractTime, target: ClockTime(hour: 2), related: [ClockTime(hour: 4)], duration: 120)
         let earlierTitle = prompt(earlier, "en")
-        expect(sentence(earlierTitle, "en") == "It is four o’clock. What time was it 2 hours earlier?", "going back names the step")
+        expect(sentence(earlierTitle, "en") == "It is four o’clock. What time was it 2 hours ago?", "going back names the step")
         expect(earlierTitle.arguments.map(\.emphasis) == [.plain, .plain, .backward], "only earlier is red; the time and duration stay plain")
         expect(!sentence(earlierTitle, "en").contains("two"), "the earlier result is not spoken")
+        let twoMinutesAgo = question(kind: .subtractTime, target: ClockTime(hour: 4),
+                                     related: [ClockTime(hour: 4, minute: 2)], duration: 2)
+        expect(sentence(prompt(twoMinutesAgo, "nl"), "nl") == "Het is 2 over vier. Hoe laat was het 2 minuten geleden?",
+               "question 15 places geleden after the duration")
+        let twoHoursAhead = question(kind: .addTime, target: ClockTime(hour: 6),
+                                    related: [ClockTime(hour: 4)], duration: 120)
+        expect(sentence(prompt(twoHoursAhead, "nl"), "nl") == "Het is vier uur. Hoe laat is het over 2 uur?",
+               "question 14 places over before the duration")
+        for language in ["nl", "en"] {
+            for minute in 0..<60 {
+                let description = DinoTimeWords.time(ClockTime(hour: 6, minute: minute), language: language)
+                expect(!description.contains("minu"), "clock descriptions omit minute units at every position")
+            }
+            expect(DinoTimeWords.minutes(10, language: language).contains("minu"), "elapsed minutes retain their unit")
+        }
 
         let between = question(kind: .minutesBetween, target: ClockTime(hour: 4),
                                related: [ClockTime(hour: 3), ClockTime(hour: 4)], duration: 60)
@@ -4864,8 +5086,8 @@ struct DinoCoreTests {
                         expect(!text.isEmpty && !text.contains("%@") && !text.contains("dino."), "every question has a complete localized title")
                         expect(!text.contains(DinoTimeWords.dayPartSuffix(time, language: language)), "titles omit redundant day-part suffixes")
                         for argument in title.arguments where argument.emphasis != .plain {
-                            let allowed = language == "nl" ? ["vooruit", "later", "eerder", "voor", "achter"]
-                                : ["forward", "later", "earlier", "ahead", "behind"]
+                            let allowed = language == "nl" ? ["vooruit", "over", "geleden", "later", "eerder", "voor", "achter"]
+                                : ["forward", "later", "ago", "ahead", "behind"]
                             expect(allowed.contains(argument.text), "only a direction word can be colored")
                         }
                     }
@@ -4876,7 +5098,7 @@ struct DinoCoreTests {
             }
             let noon = question(kind: .chooseAnalog, target: ClockTime(hour: 12), options: Array(four.prefix(2)))
             expect(sentence(prompt(noon, language), language) == (language == "nl"
-                ? "Welke van de twee klokken geeft twaalf uur aan?" : "Which of the two clocks shows twelve o’clock?"),
+                ? "Welke klok geeft twaalf uur aan?" : "Which clock shows twelve o’clock?"),
                    "the attached example uses natural clock wording")
             expect(DinoTimeWords.time(ClockTime(hour: 3), language: language, dayPart: true)
                    != DinoTimeWords.time(ClockTime(hour: 15), language: language, dayPart: true),

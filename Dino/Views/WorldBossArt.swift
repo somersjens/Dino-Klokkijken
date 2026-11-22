@@ -135,17 +135,17 @@ private enum WorldBossArtwork {
         switch themeID {
         case 1: return [.init(497.5, 776, 95, 105, blue: false)]
         case 2: return [.init(875, 838.5, 67, 74)]
-        case 3: return [.init(421, 895, 58, 60, initial: .init(hour: 8, minute: 15)),
-                        .init(585.5, 821.5, 62, 64, initial: .init(hour: 4, minute: 45)),
-                        .init(745, 720, 59, 59, initial: .init(hour: 1, minute: 15))]
+        case 3: return [.init(395.27, 843.95, 42.91, 59.12, initial: .init(hour: 8, minute: 15)),
+                        .init(534.98, 770.52, 58.17, 57.22, initial: .init(hour: 4, minute: 45)),
+                        .init(687.08, 677.06, 54.36, 54.36, initial: .init(hour: 1, minute: 15))]
         case 4: return [.init(251, 316.5, 118, 122)]
-        case 5: return [.init(546, 779, 95, 92)]
+        case 5: return [.init(499.86, 748.19, 72.26, 73.17)]
         case 6: return [.init(312.5, 559, 46, 49), .init(848.5, 572, 47, 52)]
         case 7: return [.init(652, 767.5, 118, 132, blue: false)]
         case 8: return [.init(625.5, 175, 58, 54, initial: .init(hour: 10, minute: 10)),
                         .init(717.5, 263.5, 47, 51, initial: .init(hour: 3))]
-        case 9: return [.init(228.5, 770.5, 56, 63)]
-        case 10: return [.init(653, 194.5, 81, 85)]
+        case 9: return [.init(224.81, 746.99, 56.91, 59.76)]
+        case 10: return [.init(478.55, 204.42, 83.47, 80.63)]
         default: return []
         }
     }

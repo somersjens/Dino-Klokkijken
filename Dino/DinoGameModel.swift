@@ -69,7 +69,15 @@ final class DinoPlayer: ObservableObject {
            let rawCorrect = ProcessInfo.processInfo.environment["DINO_TEST_RESULT_CORRECT"], let correct = Int(rawCorrect),
            (0...level.questionCount).contains(correct) {
             profile.onboardingComplete = true
+            let firstJungleVictory = id == 10 && !profile.worldComplete(1)
             profile.recordCompletedAttempt(levelID: id, correct: correct)
+            if firstJungleVictory && profile.worldComplete(1) { profile.pendingCharacterUnlock = .jungle }
+        }
+        if ProcessInfo.processInfo.environment["DINO_TEST_SUITE"] != nil,
+           let raw = ProcessInfo.processInfo.environment["DINO_TEST_SELECTED_CHARACTER"],
+           let value = Int(raw), let character = DinoIdentity(rawValue: value) {
+            _ = profile.selectCharacter(character)
+            profile.pendingCharacterUnlock = nil
         }
 #endif
     }
@@ -114,6 +122,19 @@ final class DinoPlayer: ObservableObject {
         update { $0.dinoAppearance = appearance }
         appearanceChanged?()
     }
+    func selectCharacter(_ character: DinoIdentity) {
+        guard profile.isCharacterUnlocked(character) else { return }
+        update { _ = $0.selectCharacter(character) }
+        appearanceChanged?()
+    }
+    func completeCharacterUnlock() {
+        guard let character = profile.pendingCharacterUnlock, profile.isCharacterUnlocked(character) else { return }
+        update {
+            _ = $0.selectCharacter(character)
+            $0.pendingCharacterUnlock = nil
+        }
+        appearanceChanged?()
+    }
     func completeOnboarding(theme: ClockTheme) {
         update { $0.clockTheme = theme.replacingUnreadableClocks().applyingFixedStyles(); $0.onboardingComplete = true }
     }
@@ -130,7 +151,11 @@ final class DinoPlayer: ObservableObject {
         guard attempt.isComplete, let level = DinoLevelCatalog.level(attempt.levelID),
               attempt.answers.count == level.questionCount else { return nil }
         var victory = BossVictory.none
-        update { victory = $0.recordCompletedAttempt(levelID: level.id, correct: attempt.correctCount, questionSeconds: attempt.questionSeconds) }
+        let unlocksJungle = level.id == 10 && !profile.worldComplete(1)
+        update {
+            victory = $0.recordCompletedAttempt(levelID: level.id, correct: attempt.correctCount, questionSeconds: attempt.questionSeconds)
+            if unlocksJungle && victory != .none { $0.pendingCharacterUnlock = .jungle }
+        }
         progressChanged?()
         return DinoLevelResult(level: level, correct: attempt.correctCount,
                                stars: StarCalculator.stars(correct: attempt.correctCount, questionCount: level.questionCount),

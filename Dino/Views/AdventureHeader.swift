@@ -24,6 +24,7 @@ struct AdventureHeader: View {
     var worldID = 1
     var compact = false
     var vertical = false
+    var railScale: CGFloat = 1
     var showsPracticeSubtitle = true
     var viewportHeight: CGFloat = 900
     var viewportWidth: CGFloat? = nil
@@ -42,11 +43,11 @@ struct AdventureHeader: View {
     private static let railFootprint: CGFloat = 102
     private static let railPlateWidth: CGFloat = 68
     private static let railSubtitleWidth: CGFloat = 36
-    // Cross the portrait's side margin and overlap the plaque rim by five points.
-    private static let railSubtitleSpacing: CGFloat = -22
+    // Cross the portrait's side margin and overlap the plaque rim by nine points.
+    private static let railSubtitleSpacing: CGFloat = -26
 
-    static func railWidth(showsPracticeSubtitle: Bool) -> CGFloat {
-        railFootprint + (showsPracticeSubtitle ? railSubtitleWidth + railSubtitleSpacing : 0)
+    static func railWidth(showsPracticeSubtitle: Bool, scale: CGFloat = 1) -> CGFloat {
+        (railFootprint + (showsPracticeSubtitle ? railSubtitleWidth + railSubtitleSpacing : 0)) * scale
     }
 
     private var palette: HUDPalette { HUDPalette(worldID: worldID) }
@@ -62,24 +63,28 @@ struct AdventureHeader: View {
     var body: some View {
         Group {
             if vertical {
-                HStack(spacing: Self.railSubtitleSpacing) {
-                    verticalHeader
-                    if let practiceConfiguration, showsPracticeSubtitle {
-                        HUDQuarterTurnLayout {
-                            HUDPracticeSubtitle(configuration: practiceConfiguration, record: practiceRecord, palette: palette,
-                                                compact: true, spacious: false, highContrast: highContrast)
-                                .rotationEffect(.degrees(-90))
+                HUDScaledRailLayout(scale: railScale) {
+                    HStack(alignment: .hudPlateCenter, spacing: Self.railSubtitleSpacing) {
+                        verticalHeader
+                        if let practiceConfiguration, showsPracticeSubtitle {
+                            HUDQuarterTurnLayout {
+                                HUDPracticeSubtitle(configuration: practiceConfiguration, record: practiceRecord, palette: palette,
+                                                    compact: true, spacious: false, highContrast: highContrast)
+                                    .rotationEffect(.degrees(-90))
+                            }
+                            .frame(width: Self.railSubtitleWidth)
                         }
-                        .frame(width: Self.railSubtitleWidth)
                     }
+                    .scaleEffect(railScale)
                 }
             } else {
                 horizontalHeader
             }
         }
+        .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: vertical)
         .sheet(isPresented: $showsPersonalizer) {
             DinoPersonalizer().environmentObject(player).gameEnvironment()
-                .personalizerPresentation(width: viewportWidth, height: viewportHeight, compact: compact)
+                .personalizerPresentation(width: viewportWidth, height: viewportHeight, compact: compact && viewportHeight < 500)
                 .presentationDetents([.large]).presentationDragIndicator(.visible)
         }
         .onValueChange(of: showsPersonalizer) { shown in personalizerChanged(shown) }
@@ -156,7 +161,7 @@ struct AdventureHeader: View {
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: worldID)
     }
 
-    /// A narrow, fully operable HUD for windows with very little vertical room.
+    /// A narrow HUD that frees question space on tablets and short landscape windows.
     private var verticalHeader: some View {
         let metrics = HUDMetrics(width: 410, compact: true, level: practiceStreak ?? level,
                                  stars: stars, questionCounter: questionCounter, titles: localizedTitles, vertical: true)
@@ -180,6 +185,7 @@ struct AdventureHeader: View {
                 HUDPlate(palette: palette, highContrast: highContrast)
                     .accessibilityIdentifier("header.railPlate")
             }
+            .alignmentGuide(.hudPlateCenter) { $0[VerticalAlignment.center] }
         }
         .foregroundStyle(highContrast ? palette.contrastInk : palette.ink)
         .frame(width: Self.railFootprint)
@@ -224,7 +230,7 @@ struct AdventureHeader: View {
                         .frame(width: size, height: size)
                     DinoBustImage(appearance: player.profile.dinoAppearance ?? .standard, diameter: size)
                         .frame(width: footprint, height: footprint)
-                        .mask(DinoBustOverflowMask(diameter: size))
+                        .mask(DinoBustOverflowMask(diameter: size, leafyCrown: player.profile.activeCharacter == .jungle))
                         .shadow(color: DinoStyle.ink.opacity(0.14), radius: 0.7, y: 0.7)
                 }
             }
@@ -370,6 +376,38 @@ private struct HUDRecordBadge: View {
             Capsule().fill(LinearGradient(colors: [.white, palette.paperBottom], startPoint: .top, endPoint: .bottom))
                 .overlay(Capsule().strokeBorder(highContrast ? palette.outline : palette.borderLight, lineWidth: trophy ? 1.5 : 1))
         }
+    }
+}
+
+private enum HUDPlateCenter: AlignmentID {
+    static func defaultValue(in dimensions: ViewDimensions) -> CGFloat {
+        dimensions[VerticalAlignment.center]
+    }
+}
+
+private extension VerticalAlignment {
+    static let hudPlateCenter = VerticalAlignment(HUDPlateCenter.self)
+}
+
+/// Scale the complete rail, reserving its enlarged footprint for layout and hit testing.
+private struct HUDScaledRailLayout: Layout {
+    var scale: CGFloat
+    var animatableData: CGFloat {
+        get { scale }
+        set { scale = newValue }
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard let rail = subviews.first else { return .zero }
+        let size = rail.sizeThatFits(.unspecified)
+        return CGSize(width: size.width * scale, height: size.height * scale)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        guard let rail = subviews.first else { return }
+        let size = rail.sizeThatFits(.unspecified)
+        rail.place(at: CGPoint(x: bounds.midX, y: bounds.midY), anchor: .center,
+                   proposal: ProposedViewSize(size))
     }
 }
 
@@ -592,7 +630,7 @@ private struct HUDMetrics {
         let widestValue = values.map { ($0 as NSString).size(withAttributes: [.font: reference]).width }.max() ?? 1
         let nominalNumber = icon * 0.80 * reference.pointSize / reference.capHeight
         // One shared font handles both values; neither Text scales independently.
-        number = min(nominalNumber, availableWidth * reference.pointSize / max(1, widestValue)) * 0.98
+        number = min(nominalNumber, availableWidth * reference.pointSize / max(1, widestValue)) * (vertical ? 0.86 : 0.98)
         numberOffset = number * (reference.lineHeight / 2 - reference.ascender + reference.capHeight / 2)
             / reference.pointSize
     }

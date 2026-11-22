@@ -38,7 +38,7 @@ struct DinoRootView: View {
                                    clip: companionClip, isResult: result != nil && startCard == nil,
                                    worldID: result?.level.worldID ?? session?.level.worldID ?? 1,
                                    compactPortrait: geometry.size.height < 430,
-                                   entersFromAbove: geometry.size.width > geometry.size.height,
+                                   constrainsJumpHeight: geometry.size.width > geometry.size.height,
                                    reactionID: gameCompanionReactionID,
                                    dimmingOpacity: anchor?.dimmingOpacity ?? 0,
                                    onCelebrationStart: { resultCelebrationStart = $0 })

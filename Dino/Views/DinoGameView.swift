@@ -23,22 +23,26 @@ struct DinoGameView: View {
         GeometryReader { g in
             // GeometryReader already excludes the container's safe areas.
             let landscape = g.size.width > g.size.height
-            let sideHUD = g.size.height < 500 && landscape
-            let railWidth: CGFloat = sideHUD ? AdventureHeader.railWidth(showsPracticeSubtitle: session.practice != nil) : 0
-            let availableWidth = max(1, g.size.width - railWidth - (sideHUD ? 40 : 32))
+            let sideHUD = DinoGameLayout.usesSideHUD(in: g.size)
+            let railScale = DinoGameLayout.sideHUDScale(in: g.size)
+            let railSpacing: CGFloat = sideHUD ? 8 * railScale : 0
+            let gameLayout = sideHUD
+                ? AnyLayout(HStackLayout(spacing: railSpacing))
+                : AnyLayout(VStackLayout(spacing: 0))
+            let railWidth: CGFloat = sideHUD ? AdventureHeader.railWidth(showsPracticeSubtitle: session.practice != nil, scale: railScale) : 0
+            let availableWidth = max(1, g.size.width - railWidth - railSpacing - 32)
             let spacious = g.size.width >= 700 && g.size.height >= 550
             let compact = g.size.height < 500
             let stackedDayPart = session.question.kind == .dayPart && !compact && !(spacious && landscape)
             let footerHeight: CGFloat = spacious ? (stackedDayPart ? 208 : 104) : stackedDayPart ? 146 : compact ? 64 : 74
             ZStack {
                 JungleBackground(quiet: true)
-                HStack(spacing: sideHUD ? 8 : 0) {
-                    if sideHUD {
-                        gameChrome(size: g.size, compact: true, vertical: true)
-                            .frame(width: railWidth)
-                    }
+                // Keep both children alive while the HUD moves between the top and left.
+                // In-progress clock edits and matching gestures belong to this question.
+                gameLayout {
+                    gameChrome(size: g.size, compact: sideHUD || compact, vertical: sideHUD)
+                        .frame(width: sideHUD ? railWidth : g.size.width)
                     VStack(spacing: 0) {
-                        if !sideHUD { gameChrome(size: g.size, compact: compact, vertical: false) }
                         GeometryReader { geometry in
                             let playHeight = max(1, geometry.size.height - footerHeight)
                             let width = DinoGameLayout.contentWidth(availableWidth: availableWidth, playHeight: playHeight, spacious: spacious)
@@ -119,6 +123,7 @@ struct DinoGameView: View {
                         }
                     }
                 }.frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .animation(reduceMotion ? nil : .smooth(duration: 0.35), value: sideHUD)
                     .background(alignment: .bottom) {
                         if session.answerCheck != nil || (session.hasFeedback && !session.shouldAutoAdvance) {
                             DinoLightMaterial()
@@ -154,7 +159,7 @@ struct DinoGameView: View {
                         .transition(.scale(scale: 0.94).combined(with: .opacity))
                 }
             }
-            // Reflow immediately on rotation; answer animations keep their own transactions.
+            // Ordinary resizing follows the viewport; only a HUD layout change animates above.
             .animation(nil, value: g.size)
             .environment(\.dinoSpaciousQuestion, spacious)
 
@@ -206,9 +211,9 @@ struct DinoGameView: View {
     @ViewBuilder private func gameChrome(size: CGSize, compact: Bool, vertical: Bool) -> some View {
         AdventureHeader(personalizerChanged: { personalizing = $0 }, sharedCompanion: true, level: session.level.id,
                         stars: player.profile.totalStars, worldID: session.level.worldID,
-                        compact: compact, vertical: vertical,
+                        compact: compact, vertical: vertical, railScale: DinoGameLayout.sideHUDScale(in: size),
                         viewportHeight: size.height,
-                        viewportWidth: vertical ? AdventureHeader.railWidth(showsPracticeSubtitle: session.practice != nil) : size.width,
+                        viewportWidth: size.width,
                         maximumScale: size.width >= 700 && size.height >= 550 ? 1.5 : 1.2,
                         questionCounter: session.practice == nil
                             ? "\(min(session.attempt.index + 1, session.level.questionCount))/\(session.level.questionCount)"
@@ -729,6 +734,7 @@ struct DinoAnalogAdvanceDemonstration: View {
                 arrangement {
                     DinoAnalogAdvanceLayout(start: script.start, theme: theme, durationMinutes: question.durationMinutes,
                                             language: language.effective.code, playSize: playFace,
+                                            showsAnswer: confirmed,
                                             prefix: "demo", startIdentifier: "demo.startClock") {
                         AnalogClock(time: time, theme: theme, size: playFace,
                                     onHourChange: { hour in
@@ -834,7 +840,6 @@ struct DinoAnalogAdvanceDemonstration: View {
 /// Reserve the correction before answering so the clock and choices stay in place.
 struct DinoTrueFalseQuestionTitle: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.dinoHighContrast) private var highContrast
     @ObservedObject private var language = LanguageManager.shared
     let question: ClockQuestion
     let showsCorrection: Bool
@@ -848,40 +853,20 @@ struct DinoTrueFalseQuestionTitle: View {
         showsCorrection && question.expectedAnswer == .truth(false)
     }
 
-    private func statement(corrected: Bool) -> String {
-        if corrected {
-            return String(format: L(key: "dino.question.trueFalse.correction"),
-                          DinoTimeWords.time(question.target, language: language.effective.code))
-        }
-        return DinoQuestionPrompt.make(question: question, language: language.effective.code,
-                                       instructionKey: question.kind.instructionKey).spoken { L(key: $0) }
+    private var correctionText: String {
+        String(format: L(key: "dino.question.trueFalse.correction"),
+               DinoTimeWords.time(question.target, language: language.effective.code))
     }
 
     var body: some View {
         VStack(spacing: 10) {
             DinoQuestionTitle(question: question, fontSize: fontSize, announces: announces,
-                              speechScope: prefix == "demo" ? "demo" : "play")
-                .opacity(strikesStatement ? (highContrast ? 0.75 : 0.55) : 1)
-                .animation(reduceMotion ? nil : .easeOut(duration: 0.25), value: strikesStatement)
-                .overlay {
-                    // Matching Text draws a separate strike on each wrapped line.
-                    // Only the strikes are visible; the original title remains one AX element.
-                    Text(verbatim: statement(corrected: false))
-                        .font(.system(size: fontSize, weight: .heavy, design: .rounded))
-                        .foregroundColor(.clear)
-                        .strikethrough(true, color: DinoStyle.wrong(highContrast))
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .mask(alignment: .leading) {
-                            Rectangle().scaleEffect(x: strikeProgress, y: 1, anchor: .leading)
-                        }
-                        .allowsHitTesting(false)
-                        .accessibilityHidden(true)
-                }
+                              speechScope: prefix == "demo" ? "demo" : "play",
+                              statementStrikeProgress: strikeProgress)
                 .accessibilityIdentifier("\(prefix).title")
 
             Label {
-                Text(verbatim: statement(corrected: true))
+                Text(verbatim: correctionText)
                     .fixedSize(horizontal: false, vertical: true)
             } icon: {
                 Image(systemName: "checkmark.circle.fill")
@@ -892,7 +877,7 @@ struct DinoTrueFalseQuestionTitle: View {
             .opacity(correctionVisible ? 1 : 0)
             .offset(y: correctionVisible || reduceMotion ? 0 : 7)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(statement(corrected: true))
+            .accessibilityLabel(correctionText)
             .accessibilityIdentifier("\(prefix).correctStatement")
             .accessibilityHidden(!correctionVisible)
         }
@@ -912,7 +897,7 @@ struct DinoTrueFalseQuestionTitle: View {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.86)) { correctionVisible = true }
             }
             if UIAccessibility.isVoiceOverRunning {
-                UIAccessibility.post(notification: .announcement, argument: statement(corrected: true))
+                UIAccessibility.post(notification: .announcement, argument: correctionText)
             }
         }
     }
@@ -927,11 +912,12 @@ struct DinoQuestionTitle: View {
     /// False while a demonstration or exit card covers this title, so only the visible title is read.
     var announces = true
     var speechScope = "play"
+    var statementStrikeProgress: CGFloat = 0
 
     var body: some View {
         Group {
-            if question.kind == .spokenTime, let formatKey = prompt.formatKey, let time = prompt.arguments.first {
-                spokenTimeTitle(formatKey: formatKey, time: time.text)
+            if [.spokenTime, .trueFalse].contains(question.kind), let formatKey = prompt.formatKey, let time = prompt.arguments.first {
+                timePromptTitle(formatKey: formatKey, time: time.text)
             } else {
                 title
             }
@@ -942,13 +928,25 @@ struct DinoQuestionTitle: View {
             .speakQuestionTitle(spokenText, identity: "\(speechScope)-\(question.id)", active: announces)
     }
 
-    private func spokenTimeTitle(formatKey: String, time: String) -> some View {
+    private func timePromptTitle(formatKey: String, time: String) -> some View {
         VStack(spacing: 10) {
             Text(verbatim: L(key: formatKey).replacingOccurrences(of: "%@", with: "")
                 .trimmingCharacters(in: .whitespacesAndNewlines))
             Text(verbatim: time)
                 .font(.system(size: fontSize + 2, weight: .heavy, design: .rounded))
                 .fixedSize(horizontal: false, vertical: true)
+                .opacity(statementStrikeProgress > 0 ? (highContrast ? 0.75 : 0.55) : 1)
+                .overlay {
+                    Text(verbatim: time)
+                        .font(.system(size: fontSize + 2, weight: .heavy, design: .rounded))
+                        .foregroundColor(.clear)
+                        .strikethrough(true, color: DinoStyle.wrong(highContrast))
+                        .mask(alignment: .leading) {
+                            Rectangle().scaleEffect(x: statementStrikeProgress, y: 1, anchor: .leading)
+                        }
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
                 .padding(.horizontal, 18)
                 .padding(.vertical, 9)
                 .background(DinoStyle.ink.opacity(highContrast ? 0.10 : 0.06),

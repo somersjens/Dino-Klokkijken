@@ -869,6 +869,16 @@ struct DinoButtonStyle: ButtonStyle {
     }
 }
 
+/// Numeric rewards read as a count followed by their symbol.
+struct DinoTrailingIconLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 4) {
+            configuration.title
+            configuration.icon
+        }
+    }
+}
+
 struct DinoSecondaryButtonStyle: ButtonStyle {
     @Environment(\.dinoHighContrast) private var highContrast
     var outlined = false

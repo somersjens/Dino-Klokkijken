@@ -13,6 +13,7 @@ struct DinoCharacter: View {
     var preparesReactions = true
     var companionPresentation: DinoCompanionPresentation?
     var journeyElapsed: Double?
+    var jumpHeightScale: CGFloat = 1
     @EnvironmentObject private var player: DinoPlayer
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
@@ -47,10 +48,12 @@ struct DinoCharacter: View {
             // A finished answer reaction must not lend its final time or paused
             // schedule to the new jump before the playback task starts.
             let elapsed = journeyElapsed ?? (playbackClip != clip ? 0 : finished ? DinoAnimation.duration(clip) : context.date.timeIntervalSince(start))
-            let sample = DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reduceMotion)
+            let sample = appearance.identity == .jungle
+                ? DinoJungleAnimation.sample(clip, elapsed: elapsed, reducedMotion: reduceMotion)
+                : DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reduceMotion)
             let drawing = characterDrawing(sample, elapsed: elapsed)
                 .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
-                .offset(y: size * sample.height)
+                .offset(y: size * sample.height * jumpHeightScale)
                 // Only the pose bypasses answer-card animations. The portrait
                 // modifier must retain its animated unfold during a result jump.
                 .transaction { $0.animation = nil }
@@ -95,7 +98,16 @@ struct DinoCharacter: View {
     }
 
     @ViewBuilder private func characterDrawing(_ sample: DinoAnimation.Sample, elapsed: Double) -> some View {
-        if clip == .thumbsUp {
+        if appearance.identity == .jungle {
+            ZStack {
+                if let previous = sample.previousPose, sample.poseBlend < 1 {
+                    sprite(previous, angle: sample.angle, yaw: sample.yaw).opacity(1 - sample.poseBlend)
+                }
+                sprite(sample.pose, angle: sample.angle, yaw: sample.yaw)
+                    .opacity(sample.previousPose != nil ? sample.poseBlend : 1)
+                if clip == .thumbsUp && !reduceMotion { DinoClapEffect(elapsed: elapsed).scaleEffect(x: -1, y: 1) }
+            }
+        } else if clip == .thumbsUp {
             ZStack {
                 // Bridge the moving jaw to the torso behind the clapping hands.
                 // The original fists stay outside this narrow neck patch.
@@ -154,11 +166,12 @@ struct DinoCharacter: View {
                 DinoAvatar(appearance: appearance, asset: pose.asset)
             }
         }.frame(width: size, height: size)
-            .offset(x: size * pose.offsetX, y: size * pose.offsetY)
-            .rotationEffect(.degrees(angle - pose.paintedAngle),
+            .offset(x: appearance.identity == .jungle ? 0 : size * pose.offsetX,
+                    y: appearance.identity == .jungle ? 0 : size * pose.offsetY)
+            .rotationEffect(.degrees(angle - (appearance.identity == .jungle ? 0 : pose.paintedAngle)),
                             anchor: clip == .backflip ? UnitPoint(x: 0.5, y: 0.52)
                                 : clip == .thumbsUp || clip == .wrongAnswer ? UnitPoint(x: 0.54, y: 0.48) : .bottom)
-        if clip == .pirouette {
+        if clip == .pirouette && appearance.identity != .jungle {
             // The supplied views carry the turn. A small residual motion keeps
             // them alive without squeezing Dino into a thin rotating card.
             image.rotation3DEffect(.degrees(min(9, max(-9, yaw - pose.paintedYaw))), axis: (x: 0, y: 1, z: 0),
@@ -307,7 +320,7 @@ struct DinoCompanionLayer: View {
     let isResult: Bool
     var worldID = 1
     var compactPortrait = false
-    var entersFromAbove = false
+    var constrainsJumpHeight = false
     var reactionID = 0
     var dimmingOpacity: Double = 0
     var onCelebrationStart: (Date) -> Void = { _ in }
@@ -321,17 +334,18 @@ struct DinoCompanionLayer: View {
     @State private var presentedClip: DinoAnimation.Clip = .idle
     @State private var celebrationStart: Date?
     @State private var celebrationFinished = false
+    @State private var resultHeightScale: CGFloat = 1
 
-    private var celebrates: Bool { isResult && (clip == .openingJump || clip == .pirouette || clip == .backflip) }
+    private var celebrates: Bool { isResult && DinoResultJourney.clips.contains(clip) }
 
     var body: some View {
         Group {
             if destination != nil || isResult {
                 TimelineView(.animation(minimumInterval: 1.0 / 60,
                                         paused: !celebrates || celebrationStart == nil || celebrationFinished || reduceMotion || scenePhase != .active)) { context in
-                    let elapsed = celebrates ? celebrationStart.map { start in
+                    let elapsed: Double? = celebrates ? celebrationStart.map { start in
                         celebrationFinished || reduceMotion ? DinoAnimation.duration(clip) : max(0, context.date.timeIntervalSince(start))
-                    } : nil
+                    } ?? 0 : nil
                     let frame = elapsed.map { celebrationFrame(at: $0, target: destination ?? placement) } ?? placement
                     let portrait = elapsed.map { celebrationPortrait(at: $0) } ?? portraitAmount
                     character(frame: frame, portrait: portrait, elapsed: elapsed)
@@ -347,27 +361,6 @@ struct DinoCompanionLayer: View {
                         let arriving = isResult && !atResult
                         atResult = isResult
                         showClip(clip)
-                        if arriving && entersFromAbove && !reduceMotion {
-                            var transaction = Transaction()
-                            transaction.disablesAnimations = true
-                            withTransaction(transaction) {
-                                placement = CGRect(x: target.minX, y: -target.height - 24,
-                                                   width: target.width, height: target.height)
-                                portraitAmount = 0
-                                visible = true
-                            }
-                            if celebrates {
-                                startCelebration()
-                                return
-                            }
-                            Task { @MainActor in
-                                // Commit the offscreen origin before animating to the podium.
-                                do { try await Task.sleep(for: .milliseconds(16)) } catch { return }
-                                guard atResult, destination == target else { return }
-                                fall(to: target)
-                            }
-                            return
-                        }
                         guard visible, !reduceMotion else {
                             var transaction = Transaction()
                             transaction.disablesAnimations = true
@@ -375,13 +368,19 @@ struct DinoCompanionLayer: View {
                                 placement = target; visible = true
                                 portraitAmount = isResult ? 0 : 1
                             }
-                            if arriving && celebrates { startCelebration() }
+                            if arriving && celebrates { startCelebration(toward: target) }
                             if !isResult { celebrationStart = nil }
                             return
                         }
                         if arriving {
-                            if celebrates { startCelebration() }
-                            else { fall(to: target) }
+                            if celebrates { startCelebration(toward: target) }
+                        } else if celebrates && celebrationStart != nil {
+                            // Keep the measured HUD origin for the whole journey.
+                            // Layout updates move the destination, not the takeoff.
+                            // The shared clock also keeps the fall's contact and
+                            // recovery aligned with the movement on the screen.
+                            resultHeightScale = heightScale(toward: target)
+                            return
                         } else {
                             // Track the portrait or result anchor immediately on layout changes.
                             var transaction = Transaction()
@@ -417,8 +416,13 @@ struct DinoCompanionLayer: View {
         }
         .task(id: celebrationStart) {
             guard let celebrationStart else { return }
+            let impactID = clip == .stumble ? DinoAnswerFeedback.shared.playGroundImpact(
+                after: reduceMotion ? 0.05 : max(0, DinoAnimation.travelDuration(clip) + celebrationStart.timeIntervalSinceNow)) : nil
             let remaining = DinoAnimation.duration(clip) + celebrationStart.timeIntervalSinceNow
-            do { try await Task.sleep(for: .seconds(max(0, remaining))) } catch { return }
+            do { try await Task.sleep(for: .seconds(max(0, remaining))) } catch {
+                if let impactID { DinoAnswerFeedback.shared.cancelImpact(impactID) }
+                return
+            }
             celebrationFinished = true
         }
         .onValueChange(of: clip, initial: true) { next in
@@ -438,7 +442,8 @@ struct DinoCompanionLayer: View {
                           companionPresentation: DinoCompanionPresentation(portraitAmount: portrait,
                               decorationVisibility: isResult ? 1 : portraitReturnOpacity,
                               fadesBeforeTakeoff: celebrates, palette: HUDPalette(worldID: worldID),
-                              rimRatio: 4 / (compactPortrait ? 52 : 78)), journeyElapsed: elapsed)
+                              rimRatio: 4 / (compactPortrait ? 52 : 78)), journeyElapsed: elapsed,
+                          jumpHeightScale: resultHeightScale)
                 .id("\(presentedClip.rawValue)-\(reactionID)")
                 .transition(.identity)
                 .accessibilityHidden(true)
@@ -452,11 +457,16 @@ struct DinoCompanionLayer: View {
         .position(x: frame.midX, y: frame.midY)
     }
 
-    private func startCelebration() {
+    private func heightScale(toward target: CGRect) -> CGFloat {
+        constrainsJumpHeight ? DinoResultJourney.heightScale(clip: clip, origin: placement, target: target) : 1
+    }
+
+    private func startCelebration(toward target: CGRect) {
         let start = Date()
         var transaction = Transaction()
         transaction.disablesAnimations = true
         withTransaction(transaction) {
+            resultHeightScale = heightScale(toward: target)
             celebrationFinished = false
             celebrationStart = start
             onCelebrationStart(start)
@@ -464,34 +474,12 @@ struct DinoCompanionLayer: View {
     }
 
     private func celebrationFrame(at elapsed: Double, target: CGRect) -> CGRect {
-        let takeoff = DinoAnimation.travelDelay(clip)
-        let flight = DinoAnimation.travelDuration(clip) - takeoff
-        let progress = CGFloat(min(1, max(0, (elapsed - takeoff) / flight)))
-        let travel: CGFloat
-        switch clip {
-        case .pirouette: travel = 1 - pow(1 - progress, 3)
-        case .backflip: travel = progress * progress * (3 - 2 * progress)
-        default: travel = progress
-        }
-        // Gravity takes over after the one-star push-off while the horizontal speed holds.
-        let vertical = clip == .openingJump ? progress * progress : travel
-        let width = placement.width + (target.width - placement.width) * travel
-        let height = placement.height + (target.height - placement.height) * travel
-        return CGRect(x: placement.midX + (target.midX - placement.midX) * travel - width / 2,
-                      y: placement.midY + (target.midY - placement.midY) * vertical - height / 2,
-                      width: width, height: height)
+        DinoResultJourney.frame(clip: clip, elapsed: elapsed, origin: placement, target: target)
     }
 
     private func celebrationPortrait(at elapsed: Double) -> CGFloat {
         let fadeStart = DinoAnimation.travelDelay(clip) - 0.12
         return portraitAmount * CGFloat(min(1, max(0, 1 - (elapsed - fadeStart) / 0.36)))
-    }
-
-    private func fall(to target: CGRect) {
-        let delay = DinoAnimation.travelDelay(clip)
-        let travel = DinoAnimation.travelDuration(clip) - delay
-        withAnimation(.easeOut(duration: 0.24).delay(delay)) { portraitAmount = 0 }
-        withAnimation(.timingCurve(0.42, 0, 0.88, 0.55, duration: travel).delay(delay)) { placement = target }
     }
 
     private func showClip(_ next: DinoAnimation.Clip) {
@@ -503,6 +491,7 @@ struct DinoCompanionLayer: View {
 
 /// The HUD and the result share one drawing buffer. Only its crop changes on takeoff.
 struct DinoCompanionPresentation: AnimatableModifier {
+    @EnvironmentObject private var player: DinoPlayer
     var portraitAmount: CGFloat
     var decorationVisibility: CGFloat
     let fadesBeforeTakeoff: Bool
@@ -519,20 +508,21 @@ struct DinoCompanionPresentation: AnimatableModifier {
         let crop = fadesBeforeTakeoff ? pow(min(1, portraitAmount * 1.5), 2) : portraitAmount
         let decorationOpacity = (fadesBeforeTakeoff ? max(0, portraitAmount * 3 - 2) : portraitAmount) * decorationVisibility
         let drawing = content
-            .scaleEffect(1 + (1 / 0.62 - 1) * crop)
-            .offset(x: -210 * 0.065 * crop, y: 210 * 0.339 * crop)
+            .scaleEffect(1 + ((player.profile.activeCharacter == .jungle ? DinoJungleArtwork.portraitScale : 1 / 0.62) - 1) * crop)
+            .offset(x: 210 * (player.profile.activeCharacter == .jungle ? DinoJungleArtwork.portraitOffsetX : -0.065) * crop,
+                    y: 210 * (player.profile.activeCharacter == .jungle ? DinoJungleArtwork.portraitOffsetY : 0.339) * crop)
         ZStack {
             Circle().fill(LinearGradient(colors: [palette.portraitLight, palette.accent],
                                          startPoint: .topLeading, endPoint: .bottomTrailing))
                 .overlay(Circle().strokeBorder(palette.outline, lineWidth: 210 * rimRatio / 2))
                 .opacity(decorationOpacity)
-            drawing.mask(DinoCompanionReveal(portraitAmount: crop))
+            drawing.mask(DinoCompanionReveal(portraitAmount: crop, leafyCrown: player.profile.activeCharacter == .jungle))
             Circle().strokeBorder(palette.rim, lineWidth: 210 * rimRatio)
                 .opacity(decorationOpacity)
             // Paint the actual bandana/spike pixels over the complete rim.
             // Cutting rectangles out of the rim left gaps when a pose moved.
             // This is the same sampled image, so both crops stay frame-perfect.
-            drawing.mask(DinoBustOverflowMask(diameter: 210))
+            drawing.mask(DinoBustOverflowMask(diameter: 210, leafyCrown: player.profile.activeCharacter == .jungle))
                 .opacity(crop)
         }.frame(width: 210, height: 210)
     }
@@ -540,10 +530,11 @@ struct DinoCompanionPresentation: AnimatableModifier {
 
 private struct DinoCompanionReveal: Shape {
     var portraitAmount: CGFloat
+    var leafyCrown = false
     func path(in rect: CGRect) -> Path {
         let expansion = rect.width * 2 * (1 - portraitAmount)
         var path = Path(ellipseIn: rect.insetBy(dx: -expansion, dy: -expansion))
-        path.addPath(DinoBustOverflowMask(diameter: rect.width).path(in: rect))
+        path.addPath(DinoBustOverflowMask(diameter: rect.width, leafyCrown: leafyCrown).path(in: rect))
         return path
     }
 }

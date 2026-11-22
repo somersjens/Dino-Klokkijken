@@ -603,9 +603,9 @@ struct DinoExpandedQuestionView: View {
                 }
                 Text(verbatim: "+\(duration)")
                     .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .foregroundStyle(DinoTimeDirection.color(later: true, highContrast: highContrast))
+                    .foregroundStyle(session.hasFeedback ? DinoTimeDirection.color(later: true, highContrast: highContrast) : DinoStyle.ink)
                     .padding(.horizontal, 10).padding(.vertical, 5)
-                    .background(DinoTimeDirection.background(later: true, highContrast: highContrast), in: Capsule())
+                    .background(session.hasFeedback ? DinoTimeDirection.background(later: true, highContrast: highContrast) : DinoStyle.ink.opacity(0.08), in: Capsule())
                     .accessibilityIdentifier("question.advance.difference")
                 if advanceComparing {
                     HStack(spacing: 8) {
@@ -642,6 +642,7 @@ struct DinoExpandedQuestionView: View {
         return arrangement {
             DinoAnalogAdvanceLayout(start: DinoAnalogAdvanceExample.face(q.relatedTimes[0]), theme: theme,
                                     durationMinutes: q.durationMinutes, language: code, playSize: playFace,
+                                    showsAnswer: session.hasFeedback,
                                     resultOffset: advanceComparing ? advanceResultOffset : 0,
                                     resultTopInset: advanceComparing ? (advanceStageHeight - (playFace + 8) * advanceComparisonScale) / 2 : 0,
                                     enteredMinutes: advanceComparing ? DinoAnalogAdvanceExample.enteredMinutes(from: q.relatedTimes[0], to: shown) : nil) {
@@ -710,6 +711,7 @@ struct DinoAnalogAdvanceLayout<Play: View>: View {
     let durationMinutes: Int
     let language: String
     let playSize: CGFloat
+    var showsAnswer = false
     var resultOffset: CGFloat = 0
     var resultTopInset: CGFloat = 0
     var enteredMinutes: Int? = nil
@@ -722,6 +724,7 @@ struct DinoAnalogAdvanceLayout<Play: View>: View {
             AnalogClock(time: start, theme: theme, size: playSize * 0.5)
                 .accessibilityIdentifier(startIdentifier)
             DinoAdvanceDifference(minutes: durationMinutes, language: language, prefix: prefix,
+                                  showsAnswer: showsAnswer,
                                   resultOffset: resultOffset, resultTopInset: resultTopInset,
                                   enteredMinutes: enteredMinutes)
             play()
@@ -735,6 +738,7 @@ struct DinoAdvanceDifference: View {
     let minutes: Int
     let language: String
     var prefix = "question"
+    var showsAnswer = false
     /// Added time sits to the right of the centered arrow. Removed time sits to the left.
     var subtracting = false
     var resultOffset: CGFloat = 0
@@ -745,8 +749,8 @@ struct DinoAdvanceDifference: View {
 
     var body: some View {
         let combined = minutes / 60 > 0 && minutes % 60 > 0
-        let ink = DinoTimeDirection.color(later: !subtracting, highContrast: highContrast)
-        let fill = DinoTimeDirection.tint(later: !subtracting)
+        let ink = showsAnswer ? DinoTimeDirection.color(later: !subtracting, highContrast: highContrast) : DinoStyle.ink
+        let fill = showsAnswer ? DinoTimeDirection.tint(later: !subtracting) : DinoStyle.ink
         let duration = "\(subtracting ? "−" : "+")\(DinoTimeWords.duration(minutes, language: language))"
         // Both branches start below the prompt clock. Their mirrored labels stay above the shafts.
         HStack(spacing: 8) {

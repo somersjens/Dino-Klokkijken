@@ -96,23 +96,36 @@ struct DinoTimeArithmeticExplanation: View {
             differenceBar
                 .anchorPreference(key: FieldAnchorsKey.self, value: .bounds) { [FieldAnchor(row: -1, hours: false): $0] }
                 .readGeometry(for: CGFloat.self) { $0.size.height } action: { differenceHeight = $0 }
-            if explains && stage >= .split {
-                totalsRow
-                    .padding(.top, totalsTopPadding)
-                    .transition(.opacity)
-                if resultVisible {
-                    DigitalClock(time: work.result, theme: theme, fontSize: shownClockFont, notation: notation)
-                        .anchorPreference(key: FieldAnchorsKey.self, value: .bounds) { [FieldAnchor(row: 1, hours: true): $0] }
-                        .accessibilityLabel(Text(verbatim: resultReading.text))
-                        .accessibilityIdentifier(resultIdentifier)
-                        .padding(.top, 6 * layoutScale)
-                        .transition(.opacity)
+            if explains {
+                ZStack {
+                    Color.clear.frame(width: layoutWidth, height: blockHeight).accessibilityHidden(true)
+                    if stage >= .split { totalsRow.transition(.opacity) }
+                }
+                .padding(.top, totalsTopPadding)
+                if showsResult {
+                    ZStack {
+                        DigitalClock(time: work.result, theme: theme, fontSize: shownClockFont, notation: notation)
+                            .hidden().accessibilityHidden(true)
+                        if resultVisible {
+                            DigitalClock(time: work.result, theme: theme, fontSize: shownClockFont, notation: notation)
+                                .anchorPreference(key: FieldAnchorsKey.self, value: .bounds) { [FieldAnchor(row: 1, hours: true): $0] }
+                                .accessibilityLabel(Text(verbatim: resultReading.text))
+                                .accessibilityIdentifier(resultIdentifier)
+                                .transition(.opacity)
+                        }
+                    }
+                    .padding(.top, 6 * layoutScale)
                     if display.changesPeriod, let start = startReading.period, let end = resultReading.period {
-                        Text(verbatim: "\(start) → \(end)")
-                            .font(.system(size: 12 * layoutScale, weight: .bold, design: .rounded))
-                            .foregroundStyle(blue)
-                            .accessibilityIdentifier("\(prefix).timeArithmetic.periodChange")
-                            .transition(.opacity)
+                        ZStack {
+                            Text(verbatim: "\(start) → \(end)").hidden().accessibilityHidden(true)
+                            if resultVisible {
+                                Text(verbatim: "\(start) → \(end)")
+                                    .foregroundStyle(blue)
+                                    .accessibilityIdentifier("\(prefix).timeArithmetic.periodChange")
+                                    .transition(.opacity)
+                            }
+                        }
+                        .font(.system(size: 12 * layoutScale, weight: .bold, design: .rounded))
                     }
                 }
             }
@@ -218,7 +231,7 @@ struct DinoTimeArithmeticExplanation: View {
         }
     }
 
-    /// Actual layout content ends at the subtotals until the answer is revealed.
+    /// Reserve the final row positions before the demonstration starts revealing its steps.
     private var totalsRow: some View {
         HStack(spacing: 0) {
             totalBlock(hours: true)

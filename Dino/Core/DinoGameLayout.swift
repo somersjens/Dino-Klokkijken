@@ -31,6 +31,17 @@ struct DinoDemonstrationLayout {
 /// A lesson is sized in the safe-area viewport left after the HUD, title and actions.
 /// These are content requirements, independent of device names and size classes.
 struct DinoGameLayout {
+    static func usesSideHUD(in size: CGSize) -> Bool {
+        let spacious = size.width >= 700 && size.height >= 550
+        return size.width > size.height && (spacious || size.height < 500)
+    }
+
+    static func sideHUDScale(in size: CGSize) -> CGFloat {
+        guard usesSideHUD(in: size), size.width >= 700, size.height >= 550 else { return 1 }
+        // Tablet rails occupy roughly two thirds of the safe height, with phone proportions intact.
+        return min(2.1, max(1, size.height / 440))
+    }
+
     let width: CGFloat
     let height: CGFloat
     let kind: ClockQuestionKind

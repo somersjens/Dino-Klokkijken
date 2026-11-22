@@ -36,6 +36,11 @@ struct DinoStarsOverview: View {
                 }
                 .padding(layout.margin).padding(.top, 12 * layout.scale)
                 .frame(maxWidth: StarsLayout.maximumWidth).frame(maxWidth: .infinity)
+                .background {
+                    GeometryReader { content in
+                        Color.clear.preference(key: StarsContentHeightKey.self, value: ceil(content.size.height))
+                    }
+                }
             }
             .bouncesOnlyWhenNeeded()
             .accessibilityIdentifier("stars.overview")
@@ -44,18 +49,11 @@ struct DinoStarsOverview: View {
         .foregroundStyle(DinoStyle.ink)
     }
 
-    @ViewBuilder private func actions(layout: StarsLayout) -> some View {
-        if landscape && layout.columns == 2 {
-            HStack(spacing: 12 * layout.scale) {
-                totalCard(layout: layout).frame(width: layout.cellWidth)
-                returnButton(layout: layout).frame(width: layout.cellWidth)
-            }
-        } else {
-            VStack(spacing: 10 * layout.scale) {
-                totalCard(layout: layout)
-                returnButton(layout: layout)
-            }.frame(width: layout.cellWidth)
-        }
+    private func actions(layout: StarsLayout) -> some View {
+        VStack(spacing: 10 * layout.scale) {
+            totalCard(layout: layout)
+            returnButton(layout: layout)
+        }.frame(maxWidth: .infinity)
     }
 
     private func totalCard(layout: StarsLayout) -> some View {
@@ -67,7 +65,9 @@ struct DinoStarsOverview: View {
         .font(.system(size: 20 * layout.scale * textScale, weight: .heavy, design: .rounded))
         .padding(.horizontal, 20 * layout.scale)
         .frame(minHeight: 60 * layout.scale)
-        .background(.white.opacity(0.8), in: RoundedRectangle(cornerRadius: 18 * layout.scale))
+        .background(.white.opacity(highContrast ? 1 : 0.95), in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18)
+            .strokeBorder(DinoStyle.ink.opacity(highContrast ? 1 : 0.1), lineWidth: highContrast ? 3 : 1.5))
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("stars.total")
     }
@@ -122,8 +122,8 @@ struct DinoStarsOverview: View {
 
     private func starCount(_ count: Int, scale: CGFloat) -> some View {
         HStack(spacing: 6 * scale) {
-            DinoRewardStar(size: 22 * scale * textScale)
             Text(verbatim: "\(count)").monospacedDigit()
+            DinoRewardStar(size: 22 * scale * textScale)
         }.fixedSize()
     }
 }
@@ -135,48 +135,60 @@ private struct StarsLayout {
     let accessibilityText: Bool
 
     // Scale against the actual sheet/window so rotation and narrow iPad windows
-    // follow the same rules as phones. Short landscape windows keep compact rows.
-    var scale: CGFloat { min(1.4, max(1, size.width / 560), max(1, size.height / 600)) }
+    // follow the same rules as phones. Width alone keeps content fitting stable
+    // when the sheet adjusts its height to the measured content.
+    var scale: CGFloat { min(1.4, max(1, size.width / 560)) }
     var margin: CGFloat { 16 * scale }
     var columns: Int { min(size.width, Self.maximumWidth) >= (landscape ? 500 : 700) && !accessibilityText ? 2 : 1 }
-    var cellWidth: CGFloat {
-        max(1, (min(size.width, Self.maximumWidth) - margin * 4 - 12 * scale * CGFloat(columns - 1)) / CGFloat(columns))
-    }
     var rowCount: Int { (DinoWorldCatalog.worlds.count + columns - 1) / columns }
 }
 
+private struct StarsContentHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+}
+
 extension DinoStarsOverview {
-    @ViewBuilder func starsPresentation() -> some View {
+    func starsPresentation(maximumHeight: CGFloat) -> some View {
+        modifier(StarsPresentation(maximumHeight: maximumHeight))
+    }
+}
+
+private struct StarsPresentation: ViewModifier {
+    let maximumHeight: CGFloat
+    @State private var contentHeight: CGFloat = 860
+
+    private var fittedHeight: CGFloat { min(contentHeight, max(120, maximumHeight)) }
+
+    func body(content: Content) -> some View {
+        presentation(content)
+            .onPreferenceChange(StarsContentHeightKey.self) { height in
+                guard height > 0, height != contentHeight else { return }
+                contentHeight = height
+            }
+    }
+
+    @ViewBuilder private func presentation(_ content: Content) -> some View {
         if #available(iOS 18, *) {
-            presentationSizing(StarsPresentationSizing())
-                .presentationDetents([.custom(StarsPresentationDetent.self)])
+            content.presentationSizing(StarsPresentationSizing(contentHeight: fittedHeight))
+                .presentationDetents([.height(fittedHeight)])
                 .presentationCompactAdaptation(.none)
                 .presentationCornerRadius(28)
         } else if #available(iOS 16.4, *) {
-            presentationDetents([.fraction(0.9)])
+            content.presentationDetents([.height(fittedHeight)])
                 .presentationCompactAdaptation(.none)
         } else {
-            presentationDetents([.large])
+            content.presentationDetents([.height(fittedHeight)])
         }
     }
 }
 
 @available(iOS 18, *)
 private struct StarsPresentationSizing: PresentationSizing {
+    let contentHeight: CGFloat
+
     func proposedSize(for root: PresentationSizingRoot, context: PresentationSizingContext) -> ProposedViewSize {
         let page = PagePresentationSizing.page.proposedSize(for: root, context: context)
-        guard let width = page.width, width >= 700 else { return page }
-        return ProposedViewSize(width: width, height: min(page.height ?? 860, 860))
-    }
-}
-
-@available(iOS 18, *)
-private struct StarsPresentationDetent: CustomPresentationDetent {
-    static func height(in context: Context) -> CGFloat? {
-        if context.verticalSizeClass == .compact {
-            // Preserve a strip of the map and the native grabber on landscape phones.
-            return max(120, context.maxDetentValue - 32)
-        }
-        return min(context.maxDetentValue, 860)
+        return ProposedViewSize(width: page.width, height: min(page.height ?? contentHeight, contentHeight))
     }
 }

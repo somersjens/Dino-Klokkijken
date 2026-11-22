@@ -4,6 +4,7 @@ import CoreText
 
 /// The title and scenery are native drawing; only the player's recolored Dino is a sprite.
 struct MapOpeningView: View {
+    @EnvironmentObject private var player: DinoPlayer
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dinoHighContrast) private var highContrast
@@ -53,7 +54,8 @@ struct MapOpeningView: View {
                     OpeningEmergingDino(image: image, jumpImages: jumpImages,
                         flight: DinoWelcomeFlight(source: source, sourceSide: dinoSide,
                             destination: destination ?? CGRect(x: source.x - dinoSide / 2,
-                                y: source.y - dinoSide / 2, width: dinoSide, height: dinoSide)),
+                                y: source.y - dinoSide / 2, width: dinoSide, height: dinoSide),
+                            character: player.profile.activeCharacter),
                         revealMask: OpeningDinoRevealMask(edge: title.revealEdge, board: board, release: 0),
                         hiddenOffset: hiddenOffset, revealed: emergence > 0,
                         jumpStartedAt: jumpStartedAt, reducedMotion: reduceMotion)
@@ -282,11 +284,12 @@ private final class OpeningDinoArtwork: UIView {
         sprite.bounds = CGRect(x: 0, y: 0, width: flight.sourceSide, height: flight.sourceSide)
         sprite.position = flight.position(elapsed: 0)
         artwork.bounds = sprite.bounds
-        artwork.anchorPoint = DinoWelcomeJump.idleHead.center
+        let head = DinoWelcomeJump.idleHead(for: flight.character)
+        artwork.anchorPoint = head.center
         artwork.position = .zero
         artwork.setAffineTransform(.identity)
-        headMotion.position = CGPoint(x: DinoWelcomeJump.idleHead.center.x * flight.sourceSide,
-                                      y: DinoWelcomeJump.idleHead.center.y * flight.sourceSide)
+        headMotion.position = CGPoint(x: head.center.x * flight.sourceSide,
+                                      y: head.center.y * flight.sourceSide)
         headMotion.setAffineTransform(.identity)
     }
 
@@ -348,8 +351,8 @@ private final class OpeningDinoArtwork: UIView {
         let poseTimes = (DinoWelcomeJump.poseStarts + [duration]).map { NSNumber(value: $0 / duration) }
         let poses = (DinoWelcomeJump.poseStarts + [duration]).map { DinoWelcomeJump.pose(elapsed: $0) }
         let contents = poses.map { images[$0.asset]?.cgImage ?? idle }
-        let anchors = poses.map { NSValue(cgPoint: DinoWelcomeJump.sourceHead(for: $0.asset).center) }
-        let corrections = poses.map { NSValue(caTransform3D: CATransform3DMakeAffineTransform(DinoWelcomeJump.sourceCorrection(for: $0.asset))) }
+        let anchors = poses.map { NSValue(cgPoint: DinoWelcomeJump.sourceHead(for: $0.asset, character: flight.character).center) }
+        let corrections = poses.map { NSValue(caTransform3D: CATransform3DMakeAffineTransform(DinoWelcomeJump.sourceCorrection(for: $0.asset, character: flight.character))) }
         let poseGroup = CAAnimationGroup()
         poseGroup.animations = [animation("contents", values: contents, times: poseTimes, discrete: true),
                                 animation("anchorPoint", values: anchors, times: poseTimes, discrete: true),
@@ -359,10 +362,43 @@ private final class OpeningDinoArtwork: UIView {
         poseGroup.timingFunction = CAMediaTimingFunction(name: .linear)
         poseGroup.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 60, preferred: 60)
         artwork.contents = image.cgImage
-        artwork.anchorPoint = DinoWelcomeJump.idleHead.center
+        artwork.anchorPoint = DinoWelcomeJump.idleHead(for: flight.character).center
         artwork.position = .zero
         artwork.setAffineTransform(.identity)
-        artwork.add(poseGroup, forKey: "opening.poses")
+        if flight.character == .jungle {
+            // Every painting has its own measured face anchor. Keep the face on
+            // the continuous tracking curve while adjacent body poses dissolve.
+            artwork.contents = nil
+            let starts = DinoWelcomeJump.poseStarts + [duration - 0.04]
+            for (index, pose) in poses.enumerated() {
+                let drawing = CALayer()
+                drawing.bounds = artwork.bounds
+                drawing.contentsGravity = .resizeAspect
+                drawing.contents = contents[index]
+                drawing.anchorPoint = DinoWelcomeJump.sourceHead(for: pose.asset, character: .jungle).center
+                drawing.position = .zero
+                drawing.setAffineTransform(DinoWelcomeJump.sourceCorrection(for: pose.asset, character: .jungle))
+                func fade(_ t: Double, at index: Int) -> Double {
+                    let boundary = starts[index]
+                    let half = min(0.045, (boundary - starts[index - 1]) * 0.45)
+                    let p = min(1, max(0, (t - boundary + half) / (2 * half)))
+                    return p * p * (3 - 2 * p)
+                }
+                let opacity = times.map { time -> NSNumber in
+                    let t = time * duration
+                    let enter = index == 0 ? 1 : fade(t, at: index)
+                    let leave = index + 1 == poses.count ? 1 : 1 - fade(t, at: index + 1)
+                    return NSNumber(value: enter * leave)
+                }
+                let dissolve = animation("opacity", values: opacity, times: keyTimes)
+                dissolve.beginTime = begin
+                drawing.opacity = index + 1 == poses.count ? 1 : 0
+                headMotion.addSublayer(drawing)
+                drawing.add(dissolve, forKey: "opening.registeredPose")
+            }
+        } else {
+            artwork.add(poseGroup, forKey: "opening.poses")
+        }
 
         let masks = times.map { time -> CGPath in
             var value = mask

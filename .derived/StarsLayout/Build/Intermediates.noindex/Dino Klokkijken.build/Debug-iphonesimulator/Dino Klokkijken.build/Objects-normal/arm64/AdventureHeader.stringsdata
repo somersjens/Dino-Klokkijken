@@ -7,7 +7,7 @@
         "key": "dino.practice.ascending",
         "location": {
           "startingColumn": 35,
-          "startingLine": 408
+          "startingLine": 435
         }
       },
       {
@@ -15,7 +15,7 @@
         "key": "dino.practice.mix",
         "location": {
           "startingColumn": 29,
-          "startingLine": 409
+          "startingLine": 436
         }
       },
       {
@@ -23,7 +23,7 @@
         "key": "dino.practice.bestStreak",
         "location": {
           "startingColumn": 45,
-          "startingLine": 443
+          "startingLine": 470
         }
       }
     ]

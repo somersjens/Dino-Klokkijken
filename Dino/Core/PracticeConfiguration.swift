@@ -31,14 +31,10 @@ enum DinoPracticeTime: String, CaseIterable, Sendable {
     }
 
     /// Drag and button step while setting an analog clock. Questions stay on the family.
-    /// Half hours also stop on quarters, and ten-minute practice moves five minutes at a time.
+    /// Only exact-minute questions use one-minute steps; all other minute hands move by five.
     var analogHandStep: Int { Self.analogHandStep(minuteStep) }
     static func analogHandStep(_ minuteStep: Int) -> Int {
-        switch minuteStep {
-        case 30: return 15
-        case 10: return 5
-        default: return minuteStep
-        }
+        minuteStep == 60 ? 60 : minuteStep == 1 ? 1 : 5
     }
 }
 

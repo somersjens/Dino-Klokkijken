@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "jungle-airborne.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

@@ -53,7 +53,7 @@ struct DinoPersonalizer: View {
                             .modifier(CustomizationWidth())
                     }
                     TabView(selection: $page) {
-                        DinoAppearanceEditor(showsPreview: !landscape).tag(PersonalizationPage.dino)
+                        DinoAppearanceEditor(showsPreview: !landscape, pinsCollection: landscape).tag(PersonalizationPage.dino)
                         ClockCustomizer(theme: $theme, page: .analog, showsPreview: !landscape).tag(PersonalizationPage.analog)
                         ClockCustomizer(theme: $theme, page: .digital, showsPreview: !landscape).tag(PersonalizationPage.digital)
                     }.tabViewStyle(.page(indexDisplayMode: .never))
@@ -126,6 +126,7 @@ struct DinoAppearanceEditor: View {
     var onNavigate: ((Int) -> Void)?
     var showsPreview = true
     var showsOptions = true
+    var pinsCollection = false
     private var appearance: DinoAppearance { player.profile.dinoAppearance ?? .standard }
     private var compact: Bool { verticalSizeClass == .compact }
     private let swatches: [(name: String, hex: UInt32)] = [
@@ -137,7 +138,13 @@ struct DinoAppearanceEditor: View {
     var welcomeChrome: (title: AnyView, action: AnyView)? = nil
 
     var body: some View {
-        if let welcomeChrome {
+        if pinsCollection {
+            VStack(spacing: 0) {
+                ScrollView { colorOptions.modifier(CustomizationOptionsCard()) }
+                    .bouncesOnlyWhenNeeded().clipped().accessibilityIdentifier("personalize.options")
+                characterCollection.modifier(CustomizationOptionsCard())
+            }
+        } else if let welcomeChrome {
             CustomizationWelcomeLayout(identifier: "personalize.options", cardIdentifier: "personalize.welcome.optionsCard") {
                 welcomeChrome.title
             } preview: {
@@ -160,13 +167,22 @@ struct DinoAppearanceEditor: View {
 
     private var options: some View {
         VStack(spacing: metrics.restoreSpacing) {
+            colorOptions
+            if welcomeChrome == nil { characterCollection }
+        }
+    }
+
+    private var colorOptions: some View {
+        VStack(spacing: metrics.restoreSpacing) {
             VStack(spacing: metrics.sectionSpacing * metrics.enlargement) {
                 ForEach(DinoAppearance.Part.allCases, id: \.self) { part in
                     colorChoice(part)
                 }
             }
             Button {
-                player.setDinoAppearance(.standard)
+                var reset = DinoAppearance.standard
+                reset.character = appearance.character
+                player.setDinoAppearance(reset)
             } label: {
                 Label("dino.appearance.reset", systemImage: "arrow.counterclockwise")
                     .modifier(CustomizationText())
@@ -176,12 +192,65 @@ struct DinoAppearanceEditor: View {
         }
     }
 
+    private var characterCollection: some View {
+        VStack(alignment: .leading, spacing: compact ? 8 : 12) {
+            Text("dino.characters.title").modifier(CustomizationText())
+                .foregroundStyle(DinoStyle.deepGreen)
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 5), spacing: 10) {
+                ForEach(Array(player.profile.collectionCharacters.enumerated()), id: \.offset) { index, character in
+                    let unlocked = player.profile.isCharacterUnlocked(character)
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.22)) { player.selectCharacter(character) }
+                    } label: {
+                        VStack(spacing: 3) {
+                            ZStack(alignment: .bottomTrailing) {
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(unlocked ? Color.white.opacity(0.92) : DinoStyle.deepGreen.opacity(0.07))
+                                if character == .main || character == .jungle {
+                                    DinoAvatar(appearance: collectionAppearance(character))
+                                        .padding(3).saturation(unlocked ? 1 : 0)
+                                        .opacity(unlocked ? 1 : 0.38)
+                                } else {
+                                    Image(character.bossAsset).resizable().scaledToFit().padding(5)
+                                        .saturation(0).opacity(0.3)
+                                }
+                                if !unlocked {
+                                    Image(systemName: "lock.fill")
+                                        .font(.system(size: 11, weight: .bold)).foregroundStyle(DinoStyle.deepGreen)
+                                        .padding(5).background(.white.opacity(0.92), in: Circle()).padding(3)
+                                }
+                            }.aspectRatio(1, contentMode: .fit)
+                                .frame(maxHeight: pinsCollection ? (compact ? 54 : 84) : nil)
+                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(DinoStyle.deepGreen.opacity(unlocked ? 0.35 : 0.10), lineWidth: 1))
+                            if character == .main {
+                                Text("dino.characters.main").font(.system(size: compact ? 10 : 11, weight: .semibold))
+                            } else {
+                                Text("dino.characters.level \(character.unlockLevel)")
+                                    .font(.system(size: compact ? 10 : 11, weight: .semibold))
+                            }
+                        }.foregroundStyle(DinoStyle.ink).contentShape(Rectangle())
+                    }.buttonStyle(DinoPlainButtonStyle()).disabled(!unlocked)
+                        .accessibilityIdentifier("personalize.character.\(character.rawValue)")
+                        .accessibilityValue(Text(unlocked ? "dino.characters.available" : "dino.characters.locked"))
+                }
+            }
+        }.padding(.top, 8)
+            .accessibilityIdentifier("personalize.characters")
+    }
+
+    private func collectionAppearance(_ character: DinoIdentity) -> DinoAppearance {
+        var colors = appearance
+        colors.character = character == .main ? nil : character
+        return colors
+    }
+
     private var preview: some View {
         ZStack { DinoAvatar(appearance: appearance) }
             .frame(width: compact ? (showsOptions ? 120 : 156) : metrics.dinoPreviewSize, height: compact ? (showsOptions ? 120 : 156) : metrics.dinoPreviewSize)
             .shadow(color: DinoStyle.deepGreen.opacity(0.10), radius: 8, y: 5)
             .accessibilityHidden(false)
             .accessibilityIdentifier("personalize.preview")
+            .accessibilityValue(String(player.profile.activeCharacter.rawValue))
             .modifier(PersonalizationPreviewNavigation(onNavigate: onNavigate))
             .padding(.vertical, CustomizationLayout.previewPadding)
             .frame(maxWidth: metrics.sideBySide ? (compact ? (showsOptions ? 132 : 188) : 320) : .infinity)

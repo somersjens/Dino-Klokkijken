@@ -283,7 +283,7 @@
 	<key>dino.friends.connect</key>
 	<string>Game Center gebruiken</string>
 	<key>dino.friends.connectDisclosure</key>
-	<string>Dit zet Game Center, vriendentoegang en het delen van je resultaten samen aan. Met vriendentoegang toont Apple vrienden die deze game ook toegang geven. Delen publiceert de beste levelresultaten, gemeten speeltijden, sterren en voortgang van dit apparaat op Game Center-leaderboards onder de Apple-displaynaam. Apple-leaderboards kunnen deze resultaten aan andere spelers tonen, niet alleen aan vrienden. Je kunt elk schuifje daarna uitzetten zonder een nieuwe som. Een schuifje weer aanzetten vraagt deze som opnieuw. Vrienden uitnodigen kan via Apple Berichten. De beperkingen van het Apple-account blijven gelden. Dit ouderscherm is geen juridische toestemming.</string>
+	<string>Dit zet Game Center, vriendentoegang en het delen van je resultaten samen aan. Apple toont vrienden die deze game ook toegang geven. Je beste levelresultaten, gemeten tijden, sterren, voortgang en prestaties worden gepubliceerd onder je Apple-displaynaam. Apple kan ze ook aan andere spelers tonen, niet alleen aan vrienden. Toon mijn score uitzetten verbergt sterren en tijden in deze versie van de game en stopt nieuwe uploads van scores en sterrenprestaties; je level en baasprestaties blijven bijgewerkt. Apple bewaart eerder gepubliceerde resultaten en prestaties. Afmelden bij Game Center stopt alle updates vanaf dit apparaat. Delen weer aanzetten vraagt deze som opnieuw. Vrienden uitnodigen kan via Apple Berichten. De beperkingen van het Apple-account blijven gelden. Dit ouderscherm is geen juridische toestemming. Je gekozen dinokleuren worden ook met Game Center gedeeld zolang je verbonden bent.</string>
 	<key>dino.friends.contact</key>
 	<string>Contact met de ontwikkelaar</string>
 	<key>dino.friends.contactMissing</key>
@@ -349,15 +349,17 @@
 	<key>dino.friends.privacy</key>
 	<string>Privacy en veiligheid</string>
 	<key>dino.friends.privacyBody</key>
-	<string>Je klokken en voortgang staan op dit apparaat. Je naam komt uit je Game Center-account. Vrienden zijn optioneel. Apple beheert het inloggen, vriendschappen, displaynamen en avatars. De eerste keer dat een volwassene Game Center aanzet, gaan vriendentoegang en het delen van resultaten samen aan. Alleen vrienden die Apple toestaat worden getoond. Elk schuifje kan uit zonder een nieuwe som. Een schuifje weer aanzetten vraagt de som opnieuw. Gegevens van vrienden staan alleen in het geheugen en worden gewist wanneer de app naar de achtergrond gaat, toegang verandert of je vrienden uitschakelt.
+	<string>Je klokken en voortgang staan op dit apparaat. Je naam komt uit je Game Center-account. Vrienden zijn optioneel. Apple beheert het inloggen, vriendschappen, displaynamen en avatars. De eerste keer dat een volwassene Game Center aanzet, gaan vriendentoegang en het delen van resultaten samen aan. Alleen vrienden die Apple toestaat worden getoond. Score delen kan uit zonder een nieuwe som. Delen weer aanzetten vraagt de som opnieuw. Gegevens van vrienden staan alleen in het geheugen en worden gewist wanneer de app naar de achtergrond gaat, toegang verandert of je vrienden uitschakelt.
 
 Als je iCloud-sync aanzet, worden alleen je levelresultaten, gemeten speeltijden, sterren en spelvoortgang met je eigen iCloud-account gedeeld tussen je apparaten. Je dinokleuren, klokken en instellingen blijven op dit apparaat. Uitzetten stopt nieuwe iCloud-updates op dit apparaat; het verwijdert eerder opgeslagen cloudvoortgang niet.
 
-Zolang delen aanstaat, verstuurt de game de beste levelresultaten, gemeten speeltijden, sterren en voortgang naar Apple Game Center-leaderboards. Deze resultaten kunnen volgens Apples instellingen zichtbaar zijn voor andere Game Center-spelers; de app biedt geen besloten opslag voor alleen vrienden. Je geboortedatum, locatie, e-mailadres en telefoonnummer worden nooit door deze game verstuurd. Er is geen chat, eigen berichten, reclame, analyse of tracking.
+Zolang Toon mijn score aanstaat, verstuurt de game de beste levelresultaten, gemeten speeltijden, sterren, voortgang en prestaties naar Apple Game Center. Deze resultaten kunnen volgens Apples instellingen zichtbaar zijn voor andere Game Center-spelers; de app biedt geen besloten opslag voor alleen vrienden. Je geboortedatum, locatie, e-mailadres en telefoonnummer worden nooit door deze game verstuurd. Er is geen chat, eigen berichten, reclame, analyse of tracking.
 
-Je kunt nieuwe uploads op dit apparaat stoppen. Gepubliceerde scores blijven bij Apple; stoppen met delen of de lokale game resetten verwijdert ze niet. Zichtbaarheid, meldingen, vriendschappen en Apple-gegevensverzoeken regel je via Apple Games, Game Center en Apples privacyinstellingen. Opnieuw publiceren kan je eerdere beste resultaten herstellen.
+Toon mijn score uitzetten verbergt sterren en tijden in deze versie van de game en stopt nieuwe uploads van scores en sterrenprestaties. Je level en baasprestaties blijven bijgewerkt zolang Game Center verbonden is. Afmelden stopt alle Game Center-updates vanaf dit apparaat. Gepubliceerde scores en prestaties blijven bij Apple; delen uitzetten of de lokale game resetten verwijdert ze niet. Oudere spelversies kunnen eerder gepubliceerde scores nog tonen. Zichtbaarheid, meldingen, vriendschappen en Apple-gegevensverzoeken regel je via Apple Games, Game Center en Apples privacyinstellingen. Opnieuw publiceren kan je eerdere beste resultaten herstellen.
 
-Accounts met beperkingen en minderjarige accounts kunnen via deze game geen voortgang publiceren. Een ouderscherm vervangt geen wettelijk vereiste ouderlijke toestemming.</string>
+Accounts met beperkingen en minderjarige accounts kunnen via deze game geen voortgang publiceren. Een ouderscherm vervangt geen wettelijk vereiste ouderlijke toestemming.
+
+Zolang Game Center verbonden is, worden je gekozen dinokleuren gepubliceerd zodat vrienden jouw eigen dino zien. Kleuren worden ook bijgewerkt als Toon mijn score uitstaat. Je kleuren worden als kleurwaarden verstuurd, zonder een geüploade foto of eigen tekst.</string>
 	<key>dino.friends.profile</key>
 	<string>Vriendenprofiel</string>
 	<key>dino.friends.profileUnavailable</key>
@@ -381,9 +383,9 @@ Accounts met beperkingen en minderjarige accounts kunnen via deze game geen voor
 	<key>dino.friends.shareGame.message</key>
 	<string>Speel Dino Klokkijken met mij.</string>
 	<key>dino.friends.sharingDisclosure</key>
-	<string>Optioneel: publiceer de beste levelresultaten, gemeten speeltijden, sterren en voortgang van dit apparaat op Game Center-leaderboards onder de Apple-displaynaam. Apple-leaderboards kunnen deze resultaten aan andere spelers tonen, niet alleen aan vrienden. Bestaande resultaten van dit Apple-account worden samengevoegd met het beste resultaat per level. Stoppen met delen verwijdert gepubliceerde resultaten niet. Dit ouderscherm is geen juridische toestemming.</string>
+	<string>Optioneel: publiceer de beste levelresultaten, gemeten tijden, sterren en prestaties van dit apparaat op Game Center onder je Apple-displaynaam. Apple kan ze ook aan andere spelers tonen, niet alleen aan vrienden. Bestaande resultaten worden samengevoegd met het beste resultaat per level. Als Toon mijn score uitstaat, blijven alleen je level en baasprestaties bijgewerkt. Apple bewaart eerder gepubliceerde resultaten en prestaties; oudere spelversies kunnen scores nog tonen. Dit ouderscherm is geen juridische toestemming. Je gekozen dinokleuren worden ook met Game Center gedeeld zolang je verbonden bent.</string>
 	<key>dino.friends.sharingOff</key>
-	<string>Delen staat uit. Vrienden zien geen resultaten van dit apparaat totdat een volwassene ervoor kiest ze te publiceren.</string>
+	<string>Score delen staat uit. Zolang Game Center verbonden is, worden je level en baasprestaties wel bijgewerkt.</string>
 	<key>dino.friends.sharingRestricted</key>
 	<string>Dit account kan geen resultaten delen.</string>
 	<key>dino.friends.sharingTitle</key>
@@ -419,7 +421,7 @@ Accounts met beperkingen en minderjarige accounts kunnen via deze game geen voor
 	<key>dino.friends.stopSharing</key>
 	<string>Resultaten niet meer versturen</string>
 	<key>dino.friends.stopSharingMessage</key>
-	<string>Dit stopt nieuwe uploads op dit apparaat. Eerder gepubliceerde scores blijven in Game Center. Beheer hun zichtbaarheid en je gegevens bij Apple.</string>
+	<string>Dit verbergt je sterren en tijden in dit spel en stopt nieuwe score-uploads. Je level en baasprestaties blijven bijgewerkt. Apple bewaart eerder gepubliceerde resultaten en prestaties; oudere spelversies kunnen scores nog tonen.</string>
 	<key>dino.friends.syncDone</key>
 	<string>Je beschikbare resultaten zijn gesynchroniseerd.</string>
 	<key>dino.friends.syncPending</key>
@@ -768,7 +770,7 @@ Accounts met beperkingen en minderjarige accounts kunnen via deze game geen voor
 	<key>dino.resetAnswer</key>
 	<string>Antwoord</string>
 	<key>dino.resetMessage</key>
-	<string>Voortgang, kleuren, klokken, taal en instellingen op dit apparaat worden gewist. Ook de opgeslagen iCloud-voortgang wordt gewist.</string>
+	<string>Voortgang, kleuren, klokken, taal en instellingen op dit apparaat worden gewist. Ook de opgeslagen iCloud-voortgang wordt gewist. Beste Game Center-scores en behaalde prestaties blijven bij Apple. Opnieuw delen kan eerdere beste resultaten herstellen.</string>
 	<key>dino.resetProgress</key>
 	<string>Voortgang resetten</string>
 	<key>dino.resetTitle</key>

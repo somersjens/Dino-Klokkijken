@@ -90,6 +90,12 @@ final class DinoProgressStore {
         if result.perfectBossVictory { result.worldOneComplete = true }
         result.completedWorlds = result.completedWorlds.map { Set($0.filter { (2...10).contains($0) }) }
         result.perfectWorlds = result.perfectWorlds.map { Set($0.filter { (2...10).contains($0) }) }
+        if let appearance = result.dinoAppearance, !result.isCharacterUnlocked(appearance.identity) {
+            result.dinoAppearance = appearance.mainAppearance
+        }
+        if let pending = result.pendingCharacterUnlock, !result.isCharacterUnlocked(pending) {
+            result.pendingCharacterUnlock = nil
+        }
         return result
     }
 }

@@ -12,7 +12,7 @@ enum DinoAnimation {
         var offsetY = 0.0
     }
     struct Sample {
-        let pose: Pose
+        var pose: Pose
         var angle = 0.0
         var yaw = 0.0
         var height = 0.0
@@ -287,8 +287,125 @@ enum DinoAnimation {
     }
 }
 
+/// Result poses, travel and portrait reveal share one elapsed time in every orientation.
+/// The measured HUD stays the origin, including when the result anchor is remeasured.
+enum DinoResultJourney {
+    static let clips: [DinoAnimation.Clip] = [.stumble, .openingJump, .pirouette, .backflip]
+
+    /// Fit the entire drawing buffer above its trajectory, with room for the
+    /// painted registration offsets. One fixed amplitude keeps the arc smooth;
+    /// clamping each rendered frame would flatten its apex abruptly.
+    static func heightScale(clip: DinoAnimation.Clip, origin: CGRect, target: CGRect) -> CGFloat {
+        guard clip != .stumble else { return 1 }
+        var scale: CGFloat = 1
+        let takeoff = DinoAnimation.travelDelay(clip)
+        let landing = DinoAnimation.travelDuration(clip)
+        for step in 0...120 {
+            let time = takeoff + (landing - takeoff) * Double(step) / 120
+            let frame = frame(clip: clip, elapsed: time, origin: origin, target: target)
+            let sample = DinoAnimation.sample(clip, elapsed: time)
+            let lift = -sample.height * frame.width
+            guard lift > 0.001 else { continue }
+            let top = frame.minY + min(0, sample.pose.offsetY) * frame.width
+            scale = min(scale, max(0, (top - 16) / lift))
+        }
+        return scale
+    }
+
+    static func frame(clip: DinoAnimation.Clip, elapsed: Double, origin: CGRect, target: CGRect) -> CGRect {
+        let takeoff = DinoAnimation.travelDelay(clip)
+        let landing = DinoAnimation.travelDuration(clip)
+        guard elapsed > takeoff else { return origin }
+        guard elapsed < landing else { return target }
+        let progress = CGFloat((elapsed - takeoff) / (landing - takeoff))
+        let travel: CGFloat
+        switch clip {
+        case .pirouette: travel = 1 - pow(1 - progress, 3)
+        case .backflip: travel = progress * progress * (3 - 2 * progress)
+        default: travel = progress
+        }
+        let vertical = clip == .openingJump || clip == .stumble ? progress * progress : travel
+        let width = origin.width + (target.width - origin.width) * travel
+        let height = origin.height + (target.height - origin.height) * travel
+        return CGRect(x: origin.midX + (target.midX - origin.midX) * travel - width / 2,
+                      y: origin.midY + (target.midY - origin.midY) * vertical - height / 2,
+                      width: width, height: height)
+    }
+}
+
 /// A straight jump from the opening logo, using the artist's complete eight-pose
 /// sequence. Crouch and recovery stay planted; only the flight travels to the map.
+/// Keep the shared jump paths and reward timing, with continuous pose transitions
+/// calibrated for the jungle character's own artwork rather than the main Dino's mesh.
+enum DinoJungleAnimation {
+    struct Key {
+        let time: Double
+        let asset: String
+        init(_ time: Double, _ asset: String) { self.time = time; self.asset = asset }
+    }
+
+    static func keys(for clip: DinoAnimation.Clip) -> [Key] {
+        let lead = DinoAnimation.leadIn(clip), end = DinoAnimation.duration(clip)
+        switch clip {
+        case .idle: return [Key(0, "jungle-idle")]
+        case .thumbsUp:
+            return zip(DinoAnimation.correctAnswerFrameStarts, DinoAnimation.correctAnswerAssets).map {
+                Key($0.0, DinoJungleArtwork.asset(for: $0.1))
+            }
+        case .wrongAnswer:
+            return [Key(0, "jungle-idle"), Key(DinoAnimation.answerGestureStart, "jungle-wrong"),
+                    Key(DinoAnimation.answerGestureEnd, "jungle-idle")]
+        case .openingJump:
+            return [Key(0, "jungle-idle"), Key(lead + 0.09, "jungle-crouch"),
+                    Key(lead + DinoOpeningJump.takeoff, "jungle-takeoff"),
+                    Key(lead + 0.56, "jungle-landing"), Key(lead + 0.86, "jungle-recover"), Key(end - 0.06, "jungle-idle")]
+        case .backflip:
+            return [Key(0, "jungle-idle"), Key(0.08, "jungle-crouch"), Key(0.20, "jungle-airborne"),
+                    Key(1.22, "jungle-landing"), Key(1.44, "jungle-recover"), Key(end - 0.06, "jungle-idle")]
+        case .worldJump:
+            return [Key(0, "jungle-idle"), Key(0.06, "jungle-crouch"), Key(0.20, "jungle-airborne"),
+                    Key(1.10, "jungle-landing"), Key(1.22, "jungle-recover"), Key(end - 0.06, "jungle-idle")]
+        case .pirouette:
+            return DinoAnimation.pirouetteFrames.map { Key(lead + $0.start, DinoJungleArtwork.asset(for: $0.pose.asset)) }
+        case .stumble:
+            return [Key(0, "jungle-idle"), Key(lead + DinoAnimation.stumbleTakeoff, "jungle-stumble"),
+                    Key(lead + DinoAnimation.stumbleLanding, "jungle-fallen"),
+                    Key(lead + DinoAnimation.stumblePushStart, "jungle-push-up"),
+                    Key(lead + DinoAnimation.stumbleHandRelease, "jungle-recover"), Key(end - 0.06, "jungle-idle")]
+        }
+    }
+
+    static func sample(_ clip: DinoAnimation.Clip, elapsed: Double, reducedMotion: Bool = false) -> DinoAnimation.Sample {
+        var sample = DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reducedMotion)
+        sample.morph = nil
+        sample.previousPose = nil
+        sample.poseBlend = 1
+        if reducedMotion {
+            sample.pose = .init(asset: clip == .wrongAnswer ? "jungle-wrong" : "jungle-idle")
+            return sample
+        }
+        // Consolidate repeated drawings so a held pose cannot restart a dissolve.
+        let keys = keys(for: clip).reduce(into: [Key]()) { result, key in
+            if result.last?.asset != key.asset { result.append(key) }
+        }
+        let t = max(0, elapsed)
+        let index = keys.lastIndex { t >= $0.time } ?? 0
+        sample.pose = .init(asset: keys[index].asset)
+        for boundary in 1..<keys.count {
+            let before = keys[boundary - 1], after = keys[boundary]
+            let next = boundary + 1 < keys.count ? keys[boundary + 1].time : after.time + 0.2
+            let half = min(0.045, (after.time - before.time) * 0.45, (next - after.time) * 0.45)
+            guard half > 0, t >= after.time - half, t < after.time + half else { continue }
+            let p = (t - after.time + half) / (2 * half)
+            sample.previousPose = .init(asset: before.asset)
+            sample.pose = .init(asset: after.asset)
+            sample.poseBlend = p * p * (3 - 2 * p)
+            break
+        }
+        return sample
+    }
+}
+
 enum DinoOpeningJump {
     static let assets = (1...8).map { String(format: "dino-opening-jump-%02d", $0) }
     static let takeoff = 0.14
@@ -365,15 +482,33 @@ enum DinoWelcomeJump {
     struct Tracking {
         let pose: DinoAnimation.Pose
         let head: Head
+        var referenceHead: Head = DinoWelcomeJump.idleHead
         var position: CGPoint { head.center }
-        var transform: CGAffineTransform { DinoWelcomeJump.transform(from: idleHead, to: head) }
+        var transform: CGAffineTransform { DinoWelcomeJump.transform(from: referenceHead, to: head) }
     }
 
     // Measured iris centroids and the midpoint between both nostrils, in the
     // original 1254-pixel paintings. Recoloring preserves these facial pixels.
     static let idleHead = Head(pixels: (605.76, 355.11), (800.74, 308.01), (803.62, 397.21))
-    static func sourceHead(for asset: String) -> Head {
-        switch asset {
+    static func idleHead(for character: DinoIdentity) -> Head {
+        character == .jungle ? jungleHead(for: "jungle-idle") : idleHead
+    }
+    private static func jungleHead(for asset: String) -> Head {
+        // Eye and nostril landmarks in the 512px paintings, before their runtime reflection.
+        let points: [(Double, Double)]
+        switch DinoJungleArtwork.asset(for: asset) {
+        case "jungle-crouch": points = [(203.8, 229.1), (145.4, 234.9), (140, 276)]
+        case "jungle-takeoff": points = [(252.4, 134.1), (199.7, 127.6), (186, 165)]
+        case "jungle-landing": points = [(252.4, 254.4), (175.4, 256.9), (180, 297)]
+        case "jungle-recover": points = [(228.4, 175.3), (167, 176.7), (162, 220)]
+        default: points = [(260.8, 155), (198.4, 152.2), (187, 204)]
+        }
+        let p = points.map { CGPoint(x: (512 - $0.0) / 512, y: $0.1 / 512) }
+        return Head(p[0], p[1], p[2])
+    }
+    static func sourceHead(for asset: String, character: DinoIdentity = .main) -> Head {
+        if character == .jungle { return jungleHead(for: asset) }
+        return switch asset {
         case "dino-opening-jump-02": Head(pixels: (731.46, 556.91), (935.30, 538.88), (917.29, 629.87))
         case "dino-opening-jump-03": Head(pixels: (592.44, 336.82), (776.99, 272.03), (778.07, 356.65))
         case "dino-opening-jump-07": Head(pixels: (629.80, 478.09), (835.98, 438.09), (830.02, 531.83))
@@ -401,19 +536,44 @@ enum DinoWelcomeJump {
         return .init(asset: assets[index], offsetY: offsets[index] / 1254)
     }
 
+    static func paintingHead(elapsed: Double, character: DinoIdentity) -> Head {
+        let current = pose(elapsed: elapsed)
+        func head(_ pose: DinoAnimation.Pose) -> Head {
+            sourceHead(for: pose.asset, character: character).applying(CGAffineTransform(
+                translationX: character == .jungle ? 0 : pose.offsetX,
+                y: character == .jungle ? 0 : pose.offsetY))
+        }
+        guard character == .jungle else { return head(current) }
+        let starts = poseStarts + [duration - 0.04]
+        let drawings = assets + ["dino-idle"]
+        for i in 1..<starts.count {
+            let half = min(0.045, (starts[i] - starts[i - 1]) * 0.45)
+            guard elapsed >= starts[i] - half, elapsed < starts[i] + half else { continue }
+            let p = (elapsed - starts[i] + half) / (2 * half)
+            return interpolate(head(.init(asset: drawings[i - 1])), head(.init(asset: drawings[i])), p * p * (3 - 2 * p))
+        }
+        let index = starts.lastIndex { elapsed >= $0 } ?? 0
+        return head(.init(asset: drawings[index]))
+    }
+
     static func tracking(elapsed: Double, flight: DinoWelcomeFlight) -> Tracking {
         let pose = pose(elapsed: elapsed)
+        let reference = idleHead(for: flight.character)
+        let low: Head
+        if flight.character == .jungle {
+            low = reference.applying(CGAffineTransform(translationX: 0.035, y: 0.13))
+        } else { low = lowHead }
         let target: Head
         if elapsed < crouchBottom {
             let t = min(1, max(0, elapsed / crouchBottom))
-            target = interpolate(idleHead, lowHead, t * t * (3 - 2 * t))
+            target = interpolate(reference, low, t * t * (3 - 2 * t))
         } else if elapsed < flightHandoff {
             // Match the actual screen-space velocity of the flying painting,
             // including the arc, shrinking and rotation. Merely meeting its
             // local eye position made the two motions change speed at takeoff.
             let span = flightHandoff - crouchBottom
             let t = (elapsed - crouchBottom) / span
-            let start = lowHead.applying(flight.worldTransform(elapsed: crouchBottom))
+            let start = low.applying(flight.worldTransform(elapsed: crouchBottom))
             let end = flight.paintedHead(elapsed: flightHandoff)
             let epsilon = 0.0001
             let before = flight.paintedHead(elapsed: flightHandoff - epsilon)
@@ -430,13 +590,13 @@ enum DinoWelcomeJump {
             // Compensate its transform so the visible face follows one curve.
             target = screenHead.applying(flight.worldTransform(elapsed: elapsed).inverted())
         } else {
-            target = sourceHead(for: pose.asset).applying(CGAffineTransform(translationX: pose.offsetX, y: pose.offsetY))
+            target = paintingHead(elapsed: elapsed, character: flight.character)
         }
-        return Tracking(pose: pose, head: target)
+        return Tracking(pose: pose, head: target, referenceHead: reference)
     }
 
-    static func sourceCorrection(for asset: String) -> CGAffineTransform {
-        transform(from: sourceHead(for: asset), to: idleHead)
+    static func sourceCorrection(for asset: String, character: DinoIdentity = .main) -> CGAffineTransform {
+        transform(from: sourceHead(for: asset, character: character), to: idleHead(for: character))
     }
 
     static func motion(elapsed: Double) -> DinoAnimation.Sample {
@@ -476,6 +636,7 @@ struct DinoWelcomeFlight {
     let source: CGPoint
     let sourceSide: CGFloat
     let destination: CGRect
+    var character: DinoIdentity = .main
 
     func position(elapsed: Double) -> CGPoint {
         let t = CGFloat(DinoWelcomeJump.travelProgress(elapsed: elapsed))
@@ -504,10 +665,7 @@ struct DinoWelcomeFlight {
     }
 
     func paintedHead(elapsed: Double) -> DinoWelcomeJump.Head {
-        let pose = DinoWelcomeJump.pose(elapsed: elapsed)
-        return DinoWelcomeJump.sourceHead(for: pose.asset)
-            .applying(CGAffineTransform(translationX: pose.offsetX, y: pose.offsetY))
-            .applying(worldTransform(elapsed: elapsed))
+        DinoWelcomeJump.paintingHead(elapsed: elapsed, character: character).applying(worldTransform(elapsed: elapsed))
     }
 }
 

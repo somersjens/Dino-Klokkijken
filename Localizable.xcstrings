@@ -5457,7 +5457,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Klopt de tijd bij de klok?"
+            "value" : "Klopt de tijd met de klok?"
           }
         }
       }
@@ -5836,23 +5836,7 @@
         }
       }
     },
-    "dino.question.chooseClock.format" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Which of the %@ clocks shows %@?"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Welke van de %@ klokken geeft %@ aan?"
-          }
-        }
-      }
-    },
+
     "dino.question.chooseClock.short" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6341,7 +6325,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Klopt de tijd bij de klok?"
+            "value" : "Klopt de tijd met de klok?"
           }
         }
       }
@@ -6369,13 +6353,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The clock shows %@. Is that correct?"
+            "value" : "Does the time match the clock?\n%@"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "De klok geeft %@ aan. Klopt dat?"
+            "value" : "Klopt de tijd met de klok?\n%@"
           }
         }
       }
@@ -8263,6 +8247,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jouw antwoord"
+          }
+        }
+      }
+    },
+    "dino.characters.available" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlocked"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontgrendeld"
+          }
+        }
+      }
+    },
+    "dino.characters.level %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Level %lld"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Level %lld"
+          }
+        }
+      }
+    },
+    "dino.characters.locked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locked"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergrendeld"
+          }
+        }
+      }
+    },
+    "dino.characters.main" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Main Dino"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoofddino"
+          }
+        }
+      }
+    },
+    "dino.characters.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose your dino"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies je dino"
           }
         }
       }

@@ -104,8 +104,8 @@ struct DinoQuestionPrompt: Equatable, Sendable {
         let unchanged = DinoQuestionPrompt(plainKey: instructionKey, formatKey: nil, arguments: [])
         switch question.kind {
         case .chooseAnalog, .activity:
-            return clockChoice(question, language: code, countedKey: "dino.question.chooseClock.format",
-                               shortKey: "dino.question.chooseClock.short", plainKey: instructionKey)
+            return formatted("dino.question.chooseClock.short", [clock(question.target, language: code)],
+                             plainKey: instructionKey)
         case .spokenTime:
             return formatted("dino.question.spokenTime.format", [clock(question.target, language: code)],
                              plainKey: instructionKey)
@@ -122,15 +122,15 @@ struct DinoQuestionPrompt: Equatable, Sendable {
             guard let start = question.relatedTimes.first, question.durationMinutes > 0 else { return unchanged }
             return formatted("dino.question.addTime.format",
                              [clock(start, language: code),
-                              duration(question.durationMinutes, language: code),
-                              word("later", .forward)],
+                              code == "nl" ? word("over", .forward) : duration(question.durationMinutes, language: code),
+                              code == "nl" ? duration(question.durationMinutes, language: code) : word("later", .forward)],
                              plainKey: instructionKey)
         case .subtractTime:
             guard let start = question.relatedTimes.first, question.durationMinutes > 0 else { return unchanged }
             return formatted("dino.question.subtractTime.format",
                              [clock(start, language: code),
                               duration(question.durationMinutes, language: code),
-                              word(code == "nl" ? "eerder" : "earlier", .backward)],
+                              word(code == "nl" ? "geleden" : "ago", .backward)],
                              plainKey: instructionKey)
         case .minutesBetween:
             guard question.relatedTimes.count == 2 else { return unchanged }
@@ -166,25 +166,6 @@ struct DinoQuestionPrompt: Equatable, Sendable {
         case .chooseDigital, .readDigital, .sayTime, .setAnalog, .setDigital, .read24Hour, .dayPart, .match, .sortTimes, .daySchedule:
             // Reading these aloud would say the answer, or would list every choice.
             return unchanged
-        }
-    }
-
-    private static func clockChoice(_ question: ClockQuestion, language: String, countedKey: String,
-                                    shortKey: String, plainKey: String) -> DinoQuestionPrompt {
-        let time = clock(question.target, language: language)
-        guard let count = countWord(question.options.count, language: language) else {
-            return formatted(shortKey, [time], plainKey: plainKey)
-        }
-        return formatted(countedKey, [plain(count), time], plainKey: plainKey)
-    }
-
-    private static func countWord(_ count: Int, language: String) -> String? {
-        switch (count, language == "nl") {
-        case (2, true): return "twee"
-        case (4, true): return "vier"
-        case (2, false): return "two"
-        case (4, false): return "four"
-        default: return nil
         }
     }
 

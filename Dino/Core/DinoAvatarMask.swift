@@ -477,6 +477,63 @@ enum DinoAvatarMask {
 enum DinoSpriteColorRenderer {
     enum Resolution: String { case standard, original }
 
+    /// Mirror once while preparing sprites; every native flight and SwiftUI pose then shares the same facing.
+    static func facingRight(_ source: CGImage) -> CGImage? {
+        guard let context = CGContext(data: nil, width: source.width, height: source.height, bitsPerComponent: 8,
+            bytesPerRow: source.width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+            bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        context.translateBy(x: CGFloat(source.width), y: 0)
+        context.scaleBy(x: -1, y: 1)
+        context.draw(source, in: CGRect(x: 0, y: 0, width: source.width, height: source.height))
+        return context.makeImage()
+    }
+
+    /// Jungle outfits have leaf spines and a gold crown in place of the main Dino's bandana.
+    /// Classify the original paint before applying choices, so every pose retains its own shading.
+    static func recoloredJungle(_ source: CGImage, appearance: DinoAppearance) -> CGImage? {
+        guard appearance.mainAppearance != .standard else { return source }
+        let width = source.width, height = source.height
+        let space = CGColorSpace(name: CGColorSpace.sRGB)!
+        let format = CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
+        var pixels = [UInt8](repeating: 0, count: width * height * 4)
+        let parts: [DinoAppearance.Part] = [.bandana, .spikes, .body, .belly]
+        let references = [0xDAA33D, 0x247C35, 0x94BF46, 0xF0D995].map { HSL(hex: UInt32($0)) }
+        let targets = parts.map { HSL(hex: appearance[$0]) }
+        pixels.withUnsafeMutableBytes { buffer in
+            let context = CGContext(data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8,
+                bytesPerRow: width * 4, space: space, bitmapInfo: format)!
+            context.draw(source, in: CGRect(x: 0, y: 0, width: width, height: height))
+            let bytes = buffer.bindMemory(to: UInt8.self)
+            for index in stride(from: 0, to: bytes.count, by: 4) {
+                let alpha = Double(bytes[index + 3]) / 255
+                guard alpha > 0.06 else { continue }
+                let pixel = HSL(red: Double(bytes[index]) / 255 / alpha,
+                                green: Double(bytes[index + 1]) / 255 / alpha,
+                                blue: Double(bytes[index + 2]) / 255 / alpha)
+                let part: Int
+                if (0.18...0.46).contains(pixel.hue), pixel.saturation > 0.22 {
+                    part = pixel.hue > 0.27 || pixel.lightness < 0.30 ? 1 : 2
+                } else if (0.07...0.18).contains(pixel.hue), pixel.saturation > 0.20 {
+                    part = pixel.lightness > 0.57 && pixel.saturation < 0.72 ? 3 : 0
+                } else { continue }
+                guard appearance[parts[part]] != DinoAppearance.standard[parts[part]] else { continue }
+                let reference = references[part], target = targets[part]
+                let lightness = pixel.lightness <= reference.lightness
+                    ? target.lightness * pixel.lightness / max(0.001, reference.lightness)
+                    : target.lightness + (1 - target.lightness) * (pixel.lightness - reference.lightness) / max(0.001, 1 - reference.lightness)
+                let rgb = HSL(hue: target.hue, saturation: min(1, pixel.saturation * target.saturation / max(0.001, reference.saturation)),
+                              lightness: min(1, max(0, lightness))).rgb
+                for (channel, value) in [rgb.0, rgb.1, rgb.2].enumerated() {
+                    bytes[index + channel] = UInt8((min(1, max(0, value)) * alpha * 255).rounded())
+                }
+            }
+        }
+        guard let provider = CGDataProvider(data: Data(pixels) as CFData) else { return nil }
+        return CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: width * 4,
+                       space: space, bitmapInfo: CGBitmapInfo(rawValue: format), provider: provider, decode: nil,
+                       shouldInterpolate: true, intent: .defaultIntent)
+    }
+
     /// The supplied head moves independently of the hands. Remove that head
     /// before caching the moving layer; DinoCharacter draws the exact idle head above it.
     /// Clear the painted gold accents too, so the view can animate its own soft ripples.

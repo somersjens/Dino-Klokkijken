@@ -1,5 +1,7 @@
 # Transparante eindbazen met bewegende klokvlakken
 
+Op 22 november 2026 zijn eindbazen 3, 5, 9 en 10 vervangen door de aangeleverde `new_`-afbeeldingen. De grote originelen staan in `References/new_<nummer>-original.png`; de app gebruikt dezelfde bestaande assetnamen met transparante exports van 640 × 640 pixels. Samen zijn deze vier runtimebestanden 71,2% kleiner dan de aangeleverde bronnen. `Tools/import-replacement-bosses.swift` bewaart de originelen, maakt bij nummer 3 uitsluitend de donkerrode wijzerplaten transparant en houdt de overlappende vingers intact. De zes bijbehorende klokvlakken zijn opnieuw ingemeten in de genormaliseerde 1254-puntsruimte. `CharacterMotionVerification.json` bevat de exacte meetpunten en controles. De UI-controle `testReplacementBossClockArtwork` heeft alle vier de bazen met draaiende wijzers op twee tijdstippen vastgelegd.
+
 De exports van 27 oktober 2026 vervangen de eerdere afbeeldingen met witte achtergrond. De tien actieve assetnamen blijven `boss-<thema>-<art-ID>`. De oorspronkelijke PNGs staan ongewijzigd in [References](References); ze worden niet meer in de assetcatalogus opgenomen.
 
 De nieuwe exportvolgorde verschilt van de bestaande art-ID's:

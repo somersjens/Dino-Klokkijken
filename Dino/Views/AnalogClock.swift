@@ -164,7 +164,7 @@ struct AnalogClock: View {
     /// The complete phrase example needs the hour ring without a second outer guide.
     var spokenHourHintLanguage: String? = nil
     var onMinuteChange: ((ClockTime) -> Void)? = nil
-    var minuteStep = 1
+    var minuteStep = 5
     var adjustingMinutes = false
     var onHandSelection: ((Bool) -> Void)? = nil
     /// Unwrapped demonstration angles preserve the direction when passing twelve.

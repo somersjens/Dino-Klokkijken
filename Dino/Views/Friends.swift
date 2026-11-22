@@ -643,7 +643,8 @@ struct LevelFriendsView<Play: View>: View {
                     .font(.system(size: 13, weight: .bold, design: .rounded))
                     .lineLimit(1).minimumScaleFactor(0.8).frame(maxWidth: .infinity, alignment: .leading)
                 if let result = friend.progress.levels[levelID] {
-                    Label(String(result.stars), systemImage: "star.fill").foregroundStyle(theme.ink)
+                    Label(String(result.stars), systemImage: "star.fill")
+                        .labelStyle(DinoTrailingIconLabelStyle()).foregroundStyle(theme.ink)
                     Text(verbatim: result.seconds.map(DinoQuestionTiming.text) ?? "—")
                         .monospacedDigit().frame(minWidth: 44, alignment: .trailing)
                 }
@@ -670,6 +671,7 @@ struct LevelFriendsView<Play: View>: View {
                 }
                 HStack(spacing: 10) {
                     Label(String(result?.stars ?? 0), systemImage: "star.fill")
+                        .labelStyle(DinoTrailingIconLabelStyle())
                         .foregroundStyle(theme.ink).monospacedDigit()
                         .accessibilityIdentifier("level.ownScore")
                     Spacer(minLength: 0)

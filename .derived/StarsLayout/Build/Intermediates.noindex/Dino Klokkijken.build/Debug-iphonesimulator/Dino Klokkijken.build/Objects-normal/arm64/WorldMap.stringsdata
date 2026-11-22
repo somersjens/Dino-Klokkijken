@@ -7,7 +7,7 @@
         "key": "dino.done",
         "location": {
           "startingColumn": 32,
-          "startingLine": 333
+          "startingLine": 334
         }
       },
       {
@@ -15,7 +15,7 @@
         "key": "dino.friends.title",
         "location": {
           "startingColumn": 23,
-          "startingLine": 366
+          "startingLine": 367
         }
       },
       {
@@ -23,7 +23,7 @@
         "key": "dino.bossName",
         "location": {
           "startingColumn": 26,
-          "startingLine": 386
+          "startingLine": 387
         }
       },
       {
@@ -31,7 +31,7 @@
         "key": "dino.bossShortcut",
         "location": {
           "startingColumn": 26,
-          "startingLine": 387
+          "startingLine": 388
         }
       },
       {
@@ -39,7 +39,7 @@
         "key": "dino.comingSoon",
         "location": {
           "startingColumn": 22,
-          "startingLine": 407
+          "startingLine": 408
         }
       },
       {
@@ -47,7 +47,7 @@
         "key": "dino.afterHundred",
         "location": {
           "startingColumn": 22,
-          "startingLine": 409
+          "startingLine": 410
         }
       },
       {
@@ -55,7 +55,7 @@
         "key": "dino.play",
         "location": {
           "startingColumn": 47,
-          "startingLine": 1587
+          "startingLine": 1588
         }
       },
       {
@@ -63,7 +63,7 @@
         "key": "dino.map",
         "location": {
           "startingColumn": 23,
-          "startingLine": 1593
+          "startingLine": 1594
         }
       },
       {
@@ -71,7 +71,7 @@
         "key": "dino.levelNumber %lld",
         "location": {
           "startingColumn": 38,
-          "startingLine": 1686
+          "startingLine": 1687
         }
       },
       {
@@ -79,7 +79,7 @@
         "key": ", ",
         "location": {
           "startingColumn": 77,
-          "startingLine": 1686
+          "startingLine": 1687
         }
       },
       {
@@ -87,7 +87,7 @@
         "key": "dino.level.details",
         "location": {
           "startingColumn": 90,
-          "startingLine": 1686
+          "startingLine": 1687
         }
       },
       {
@@ -95,7 +95,7 @@
         "key": "dino.levelNumber %lld",
         "location": {
           "startingColumn": 26,
-          "startingLine": 1661
+          "startingLine": 1662
         }
       },
       {
@@ -103,7 +103,7 @@
         "key": "dino.level.details",
         "location": {
           "startingColumn": 26,
-          "startingLine": 1692
+          "startingLine": 1693
         }
       },
       {
@@ -111,7 +111,7 @@
         "key": "dino.practice.title",
         "location": {
           "startingColumn": 41,
-          "startingLine": 1770
+          "startingLine": 1771
         }
       }
     ]

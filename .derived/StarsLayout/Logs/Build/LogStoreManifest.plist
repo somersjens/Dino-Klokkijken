@@ -6,7 +6,7 @@
 	<integer>13</integer>
 	<key>logs</key>
 	<dict>
-		<key>2569B445-23F2-4695-B8B1-B13C47E79A65</key>
+		<key>38D1F445-A89E-4271-90B6-B920B26C0A5C</key>
 		<dict>
 			<key>className</key>
 			<string>IDECommandLineBuildLog</string>
@@ -15,7 +15,7 @@
 			<key>domainType</key>
 			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
 			<key>fileName</key>
-			<string>2569B445-23F2-4695-B8B1-B13C47E79A65.xcactivitylog</string>
+			<string>38D1F445-A89E-4271-90B6-B920B26C0A5C.xcactivitylog</string>
 			<key>hasPrimaryLog</key>
 			<true/>
 			<key>primaryObservable</key>
@@ -40,15 +40,15 @@
 			<key>signature</key>
 			<string>Building project Dino Klokkijken for testing with scheme Dino Klokkijken</string>
 			<key>timeStartedRecording</key>
-			<real>816070446.49931598</real>
+			<real>816124340.008847</real>
 			<key>timeStoppedRecording</key>
-			<real>816070482.66155696</real>
+			<real>816124348.18968105</real>
 			<key>title</key>
 			<string>Building project Dino Klokkijken for testing with scheme Dino Klokkijken</string>
 			<key>uniqueIdentifier</key>
-			<string>2569B445-23F2-4695-B8B1-B13C47E79A65</string>
+			<string>38D1F445-A89E-4271-90B6-B920B26C0A5C</string>
 		</dict>
-		<key>57758FE5-2716-497D-B0BA-3F232B19D29C</key>
+		<key>7B9E92E6-FA57-4F2F-ABA5-318AFF7740FC</key>
 		<dict>
 			<key>className</key>
 			<string>IDECommandLineBuildLog</string>
@@ -57,7 +57,7 @@
 			<key>domainType</key>
 			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
 			<key>fileName</key>
-			<string>57758FE5-2716-497D-B0BA-3F232B19D29C.xcactivitylog</string>
+			<string>7B9E92E6-FA57-4F2F-ABA5-318AFF7740FC.xcactivitylog</string>
 			<key>hasPrimaryLog</key>
 			<true/>
 			<key>primaryObservable</key>
@@ -82,13 +82,55 @@
 			<key>signature</key>
 			<string>Building project Dino Klokkijken for testing with scheme Dino Klokkijken</string>
 			<key>timeStartedRecording</key>
-			<real>816070767.27617002</real>
+			<real>816124228.26618803</real>
 			<key>timeStoppedRecording</key>
-			<real>816070778.89645696</real>
+			<real>816124240.83333099</real>
 			<key>title</key>
 			<string>Building project Dino Klokkijken for testing with scheme Dino Klokkijken</string>
 			<key>uniqueIdentifier</key>
-			<string>57758FE5-2716-497D-B0BA-3F232B19D29C</string>
+			<string>7B9E92E6-FA57-4F2F-ABA5-318AFF7740FC</string>
+		</dict>
+		<key>D333BF29-F49D-4626-A86B-C230A783C48F</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>D333BF29-F49D-4626-A86B-C230A783C48F.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>Dino Klokkijken project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>Dino Klokkijken</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Building project Dino Klokkijken for testing with scheme Dino Klokkijken</string>
+			<key>timeStartedRecording</key>
+			<real>816124609.96317804</real>
+			<key>timeStoppedRecording</key>
+			<real>816124615.44512796</real>
+			<key>title</key>
+			<string>Building project Dino Klokkijken for testing with scheme Dino Klokkijken</string>
+			<key>uniqueIdentifier</key>
+			<string>D333BF29-F49D-4626-A86B-C230A783C48F</string>
 		</dict>
 	</dict>
 </dict>

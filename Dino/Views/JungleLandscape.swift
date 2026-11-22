@@ -1813,6 +1813,7 @@ struct JungleFriendsLeaves: View {
 /// overlays animate independently of the static scenery.
 struct WorldMapLandscape: View, Equatable {
     @Environment(\.dinoMapArtworkPrepared) private var artworkPrepared
+    @EnvironmentObject private var player: DinoPlayer
     @State private var preparedTiles: Set<Int> = []
     var palette = WorldLandscapePalette.jungle
     var nextPalette = WorldLandscapePalette.nextHorizon
@@ -1928,7 +1929,23 @@ struct WorldMapLandscape: View, Equatable {
             }.clipped()
         }
         .overlay {
-            WorldBossMapClocks(world: DinoWorldCatalog.world(1)!, routeOffset: routeOffset, viewportHeight: viewportHeight)
+            GeometryReader { geometry in
+                let width = geometry.size.width
+                let scale = min(1.35, max(0.82, width / 390))
+                let point = JungleMapLayout(width: width).scene().bossPoint
+                let size = 180 * scale * 0.88
+                if player.profile.worldComplete(1) && player.profile.pendingCharacterUnlock == nil {
+                    DinoAvatar(appearance: (player.profile.dinoAppearance ?? .standard).mainAppearance)
+                        .frame(width: size, height: size)
+                        .position(x: point.x, y: routeOffset + point.y + 8 * scale - size * 0.466)
+                        .accessibilityIdentifier("map.jungleResident.main")
+                } else {
+                    Canvas { context, _ in
+                        WorldBossPainter(context: context).draw(worldID: 1,
+                            at: CGPoint(x: point.x, y: point.y + routeOffset), size: scale * 0.88)
+                    }
+                }
+            }
         }
         .allowsHitTesting(false).accessibilityHidden(true)
     }
@@ -1969,7 +1986,7 @@ private struct JungleSceneryTile: View, Equatable {
                 let boss = ThemePainter(context: c, colors: WorldThemeColors(DinoWorldCatalog.world(1)!))
                 depth.add(at: scene.bossPoint.y) {
                     boss.bossClearing(worldID: 1, at: scene.bossPoint, size: scale)
-                    boss.boss(worldID: 1, at: scene.bossPoint, size: scale * 0.88)
+                    // The resident is a live identity layer so completing the world never invalidates terrain tiles.
                     boss.bossClearingForeground(worldID: 1, at: scene.bossPoint, size: scale)
                 }
             }

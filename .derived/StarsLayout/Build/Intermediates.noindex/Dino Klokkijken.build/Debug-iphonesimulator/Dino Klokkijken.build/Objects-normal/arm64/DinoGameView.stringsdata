@@ -7,7 +7,7 @@
         "key": "dino.dayPart.changeSettings",
         "location": {
           "startingColumn": 35,
-          "startingLine": 262
+          "startingLine": 267
         }
       },
       {
@@ -15,7 +15,7 @@
         "key": "dino.exitTitle",
         "location": {
           "startingColumn": 22,
-          "startingLine": 330
+          "startingLine": 335
         }
       },
       {
@@ -23,7 +23,7 @@
         "key": "dino.exitTitle",
         "location": {
           "startingColumn": 23,
-          "startingLine": 324
+          "startingLine": 329
         }
       },
       {
@@ -31,7 +31,7 @@
         "key": "dino.keepPlaying",
         "location": {
           "startingColumn": 59,
-          "startingLine": 335
+          "startingLine": 340
         }
       },
       {
@@ -39,7 +39,7 @@
         "key": "dino.exit",
         "location": {
           "startingColumn": 64,
-          "startingLine": 337
+          "startingLine": 342
         }
       },
       {
@@ -47,7 +47,7 @@
         "key": "dino.clock.arrowControls",
         "location": {
           "startingColumn": 18,
-          "startingLine": 558
+          "startingLine": 563
         }
       },
       {
@@ -55,7 +55,7 @@
         "key": "dino.question.setAnalog",
         "location": {
           "startingColumn": 22,
-          "startingLine": 607
+          "startingLine": 612
         }
       },
       {
@@ -63,7 +63,7 @@
         "key": "dino.clock.check",
         "location": {
           "startingColumn": 35,
-          "startingLine": 760
+          "startingLine": 765
         }
       },
       {
@@ -71,7 +71,7 @@
         "key": "dino.example",
         "location": {
           "startingColumn": 18,
-          "startingLine": 1057
+          "startingLine": 1062
         }
       },
       {
@@ -79,7 +79,7 @@
         "key": "dino.example.another",
         "location": {
           "startingColumn": 30,
-          "startingLine": 1103
+          "startingLine": 1108
         }
       },
       {
@@ -87,7 +87,7 @@
         "key": "dino.ready",
         "location": {
           "startingColumn": 46,
-          "startingLine": 1107
+          "startingLine": 1112
         }
       }
     ]

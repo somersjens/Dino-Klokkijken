@@ -52,6 +52,7 @@ struct WorldMap: View {
     @State private var worldJumpStartedAt: Date?
     @State private var worldJumpFinished = false
     @State private var worldJumpImages: [String: UIImage] = [:]
+    @State private var unlockedJumpImages: [String: UIImage] = [:]
     @State private var reviewRequestHandled = false
 #if DEBUG
     @State private var reviewRequestCount = 0
@@ -213,7 +214,8 @@ struct WorldMap: View {
                 }
             }.coordinateSpace(name: "adventure.map.viewport")
                 .sheet(isPresented: $showsStars) {
-                    DinoStarsOverview(landscape: landscape).starsPresentation().gameEnvironment()
+                    DinoStarsOverview(landscape: landscape)
+                        .starsPresentation(maximumHeight: geometry.size.height - 32).gameEnvironment()
                         .presentationDragIndicator(.visible)
                 }
         }
@@ -242,7 +244,9 @@ struct WorldMap: View {
                        let destination = anchors[worldTransition.destinationLevel] {
                         MapWorldJumpDino(source: geometry[source], destination: geometry[destination],
                                          startedAt: worldJumpStartedAt, images: worldJumpImages,
-                                         idleImage: openingImage, reducedMotion: reduceMotion)
+                                         idleImage: openingImage, reducedMotion: reduceMotion,
+                                         unlockedImages: unlockedJumpImages,
+                                         sourceIsJungle: (player.profile.dinoAppearance ?? .standard).identity == .jungle)
                     }
                 }
                 .allowsHitTesting(false)
@@ -258,7 +262,12 @@ struct WorldMap: View {
                 let landing = reduceMotion ? 0.2 : DinoAnimation.travelDuration(.worldJump)
                 DinoAnswerFeedback.shared.playWorldJourney(takeoff: takeoff, landing: landing)
                 try await Task.sleep(for: .seconds(reduceMotion ? 0.05 : DinoAnimation.duration(.worldJump)))
-                worldJumpFinished = true
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    if worldTransition?.sourceLevel == 10 { player.completeCharacterUnlock() }
+                    worldJumpFinished = true
+                }
             } catch {
                 DinoAnswerFeedback.shared.stopWorldJourney()
             }
@@ -304,7 +313,15 @@ struct WorldMap: View {
                 openingJumpPrepared = true
             }
             if worldTransition != nil {
+                if worldTransition?.sourceLevel == 10, player.profile.pendingCharacterUnlock == .jungle {
+                    var unlocked = colors
+                    unlocked.character = .jungle
+                    unlockedJumpImages = await DinoSpriteLoader.shared.worldJumpImages(for: unlocked)
+                }
                 worldJumpImages = await DinoSpriteLoader.shared.worldJumpImages(for: player.profile.dinoAppearance ?? .standard)
+            } else if player.profile.pendingCharacterUnlock != nil {
+                // Recover a first unlock if the app was closed on the result screen.
+                player.completeCharacterUnlock()
             }
         }
         .foregroundStyle(DinoStyle.ink)
@@ -523,6 +540,8 @@ private struct MapWorldJumpDino: View {
     let images: [String: UIImage]
     let idleImage: UIImage?
     let reducedMotion: Bool
+    var unlockedImages: [String: UIImage] = [:]
+    var sourceIsJungle = false
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 60, paused: startedAt == nil || reducedMotion)) { context in
@@ -530,21 +549,41 @@ private struct MapWorldJumpDino: View {
             let progress = reducedMotion && startedAt != nil ? 1 : DinoAnimation.worldJumpProgress(elapsed: elapsed)
             let sample = startedAt == nil ? DinoAnimation.sample(.idle, elapsed: 0)
                 : DinoAnimation.sample(.worldJump, elapsed: elapsed, reducedMotion: reducedMotion)
+            let jungle = DinoJungleAnimation.sample(startedAt == nil ? .idle : .worldJump,
+                                                    elapsed: elapsed, reducedMotion: reducedMotion)
             let size = source.width + (destination.width - source.width) * progress
             let center = CGPoint(x: source.midX + (destination.midX - source.midX) * progress,
                                  y: source.midY + (destination.midY - source.midY) * progress)
+            let transformation = unlockedImages.isEmpty ? 0 : min(1, max(0, (progress - 0.58) / 0.20))
             ZStack {
                 Ellipse().fill(Color(dinoHex: 0x38552D).opacity(0.25 * (1 + sample.height)))
                     .frame(width: size * 0.48 * (1 + sample.height), height: size * 0.12)
                     .blur(radius: 3)
                     .position(x: center.x, y: center.y + size / 2 - 10)
-                if let image = images[sample.pose.asset] ?? idleImage {
+                if sourceIsJungle {
+                    jungleDrawing(jungle, images: images, fallback: idleImage)
+                        .frame(width: size, height: size)
+                        .rotationEffect(.degrees(sample.angle), anchor: UnitPoint(x: 0.5, y: 0.52))
+                        .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
+                        .offset(y: size * sample.height).opacity(1 - transformation)
+                        .position(center)
+                } else if let image = images[sample.pose.asset] ?? idleImage {
                     Image(uiImage: image).resizable().scaledToFit()
                         .frame(width: size, height: size)
-                        .offset(x: size * sample.pose.offsetX, y: size * sample.pose.offsetY)
-                        .rotationEffect(.degrees(sample.angle - sample.pose.paintedAngle), anchor: UnitPoint(x: 0.5, y: 0.52))
+                        .offset(x: sourceIsJungle ? 0 : size * sample.pose.offsetX, y: sourceIsJungle ? 0 : size * sample.pose.offsetY)
+                        .rotationEffect(.degrees(sample.angle - (sourceIsJungle ? 0 : sample.pose.paintedAngle)), anchor: UnitPoint(x: 0.5, y: 0.52))
                         .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
                         .offset(y: size * sample.height)
+                        .opacity(1 - transformation)
+                        .position(center)
+                }
+                if !unlockedImages.isEmpty {
+                    jungleDrawing(jungle, images: unlockedImages, fallback: unlockedImages["dino-idle"])
+                        .frame(width: size, height: size)
+                        .rotationEffect(.degrees(sample.angle), anchor: UnitPoint(x: 0.5, y: 0.52))
+                        .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
+                        .offset(y: size * sample.height).opacity(transformation)
+                        .shadow(color: Color(dinoHex: 0xFFE59A).opacity(sin(transformation * .pi)), radius: 16)
                         .position(center)
                 }
             }
@@ -553,6 +592,17 @@ private struct MapWorldJumpDino: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: "Dino"))
         .accessibilityIdentifier("map.worldJump")
+    }
+
+    private func jungleDrawing(_ sample: DinoAnimation.Sample, images: [String: UIImage], fallback: UIImage?) -> some View {
+        ZStack {
+            if let previous = sample.previousPose, let image = images[previous.asset] {
+                Image(uiImage: image).resizable().scaledToFit().opacity(1 - sample.poseBlend)
+            }
+            if let image = images[sample.pose.asset] ?? fallback {
+                Image(uiImage: image).resizable().scaledToFit().opacity(sample.previousPose == nil ? 1 : sample.poseBlend)
+            }
+        }
     }
 }
 

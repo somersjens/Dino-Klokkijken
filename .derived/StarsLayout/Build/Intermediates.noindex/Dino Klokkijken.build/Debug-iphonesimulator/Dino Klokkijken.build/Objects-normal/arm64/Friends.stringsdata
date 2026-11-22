@@ -199,7 +199,7 @@
         "key": "dino.levelNumber %lld",
         "location": {
           "startingColumn": 26,
-          "startingLine": 399
+          "startingLine": 402
         }
       },
       {
@@ -207,7 +207,7 @@
         "key": "dino.worldComplete",
         "location": {
           "startingColumn": 26,
-          "startingLine": 401
+          "startingLine": 404
         }
       },
       {
@@ -215,7 +215,7 @@
         "key": "dino.friends.profileUnavailable",
         "location": {
           "startingColumn": 140,
-          "startingLine": 418
+          "startingLine": 421
         }
       },
       {
@@ -223,7 +223,7 @@
         "key": "dino.friends.notAvailable",
         "location": {
           "startingColumn": 38,
-          "startingLine": 418
+          "startingLine": 421
         }
       },
       {
@@ -231,7 +231,7 @@
         "key": "dino.friends.profileUnavailable",
         "location": {
           "startingColumn": 22,
-          "startingLine": 425
+          "startingLine": 428
         }
       },
       {
@@ -239,7 +239,7 @@
         "key": "dino.friends.notAvailable",
         "location": {
           "startingColumn": 34,
-          "startingLine": 424
+          "startingLine": 427
         }
       },
       {
@@ -247,7 +247,7 @@
         "key": "dino.friends.profile",
         "location": {
           "startingColumn": 47,
-          "startingLine": 489
+          "startingLine": 496
         }
       },
       {
@@ -255,7 +255,7 @@
         "key": "dino.friends.reportHelp",
         "location": {
           "startingColumn": 26,
-          "startingLine": 482
+          "startingLine": 489
         }
       },
       {
@@ -263,7 +263,7 @@
         "key": "dino.friends.appleProfile",
         "location": {
           "startingColumn": 28,
-          "startingLine": 481
+          "startingLine": 488
         }
       },
       {
@@ -271,7 +271,7 @@
         "key": "dino.friends.scoreHidden",
         "location": {
           "startingColumn": 34,
-          "startingLine": 451
+          "startingLine": 458
         }
       },
       {
@@ -279,31 +279,31 @@
         "key": "dino.worldComplete",
         "location": {
           "startingColumn": 139,
-          "startingLine": 444
+          "startingLine": 447
         }
       },
       {
         "comment": "",
         "key": "dino.friends.levels",
         "location": {
-          "startingColumn": 30,
-          "startingLine": 458
+          "startingColumn": 34,
+          "startingLine": 465
         }
       },
       {
         "comment": "",
         "key": "dino.levelNumber %lld",
         "location": {
-          "startingColumn": 38,
-          "startingLine": 461
+          "startingColumn": 42,
+          "startingLine": 468
         }
       },
       {
         "comment": "",
         "key": "dino.friends.notAvailable",
         "location": {
-          "startingColumn": 47,
-          "startingLine": 475
+          "startingColumn": 51,
+          "startingLine": 482
         }
       },
       {
@@ -311,7 +311,7 @@
         "key": "dino.friends.notAvailable",
         "location": {
           "startingColumn": 39,
-          "startingLine": 499
+          "startingLine": 506
         }
       },
       {
@@ -319,7 +319,7 @@
         "key": "dino.friends.more %lld",
         "location": {
           "startingColumn": 46,
-          "startingLine": 521
+          "startingLine": 528
         }
       },
       {
@@ -327,7 +327,7 @@
         "key": "dino.friends.connect",
         "location": {
           "startingColumn": 27,
-          "startingLine": 563
+          "startingLine": 570
         }
       },
       {
@@ -335,7 +335,7 @@
         "key": "dino.done",
         "location": {
           "startingColumn": 36,
-          "startingLine": 576
+          "startingLine": 583
         }
       },
       {
@@ -343,7 +343,7 @@
         "key": "dino.friends.shareGame",
         "location": {
           "startingColumn": 52,
-          "startingLine": 595
+          "startingLine": 602
         }
       },
       {
@@ -351,7 +351,7 @@
         "key": "dino.friends.shareGame.message",
         "location": {
           "startingColumn": 93,
-          "startingLine": 595
+          "startingLine": 602
         }
       },
       {
@@ -359,7 +359,7 @@
         "key": "dino.friends.shareGame.message",
         "location": {
           "startingColumn": 35,
-          "startingLine": 601
+          "startingLine": 608
         }
       },
       {
@@ -367,7 +367,7 @@
         "key": "dino.friends.shareGame",
         "location": {
           "startingColumn": 27,
-          "startingLine": 596
+          "startingLine": 603
         }
       },
       {
@@ -375,7 +375,7 @@
         "key": "dino.friends.shareGame",
         "location": {
           "startingColumn": 27,
-          "startingLine": 602
+          "startingLine": 609
         }
       },
       {
@@ -383,7 +383,7 @@
         "key": "dino.friends.you",
         "location": {
           "startingColumn": 26,
-          "startingLine": 662
+          "startingLine": 670
         }
       },
       {
@@ -391,7 +391,7 @@
         "key": "dino.friends.privacy",
         "location": {
           "startingColumn": 51,
-          "startingLine": 707
+          "startingLine": 716
         }
       },
       {
@@ -399,7 +399,7 @@
         "key": "dino.done",
         "location": {
           "startingColumn": 81,
-          "startingLine": 708
+          "startingLine": 717
         }
       },
       {
@@ -407,7 +407,7 @@
         "key": "dino.friends.privacyBody",
         "location": {
           "startingColumn": 18,
-          "startingLine": 726
+          "startingLine": 735
         }
       },
       {
@@ -415,7 +415,7 @@
         "key": "dino.friends.reportHelp",
         "location": {
           "startingColumn": 18,
-          "startingLine": 727
+          "startingLine": 736
         }
       },
       {
@@ -423,7 +423,7 @@
         "key": "dino.friends.contactMissing",
         "location": {
           "startingColumn": 27,
-          "startingLine": 738
+          "startingLine": 747
         }
       },
       {
@@ -431,7 +431,7 @@
         "key": "dino.friends.contact",
         "location": {
           "startingColumn": 24,
-          "startingLine": 730
+          "startingLine": 739
         }
       },
       {
@@ -439,7 +439,7 @@
         "key": "dino.friends.fullPrivacy",
         "location": {
           "startingColumn": 24,
-          "startingLine": 740
+          "startingLine": 749
         }
       }
     ]

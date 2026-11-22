@@ -266,7 +266,7 @@ enum DinoExpandedQuestions {
                                                    using rng: inout R) -> ClockQuestion {
         let family = DinoPracticeTime.allCases.first { $0.minuteStep == minuteStep } ?? .minutes
         let step = minuteStep
-        let minimumDuration = max(2, step)
+        let minimumDuration = kind == .advanceAnalog ? 2 * step : max(2, step)
         let arithmeticLimit = difficulty == .introduction ? minimumDuration : difficulty == .familiar ? 90 : 240
         let sequenceLimit = difficulty == .challenge ? 90 : arithmeticLimit
         let durations = Array(stride(from: minimumDuration, through: max(minimumDuration, kind == .timeSequence ? sequenceLimit : arithmeticLimit), by: step))
@@ -707,10 +707,10 @@ enum DinoTimeWords {
             case 45: text = "kwart voor \(next)"
             case 50: text = "tien voor \(next)"
             case 55: text = "vijf voor \(next)"
-            case 1..<15: text = "\(minutes(time.minute, language: language)) over \(hour)"
-            case 16..<30: text = "\(minutes(30 - time.minute, language: language)) voor half \(next)"
-            case 31..<45: text = "\(minutes(time.minute - 30, language: language)) over half \(next)"
-            default: text = "\(minutes(60 - time.minute, language: language)) voor \(next)"
+            case 1..<15: text = "\(time.minute) over \(hour)"
+            case 16..<30: text = "\(30 - time.minute) voor half \(next)"
+            case 31..<45: text = "\(time.minute - 30) over half \(next)"
+            default: text = "\(60 - time.minute) voor \(next)"
             }
         } else {
             switch time.minute {
@@ -718,8 +718,8 @@ enum DinoTimeWords {
             case 15: text = "quarter past \(hour)"
             case 30: text = "half past \(hour)"
             case 45: text = "quarter to \(next)"
-            case 1..<30: text = "\(minutes(time.minute, language: language)) past \(hour)"
-            default: text = "\(minutes(60 - time.minute, language: language)) to \(next)"
+            case 1..<30: text = "\(time.minute) past \(hour)"
+            default: text = "\(60 - time.minute) to \(next)"
             }
         }
         guard dayPart else { return text }
