@@ -18301,7 +18301,7 @@ struct ThemedWorldLandscape: View, Equatable {
                 let point = WorldBossStage(worldID: 3, width: size.width).point
                 depth.add(at: routeOffset + point.y) {
                     boss.bossClearing(worldID: 3, at: point, size: scale)
-                    boss.boss(worldID: 3, at: point, size: scale * 0.88)
+                    // The collection resident is drawn by the live identity layer.
                     boss.bossClearingForeground(worldID: 3, at: point, size: scale)
                 }
                 depth.draw()
@@ -18505,8 +18505,8 @@ private struct WorldBossMapClocks: View {
             let point = CGPoint(x: origin.x, y: routeOffset + origin.y)
             let frame = WorldBossPainter.bounds(worldID: world.themeID, at: point, size: artScale)
             Group {
-                if world.id == 2 {
-                    if let resident = player.profile.mapResident(in: 2), resident != .desert {
+                if [2, 3].contains(world.id) {
+                    if let resident = player.profile.mapResident(in: world.id), resident != DinoIdentity(rawValue: world.id) {
                         DinoAvatar(appearance: .standard(for: resident))
                             .frame(width: 195 * artScale, height: 195 * artScale)
                             .position(x: point.x, y: point.y + 10 * artScale - 195 * artScale * CGFloat(resident.standingFootline - 0.5))

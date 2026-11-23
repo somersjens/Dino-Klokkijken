@@ -554,7 +554,11 @@ enum DinoWelcomeJump {
     // original 1254-pixel paintings. Recoloring preserves these facial pixels.
     static let idleHead = Head(pixels: (605.76, 355.11), (800.74, 308.01), (803.62, 397.21))
     static func idleHead(for character: DinoIdentity) -> Head {
-        character == .desert ? desertHead : character == .jungle ? jungleHead(for: "jungle-idle") : idleHead
+        character == .volcano ? volcanoHead : character == .desert ? desertHead : character == .jungle ? jungleHead(for: "jungle-idle") : idleHead
+    }
+    private static var volcanoHead: Head {
+        let p = DinoVolcanoArtwork.headLandmarks.map { CGPoint(x:1-$0.x,y:$0.y) }
+        return Head(p[0],p[1],p[2])
     }
     private static var desertHead: Head {
         let p = DinoDesertArtwork.headLandmarks.map { CGPoint(x: 1 - $0.x, y: $0.y) }
@@ -567,6 +571,7 @@ enum DinoWelcomeJump {
         return Head(p[0], p[1], p[2])
     }
     static func sourceHead(for asset: String, character: DinoIdentity = .main) -> Head {
+        if character == .volcano { return volcanoHead }
         if character == .desert { return desertHead }
         if character == .jungle { return jungleHead(for: asset) }
         return switch asset {
@@ -1035,27 +1040,42 @@ enum DinoBossAnimation {
         keys(for: clip, character: character).map(\.asset)
     }
     static func keys(for clip: DinoAnimation.Clip, character: DinoIdentity) -> [DinoJungleAnimation.Key] {
-        DinoJungleAnimation.keys(for: clip).map { key in
-            let asset = character == .desert ? key.asset.replacingOccurrences(of: "jungle-", with: "desert-") : key.asset
-            return DinoJungleAnimation.Key(key.time, asset == "desert-recover" ? "desert-idle" : asset)
+        if character == .volcano, clip == .stumble {
+            let lead=DinoAnimation.leadIn(clip),end=DinoAnimation.duration(clip)
+            return [.init(0,"volcano-idle"),.init(lead+DinoAnimation.stumbleTakeoff,"volcano-stumble"),
+                    .init(lead+DinoAnimation.stumbleLanding,"volcano-fallen"),.init(lead+DinoAnimation.stumblePushStart,"volcano-push-up"),
+                    .init(lead+1.25,"volcano-rise-low"),.init(lead+DinoAnimation.stumbleHandRelease,"volcano-rise-high"),.init(end-0.04,"volcano-idle")]
+        }
+        return DinoJungleAnimation.keys(for: clip).map { key in
+            return DinoJungleAnimation.Key(key.time, character.asset(for: key.asset))
         }
     }
     static func sample(_ clip: DinoAnimation.Clip, character: DinoIdentity, elapsed: Double, reducedMotion: Bool = false) -> DinoAnimation.Sample {
         guard character.usesBossArtwork else { return DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reducedMotion) }
-        guard character == .desert else { return DinoJungleAnimation.sample(clip, elapsed: elapsed, reducedMotion: reducedMotion) }
+        guard character != .jungle else { return DinoJungleAnimation.sample(clip, elapsed: elapsed, reducedMotion: reducedMotion) }
         var result = DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reducedMotion)
         result.morph = nil; result.previousPose = nil; result.poseBlend = 1
         let keys = keys(for: clip, character: character).reduce(into: [DinoJungleAnimation.Key]()) { a, b in
             if a.last?.asset != b.asset { a.append(b) }
         }
-        let asset = reducedMotion ? (clip == .wrongAnswer ? "desert-wrong" : "desert-idle")
+        let asset = reducedMotion ? character.asset(for: clip == .wrongAnswer && elapsed < DinoAnimation.answerGestureEnd ? "dino-answer-wrong" : "dino-idle")
             : (keys.last { max(0, elapsed) >= $0.time } ?? keys[0]).asset
         var axisOffset = 0.0
         if asset.hasPrefix("desert-turn-"), let index = Int(asset.suffix(2)), (1...8).contains(index) {
             // Prepared images face right: source-axis deltas reverse once.
             axisOffset = (DinoDesertArtwork.turnAxes[index-1] - 229) / 443.5
         }
-        result.pose = .init(asset: asset, offsetX: axisOffset)
+        var verticalOffset = 0.0
+        if character == .volcano {
+            if asset.contains("clap-") || asset == "volcano-wrong" {axisOffset=6.0/512;verticalOffset = -2.0/512}
+            if asset == "volcano-crouch" || asset == "volcano-landing" {verticalOffset = -2.0/512}
+            if asset == "volcano-push-up" {verticalOffset=5.0/512}
+            if asset.hasPrefix("volcano-turn-"), let index=Int(asset.suffix(2)),(1...8).contains(index) {
+                axisOffset=(DinoVolcanoArtwork.turnAxes[index-1]-228.5)/512
+                verticalOffset=(477-DinoVolcanoArtwork.turnFootlines[index-1])/512
+            }
+        }
+        result.pose = .init(asset: asset, offsetX: axisOffset, offsetY:verticalOffset)
         return result
     }
 }

@@ -108,10 +108,10 @@ struct DinoRootView: View {
             if !player.profile.onboardingComplete { OnboardingFlow() }
             else if let result {
                 DinoResultView(result: result, retry: { start(result.level) }, next: {
-                    if result.level.isBoss { advanceWorld(after: result.level.worldID) }
+                    if result.level.isBoss || result.hasPendingCharacterUnlock(in:player.profile) { advanceWorld(after: result.level.worldID) }
                     else if let next = DinoLevelCatalog.level(result.level.id + 1) { start(next) }
                 }, map: {
-                    if result.level.isBoss && result.victory != .none { advanceWorld(after: result.level.worldID) }
+                    if (result.level.isBoss && result.victory != .none) || result.hasPendingCharacterUnlock(in:player.profile) { advanceWorld(after: result.level.worldID) }
                     else { showMap() }
                 }, sharedCompanion: true, celebrationStart: resultCelebrationStart)
             } else if let session {

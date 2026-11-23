@@ -156,6 +156,7 @@ struct DinoCoreTests {
             testCharacterUnlocks()
             testJungleMotion()
             testDesertCharacter()
+            testVolcanoCharacter()
             print("PASS: \(checks) character unlock, swap and save checks.")
             return
         }
@@ -213,6 +214,7 @@ struct DinoCoreTests {
         if CommandLine.arguments.contains("--animation-timing") {
             testAssetCatalog()
             testAnimation()
+            testVolcanoMotion()
             print("PASS: \(checks) animation timing and asset checks.")
             return
         }
@@ -335,6 +337,7 @@ struct DinoCoreTests {
         testCharacterUnlocks()
         testJungleMotion()
         testDesertCharacter()
+        testVolcanoCharacter()
         testDinoAvatarMask()
         testDinoSpriteColors()
         testPaleBandanaLettering()
@@ -4821,7 +4824,7 @@ struct DinoCoreTests {
         })
         expect(bosses.count == 10, "all ten world boss illustrations are accounted for")
         let jungle = Set(preloaded.map { DinoJungleArtwork.asset(for: $0) })
-        let expected = sprites.union(bosses).union(jungle).union(DinoDesertArtwork.assets).union(["reward-star", DinoJungleArtwork.openingAsset, DinoDesertArtwork.openingAsset])
+        let expected = sprites.union(bosses).union(jungle).union(DinoDesertArtwork.assets).union(DinoVolcanoArtwork.assets).union(["reward-star", DinoJungleArtwork.openingAsset, DinoDesertArtwork.openingAsset, DinoVolcanoArtwork.openingAsset])
         let root = URL(fileURLWithPath: "Assets.xcassets")
         let actual = Set(try! FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
             .filter { $0.pathExtension == "imageset" }.map { $0.deletingPathExtension().lastPathComponent })
@@ -4832,8 +4835,8 @@ struct DinoCoreTests {
                   let image = CGImageSourceCreateImageAtIndex(data, 0, nil) else {
                 fatalError("Missing or invalid asset: \(asset)")
             }
-            let side = asset == "dino-idle" || asset.hasPrefix("dino-opening-jump-") || asset == DinoJungleArtwork.openingAsset || asset == DinoDesertArtwork.openingAsset ? 1254
-                : bosses.contains(asset) ? 640 : jungle.contains(asset) || DinoDesertArtwork.assets.contains(asset) ? 512 : asset == "reward-star" ? 384 : 768
+            let side = asset == "dino-idle" || asset.hasPrefix("dino-opening-jump-") || asset == DinoJungleArtwork.openingAsset || asset == DinoDesertArtwork.openingAsset || asset == DinoVolcanoArtwork.openingAsset ? 1254
+                : bosses.contains(asset) ? 640 : jungle.contains(asset) || DinoDesertArtwork.assets.contains(asset) || DinoVolcanoArtwork.assets.contains(asset) ? 512 : asset == "reward-star" ? 384 : 768
             expect(image.width == side && image.height == side, "\(asset) retains its intended iPad raster budget")
             let contents = try! Data(contentsOf: url.deletingLastPathComponent().appendingPathComponent("Contents.json"))
             let manifest = try! JSONSerialization.jsonObject(with: contents) as! [String: Any]
@@ -5650,5 +5653,153 @@ extension DinoCoreTests {
                 expect(noEscape,"isolated desert head excludes all moving hands shoulders clock and lower ornaments: \(asset)")
             }
         }
+    }
+}
+
+extension DinoCoreTests {
+    static func testVolcanoCharacter() {
+        expect(DinoWorldCatalog.world(3)?.themeID == 3 && DinoIdentity.volcano.rawValue == 3 && DinoIdentity.volcano.bossAsset == "boss-volcano" && DinoIdentity.volcano.unlockLevel == 30, "Magma is chapter/theme/save 3, level 30, not an artwork-array guess")
+        var p=PlayerProfile()
+        p.recordCompletedAttempt(levelID:10,correct:10)
+        p.recordCompletedAttempt(levelID:20,correct:10)
+        p.recordCompletedAttempt(levelID:30,correct:9)
+        expect(!p.isCharacterUnlocked(.volcano), "volcano boss stars alone retain existing completion rules")
+        for level in 21...29 {p.recordCompletedAttempt(levelID:level,correct:3)}
+        expect(p.isCharacterUnlocked(.volcano), "ordinary volcano victory plus route unlocks Magma")
+        expect(p.selectCharacter(.volcano), "an unlocked volcano guardian is selectable")
+        expect(p.dinoAppearance == .standard(for:.volcano), "first default selection uses the actual orange, red and cream palette")
+        expect(p.collectionCharacters[2] == .main && p.mapResident(in:3) == .main, "outgoing main Dino occupies exactly volcano slot three")
+        p.dinoAppearance?.body = 0x1263EA
+        expect(p.selectCharacter(.main) && p.collectionCharacters[2] == .volcano, "selecting the outgoing resident returns Magma to the same slot")
+        expect(p.mapResident(in:3) == .volcano && DinoAppearance.standard(for:.volcano).body == 0xFF783E, "a returned Magma uses its own default colors independently of active blue")
+        let saved=try! JSONDecoder().decode(PlayerProfile.self,from:JSONEncoder().encode(p))
+        expect(saved == p && saved.collectionCharacters == p.collectionCharacters, "all volcano colors and exact slot arrangement survive serialization")
+        p.resetProgress()
+        expect(!p.isCharacterUnlocked(.volcano) && p.activeCharacter == .main && p.characterSlots == nil && p.pendingCharacterUnlock == nil, "reset relocks Magma and clears pending swaps")
+        let store=DinoProgressStore(defaults:InMemoryKeyValueStore())
+        var first=PlayerProfile();first.recordCompletedAttempt(levelID:10,correct:10);first.recordCompletedAttempt(levelID:20,correct:10);first.dinoAppearance = .standard(for:.jungle);first.characterSlots = [.main] + Array(DinoIdentity.allCases.dropFirst(2));store.save(first)
+        let player=DinoPlayer(store:store)
+        var rng=SeededGenerator(seed:42)
+        let level=DinoLevelCatalog.level(30)!
+        var attempt=LevelAttempt(levelID:30,questions:DinoQuestionGenerator.generate(level:level,using:&rng))
+        while !attempt.isComplete {_ = attempt.submit(attempt.current.answer ?? .time(attempt.current.target));attempt.advance()}
+        expect(player.finish(attempt)?.victory == .perfect && player.profile.pendingCharacterUnlock == .volcano && player.profile.activeCharacter == .jungle, "level thirty stages a pending volcano transformation without changing the result actor")
+        let restarted=DinoPlayer(store:store)
+        expect(restarted.profile.pendingCharacterUnlock == .volcano, "pending volcano unlock survives closing during the result/transition")
+        restarted.completeCharacterUnlock()
+        expect(restarted.profile.activeCharacter == .volcano && restarted.profile.pendingCharacterUnlock == nil && restarted.profile.collectionCharacters[2] == .jungle, "resumed landing swaps the jungle actor into volcano slot")
+        restarted.completeCharacterUnlock()
+        expect(DinoPlayer(store:store).profile.activeCharacter == .volcano, "unlock completion is idempotent and persists")
+        restarted.selectCharacter(.main);_ = restarted.finish(attempt)
+        expect(restarted.profile.activeCharacter == .main && restarted.profile.pendingCharacterUnlock == nil, "repeated volcano victories preserve manual choices")
+        expect(DinoWorldTransition(after:10) == nil, "last-world handling never invents level 101")
+        // The recovery entry point deliberately does not require a next chapter.
+        var terminal=restarted.profile;terminal.pendingCharacterUnlock = .volcano;store.save(terminal)
+        let noTransition=DinoPlayer(store:store);noTransition.completeCharacterUnlock()
+        expect(noTransition.profile.activeCharacter == .volcano, "pending recovery works without any transition object or next level")
+
+        var early=PlayerProfile()
+        early.recordCompletedAttempt(levelID:10,correct:10);early.recordCompletedAttempt(levelID:20,correct:10)
+        early.recordCompletedAttempt(levelID:30,correct:9)
+        for id in 21...28 {early.recordCompletedAttempt(levelID:id,correct:3)}
+        let routeStore=DinoProgressStore(defaults:InMemoryKeyValueStore());routeStore.save(early)
+        let routePlayer=DinoPlayer(store:routeStore),routeLevel=DinoLevelCatalog.level(29)!
+        var lastLesson=LevelAttempt(levelID:29,questions:DinoQuestionGenerator.generate(level:routeLevel,using:&rng))
+        while !lastLesson.isComplete {_ = lastLesson.submit(lastLesson.current.answer ?? .time(lastLesson.current.target));lastLesson.advance()}
+        let routeResult=routePlayer.finish(lastLesson)!
+        expect(routeResult.hasPendingCharacterUnlock(in:routePlayer.profile),"finishing world three on level 29 routes into its character arrival rather than replaying the cleared boss")
+        expect(routePlayer.profile.worldComplete(3) && routePlayer.profile.pendingCharacterUnlock == .volcano,"Magma also unlocks when the last route lesson follows an earlier boss pass")
+        let restoredColors=DinoAppearance(bandana:0xA528DB,spikes:0x19B76B,body:0x218BEA,belly:0xFF85B9,character:.volcano).selecting(.main).selecting(.volcano)
+        expect(restoredColors.body == 0x218BEA,"explicit player colors survive changing identities")
+        testVolcanoMotion()
+        let custom=DinoAppearance(bandana:0xA528DB,spikes:0x19B76B,body:0x218BEA,belly:0xFF85B9,character:.volcano)
+        func pixels(_ im:CGImage)->[UInt8] {var b=[UInt8](repeating:0,count:im.width*im.height*4);b.withUnsafeMutableBytes {p in let c=CGContext(data:p.baseAddress,width:im.width,height:im.height,bitsPerComponent:8,bytesPerRow:im.width*4,space:CGColorSpace(name:CGColorSpace.sRGB)!,bitmapInfo:CGBitmapInfo.byteOrder32Big.rawValue|CGImageAlphaInfo.premultipliedLast.rawValue)!;c.draw(im,in:CGRect(x:0,y:0,width:im.width,height:im.height))};return b}
+        for asset in DinoVolcanoArtwork.assets.sorted()+[DinoVolcanoArtwork.openingAsset] {
+            let url=URL(fileURLWithPath:"Assets.xcassets/\(asset).imageset/\(asset).png")
+            let image=CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL,nil)!,0,nil)!
+            if asset==DinoVolcanoArtwork.openingAsset {expect(image.width>=1254 && image.height>=1254,"Magma welcome uses real restored detail")}
+            let original=pixels(image),native=pixels(DinoSpriteColorRenderer.recoloredVolcano(image,appearance:.standard(for:.volcano),asset:asset)!),colored=pixels(DinoSpriteColorRenderer.recoloredVolcano(image,appearance:custom,asset:asset)!)
+            expect(original==native && original != colored,"native palette is untouched and every pose supports customization")
+            let labels=DinoSpriteColorRenderer.volcanoLabels(image,asset:asset)
+            if asset == "volcano-idle" {
+                for (x,y,label) in [(175,130,UInt8(4)),(200,247,4),(294,167,3),(224,325,0),(283,288,0)] {expect(labels[y*image.width+x] == label,"Magma horns, chin shadows, skin spots and separate dials keep their measured materials")}
+            }
+            if asset == "volcano-turn-02" {
+                for (x,y,label) in [(186,283,UInt8(0)),(145,318,0),(209,292,3)] {expect(labels[y*image.width+x] == label,"Magma profile clocks use their own measured positions and preserve the arm in front")}
+            }
+            let shadowedGlass:[String:(Int,Int)] = ["volcano-push-up":(185,419),"volcano-rise-low":(203,400),"volcano-stumble":(290,342),"volcano-fallen":(176,456)]
+            if let (x,y)=shadowedGlass[asset] {expect(labels[y*image.width+x] == 0,"shadowed clock glass remains neutral rather than inheriting a selected material color")}
+            if asset == "volcano-rise-low" {expect(labels[274*image.width+402] == 3,"the low recovery tail tip remains skin, outside its own frill mask")}
+            if asset == "volcano-turn-03" {for (x,y,label) in [(159,163,UInt8(0)),(174,181,3),(160,230,4)] {expect(labels[y*image.width+x] == label,"rear-left view protects its visible eye, skin spots and cream chin")}}
+            if asset == "volcano-turn-05" {for (x,y,label) in [(382,160,UInt8(0)),(385,193,3),(383,233,4)] {expect(labels[y*image.width+x] == label,"rear-right view protects its visible eye, skin spots and cream chin")}}
+            expect(FileManager.default.fileExists(atPath:"Assets.xcassets/volcano-materials.dataset/magma-materials.bin"),"Magma ships prepared material mattes, avoiding analysis during a reaction")
+            var alpha=true,protected=true
+            for n in labels.indices {if original[n*4+3] != colored[n*4+3] {alpha=false};if labels[n]==0 && original[n*4..<n*4+4] != colored[n*4..<n*4+4] {protected=false}}
+            expect(alpha && protected,"Magma recoloring preserves alpha and neutral eyes mouth and three dials")
+            let mirror=pixels(DinoSpriteColorRenderer.facingRight(image)!)
+            for (x,y) in [(0,0),(image.width/3,image.height/4),(image.width/2,image.height/2)] {let a=(y*image.width+x)*4,b=(y*image.width+image.width-1-x)*4;expect(original[a..<a+4]==mirror[b..<b+4],"Magma mirrors exactly once about pixel centres")}
+            let head=pixels(DinoSpriteColorRenderer.volcanoHeadOverflow(image,asset:asset,mirrored:false)!),rig=DinoSpriteColorRenderer.VolcanoRig(asset:asset)
+            var contained=true
+            for y in 0..<image.height {for x in 0..<image.width where head[(y*image.width+x)*4+3]>0 {let p=CGPoint(x:(Double(x)+0.5)*512/Double(image.width),y:(Double(y)+0.5)*512/Double(image.height));if !rig.head.contains(p) || rig.hands.contains(where:{CGPath(ellipseIn:$0,transform:nil).contains(p)}) {contained=false}}}
+            expect(contained,"Magma isolated heads exclude every measured hand and lower-body region")
+            if asset == "volcano-idle" {
+                var uncropped=true
+                for y in 0..<image.height {for x in 0..<image.width where head[(y*image.width+x)*4+3]>0 {if !DinoVolcanoArtwork.portraitCrop.contains(CGPoint(x:1-(Double(x)+0.5)/Double(image.width),y:(Double(y)+0.5)/Double(image.height))) {uncropped=false}}}
+                expect(uncropped,"Magma's own friend-avatar crop contains its entire measured frill and muzzle")
+            }
+            if asset != DinoVolcanoArtwork.openingAsset && !asset.contains("airborne") && !asset.contains("takeoff") && !asset.contains("stumble") {
+                var bottom=0
+                for y in 0..<image.height {for x in 0..<image.width where original[(y*image.width+x)*4+3]>240 {bottom=max(bottom,y)}}
+                let displayed=clipsForGroundProbe(asset:asset)
+                expect(abs(Double(bottom)/Double(image.height)+displayed-DinoVolcanoArtwork.footline)<0.006,"Magma planted poses share the measured ground line after their own registration")
+            }
+        }
+    }
+}
+
+extension DinoCoreTests {
+    static func testVolcanoMotion() {
+        let recovery=["volcano-push-up","volcano-rise-low","volcano-rise-high","volcano-idle"]
+        let recoveryKeys=DinoBossAnimation.keys(for:.stumble,character:.volcano)
+        var previousEye:CGPoint?
+        for asset in recovery {
+            let key=recoveryKeys.last(where:{$0.asset==asset})!
+            let pose=DinoBossAnimation.sample(.stumble,character:.volcano,elapsed:key.time+0.001).pose
+            let measured=DinoVolcanoArtwork.recoveryHeadCenters[asset]!
+            let point=CGPoint(x:measured.x-pose.offsetX*512,y:measured.y+pose.offsetY*512)
+            if let previousEye {expect(point.y<previousEye.y && hypot(point.x-previousEye.x,point.y-previousEye.y)<46,"Magma rises in measured grounded stages, without the old 100px head jump")}
+            previousEye=point
+        }
+        expect(DinoVolcanoArtwork.recoveryEyeDistances.max()!/DinoVolcanoArtwork.recoveryEyeDistances.min()!<1.09,"recovery keeps the measured eye spacing without affine face stretching")
+        let clips:[DinoAnimation.Clip]=[.idle,.thumbsUp,.wrongAnswer,.stumble,.openingJump,.backflip,.pirouette,.worldJump]
+        for clip in clips {
+            for tick in 0...420 {
+                let sample=DinoBossAnimation.sample(clip,character:.volcano,elapsed:Double(tick)/120)
+                expect(DinoVolcanoArtwork.assets.contains(sample.pose.asset),"every displayed Magma pose is prepared")
+                expect(sample.previousPose == nil && sample.poseBlend == 1,"Magma never renders two translucent bodies")
+                expect([sample.height,sample.angle,sample.pose.offsetX,sample.pose.offsetY].allSatisfy {$0.isFinite},"Magma motion is finite")
+            }
+            let end=DinoBossAnimation.sample(clip,character:.volcano,elapsed:DinoAnimation.duration(clip)+1)
+            expect(end.pose.asset == "volcano-idle" && end.previousPose == nil,"each Magma clip settles on one opaque canonical idle")
+        }
+        for contact in DinoAnimation.correctAnswerClapContacts {expect(DinoBossAnimation.sample(.thumbsUp,character:.volcano,elapsed:contact).pose.asset.contains("contact"),"both clap contacts use touching Magma palms")}
+        for step in 0...100 {let o=DinoBossAnimation.unlockOpacity(progress:Double(step)/100,character:.volcano);expect(o.source+o.unlocked == 1 && (o.source==0 || o.source==1),"Magma unlock swaps a single opaque actor")}
+        expect(DinoWelcomeJump.assets(for:.volcano) == ["dino-idle"],"Magma's large welcome holds one detailed painting")
+        for size in [CGSize(width:390,height:844),CGSize(width:844,height:390),CGSize(width:834,height:1194),CGSize(width:1194,height:834)] {
+            let f=DinoWelcomeFlight(source:CGPoint(x:size.width/2,y:size.height*0.4),sourceSide:min(size.width,480),destination:CGRect(x:40,y:size.height*0.7,width:150,height:150),character:.volcano)
+            for t in [DinoWelcomeJump.crouchBottom,DinoWelcomeJump.takeoff,DinoWelcomeJump.flightHandoff,DinoWelcomeJump.landing] {
+                let a=f.paintedHead(elapsed:t-0.00001),b=f.paintedHead(elapsed:t+0.00001)
+                expect(hypot(a.center.x-b.center.x,a.center.y-b.center.y)<0.2,"Magma eyes remain continuous across preparation takeoff handoff and landing")
+            }
+        }
+    }
+}
+
+extension DinoCoreTests {
+    private static func clipsForGroundProbe(asset:String)->Double {
+        for clip:DinoAnimation.Clip in [.idle,.thumbsUp,.wrongAnswer,.openingJump,.backflip,.stumble,.pirouette] {
+            if let key=DinoBossAnimation.keys(for:clip,character:.volcano).first(where:{$0.asset==asset}) {return DinoBossAnimation.sample(clip,character:.volcano,elapsed:key.time+0.001).pose.offsetY}
+        }
+        return 0
     }
 }

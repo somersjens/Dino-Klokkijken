@@ -307,9 +307,7 @@ enum DinoAvatarRenderer {
         let key = "head-\(cacheKey(appearance:appearance,portrait:false,asset:asset))" as NSString
         if let cached = headCache.object(forKey:key) { return cached }
         guard let body = render(original:nil,appearance:appearance,portrait:false,asset:asset)?.cgImage,
-              let head = (appearance.identity == .desert
-                ? DinoSpriteColorRenderer.desertHeadOverflow(body, asset: asset)
-                : DinoSpriteColorRenderer.jungleHeadOverflow(body,asset:asset)) else { return nil }
+              let head = DinoSpriteColorRenderer.bossHeadOverflow(body, character:appearance.identity, asset:asset) else { return nil }
         let image = UIImage(cgImage:head)
         headCache.setObject(image,forKey:key,cost:head.bytesPerRow*head.height)
         return image
@@ -323,14 +321,13 @@ enum DinoAvatarRenderer {
             let drawing = appearance.identity.asset(for: asset)
             let sourceAsset = resolution == .original && drawing == appearance.identity.asset(for: "dino-idle") ? appearance.identity.openingAsset : drawing
             guard let source = UIImage(named: sourceAsset)?.cgImage,
-                  let recolored = (appearance.identity == .desert
-                    ? DinoSpriteColorRenderer.recoloredDesert(source, appearance: appearance, asset: sourceAsset)
-                    : DinoSpriteColorRenderer.recoloredJungle(source, appearance: appearance, asset: sourceAsset)),
+                  let recolored = DinoSpriteColorRenderer.recoloredBoss(source, appearance:appearance, asset:sourceAsset),
                   let colored = DinoSpriteColorRenderer.facingRight(recolored) else { return nil }
             let output: CGImage
-            if portrait, appearance.identity == .desert {
-                let head = DinoSpriteColorRenderer.desertHeadOverflow(colored, asset: sourceAsset) ?? colored
-                output = head.cropping(to: CGRect(x: CGFloat(head.width) * 0.40, y: 0, width: CGFloat(head.width) * 0.60, height: CGFloat(head.height) * 0.56)) ?? head
+            if portrait, appearance.identity != .jungle {
+                let head = DinoSpriteColorRenderer.bossHeadOverflow(colored, character:appearance.identity, asset:sourceAsset) ?? colored
+                let crop = appearance.identity == .volcano ? DinoVolcanoArtwork.portraitCrop : CGRect(x:0.40,y:0,width:0.60,height:0.56)
+                output = head.cropping(to:CGRect(x:CGFloat(head.width)*crop.minX,y:CGFloat(head.height)*crop.minY,width:CGFloat(head.width)*crop.width,height:CGFloat(head.height)*crop.height)) ?? head
             } else { output = portrait ? junglePortrait(colored) ?? colored : colored }
             let image = UIImage(cgImage: output)
             cache.setObject(image, forKey: key, cost: output.bytesPerRow * output.height)

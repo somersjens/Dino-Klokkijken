@@ -5884,8 +5884,24 @@ final class DinoUITests: XCTestCase {
             case .setAnalog:
                 let clock = app.descendants(matching: .any).matching(identifier: "question.analogControl").firstMatch
                 XCTAssertTrue(clock.waitForExistence(timeout: 5))
-                let angle = Double(answer.hour) * .pi / 6
-                clock.coordinate(withNormalizedOffset: CGVector(dx: 0.5 + sin(angle) * 0.34, dy: 0.5 - cos(angle) * 0.34)).tap()
+                if app.buttons["question.hand.minutes"].exists {
+                    // Later worlds require both hands. Use the native step buttons
+                    // so dragging across the other hand cannot change the selection.
+                    func displayedTime() -> [Int] { clock.label.split(separator:":").compactMap {Int($0)} }
+                    tap("question.hand.minutes")
+                    let initial = displayedTime()
+                    XCTAssertEqual(initial.count,2)
+                    let step = DinoPracticeTime.analogHandStep(level.minuteStep)
+                    for _ in 0..<((answer.minute-initial[1]+60)%60)/step {app.buttons["question.analog.more"].tap()}
+                    tap("question.hand.hours")
+                    let current = displayedTime()
+                    for _ in 0..<((answer.hour-current[0]+12)%12) {app.buttons["question.analog.more"].tap()}
+                    XCTAssertEqual(displayedTime()[0]%12,answer.hour%12)
+                    XCTAssertEqual(displayedTime()[1],answer.minute)
+                } else {
+                    let angle = Double(answer.hour) * .pi / 6
+                    clock.coordinate(withNormalizedOffset: CGVector(dx: 0.5 + sin(angle) * 0.34, dy: 0.5 - cos(angle) * 0.34)).tap()
+                }
                 tap("question.confirm")
             case .setDigital:
                 let initial = question.target.hour == 12 ? 1 : 12
@@ -8549,5 +8565,192 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 5))
         XCTAssertTrue(revealMapNode(2).isEnabled)
         saveScreenshot("personalized-completed-map-companion")
+    }
+}
+
+// Magma uses the shipped screens and normal input/result paths.
+extension DinoUITests {
+    func testVolcanoWelcomeAndAnswerReactions() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "30"
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "3"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 15))
+        waitForMapOpeningToFinish()
+        saveScreenshot("volcano-welcome-right-facing")
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        app.launch()
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 15))
+        assertCompanionInPortrait(app.descendants(matching: .any)["dino.character"])
+        saveScreenshot("volcano-face-portrait")
+        var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.chooseAnalog)), seed: seed)
+        let first = generator.next(index: 0, difficultyForKind: { _ in .introduction })
+        let oldTitle = app.staticTexts["question.title"].label
+        tap("question.option.\(first.responses.firstIndex(of: first.expectedAnswer)!)")
+        let advanced = NSPredicate { _, _ in self.app.staticTexts["question.title"].label != oldTitle }
+        expectation(for: advanced, evaluatedWith: nil)
+        waitForExpectations(timeout: 8)
+        let next = generator.next(index: 1, difficultyForKind: { _ in .familiar })
+        tap("question.option.\(next.responses.firstIndex { $0 != next.expectedAnswer }!)")
+        if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 8))
+        saveScreenshot("volcano-wrong-answer-portrait")
+    }
+
+    private func exerciseVolcanoCustomPortraitReactions() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "30"
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "3"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        app.launch()
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout:15))
+        tap("header.dino")
+        for (part,color) in [("bandana","purple"),("spikes","green"),("body","blue"),("belly","pink")] {
+            tap("personalize.\(part).\(color)")
+        }
+        saveScreenshot("volcano-clean-materials-full-body")
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout:5))
+        saveScreenshot("volcano-clean-materials-portrait")
+        var generator = DinoPracticeGenerator(configuration:.init(time:.whole,order:.specific(.chooseAnalog)),seed:seed)
+        let first = generator.next(index:0,difficultyForKind:{_ in .introduction})
+        let oldTitle = app.staticTexts["question.title"].label
+        tap("question.option.\(first.responses.firstIndex(of:first.expectedAnswer)!)")
+        saveScreenshot("volcano-clean-materials-clap")
+        expectation(for:NSPredicate { _,_ in self.app.staticTexts["question.title"].label != oldTitle },evaluatedWith:nil)
+        waitForExpectations(timeout:8)
+        let next = generator.next(index:1,difficultyForKind:{_ in .familiar})
+        tap("question.option.\(next.responses.firstIndex {$0 != next.expectedAnswer}!)")
+        if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout:8))
+        saveScreenshot("volcano-clean-materials-wrong")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        RunLoop.current.run(until:Date().addingTimeInterval(1))
+        saveScreenshot("volcano-custom-landscape-hud")
+    }
+
+    func testThirdCharacterUnlockAndCollectionSwap() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "29"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "30"
+        app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = "10"
+        app.launch()
+        XCTAssertTrue(app.buttons["result.next"].waitForExistence(timeout:20))
+        tap("result.next")
+        XCTAssertTrue(app.descendants(matching:.any)["map.dino.31"].waitForExistence(timeout:30))
+        waitForMapOpeningToFinish()
+        saveScreenshot("volcano-unlocked-map")
+        tap("header.dino")
+        revealThemeChoice("personalize.character.0")
+        XCTAssertTrue(app.buttons["personalize.character.0"].isEnabled)
+        XCTAssertFalse(app.buttons["personalize.character.3"].exists)
+        XCTAssertFalse(app.buttons["personalize.character.4"].isEnabled)
+        tap("personalize.character.0")
+        XCTAssertTrue(app.buttons["personalize.character.3"].isEnabled)
+        tap("personalize.character.3")
+        saveScreenshot("volcano-collection-swapped")
+        tap("personalize.done")
+        app.terminate()
+        for key in ["DINO_TEST_COMPLETED_LEVEL","DINO_TEST_RESULT_LEVEL","DINO_TEST_RESULT_CORRECT"] {app.launchEnvironment.removeValue(forKey:key)}
+        app.launch()
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout:20))
+        waitForMapOpeningToFinish()
+        tap("header.dino")
+        revealThemeChoice("personalize.character.0")
+        XCTAssertFalse(app.buttons["personalize.character.3"].exists)
+        XCTAssertTrue(app.buttons["personalize.character.0"].isEnabled)
+        saveScreenshot("volcano-restarted-selection")
+        tap("personalize.done")
+    }
+
+    func testVolcanoCharacterResultAnimations() {
+        for correct in [0, 3, 4, 5] {
+            app.terminate()
+            app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "30"
+            app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "3"
+            app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+            app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "31"
+            app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = String(correct)
+            app.launch()
+            XCTAssertTrue(app.buttons["result.retry"].waitForExistence(timeout: 15))
+            saveScreenshot("volcano-result-\(correct)-arrival")
+            waitForVolcanoResultMotion()
+            saveScreenshot("volcano-result-\(correct)-settled")
+        }
+    }
+
+}
+
+extension DinoUITests {
+    func testVolcanoLandscapeWelcomeAndResults() {
+        app.terminate()
+        XCUIDevice.shared.orientation = .landscapeLeft
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "30"
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "3"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout:20))
+        waitForMapOpeningToFinish()
+        saveScreenshot("volcano-landscape-welcome")
+        for correct in [0,3,4,5] {
+            app.terminate()
+            app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+            app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "31"
+            app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = String(correct)
+            app.launch()
+            XCTAssertTrue(app.buttons["result.retry"].waitForExistence(timeout:20))
+            waitForVolcanoResultMotion()
+            saveScreenshot("volcano-landscape-result-\(correct)")
+        }
+    }
+}
+
+extension DinoUITests {
+    func testVolcanoCustomPortraitReactions() { exerciseVolcanoCustomPortraitReactions() }
+    func testVolcanoCustomResultAnimations() {
+        exerciseVolcanoCustomPortraitReactions()
+        XCUIDevice.shared.orientation = .portrait
+        for key in ["DINO_TEST_PRACTICE_TYPE","DINO_TEST_PRACTICE_TIME"] {app.launchEnvironment.removeValue(forKey:key)}
+        for correct in [0,3,4,5] {
+            app.terminate()
+            app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+            app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "31"
+            app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = String(correct)
+            app.launch()
+            XCTAssertTrue(app.buttons["result.retry"].waitForExistence(timeout:20))
+            waitForVolcanoResultMotion()
+            saveScreenshot("volcano-custom-result-\(correct)")
+        }
+    }
+}
+
+extension DinoUITests {
+    private func waitForVolcanoResultMotion() {
+        let finished=app.descendants(matching:.any).matching(NSPredicate(format:"value CONTAINS %@", "3|ready:true|started:true|finished:true")).firstMatch
+        XCTAssertTrue(finished.waitForExistence(timeout:45),"The result must actually start and finish its animation, not just show a static actor")
+    }
+}
+
+extension DinoUITests {
+    func testVolcanoUnlockAfterEarlierBossPass() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "28"
+        app.launchEnvironment["DINO_TEST_EARLY_BOSS_LEVEL"] = "30"
+        app.launch()
+        waitForMapOpeningToFinish()
+        begin(29)
+        play(29, correct:5)
+        XCTAssertTrue(app.buttons["result.next"].waitForExistence(timeout:20))
+        saveScreenshot("volcano-late-route-result")
+        tap("result.next")
+        XCTAssertTrue(app.descendants(matching:.any)["map.dino.31"].waitForExistence(timeout:30))
+        waitForMapOpeningToFinish()
+        saveScreenshot("volcano-late-route-unlocked")
+        tap("header.dino")
+        XCTAssertEqual(app.descendants(matching:.any)["personalize.preview"].value as? String,"3")
+        saveScreenshot("volcano-late-route-active")
+        tap("personalize.done")
     }
 }

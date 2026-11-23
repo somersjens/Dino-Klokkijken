@@ -292,6 +292,75 @@
         }
       }
     },
+    "dino.appearance.volcano.bandana" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sjerp en klokmetaal"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sash and clock metal"
+          }
+        }
+      }
+    },
+    "dino.appearance.volcano.spikes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopschild"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frill"
+          }
+        }
+      }
+    },
+    "dino.appearance.volcano.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huid en vlekken"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skin and spots"
+          }
+        }
+      }
+    },
+    "dino.appearance.volcano.belly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buik, hoorns en klauwen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belly, horns and claws"
+          }
+        }
+      }
+    }
+,
     "dino.appearance.desert.bandana": {
       "extractionState": "manual",
       "localizations": {

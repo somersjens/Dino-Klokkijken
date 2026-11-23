@@ -1,11 +1,12 @@
 import Foundation
+import CoreGraphics
 
 /// Stable identities reserve one collection slot per world. Raw values follow chapter order, independently of theme and artwork IDs.
 enum DinoIdentity: Int, Codable, CaseIterable, Sendable {
     case main = 0, jungle, desert, volcano, village, cave, city, valley, machine, pirates, castle
 
-    var isPlayable: Bool { self == .main || self == .jungle || self == .desert }
-    var usesBossArtwork: Bool { self == .jungle || self == .desert }
+    var isPlayable: Bool { self == .main || usesBossArtwork }
+    var usesBossArtwork: Bool { self == .jungle || self == .desert || self == .volcano }
     var worldID: Int? { self == .main ? nil : rawValue }
     static func boss(in world: Int) -> DinoIdentity? {
         guard let identity = DinoIdentity(rawValue: world), identity != .main, identity.isPlayable else { return nil }
@@ -15,19 +16,20 @@ enum DinoIdentity: Int, Codable, CaseIterable, Sendable {
         switch self {
         case .jungle: return DinoJungleArtwork.asset(for: pose)
         case .desert: return DinoDesertArtwork.asset(for: pose)
+        case .volcano: return DinoVolcanoArtwork.asset(for: pose)
         default: return pose
         }
     }
     var artworkAssets: Set<String> {
-        self == .desert ? DinoDesertArtwork.assets : self == .jungle ? DinoJungleArtwork.assets : []
+        self == .volcano ? DinoVolcanoArtwork.assets : self == .desert ? DinoDesertArtwork.assets : self == .jungle ? DinoJungleArtwork.assets : []
     }
-    var openingAsset: String { self == .desert ? DinoDesertArtwork.openingAsset : DinoJungleArtwork.openingAsset }
-    var portraitScale: Double { self == .desert ? 1.72 : self == .jungle ? DinoJungleArtwork.portraitScale : 1 / 0.62 }
-    var portraitOffsetX: Double { self == .desert ? -0.28 : self == .jungle ? DinoJungleArtwork.portraitOffsetX : -0.065 }
-    var portraitOffsetY: Double { self == .desert ? 0.22 : self == .jungle ? DinoJungleArtwork.portraitOffsetY : 0.339 }
+    var openingAsset: String { self == .volcano ? DinoVolcanoArtwork.openingAsset : self == .desert ? DinoDesertArtwork.openingAsset : DinoJungleArtwork.openingAsset }
+    var portraitScale: Double { self == .volcano ? DinoVolcanoArtwork.portraitScale : self == .desert ? 1.72 : self == .jungle ? DinoJungleArtwork.portraitScale : 1 / 0.62 }
+    var portraitOffsetX: Double { self == .volcano ? DinoVolcanoArtwork.portraitOffsetX : self == .desert ? -0.28 : self == .jungle ? DinoJungleArtwork.portraitOffsetX : -0.065 }
+    var portraitOffsetY: Double { self == .volcano ? DinoVolcanoArtwork.portraitOffsetY : self == .desert ? 0.22 : self == .jungle ? DinoJungleArtwork.portraitOffsetY : 0.339 }
     /// Visible sole boundary in each canonical source canvas, before mirroring.
     /// Collection residents stand on their own feet, independently of active art.
-    var standingFootline: Double { self == .jungle ? 484.0 / 512 : 1211.0 / 1254 }
+    var standingFootline: Double { self == .volcano ? DinoVolcanoArtwork.footline : self == .jungle ? 484.0 / 512 : 1211.0 / 1254 }
     var unlockLevel: Int { rawValue * 10 }
     var bossAsset: String {
         ["dino-idle", "boss-jungle", "boss-desert", "boss-volcano", "boss-clock-village",
@@ -41,7 +43,7 @@ struct DinoAppearance: Codable, Equatable, Hashable, Sendable {
         case bandana, spikes, body, belly
         var labelKey: String { "dino.appearance.\(rawValue)" }
         func labelKey(for identity: DinoIdentity) -> String {
-            identity == .desert ? "dino.appearance.desert.\(rawValue)" : labelKey
+            identity == .volcano ? "dino.appearance.volcano.\(rawValue)" : identity == .desert ? "dino.appearance.desert.\(rawValue)" : labelKey
         }
     }
 
@@ -58,6 +60,9 @@ struct DinoAppearance: Codable, Equatable, Hashable, Sendable {
     }
     static let standard = DinoAppearance()
     static func standard(for identity: DinoIdentity) -> DinoAppearance {
+        if identity == .volcano {
+            return DinoAppearance(bandana: 0xDB3526, spikes: 0xD93725, body: 0xFF783E, belly: 0xF8D99A, character: .volcano)
+        }
         if identity == .desert {
             return DinoAppearance(bandana: 0xF89B20, spikes: 0xB47B43, body: 0xE7B56D, belly: 0xF5DEAA, character: .desert)
         }
@@ -192,5 +197,37 @@ enum DinoDesertArtwork {
         if pose.hasPrefix("desert-") { return pose }
         let semantic = DinoJungleArtwork.asset(for: pose).replacingOccurrences(of: "jungle-", with: "desert-")
         return semantic == "desert-recover" ? "desert-idle" : semantic
+    }
+}
+
+/// Magma: chapter/theme/save identity 3. All geometry is in normalized,
+/// top-left SOURCE coordinates. Preparation mirrors exactly once to face right.
+enum DinoVolcanoArtwork {
+    static let openingAsset = "volcano-opening-idle"
+    static let portraitScale = 1.62
+    /// Prepared (right-facing) bounds enclosing the complete frill and muzzle.
+    static let portraitCrop = CGRect(x:0.20,y:0.02,width:0.66,height:0.53)
+    static let portraitOffsetX = -0.13
+    static let portraitOffsetY = 0.30
+    static let footline = 477.0 / 512
+    static let recoveryHeadCenters: [String:CGPoint] = [
+        "volcano-push-up":CGPoint(x:180.45,y:269.2),"volcano-rise-low":CGPoint(x:194.85,y:251.65),
+        "volcano-rise-high":CGPoint(x:204.35,y:211.55),"volcano-idle":CGPoint(x:207.05,y:169.85)
+    ]
+    static let recoveryEyeDistances: [Double] = [60.3,58.5,60.1,62.7]
+    static let turnAxes: [Double] = [249,234,238,257,293,289,275,242]
+    static let turnFootlines: [Double] = [478,478,476,476,478,480,479,479]
+    static let clapContact = CGPoint(x:1-224.0/512,y:307.0/512)
+    static let headLandmarks = [CGPoint(x:175.7/512,y:168.3/512),CGPoint(x:238.4/512,y:171.4/512),CGPoint(x:182.05/512,y:198.4/512)]
+    static let assets: Set<String> = Set([
+        "volcano-idle", "volcano-wrong", "volcano-clap-open", "volcano-clap-contact",
+        "volcano-clap-open-2", "volcano-clap-contact-2", "volcano-crouch", "volcano-takeoff",
+        "volcano-airborne", "volcano-landing", "volcano-stumble", "volcano-fallen", "volcano-push-up", "volcano-rise-low", "volcano-rise-high"
+    ] + (1...8).map { String(format:"volcano-turn-%02d",$0) })
+    static func asset(for pose: String) -> String {
+        if pose == "volcano-recover" { return "volcano-idle" }
+        if pose.hasPrefix("volcano-") { return pose }
+        let semantic = DinoJungleArtwork.asset(for:pose).replacingOccurrences(of:"jungle-",with:"volcano-")
+        return semantic == "volcano-recover" ? "volcano-idle" : semantic
     }
 }

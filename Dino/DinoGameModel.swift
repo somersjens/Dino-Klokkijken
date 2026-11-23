@@ -64,6 +64,12 @@ final class DinoPlayer: ObservableObject {
             }
         }
         if ProcessInfo.processInfo.environment["DINO_TEST_SUITE"] != nil,
+           let raw = ProcessInfo.processInfo.environment["DINO_TEST_EARLY_BOSS_LEVEL"], let id=Int(raw),
+           let boss=DinoLevelCatalog.level(id),boss.isBoss {
+            // A real earlier boss pass, before the final ordinary route lesson.
+            profile.recordCompletedAttempt(levelID:id,correct:9)
+        }
+        if ProcessInfo.processInfo.environment["DINO_TEST_SUITE"] != nil,
            let raw = ProcessInfo.processInfo.environment["DINO_TEST_RESULT_LEVEL"], let id = Int(raw),
            let level = DinoLevelCatalog.level(id),
            let rawCorrect = ProcessInfo.processInfo.environment["DINO_TEST_RESULT_CORRECT"], let correct = Int(rawCorrect),
@@ -292,6 +298,13 @@ struct DinoLevelResult {
     let correct: Int
     let stars: Int
     let victory: BossVictory
+
+    /// A world can finish on its last ordinary lesson after an earlier boss
+    /// pass. Its pending character still receives the normal world arrival.
+    func hasPendingCharacterUnlock(in profile:PlayerProfile)->Bool {
+        guard let pending=profile.pendingCharacterUnlock else {return false}
+        return pending.worldID==level.worldID && profile.isCharacterUnlocked(pending)
+    }
 
     var animationClip: DinoAnimation.Clip {
         if correct == level.questionCount { return .backflip }

@@ -114,7 +114,7 @@ struct DinoCharacter: View {
                 sprite(sample.pose, angle: sample.angle, yaw: sample.yaw, headOnly: headOnly)
                     .opacity(sample.previousPose != nil ? sample.poseBlend : 1)
                     .blendMode(.plusLighter)
-                if !headOnly && clip == .thumbsUp && !reduceMotion { DinoClapEffect(elapsed: elapsed, contact: appearance.identity == .desert ? CGPoint(x: 0.72, y: 0.60) : CGPoint(x: 0.40, y: 0.475)) }
+                if !headOnly && clip == .thumbsUp && !reduceMotion { DinoClapEffect(elapsed: elapsed, contact: appearance.identity == .volcano ? DinoVolcanoArtwork.clapContact : appearance.identity == .desert ? CGPoint(x: 0.72, y: 0.60) : CGPoint(x: 0.40, y: 0.475)) }
             }.compositingGroup()
         } else if clip == .thumbsUp {
             ZStack {
@@ -354,7 +354,7 @@ struct DinoCompanionLayer: View {
     private var celebrates: Bool { isResult && DinoResultJourney.clips.contains(clip) }
     private var appearance: DinoAppearance { player.profile.dinoAppearance ?? .standard }
     private var preparationAppearance: DinoAppearance? {
-        (destination != nil || isResult) && appearance.identity == .desert ? appearance : nil
+        (destination != nil || isResult) && appearance.identity.usesBossArtwork ? appearance : nil
     }
     private var artworkReady: Bool { preparationAppearance == nil || preparedAppearance == appearance }
 
@@ -492,7 +492,9 @@ struct DinoCompanionLayer: View {
                 .accessibilityLabel(Text(verbatim: "Dino"))
                 .accessibilityIdentifier(presentedClip == .idle ? "dino.character" : "dino.\(presentedClip.rawValue)")
 #if DEBUG
-                .accessibilityValue(String(appearance.identity.rawValue))
+                .accessibilityValue(ProcessInfo.processInfo.environment["DINO_TEST_ANIMATION_DIAGNOSTICS"] == "1"
+                    ? "\(appearance.identity.rawValue)|ready:\(artworkReady)|started:\(celebrationStart != nil)|finished:\(celebrationFinished)"
+                    : String(appearance.identity.rawValue))
 #endif
         }
         .frame(width: 210, height: 210)

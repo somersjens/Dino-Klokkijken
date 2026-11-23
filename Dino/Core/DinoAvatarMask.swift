@@ -1,5 +1,8 @@
 import CoreGraphics
 import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
 
 enum DinoAnswerArtwork {
     static let wrongAsset = "dino-answer-wrong"
@@ -1634,5 +1637,369 @@ extension DinoSpriteColorRenderer {
     private static func desertImage(_ bytes:[UInt8],width:Int,height:Int) -> CGImage? {
         guard let provider=CGDataProvider(data:Data(bytes) as CFData) else {return nil}
         return CGImage(width:width,height:height,bitsPerComponent:8,bitsPerPixel:32,bytesPerRow:width*4,space:CGColorSpace(name:CGColorSpace.sRGB)!,bitmapInfo:CGBitmapInfo(rawValue:CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue),provider:provider,decode:nil,shouldInterpolate:true,intent:.defaultIntent)
+    }
+}
+
+extension DinoSpriteColorRenderer {
+    static func recoloredBoss(_ source: CGImage, appearance: DinoAppearance, asset: String) -> CGImage? {
+        switch appearance.identity {
+        case .volcano: return recoloredVolcano(source, appearance:appearance, asset:asset)
+        case .desert: return recoloredDesert(source, appearance:appearance, asset:asset)
+        default: return recoloredJungle(source, appearance:appearance, asset:asset)
+        }
+    }
+    static func bossHeadOverflow(_ source: CGImage, character: DinoIdentity, asset: String, mirrored: Bool = true) -> CGImage? {
+        switch character {
+        case .volcano: return volcanoHeadOverflow(source,asset:asset,mirrored:mirrored)
+        case .desert: return desertHeadOverflow(source,asset:asset,mirrored:mirrored)
+        default: return jungleHeadOverflow(source,asset:asset,mirrored:mirrored)
+        }
+    }
+}
+
+extension DinoSpriteColorRenderer {
+    /// Magma's rig is measured in a 512px top-left SOURCE canvas. Raster pixel
+    /// centres scale into that canvas; mirrored head mattes use 512 - x once.
+    struct VolcanoRig {
+        let asset: String
+        var headTransform = CGAffineTransform.identity
+        var clocks: [CGRect] = [CGRect(x:144,y:330,width:51,height:65),CGRect(x:188,y:294,width:66,height:68),CGRect(x:248,y:254,width:62,height:67)]
+        var hands: [CGRect] = []
+        var sashPoints: [CGPoint] = []
+        var rear = false
+        var turn = 0
+        init(asset: String) {
+            self.asset = DinoVolcanoArtwork.asset(for:asset)
+            var shift = CGPoint.zero
+            switch self.asset {
+            case "volcano-wrong": shift = CGPoint(x:6,y:4); hands=[CGRect(x:73,y:266,width:102,height:68),CGRect(x:314,y:277,width:95,height:65)]
+            case "volcano-clap-open", "volcano-clap-open-2": shift=CGPoint(x:6,y:4); hands=[CGRect(x:98,y:262,width:85,height:91),CGRect(x:278,y:267,width:76,height:87)]; clocks=[CGRect(x:151,y:330,width:58,height:64),CGRect(x:201,y:300,width:66,height:66),CGRect(x:267,y:253,width:62,height:65)]
+            case "volcano-clap-contact", "volcano-clap-contact-2": shift=CGPoint(x:6,y:4); hands=[CGRect(x:170,y:267,width:142,height:89)]; clocks=[CGRect(x:151,y:330,width:58,height:64),CGRect(x:201,y:300,width:66,height:66),CGRect(x:267,y:253,width:62,height:65)]
+            case "volcano-crouch", "volcano-landing": shift=CGPoint(x:6,y:16); clocks=[CGRect(x:149,y:341,width:58,height:64),CGRect(x:202,y:310,width:66,height:66),CGRect(x:264,y:268,width:62,height:65)]
+            case "volcano-rise-low": shift=CGPoint(x:-12,y:82);clocks=[CGRect(x:175,y:369,width:53,height:59),CGRect(x:208,y:352,width:59,height:65),CGRect(x:248,y:319,width:61,height:64)];hands=[CGRect(x:82,y:412,width:105,height:70),CGRect(x:250,y:413,width:100,height:70)]
+            case "volcano-rise-high": shift=CGPoint(x:-3,y:42);clocks=[CGRect(x:167,y:347,width:55,height:64),CGRect(x:206,y:313,width:63,height:69),CGRect(x:255,y:280,width:62,height:66)];hands=[CGRect(x:111,y:326,width:67,height:69),CGRect(x:273,y:326,width:77,height:81)]
+            case "volcano-takeoff": shift=CGPoint(x:29,y:-10); clocks=[CGRect(x:170,y:305,width:53,height:62),CGRect(x:219,y:276,width:65,height:67),CGRect(x:279,y:241,width:60,height:64)]; hands=[CGRect(x:92,y:192,width:92,height:91),CGRect(x:304,y:201,width:98,height:80)]
+            case "volcano-airborne": shift=CGPoint(x:13,y:-2); clocks=[CGRect(x:151,y:302,width:55,height:64),CGRect(x:198,y:276,width:66,height:68),CGRect(x:263,y:250,width:60,height:60)]; hands=[CGRect(x:112,y:251,width:67,height:76),CGRect(x:285,y:258,width:69,height:67)]
+            case "volcano-stumble": shift=CGPoint(x:-29,y:33); headTransform=CGAffineTransform(translationX:207,y:170).rotated(by:-0.12).translatedBy(x:-207,y:-170); clocks=[CGRect(x:176,y:368,width:54,height:61),CGRect(x:218,y:337,width:65,height:66),CGRect(x:273,y:301,width:63,height:69)]; hands=[CGRect(x:56,y:264,width:103,height:77),CGRect(x:244,y:274,width:87,height:76)]
+            case "volcano-fallen": shift=CGPoint(x:-47,y:128); clocks=[CGRect(x:146,y:434,width:55,height:38),CGRect(x:186,y:410,width:62,height:58),CGRect(x:226,y:370,width:59,height:64)]; hands=[CGRect(x:52,y:425,width:96,height:47),CGRect(x:239,y:423,width:95,height:50)]
+            case "volcano-push-up": shift=CGPoint(x:-26,y:99); clocks=[CGRect(x:155,y:390,width:57,height:50),CGRect(x:198,y:372,width:62,height:64),CGRect(x:237,y:336,width:61,height:67)]; hands=[CGRect(x:80,y:420,width:95,height:50),CGRect(x:244,y:422,width:92,height:50)]
+            case let n where n.contains("turn-"):
+                turn=Int(n.suffix(2)) ?? 0
+                switch turn {
+                case 1: shift=CGPoint(x:18,y:-4);clocks=[CGRect(x:151,y:321,width:53,height:64),CGRect(x:198,y:288,width:65,height:67),CGRect(x:258,y:250,width:62,height:64)]
+                case 2: hands=[CGRect(x:165,y:280,width:94,height:90)];clocks=[CGRect(x:112,y:312,width:30,height:62),CGRect(x:125,y:285,width:40,height:66),CGRect(x:160,y:249,width:51,height:70)]
+                case 3,4,5: rear=true;clocks=[]
+                case 6: hands=[CGRect(x:245,y:280,width:110,height:100)];clocks=[CGRect(x:319,y:313,width:54,height:65),CGRect(x:350,y:279,width:41,height:64)];
+                case 7: hands=[CGRect(x:151,y:270,width:100,height:90),CGRect(x:338,y:286,width:70,height:87)];clocks=[CGRect(x:225,y:323,width:54,height:63),CGRect(x:275,y:289,width:61,height:67),CGRect(x:325,y:250,width:45,height:63)]
+                default: shift=CGPoint(x:12,y:-4);clocks=[CGRect(x:151,y:321,width:53,height:64),CGRect(x:198,y:288,width:65,height:67),CGRect(x:258,y:250,width:62,height:64)]
+                }
+            default: break
+            }
+            headTransform = headTransform.concatenating(CGAffineTransform(translationX:shift.x,y:shift.y))
+            if hands.isEmpty { hands=[CGRect(x:95,y:283,width:81,height:98),CGRect(x:274,y:288,width:79,height:98)] }
+            // The visible sash lies between the three independent bezels. Arm
+            // exclusions take priority; spot-colored skin never becomes cloth.
+            if rear {
+                sashPoints=[CGPoint(x:180,y:244),CGPoint(x:223,y:240),CGPoint(x:346,y:326),CGPoint(x:348,y:360),CGPoint(x:294,y:349),CGPoint(x:177,y:270)]
+            } else if let first=clocks.first,let last=clocks.last {
+                sashPoints=[CGPoint(x:first.minX-7,y:first.midY-16),CGPoint(x:last.midX+10,y:last.minY-17),CGPoint(x:last.maxX+19,y:last.minY+16),CGPoint(x:first.maxX+12,y:first.maxY+5)]
+            }
+        }
+        func path(_ points: [(Double,Double)], head: Bool = false) -> CGPath {
+            let p=CGMutablePath();p.addLines(between:points.map {CGPoint(x:$0.0,y:$0.1)});p.closeSubpath()
+            if head {var t=headTransform;return p.copy(using:&t)!};return p
+        }
+        var head: CGPath {
+            if asset == "volcano-rise-low" {return path([(75,60),(395,60),(395,275),(380,292),(355,315),(333,326),(306,317),(290,317),(269,330),(236,340),(198,336),(165,323),(145,308),(122,318),(100,300),(75,275)])}
+            if asset == "volcano-rise-high" {return path([(80,30),(420,30),(420,256),(373,277),(333,296),(309,278),(286,278),(268,289),(236,296),(197,292),(167,281),(152,270),(133,291),(102,270),(80,250)])}
+            if asset == "volcano-push-up" { return path([(70,65),(390,65),(390,285),(330,310),(304,324),(280,321),(263,333),(246,341),(224,349),(196,349),(172,340),(147,330),(130,322),(120,305),(94,303),(86,250)]) }
+            if asset == "volcano-fallen" { return path([(40,100),(370,100),(370,325),(326,349),(301,365),(273,363),(251,358),(235,373),(207,379),(177,376),(146,366),(116,348),(100,332),(70,340),(40,320)]) }
+            if asset == "volcano-stumble" { return path([(75,0),(405,0),(405,220),(345,244),(307,258),(273,257),(267,271),(248,284),(224,292),(193,294),(169,284),(141,272),(131,259),(115,254),(94,249),(75,230)]) }
+            if turn>1 && turn<8 { return path([(70,0),(430,0),(430,240),(365,249),(320,247),(260,250),(200,250),(150,242),(70,240)]) }
+            return path([(75,0),(420,0),(420,220),(365,240),(332,264),(316,251),(307,244),(298,245),(276,254),(236,257),(199,250),(169,237),(154,250),(138,257),(122,246),(75,246)],head:true)
+        }
+        var extraSash: CGPath {
+            if turn == 2 {return path([(219,246),(245,261),(281,300),(293,313),(275,303),(239,277),(217,265)])}
+            if turn == 6 {return path([(218,292),(247,303),(270,331),(325,351),(329,370),(280,372),(223,350),(205,333),(207,314)])}
+            return CGMutablePath()
+        }
+        var face: CGPath {
+            if asset == "volcano-rise-low" {return path([(147,205),(164,198),(181,179),(231,179),(267,195),(288,221),(306,270),(302,304),(282,326),(242,339),(206,336),(176,327),(148,304),(139,280),(139,247)])}
+            if asset == "volcano-rise-high" {return path([(147,181),(164,169),(181,146),(231,143),(268,159),(291,196),(309,236),(305,274),(282,292),(244,304),(208,301),(177,287),(151,270),(139,244),(139,211)])}
+            if turn==3 {return path([(157,132),(176,123),(190,137),(190,227),(181,246),(164,242),(145,229),(135,209),(137,184),(148,176),(153,151)])}
+            if turn==5 {return path([(374,123),(389,136),(397,176),(407,188),(407,219),(393,239),(374,246),(357,246),(352,218),(360,188),(369,161)])}
+            if rear {return CGMutablePath()}
+            if turn==2 {return path([(135,121),(176,120),(185,87),(231,103),(265,145),(266,226),(237,249),(190,247),(140,231),(122,205),(122,182)])}
+            if turn==6 {return path([(285,98),(333,106),(363,142),(378,182),(397,193),(398,222),(364,250),(306,249),(289,211)])}
+            if turn==7 {return path([(208,115),(252,95),(314,97),(348,131),(366,183),(361,229),(334,249),(280,250),(238,239),(209,216)])}
+            return path([(139,139),(160,128),(180,99),(233,96),(270,113),(290,146),(303,192),(301,231),(278,251),(241,258),(203,252),(169,237),(145,217),(137,179)],head:true)
+        }
+        var browHorns: [CGPath] {
+            if turn==3 {return [path([(176,58),(186,62),(185,82),(187,101),(185,125),(177,137),(166,130),(159,113),(158,94),(165,70)])]}
+            if turn==5 {return [path([(363,58),(374,61),(383,83),(382,110),(376,133),(364,137),(354,126),(351,106),(357,88)])]}
+            if rear {return []}
+            if turn==2 {return [path([(191,40),(206,61),(217,108),(208,129),(182,130),(177,106),(177,80)])]}
+            if turn==6 {return [path([(312,56),(335,51),(337,92),(324,130),(301,135),(292,117),(300,91)])]}
+            if turn==7 {return [path([(247,51),(267,68),(271,106),(257,130),(228,136),(213,119),(219,88)]),path([(343,58),(356,78),(354,117),(342,135),(328,128),(333,103)])]}
+            return [path([(156,61),(170,65),(170,92),(186,121),(177,140),(161,142),(146,123),(141,98)],head:true),path([(265,54),(280,65),(292,94),(293,122),(279,145),(258,145),(247,128),(254,102)],head:true)]
+        }
+        var eyes: [CGPath] {
+            if turn==3 {return [CGPath(ellipseIn:CGRect(x:152,y:142,width:16,height:46),transform:nil)]}
+            if turn==5 {return [CGPath(ellipseIn:CGRect(x:377,y:142,width:14,height:40),transform:nil)]}
+            if rear {return []}
+            if turn==2 {return [CGPath(ellipseIn:CGRect(x:150,y:142,width:28,height:58),transform:nil)]}
+            if turn==6 {return [CGPath(ellipseIn:CGRect(x:339,y:139,width:31,height:61),transform:nil)]}
+            if turn==7 {return [CGPath(ellipseIn:CGRect(x:254,y:140,width:39,height:59),transform:nil),CGPath(ellipseIn:CGRect(x:318,y:141,width:30,height:49),transform:nil)]}
+            return [CGRect(x:155,y:135,width:43,height:65),CGRect(x:215,y:134,width:56,height:73)].map { r in var t=headTransform;return CGPath(ellipseIn:r,transform:nil).copy(using:&t)! }
+        }
+    }
+    private final class VolcanoLabels: NSObject {let values:[UInt8];init(_ values:[UInt8]){self.values=values}}
+    private static let volcanoMaskCache: NSCache<NSString,VolcanoLabels> = {let c=NSCache<NSString,VolcanoLabels>();c.totalCostLimit=24*1024*1024;return c}()
+    static func volcanoLabels(_ source: CGImage, asset: String, useArchive: Bool = true) -> [UInt8] {
+        let key="magma-v9-\(DinoVolcanoArtwork.asset(for:asset))-\(source.width)-\(source.height)" as NSString
+        if useArchive, let hit=volcanoMaskCache.object(forKey:key){return hit.values}
+        if useArchive, let baked=VolcanoMaterialArchive.labels(asset:DinoVolcanoArtwork.asset(for:asset),width:source.width,height:source.height) {
+            volcanoMaskCache.setObject(VolcanoLabels(baked),forKey:key,cost:baked.count)
+            return baked
+        }
+        let w=source.width,h=source.height,rig=VolcanoRig(asset:asset)
+        let head=rig.head,face=rig.face,eyes=rig.eyes,horns=rig.browHorns,extraSash=rig.extraSash
+        let hornEdges=horns.map {$0.copy(strokingWithWidth:rig.turn==3 || rig.turn==5 ? 2:14,lineCap:.round,lineJoin:.round,miterLimit:2)}
+        let sash=CGMutablePath();sash.addLines(between:rig.sashPoints);sash.closeSubpath()
+        let chin = rig.asset == "volcano-stumble"
+            ? rig.path([(140,262),(151,260),(163,274),(183,281),(201,275),(221,255),(231,236),(250,234),(263,241),(265,254),(258,272),(245,284),(220,293),(191,299),(165,291),(147,279),(139,269)])
+            : rig.path([(145,216),(151,216),(170,228),(195,235),(218,237),(240,232),(254,218),(275,212),(284,219),(282,233),(265,247),(242,255),(207,254),(181,245),(160,234)],head:true)
+        let stumbleMouth=CGPath(ellipseIn:CGRect(x:165,y:258,width:35,height:29),transform:nil)
+        let clapTips=[CGRect(x:280,y:280,width:25,height:23),CGRect(x:276,y:295,width:24,height:23),CGRect(x:267,y:310,width:25,height:25)].map {CGPath(ellipseIn:$0,transform:nil)}
+        let wrongMouth=rig.path([(192,234),(212,233),(235,224),(255,215),(255,231),(248,243),(237,251),(221,256),(207,251),(198,245)])
+        let noseHorn: CGPath
+        switch rig.turn {
+        case 2: noseHorn=rig.path([(152,94),(160,88),(171,84),(178,98),(177,118),(165,135),(153,131),(149,116)])
+        case 3: noseHorn=rig.path([(193,85),(199,77),(213,76),(221,84),(213,97),(199,100)])
+        case 5: noseHorn=rig.path([(334,78),(347,78),(359,87),(357,101),(344,104),(337,94)])
+        case 6: noseHorn=rig.path([(339,91),(355,86),(371,98),(376,120),(368,135),(352,137),(341,123)])
+        case 7: noseHorn=rig.path([(274,88),(294,85),(312,99),(322,117),(308,137),(287,134),(274,118)])
+        default: noseHorn=rig.path([(188,75),(253,75),(253,142),(188,149)],head:true)
+        }
+        let hands=rig.hands.map {CGPath(ellipseIn:$0,transform:nil)}
+                let metals=rig.clocks.map {CGPath(ellipseIn:$0.insetBy(dx:-3,dy:-5),transform:nil)}
+        var bytes=[UInt8](repeating:0,count:w*h*4),labels=[UInt8](repeating:0,count:w*h)
+        bytes.withUnsafeMutableBytes { buf in
+            let c=CGContext(data:buf.baseAddress,width:w,height:h,bitsPerComponent:8,bytesPerRow:w*4,space:CGColorSpace(name:CGColorSpace.sRGB)!,bitmapInfo:CGBitmapInfo.byteOrder32Big.rawValue|CGImageAlphaInfo.premultipliedLast.rawValue)!
+            c.draw(source,in:CGRect(x:0,y:0,width:w,height:h));let p=buf.bindMemory(to:UInt8.self)
+            let dialMatte=volcanoDialMatte(p,width:w,height:h,rig:rig)
+            for y in 0..<h {for x in 0..<w {
+                let n=y*w+x,i=n*4,a=Double(p[i+3])/255;guard a>0 else {continue}
+                let point=CGPoint(x:(Double(x)+0.5)*512/Double(w),y:(Double(y)+0.5)*512/Double(h))
+                let v=HSL(red:Double(p[i])/255/a,green:Double(p[i+1])/255/a,blue:Double(p[i+2])/255/a)
+                let cream=v.hue>0.060 && v.hue<0.19 && Double(p[i+2])/max(1,Double(p[i]))>0.35 && Double(p[i+1])/max(1,Double(p[i]))>0.65
+                let red=v.hue<0.055 || v.hue>0.95
+                let gold=v.hue>=0.065 && v.hue<0.19
+                let onHand=hands.contains {$0.contains(point)} && v.hue<0.055 && v.saturation>0.35
+                var label:UInt8=3
+                if head.contains(point) && !face.contains(point) && !onHand && (v.hue<0.04 || gold) {label=gold ? 6:2}
+                if cream && ((face.contains(point) && point.y > (rig.turn>=2 && rig.turn<=7 ? 205:rig.headTransform.ty+209)) || !head.contains(point)) {label=4}
+                if (horns.contains(where:{$0.contains(point)}) || hornEdges.contains(where:{$0.contains(point)})) && cream && Double(p[i+2])/max(1,Double(p[i]))>0.42 {label=4}
+                if chin.contains(point) && rig.turn != 2 && rig.turn != 6 && rig.turn != 7 && !rig.rear {label=4}
+                if noseHorn.contains(point) && v.hue<0.035 && v.saturation>0.5 && rig.turn != 4 {label=2}
+                if (sash.contains(point) || extraSash.contains(point)) && red && !onHand {label=1}
+                if metals.contains(where:{$0.contains(point)}) && v.hue>0.05 && v.hue<0.19 && Double(p[i+1])/max(1,Double(p[i]))>0.5 && !onHand {label=5}
+                // Hanging loops sit above each separate clock; keep their full
+                // highlights and shadows in metal, independent of dial colors.
+                for clock in rig.clocks where CGRect(x:clock.midX-10,y:clock.minY-14,width:20,height:18).contains(point) && gold && !onHand {label=5}
+                if dialMatte[n]>0 {label=0}
+                if (rig.asset == "volcano-clap-open" || rig.asset == "volcano-clap-open-2"), cream {
+                    if clapTips.contains(where:{$0.contains(point)}) {label=4}
+                }
+                if eyes.contains(where:{$0.contains(point)}) && ((Double(p[i+1])/max(1,Double(p[i]))>0.74 && Double(p[i+2])/max(1,Double(p[i]))>0.65) || (Double(p[i])/a<120 && Double(p[i+1])/a<100)) {label=0}
+                // Dark nostrils, mouth ink and raised wrong-answer eyebrows are
+                // protected within the face, never mistaken for skin shadows.
+                if face.contains(point) && v.lightness<0.22 && v.saturation<0.45 {label=0}
+                if face.contains(point) && v.lightness<0.22 && point.y > rig.headTransform.ty+188 && point.y < rig.headTransform.ty+248 {label=0}
+                if rig.asset == "volcano-wrong" {
+                    if wrongMouth.contains(point) {label=0}
+                    if CGRect(x:224,y:136,width:45,height:19).contains(point) && v.lightness<0.38 {label=0}
+                }
+                if rig.asset == "volcano-stumble", stumbleMouth.contains(point) {label=0}
+                labels[n]=label
+            }}
+        }
+        labels = cleanedVolcanoLabels(labels,width:w,height:h)
+        if useArchive {volcanoMaskCache.setObject(VolcanoLabels(labels),forKey:key,cost:labels.count)}
+        return labels
+    }
+    static func recoloredVolcano(_ source:CGImage,appearance:DinoAppearance,asset:String) -> CGImage? {
+        guard !appearance.hasOriginalColors else {return source}
+        let w=source.width,h=source.height,labels=volcanoLabels(source,asset:asset)
+        var bytes=[UInt8](repeating:0,count:w*h*4)
+        let parts:[DinoAppearance.Part]=[.body,.bandana,.spikes,.body,.belly,.bandana,.spikes]
+        let refs=[UInt32(0),0xDB3526,0xD93725,0xFF783E,0xF8D99A,0xE9AA34,0xF3BB45].map {HSL(hex:$0)}
+        let standard=DinoAppearance.standard(for:.volcano)
+        bytes.withUnsafeMutableBytes { b in
+            let c=CGContext(data:b.baseAddress,width:w,height:h,bitsPerComponent:8,bytesPerRow:w*4,space:CGColorSpace(name:CGColorSpace.sRGB)!,bitmapInfo:CGBitmapInfo.byteOrder32Big.rawValue|CGImageAlphaInfo.premultipliedLast.rawValue)!
+            c.draw(source,in:CGRect(x:0,y:0,width:w,height:h));let p=b.bindMemory(to:UInt8.self)
+            for n in 0..<w*h {
+                let label=Int(labels[n]),i=n*4,a=Double(p[i+3])/255
+                guard label>0,a>0,appearance[parts[label]] != standard[parts[label]] else {continue}
+                let pixel=HSL(red:Double(p[i])/255/a,green:Double(p[i+1])/255/a,blue:Double(p[i+2])/255/a)
+                let ref=refs[label],target=HSL(hex:appearance[parts[label]])
+                let l=pixel.lightness<=ref.lightness ? target.lightness*pixel.lightness/max(0.001,ref.lightness) : target.lightness+(1-target.lightness)*(pixel.lightness-ref.lightness)/max(0.001,1-ref.lightness)
+                let rgb=HSL(hue:target.hue,saturation:min(1,pixel.saturation*target.saturation/max(0.001,ref.saturation)),lightness:min(1,max(0,l))).rgb
+                for (k,v) in [rgb.0,rgb.1,rgb.2].enumerated(){p[i+k]=UInt8((min(1,max(0,v))*a*255).rounded())}
+            }
+        }
+        return desertImage(bytes,width:w,height:h)
+    }
+    static func volcanoHeadOverflow(_ source:CGImage,asset:String,mirrored:Bool=true) -> CGImage? {
+        let w=source.width,h=source.height,rig=VolcanoRig(asset:asset),head=rig.head
+        let hands=rig.hands.map {CGPath(ellipseIn:$0,transform:nil)}
+        var bytes=[UInt8](repeating:0,count:w*h*4)
+        bytes.withUnsafeMutableBytes { b in
+            let c=CGContext(data:b.baseAddress,width:w,height:h,bitsPerComponent:8,bytesPerRow:w*4,space:CGColorSpace(name:CGColorSpace.sRGB)!,bitmapInfo:CGBitmapInfo.byteOrder32Big.rawValue|CGImageAlphaInfo.premultipliedLast.rawValue)!
+            c.draw(source,in:CGRect(x:0,y:0,width:w,height:h));let p=b.bindMemory(to:UInt8.self)
+            for y in 0..<h {for x in 0..<w {
+                let u=(Double(x)+0.5)/Double(w),v=(Double(y)+0.5)/Double(h)
+                let point=CGPoint(x:(mirrored ? 1-u:u)*512,y:v*512)
+                if !head.contains(point) || hands.contains(where:{$0.contains(point)}) {for k in 0..<4 {p[(y*w+x)*4+k]=0}}
+            }}
+        }
+        // Keep only the connected head silhouette. A mask edge must never
+        // retain an isolated tail tip, shoulder fleck or lower clock fragment.
+        var seen=[Bool](repeating:false,count:w*h),largest=[Int]()
+        for start in 0..<w*h where !seen[start] && bytes[start*4+3]>0 {
+            var q=[start],j=0;seen[start]=true
+            while j<q.count {let n=q[j];j+=1
+                for m in [n%w>0 ? n-1:-1,n%w<w-1 ? n+1:-1,n>=w ? n-w:-1,n<w*(h-1) ? n+w:-1] where m>=0 {
+                    if !seen[m] && bytes[m*4+3]>0 {seen[m]=true;q.append(m)}
+                }
+            }
+            if q.count>largest.count {largest=q}
+        }
+        var keep=[Bool](repeating:false,count:w*h);for n in largest {keep[n]=true}
+        for n in 0..<w*h where !keep[n] {for k in 0..<4 {bytes[n*4+k]=0}}
+        return desertImage(bytes,width:w,height:h)
+    }
+}
+
+extension DinoSpriteColorRenderer {
+    /// Connected ivory glass, then its convex contour, protects all neutral ink.
+    /// Each of Magma's three clocks is measured independently in every pose.
+    private static func volcanoDialMatte(_ p:UnsafeMutableBufferPointer<UInt8>,width w:Int,height h:Int,rig:VolcanoRig) -> [UInt8] {
+        var result=[UInt8](repeating:0,count:w*h)
+        let shaded=["volcano-push-up","volcano-rise-low","volcano-fallen","volcano-stumble"].contains(rig.asset)
+        let greenRatio=shaded ? 0.68:0.81,blueRatio=shaded ? 0.38:0.59,minimumLight=shaded ? 0.40:0.60
+        for clock in rig.clocks {
+            let box=clock.insetBy(dx:-4,dy:-4),scale=Double(w)/512
+            let x0=max(0,Int(box.minX*scale)),x1=min(w-1,Int(box.maxX*scale))
+            let y0=max(0,Int(box.minY*scale)),y1=min(h-1,Int(box.maxY*scale))
+            guard x0<x1,y0<y1 else {continue}
+            var candidate=[Bool](repeating:false,count:w*h),seen=candidate,best=[Int](),score=0.0
+            for y in y0...y1 {for x in x0...x1 {
+                let i=(y*w+x)*4,r=Double(p[i]),g=Double(p[i+1]),b=Double(p[i+2])
+                candidate[y*w+x] = p[i+3]>120 && b/max(1,r)>blueRatio && g/max(1,r)>greenRatio && r/Double(max(1,p[i+3]))>minimumLight
+            }}
+            for y in y0...y1 {for x in x0...x1 {
+                let start=y*w+x;guard candidate[start],!seen[start] else {continue}
+                var q=[start],j=0;seen[start]=true
+                while j<q.count {let n=q[j];j+=1
+                    for m in [n%w>0 ? n-1:-1,n%w<w-1 ? n+1:-1,n>=w ? n-w:-1,n<w*(h-1) ? n+w:-1] where m>=0 {
+                        if candidate[m] && !seen[m] {seen[m]=true;q.append(m)}
+                    }
+                }
+                let cx=q.reduce(0.0){$0+Double($1%w)}/Double(q.count)/scale,cy=q.reduce(0.0){$0+Double($1/w)}/Double(q.count)/scale
+                let weight=Double(q.count)/(1+hypot(cx-clock.midX,cy-clock.midY)*0.1)
+                if weight>score {score=weight;best=q}
+            }}
+            guard best.count>Int(20*scale*scale) else {continue}
+            var points: [CGPoint] = best.map { n in CGPoint(x:Double(n % w)+0.5,y:Double(n / w)+0.5) }
+            points.sort { a,b in a.x == b.x ? a.y < b.y : a.x < b.x }
+            func cross(_ a:CGPoint,_ b:CGPoint,_ c:CGPoint)->Double{(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x)}
+            var lower=[CGPoint](),upper=[CGPoint]()
+            for v in points {while lower.count>=2 && cross(lower[lower.count-2],lower.last!,v)<=0 {lower.removeLast()};lower.append(v)}
+            for v in points.reversed() {while upper.count>=2 && cross(upper[upper.count-2],upper.last!,v)<=0 {upper.removeLast()};upper.append(v)}
+            let path=CGMutablePath();path.addLines(between:Array(lower.dropLast())+Array(upper.dropLast()));path.closeSubpath()
+            let edge=path.copy(strokingWithWidth:1.5*scale,lineCap:.round,lineJoin:.round,miterLimit:2)
+            for y in y0...y1 {for x in x0...x1 {
+                let point=CGPoint(x:Double(x)+0.5,y:Double(y)+0.5),n=y*w+x,i=n*4
+                let r=Double(p[i]),g=Double(p[i+1]),b=Double(p[i+2])
+                // Orange fingers retain their own material in front of glass.
+                let skin=r>g*(shaded ? 1.55:1.32) && g>b*(shaded ? 1.20:1.12)
+                if !skin && (path.contains(point) || edge.contains(point)) {result[n]=1}
+            }}
+        }
+        return result
+    }
+}
+
+extension DinoSpriteColorRenderer {
+    /// Source texture can shift an isolated highlight across a hue boundary.
+    /// Resolve small connected material islands from their surrounding region;
+    /// neutral eyes, nostrils and dial ink remain explicitly protected.
+    private static func cleanedVolcanoLabels(_ input:[UInt8],width w:Int,height h:Int)->[UInt8] {
+        var labels=input,seen=[Bool](repeating:false,count:input.count)
+        let scale=pow(Double(w)/512,2)
+        for start in labels.indices where !seen[start] && input[start] != 0 {
+            let label=input[start]
+            var q=[start],j=0;seen[start]=true
+            var votes=[Int](repeating:0,count:7)
+            while j<q.count {let n=q[j];j+=1
+                for m in [n%w>0 ? n-1:-1,n%w<w-1 ? n+1:-1,n>=w ? n-w:-1,n<w*(h-1) ? n+w:-1] where m>=0 {
+                    if input[m]==label {if !seen[m] {seen[m]=true;q.append(m)}}
+                    else if input[m]>0 {votes[Int(input[m])]+=1}
+                }
+            }
+            let limit=Int((label==3 ? 220.0:label==4 ? 36.0:18.0)*scale)
+            if q.count<limit, let best=(1..<7).max(by:{votes[$0]<votes[$1]}), votes[best]>0 {
+                for n in q {labels[n]=UInt8(best)}
+            }
+        }
+        // A compact categorical edge filter removes salt-and-pepper contour
+        // labels without touching the original raster's texture or alpha.
+        let before=labels,radius=max(1,Int((Double(w)/512).rounded()))
+        for y in radius..<(h-radius) {for x in radius..<(w-radius) {
+            let n=y*w+x,label=before[n];guard label>0 else {continue}
+            let neighbours=[before[n-1],before[n+1],before[n-w],before[n+w]]
+            guard neighbours.contains(where:{$0 != label && $0>0}) else {continue}
+            var votes=[Int](repeating:0,count:7)
+            for yy in (y-radius)...(y+radius) {for xx in (x-radius)...(x+radius) {votes[Int(before[yy*w+xx])]+=1}}
+            if let best=(1..<7).max(by:{votes[$0]<votes[$1]}),votes[best]>votes[Int(label)]+2 {labels[n]=UInt8(best)}
+        }}
+        return labels
+    }
+}
+
+/// Material analysis is an authoring step. Shipping the color-independent RLE
+/// mattes keeps a cold answer/result from doing connected-component work on the
+/// render thread. Geometry remains the source of truth for rebaking and tests.
+private enum VolcanoMaterialArchive {
+    private struct Entry {let width:Int;let height:Int;let start:Int;let runs:Int}
+    private static let archive: (Data,[String:Entry])? = {
+        let data:Data?
+#if canImport(UIKit)
+        data=NSDataAsset(name:"volcano-materials")?.data
+#else
+        data=try? Data(contentsOf:URL(fileURLWithPath:"Assets.xcassets/volcano-materials.dataset/magma-materials.bin"))
+#endif
+        guard let data,data.count>=6,Array(data.prefix(4))==[77,71,77,57] else {return nil}
+        func u16(_ p:Int)->Int {Int(data[p]) | Int(data[p+1])<<8}
+        func u32(_ p:Int)->Int {Int(data[p]) | Int(data[p+1])<<8 | Int(data[p+2])<<16 | Int(data[p+3])<<24}
+        var entries=[String:Entry](),cursor=6
+        for _ in 0..<u16(4) {
+            guard cursor+10<=data.count else {return nil}
+            let length=u16(cursor),w=u16(cursor+2),h=u16(cursor+4),runs=u32(cursor+6);cursor+=10
+            guard cursor+length+runs*5<=data.count,let name=String(data:data[cursor..<cursor+length],encoding:.utf8) else {return nil}
+            cursor+=length;entries[name]=Entry(width:w,height:h,start:cursor,runs:runs);cursor+=runs*5
+        }
+        return (data,entries)
+    }()
+    static func labels(asset:String,width:Int,height:Int)->[UInt8]? {
+        guard let (data,entries)=archive,let e=entries[asset],e.width==width,e.height==height else {return nil}
+        var out=[UInt8]();out.reserveCapacity(width*height)
+        for run in 0..<e.runs {
+            let p=e.start+run*5,count=Int(data[p]) | Int(data[p+1])<<8 | Int(data[p+2])<<16 | Int(data[p+3])<<24,label=data[p+4]
+            guard label<=6,count>0,out.count+count<=width*height else {return nil}
+            out.append(contentsOf:repeatElement(label,count:count))
+        }
+        return out.count==width*height ? out:nil
     }
 }
