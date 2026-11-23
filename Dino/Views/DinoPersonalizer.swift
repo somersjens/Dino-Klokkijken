@@ -180,7 +180,7 @@ struct DinoAppearanceEditor: View {
                 }
             }
             Button {
-                var reset = DinoAppearance.standard
+                var reset = DinoAppearance.standard(for: appearance.identity)
                 reset.character = appearance.character
                 player.setDinoAppearance(reset)
             } label: {
@@ -206,7 +206,7 @@ struct DinoAppearanceEditor: View {
                             ZStack(alignment: .bottomTrailing) {
                                 RoundedRectangle(cornerRadius: 14)
                                     .fill(unlocked ? Color.white.opacity(0.92) : DinoStyle.deepGreen.opacity(0.07))
-                                if character == .main || character == .jungle {
+                                if character.isPlayable {
                                     DinoAvatar(appearance: collectionAppearance(character))
                                         .padding(3).saturation(unlocked ? 1 : 0)
                                         .opacity(unlocked ? 1 : 0.38)
@@ -239,9 +239,7 @@ struct DinoAppearanceEditor: View {
     }
 
     private func collectionAppearance(_ character: DinoIdentity) -> DinoAppearance {
-        var colors = appearance
-        colors.character = character == .main ? nil : character
-        return colors
+        DinoAppearance.standard(for: character)
     }
 
     private var preview: some View {
@@ -257,7 +255,7 @@ struct DinoAppearanceEditor: View {
     }
 
     private func colorChoice(_ part: DinoAppearance.Part) -> some View {
-        CustomizationSection(title: part.labelKey, identifier: "personalize.\(part.rawValue).label",
+        CustomizationSection(title: part.labelKey(for: appearance.identity), identifier: "personalize.\(part.rawValue).label",
                              compactLabelWidth: compact ? 64 : nil) {
             HStack(spacing: 0) {
                 ForEach(swatches, id: \.name) { swatch in
@@ -278,7 +276,7 @@ struct DinoAppearanceEditor: View {
                         .accessibilityIdentifier("personalize.\(part.rawValue).\(swatch.name)")
                 }
                 ColorPicker(selection: colorBinding(part), supportsOpacity: false) {
-                    Text(LocalizedStringKey(part.labelKey))
+                    Text(LocalizedStringKey(part.labelKey(for: appearance.identity)))
                 }.labelsHidden()
                     .scaleEffect(metrics.spacious ? 1.25 : 1)
                     .frame(maxWidth: .infinity, minHeight: metrics.controlHeight)

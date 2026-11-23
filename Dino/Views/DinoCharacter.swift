@@ -48,8 +48,8 @@ struct DinoCharacter: View {
             // A finished answer reaction must not lend its final time or paused
             // schedule to the new jump before the playback task starts.
             let elapsed = journeyElapsed ?? (playbackClip != clip ? 0 : finished ? DinoAnimation.duration(clip) : context.date.timeIntervalSince(start))
-            let sample = appearance.identity == .jungle
-                ? DinoJungleAnimation.sample(clip, elapsed: elapsed, reducedMotion: reduceMotion)
+            let sample = appearance.identity.usesBossArtwork
+                ? DinoBossAnimation.sample(clip, character: appearance.identity, elapsed: elapsed, reducedMotion: reduceMotion)
                 : DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reduceMotion)
             let drawing = characterDrawing(sample, elapsed: elapsed)
                 .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
@@ -59,7 +59,15 @@ struct DinoCharacter: View {
                 .transaction { $0.animation = nil }
             Group {
                 if let companionPresentation {
-                    drawing.modifier(companionPresentation)
+                    if appearance.identity.usesBossArtwork, companionPresentation.portraitAmount > 0 {
+                        let head = characterDrawing(sample, elapsed: elapsed, headOnly: true)
+                            .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
+                            .offset(y: size * sample.height * jumpHeightScale)
+                            .transaction { $0.animation = nil }
+                        drawing.modifier(companionPresentation.withJungleHead(AnyView(head)))
+                    } else {
+                        drawing.modifier(companionPresentation)
+                    }
                 } else {
                     drawing
                 }
@@ -97,16 +105,17 @@ struct DinoCharacter: View {
         }
     }
 
-    @ViewBuilder private func characterDrawing(_ sample: DinoAnimation.Sample, elapsed: Double) -> some View {
-        if appearance.identity == .jungle {
+    @ViewBuilder private func characterDrawing(_ sample: DinoAnimation.Sample, elapsed: Double, headOnly: Bool = false) -> some View {
+        if appearance.identity.usesBossArtwork {
             ZStack {
                 if let previous = sample.previousPose, sample.poseBlend < 1 {
-                    sprite(previous, angle: sample.angle, yaw: sample.yaw).opacity(1 - sample.poseBlend)
+                    sprite(previous, angle: sample.angle, yaw: sample.yaw, headOnly: headOnly).opacity(1 - sample.poseBlend)
                 }
-                sprite(sample.pose, angle: sample.angle, yaw: sample.yaw)
+                sprite(sample.pose, angle: sample.angle, yaw: sample.yaw, headOnly: headOnly)
                     .opacity(sample.previousPose != nil ? sample.poseBlend : 1)
-                if clip == .thumbsUp && !reduceMotion { DinoClapEffect(elapsed: elapsed).scaleEffect(x: -1, y: 1) }
-            }
+                    .blendMode(.plusLighter)
+                if !headOnly && clip == .thumbsUp && !reduceMotion { DinoClapEffect(elapsed: elapsed, contact: appearance.identity == .desert ? CGPoint(x: 0.72, y: 0.60) : CGPoint(x: 0.40, y: 0.475)) }
+            }.compositingGroup()
         } else if clip == .thumbsUp {
             ZStack {
                 // Bridge the moving jaw to the torso behind the clapping hands.
@@ -158,20 +167,23 @@ struct DinoCharacter: View {
         }
     }
 
-    @ViewBuilder private func sprite(_ pose: DinoAnimation.Pose, angle: Double, yaw: Double) -> some View {
+    @ViewBuilder private func sprite(_ pose: DinoAnimation.Pose, angle: Double, yaw: Double, headOnly: Bool = false) -> some View {
         let image = Group {
-            if let prepared, prepared.appearance == appearance, let image = prepared.images[pose.asset] {
+            if headOnly, let prepared, prepared.appearance == appearance, let image = prepared.images["head-" + pose.asset] {
+                Image(uiImage:image).resizable().scaledToFit().accessibilityHidden(true)
+            } else if headOnly, let image = DinoAvatarRenderer.bossHead(appearance:appearance,asset:pose.asset) {
+                Image(uiImage:image).resizable().scaledToFit().accessibilityHidden(true)
+            } else if let prepared, prepared.appearance == appearance, let image = prepared.images[pose.asset] {
                 Image(uiImage: image).resizable().scaledToFit().accessibilityHidden(true)
             } else {
                 DinoAvatar(appearance: appearance, asset: pose.asset)
             }
         }.frame(width: size, height: size)
-            .offset(x: appearance.identity == .jungle ? 0 : size * pose.offsetX,
-                    y: appearance.identity == .jungle ? 0 : size * pose.offsetY)
-            .rotationEffect(.degrees(angle - (appearance.identity == .jungle ? 0 : pose.paintedAngle)),
+            .offset(x: size * pose.offsetX, y: size * pose.offsetY)
+            .rotationEffect(.degrees(angle - (appearance.identity.usesBossArtwork ? 0 : pose.paintedAngle)),
                             anchor: clip == .backflip ? UnitPoint(x: 0.5, y: 0.52)
                                 : clip == .thumbsUp || clip == .wrongAnswer ? UnitPoint(x: 0.54, y: 0.48) : .bottom)
-        if clip == .pirouette && appearance.identity != .jungle {
+        if clip == .pirouette && !appearance.identity.usesBossArtwork {
             // The supplied views carry the turn. A small residual motion keeps
             // them alive without squeezing Dino into a thin rotating card.
             image.rotation3DEffect(.degrees(min(9, max(-9, yaw - pose.paintedYaw))), axis: (x: 0, y: 1, z: 0),
@@ -186,11 +198,12 @@ struct DinoCharacter: View {
 /// Rounded strokes expand and dissolve instead of flashing between painted marks.
 private struct DinoClapEffect: View {
     let elapsed: Double
+    var contact = CGPoint(x: 0.60, y: 0.475)
 
     var body: some View {
         Canvas { context, size in
             let unit = size.width
-            let center = CGPoint(x: unit * 0.60, y: size.height * 0.475)
+            let center = CGPoint(x: unit * contact.x, y: size.height * contact.y)
             for contact in DinoAnimation.correctAnswerClapContacts {
                 for echo in 0..<2 {
                     let age = elapsed - contact - Double(echo) * 0.035
@@ -324,6 +337,7 @@ struct DinoCompanionLayer: View {
     var reactionID = 0
     var dimmingOpacity: Double = 0
     var onCelebrationStart: (Date) -> Void = { _ in }
+    @EnvironmentObject private var player: DinoPlayer
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var placement = CGRect.zero
@@ -335,8 +349,14 @@ struct DinoCompanionLayer: View {
     @State private var celebrationStart: Date?
     @State private var celebrationFinished = false
     @State private var resultHeightScale: CGFloat = 1
+    @State private var preparedAppearance: DinoAppearance?
 
     private var celebrates: Bool { isResult && DinoResultJourney.clips.contains(clip) }
+    private var appearance: DinoAppearance { player.profile.dinoAppearance ?? .standard }
+    private var preparationAppearance: DinoAppearance? {
+        (destination != nil || isResult) && appearance.identity == .desert ? appearance : nil
+    }
+    private var artworkReady: Bool { preparationAppearance == nil || preparedAppearance == appearance }
 
     var body: some View {
         Group {
@@ -361,6 +381,15 @@ struct DinoCompanionLayer: View {
                         let arriving = isResult && !atResult
                         atResult = isResult
                         showClip(clip)
+                        // A cold result route can arrive before its background
+                        // sprite preparation. Start the journey and star clock
+                        // together only after the complete set is available.
+                        if celebrates && !artworkReady {
+                            if !visible {
+                                placement = target; visible = true; portraitAmount = 0
+                            }
+                            return
+                        }
                         guard visible, !reduceMotion else {
                             var transaction = Transaction()
                             transaction.disablesAnimations = true
@@ -398,6 +427,17 @@ struct DinoCompanionLayer: View {
         // preserving the portrait's transparent edges and overflowing spikes.
         .colorMultiply(Color(white: 1 - dimmingOpacity))
         .animation(.easeOut(duration: 0.18), value: dimmingOpacity)
+        .task(id: preparationAppearance) {
+            guard let colors = preparationAppearance else { return }
+            let images = await DinoSpriteLoader.shared.images(for: colors)
+            guard !Task.isCancelled, !images.isEmpty else { return }
+            preparedAppearance = colors
+        }
+        .onValueChange(of: artworkReady) { ready in
+            if ready, celebrates, celebrationStart == nil, let target = destination {
+                startCelebration(toward: target)
+            }
+        }
         .task(id: isResult) {
             if isResult {
                 var transaction = Transaction()
@@ -451,6 +491,9 @@ struct DinoCompanionLayer: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text(verbatim: "Dino"))
                 .accessibilityIdentifier(presentedClip == .idle ? "dino.character" : "dino.\(presentedClip.rawValue)")
+#if DEBUG
+                .accessibilityValue(String(appearance.identity.rawValue))
+#endif
         }
         .frame(width: 210, height: 210)
         .scaleEffect(frame.width / 210)
@@ -462,6 +505,7 @@ struct DinoCompanionLayer: View {
     }
 
     private func startCelebration(toward target: CGRect) {
+        guard artworkReady else { return }
         let start = Date()
         var transaction = Transaction()
         transaction.disablesAnimations = true
@@ -497,6 +541,12 @@ struct DinoCompanionPresentation: AnimatableModifier {
     let fadesBeforeTakeoff: Bool
     let palette: HUDPalette
     let rimRatio: CGFloat
+    var jungleHead: AnyView? = nil
+    func withJungleHead(_ head: AnyView) -> Self {
+        var copy = self
+        copy.jungleHead = head
+        return copy
+    }
     var animatableData: AnimatablePair<CGFloat, CGFloat> {
         get { AnimatablePair(portraitAmount, decorationVisibility) }
         set { portraitAmount = newValue.first; decorationVisibility = newValue.second }
@@ -508,22 +558,30 @@ struct DinoCompanionPresentation: AnimatableModifier {
         let crop = fadesBeforeTakeoff ? pow(min(1, portraitAmount * 1.5), 2) : portraitAmount
         let decorationOpacity = (fadesBeforeTakeoff ? max(0, portraitAmount * 3 - 2) : portraitAmount) * decorationVisibility
         let drawing = content
-            .scaleEffect(1 + ((player.profile.activeCharacter == .jungle ? DinoJungleArtwork.portraitScale : 1 / 0.62) - 1) * crop)
-            .offset(x: 210 * (player.profile.activeCharacter == .jungle ? DinoJungleArtwork.portraitOffsetX : -0.065) * crop,
-                    y: 210 * (player.profile.activeCharacter == .jungle ? DinoJungleArtwork.portraitOffsetY : 0.339) * crop)
+            .scaleEffect(1 + ((player.profile.activeCharacter.usesBossArtwork ? player.profile.activeCharacter.portraitScale : 1 / 0.62) - 1) * crop)
+            .offset(x: 210 * (player.profile.activeCharacter.usesBossArtwork ? player.profile.activeCharacter.portraitOffsetX : -0.065) * crop,
+                    y: 210 * (player.profile.activeCharacter.usesBossArtwork ? player.profile.activeCharacter.portraitOffsetY : 0.339) * crop)
         ZStack {
             Circle().fill(LinearGradient(colors: [palette.portraitLight, palette.accent],
                                          startPoint: .topLeading, endPoint: .bottomTrailing))
                 .overlay(Circle().strokeBorder(palette.outline, lineWidth: 210 * rimRatio / 2))
                 .opacity(decorationOpacity)
-            drawing.mask(DinoCompanionReveal(portraitAmount: crop, leafyCrown: player.profile.activeCharacter == .jungle))
+            drawing.mask(DinoCompanionReveal(portraitAmount: crop, leafyCrown: player.profile.activeCharacter.usesBossArtwork))
             Circle().strokeBorder(palette.rim, lineWidth: 210 * rimRatio)
                 .opacity(decorationOpacity)
             // Paint the actual bandana/spike pixels over the complete rim.
             // Cutting rectangles out of the rim left gaps when a pose moved.
             // This is the same sampled image, so both crops stay frame-perfect.
-            drawing.mask(DinoBustOverflowMask(diameter: 210, leafyCrown: player.profile.activeCharacter == .jungle))
-                .opacity(crop)
+            if let jungleHead {
+                jungleHead
+                    .scaleEffect(1 + (player.profile.activeCharacter.portraitScale-1)*crop)
+                    .offset(x:210*player.profile.activeCharacter.portraitOffsetX*crop,
+                            y:210*player.profile.activeCharacter.portraitOffsetY*crop)
+                    .opacity(crop)
+            } else {
+                drawing.mask(DinoBustOverflowMask(diameter: 210))
+                    .opacity(crop)
+            }
         }.frame(width: 210, height: 210)
     }
 }
@@ -534,7 +592,7 @@ private struct DinoCompanionReveal: Shape {
     func path(in rect: CGRect) -> Path {
         let expansion = rect.width * 2 * (1 - portraitAmount)
         var path = Path(ellipseIn: rect.insetBy(dx: -expansion, dy: -expansion))
-        path.addPath(DinoBustOverflowMask(diameter: rect.width, leafyCrown: leafyCrown).path(in: rect))
+        if !leafyCrown { path.addPath(DinoBustOverflowMask(diameter: rect.width).path(in: rect)) }
         return path
     }
 }

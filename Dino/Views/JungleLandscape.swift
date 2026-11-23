@@ -1934,8 +1934,8 @@ struct WorldMapLandscape: View, Equatable {
                 let scale = min(1.35, max(0.82, width / 390))
                 let point = JungleMapLayout(width: width).scene().bossPoint
                 let size = 180 * scale * 0.88
-                if player.profile.worldComplete(1) && player.profile.pendingCharacterUnlock == nil {
-                    DinoAvatar(appearance: (player.profile.dinoAppearance ?? .standard).mainAppearance)
+                if let resident = player.profile.mapResident(in: 1), resident != .jungle {
+                    DinoAvatar(appearance: .standard(for: resident))
                         .frame(width: size, height: size)
                         .position(x: point.x, y: routeOffset + point.y + 8 * scale - size * 0.466)
                         .accessibilityIdentifier("map.jungleResident.main")
@@ -18349,7 +18349,6 @@ struct ThemedWorldLandscape: View, Equatable {
                 let point = CGPoint(x: size.width - 79 * scale, y: 1675)
                 depth.add(at: routeOffset + point.y) {
                     boss.bossClearing(worldID: 7, at: point, size: scale)
-                    boss.boss(worldID: 7, at: point, size: scale * 0.88)
                     boss.bossClearingForeground(worldID: 7, at: point, size: scale)
                 }
                 depth.draw()
@@ -18488,6 +18487,7 @@ struct ThemedWorldLandscape: View, Equatable {
 
 /// Only the clock cutouts animate; the body and world remain in their depth layers.
 private struct WorldBossMapClocks: View {
+    @EnvironmentObject private var player: DinoPlayer
     let world: DinoWorld
     let routeOffset: CGFloat
     let viewportHeight: CGFloat
@@ -18504,13 +18504,29 @@ private struct WorldBossMapClocks: View {
             let artScale = scale * 0.88
             let point = CGPoint(x: origin.x, y: routeOffset + origin.y)
             let frame = WorldBossPainter.bounds(worldID: world.themeID, at: point, size: artScale)
-            WorldBossClockSurface(themeID: world.themeID, point: point, scale: artScale, viewportHeight: viewportHeight)
+            Group {
+                if world.id == 2 {
+                    if let resident = player.profile.mapResident(in: 2), resident != .desert {
+                        DinoAvatar(appearance: .standard(for: resident))
+                            .frame(width: 195 * artScale, height: 195 * artScale)
+                            .position(x: point.x, y: point.y + 10 * artScale - 195 * artScale * CGFloat(resident.standingFootline - 0.5))
+                    } else {
+                        Canvas { context, _ in
+                            WorldBossPainter(context: context).draw(worldID: world.themeID, at: point, size: artScale)
+                        }
+                        WorldBossClockSurface(themeID: world.themeID, point: point, scale: artScale, viewportHeight: viewportHeight)
+                            .position(x: frame.midX, y: frame.midY)
+                    }
+                } else {
+                    WorldBossClockSurface(themeID: world.themeID, point: point, scale: artScale, viewportHeight: viewportHeight)
                 .mask {
                     if let scene {
                         JungleDepthOcclusion(scene: scene, frame: frame.offsetBy(dx: 0, dy: -routeOffset), behindY: origin.y)
                     } else { Rectangle().fill(.white) }
                 }
                 .position(x: frame.midX, y: frame.midY)
+                }
+            }
         }.allowsHitTesting(false).accessibilityHidden(true)
     }
 }

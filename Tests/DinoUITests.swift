@@ -522,6 +522,188 @@ final class DinoUITests: XCTestCase {
         }
     }
 
+    func testDesertWelcomeAndAnswerReactions() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "20"
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "2"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 15))
+        waitForMapOpeningToFinish()
+        saveScreenshot("desert-welcome-right-facing")
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        app.launch()
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 15))
+        assertCompanionInPortrait(app.descendants(matching: .any)["dino.character"])
+        saveScreenshot("desert-face-portrait")
+        var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.chooseAnalog)), seed: seed)
+        let first = generator.next(index: 0, difficultyForKind: { _ in .introduction })
+        let oldTitle = app.staticTexts["question.title"].label
+        tap("question.option.\(first.responses.firstIndex(of: first.expectedAnswer)!)")
+        let advanced = NSPredicate { _, _ in self.app.staticTexts["question.title"].label != oldTitle }
+        expectation(for: advanced, evaluatedWith: nil)
+        waitForExpectations(timeout: 8)
+        let next = generator.next(index: 1, difficultyForKind: { _ in .familiar })
+        tap("question.option.\(next.responses.firstIndex { $0 != next.expectedAnswer }!)")
+        if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 8))
+        saveScreenshot("desert-wrong-answer-portrait")
+    }
+
+    func testDesertCleanMaterialPortraitReactions() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "20"
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "2"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        app.launch()
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout:15))
+        tap("header.dino")
+        for (part,color) in [("bandana","orange"),("spikes","red"),("body","green"),("belly","blue")] {
+            tap("personalize.\(part).\(color)")
+        }
+        saveScreenshot("desert-clean-materials-full-body")
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout:5))
+        saveScreenshot("desert-clean-materials-portrait")
+        var generator = DinoPracticeGenerator(configuration:.init(time:.whole,order:.specific(.chooseAnalog)),seed:seed)
+        let first = generator.next(index:0,difficultyForKind:{_ in .introduction})
+        let oldTitle = app.staticTexts["question.title"].label
+        tap("question.option.\(first.responses.firstIndex(of:first.expectedAnswer)!)")
+        saveScreenshot("desert-clean-materials-clap")
+        expectation(for:NSPredicate { _,_ in self.app.staticTexts["question.title"].label != oldTitle },evaluatedWith:nil)
+        waitForExpectations(timeout:8)
+        let next = generator.next(index:1,difficultyForKind:{_ in .familiar})
+        tap("question.option.\(next.responses.firstIndex {$0 != next.expectedAnswer}!)")
+        if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout:8))
+        saveScreenshot("desert-clean-materials-wrong")
+    }
+
+    func testDesertCustomColorsPortraitAndResident() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "20"
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "2"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout: 15))
+        waitForMapOpeningToFinish()
+        tap("header.dino")
+        for (part,color) in [("bandana","purple"),("spikes","purple"),("body","blue"),("belly","pink")] {
+            tap("personalize.\(part).\(color)")
+        }
+        saveScreenshot("desert-custom-colors-full-body")
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout: 5))
+        saveScreenshot("desert-custom-colors-map")
+        app.swipeDown()
+        saveScreenshot("desert-resident-default-colors")
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        app.launch()
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 15))
+        saveScreenshot("desert-custom-colors-hud")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout: 5))
+        saveScreenshot("desert-custom-colors-hud-landscape")
+        XCUIDevice.shared.orientation = .portrait
+    }
+
+    func testDesertCharacterResultAnimations() {
+        for correct in [0, 3, 4, 5] {
+            app.terminate()
+            app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "20"
+            app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "2"
+            app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "21"
+            app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = String(correct)
+            app.launch()
+            XCTAssertTrue(app.buttons["result.retry"].waitForExistence(timeout: 15))
+            saveScreenshot("desert-result-\(correct)-arrival")
+            RunLoop.current.run(until: Date().addingTimeInterval(2.5))
+            saveScreenshot("desert-result-\(correct)-settled")
+        }
+    }
+
+    func testDesertUnlockFromJungleAndResidentSwap() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "9"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "10"
+        app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = "10"
+        app.launch()
+        XCTAssertTrue(app.buttons["result.next"].waitForExistence(timeout:20))
+        tap("result.next")
+        XCTAssertTrue(app.descendants(matching:.any)["map.dino.11"].waitForExistence(timeout:30))
+        XCTAssertTrue(app.descendants(matching:.any)["map.worldJump"].waitForNonExistence(timeout:10))
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "19"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "20"
+        app.launch()
+        XCTAssertTrue(app.buttons["result.next"].waitForExistence(timeout:20))
+        XCTAssertEqual(app.descendants(matching:.any)["dino.backflip"].value as? String,"1",
+                       "the previous jungle identity stays active until the desert reveal")
+        saveScreenshot("desert-unlock-jungle-source-result")
+        tap("result.next")
+        XCTAssertTrue(app.descendants(matching:.any)["map.dino.21"].waitForExistence(timeout:30))
+        XCTAssertTrue(app.descendants(matching:.any)["map.worldJump"].waitForNonExistence(timeout:10))
+        tap("header.dino")
+        XCTAssertEqual(app.descendants(matching:.any)["personalize.preview"].value as? String,"2")
+        tap("personalize.body.blue")
+        tap("personalize.done")
+        _ = revealMapNode(20)
+        saveScreenshot("desert-active-blue-jungle-resident-original")
+        tap("header.dino")
+        revealThemeChoice("personalize.character.1")
+        tap("personalize.character.1")
+        XCTAssertEqual(app.descendants(matching:.any)["personalize.preview"].value as? String,"1")
+        tap("personalize.done")
+        _ = revealMapNode(20)
+        saveScreenshot("jungle-active-blue-desert-resident-original")
+        app.terminate()
+        for key in ["DINO_TEST_COMPLETED_LEVEL","DINO_TEST_RESULT_LEVEL","DINO_TEST_RESULT_CORRECT"] {app.launchEnvironment.removeValue(forKey:key)}
+        app.launch()
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout:20))
+        waitForMapOpeningToFinish()
+        tap("header.dino")
+        XCTAssertEqual(app.descendants(matching:.any)["personalize.preview"].value as? String,"1")
+        saveScreenshot("desert-jungle-swap-persisted")
+        tap("personalize.done")
+    }
+
+    func testSecondCharacterUnlockAndCollectionSwap() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "19"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "20"
+        app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = "10"
+        app.launch()
+        XCTAssertTrue(app.buttons["result.next"].waitForExistence(timeout:20))
+        tap("result.next")
+        XCTAssertTrue(app.descendants(matching:.any)["map.dino.21"].waitForExistence(timeout:30))
+        waitForMapOpeningToFinish()
+        saveScreenshot("desert-unlocked-map")
+        tap("header.dino")
+        revealThemeChoice("personalize.character.0")
+        XCTAssertTrue(app.buttons["personalize.character.0"].isEnabled)
+        XCTAssertFalse(app.buttons["personalize.character.2"].exists)
+        XCTAssertFalse(app.buttons["personalize.character.3"].isEnabled)
+        tap("personalize.character.0")
+        XCTAssertTrue(app.buttons["personalize.character.2"].isEnabled)
+        tap("personalize.character.2")
+        saveScreenshot("desert-collection-swapped")
+        tap("personalize.done")
+        app.terminate()
+        for key in ["DINO_TEST_COMPLETED_LEVEL","DINO_TEST_RESULT_LEVEL","DINO_TEST_RESULT_CORRECT"] {app.launchEnvironment.removeValue(forKey:key)}
+        app.launch()
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout:20))
+        waitForMapOpeningToFinish()
+        tap("header.dino")
+        revealThemeChoice("personalize.character.0")
+        XCTAssertFalse(app.buttons["personalize.character.2"].exists)
+        XCTAssertTrue(app.buttons["personalize.character.0"].isEnabled)
+        saveScreenshot("desert-restarted-selection")
+        tap("personalize.done")
+    }
+
     func testJungleWelcomeAndAnswerReactions() {
         app.terminate()
         app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "10"
@@ -5442,6 +5624,65 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("jungle-character-collection-landscape")
         XCTAssertTrue(app.buttons["personalize.character.0"].isHittable)
         tap("personalize.done")
+        XCUIDevice.shared.orientation = .portrait
+    }
+
+    func testJungleCleanMaterialPortraitReactions() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "10"
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "1"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        app.launch()
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout:15))
+        tap("header.dino")
+        for (part,color) in [("bandana","orange"),("spikes","red"),("body","green"),("belly","blue")] {
+            tap("personalize.\(part).\(color)")
+        }
+        saveScreenshot("jungle-clean-materials-full-body")
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout:5))
+        saveScreenshot("jungle-clean-materials-portrait")
+        var generator = DinoPracticeGenerator(configuration:.init(time:.whole,order:.specific(.chooseAnalog)),seed:seed)
+        let first = generator.next(index:0,difficultyForKind:{_ in .introduction})
+        let oldTitle = app.staticTexts["question.title"].label
+        tap("question.option.\(first.responses.firstIndex(of:first.expectedAnswer)!)")
+        saveScreenshot("jungle-clean-materials-clap")
+        expectation(for:NSPredicate { _,_ in self.app.staticTexts["question.title"].label != oldTitle },evaluatedWith:nil)
+        waitForExpectations(timeout:8)
+        let next = generator.next(index:1,difficultyForKind:{_ in .familiar})
+        tap("question.option.\(next.responses.firstIndex {$0 != next.expectedAnswer}!)")
+        if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout:8))
+        saveScreenshot("jungle-clean-materials-wrong")
+    }
+
+    func testJungleCustomColorsPortraitAndResident() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "10"
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "1"
+        app.launch()
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout: 15))
+        waitForMapOpeningToFinish()
+        tap("header.dino")
+        for (part,color) in [("bandana","purple"),("spikes","purple"),("body","blue"),("belly","pink")] {
+            tap("personalize.\(part).\(color)")
+        }
+        saveScreenshot("jungle-custom-colors-full-body")
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout: 5))
+        saveScreenshot("jungle-custom-colors-map")
+        app.swipeDown()
+        saveScreenshot("jungle-resident-default-colors")
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        app.launch()
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 15))
+        saveScreenshot("jungle-custom-colors-hud")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout: 5))
+        saveScreenshot("jungle-custom-colors-hud-landscape")
         XCUIDevice.shared.orientation = .portrait
     }
 

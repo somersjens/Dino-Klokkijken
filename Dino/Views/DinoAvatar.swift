@@ -17,7 +17,7 @@ struct DinoAvatar: View {
     }
 
     private var image: UIImage? {
-        if appearance.identity == .jungle {
+        if appearance.identity.usesBossArtwork {
             return DinoAvatarRenderer.render(original: nil, appearance: appearance, portrait: portrait, asset: asset)
         }
         if let rendered, rendered.key == renderKey { return rendered.image }
@@ -86,8 +86,10 @@ actor DinoSpriteLoader {
             return cached
         }
         let preparation = Task.detached(priority: .userInitiated) {
-            DinoAvatarRenderer.render(original: UIImage(named: "dino-idle")?.cgImage,
+            let image = DinoAvatarRenderer.render(original: UIImage(named: "dino-idle")?.cgImage,
                                       appearance: colors, portrait: false, resolution: resolution)
+            if colors.identity.usesBossArtwork, resolution == .standard { _ = DinoAvatarRenderer.bossHead(appearance: colors, asset: "dino-idle") }
+            return image
         }
         return await withTaskCancellationHandler { await preparation.value } onCancel: { preparation.cancel() }
     }
@@ -107,6 +109,10 @@ actor DinoSpriteLoader {
                     guard !Task.isCancelled else { return [:] }
                     images[asset] = DinoAvatarRenderer.render(original: UIImage(named: asset)?.cgImage,
                                                             appearance: colors, portrait: false, asset: asset)
+                    if colors.identity.usesBossArtwork, let head = DinoAvatarRenderer.bossHead(appearance:colors,asset:asset) {
+                        images["head-" + asset] = head
+                        images["head-" + colors.identity.asset(for: asset)] = head
+                    }
                 }
                 return images
             }
@@ -122,7 +128,7 @@ actor DinoSpriteLoader {
             appearance = colors
             job = Task.detached(priority: .userInitiated) {
                 var images = answers
-                for asset in DinoAnimation.spriteAssets + (colors.identity == .jungle ? Array(DinoJungleArtwork.assets) : []) {
+                for asset in DinoAnimation.spriteAssets + (colors.identity.usesBossArtwork ? Array(colors.identity.artworkAssets) : []) {
                     guard !Task.isCancelled else { return [:] }
                     if images[asset] != nil { continue }
                     if let cached = DinoAvatarRenderer.cached(appearance: colors, portrait: false, asset: asset) {
@@ -130,6 +136,12 @@ actor DinoSpriteLoader {
                     } else {
                         images[asset] = DinoAvatarRenderer.render(original: UIImage(named: asset)?.cgImage,
                                                                 appearance: colors, portrait: false, asset: asset)
+                    }
+                }
+                if colors.identity.usesBossArtwork {
+                    for asset in DinoBossAnimation.portraitAssets(for: colors.identity) {
+                        guard !Task.isCancelled else { return [:] }
+                        images["head-" + asset] = DinoAvatarRenderer.bossHead(appearance: colors, asset: asset)
                     }
                 }
                 return images
@@ -141,11 +153,12 @@ actor DinoSpriteLoader {
     func worldJumpImages(for colors: DinoAppearance) async -> [String: UIImage] {
         let preparation = Task.detached(priority: .userInitiated) { () -> [String: UIImage] in
             var images: [String: UIImage] = [:]
-            for asset in ["dino-idle"] + DinoAnimation.worldJumpAssets + (colors.identity == .jungle ? DinoJungleAnimation.keys(for: .worldJump).map(\.asset) : []) {
+            for asset in ["dino-idle"] + DinoAnimation.worldJumpAssets + (colors.identity.usesBossArtwork ? DinoBossAnimation.assets(for: .worldJump, character: colors.identity) : []) {
                 guard !Task.isCancelled else { return [:] }
                 images[asset] = DinoAvatarRenderer.render(original: UIImage(named: asset)?.cgImage,
                                                          appearance: colors, portrait: false, asset: asset)
             }
+            if colors.identity.usesBossArtwork { _ = DinoAvatarRenderer.bossHead(appearance: colors, asset: "dino-idle") }
             return images
         }
         return await withTaskCancellationHandler { await preparation.value } onCancel: { preparation.cancel() }
@@ -155,7 +168,7 @@ actor DinoSpriteLoader {
     /// copies stay separate from the compact result sprites and are released after landing.
     func openingJumpImages(for colors: DinoAppearance) async -> [String: UIImage] {
         await withTaskGroup(of: (String, UIImage?).self) { group in
-            var next = DinoWelcomeJump.assets.makeIterator()
+            var next = DinoWelcomeJump.assets(for: colors.identity).makeIterator()
             func enqueue(_ asset: String) {
                 group.addTask(priority: .userInitiated) {
                     guard !Task.isCancelled else { return (asset, nil) }
@@ -196,9 +209,9 @@ struct DinoPortrait: View {
                     .clipShape(Circle())
                 Circle().strokeBorder(.white, lineWidth: 2)
                     .frame(width: size, height: size)
-                DinoBustImage(appearance: appearance, diameter: size, placement: placement)
+                DinoBustImage(appearance: appearance, diameter: size, placement: placement, headOnly: appearance.identity.usesBossArtwork)
                     .frame(width: footprint, height: footprint)
-                    .mask(DinoBustOverflowMask(diameter: size, placement: placement, leafyCrown: appearance.identity == .jungle))
+                    .mask(DinoBustOverflowMask(diameter: size, placement: placement, leafyCrown: appearance.identity.usesBossArtwork))
             }
             .frame(width: footprint, height: footprint)
         } else {
@@ -214,12 +227,19 @@ struct DinoBustImage: View {
     let appearance: DinoAppearance
     let diameter: CGFloat
     var placement: CGFloat = 0.339
+    var headOnly = false
     var body: some View {
-        DinoAvatar(appearance: appearance)
-            .frame(width: diameter * (appearance.identity == .jungle ? DinoJungleArtwork.portraitScale : 1 / 0.62),
-                   height: diameter * (appearance.identity == .jungle ? DinoJungleArtwork.portraitScale : 1 / 0.62))
-            .offset(x: diameter * (appearance.identity == .jungle ? DinoJungleArtwork.portraitOffsetX : -0.065),
-                    y: diameter * (appearance.identity == .jungle ? placement + DinoJungleArtwork.portraitOffsetY - 0.339 : placement))
+        Group {
+            if headOnly, let image = DinoAvatarRenderer.bossHead(appearance: appearance, asset: "dino-idle") {
+                Image(uiImage:image).resizable().scaledToFit()
+            } else {
+                DinoAvatar(appearance: appearance)
+            }
+        }
+            .frame(width: diameter * (appearance.identity.usesBossArtwork ? appearance.identity.portraitScale : 1 / 0.62),
+                   height: diameter * (appearance.identity.usesBossArtwork ? appearance.identity.portraitScale : 1 / 0.62))
+            .offset(x: diameter * (appearance.identity.usesBossArtwork ? appearance.identity.portraitOffsetX : -0.065),
+                    y: diameter * (appearance.identity.usesBossArtwork ? placement + appearance.identity.portraitOffsetY - 0.339 : placement))
             .frame(width: diameter, height: diameter)
             .accessibilityHidden(true)
     }
@@ -233,9 +253,9 @@ struct DinoBustOverflowMask: Shape {
     func path(in rect: CGRect) -> Path {
         let origin = CGPoint(x: rect.midX - diameter / 2, y: rect.midY - diameter / 2)
         if leafyCrown {
-            // Only the upper crown crosses the rim; shoulders stay inside the circle.
-            return Path(CGRect(x: origin.x - diameter * 0.17, y: origin.y - diameter * 0.24,
-                               width: diameter * 1.25, height: diameter * 0.45))
+            // Jungle uses a separately masked head image, never a rectangular
+            // window onto the animated full body.
+            return Path(rect.insetBy(dx:-diameter,dy:-diameter))
         }
         let bandanaLift = (0.339 - placement) * diameter
         var path = Path(CGRect(x: origin.x - diameter * 0.23 / 0.62,
@@ -253,6 +273,13 @@ struct DinoBustOverflowMask: Shape {
 }
 
 enum DinoAvatarRenderer {
+    // Short portrait reactions retain their own bounded cache. Loading a larger
+    // result set cannot evict a prepared head between the two clap contacts.
+    private static let headCache: NSCache<NSString, UIImage> = {
+        let cache = NSCache<NSString, UIImage>()
+        cache.totalCostLimit = 16 * 1024 * 1024
+        return cache
+    }()
     private static let cache: NSCache<NSString, UIImage> = {
         let cache = NSCache<NSString, UIImage>()
         cache.totalCostLimit = 32 * 1024 * 1024
@@ -261,7 +288,7 @@ enum DinoAvatarRenderer {
 
     private static func cacheKey(appearance: DinoAppearance, portrait: Bool, asset: String,
                                  resolution: DinoSpriteColorRenderer.Resolution = .standard) -> NSString {
-        let drawing = appearance.identity == .jungle ? DinoJungleArtwork.asset(for: asset) : asset
+        let drawing = appearance.identity.usesBossArtwork ? appearance.identity.asset(for: asset) : asset
         return "\(appearance.identity.rawValue)-\(drawing)-\(appearance.bandana)-\(appearance.spikes)-\(appearance.body)-\(appearance.belly)-\(portrait)-\(resolution.rawValue)" as NSString
     }
 
@@ -271,20 +298,40 @@ enum DinoAvatarRenderer {
     }
 
     static func releaseOpeningImages(appearance: DinoAppearance) {
-        for asset in DinoWelcomeJump.assets {
+        for asset in DinoWelcomeJump.assets(for: appearance.identity) {
             cache.removeObject(forKey: cacheKey(appearance: appearance, portrait: false, asset: asset, resolution: .original))
         }
     }
 
+    static func bossHead(appearance: DinoAppearance, asset: String) -> UIImage? {
+        let key = "head-\(cacheKey(appearance:appearance,portrait:false,asset:asset))" as NSString
+        if let cached = headCache.object(forKey:key) { return cached }
+        guard let body = render(original:nil,appearance:appearance,portrait:false,asset:asset)?.cgImage,
+              let head = (appearance.identity == .desert
+                ? DinoSpriteColorRenderer.desertHeadOverflow(body, asset: asset)
+                : DinoSpriteColorRenderer.jungleHeadOverflow(body,asset:asset)) else { return nil }
+        let image = UIImage(cgImage:head)
+        headCache.setObject(image,forKey:key,cost:head.bytesPerRow*head.height)
+        return image
+    }
+
     static func render(original: CGImage?, appearance: DinoAppearance, portrait: Bool, asset: String = "dino-idle",
                        resolution: DinoSpriteColorRenderer.Resolution = .standard) -> UIImage? {
-        if appearance.identity == .jungle {
+        if appearance.identity.usesBossArtwork {
             let key = cacheKey(appearance: appearance, portrait: portrait, asset: asset, resolution: resolution)
             if let image = cache.object(forKey: key) { return image }
-            guard let source = UIImage(named: DinoJungleArtwork.asset(for: asset))?.cgImage,
-                  let recolored = DinoSpriteColorRenderer.recoloredJungle(source, appearance: appearance),
+            let drawing = appearance.identity.asset(for: asset)
+            let sourceAsset = resolution == .original && drawing == appearance.identity.asset(for: "dino-idle") ? appearance.identity.openingAsset : drawing
+            guard let source = UIImage(named: sourceAsset)?.cgImage,
+                  let recolored = (appearance.identity == .desert
+                    ? DinoSpriteColorRenderer.recoloredDesert(source, appearance: appearance, asset: sourceAsset)
+                    : DinoSpriteColorRenderer.recoloredJungle(source, appearance: appearance, asset: sourceAsset)),
                   let colored = DinoSpriteColorRenderer.facingRight(recolored) else { return nil }
-            let output = portrait ? junglePortrait(colored) ?? colored : colored
+            let output: CGImage
+            if portrait, appearance.identity == .desert {
+                let head = DinoSpriteColorRenderer.desertHeadOverflow(colored, asset: sourceAsset) ?? colored
+                output = head.cropping(to: CGRect(x: CGFloat(head.width) * 0.40, y: 0, width: CGFloat(head.width) * 0.60, height: CGFloat(head.height) * 0.56)) ?? head
+            } else { output = portrait ? junglePortrait(colored) ?? colored : colored }
             let image = UIImage(cgImage: output)
             cache.setObject(image, forKey: key, cost: output.bytesPerRow * output.height)
             return image

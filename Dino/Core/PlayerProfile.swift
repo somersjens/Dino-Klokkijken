@@ -65,7 +65,7 @@ struct PlayerProfile: Codable, Equatable, Sendable {
         return isCharacterUnlocked(saved) ? saved : .main
     }
     func isCharacterUnlocked(_ character: DinoIdentity) -> Bool {
-        character == .main || (character.isPlayable && worldComplete(character.rawValue))
+        character == .main || (character.isPlayable && worldComplete(character.worldID ?? 0))
     }
     /// The active character lives in the preview; selecting a tile swaps it into that tile.
     var collectionCharacters: [DinoIdentity] {
@@ -81,11 +81,16 @@ struct PlayerProfile: Codable, Equatable, Sendable {
               let index = collectionCharacters.firstIndex(of: character) else { return false }
         var slots = collectionCharacters
         slots[index] = activeCharacter
-        var colors = dinoAppearance ?? .standard
-        colors.character = character == .main ? nil : character
+        let colors = (dinoAppearance ?? .standard).selecting(character)
         characterSlots = slots
         dinoAppearance = colors
         return true
+    }
+    /// Slots belong to chapters; the outgoing resident never inherits active colors.
+    func mapResident(in worldID: Int) -> DinoIdentity? {
+        guard let boss = DinoIdentity(rawValue: worldID), boss != .main else { return nil }
+        guard boss.isPlayable, worldComplete(worldID) else { return boss }
+        return collectionCharacters[worldID - 1]
     }
     func normalLevelsComplete(in worldID: Int) -> Bool {
         guard let world = DinoWorldCatalog.world(worldID) else { return false }
@@ -183,7 +188,7 @@ struct PlayerProfile: Codable, Equatable, Sendable {
         levels = [:]; bossResults = []; timedAttempts = nil
         perfectBossVictory = false; worldOneComplete = false
         completedWorlds = nil; perfectWorlds = nil
-        dinoAppearance = dinoAppearance?.mainAppearance
+        dinoAppearance = dinoAppearance?.selecting(.main)
         characterSlots = nil; pendingCharacterUnlock = nil
         demonstratedInteractions = []
         progressResetAt = date

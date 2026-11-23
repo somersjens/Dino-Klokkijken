@@ -490,7 +490,7 @@ enum DinoSpriteColorRenderer {
 
     /// Jungle outfits have leaf spines and a gold crown in place of the main Dino's bandana.
     /// Classify the original paint before applying choices, so every pose retains its own shading.
-    static func recoloredJungle(_ source: CGImage, appearance: DinoAppearance) -> CGImage? {
+    static func recoloredJungle(_ source: CGImage, appearance: DinoAppearance, asset: String = "jungle-idle") -> CGImage? {
         guard appearance.mainAppearance != .standard else { return source }
         let width = source.width, height = source.height
         let space = CGColorSpace(name: CGColorSpace.sRGB)!
@@ -499,22 +499,38 @@ enum DinoSpriteColorRenderer {
         let parts: [DinoAppearance.Part] = [.bandana, .spikes, .body, .belly]
         let references = [0xDAA33D, 0x247C35, 0x94BF46, 0xF0D995].map { HSL(hex: UInt32($0)) }
         let targets = parts.map { HSL(hex: appearance[$0]) }
+        let regions = JungleRegions(asset: DinoJungleArtwork.asset(for: asset))
         pixels.withUnsafeMutableBytes { buffer in
             let context = CGContext(data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8,
                 bytesPerRow: width * 4, space: space, bitmapInfo: format)!
             context.draw(source, in: CGRect(x: 0, y: 0, width: width, height: height))
             let bytes = buffer.bindMemory(to: UInt8.self)
+            let crown = jungleMetalMask(bytes, width: width, height: height, asset: DinoJungleArtwork.asset(for: asset), regions: regions)
+            let clock = jungleMetalMask(bytes, width: width, height: height, asset: DinoJungleArtwork.asset(for: asset), regions: regions, isClock: true)
+            let spots = jungleBodySpots(bytes,width:width,height:height,asset:DinoJungleArtwork.asset(for:asset))
             for index in stride(from: 0, to: bytes.count, by: 4) {
                 let alpha = Double(bytes[index + 3]) / 255
                 guard alpha > 0.06 else { continue }
                 let pixel = HSL(red: Double(bytes[index]) / 255 / alpha,
                                 green: Double(bytes[index + 1]) / 255 / alpha,
                                 blue: Double(bytes[index + 2]) / 255 / alpha)
+                let point = CGPoint(x: Double(index / 4 % width) * 512 / Double(width),
+                                    y: Double(index / 4 / width) * 512 / Double(height))
+                // Geometry identifies complete materials, including their gloss
+                // and shadows. The dial and ink retain their neutral source art.
+                if regions.ink.contains(point), pixel.hue < 0.15 { continue }
+                let palm = regions.skin.contains(point)
+                if regions.clockFace.contains(point), !palm, pixel.hue < 0.18 { continue }
                 let part: Int
-                if (0.18...0.46).contains(pixel.hue), pixel.saturation > 0.22 {
-                    part = pixel.hue > 0.27 || pixel.lightness < 0.30 ? 1 : 2
-                } else if (0.07...0.18).contains(pixel.hue), pixel.saturation > 0.20 {
-                    part = pixel.lightness > 0.57 && pixel.saturation < 0.72 ? 3 : 0
+                let warm = pixel.hue < 0.18 || pixel.saturation < 0.10
+                if !palm, crown[index / 4] != 0 || clock[index / 4] != 0 || (warm && (regions.clockRim.contains(point) || regions.suspension.contains(point,using:.evenOdd))) {
+                    part = 0
+                } else if point.y < regions.leafBase, abs(point.x-regions.crownSeed.x) < 135, pixel.saturation > 0.12 {
+                    part = 1
+                } else if (0.18...0.50).contains(pixel.hue), pixel.saturation > 0.12 {
+                    part = pixel.hue > 0.27 && spots[index / 4] == 0 && !regions.faceSkin.contains(point) ? 1 : 2
+                } else if (0.055..<0.18).contains(pixel.hue), pixel.saturation > 0.10 {
+                    part = !palm && regions.gold.contains(point) && pixel.hue < 0.118 ? 0 : 3
                 } else { continue }
                 guard appearance[parts[part]] != DinoAppearance.standard[parts[part]] else { continue }
                 let reference = references[part], target = targets[part]
@@ -532,6 +548,295 @@ enum DinoSpriteColorRenderer {
         return CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: width * 4,
                        space: space, bitmapInfo: CGBitmapInfo(rawValue: format), provider: provider, decode: nil,
                        shouldInterpolate: true, intent: .defaultIntent)
+    }
+
+    /// A source-locked head layer. The lower back leaf, shoulder garland,
+    /// clock and moving hands can never enter the portrait foreground.
+    static func jungleHeadOverflow(_ source: CGImage, asset: String, mirrored: Bool = true) -> CGImage? {
+        let name = DinoJungleArtwork.asset(for:asset)
+        let width = source.width, height = source.height
+        let regions = JungleRegions(asset:name)
+        let path = CGMutablePath()
+        path.move(to:.zero)
+        for point in [CGPoint(x:512,y:0),CGPoint(x:512,y:212),CGPoint(x:390,y:220),
+                      CGPoint(x:369,y:228),CGPoint(x:335,y:235),CGPoint(x:310,y:244),
+                      CGPoint(x:266,y:253),CGPoint(x:220,y:253),CGPoint(x:164,y:238),
+                      CGPoint(x:135,y:213),CGPoint(x:0,y:213)] { path.addLine(to:point) }
+        path.closeSubpath()
+        var transform = DinoJungleArtwork.headRegistration(for:name)
+        let head = path.copy(using:&transform)!
+        let format = CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
+        let space = CGColorSpace(name:CGColorSpace.sRGB)!
+        var pixels = [UInt8](repeating:0,count:width*height*4)
+        pixels.withUnsafeMutableBytes { buffer in
+            let context = CGContext(data:buffer.baseAddress,width:width,height:height,bitsPerComponent:8,
+                bytesPerRow:width*4,space:space,bitmapInfo:format)!
+            context.draw(source,in:CGRect(x:0,y:0,width:width,height:height))
+            let bytes = buffer.bindMemory(to:UInt8.self)
+            for y in 0..<height {
+                for x in 0..<width {
+                    let u = (Double(x)+0.5)/Double(width)
+                    let point = CGPoint(x:(mirrored ? 1-u : u)*512,y:(Double(y)+0.5)*512/Double(height))
+                    if !head.contains(point) || regions.skin.contains(point) {
+                        let i = (y*width+x)*4
+                        for channel in 0..<4 { bytes[i+channel] = 0 }
+                    }
+                }
+            }
+        }
+        guard let provider = CGDataProvider(data:Data(pixels) as CFData) else { return nil }
+        return CGImage(width:width,height:height,bitsPerComponent:8,bitsPerPixel:32,bytesPerRow:width*4,
+            space:space,bitmapInfo:CGBitmapInfo(rawValue:format),provider:provider,decode:nil,shouldInterpolate:true,intent:.defaultIntent)
+    }
+
+    private final class JungleMaterialMask: NSObject {
+        let values: [UInt8]
+        init(_ values: [UInt8]) { self.values = values }
+    }
+    private static let jungleMaterialCache: NSCache<NSString,JungleMaterialMask> = {
+        let cache = NSCache<NSString,JungleMaterialMask>()
+        cache.totalCostLimit = 24*1024*1024
+        return cache
+    }()
+
+    /// Small green spots completely surrounded by lime skin belong to that
+    /// skin. Leaves adjoin other leaves, metal or transparency instead.
+    private static func jungleBodySpots(_ bytes: UnsafeMutableBufferPointer<UInt8>, width: Int, height: Int,
+                                         asset: String) -> [UInt8] {
+        let key = "spots-\(asset)-\(width)-\(height)" as NSString
+        if let cached = jungleMaterialCache.object(forKey:key) { return cached.values }
+        var green = [UInt8](repeating:0,count:width*height), body = green
+        for i in green.indices {
+            let p = i*4, alpha = Double(bytes[p+3])/255
+            guard alpha > 0.5 else { continue }
+            let color = HSL(red:Double(bytes[p])/255/alpha,green:Double(bytes[p+1])/255/alpha,blue:Double(bytes[p+2])/255/alpha)
+            if color.saturation > 0.12 {
+                if (0.27...0.50).contains(color.hue) { green[i] = 1 }
+                else if (0.175..<0.27).contains(color.hue) { body[i] = 1 }
+            }
+        }
+        let source = green
+        var result = [UInt8](repeating:0,count:width*height)
+        for start in green.indices where green[start] != 0 {
+            var pending = [start], component: [Int] = []
+            green[start] = 0
+            while let i = pending.popLast() {
+                component.append(i)
+                let x = i % width, y = i / width
+                for next in [x > 0 ? i-1 : -1,x+1 < width ? i+1 : -1,y > 0 ? i-width : -1,y+1 < height ? i+width : -1] {
+                    if next >= 0 && green[next] != 0 { green[next] = 0; pending.append(next) }
+                }
+            }
+            guard component.count >= 6*width*height/(512*512),component.count <= 600*width*height/(512*512) else { continue }
+            let xs = component.map {$0 % width}, ys = component.map {$0 / width}
+            let ratio = Double(xs.max()!-xs.min()!+1)/Double(ys.max()!-ys.min()!+1)
+            guard (0.5...2.0).contains(ratio) else { continue }
+            var neighbors = Set<Int>()
+            let step = max(1,width/256)
+            for i in component {
+                let x = i % width, y = i / width
+                for next in [x >= step ? i-step : -1,x+step < width ? i+step : -1,y >= step ? i-width*step : -1,y+step < height ? i+width*step : -1] {
+                    if next >= 0 && source[next] == 0 { neighbors.insert(next) }
+                }
+            }
+            if !neighbors.isEmpty && Double(neighbors.filter {body[$0] != 0}.count)/Double(neighbors.count) > 0.72 {
+                for i in component { result[i] = 1 }
+            }
+        }
+        jungleMaterialCache.setObject(JungleMaterialMask(result),forKey:key,cost:result.count)
+        return result
+    }
+
+    /// A connected material, rather than a hue cutoff through individual gold
+    /// highlights. Eyes and the lime center leaf cannot join this component.
+    private static func jungleMetalMask(_ bytes: UnsafeMutableBufferPointer<UInt8>, width: Int, height: Int,
+                                         asset: String, regions: JungleRegions, isClock: Bool = false) -> [UInt8] {
+        let key = "\(asset)-\(width)-\(height)-\(isClock)" as NSString
+        if let cached = jungleMaterialCache.object(forKey:key) { return cached.values }
+        var candidates = [UInt8](repeating:0,count:width*height)
+        for y in 0..<height {
+            let py = Double(y)*512/Double(height)
+            for x in 0..<width {
+                let p = CGPoint(x:Double(x)*512/Double(width),y:py)
+                if isClock {
+                    guard regions.clockRim.contains(p) || regions.suspension.contains(p,using:.evenOdd), !regions.clockFace.contains(p), !regions.skin.contains(p) else { continue }
+                } else {
+                    guard regions.crown.contains(p), !regions.ink.contains(p), !(asset == "jungle-fallen" && p.x > 330) else { continue }
+                }
+                let i = (y*width+x)*4, alpha = Double(bytes[i+3])/255
+                guard alpha > 0.06 else { continue }
+                let color = HSL(red:Double(bytes[i])/255/alpha,green:Double(bytes[i+1])/255/alpha,blue:Double(bytes[i+2])/255/alpha)
+                let upperLeaf = !isClock && py < regions.leafBase && color.hue >= 0.14 && color.saturation > 0.12
+                if !upperLeaf && (color.hue < 0.18 || color.saturation < 0.10) && color.lightness > 0.09 { candidates[y*width+x] = 1 }
+            }
+        }
+        let dialBounds = regions.clockFace.isEmpty ? regions.clockRim.boundingBox : regions.clockFace.boundingBox
+        let seedX: Double = isClock ? dialBounds.midX : asset == "jungle-fallen" ? 160 : regions.crownSeed.x
+        let seedY = isClock ? dialBounds.maxY+5 : regions.crownSeed.y
+        var best: [Int] = [], bestScore = 0.0
+        for start in candidates.indices where candidates[start] != 0 {
+            var pending = [start], component: [Int] = [], distance = Double.infinity
+            candidates[start] = 0
+            while let i = pending.popLast() {
+                component.append(i)
+                let x = i % width, y = i / width
+                let dx = Double(x)*512/Double(width)-seedX, dy = Double(y)*512/Double(height)-seedY
+                distance = min(distance,dx*dx+dy*dy)
+                for next in [x > 0 ? i-1 : -1,x+1 < width ? i+1 : -1,y > 0 ? i-width : -1,y+1 < height ? i+width : -1] {
+                    if next >= 0 && candidates[next] != 0 { candidates[next] = 0; pending.append(next) }
+                }
+            }
+            let score = Double(component.count)/(1+distance/625)
+            if score > bestScore { bestScore = score; best = component }
+        }
+        var result = [UInt8](repeating:0,count:width*height)
+        for i in best { result[i] = 1 }
+        // Small reflected green/gray flecks are still part of the surrounding
+        // metal. Large holes (the emerald and the dial) keep their own material.
+        if let minX = best.map({$0 % width}).min(), let maxX = best.map({$0 % width}).max(),
+           let minY = best.map({$0 / width}).min(), let maxY = best.map({$0 / width}).max() {
+            var visited = result
+            for y in minY...maxY {
+                for x in minX...maxX {
+                    let start = y*width+x
+                    guard visited[start] == 0 else { continue }
+                    var pending = [start], hole: [Int] = [], edge = false
+                    visited[start] = 1
+                    while let i = pending.popLast() {
+                        hole.append(i)
+                        let px = i % width, py = i / width
+                        if px == minX || px == maxX || py == minY || py == maxY { edge = true }
+                        for next in [px > minX ? i-1 : -1,px < maxX ? i+1 : -1,py > minY ? i-width : -1,py < maxY ? i+width : -1] {
+                            if next >= 0 && visited[next] == 0 { visited[next] = 1; pending.append(next) }
+                        }
+                    }
+                    if !edge && hole.count <= 90*width*height/(512*512) {
+                        for i in hole { result[i] = 1 }
+                    }
+                }
+            }
+        }
+        jungleMaterialCache.setObject(JungleMaterialMask(result),forKey:key,cost:result.count)
+        return result
+    }
+
+    /// Measured in the unreflected 512px paintings. Only warm source pixels use
+    /// these regions; green leaves crossing a strap retain their own material.
+    private struct JungleRegions {
+        let gold: CGPath
+        let ink: CGPath
+        let skin: CGPath
+        let clockFace: CGPath
+        let crown: CGPath
+        let clockRim: CGPath
+        let suspension: CGPath
+        let preciseGold: Bool
+        let leafBase: CGFloat
+        let crownSeed: CGPoint
+        let faceSkin: CGPath
+
+        init(asset: String) {
+            // Crown search extent, center-leaf base, iris regions, and strap centerlines.
+            typealias Spec = (CGFloat, CGFloat, [[CGFloat]], [[CGFloat]])
+            let spec: Spec
+            preciseGold = asset == DinoJungleArtwork.openingAsset
+            switch asset {
+            case DinoJungleArtwork.openingAsset:
+                spec = (165, 96, [[185,132,25,43],[249,134,26,45]],
+                        [[163,265,185,288],[322,251,265,291],[160,326,174,329],[269,338,294,347]])
+            case "jungle-crouch": spec = (210, 145, [[126,203,39,67],[187,200,60,73]], [[155,326,202,352],[288,277,255,350],[166,389,310,388]])
+            case "jungle-takeoff": spec = (150, 72, [[172,100,37,65],[228,103,52,65]], [[187,235,205,250],[280,238,250,266],[173,293,309,307]])
+            case "jungle-airborne": spec = (173, 85, [], [[182,232,204,242],[260,236,237,260]])
+            case "jungle-landing": spec = (224, 147, [], [[177,320,221,345],[322,287,265,350],[183,390,315,383]])
+            case "jungle-recover": spec = (168, 87, [[146,133,40,63],[203,132,58,68]], [[177,273,205,293],[302,251,254,302],[178,336,310,341]])
+            case "jungle-stumble": spec = (187, 112, [[106,155,42,65],[158,150,67,73]], [[156,298,188,320],[277,258,240,334],[157,366,297,341]])
+            case "jungle-fallen": spec = (352, 266, [], [[310,355,350,381],[350,381,343,442]])
+            case "jungle-push-up": spec = (230, 155, [[98,207,44,59],[149,191,61,67]], [[191,344,208,352],[290,281,247,364],[260,396,334,382]])
+            case "jungle-turn-01", "jungle-turn-08": spec = (170, 91, [[160,128,44,62],[219,127,58,66]], [[164,284,192,294],[282,269,243,305],[153,347,298,359]])
+            case "jungle-turn-02": spec = (191, 102, [[157,139,39,62]], [[178,287,170,294],[253,283,193,311],[192,351,278,371]])
+            case "jungle-turn-03": spec = (198, 109, [[149,143,18,47]], [[175,275,218,309],[218,309,145,350]])
+            case "jungle-turn-04": spec = (161, 109, [], [[199,256,232,273],[279,273,322,248],[194,294,172,320],[309,295,336,321]])
+            case "jungle-turn-05": spec = (158, 83, [], [[320,242,267,268],[267,268,310,314]])
+            case "jungle-turn-06": spec = (166, 82, [[312,112,29,69]], [[285,253,321,266],[243,299,315,307]])
+            case "jungle-turn-07": spec = (185, 102, [[260,126,52,65],[320,125,38,63]], [[268,283,308,300],[355,285,348,302],[213,349,298,355]])
+            default: spec = (165, 96, [[174,121,40,71],[238,122,58,76]], [[175,264,204,287],[323,252,251,295],[162,330,306,350]])
+            }
+            leafBase = spec.1
+            crownSeed = CGPoint(x:spec.2.isEmpty ? 235 : spec.2.map { $0[0]+$0[2]/2 }.reduce(0,+)/CGFloat(spec.2.count),y:spec.0-35)
+            let gold = CGMutablePath(), ink = CGMutablePath(), clockFace = CGMutablePath(), clockRim = CGMutablePath()
+            crown = CGPath(rect: CGRect(x: 0,y: 0,width: 512,height: spec.0),transform: nil)
+            // Measured inner dials. Occluding hands are excluded separately.
+            let dial: CGRect
+            switch asset {
+            case "jungle-crouch": dial = CGRect(x:176,y:350,width:75,height:79)
+            case "jungle-takeoff": dial = CGRect(x:169,y:251,width:76,height:77)
+            case "jungle-airborne": dial = CGRect(x:174,y:252,width:60,height:54)
+            case "jungle-landing": dial = CGRect(x:204,y:360,width:75,height:73)
+            case "jungle-recover": dial = CGRect(x:176,y:308,width:75,height:77)
+            case "jungle-stumble": dial = CGRect(x:161,y:322,width:77,height:73)
+            case "jungle-push-up": dial = CGRect(x:186,y:360,width:73,height:64)
+            case "jungle-turn-01": dial = CGRect(x:164,y:269,width:82,height:82)
+            case "jungle-turn-02": dial = CGRect(x:138,y:273,width:48,height:77)
+            case "jungle-turn-03", "jungle-turn-04", "jungle-turn-05", "jungle-fallen": dial = .zero
+            case "jungle-turn-06": dial = CGRect(x:317,y:267,width:47,height:81)
+            case "jungle-turn-07": dial = CGRect(x:299,y:265,width:72,height:85)
+            case "jungle-turn-08": dial = CGRect(x:153,y:268,width:80,height:82)
+            case "jungle-clap-contact", "jungle-clap-contact-2": dial = CGRect(x:179,y:297,width:85,height:81)
+            case DinoJungleArtwork.openingAsset: dial = CGRect(x:178,y:278,width:88,height:91)
+            default: dial = CGRect(x:179,y:279,width:85,height:86)
+            }
+            if !dial.isEmpty {
+                clockFace.addEllipse(in: dial)
+                clockRim.addEllipse(in: dial.insetBy(dx: -11,dy: -10))
+                // The suspension ring is one metal piece above the bezel.
+                gold.addEllipse(in: CGRect(x:dial.midX-14,y:dial.minY-32,width:28,height:30))
+            }
+            let suspension = CGMutablePath()
+            if ["jungle-idle","jungle-wrong","jungle-clap-open","jungle-clap-open-2","jungle-clap-contact","jungle-clap-contact-2",DinoJungleArtwork.openingAsset].contains(asset) {
+                let center = CGPoint(x:dial.midX+5,y:dial.minY-19)
+                suspension.addEllipse(in:CGRect(x:center.x-11,y:center.y-12,width:22,height:24))
+                suspension.addEllipse(in:CGRect(x:center.x-6,y:center.y-7,width:12,height:14))
+            }
+            self.suspension = suspension
+            if asset == "jungle-turn-03" { clockRim.addRect(CGRect(x:124,y:297,width:25,height:63)) }
+            for eye in spec.2 {
+                let rect = CGRect(x:eye[0],y:eye[1],width:eye[2],height:eye[3])
+                ink.addEllipse(in: preciseGold ? rect : rect.insetBy(dx:rect.width*0.18,dy:rect.height*0.10))
+            }
+            for line in spec.3 {
+                let strap = CGMutablePath()
+                strap.move(to: CGPoint(x: line[0], y: line[1]))
+                strap.addLine(to: CGPoint(x: line[2], y: line[3]))
+                gold.addPath(strap.copy(strokingWithWidth: preciseGold ? 12 : 17, lineCap: .round, lineJoin: .round, miterLimit: 1))
+            }
+            // Palms and fingertips can cover the clock and its straps. Their
+            // warm paint still belongs to the skin in every reaction pose.
+            let palms: [[CGFloat]]
+            switch asset {
+            case "jungle-clap-open", "jungle-clap-open-2": palms = [[139,228,52,70],[273,228,48,74]]
+            case "jungle-clap-contact", "jungle-clap-contact-2": palms = [[190,234,53,72]]
+            case "jungle-crouch": palms = [[112,329,73,74],[269,333,67,72]]
+            case "jungle-takeoff": palms = [[132,137,66,73],[336,161,66,67]]
+            case "jungle-airborne": palms = [[143,190,49,62],[237,230,60,70],[123,272,68,78],[198,289,65,86]]
+            case "jungle-landing": palms = [[142,325,64,66],[273,322,65,71]]
+            case "jungle-recover": palms = [[113,290,74,74],[274,284,72,78]]
+            case "jungle-stumble": palms = [[169,258,77,76]]
+            default: palms = []
+            }
+            let skin = CGMutablePath()
+            for palm in palms { skin.addRect(CGRect(x: palm[0], y: palm[1], width: palm[2], height: palm[3])) }
+            let face = CGMutablePath()
+            face.move(to:CGPoint(x:180,y:119))
+            for point in [CGPoint(x:195,y:107),CGPoint(x:250,y:109),CGPoint(x:286,y:117),
+                          CGPoint(x:316,y:139),CGPoint(x:336,y:166),CGPoint(x:337,y:202),
+                          CGPoint(x:324,y:227),CGPoint(x:299,y:243),CGPoint(x:269,y:250),
+                          CGPoint(x:221,y:249),CGPoint(x:183,y:238),CGPoint(x:153,y:219),
+                          CGPoint(x:140,y:199),CGPoint(x:141,y:183),CGPoint(x:157,y:172),CGPoint(x:166,y:152)] { face.addLine(to:point) }
+            face.closeSubpath()
+            var registration = DinoJungleArtwork.headRegistration(for:asset)
+            faceSkin = asset.hasPrefix("jungle-turn-") || asset == "jungle-fallen" ? CGMutablePath() : face.copy(using:&registration)!
+            self.gold = gold; self.ink = ink; self.skin = skin; self.clockFace = clockFace; self.clockRim = clockRim
+        }
     }
 
     /// The supplied head moves independently of the hands. Remove that head
@@ -899,4 +1204,435 @@ enum DinoSpriteColorRenderer {
         "dino-result-backflip-recover": [Tone(0.25494, 0.48024, 0.56471, 0.90698), Tone(0.08929, 0.17729, 0.37352, 0.59259),
                               Tone(0.23518, 0.36759, 0.49012, 0.67045), Tone(0.55336, 0.79249, 0.87795, 0.74074)],
     ]
+}
+
+extension DinoSpriteColorRenderer {
+    /// Geometry is measured in the 443.5px sheet cells, then mapped to normalized
+    /// source coordinates. Raster labels are cached independently of color choices.
+    struct DesertRig {
+        var headDX = 0.0, headDY = 0.0, headScale = 1.0
+        var dy = 0.0397
+        var dx = 0.0
+        var clock = CGRect(x: 211, y: 222, width: 100, height: 112)
+        var eyes: [CGRect] = [CGRect(x:84,y:88,width:39,height:61), CGRect(x:148,y:89,width:51,height:70)]
+        var dorsal: [(Double,Double)] = [(234,39),(239,80),(240,152),(227,191),(250,209),(284,244),(311,289),(350,293),(366,244),(341,168),(289,67)]
+        var belly: [(Double,Double)] = [(157,252),(191,247),(213,278),(205,324),(188,366),(143,369),(113,352),(102,308)]
+        var hands: [CGRect] = []
+        var toes: [CGRect] = [CGRect(x:83,y:379,width:72,height:35),CGRect(x:173,y:383,width:62,height:35),CGRect(x:266,y:377,width:70,height:35)]
+        var rear = false
+        var flip = false
+        var hasClock = true
+        var dorsalLeftCount = 7
+        var isTurn = false
+        var frontRockPoints: [(Double,Double)]? = nil
+        var tailStemPoints: [(Double,Double)]? = nil
+        var tailClub = CGRect(x:351,y:234,width:80,height:95)
+        var scarfTop = 185.0, scarfBottom = 335.0
+        var chinPoints: [(Double,Double)]? = nil
+        var scarfPoints: [(Double,Double)]? = nil
+        var brows: [CGRect] = []
+        var mouthPoints: [(Double,Double)]? = nil
+        var harness: [[(Double,Double)]] = [
+            [(197,226),(209,219),(214,276),(198,286)],
+            [(315.3,283.2),(343.9,297.9),(343.9,314.4),(317,299.7)]
+        ]
+        init(asset: String) {
+            let name = DinoDesertArtwork.asset(for: asset)
+            switch name {
+            case "desert-idle", "desert-opening-idle": dy = 0.0333
+            case "desert-crouch":
+                tailClub = CGRect(x:350,y:210,width:100,height:125)
+                harness = [[(226,244),(242,245),(252,286),(239,302)],[(319,278),(355,290),(358,317),(321,311)]]
+                scarfTop = 210; scarfBottom = 345
+                headDX = -6; headDY = 28; headScale = 0.95
+                eyes = [CGRect(x:79,y:111,width:34,height:54),CGRect(x:141,y:112,width:46,height:61)]
+                clock = CGRect(x:239,y:228,width:87,height:104)
+                hands = [CGRect(x:26,y:263,width:82,height:47),CGRect(x:130,y:280,width:83,height:57)]
+                belly = [(111,300),(156,314),(211,321),(215,364),(173,390),(119,373),(94,342)]
+            case "desert-landing":
+                harness = [[(212,229),(227,220),(236,270),(220,283)],[(319,272),(349,284),(352,308),(318,302)]]
+                headDX = 10; headDY = -7; headScale = 0.95
+                eyes = [CGRect(x:94,y:79,width:33,height:54),CGRect(x:157,y:83,width:43,height:64)]
+                clock = CGRect(x:230,y:228,width:97,height:100)
+                hands = [CGRect(x:29,y:270,width:77,height:49),CGRect(x:134,y:279,width:73,height:58)]
+            case "desert-wrong":
+                hands = [CGRect(x:27,y:228,width:75,height:68),CGRect(x:156,y:230,width:76,height:79)]
+            case "desert-clap-open", "desert-clap-open-2":
+                hands = [CGRect(x:38,y:213,width:78,height:91),CGRect(x:134,y:215,width:73,height:92)]
+            case "desert-clap-contact", "desert-clap-contact-2":
+                hands = [CGRect(x:86,y:214,width:93,height:102)]
+            case "desert-takeoff":
+                frontRockPoints = [(243.4,59.2),(265.1,50.5),(280.6,48.8),(283.3,68.7),(272.9,89.5),(265.9,98.2),(259,75.6)]
+                dorsalLeftCount = 5; tailClub = CGRect(x:327,y:286,width:80,height:75)
+                harness = [[(202,221),(215,217),(215,280),(201,286)],[(289,289),(304,289),(303,306),(291,303)]]
+                scarfTop = 170; scarfBottom = 285
+                dy = 0.015; headDX = 45; headDY = -26; headScale = 0.95
+                eyes = [CGRect(x:132,y:56,width:35,height:45),CGRect(x:182,y:60,width:41,height:59)]
+                clock = CGRect(x:212,y:227,width:78,height:96)
+                dorsal = [(264,43),(265,112),(252,169),(294,205),(298,294),(341,291),(346,203),(310,97)]
+                hands = [CGRect(x:43,y:145,width:94,height:85),CGRect(x:236,y:143,width:89,height:92)]
+                belly = [(130,231),(187,232),(220,253),(220,320),(193,358),(139,337),(119,282)]
+                toes = [CGRect(x:150,y:377,width:57,height:39),CGRect(x:220,y:385,width:68,height:39)]
+            case "desert-airborne":
+                frontRockPoints = [(294.5,80.8),(317.8,79.1),(336.9,82.6),(331.7,102.5),(317.8,121.5),(304.9,125)]
+                dorsalLeftCount = 5; tailClub = CGRect(x:175,y:340,width:70,height:85)
+                harness = []
+                scarfTop = 160; scarfBottom = 250
+                dy = 0.015; headDX = 77; headDY = -24; headScale = 0.94
+                eyes = []; clock = CGRect(x:244,y:216,width:69,height:106)
+                dorsal = [(283,43),(290,112),(282,169),(303,208),(313,300),(354,302),(371,201),(335,90)]
+                belly = [(132,236),(203,228),(249,276),(239,333),(214,357),(155,350),(116,304)]
+                hands = [CGRect(x:66,y:176,width:91,height:67),CGRect(x:155,y:195,width:99,height:72)]
+                toes = [CGRect(x:65,y:244,width:153,height:97)]
+            case "desert-stumble":
+                frontRockPoints = [(245,111),(268,100),(290,100),(290,120),(276,146),(268,156),(260,132)]
+                dorsalLeftCount = 6; tailClub = CGRect(x:347,y:268,width:90,height:85)
+                chinPoints = [(109,219),(129,232),(158,235),(186,224),(194,210),(208,201),(224,208),(227,222),(214,239),(193,252),(155,258),(127,248)]
+                harness = []
+                scarfTop = 220; scarfBottom = 350
+                dy = 0.004; headDX = 34; headDY = 46; headScale = 0.95
+                eyes = [CGRect(x:115,y:127,width:34,height:47),CGRect(x:173,y:132,width:44,height:58)]
+                clock = CGRect(x:246,y:260,width:84,height:98)
+                hands = [CGRect(x:2,y:211,width:106,height:82),CGRect(x:117,y:249,width:105,height:72)]
+                belly = [(141,316),(199,309),(239,350),(224,388),(167,382),(134,350)]
+                toes = [CGRect(x:86,y:350,width:69,height:44),CGRect(x:284,y:397,width:68,height:33)]
+                dorsal = [(262,105),(271,170),(264,210),(280,253),(316,282),(345,310),(373,300),(352,207),(302,115)]
+            case "desert-fallen":
+                tailStemPoints = [(318,365),(341,324),(351,293),(374,289),(391,304),(376,346),(338,381)]
+                dorsalLeftCount = 5; tailClub = CGRect(x:330,y:228,width:85,height:82)
+                chinPoints = [(98,299),(120,309),(143,320),(169,321),(190,308),(197,291),(193,280),(204,273),(220,279),(226,294),(218,316),(202,332),(175,340),(137,337),(112,329)]
+                harness = [[(305.7,317.9),(334.3,319.7),(337.8,333.5),(309.2,331.8)],[(280.6,395.8),(251.2,417.4),(243.4,412.4),(264.2,389)]]
+                scarfTop = 295; scarfBottom = 425
+                dy = -0.004; headDX = 11; headDY = 134; headScale = 0.9
+                eyes = [CGRect(x:88,y:215,width:37,height:49),CGRect(x:145,y:219,width:46,height:61)]
+                clock = CGRect(x:250,y:303,width:80,height:85)
+                hands = [CGRect(x:16,y:386,width:171,height:49)]
+                toes = [CGRect(x:362,y:359,width:73,height:53)]
+                dorsal = [(224,151),(232,216),(229,259),(251,296),(330,306),(346,263),(305,182)]
+            case "desert-push-up":
+                tailStemPoints = [(310,326),(332,291),(350,254),(369,237),(391,246),(383,278),(358,320),(321,344)]
+                dorsalLeftCount = 5; tailClub = CGRect(x:340,y:180,width:80,height:82)
+                chinPoints = [(60,231),(83,245),(120,253),(161,249),(181,235),(188,215),(178,202),(159,204),(155,219),(137,235),(109,237),(87,230)]
+                harness = [[(315.7,259.7),(341.7,267.5),(344.3,279.7),(319.2,275.3)],[(287.1,329.9),(260.3,364.6),(252.5,369.7),(249.9,360.1),(275,329.9)]]
+                scarfTop = 220; scarfBottom = 360
+                dy = 0.055; dx = -0.04; headDX = -13; headDY = 57; headScale = 0.96
+                eyes = [CGRect(x:62,y:132,width:38,height:54),CGRect(x:120,y:137,width:48,height:62)]
+                clock = CGRect(x:220,y:239,width:91,height:103)
+                hands = [CGRect(x:22,y:361,width:215,height:63)]
+                dorsal = [(214,88),(222,155),(219,205),(249,233),(302,297),(335,290),(321,202),(264,109)]
+            case let n where n.hasPrefix("desert-turn-"):
+                dy = 0.025
+                isTurn = true
+                let i = Int(n.suffix(2)) ?? 1
+                dy = [0.035,0.043,0.043,0.045,0.041,0.041,0.035,0.035][i-1]
+                flip = (5...7).contains(i)
+                hasClock = i <= 3 || i == 8
+                headDX = -15; headDY = 22; headScale = 0.9
+                clock = CGRect(x:195,y:231,width:99,height:108)
+                dorsal = [(210,58),(215,124),(207,182),(221,213),(242,226),(270,255),(294,295),(344,295),(354,240),(313,136),(256,64)]
+                belly = [(104,260),(154,244),(191,251),(208,284),(184,369),(140,369),(105,342)]
+                if i == 2 || i == 6 {
+                    frontRockPoints = [(184,100),(211,81),(239,65),(246,90),(237,116),(219,138),(204,119),(196,110)]
+                    dorsalLeftCount = 6
+                    belly = [(102,281),(145,286),(162,323),(154,363),(127,376),(105,351)]
+                    eyes = [CGRect(x:92,y:101,width:38,height:61)]
+                    headDX = -10; headDY = 17; headScale = 0.94
+                    clock = CGRect(x:121,y:235,width:99,height:111)
+                    harness = [[(240,278),(299,293),(302,316),(244,303)]]
+                    dorsal = [(206,67),(203,128),(185,187),(218,208),(257,252),(296,300),(351,302),(352,229),(306,120),(250,75)]
+                }
+                if i == 3 || i == 5 {
+                    dorsalLeftCount = 6; tailClub = CGRect(x:276,y:220,width:102,height:120)
+                    belly = [(171,319),(215,330),(275,316),(279,350),(238,373),(184,366)]
+                    eyes = []; headDX = 70; headDY = 16; headScale = 0.9
+                    clock = CGRect(x:93,y:234,width:53,height:107)
+                    dorsal = [(165,65),(157,125),(166,168),(153,215),(177,257),(221,299),(286,310),(335,286),(350,228),(310,129),(238,62)]
+                }
+                if i == 3 || i == 5 {
+                    harness = [[(143,285),(214,300),(218,321),(143,306)]]
+                    belly = [(200,348),(249,347),(296,328),(326,312),(319,348),(279,372),(235,373),(202,363)]
+                }
+                if i == 6 || i == 7 {
+                    belly = i == 6 ? [(128.5,307),(110.5,303),(107.5,329),(117.5,352),(130.5,360)] : [(144.5,273),(103.5,290),(113.5,344),(142.5,365),(162.5,360),(166.5,333)]
+                    harness = i == 6 ? [[(296.5,297),(179.5,231),(158.5,233),(159.5,249),(280.5,319),(290.5,318)]] : [[(322.5,286),(222.5,220),(204.5,227),(207.5,239),(315.5,309),(322.5,302)]]
+                }
+                if i == 4 {
+                    harness = [[(135,230),(152,262),(152,300),(139,314),(118,270)],[(303,230),(285,264),(285,302),(302,316),(323,272)]]
+                    rear = true; eyes = []; headDX = 80
+                    dorsal = [(153,87),(288,87),(325,228),(290,283),(250,304),(196,303),(154,277),(123,220)]
+                }
+                if i == 1 || i == 8 {
+                    let shift = i == 8 ? 20.0 : 0
+                    frontRockPoints = [(183,97),(196,77),(223,57),(230,77),(227,113),(213,135),(205,118),(196,103)].map { ($0.0+shift,$0.1) }
+                }
+                if i == 7 {frontRockPoints = [(184,100),(211,81),(239,65),(246,90),(237,116),(219,138),(204,119),(196,110)]}
+                if i == 8 { headDX = 0; headDY = 12; headScale = 0.97; clock = CGRect(x:221,y:237,width:101,height:109) }
+
+            default: break
+            }
+            // Trace the painted cream seam in each moving source. Its shaded
+            // edge belongs to the same material as the bright cheek; a per-pixel
+            // cream threshold left blue flecks along this curved boundary.
+            let chinContour: [(Double,Double)]?
+            switch name {
+            case "desert-push-up":
+                chinContour = [(158,269),(173,267),(187,273),(198,286),(201,300),(196,313),(181,325),(159,333),(133,338),(104,338),(81,335),(59,328),(42,318),(30,304),(47,311),(66,316),(91,320),(116,318),(137,307),(149,291),(158,279)]
+            case "desert-fallen":
+                chinContour = [(184,328),(198,326),(212,332),(222,344),(225,357),(217,370),(201,380),(176,388),(150,393),(124,392),(99,389),(77,381),(62,372),(55,360),(80,369),(107,376),(139,377),(162,370),(177,356),(184,340)]
+            case "desert-stumble":
+                chinContour = [(233,243),(247,243),(260,251),(268,264),(269,278),(259,289),(239,298),(213,302),(190,301),(171,297),(150,290),(134,278),(156,284),(177,285),(204,281),(223,271),(232,257)]
+            default: chinContour = nil
+            }
+            if let chinContour {
+                chinPoints = chinContour.map { (($0.0 / 512 - dx) * 443.5, ($0.1 / 512 - dy) * 443.5) }
+            }
+            func cell(_ points: [(Double,Double)]) -> [(Double,Double)] {
+                points.map { (($0.0 / 512 - dx) * 443.5, ($0.1 / 512 - dy) * 443.5) }
+            }
+            func cellRect(_ r: CGRect) -> CGRect {
+                CGRect(x:(r.minX/512-dx)*443.5,y:(r.minY/512-dy)*443.5,width:r.width/512*443.5,height:r.height/512*443.5)
+            }
+            switch name {
+            case "desert-fallen":
+                belly = cell([(234,404),(258,407),(266,435),(249,453),(220,453),(206,435)])
+                scarfPoints = cell([(96,391),(141,397),(184,390),(219,374),(242,354),(252,339),(261,347),(265,365),(257,385),(238,405),(212,424),(193,433),(194,476),(179,490),(126,486),(121,446),(109,429),(96,416)])
+                mouthPoints = cell([(103,363),(110,353),(124,347),(140,347),(154,350),(164,361),(162,369),(141,371),(121,371)])
+                toes = [CGRect(x:447,y:434,width:31,height:30),CGRect(x:448,y:461,width:27,height:26),CGRect(x:27,y:469,width:30,height:27),CGRect(x:55,y:463,width:28,height:30),CGRect(x:83,y:470,width:30,height:27),CGRect(x:174,y:469,width:28,height:28),CGRect(x:204,y:465,width:30,height:31),CGRect(x:233,y:469,width:32,height:29)].map(cellRect)
+                brows = [cellRect(CGRect(x:76,y:234,width:48,height:26)),cellRect(CGRect(x:150,y:233,width:51,height:25))]
+                hands = [cellRect(CGRect(x:26,y:458,width:91,height:45)),cellRect(CGRect(x:169,y:458,width:99,height:47))]
+            case "desert-push-up":
+                belly = cell([(175,374),(204,369),(212,405),(208,435),(189,447),(174,428)])
+                scarfPoints = cell([(77,336),(124,341),(169,334),(207,316),(232,289),(241,275),(250,287),(258,303),(254,321),(231,345),(208,362),(176,380),(174,434),(151,445),(132,435),(129,389),(108,386),(86,369)])
+                mouthPoints = cell([(79,301),(88,294),(104,292),(119,295),(128,302),(125,310),(112,315),(97,315),(84,310)])
+                brows = [cellRect(CGRect(x:52,y:180,width:37,height:24)),cellRect(CGRect(x:121,y:181,width:59,height:25))]
+            case "desert-stumble":
+                scarfPoints = cell([(150,302),(191,307),(231,299),(266,283),(288,265),(297,268),(308,285),(307,304),(282,325),(249,342),(207,350),(215,388),(200,401),(165,395),(158,370),(139,378),(126,365),(130,347),(143,334)])
+                mouthPoints = cell([(148,271),(156,260),(171,251),(188,251),(203,259),(212,273),(210,278),(178,278),(154,277)])
+                brows = [cellRect(CGRect(x:137,y:149,width:39,height:27)),cellRect(CGRect(x:216,y:150,width:43,height:32))]
+            default: break
+            }
+            if !rear {
+                let chain = Array(dorsal.prefix(dorsalLeftCount))
+                dorsal = [(chain[0].0,0)] + chain + [(500,chain.last!.1),(500,0)]
+            }
+        }
+        func point(_ x: Double, _ y: Double, head: Bool = false) -> CGPoint {
+            CGPoint(x:(flip ? 443.5 - (head ? x * headScale + headDX : x) : (head ? x * headScale + headDX : x))/443.5 + dx,
+                    y:(head ? y * headScale + headDY : y)/443.5 + dy)
+        }
+        func polygon(_ points: [(Double,Double)], head: Bool = false) -> CGPath {
+            let p=CGMutablePath();p.addLines(between:points.map { point($0.0,$0.1,head:head) });p.closeSubpath();return p
+        }
+        func ellipse(_ r: CGRect, head: Bool = false) -> CGPath {
+            let p=CGMutablePath(); let a=point(r.minX,r.minY,head:head), b=point(r.maxX,r.maxY,head:head)
+            p.addEllipse(in:CGRect(x:min(a.x,b.x),y:min(a.y,b.y),width:abs(b.x-a.x),height:abs(b.y-a.y))); return p
+        }
+        var head: CGPath { polygon([(0,0),(235,0),(242,72),(242,117),(244,154),(234,181),(216,202),(185,213),(144,213),(106,205),(70,187),(0,182)],head:true) }
+        var frontRock: CGPath {
+            if let frontRockPoints {return polygon(frontRockPoints)}
+            if isTurn {return CGMutablePath()}
+            return polygon([(202,61),(210,52),(240,40),(249,56),(248,83),(238,109),(233,99),(224,80),(212,68)],head:true)
+        }
+        var scarf: CGPath {
+            if let scarfPoints {return polygon(scarfPoints)}
+            let path=CGMutablePath()
+            path.addPath(polygon([(101,209),(150,216),(191,202),(225,184),(241,193),(247,212),(233,234),(207,247),(171,257),(126,264),(103,258),(96,245),(97,227)],head:true))
+            path.addPath(polygon([(104,255),(154,255),(161,320),(106,320)],head:true))
+            return path
+        }
+        var chin: CGPath { if let chinPoints {return polygon(chinPoints)};return polygon([(45,158),(95,158),(150,150),(215,145),(230,175),(218,204),(183,220),(140,224),(100,218),(66,200)],head:true) }
+        var horns: [CGPath] { [polygon([(103,24),(132,20),(151,71),(143,91),(121,98),(107,82)],head:true),polygon([(155,58),(164,12),(187,8),(205,54),(201,70),(180,76)],head:true)] }
+    }
+
+    private final class DesertLabels: NSObject { let labels:[UInt8]; init(_ labels:[UInt8]) {self.labels=labels} }
+    private static let desertMaskCache: NSCache<NSString,DesertLabels> = {
+        let c=NSCache<NSString,DesertLabels>();c.totalCostLimit=24*1024*1024;return c
+    }()
+    /// Labels: 0 protected, 1 cloth, 2 decoration, 3 skin, 4 cream, 5 leather/metal.
+    static func desertLabels(_ source: CGImage, asset: String) -> [UInt8] {
+        let key="desert-\(asset)-\(source.width)-\(source.height)" as NSString
+        if let cached=desertMaskCache.object(forKey:key) {return cached.labels}
+        let w=source.width,h=source.height,rig=DesertRig(asset:asset)
+        var bytes=[UInt8](repeating:0,count:w*h*4), labels=[UInt8](repeating:0,count:w*h)
+        let format=CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
+        let dorsal=rig.polygon(rig.dorsal), belly=rig.polygon(rig.belly), chin=rig.chin
+        let head=rig.head, cloth=rig.scarf, tailClub=rig.ellipse(rig.tailClub), frontRock=rig.frontRock
+        let rearClub=rig.ellipse(CGRect(x:176,y:231,width:102,height:103))
+        let rearBelly=rig.ellipse(CGRect(x:165,y:289,width:117,height:97))
+        let torsoCreamZone = rig.polygon([(65,220),(245,220),(255,420),(60,420)])
+        let tailStem = rig.polygon(rig.tailStemPoints ?? [(321,350),(338,312),(360,285),(382,272),(410,290),(388,332),(349,365)])
+        let eyes=rig.eyes.map {rig.ellipse($0)}, palms=rig.hands.map {rig.ellipse($0)}, toes=rig.toes.map {rig.ellipse($0)}
+        let harness=rig.harness.map {rig.polygon($0)}
+        let metal = [rig.ellipse(CGRect(x:rig.clock.midX-31,y:rig.clock.minY-25,width:30,height:28)),rig.ellipse(CGRect(x:rig.clock.midX-2,y:rig.clock.maxY-5,width:20,height:22))]
+        bytes.withUnsafeMutableBytes { b in
+            let c=CGContext(data:b.baseAddress,width:w,height:h,bitsPerComponent:8,bytesPerRow:w*4,space:CGColorSpace(name:CGColorSpace.sRGB)!,bitmapInfo:format)!
+            c.draw(source,in:CGRect(x:0,y:0,width:w,height:h))
+            let pixels=b.bindMemory(to:UInt8.self)
+            let clockMatte = rig.hasClock ? desertClockMatte(pixels,width:w,height:h,rig:rig) : [UInt8](repeating:0,count:w*h)
+            let hornMatte = desertClockMatte(pixels,width:w,height:h,rig:rig,isHorn:true)
+            var harnessMatte=[UInt8](repeating:0,count:w*h)
+            for region in harness {
+                let part=desertClockMatte(pixels,width:w,height:h,rig:rig,harnessRegion:region,excluding:clockMatte)
+                for n in part.indices where part[n]>0 {harnessMatte[n]=1}
+            }
+            for n in 0..<w*h {
+                let i=n*4,a=Double(pixels[i+3])/255
+                guard a>0 else {continue}
+                let color=HSL(red:Double(pixels[i])/255/a,green:Double(pixels[i+1])/255/a,blue:Double(pixels[i+2])/255/a)
+                let p=CGPoint(x:(Double(n%w)+0.5)/Double(w),y:(Double(n/w)+0.5)/Double(h))
+                let hand=palms.contains {$0.contains(p)}
+                if (eyes.contains(where:{$0.contains(p)}) && (color.saturation<0.22 || color.lightness<0.52)) || color.lightness<0.15 || (rig.mouthPoints.map({rig.polygon($0).contains(p)}) == true) || (rig.brows.contains(where:{rig.ellipse($0).contains(p)}) && color.hue<0.11 && color.lightness<0.66) {continue}
+                if head.contains(p), color.hue<0.065, color.saturation>0.35, color.lightness<0.55, p.y>rig.point(0,130,head:true).y, Double(pixels[i+1])/max(1,Double(pixels[i]))<0.45 {continue}
+                if clockMatte[n] == 1, !hand {continue}
+                var label: UInt8=3
+                if dorsal.contains(p) || frontRock.contains(p) || hornMatte[n]>0 {label=2}
+                if tailClub.contains(p) || (tailStem.contains(p) && !asset.contains("turn-") && asset != "desert-airborne") {label=3}
+                // Geometry limits the material, chromaticity snaps only its edge
+                // to the actual painted cream seam. This includes all relative
+                // cream shadows and avoids classifying bright skin as a new material.
+                let r=Double(pixels[i])/max(1,Double(pixels[i+3])), g=Double(pixels[i+1])/max(1,Double(pixels[i+3])), b=Double(pixels[i+2])/max(1,Double(pixels[i+3]))
+                let cream = b/max(0.001,r)>0.57 && g/max(0.001,r)>0.79
+                if (rig.chinPoints != nil && chin.contains(p)) || (belly.contains(p) && !head.contains(p) && ((!asset.contains("turn-") && asset != "desert-fallen") || cream)) || (cream && (chin.contains(p) || (rig.chinPoints == nil && torsoCreamZone.contains(p) && !asset.contains("turn-") && !dorsal.contains(p) && !head.contains(p)) || toes.contains(where:{$0.contains(p)}))) {label=4}
+                if !hand && (harnessMatte[n]>0 || clockMatte[n] == 2) {label=5}
+                // One connected orange knitted material. Geometry excludes the
+                // orange cheek and every hand even in front of the clock/scarf.
+                if rig.scarfPoints == nil, p.y>rig.point(0,rig.scarfTop).y, p.y<rig.point(0,rig.scarfBottom).y,
+                   (rig.flip ? 1-p.x:p.x)>0.10,(rig.flip ? 1-p.x:p.x)<0.82,
+                   (b/max(0.001,r)<0.22 || (cloth.contains(p) && b/max(0.001,r)<0.5)), g/max(0.001,r)>0.32, g/max(0.001,r)<0.86,
+                   color.hue>0.065, !hand, label != 2, label != 5 {label=1}
+                // Horns are a connected brown material within their own cap,
+                // separate from the sandy forehead and all skin spots below.
+                if hornMatte[n]>0 {label=2}
+                if cloth.contains(p), !hand, (label != 2 || b/max(0.001,r)<0.25), label != 5 {label=1}
+                if hand {label=3}
+                if rig.rear {
+                    label = dorsal.contains(p) ? 2 : 3
+                    let club = rearClub
+                    if club.contains(p) { label=3 }
+                    if rearBelly.contains(p), !club.contains(p) {label=4}
+                }
+                if hornMatte[n]>0 {label=2}
+                if !hand && harnessMatte[n]>0 {label=5}
+                if rig.hasClock, !cloth.contains(p), (metal.contains(where:{$0.contains(p)}) || harness.contains(where:{$0.contains(p)}) || clockMatte[n] == 2),
+                   (0.095...0.17).contains(color.hue), g/max(0.001,r)>0.60,b/max(0.001,r)<0.65 {label=0}
+                if hand && cream && toes.contains(where:{$0.contains(p)}) {label=4}
+                labels[n]=label
+            }
+        }
+        desertMaskCache.setObject(DesertLabels(labels),forKey:key,cost:labels.count)
+        return labels
+    }
+    /// The opaque, neutral dial is a connected region inside a pose-specific
+    /// search window. Its convex contour includes the dark ticks/hands, and a
+    /// measured outset follows the rotated bezel. This never reuses idle clock
+    /// coordinates on a moving source or mixes 1254px with 512px measurements.
+    private static func desertClockMatte(_ p: UnsafeMutableBufferPointer<UInt8>, width w:Int, height h:Int, rig:DesertRig, isHorn:Bool = false, harnessRegion:CGPath? = nil, excluding:[UInt8]? = nil) -> [UInt8] {
+        let capBottom = (rig.point(0,110,head:true).y-rig.dy)*443.5
+        let search = isHorn ? CGRect(x:0,y:0,width:443.5,height:capBottom) : rig.clock.insetBy(dx:-32,dy:-30)
+        let a=harnessRegion?.boundingBoxOfPath.origin ?? rig.point(search.minX,search.minY)
+        let b=harnessRegion.map {CGPoint(x:$0.boundingBoxOfPath.maxX,y:$0.boundingBoxOfPath.maxY)} ?? rig.point(search.maxX,search.maxY)
+        let x0=max(0,Int(min(a.x,b.x)*Double(w))),x1=min(w-1,Int(max(a.x,b.x)*Double(w)))
+        let y0=max(0,Int(min(a.y,b.y)*Double(h))),y1=min(h-1,Int(max(a.y,b.y)*Double(h)))
+        var candidate=[Bool](repeating:false,count:w*h),seen=candidate,best=[Int]()
+        var groups=[[Int]]()
+        let eyePaths=rig.eyes.map {rig.ellipse($0)}
+        let coneZone=rig.polygon([(85,0),(220,0),(220,112),(85,112)],head:true)
+        guard x0<x1,y0<y1 else {return [UInt8](repeating:0,count:w*h)}
+        for y in y0...y1 {for x in x0...x1 {
+            let n=y*w+x,i=n*4,r=Double(p[i]),g=Double(p[i+1]),b=Double(p[i+2])
+            if isHorn || harnessRegion != nil {
+                let color=HSL(red:r/max(1,Double(p[i+3])),green:g/max(1,Double(p[i+3])),blue:b/max(1,Double(p[i+3])))
+                let point=CGPoint(x:(Double(x)+0.5)/Double(w),y:(Double(y)+0.5)/Double(h))
+                if let harnessRegion {
+                    candidate[n] = p[i+3]>100 && color.hue<0.11 && color.saturation>0.15 && color.lightness<0.70 && g/max(1,r)>0.58 && g/max(1,r)<0.77 && b/max(1,r)<0.55 && harnessRegion.contains(point) && excluding?[n] == 0
+                } else {
+                    candidate[n] = p[i+3]>100 && color.hue<0.095 && color.saturation>0.25 && color.lightness>0.19 && g/max(1,r)<0.70 && b/max(1,r)<0.50 && (rig.isTurn || coneZone.contains(point)) && !eyePaths.contains(where:{$0.contains(point)}) && !rig.brows.contains(where:{rig.ellipse($0).contains(point)})
+                }
+            } else {candidate[n] = p[i+3]>100 && b/max(1,r)>0.72 && g/max(1,r)>0.84}
+        }}
+        for y in y0...y1 {for x in x0...x1 {
+            let start=y*w+x
+            guard candidate[start],!seen[start] else {continue}
+            var q=[start],i=0;seen[start]=true
+            while i<q.count {
+                let n=q[i];i+=1
+                for m in [n%w>0 ? n-1:-1,n%w<w-1 ? n+1:-1,n>=w ? n-w:-1,n<w*(h-1) ? n+w:-1] where m>=0 {
+                    if candidate[m] && !seen[m] {seen[m]=true;q.append(m)}
+                }
+            }
+            if q.count>best.count {best=q}
+            if isHorn && Double(q.count)>180*pow(Double(w)/443.5,2) {groups.append(q)}
+        }}
+        guard best.count>Int(50*Double(w)/443.5) else {return [UInt8](repeating:0,count:w*h)}
+        if harnessRegion != nil {
+            let xs=best.map {$0%w},ys=best.map {$0/w}
+            let bw=Double(xs.max()!-xs.min()!+1),bh=Double(ys.max()!-ys.min()!+1)
+            let searchArea=harnessRegion!.boundingBoxOfPath.width*harnessRegion!.boundingBoxOfPath.height*443.5*443.5
+            guard (max(bw,bh)/max(1,min(bw,bh))>1.6 || searchArea<800), Double(best.count)>50*pow(Double(w)/443.5,2) else {return [UInt8](repeating:0,count:w*h)}
+        }
+        if !isHorn {groups=[best]}
+        var mask=[UInt8](repeating:0,count:w*h)
+        for group in groups {
+        var points: [CGPoint] = group.map { n in CGPoint(x: Double(n % w) + 0.5, y: Double(n / w) + 0.5) }
+        points.sort { a, b in a.x == b.x ? a.y < b.y : a.x < b.x }
+        func cross(_ a:CGPoint,_ b:CGPoint,_ c:CGPoint)->Double {(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x)}
+        var lower=[CGPoint](),upper=[CGPoint]()
+        for point in points {while lower.count>=2 && cross(lower[lower.count-2],lower.last!,point)<=0 {lower.removeLast()};lower.append(point)}
+        for point in points.reversed() {while upper.count>=2 && cross(upper[upper.count-2],upper.last!,point)<=0 {upper.removeLast()};upper.append(point)}
+        let hull=Array(lower.dropLast())+Array(upper.dropLast()),path=CGMutablePath()
+        path.addLines(between:hull);path.closeSubpath()
+        let dial=path.copy(strokingWithWidth:2*Double(w)/443.5,lineCap:.round,lineJoin:.round,miterLimit:2)
+        let bezel=path.copy(strokingWithWidth:(isHorn || harnessRegion != nil ? 3 : 24)*Double(w)/443.5,lineCap:.round,lineJoin:.round,miterLimit:2)
+        let box=bezel.boundingBoxOfPath.integral
+        for y in max(0,Int(box.minY))...min(h-1,Int(box.maxY)) {for x in max(0,Int(box.minX))...min(w-1,Int(box.maxX)) {
+            let point=CGPoint(x:Double(x)+0.5,y:Double(y)+0.5)
+            if path.contains(point) || dial.contains(point) {mask[y*w+x]=1}
+            else if bezel.contains(point) {mask[y*w+x]=2}
+        }}
+        }
+        return mask
+    }
+    static func recoloredDesert(_ source: CGImage, appearance: DinoAppearance, asset: String) -> CGImage? {
+        guard !appearance.hasOriginalColors else { return source }
+        let w=source.width,h=source.height,labels=desertLabels(source,asset:asset)
+        var bytes=[UInt8](repeating:0,count:w*h*4)
+        let parts:[DinoAppearance.Part] = [.body,.bandana,.spikes,.body,.belly,.bandana]
+        let standard=DinoAppearance.standard(for:.desert)
+        let refs=[UInt32(0xE7B56D),0xF89B20,0xB47B43,0xE7B56D,0xF5DEAA,0x97642F].map {HSL(hex:$0)}
+        let format=CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
+        bytes.withUnsafeMutableBytes { b in
+            let c=CGContext(data:b.baseAddress,width:w,height:h,bitsPerComponent:8,bytesPerRow:w*4,space:CGColorSpace(name:CGColorSpace.sRGB)!,bitmapInfo:format)!
+            c.draw(source,in:CGRect(x:0,y:0,width:w,height:h));let p=b.bindMemory(to:UInt8.self)
+            for n in 0..<w*h {
+                let label=Int(labels[n]),i=n*4,a=Double(p[i+3])/255
+                guard label>0,a>0,appearance[parts[label]] != standard[parts[label]] else {continue}
+                let v=HSL(red:Double(p[i])/255/a,green:Double(p[i+1])/255/a,blue:Double(p[i+2])/255/a)
+                let ref=refs[label],target=HSL(hex:appearance[parts[label]])
+                let l = v.lightness <= ref.lightness ? target.lightness*v.lightness/max(0.001,ref.lightness)
+                    : target.lightness+(1-target.lightness)*(v.lightness-ref.lightness)/max(0.001,1-ref.lightness)
+                let rgb=HSL(hue:target.hue,saturation:min(1,v.saturation*target.saturation/max(0.001,ref.saturation)),lightness:min(1,max(0,l))).rgb
+                for (k,value) in [rgb.0,rgb.1,rgb.2].enumerated() {p[i+k]=UInt8((min(1,max(0,value))*a*255).rounded())}
+            }
+        }
+        return desertImage(bytes,width:w,height:h)
+    }
+    static func desertHeadOverflow(_ source: CGImage, asset: String, mirrored: Bool = true) -> CGImage? {
+        let w=source.width,h=source.height,rig=DesertRig(asset:asset),head=rig.head
+        let hands=rig.hands.map {rig.ellipse($0)}
+        var bytes=[UInt8](repeating:0,count:w*h*4)
+        bytes.withUnsafeMutableBytes { b in
+            let c=CGContext(data:b.baseAddress,width:w,height:h,bitsPerComponent:8,bytesPerRow:w*4,space:CGColorSpace(name:CGColorSpace.sRGB)!,bitmapInfo:CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue)!
+            c.draw(source,in:CGRect(x:0,y:0,width:w,height:h));let p=b.bindMemory(to:UInt8.self)
+            for y in 0..<h {for x in 0..<w {
+                let u=(Double(x)+0.5)/Double(w),v=(Double(y)+0.5)/Double(h)
+                let point=CGPoint(x:mirrored ? 1-u:u,y:v)
+                if !head.contains(point) || hands.contains(where:{$0.contains(point)}) {for k in 0..<4 {p[(y*w+x)*4+k]=0}}
+            }}
+        }
+        return desertImage(bytes,width:w,height:h)
+    }
+    private static func desertImage(_ bytes:[UInt8],width:Int,height:Int) -> CGImage? {
+        guard let provider=CGDataProvider(data:Data(bytes) as CFData) else {return nil}
+        return CGImage(width:width,height:height,bitsPerComponent:8,bitsPerPixel:32,bytesPerRow:width*4,space:CGColorSpace(name:CGColorSpace.sRGB)!,bitmapInfo:CGBitmapInfo(rawValue:CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue),provider:provider,decode:nil,shouldInterpolate:true,intent:.defaultIntent)
+    }
 }

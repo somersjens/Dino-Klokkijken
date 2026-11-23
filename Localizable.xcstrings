@@ -292,6 +292,74 @@
         }
       }
     },
+    "dino.appearance.desert.bandana": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scarf and leather"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sjaal en leer"
+          }
+        }
+      }
+    },
+    "dino.appearance.desert.spikes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Horns and rock spines"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoorns en rotsstekels"
+          }
+        }
+      }
+    },
+    "dino.appearance.desert.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skin and spots"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Huid en vlekken"
+          }
+        }
+      }
+    },
+    "dino.appearance.desert.belly": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chin, belly and toes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kin, buik en tenen"
+          }
+        }
+      }
+    },
     "dino.appearance.bandana" : {
       "extractionState" : "manual",
       "localizations" : {

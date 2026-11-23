@@ -228,9 +228,9 @@ struct AdventureHeader: View {
                         .clipShape(Circle())
                     Circle().strokeBorder(palette.rim, lineWidth: 4)
                         .frame(width: size, height: size)
-                    DinoBustImage(appearance: player.profile.dinoAppearance ?? .standard, diameter: size)
+                    DinoBustImage(appearance: player.profile.dinoAppearance ?? .standard, diameter: size, headOnly: player.profile.activeCharacter.usesBossArtwork)
                         .frame(width: footprint, height: footprint)
-                        .mask(DinoBustOverflowMask(diameter: size, leafyCrown: player.profile.activeCharacter == .jungle))
+                        .mask(DinoBustOverflowMask(diameter: size, leafyCrown: player.profile.activeCharacter.usesBossArtwork))
                         .shadow(color: DinoStyle.ink.opacity(0.14), radius: 0.7, y: 0.7)
                 }
             }

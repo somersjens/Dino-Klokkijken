@@ -69,9 +69,9 @@ final class DinoPlayer: ObservableObject {
            let rawCorrect = ProcessInfo.processInfo.environment["DINO_TEST_RESULT_CORRECT"], let correct = Int(rawCorrect),
            (0...level.questionCount).contains(correct) {
             profile.onboardingComplete = true
-            let firstJungleVictory = id == 10 && !profile.worldComplete(1)
+            let wasIncomplete = !profile.worldComplete(level.worldID)
             profile.recordCompletedAttempt(levelID: id, correct: correct)
-            if firstJungleVictory && profile.worldComplete(1) { profile.pendingCharacterUnlock = .jungle }
+            if wasIncomplete && profile.worldComplete(level.worldID) { profile.pendingCharacterUnlock = DinoIdentity.boss(in: level.worldID) }
         }
         if ProcessInfo.processInfo.environment["DINO_TEST_SUITE"] != nil,
            let raw = ProcessInfo.processInfo.environment["DINO_TEST_SELECTED_CHARACTER"],
@@ -151,10 +151,10 @@ final class DinoPlayer: ObservableObject {
         guard attempt.isComplete, let level = DinoLevelCatalog.level(attempt.levelID),
               attempt.answers.count == level.questionCount else { return nil }
         var victory = BossVictory.none
-        let unlocksJungle = level.id == 10 && !profile.worldComplete(1)
+        let unlocksCharacter = !profile.worldComplete(level.worldID)
         update {
             victory = $0.recordCompletedAttempt(levelID: level.id, correct: attempt.correctCount, questionSeconds: attempt.questionSeconds)
-            if unlocksJungle && victory != .none { $0.pendingCharacterUnlock = .jungle }
+            if unlocksCharacter && $0.worldComplete(level.worldID) { $0.pendingCharacterUnlock = DinoIdentity.boss(in: level.worldID) }
         }
         progressChanged?()
         return DinoLevelResult(level: level, correct: attempt.correctCount,

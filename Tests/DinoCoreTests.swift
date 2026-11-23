@@ -3,6 +3,16 @@ import CoreGraphics
 import ImageIO
 import Combine
 
+#if !canImport(UIKit)
+// The command-line suite exercises settings persistence on macOS. Actual
+// playback remains in the iOS app and simulator tests.
+@MainActor
+final class DinoAnswerFeedback {
+    static let shared = DinoAnswerFeedback()
+    nonisolated func setSoundEnabled(_ enabled: Bool) {}
+}
+#endif
+
 private var checks = 0
 private func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
     checks += 1
@@ -145,6 +155,7 @@ struct DinoCoreTests {
         if CommandLine.arguments.contains("--characters") {
             testCharacterUnlocks()
             testJungleMotion()
+            testDesertCharacter()
             print("PASS: \(checks) character unlock, swap and save checks.")
             return
         }
@@ -323,6 +334,7 @@ struct DinoCoreTests {
         testDinoAppearance()
         testCharacterUnlocks()
         testJungleMotion()
+        testDesertCharacter()
         testDinoAvatarMask()
         testDinoSpriteColors()
         testPaleBandanaLettering()
@@ -4495,6 +4507,9 @@ struct DinoCoreTests {
         let clips: [DinoAnimation.Clip] = [.idle, .thumbsUp, .wrongAnswer, .stumble, .openingJump, .backflip, .pirouette, .worldJump]
         for clip in clips {
             let duration = DinoAnimation.duration(clip)
+            let settled = DinoJungleAnimation.sample(clip, elapsed: duration)
+            expect(settled.pose.asset == "jungle-idle" && settled.previousPose == nil,
+                   "completed jungle reactions settle on one opaque idle painting")
             for step in 0...Int(ceil((duration + 0.1) * 120)) {
                 let elapsed = Double(step) / 120
                 let sample = DinoJungleAnimation.sample(clip, elapsed: elapsed)
@@ -4503,6 +4518,11 @@ struct DinoCoreTests {
                 expect(DinoJungleArtwork.assets.contains(sample.pose.asset), "every displayed jungle pose is prepared before playback")
                 if let previous = sample.previousPose {
                     expect(DinoJungleArtwork.assets.contains(previous.asset), "dissolve predecessors are also prepared")
+                    let a = DinoJungleAnimation.anchor(previous.asset)
+                    let b = DinoJungleAnimation.anchor(sample.pose.asset)
+                    expect(hypot(a.x + previous.offsetX - b.x - sample.pose.offsetX,
+                                 a.y + previous.offsetY - b.y - sample.pose.offsetY) < 0.000001,
+                           "adjacent jungle paintings share one face anchor throughout every transition")
                 }
                 let shared = DinoAnimation.sample(clip, elapsed: elapsed)
                 expect(sample.angle == shared.angle && sample.height == shared.height,
@@ -4510,11 +4530,20 @@ struct DinoCoreTests {
             }
         }
         for (clip, boundary) in [(DinoAnimation.Clip.backflip, 0.20), (.worldJump, 1.10), (.wrongAnswer, DinoAnimation.answerGestureStart)] {
-            let before = DinoJungleAnimation.sample(clip, elapsed: boundary - 0.001)
-            let after = DinoJungleAnimation.sample(clip, elapsed: boundary + 0.001)
+            let before = DinoJungleAnimation.sample(clip, elapsed: boundary - 0.00001)
+            let after = DinoJungleAnimation.sample(clip, elapsed: boundary + 0.00001)
             expect(before.previousPose != nil && after.previousPose != nil && abs(before.poseBlend - after.poseBlend) < 0.05,
                    "pose changes dissolve continuously instead of switching paintings in one frame")
         }
+        let turnKeys = DinoJungleAnimation.keys(for: .pirouette).filter { $0.asset.hasPrefix("jungle-turn-") }
+        expect(turnKeys.count == 8 && Set(turnKeys.map(\.asset)).count == 8,
+               "each jungle turn view appears once, without repeated compressed poses")
+        for pair in zip(turnKeys, turnKeys.dropFirst()) {
+            expect(pair.1.time - pair.0.time > 0.06, "each turn view has time to read clearly")
+        }
+        let beforeLanding = DinoJungleAnimation.sample(.openingJump,
+            elapsed: DinoAnimation.leadIn(.openingJump) + DinoOpeningJump.landing - 0.05)
+        expect(beforeLanding.pose.asset == "jungle-takeoff", "the reaching feet stay airborne until actual contact")
         let flight = DinoWelcomeFlight(source: CGPoint(x: 190, y: 300), sourceSide: 360,
             destination: CGRect(x: 90, y: 460, width: 170, height: 170), character: .jungle)
         for boundary in [DinoWelcomeJump.crouchBottom, DinoWelcomeJump.flightHandoff, DinoWelcomeJump.landing,
@@ -4524,9 +4553,28 @@ struct DinoCoreTests {
             expect(hypot(after.x - before.x, after.y - before.y) < 0.001,
                    "the jungle welcome's tracked face never teleports at takeoff, landing or recovery")
         }
-        expect(DinoJungleArtwork.asset(for: "dino-opening-jump-02") == "jungle-crouch"
-               && DinoJungleArtwork.asset(for: "dino-opening-jump-03") == "jungle-takeoff",
-               "the welcome bends before launching instead of switching into a tucked salto")
+        expect(DinoWelcomeJump.assets(for: .jungle) == ["dino-idle"],
+               "the jungle welcome prepares one consistent detailed drawing")
+        for geometry in [flight,
+            DinoWelcomeFlight(source: CGPoint(x: 410,y: 520), sourceSide: 592,
+                destination: CGRect(x: 240,y: 740,width: 190,height: 190),character: .jungle),
+            DinoWelcomeFlight(source: CGPoint(x: 590,y: 200), sourceSide: 330,
+                destination: CGRect(x: 490,y: 370,width: 170,height: 170),character: .jungle)] {
+            for step in 0...Int(ceil(DinoWelcomeJump.duration * 120)) {
+                let elapsed = Double(step) / 120
+                let tracked = DinoWelcomeJump.tracking(elapsed: elapsed, flight: geometry)
+                expect(tracked.pose.asset == "dino-idle" && DinoWelcomeJump.pose(elapsed: elapsed, character: .jungle).asset == "dino-idle",
+                       "the jungle face and lighting never change drawings during the bend, launch or landing")
+                let matrix = tracked.transform.concatenating(geometry.transform(elapsed: elapsed))
+                let xScale = hypot(matrix.a,matrix.b), yScale = hypot(matrix.c,matrix.d)
+                expect(xScale > 0 && abs(xScale-yScale) < 1e-8 && abs(matrix.a*matrix.c+matrix.b*matrix.d) < 1e-8,
+                       "the welcome preserves facial proportions without stretching or skewing its detailed pixels")
+            }
+        }
+        let highURL = URL(fileURLWithPath: "Assets.xcassets/\(DinoJungleArtwork.openingAsset).imageset/\(DinoJungleArtwork.openingAsset).png")
+        let high = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(highURL as CFURL,nil)!,0,nil)!
+        expect(high.width >= 1254 && high.height >= 1254 && high.alphaInfo != .none,
+               "the large jungle welcome uses a detailed transparent source instead of enlarging a sprite-sheet cell")
         let url = URL(fileURLWithPath: "Assets.xcassets/jungle-idle.imageset/jungle-idle.png")
         let original = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
         let mirrored = DinoSpriteColorRenderer.facingRight(original)!
@@ -4556,7 +4604,8 @@ struct DinoCoreTests {
         expect(profile.selectCharacter(.main) && profile.collectionCharacters[0] == .jungle,
                "choosing the main dinosaur returns the jungle boss to that same tile")
         profile.recordCompletedAttempt(levelID: 20, correct: 10)
-        expect(!profile.selectCharacter(.desert), "future characters stay locked until their playable art is implemented")
+        expect(profile.selectCharacter(.desert), "the desert guardian unlocks at chapter two, independently of theme seven")
+        expect(!profile.selectCharacter(.volcano), "unimplemented characters remain locked")
         var normal = PlayerProfile()
         for level in 1...9 { normal.recordCompletedAttempt(levelID: level, correct: 3) }
         normal.recordCompletedAttempt(levelID: 10, correct: 6)
@@ -4613,10 +4662,110 @@ struct DinoCoreTests {
         expect(pinkPixels != originalPixels, "body customization recolors the jungle character")
         expect(stride(from: 3, to: originalPixels.count, by: 4).allSatisfy { originalPixels[$0] == pinkPixels[$0] },
                "jungle color choices retain every silhouette alpha value")
+        let creamOnly = pixels(DinoSpriteColorRenderer.recoloredJungle(image,
+            appearance: DinoAppearance(belly: 0xC5AFE8, character: .jungle))!)
+        let crownOnly = pixels(DinoSpriteColorRenderer.recoloredJungle(image,
+            appearance: DinoAppearance(bandana: 0x6424C8, character: .jungle))!)
+        let leavesOnly = pixels(DinoSpriteColorRenderer.recoloredJungle(image,
+            appearance: DinoAppearance(spikes: 0x7622DC, character: .jungle))!)
+        func pixel(_ bytes: [UInt8], _ x: Int, _ y: Int) -> [UInt8] {
+            let index = (y * image.width + x) * 4
+            return Array(bytes[index..<index+3])
+        }
+        for (x, y) in [(200,235), (210,246), (230,420), (230,431), (230,440), (283,470)] {
+            expect(pixel(creamOnly,x,y) != pixel(originalPixels,x,y), "cream highlights and shadows, including toes, use the belly choice")
+            expect(pixel(crownOnly,x,y) == pixel(originalPixels,x,y), "cream skin never acquires a stripe from the crown choice")
+        }
+        for (x,y) in [(253,34), (259,59)] {
+            expect(pixel(leavesOnly,x,y) != pixel(originalPixels,x,y), "the lime center feather belongs to the leaf color")
+            expect(pixel(pinkPixels,x,y) == pixel(originalPixels,x,y), "the center feather never acquires body-color patches")
+        }
+        for asset in DinoJungleArtwork.assets {
+            let url = URL(fileURLWithPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
+            let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL,nil)!,0,nil)!
+            let original = pixels(source)
+            let recolored = pixels(DinoSpriteColorRenderer.recoloredJungle(source,
+                appearance: DinoAppearance(bandana: 0xDF2731, spikes: 0x7622DC, body: 0x45A7E6, belly: 0xC5AFE8, character: .jungle), asset: asset)!)
+            expect(stride(from: 3, to: original.count, by: 4).allSatisfy { original[$0] == recolored[$0] },
+                   "every jungle pose retains its original silhouette after recoloring")
+        }
+        for (asset, points) in [("jungle-clap-contact", [(210,264),(220,276)]),
+                                ("jungle-clap-open", [(167,260),(293,260)]),
+                                ("jungle-stumble", [(215,297)])] {
+            let url = URL(fileURLWithPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
+            let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL,nil)!,0,nil)!
+            let original = pixels(source)
+            let crown = pixels(DinoSpriteColorRenderer.recoloredJungle(source,
+                appearance: DinoAppearance(bandana: 0xDF2731, character: .jungle), asset: asset)!)
+            let skin = pixels(DinoSpriteColorRenderer.recoloredJungle(source,
+                appearance: DinoAppearance(belly: 0xC5AFE8, character: .jungle), asset: asset)!)
+            for (x,y) in points {
+                expect(pixel(crown,x,y) == pixel(original,x,y) && pixel(skin,x,y) != pixel(original,x,y),
+                       "fingertips covering gold accessories keep the skin color")
+            }
+        }
         for (index, contact) in DinoAnimation.correctAnswerClapContacts.enumerated() {
             let sample = DinoAnimation.sample(.thumbsUp, elapsed: contact + 0.01)
             expect(DinoJungleArtwork.asset(for: sample.pose.asset) == (index == 0 ? "jungle-clap-contact" : "jungle-clap-contact-2"),
                    "the jungle palms meet exactly on each shared clap beat")
+        }
+        for (x,y) in [(181,115),(201,102),(237,62),(216,259),(221,277),(180,297),(220,372)] {
+            expect(pixel(creamOnly,x,y) == pixel(originalPixels,x,y)
+                   && pixel(leavesOnly,x,y) == pixel(originalPixels,x,y)
+                   && pixel(crownOnly,x,y) != pixel(originalPixels,x,y),
+                   "crown, suspension and bezel remain one metal material across glints and shadows")
+        }
+        for (x,y) in [(210,310),(240,320),(220,345)] {
+            expect(pixel(creamOnly,x,y) == pixel(originalPixels,x,y)
+                   && pixel(crownOnly,x,y) == pixel(originalPixels,x,y),
+                   "the clock face and hands never receive colored speckles")
+        }
+        for asset in ["jungle-idle","jungle-wrong","jungle-clap-open","jungle-clap-open-2","jungle-clap-contact","jungle-clap-contact-2"] {
+            let url = URL(fileURLWithPath:"Assets.xcassets/\(asset).imageset/\(asset).png")
+            let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL,nil)!,0,nil)!
+            let head = pixels(DinoSpriteColorRenderer.jungleHeadOverflow(source,asset:asset,mirrored:false)!)
+            for y in 270..<source.height {
+                for x in 0..<source.width {
+                    expect(head[(y*source.width+x)*4+3] == 0,
+                           "no torso, clock or lower leaf may enter the portrait foreground in any answer pose")
+                }
+            }
+            expect(head[(250*source.width+350)*4+3] == 0,
+                   "the unwanted lower back leaf is absent from the foreground")
+            expect(head[(34*source.width+253)*4+3] > 0,
+                   "the head mask preserves the full crown above the circle")
+            if asset == "jungle-clap-contact" || asset == "jungle-clap-contact-2" {
+                expect(head[(264*source.width+210)*4+3] == 0,
+                       "clapping fingertips are excluded even when raised against the chin")
+            } else if asset == "jungle-clap-open" || asset == "jungle-clap-open-2" {
+                expect(head[(250*source.width+165)*4+3] == 0,
+                       "the raised open palm cannot cross the rim via the head foreground")
+            }
+        }
+        let heroName = DinoJungleArtwork.openingAsset
+        let heroURL = URL(fileURLWithPath: "Assets.xcassets/\(heroName).imageset/\(heroName).png")
+        let hero = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(heroURL as CFURL,nil)!,0,nil)!
+        let heroOriginal = pixels(hero)
+        let heroCrown = pixels(DinoSpriteColorRenderer.recoloredJungle(hero,
+            appearance: DinoAppearance(bandana: 0xDF2731,character: .jungle),asset: heroName)!)
+        let heroSkin = pixels(DinoSpriteColorRenderer.recoloredJungle(hero,
+            appearance: DinoAppearance(belly: 0xC5AFE8,character: .jungle),asset: heroName)!)
+        func heroPixel(_ data: [UInt8],_ x: Int,_ y: Int) -> [UInt8] {
+            let i = (y * hero.width + x) * 4
+            return Array(data[i..<i+3])
+        }
+        for (x,y) in [(520,575),(560,600),(560,990),(555,1035),(380,1130),(829,1160)] {
+            expect(heroPixel(heroCrown,x,y) == heroPixel(heroOriginal,x,y)
+                   && heroPixel(heroSkin,x,y) != heroPixel(heroOriginal,x,y),
+                   "high-resolution cream skin and dial never acquire gold-colored speckles")
+        }
+        expect(heroPixel(heroCrown,510,755) == heroPixel(heroOriginal,510,755)
+               && heroPixel(heroSkin,510,755) == heroPixel(heroOriginal,510,755),
+               "the clock dial keeps neutral original paint for every color selection")
+        for (x,y) in [(480,380),(640,385)] {
+            expect(heroPixel(heroCrown,x,y) == heroPixel(heroOriginal,x,y)
+                   && heroPixel(heroSkin,x,y) == heroPixel(heroOriginal,x,y),
+                   "the detailed welcome keeps its original brown irises")
         }
     }
 
@@ -4672,7 +4821,7 @@ struct DinoCoreTests {
         })
         expect(bosses.count == 10, "all ten world boss illustrations are accounted for")
         let jungle = Set(preloaded.map { DinoJungleArtwork.asset(for: $0) })
-        let expected = sprites.union(bosses).union(jungle).union(["reward-star"])
+        let expected = sprites.union(bosses).union(jungle).union(DinoDesertArtwork.assets).union(["reward-star", DinoJungleArtwork.openingAsset, DinoDesertArtwork.openingAsset])
         let root = URL(fileURLWithPath: "Assets.xcassets")
         let actual = Set(try! FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
             .filter { $0.pathExtension == "imageset" }.map { $0.deletingPathExtension().lastPathComponent })
@@ -4683,8 +4832,8 @@ struct DinoCoreTests {
                   let image = CGImageSourceCreateImageAtIndex(data, 0, nil) else {
                 fatalError("Missing or invalid asset: \(asset)")
             }
-            let side = asset == "dino-idle" || asset.hasPrefix("dino-opening-jump-") ? 1254
-                : bosses.contains(asset) ? 640 : jungle.contains(asset) ? 512 : asset == "reward-star" ? 384 : 768
+            let side = asset == "dino-idle" || asset.hasPrefix("dino-opening-jump-") || asset == DinoJungleArtwork.openingAsset || asset == DinoDesertArtwork.openingAsset ? 1254
+                : bosses.contains(asset) ? 640 : jungle.contains(asset) || DinoDesertArtwork.assets.contains(asset) ? 512 : asset == "reward-star" ? 384 : 768
             expect(image.width == side && image.height == side, "\(asset) retains its intended iPad raster budget")
             let contents = try! Data(contentsOf: url.deletingLastPathComponent().appendingPathComponent("Contents.json"))
             let manifest = try! JSONSerialization.jsonObject(with: contents) as! [String: Any]
@@ -5347,4 +5496,159 @@ private final class TestCloudStore: DinoCloudProgressStore {
     func set(_ data: Data, forKey key: String) { writes += 1; values[key] = data }
     func removeObject(forKey key: String) { values.removeValue(forKey: key) }
     func synchronize() -> Bool { syncs += 1; return succeeds }
+}
+
+extension DinoCoreTests {
+    static func testDesertCharacter() {
+        expect(DinoWorldCatalog.world(2)?.themeID == 7 && DinoWorldCatalog.world(7)?.themeID == 2, "Sandtail follows the swapped live theme catalog")
+        expect(DinoIdentity.desert.rawValue == 2 && DinoIdentity.desert.bossAsset == "boss-desert" && DinoIdentity.desert.unlockLevel == 20, "Sandtail keeps its stable save identity and chapter slot")
+        var p=PlayerProfile()
+        p.recordCompletedAttempt(levelID:10,correct:10)
+        p.recordCompletedAttempt(levelID:20,correct:9)
+        expect(!p.isCharacterUnlocked(.desert), "desert boss stars alone retain existing completion rules")
+        for level in 11...19 {p.recordCompletedAttempt(levelID:level,correct:3)}
+        expect(p.isCharacterUnlocked(.desert), "ordinary desert victory plus route unlocks Sandtail")
+        expect(p.selectCharacter(.desert), "an unlocked desert guardian is selectable")
+        expect(p.dinoAppearance == .standard(for:.desert), "first default selection uses the actual orange sand and cream palette")
+        expect(p.collectionCharacters[1] == .main && p.mapResident(in:2) == .main, "outgoing main Dino occupies exactly desert slot two")
+        p.dinoAppearance?.body = 0x1263EA
+        expect(p.selectCharacter(.main) && p.collectionCharacters[1] == .desert, "selecting the outgoing resident returns Sandtail to the same slot")
+        expect(p.mapResident(in:2) == .desert && DinoAppearance.standard(for:.desert).body == 0xE7B56D, "a returned Sandtail uses its own default colors independently of active blue")
+        let saved=try! JSONDecoder().decode(PlayerProfile.self,from:JSONEncoder().encode(p))
+        expect(saved == p && saved.collectionCharacters == p.collectionCharacters, "all desert colors and exact slot arrangement survive serialization")
+        p.resetProgress()
+        expect(!p.isCharacterUnlocked(.desert) && p.activeCharacter == .main && p.characterSlots == nil && p.pendingCharacterUnlock == nil, "reset relocks Sandtail and clears pending swaps")
+        let store=DinoProgressStore(defaults:InMemoryKeyValueStore())
+        var first=PlayerProfile();first.recordCompletedAttempt(levelID:10,correct:10);first.dinoAppearance = .standard(for:.jungle);first.characterSlots = [.main] + Array(DinoIdentity.allCases.dropFirst(2));store.save(first)
+        let player=DinoPlayer(store:store)
+        var rng=SeededGenerator(seed:42)
+        let level=DinoLevelCatalog.level(20)!
+        var attempt=LevelAttempt(levelID:20,questions:DinoQuestionGenerator.generate(level:level,using:&rng))
+        while !attempt.isComplete {_ = attempt.submit(attempt.current.answer ?? .time(attempt.current.target));attempt.advance()}
+        expect(player.finish(attempt)?.victory == .perfect && player.profile.pendingCharacterUnlock == .desert && player.profile.activeCharacter == .jungle, "level twenty stages a pending desert transformation without changing the result actor")
+        let restarted=DinoPlayer(store:store)
+        expect(restarted.profile.pendingCharacterUnlock == .desert, "pending desert unlock survives closing during the result/transition")
+        restarted.completeCharacterUnlock()
+        expect(restarted.profile.activeCharacter == .desert && restarted.profile.pendingCharacterUnlock == nil && restarted.profile.collectionCharacters[1] == .jungle, "resumed landing swaps the jungle actor into desert slot")
+        restarted.completeCharacterUnlock()
+        expect(DinoPlayer(store:store).profile.activeCharacter == .desert, "unlock completion is idempotent and persists")
+        restarted.selectCharacter(.main);_ = restarted.finish(attempt)
+        expect(restarted.profile.activeCharacter == .main && restarted.profile.pendingCharacterUnlock == nil, "repeated desert victories preserve manual choices")
+        expect(DinoWorldTransition(after:10) == nil, "last-world handling never invents level 101")
+        // The recovery entry point deliberately does not require a next chapter.
+        var terminal=restarted.profile;terminal.pendingCharacterUnlock = .desert;store.save(terminal)
+        let noTransition=DinoPlayer(store:store);noTransition.completeCharacterUnlock()
+        expect(noTransition.profile.activeCharacter == .desert, "pending recovery works without any transition object or next level")
+        for clip: DinoAnimation.Clip in [.idle,.thumbsUp,.wrongAnswer,.stumble,.openingJump,.backflip,.pirouette,.worldJump] {
+            for tick in 0...360 {
+                let t=Double(tick)/120
+                let sample=DinoBossAnimation.sample(clip,character:.desert,elapsed:t)
+                expect(DinoDesertArtwork.assets.contains(sample.pose.asset), "every actually displayed desert pose is included in preparation")
+                expect(sample.previousPose == nil && sample.poseBlend == 1, "desert playback never freezes between translucent bodies")
+                expect(sample.height.isFinite && sample.angle.isFinite && sample.pose.offsetX.isFinite, "desert result motion remains finite")
+            }
+            let end=DinoBossAnimation.sample(clip,character:.desert,elapsed:DinoAnimation.duration(clip)+1)
+            expect(end.pose.asset == "desert-idle" && end.previousPose == nil, "every desert animation ends on a single opaque canonical idle")
+        }
+        for contact in DinoAnimation.correctAnswerClapContacts {
+            expect(DinoBossAnimation.sample(.thumbsUp,character:.desert,elapsed:contact).pose.asset.contains("contact"), "both clap sounds/effects meet visible desert palms")
+        }
+        for step in 0...100 {
+            let visible=DinoBossAnimation.unlockOpacity(progress:Double(step)/100,character:.desert)
+            expect(visible.source + visible.unlocked == 1 && (visible.source == 0 || visible.unlocked == 0),
+                   "the desert reveal always displays one opaque actor rather than two ghosted identities")
+        }
+        let flight=DinoWelcomeFlight(source:CGPoint(x:195,y:400),sourceSide:420,destination:CGRect(x:80,y:600,width:150,height:150),character:.desert)
+        for t in [DinoWelcomeJump.crouchBottom,DinoWelcomeJump.takeoff,DinoWelcomeJump.flightHandoff,DinoWelcomeJump.landing] {
+            let a=DinoWelcomeJump.tracking(elapsed:t-0.00001,flight:flight).head
+            let b=DinoWelcomeJump.tracking(elapsed:t+0.00001,flight:flight).head
+            expect(hypot(a.center.x-b.center.x,a.center.y-b.center.y)<0.2, "desert opening eyes remain continuous at bend takeoff flight handoff and landing")
+        }
+        expect(DinoWelcomeJump.assets(for:.desert) == ["dino-idle"], "large desert launch keeps one sharp drawing throughout")
+        let blueJungle=DinoAppearance(body:0x1263EA,character:.jungle)
+        let blueDesert=blueJungle.selecting(.desert),nativeDesert=DinoAppearance.standard(for:.desert)
+        expect(blueDesert.body == 0x1263EA && blueDesert.bandana == nativeDesert.bandana && blueDesert.spikes == nativeDesert.spikes && blueDesert.belly == nativeDesert.belly,
+               "only chosen material colors carry over; untouched channels use the new character's native palette")
+        expect(blueDesert.selecting(.jungle) == blueJungle, "partial custom colors survive a round trip without importing another character's defaults")
+        expect(DinoIdentity.jungle.standingFootline == 484.0/512 && DinoIdentity.desert.standingFootline == 1211.0/1254,
+               "a swapped jungle resident uses its measured soles rather than desert canvas coordinates")
+        func pixels(_ image:CGImage)->[UInt8] {
+            var result=[UInt8](repeating:0,count:image.width*image.height*4)
+            result.withUnsafeMutableBytes {b in
+                let c=CGContext(data:b.baseAddress,width:image.width,height:image.height,bitsPerComponent:8,bytesPerRow:image.width*4,space:CGColorSpace(name:CGColorSpace.sRGB)!,bitmapInfo:CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue)!
+                c.draw(image,in:CGRect(x:0,y:0,width:image.width,height:image.height))
+            };return result
+        }
+        // The boss can be attempted early. Finishing the route afterwards is
+        // also a real world completion, with the same pending/recovery contract.
+        var early=PlayerProfile();early.recordCompletedAttempt(levelID:10,correct:10)
+        early.recordCompletedAttempt(levelID:20,correct:6)
+        for id in 11...18 {early.recordCompletedAttempt(levelID:id,correct:3)}
+        store.save(early)
+        let routeFinisher=DinoPlayer(store:store),last=DinoLevelCatalog.level(19)!
+        var finalRoute=LevelAttempt(levelID:19,questions:DinoQuestionGenerator.generate(level:last,using:&rng))
+        while !finalRoute.isComplete {_ = finalRoute.submit(finalRoute.current.answer ?? .time(finalRoute.current.target));finalRoute.advance()}
+        _ = routeFinisher.finish(finalRoute)
+        expect(routeFinisher.profile.worldComplete(2) && routeFinisher.profile.pendingCharacterUnlock == .desert,
+               "an early boss pass followed by the last route lesson stages the desert unlock too")
+        for (i,axis) in DinoDesertArtwork.turnAxes.enumerated() {
+            let key = DinoBossAnimation.keys(for:.pirouette,character:.desert).first { $0.asset == String(format:"desert-turn-%02d",i+1) }!
+            let sample=DinoBossAnimation.sample(.pirouette,character:.desert,elapsed:key.time+0.001)
+            expect(abs(1-axis/443.5+sample.pose.offsetX-(1-229/443.5))<0.00001,
+                   "each prepared pirouette view rotates around the measured hip axis after one mirror")
+        }
+        let custom=DinoAppearance(bandana:0xB329D4,spikes:0x21B966,body:0x2196EB,belly:0xFF80B5,character:.desert)
+        for asset in DinoDesertArtwork.assets.sorted() + [DinoDesertArtwork.openingAsset] {
+            let url=URL(fileURLWithPath:"Assets.xcassets/\(asset).imageset/\(asset).png")
+            let image=CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL,nil)!,0,nil)!
+            let original=pixels(image), unchanged=pixels(DinoSpriteColorRenderer.recoloredDesert(image,appearance:.standard(for:.desert),asset:asset)!), recolored=pixels(DinoSpriteColorRenderer.recoloredDesert(image,appearance:custom,asset:asset)!)
+            expect(original == unchanged, "original desert palette is byte-for-byte unchanged: \(asset)")
+            expect(original != recolored, "each used desert pose supports personalization: \(asset)")
+            let labels=DinoSpriteColorRenderer.desertLabels(image,asset:asset)
+            let seamProbes: [String:[(Int,Int,UInt8)]] = [
+                "desert-push-up": [(175,300,4),(118,329,4),(150,196,0)],
+                "desert-fallen": [(205,350,4),(145,387,4),(174,246,0),(150,460,1)],
+                "desert-stumble": [(247,267,4),(219,293,3),(243,167,0)]
+            ]
+            for (x,y,label) in seamProbes[asset] ?? [] {
+                expect(labels[y*image.width+x] == label,
+                       "moving desert cheek shadows, knitted fringe and protected eyebrows retain their measured material: \(asset) at \(x),\(y)")
+            }
+            if asset == "desert-idle" {
+                let rig=DinoSpriteColorRenderer.DesertRig(asset:asset)
+                for (x,y,label) in [(120.0,80.0,UInt8(2)),(135,100,3),(230,130,3),(170,225,1),(170,365,4),(262,280,0)] {
+                    let point=rig.point(x,y)
+                    expect(labels[Int(point.y*Double(image.height))*image.width+Int(point.x*Double(image.width))] == label,
+                           "horn roots forehead skin spots cloth gloss belly shade and dial keep their own material")
+                }
+            }
+            if asset == "desert-idle" || asset.contains("clap") || asset == "desert-wrong" || asset == "desert-crouch" || asset == "desert-landing" || asset.contains("turn-") {
+                var bottom=0
+                for y in 0..<image.height {for x in 0..<image.width where original[(y*image.width+x)*4+3]>240 {bottom=max(bottom,y)}}
+                expect(abs(Double(bottom)/Double(image.height)-1211.0/1254)<0.006,
+                       "each planted pose retains the registered sole line rather than auto-cropping per cell")
+            }
+            var alphaEqual=true,protectedEqual=true
+            for n in labels.indices {
+                if original[n*4+3] != recolored[n*4+3] {alphaEqual=false}
+                if labels[n] == 0 && original[n*4..<n*4+4] != recolored[n*4..<n*4+4] {protectedEqual=false}
+            }
+            expect(alphaEqual && protectedEqual, "recolor preserves all alpha and protected eye/mouth/dial bytes: \(asset)")
+            let mirrored=pixels(DinoSpriteColorRenderer.facingRight(image)!)
+            for (x,y) in [(0,0),(image.width/3,image.height/4),(image.width/2,image.height/2)] {
+                let a=(y*image.width+x)*4,b=(y*image.width+image.width-1-x)*4
+                expect(original[a..<a+4] == mirrored[b..<b+4], "single mirror maps consistent pixel centers: \(asset)")
+            }
+            if asset == "desert-idle" || asset.contains("clap") || asset == "desert-wrong" {
+                let head=pixels(DinoSpriteColorRenderer.desertHeadOverflow(image,asset:asset,mirrored:false)!)
+                let rig=DinoSpriteColorRenderer.DesertRig(asset:asset)
+                var noEscape=true
+                for y in 0..<image.height {for x in 0..<image.width where head[(y*image.width+x)*4+3]>0 {
+                    let point=CGPoint(x:(Double(x)+0.5)/Double(image.width),y:(Double(y)+0.5)/Double(image.height))
+                    if point.y>0.55 || rig.hands.contains(where:{rig.ellipse($0).contains(point)}) {noEscape=false}
+                }}
+                expect(noEscape,"isolated desert head excludes all moving hands shoulders clock and lower ornaments: \(asset)")
+            }
+        }
+    }
 }
