@@ -1,0 +1,132 @@
+{
+  "character": "Prisma de Kristalbewaker",
+  "identity": {
+    "world": 5,
+    "themeID": 5,
+    "rawValue": 5,
+    "bossLevel": 50,
+    "collectionSlot": 5,
+    "nextLevel": 51
+  },
+  "references": {
+    "map": "Assets.xcassets/boss-crystal-cave.imageset/boss-crystal-cave.png",
+    "original": "Documentation/Eindbazen/References/boss-crystal-cave-05.png"
+  },
+  "tool": "built-in image_gen.imagegen",
+  "assetDirectory": "Assets.xcassets/cave-*.imageset",
+  "opening": "cave-opening-idle",
+  "defaultPalette": {"bandana":"EAA932","spikes":"29C9EE","body":"93AEBE","belly":"E6D5B7"},
+  "archive": {
+    "path": "Assets.xcassets/cave-materials.dataset/cave-materials.bin",
+    "signature": "CAV1",
+    "labels": [
+      "Protected dial, ticks, hands, rivets and facial details",
+      "Gold clock rim and rivet sockets → bandana",
+      "Turquoise crystalline facets → spikes",
+      "Amethyst facets → spikes",
+      "Blue-gray skin, fingers and toes → body",
+      "Cream abdominal plate → belly",
+      "Icy chin → belly",
+      "Purple skin markings → body"
+    ],
+    "flags": {
+      "8": "isolated crown above the portrait ring",
+      "16": "isolated head and head ornaments for small previews"
+    }
+  },
+  "sourceSheets": {
+    "Opening": {
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "grid": [
+        1,
+        1
+      ],
+      "imagegenResult": "exec-4003a0da-026f-4429-b513-9e9f5db2e306.png"
+    },
+    "Sheet_reactions": {
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "grid": [
+        2,
+        2
+      ],
+      "imagegenResult": "exec-4cdb6a90-9b6e-4ba9-974e-5577e66eaf9e.png"
+    },
+    "Sheet_motion": {
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "grid": [
+        3,
+        2
+      ],
+      "imagegenResult": "exec-4afe7ae6-fe6d-4bc4-a27a-a15dfd04c05c.png"
+    },
+    "Sheet_turn": {
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "unusedCell": 0,
+      "imagegenResult": "exec-e5d22322-b779-4fb9-8189-e0051277beb1.png"
+    }
+  },
+  "coordinateSpaces": {
+    "cells": "Input source pixels, origin top left. Cell edges are independently rounded at the common grid divisions.",
+    "registered": "Left-facing square canvas, 512 source units. transformTo512 is [uniform scale, x translation, y translation]; the opening uses the same framing in 1254 pixels. Registered eyes, nose, palms, hip and clock use this space.",
+    "prepared": "Prepared right-facing pixels use column width−1−x. Normalized landmark positions use x′ = 1−x before SwiftUI maps to points. Screen pixels are screen points × display scale.",
+    "footline": 472,
+    "pirouetteAxis": "Result drawing offsets each measured prepared hip to the prepared idle hip at 1 − 226.46/512.",
+    "portrait": {
+      "scale": 1.8,
+      "x": -0.145,
+      "y": 0.262
+    },
+    "clapContact": {
+      "source512": [
+        203.54,
+        286.76
+      ],
+      "preparedNormalized": [
+        0.6024609375000001,
+        0.560078125
+      ]
+    }
+  },
+  "prompts": {
+    "opening": "Use case: identity-preserve. Produce a production-ready transparent, 1536×1536 full-body idle sprite for this EXACT Crystal Cave dinosaur, facing LEFT as in input 1. Input 1 is the canonical silhouette, exact left-facing three-quarter camera angle, composition, eyes, body, proportions, saturation and color reference. Input 2 is the original high-resolution reference for finish and how to complete the cutout chest clock, never copy its reversed pose. Preserve input 1 faithfully: steel-blue gray skin, purple skin spots, enormous purple central crown crystal and four blue crown crystals, same purple and blue back crystals and shoulder details, tiny rounded fingers and toes, pale icy chin and creamy belly, curling tail to the right. Keep every crown tip, toe and tail detail visible. Restore native fine detail like input 2. The existing hollow chest clock needs the opaque ivory face, dark teal ticks and correctly drawn two dark teal hands from input 2, no numbers or text. Preserve the original metallic gold bezel and cyan rivets, keep all crystal facets. Same foot line, framing, proportions, pose, front/overhead lighting and original palette. Character centered with consistent clear margins on every side, at least 4% above the crown and below the feet. True transparency beyond the original silhouette, crisp soft antialiasing. No backdrop, floor, cast shadow, checkerboard, grain, outline stroke, text, motion trails or effects. One single illustration.",
+    "reactions": "Use case: identity-preserve. Production reaction sprite sheet, EXACT 2×2 evenly spaced cells, square image 1536×1536 or larger. Input is the strict canonical design, scale, lighting and coloring of Crystal Cave boss. ALL four cells show the same entire original blue-gray crystal dinosaur facing left from the same three-quarter angle. Preserve identical eyes and pupils location, full cheeks, facial proportions, large purple central crystal, blue crown and mix of purple and cyan back crystals, cheek spots, toes, tail and round complete GOLD clock with ivory face and dark teal ticks whenever unoccluded. Very important: place each figure in the identical local cell position and scale, with crown apex at 6% cell height, feet at 92%, 12% free horizontal margin. All feet planted on the same invisible footline. Pose order row-major: 1 TOP LEFT hands parted horizontally on both sides of chest clock, ready to clap; 2 TOP RIGHT both clearly visible hands meet palm-to-palm in front of chest, their tips touching directly and naturally overlap part of the clock; 3 BOTTOM LEFT hands opened out further, between two claps; 4 BOTTOM RIGHT hands lowered in the usual position, eyebrows slightly worried and mouth small and disappointed. Keep a clear gap between hand poses and chin, do not change head dimensions and eye separation. No panels, grid dividers, shadows on ground, text, effects or scenery. Fully transparent background between and around complete isolated figures, opaque interiors.",
+    "motion": "Use case: identity-preserve. Create an EXACT 3 columns by 2 rows evenly spaced spritesheet with square cells (e.g. 2304×1536). The input is the exact same protagonist in all six illustrations, left-facing three-quarter angle. Same steel-blue skin with violet spots, large geometrical amethyst and turquoise crown, back crystals, natural sections of pale chin and ivory belly, one gold clock rim with teal rivets and plain ivory clock face with dark teal ticks, short digits on paws and full curved tail. Keep style, lighting, face aspect, eye distance and local character scale the same in every cell. No auto cropping per cell, consistent breathing room. Feet/contact points on invariant footline 92% down each cell, except airborne. Row-major pose list: (1) braced crouch lowering body while feet planted, (2) airborne with knees tucked and hands raised shoulder height, (3) stumbles forward as if losing balance, one foot planted and one slightly lifted, (4) fallen on belly facing left, hands forward palms on ground, (5) pushing up with same palms planted, hips rising, (6) near upright recovering, one knee slightly bent. Draw full silhouette in every cell. No rails, shadows, panels, checkerboard or graphic elements, with real transparent surroundings.",
+    "turn": "Use case: identity-preserve. Exact 4 columns × 2 rows game sprite sheet. All eight square cells must have identical geometry. This exact Crystal Cave character turns on the spot, one pose per cell, softly lit collectible 3D illustration, no change in identity or materials. Start in the reference left-facing three-quarter view; then top row left profile, rear-left three-quarter, rear; bottom row rear-right three-quarter, right profile, front-right three-quarter, front. On rear views the trademark deep purple and turquoise faceted crystals cover its back rising to the same unmistakable tall crown, the round gold clock is worn only on the front, never on the back. Match head, face, physique, gray-blue skin, original saturated crystals, cheek spots, pale chest, small hands and toes, and full tail. Keep visual pivot at center of its hips, level camera, constant height and scale, footline at 92% cell height, loose margin each side. No divider, no text, no hard effects, floor, or background. Genuine alpha transparency outside each silhouette."
+  },
+  "poses": {
+    "cave-idle": {"sheet":"Opening","cell":0,"transformTo512":[0.38,11,29.68],"eyes":[[164.9,178.26],[220.38,182.44]],"nose":[160.72,207.52],"groundContacts":[[143.24,470.48],[279.28,472.0]],"palms":[],"hipX":226.46,"clock":[204.42,319.24,42.18,41.8],"headBoundaryInCell":[[286,448],[321,423],[354,402],[375,307],[417,275],[452,274],[473,246],[494,296],[525,273],[572,252],[616,288],[665,297],[715,370],[737,448],[728,497],[702,544],[657,571],[607,598],[510,608],[438,599],[379,581],[347,558],[309,528],[282,492]],"headDecorationLowerBoundaryInCell":[[277,365],[324,363],[367,354],[408,295],[474,263],[498,299],[566,251],[630,299],[676,301],[736,386],[819,365],[865,356]],"openingSize":[1254,1254]},
+    "cave-clap-open": {"sheet":"Sheet_reactions","cell":0,"transformTo512":[0.738,-9,29.938],"eyes":[[166.64,180.49],[223.47,181.97]],"nose":[164.43,208.53],"groundContacts":[[145.98,469.79],[287.68,472.0]],"palms":[],"hipX":220.52,"clock":[207.97,319.23,42.07,42.07],"headBoundaryInCell":[[170,232],[198,218],[216,172],[231,151],[251,143],[270,134],[284,156],[322,143],[337,139],[363,157],[387,171],[406,205],[410,239],[402,264],[384,284],[362,303],[326,312],[279,315],[233,313],[202,295],[179,270],[171,257]],"headDecorationLowerBoundaryInCell":[[162,195],[201,199],[220,166],[237,151],[274,145],[287,159],[331,143],[368,157],[396,199],[454,182]]},
+    "cave-clap-contact": {"sheet":"Sheet_reactions","cell":1,"transformTo512":[0.738,-9,29.938],"eyes":[[166.64,180.49],[223.47,181.97]],"nose":[164.43,208.53],"groundContacts":[[145.98,469.79],[287.68,472.0]],"palms":[[203.54,286.76]],"hipX":220.52,"clock":[207.97,319.23,42.07,42.07],"headBoundaryInCell":[[170,232],[198,218],[216,172],[231,151],[251,143],[270,134],[284,156],[322,143],[337,139],[363,157],[387,171],[406,205],[410,239],[402,264],[384,284],[362,303],[326,312],[279,315],[233,313],[202,295],[179,270],[171,257]],"headDecorationLowerBoundaryInCell":[[162,195],[201,199],[220,166],[237,151],[274,145],[287,159],[331,143],[368,157],[396,199],[454,182]]},
+    "cave-clap-release": {"sheet":"Sheet_reactions","cell":2,"transformTo512":[0.738,-9,29.938],"eyes":[[166.64,180.49],[223.47,181.97]],"nose":[164.43,208.53],"groundContacts":[[145.98,469.79],[287.68,472.0]],"palms":[],"hipX":220.52,"clock":[207.97,319.23,42.07,42.07],"headBoundaryInCell":[[170,232],[198,218],[216,172],[231,151],[251,143],[270,134],[284,156],[322,143],[337,139],[363,157],[387,171],[406,205],[410,239],[402,264],[384,284],[362,303],[326,312],[279,315],[233,313],[202,295],[179,270],[171,257]],"headDecorationLowerBoundaryInCell":[[162,195],[201,199],[220,166],[237,151],[274,145],[287,159],[331,143],[368,157],[396,199],[454,182]]},
+    "cave-wrong": {"sheet":"Sheet_reactions","cell":3,"transformTo512":[0.738,-9,29.938],"eyes":[[166.64,180.49],[223.47,181.97]],"nose":[164.43,208.53],"groundContacts":[[145.98,469.79],[287.68,472.0]],"palms":[],"hipX":220.52,"clock":[207.97,319.23,42.07,42.07],"headBoundaryInCell":[[170,232],[198,218],[216,172],[231,151],[251,143],[270,134],[284,156],[322,143],[337,139],[363,157],[387,171],[406,205],[410,239],[402,264],[384,284],[362,303],[326,312],[279,315],[233,313],[202,295],[179,270],[171,257]],"headDecorationLowerBoundaryInCell":[[162,195],[201,199],[220,166],[237,151],[274,145],[287,159],[331,143],[368,157],[396,199],[454,182]]},
+    "cave-crouch": {"sheet":"Sheet_motion","cell":0,"transformTo512":[0.92,8,22.12],"eyes":[[166.24,257.64],[224.2,260.4]],"nose":[163.48,289.84],"groundContacts":[[151.52,470.16],[327.24,472.0]],"palms":[],"hipX":237.08,"clock":[227.88,385.52,34.96,34.04],"headBoundaryInCell":[[132,282],[151,265],[159,220],[187,204],[202,215],[247,194],[260,210],[281,211],[307,253],[314,297],[291,325],[264,340],[196,342],[148,324]],"headDecorationLowerBoundaryInCell":[[105,243],[155,231],[178,208],[201,216],[247,196],[279,206],[315,235],[350,218]]},
+    "cave-airborne": {"sheet":"Sheet_motion","cell":1,"transformTo512":[0.96,-3,37],"eyes":[[163.08,182.92],[222.6,185.8]],"nose":[160.2,210.76],"groundContacts":[],"palms":[],"hipX":212.04,"clock":[193.8,316.36,37.44,37.44],"headBoundaryInCell":[[137,172],[146,173],[157,132],[173,117],[199,102],[212,120],[251,103],[273,116],[298,129],[308,173],[303,207],[284,220],[250,235],[194,242],[156,228],[134,203]],"headDecorationLowerBoundaryInCell":[[123,146],[157,145],[179,118],[208,120],[247,103],[275,122],[308,156],[356,139]]},
+    "cave-stumble": {"sheet":"Sheet_motion","cell":2,"transformTo512":[0.96,26,5.44],"eyes":[[144.08,208.96],[200.72,208.0]],"nose":[145.04,241.6],"groundContacts":[[201.68,470.08]],"palms":[],"hipX":266.96,"clock":[234.32,332.8,38.4,34.56],"headBoundaryInCell":[[97,233],[109,199],[120,174],[141,162],[155,174],[191,148],[214,167],[236,170],[252,196],[264,233],[256,267],[230,285],[185,301],[142,295],[111,272],[98,264]],"headDecorationLowerBoundaryInCell":[[68,195],[114,190],[131,168],[155,174],[190,148],[219,167],[249,186],[294,173]]},
+    "cave-fallen": {"sheet":"Sheet_motion","cell":3,"transformTo512":[0.94,11,25.5],"eyes":[[121.92,320.66],[180.2,319.72]],"nose":[122.86,354.5],"groundContacts":[[87.14,466.36],[258.22,472.0]],"palms":[[87.14,466.36],[258.22,472.0]],"hipX":295.82,"clock":[185.84,439.1,34.78,27.26],"headBoundaryInCell":[[83,341],[97,333],[103,295],[122,275],[143,268],[150,279],[191,250],[213,273],[234,270],[253,294],[265,326],[265,368],[236,386],[211,402],[151,405],[104,392],[90,373]],"headDecorationLowerBoundaryInCell":[[66,306],[99,302],[124,274],[150,280],[178,257],[207,271],[229,270],[265,298],[297,288]]},
+    "cave-push-up": {"sheet":"Sheet_motion","cell":4,"transformTo512":[0.96,8,16.0],"eyes":[[116.48,250.24],[171.2,248.32]],"nose":[117.44,278.08],"groundContacts":[[87.68,463.36],[252.8,471.04]],"palms":[[87.68,463.36],[252.8,471.04]],"hipX":292.16,"clock":[196.16,381.76,35.52,35.52],"headBoundaryInCell":[[85,268],[98,226],[119,201],[132,198],[140,206],[181,184],[207,198],[236,192],[249,230],[254,270],[244,302],[219,320],[178,330],[133,333],[98,315],[83,298]],"headDecorationLowerBoundaryInCell":[[65,228],[103,229],[122,205],[139,206],[176,185],[206,203],[237,193],[267,221],[299,214]]},
+    "cave-recover": {"sheet":"Sheet_motion","cell":5,"transformTo512":[0.96,26,17.92],"eyes":[[155.6,175.36],[218.96,175.36]],"nose":[163.28,203.2],"groundContacts":[[170.0,471.04],[342.8,471.04]],"palms":[],"hipX":244.88,"clock":[216.08,310.72,39.36,38.4],"headBoundaryInCell":[[110,182],[127,155],[138,125],[169,112],[177,125],[214,105],[244,123],[274,120],[291,144],[286,187],[263,220],[247,235],[205,250],[162,249],[135,239],[109,218]],"headDecorationLowerBoundaryInCell":[[92,151],[127,147],[146,126],[170,115],[190,127],[215,106],[257,121],[294,140],[333,138]]},
+    "cave-turn-02": {"sheet":"Sheet_turn","cell":1,"transformTo512":[1.07,33,23.67],"eyes":[[210.62,179.89]],"nose":[163.54,207.71],"groundContacts":[],"palms":[],"hipX":245.93,"clock":[190.29,317.92,17.12,41.73],"headBoundaryInCell":[[109,163],[148,145],[159,110],[186,103],[229,102],[253,136],[252,187],[226,219],[192,227],[156,226],[122,204]],"headDecorationLowerBoundaryInCell":[[105,107],[160,110],[205,109],[245,144],[287,144],[326,127]]},
+    "cave-turn-03": {"sheet":"Sheet_turn","cell":2,"transformTo512":[1.07,21,24.74],"eyes":[],"nose":[147.26,220.55],"groundContacts":[],"palms":[],"hipX":244.63,"clock":null,"headBoundaryInCell":[[105,165],[132,151],[152,115],[174,113],[192,133],[199,172],[190,210],[159,225],[123,212],[107,192]],"headDecorationLowerBoundaryInCell":[[105,139],[153,133],[197,130],[258,143],[361,147]]},
+    "cave-turn-04": {"sheet":"Sheet_turn","cell":3,"transformTo512":[1.07,9,25.81],"eyes":[],"nose":null,"groundContacts":[],"palms":[],"hipX":246.54,"clock":null,"headBoundaryInCell":[],"headDecorationLowerBoundaryInCell":[[85,156],[158,130],[219,153],[279,130],[364,156]]},
+    "cave-turn-05": {"sheet":"Sheet_turn","cell":4,"transformTo512":[1.07,23,24.74],"eyes":[],"nose":[379.31,218.41],"groundContacts":[],"palms":[],"hipX":246.63,"clock":null,"headBoundaryInCell":[[296,110],[312,114],[328,144],[343,169],[350,198],[327,213],[307,215],[294,202],[295,165],[290,137]],"headDecorationLowerBoundaryInCell":[[92,155],[168,138],[235,151],[295,136],[357,145]]},
+    "cave-turn-06": {"sheet":"Sheet_turn","cell":5,"transformTo512":[1.07,-7,23.67],"eyes":[[295.81,176.68]],"nose":[341.82,204.5],"groundContacts":[],"palms":[],"hipX":246.59,"clock":[316.14,317.92,13.91,41.73],"headBoundaryInCell":[[204,110],[236,97],[263,101],[293,128],[308,154],[332,155],[336,176],[329,192],[314,212],[277,228],[245,226],[221,210],[200,182],[197,146]],"headDecorationLowerBoundaryInCell":[[95,129],[154,138],[198,139],[235,102],[280,104],[335,111]]},
+    "cave-turn-07": {"sheet":"Sheet_turn","cell":6,"transformTo512":[1.07,-14,23.67],"eyes":[[246.01,176.68],[298.44,174.54]],"nose":[304.86,205.57],"groundContacts":[],"palms":[],"hipX":247.08,"clock":[269.55,314.71,37.45,41.73],"headBoundaryInCell":[[174,138],[204,105],[239,93],[260,109],[277,94],[301,110],[306,138],[320,165],[329,187],[319,206],[292,219],[251,221],[213,217],[185,200],[165,172]],"headDecorationLowerBoundaryInCell":[[109,128],[156,148],[185,137],[209,109],[241,96],[260,108],[275,96],[314,112],[341,135]]},
+    "cave-turn-08": {"sheet":"Sheet_turn","cell":7,"transformTo512":[1.07,9,24.74],"eyes":[[212.3,179.89],[281.85,179.89]],"nose":[242.26,206.64],"groundContacts":[],"palms":[],"hipX":245.47,"clock":[247.61,317.92,42.8,42.8],"headBoundaryInCell":[[137,135],[152,110],[178,103],[202,92],[223,108],[248,93],[273,102],[288,124],[301,163],[302,184],[293,205],[267,217],[222,222],[175,217],[148,208],[137,183],[135,162]],"headDecorationLowerBoundaryInCell":[[101,141],[145,138],[178,103],[205,94],[224,110],[249,94],[276,105],[307,138],[347,141]]}
+  }
+}

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>FormatVersion</key>
+	<integer>1</integer>
+	<key>Store</key>
+	<dict>
+		<key>DinoUITests</key>
+		<dict>
+			<key>DinoUITests</key>
+			<dict>
+				<key>testPracticeHUDSubtitleModes</key>
+				<dict>
+					<key>mrnet</key>
+					<real>74.382755041122437</real>
+				</dict>
+				<key>testQuestionHUDReflowsWithoutLosingClockInput</key>
+				<dict>
+					<key>mrnet</key>
+					<real>39.622259020805359</real>
+				</dict>
+				<key>testResponsiveOrientationsAndProportionalHUD</key>
+				<dict>
+					<key>mrnet</key>
+					<real>53.962538003921509</real>
+				</dict>
+			</dict>
+		</dict>
+	</dict>
+</dict>
+</plist>

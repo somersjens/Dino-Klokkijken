@@ -1,0 +1,146 @@
+{
+  "date": "2026-11-23",
+  "character": "Magma de Vuurtriceratops",
+  "mapping": {
+    "world": 3,
+    "themeID": 3,
+    "identity": "volcano",
+    "rawValue": 3,
+    "unlockLevel": 30,
+    "collectionSlot": 3
+  },
+  "implementation": [
+    "Stable save identity; existing world-completion rules retained. Pending unlock and idempotent activation survive restart. Manual collection selection swaps the outgoing actor into slot three; residents render their own standard palette.",
+    "Shared avatar, welcome, HUD, level/practice, answer and result routes. Per-character artwork, orientation, portrait framing and source masks.",
+    "23 small 512px illustrations plus a separate 1254px opening. Two additional measured recovery stages. Eight ordered turn views. One horizontal reflection during image preparation.",
+    "24 color-independent source mask planes shipped as a 485766-byte RLE data asset; answer/head images prepared before reactions. Original palette bypasses recoloring. Clock glass, hands, eyes and mouth protected."
+  ],
+  "checks": [
+    {
+      "command": "Tools/test-dino.sh --characters",
+      "result": "PASS",
+      "checks": 768294,
+      "log": "/tmp/magma-characters-final.log"
+    },
+    {
+      "command": "Tools/test-dino.sh --animation-timing",
+      "result": "PASS",
+      "checks": 298980,
+      "log": "/tmp/magma-timing-final.log"
+    },
+    {
+      "command": "Tools/bake-volcano-materials.sh --check",
+      "result": "PASS: all 24 archived planes equal fresh geometric analysis",
+      "log": "/tmp/magma-bake-check.log"
+    },
+    {
+      "command": "xcodebuild build-for-testing; scheme Dino Klokkijken; Debug; /tmp/magma-build",
+      "result": "PASS: app and test targets"
+    },
+    {
+      "command": "Production PNG audit",
+      "result": "PASS: all 24 have transparent outer borders, opaque deep material interior and expected 512/1254px dimensions. Runtime tests preserve every source alpha byte."
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS"
+    }
+  ],
+  "simulators": [
+    {
+      "device": "iPhone 18 Pro",
+      "runtime": "iOS 27",
+      "testsPassed": [
+        "testThirdCharacterUnlockAndCollectionSwap",
+        "testVolcanoWelcomeAndAnswerReactions",
+        "testVolcanoCustomPortraitReactions",
+        "testVolcanoCharacterResultAnimations",
+        "testVolcanoCustomResultAnimations",
+        "testVolcanoLandscapeWelcomeAndResults"
+      ],
+      "logs": [
+        "/tmp/magma-final-phone-ui.log",
+        "/tmp/magma-delivery-phone-ui.log",
+        "/tmp/magma-final-route-ui.log"
+      ]
+    },
+    {
+      "device": "iPad Air 11-inch M4",
+      "runtime": "iOS 27",
+      "testsPassed": [
+        "testThirdCharacterUnlockAndCollectionSwap",
+        "testVolcanoWelcomeAndAnswerReactions",
+        "testVolcanoCustomPortraitReactions",
+        "testVolcanoCharacterResultAnimations",
+        "testVolcanoCustomResultAnimations",
+        "testVolcanoLandscapeWelcomeAndResults"
+      ],
+      "logs": [
+        "/tmp/magma-final-ipad-ui.log",
+        "/tmp/magma-delivery-ipad-ui.log",
+        "/tmp/magma-last-ipad-ui.log"
+      ]
+    }
+  ],
+  "visualReview": {
+    "palettes": [
+      "original",
+      "purple sash/metal + green frill + blue skin + pink cream materials",
+      "one channel changed at a time",
+      "dark",
+      "light"
+    ],
+    "coverage": [
+      "All source poses on light and dark backgrounds, full figures, isolated heads and pose-specific clock close-ups.",
+      "Recorded simulator cold welcome, both claps, wrong answer, landscape HUD, all four result outcomes, star reveal, collection swap and restart.",
+      "Actual recorded samples examined around takeoff, welcome-to-map handoff, portrait gestures, planted support/recovery, pirouette, backflip and final opaque idle. No generated intermediate frames."
+    ],
+    "reviewArtifacts": [
+      "VolcanoCharacterPreview/Magma-original-poses.jpg",
+      "VolcanoCharacterPreview/Magma-four-poses.jpg",
+      "VolcanoCharacterPreview/Magma-klokcontrole.jpg",
+      "VolcanoCharacterPreview/Magma-portretreacties.jpg",
+      "VolcanoCharacterPreview/Magma-herstelbeweging.jpg"
+    ]
+  },
+  "preview": {
+    "normal": "VolcanoCharacterPreview/Magma-opening-en-reacties.mov",
+    "slow": "VolcanoCharacterPreview/Magma-vertraagd.mov",
+    "source": "/tmp/magma-delivery-phone.mov",
+    "normalSourceRangesSeconds": [
+      [
+        101.8,
+        105.03
+      ],
+      [
+        42.35,
+        45.65
+      ]
+    ],
+    "slowSourceRangesSeconds": [
+      [
+        102.8,
+        104.7
+      ],
+      [
+        42.8,
+        43.5
+      ],
+      [
+        44.5,
+        45.55
+      ]
+    ],
+    "slowFactor": 3,
+    "method": "AVFoundation cuts of real simulator samples; no optical-flow interpolation. Exported preview sampled and visually checked.",
+    "durationSeconds": 6.53,
+    "exportPixels": [
+      588,
+      1280
+    ]
+  },
+  "limits": [
+    "Visual and UI checks used simulators; no physical-device performance measurement."
+  ],
+  "repository": "No commit, publication or release. Existing unrelated assets and local work preserved. Build products and full recordings remain outside the source tree."
+}

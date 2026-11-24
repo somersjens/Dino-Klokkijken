@@ -1,0 +1,1369 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "character": {
+    "nl": "Magma de Vuurtriceratops",
+    "en": "Magma the Fire Triceratops",
+    "world": 3,
+    "themeID": 3,
+    "identity": "volcano",
+    "savedRawValue": 3,
+    "bossLevel": 30,
+    "collectionSlotOneBased": 3,
+    "bossAsset": "boss-volcano",
+    "originalReference": "Documentation/Eindbazen/References/boss-volcano-03.png"
+  },
+  "orientation": {
+    "source": "left",
+    "preparedScreen": "right",
+    "mirror": "Exactly once in DinoAvatarRenderer, after material recoloring. Pixel centre x maps to width-1-x; normalized u maps to 1-u.",
+    "clockReadability": "Unnumbered ivory dials; neutral ticks, glass and hands protected."
+  },
+  "materials": {
+    "bandana": "Red diagonal sash and gold clock bezels, rings and hanging loops, each with its own reference tone.",
+    "spikes": "Segmented red frill, gold border, cream edge tips and red nose horn.",
+    "body": "Orange skin, darker spots, arms, palms and tail.",
+    "belly": "Cream chin, belly, brow horns, claws and underside of tail.",
+    "standard": {
+      "bandana": "DB3526",
+      "spikes": "D93725",
+      "body": "FF783E",
+      "belly": "F8D99A"
+    },
+    "maskMethod": "Pose-specific geometry, connected ivory dial contours, protected facial details, source material islands and local categorical edge cleanup. Separate color-independent mask cache. Unpremultiply sRGB before recoloring, then premultiply; source alpha retained.",
+    "preparedArchive": {
+      "asset": "volcano-materials",
+      "file": "Assets.xcassets/volcano-materials.dataset/magma-materials.bin",
+      "version": "MGM9",
+      "format": "24 source-resolution label planes, little-endian run-length encoding (count UInt32, material UInt8). Runtime colors and source alpha remain separate.",
+      "bake": "Tools/bake-volcano-materials.sh",
+      "verify": "Tools/bake-volcano-materials.sh --check",
+      "bytes": 485766
+    }
+  },
+  "sources": {
+    "canonical": {
+      "file": "VolcanoCharacterSources/canonical-source.png",
+      "size": [
+        1254,
+        1254
+      ],
+      "outputs": [
+        "volcano-idle",
+        "volcano-opening-idle"
+      ],
+      "uniformScale": 0.96,
+      "normalizedTranslation": [
+        0.02,
+        0.04
+      ]
+    },
+    "reactions": {
+      "file": "VolcanoCharacterSources/reactions-source.png",
+      "size": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "cells": [
+        "reference-only",
+        "volcano-wrong",
+        "volcano-clap-open",
+        "volcano-clap-contact",
+        "volcano-clap-open-2",
+        "volcano-clap-contact-2",
+        "volcano-crouch",
+        "volcano-landing"
+      ]
+    },
+    "motion": {
+      "file": "VolcanoCharacterSources/motion-source.png",
+      "size": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "cells": [
+        "volcano-takeoff",
+        "volcano-airborne",
+        "volcano-stumble",
+        "volcano-fallen",
+        "volcano-push-up",
+        "unused",
+        "unused",
+        "unused"
+      ]
+    },
+    "turn": {
+      "file": "VolcanoCharacterSources/turn-source.png",
+      "size": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "cells": [
+        "volcano-turn-01",
+        "volcano-turn-02",
+        "volcano-turn-03",
+        "volcano-turn-04",
+        "volcano-turn-05",
+        "volcano-turn-06",
+        "volcano-turn-07",
+        "volcano-turn-08"
+      ]
+    },
+    "recovery": {
+      "file": "VolcanoCharacterSources/recovery-source.png",
+      "size": [
+        1774,
+        887
+      ],
+      "grid": [
+        2,
+        1
+      ],
+      "cells": [
+        "volcano-rise-low",
+        "volcano-rise-high"
+      ],
+      "uniformScale": 0.96,
+      "normalizedTranslation": [
+        [
+          0.02,
+          0.04390625
+        ],
+        [
+          0.02,
+          0.05171875
+        ]
+      ],
+      "purpose": "Two measured grounded recovery stages replace the old approximately 100px push-up-to-idle eye jump. Palms stay planted in the low stage; hands release in the high stage."
+    }
+  },
+  "import": {
+    "command": "swift Tools/import-volcano-sprites.swift Documentation/VolcanoCharacterSources/{canonical,reactions,motion,turn}-source.png",
+    "gridRounding": "Round each shared cell boundary independently. Never auto-fit individual cells.",
+    "sheetUniformScale": 0.96,
+    "sheetNormalizedTranslation": [
+      0.02,
+      0.02
+    ],
+    "alphaCleanup": "Retain dominant connected silhouette at alpha >=128 and its attached antialias skirt. Discard outside low-alpha noise. Restore generated near-opaque interiors to opaque in sRGB. No painted backdrop; preserve final source alpha at runtime. Deep source-contour interiors are made fully opaque; only enclosed defects of at most 16 source pixels are repaired. Open negative spaces remain transparent.",
+    "extractionVariants": "Built-in extraction was tried on all three sheets; originals with deterministic connected silhouette cleanup retained the exact drawings best.",
+    "recoveryCommand": "swift Tools/import-volcano-sprites.swift --recovery-only Documentation/VolcanoCharacterSources/recovery-source.png"
+  },
+  "rig": {
+    "coordinates": "512px top-left source coordinates, scaled by pixel-centre normalization for 1254px opening. No jungle coordinates.",
+    "canonicalEyes": [
+      [
+        175.7,
+        168.3
+      ],
+      [
+        238.4,
+        171.4
+      ]
+    ],
+    "canonicalNostrilMidpoint": [
+      182.05,
+      198.4
+    ],
+    "soleY": 477,
+    "turnAxes": [
+      249,
+      234,
+      238,
+      257,
+      293,
+      289,
+      275,
+      242
+    ],
+    "turnSoleY": [
+      478,
+      478,
+      476,
+      476,
+      478,
+      480,
+      479,
+      479
+    ],
+    "clapContactSource": [
+      224,
+      307
+    ],
+    "clapContactPrepared": [
+      288,
+      307
+    ],
+    "geometry": "DinoSpriteColorRenderer.VolcanoRig in Dino/Core/DinoAvatarMask.swift; each pose owns clock rectangles, hand exclusions, head contour, face and horn regions.",
+    "opening": "Both opening and small idle derive from the same canonical source and framing. A single detailed 1254px drawing throughout the native welcome; no sprite-cell enlargement.",
+    "portrait": {
+      "fullFigureScale": 1.62,
+      "offsetX": -0.13,
+      "offsetY": 0.3,
+      "friendCropPrepared": [
+        0.2,
+        0.02,
+        0.66,
+        0.53
+      ]
+    },
+    "poses": {
+      "volcano-airborne": {
+        "clockBounds512": [
+          [
+            151,
+            302,
+            55,
+            64
+          ],
+          [
+            198,
+            276,
+            66,
+            68
+          ],
+          [
+            263,
+            250,
+            60,
+            60
+          ]
+        ],
+        "handExclusions512": [
+          [
+            112,
+            251,
+            67,
+            76
+          ],
+          [
+            285,
+            258,
+            69,
+            67
+          ]
+        ],
+        "headBounds512": [
+          88,
+          -2,
+          345,
+          264
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          13,
+          -2
+        ]
+      },
+      "volcano-clap-contact": {
+        "clockBounds512": [
+          [
+            151,
+            330,
+            58,
+            64
+          ],
+          [
+            201,
+            300,
+            66,
+            66
+          ],
+          [
+            267,
+            253,
+            62,
+            65
+          ]
+        ],
+        "handExclusions512": [
+          [
+            170,
+            267,
+            142,
+            89
+          ]
+        ],
+        "headBounds512": [
+          81,
+          4,
+          345,
+          264
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          6,
+          4
+        ]
+      },
+      "volcano-clap-contact-2": {
+        "clockBounds512": [
+          [
+            151,
+            330,
+            58,
+            64
+          ],
+          [
+            201,
+            300,
+            66,
+            66
+          ],
+          [
+            267,
+            253,
+            62,
+            65
+          ]
+        ],
+        "handExclusions512": [
+          [
+            170,
+            267,
+            142,
+            89
+          ]
+        ],
+        "headBounds512": [
+          81,
+          4,
+          345,
+          264
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          6,
+          4
+        ]
+      },
+      "volcano-clap-open": {
+        "clockBounds512": [
+          [
+            151,
+            330,
+            58,
+            64
+          ],
+          [
+            201,
+            300,
+            66,
+            66
+          ],
+          [
+            267,
+            253,
+            62,
+            65
+          ]
+        ],
+        "handExclusions512": [
+          [
+            98,
+            262,
+            85,
+            91
+          ],
+          [
+            278,
+            267,
+            76,
+            87
+          ]
+        ],
+        "headBounds512": [
+          81,
+          4,
+          345,
+          264
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          6,
+          4
+        ]
+      },
+      "volcano-clap-open-2": {
+        "clockBounds512": [
+          [
+            151,
+            330,
+            58,
+            64
+          ],
+          [
+            201,
+            300,
+            66,
+            66
+          ],
+          [
+            267,
+            253,
+            62,
+            65
+          ]
+        ],
+        "handExclusions512": [
+          [
+            98,
+            262,
+            85,
+            91
+          ],
+          [
+            278,
+            267,
+            76,
+            87
+          ]
+        ],
+        "headBounds512": [
+          81,
+          4,
+          345,
+          264
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          6,
+          4
+        ]
+      },
+      "volcano-crouch": {
+        "clockBounds512": [
+          [
+            149,
+            341,
+            58,
+            64
+          ],
+          [
+            202,
+            310,
+            66,
+            66
+          ],
+          [
+            264,
+            268,
+            62,
+            65
+          ]
+        ],
+        "handExclusions512": [
+          [
+            95,
+            283,
+            81,
+            98
+          ],
+          [
+            274,
+            288,
+            79,
+            98
+          ]
+        ],
+        "headBounds512": [
+          81,
+          16,
+          345,
+          264
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          6,
+          16
+        ]
+      },
+      "volcano-fallen": {
+        "clockBounds512": [
+          [
+            146,
+            434,
+            55,
+            38
+          ],
+          [
+            186,
+            410,
+            62,
+            58
+          ],
+          [
+            226,
+            370,
+            59,
+            64
+          ]
+        ],
+        "handExclusions512": [
+          [
+            52,
+            425,
+            96,
+            47
+          ],
+          [
+            239,
+            423,
+            95,
+            50
+          ]
+        ],
+        "headBounds512": [
+          40,
+          100,
+          330,
+          279
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          -47,
+          128
+        ]
+      },
+      "volcano-idle": {
+        "clockBounds512": [
+          [
+            144,
+            330,
+            51,
+            65
+          ],
+          [
+            188,
+            294,
+            66,
+            68
+          ],
+          [
+            248,
+            254,
+            62,
+            67
+          ]
+        ],
+        "handExclusions512": [
+          [
+            95,
+            283,
+            81,
+            98
+          ],
+          [
+            274,
+            288,
+            79,
+            98
+          ]
+        ],
+        "headBounds512": [
+          75,
+          0,
+          345,
+          264
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "volcano-landing": {
+        "clockBounds512": [
+          [
+            149,
+            341,
+            58,
+            64
+          ],
+          [
+            202,
+            310,
+            66,
+            66
+          ],
+          [
+            264,
+            268,
+            62,
+            65
+          ]
+        ],
+        "handExclusions512": [
+          [
+            95,
+            283,
+            81,
+            98
+          ],
+          [
+            274,
+            288,
+            79,
+            98
+          ]
+        ],
+        "headBounds512": [
+          81,
+          16,
+          345,
+          264
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          6,
+          16
+        ]
+      },
+      "volcano-opening-idle": {
+        "clockBounds512": [
+          [
+            144,
+            330,
+            51,
+            65
+          ],
+          [
+            188,
+            294,
+            66,
+            68
+          ],
+          [
+            248,
+            254,
+            62,
+            67
+          ]
+        ],
+        "handExclusions512": [
+          [
+            95,
+            283,
+            81,
+            98
+          ],
+          [
+            274,
+            288,
+            79,
+            98
+          ]
+        ],
+        "headBounds512": [
+          75,
+          0,
+          345,
+          264
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "volcano-push-up": {
+        "clockBounds512": [
+          [
+            155,
+            390,
+            57,
+            50
+          ],
+          [
+            198,
+            372,
+            62,
+            64
+          ],
+          [
+            237,
+            336,
+            61,
+            67
+          ]
+        ],
+        "handExclusions512": [
+          [
+            80,
+            420,
+            95,
+            50
+          ],
+          [
+            244,
+            422,
+            92,
+            50
+          ]
+        ],
+        "headBounds512": [
+          70,
+          65,
+          320,
+          284
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          -26,
+          99
+        ]
+      },
+      "volcano-rise-high": {
+        "clockBounds512": [
+          [
+            167,
+            347,
+            55,
+            64
+          ],
+          [
+            206,
+            313,
+            63,
+            69
+          ],
+          [
+            255,
+            280,
+            62,
+            66
+          ]
+        ],
+        "handExclusions512": [
+          [
+            111,
+            326,
+            67,
+            69
+          ],
+          [
+            273,
+            326,
+            77,
+            81
+          ]
+        ],
+        "headBounds512": [
+          80,
+          30,
+          340,
+          266
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          -3,
+          42
+        ]
+      },
+      "volcano-rise-low": {
+        "clockBounds512": [
+          [
+            175,
+            369,
+            53,
+            59
+          ],
+          [
+            208,
+            352,
+            59,
+            65
+          ],
+          [
+            248,
+            319,
+            61,
+            64
+          ]
+        ],
+        "handExclusions512": [
+          [
+            82,
+            412,
+            105,
+            70
+          ],
+          [
+            250,
+            413,
+            100,
+            70
+          ]
+        ],
+        "headBounds512": [
+          75,
+          60,
+          320,
+          280
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          -12,
+          82
+        ]
+      },
+      "volcano-stumble": {
+        "clockBounds512": [
+          [
+            176,
+            368,
+            54,
+            61
+          ],
+          [
+            218,
+            337,
+            65,
+            66
+          ],
+          [
+            273,
+            301,
+            63,
+            69
+          ]
+        ],
+        "handExclusions512": [
+          [
+            56,
+            264,
+            103,
+            77
+          ],
+          [
+            244,
+            274,
+            87,
+            76
+          ]
+        ],
+        "headBounds512": [
+          75,
+          0,
+          330,
+          294
+        ],
+        "headTransform512": [
+          0.9928086358538663,
+          -0.11971220728891936,
+          0.11971220728891936,
+          0.9928086358538663,
+          -47.86246286086661,
+          59.002958813649045
+        ]
+      },
+      "volcano-takeoff": {
+        "clockBounds512": [
+          [
+            170,
+            305,
+            53,
+            62
+          ],
+          [
+            219,
+            276,
+            65,
+            67
+          ],
+          [
+            279,
+            241,
+            60,
+            64
+          ]
+        ],
+        "handExclusions512": [
+          [
+            92,
+            192,
+            92,
+            91
+          ],
+          [
+            304,
+            201,
+            98,
+            80
+          ]
+        ],
+        "headBounds512": [
+          104,
+          -10,
+          345,
+          264
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          29,
+          -10
+        ]
+      },
+      "volcano-turn-01": {
+        "clockBounds512": [
+          [
+            151,
+            321,
+            53,
+            64
+          ],
+          [
+            198,
+            288,
+            65,
+            67
+          ],
+          [
+            258,
+            250,
+            62,
+            64
+          ]
+        ],
+        "handExclusions512": [
+          [
+            95,
+            283,
+            81,
+            98
+          ],
+          [
+            274,
+            288,
+            79,
+            98
+          ]
+        ],
+        "headBounds512": [
+          93,
+          -4,
+          345,
+          264
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          18,
+          -4
+        ]
+      },
+      "volcano-turn-02": {
+        "clockBounds512": [
+          [
+            112,
+            312,
+            30,
+            62
+          ],
+          [
+            125,
+            285,
+            40,
+            66
+          ],
+          [
+            160,
+            249,
+            51,
+            70
+          ]
+        ],
+        "handExclusions512": [
+          [
+            165,
+            280,
+            94,
+            90
+          ]
+        ],
+        "headBounds512": [
+          70,
+          0,
+          360,
+          250
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "volcano-turn-03": {
+        "clockBounds512": [],
+        "handExclusions512": [
+          [
+            95,
+            283,
+            81,
+            98
+          ],
+          [
+            274,
+            288,
+            79,
+            98
+          ]
+        ],
+        "headBounds512": [
+          70,
+          0,
+          360,
+          250
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "volcano-turn-04": {
+        "clockBounds512": [],
+        "handExclusions512": [
+          [
+            95,
+            283,
+            81,
+            98
+          ],
+          [
+            274,
+            288,
+            79,
+            98
+          ]
+        ],
+        "headBounds512": [
+          70,
+          0,
+          360,
+          250
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "volcano-turn-05": {
+        "clockBounds512": [],
+        "handExclusions512": [
+          [
+            95,
+            283,
+            81,
+            98
+          ],
+          [
+            274,
+            288,
+            79,
+            98
+          ]
+        ],
+        "headBounds512": [
+          70,
+          0,
+          360,
+          250
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "volcano-turn-06": {
+        "clockBounds512": [
+          [
+            319,
+            313,
+            54,
+            65
+          ],
+          [
+            350,
+            279,
+            41,
+            64
+          ]
+        ],
+        "handExclusions512": [
+          [
+            245,
+            280,
+            110,
+            100
+          ]
+        ],
+        "headBounds512": [
+          70,
+          0,
+          360,
+          250
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "volcano-turn-07": {
+        "clockBounds512": [
+          [
+            225,
+            323,
+            54,
+            63
+          ],
+          [
+            275,
+            289,
+            61,
+            67
+          ],
+          [
+            325,
+            250,
+            45,
+            63
+          ]
+        ],
+        "handExclusions512": [
+          [
+            151,
+            270,
+            100,
+            90
+          ],
+          [
+            338,
+            286,
+            70,
+            87
+          ]
+        ],
+        "headBounds512": [
+          70,
+          0,
+          360,
+          250
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "volcano-turn-08": {
+        "clockBounds512": [
+          [
+            151,
+            321,
+            53,
+            64
+          ],
+          [
+            198,
+            288,
+            65,
+            67
+          ],
+          [
+            258,
+            250,
+            62,
+            64
+          ]
+        ],
+        "handExclusions512": [
+          [
+            95,
+            283,
+            81,
+            98
+          ],
+          [
+            274,
+            288,
+            79,
+            98
+          ]
+        ],
+        "headBounds512": [
+          87,
+          -4,
+          345,
+          264
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          12,
+          -4
+        ]
+      },
+      "volcano-wrong": {
+        "clockBounds512": [
+          [
+            144,
+            330,
+            51,
+            65
+          ],
+          [
+            188,
+            294,
+            66,
+            68
+          ],
+          [
+            248,
+            254,
+            62,
+            67
+          ]
+        ],
+        "handExclusions512": [
+          [
+            73,
+            266,
+            102,
+            68
+          ],
+          [
+            314,
+            277,
+            95,
+            65
+          ]
+        ],
+        "headBounds512": [
+          81,
+          4,
+          345,
+          264
+        ],
+        "headTransform512": [
+          1,
+          0,
+          0,
+          1,
+          6,
+          4
+        ]
+      }
+    },
+    "recoveryEyesSource512": {
+      "volcano-push-up": [
+        180.45,
+        269.2
+      ],
+      "volcano-rise-low": [
+        194.85,
+        251.65
+      ],
+      "volcano-rise-high": [
+        204.35,
+        211.55
+      ],
+      "volcano-idle": [
+        207.05,
+        169.85
+      ]
+    },
+    "recoveryEyeDistances512": [
+      60.3,
+      58.5,
+      60.1,
+      62.7
+    ]
+  },
+  "prompts": {
+    "recovery": "Use case: identity-preserve. Production animation sprite sheet, exactly TWO equal square cells side by side, one row, 1774x887 transparent landscape. Reference 1 is exact canonical Magma idle identity. Reference 2 is his approved hands-on-ground push-up pose. Create precisely TWO in-between RECOVERY poses rising from reference2 to reference1, no redesign. Same exact face shape, eye spacing, head/frill size, orange skin darker spots, cream chin belly toes and two cream brow horns, small dark red nose horn, red segmented circular frill with gold border cream tips, diagonal red sash and THREE complete opaque ivory clock dials black ticks hands gold bezels. Same LEFT-facing three-quarter camera, lighting and soft detailed 3D illustration. Every cell fixed scale: head and eyes EXACT same pixel size as references; NO auto-fit. Entire toes tail frill/horns within canvas with safe clear margins, soles planted at 94 percent height in BOTH cells. Cell 1: low recovery, hips beginning to rise, knees bent, both PALMS still planted at 94 percent groundline like reference2, torso starts to lift, eye midpoint at 46 percent cell height. Do not enlarge head. Cell2: high recovery, both hands now off ground and relaxed beside lower chest, knees still slightly bent, body nearly standing but head lower than idle, eye midpoint at 40 percent cell height. Both eyes level and same expression as canonical calm closed smile in BOTH cells. These are small continuous anatomical stages, not a leap, crouching jump or new acting pose. The source idle eye midpoint is approximately33 percent, source pushup52 percent, so these two fit BETWEEN. No ground shadows, labels, grid, trails, glow, effects or text. True transparent exterior; fully opaque character and dials. Keep same view angle and original palette.",
+    "reactions": "Use case: identity-preserve. Asset type: production game sprite sheet. Reference image is the exact canonical Magma, preserve EXACT face shape eye spacing body proportions colors texture and lighting, LEFT facing three-quarter camera. Create precisely 4 columns by 2 rows of EQUAL SQUARE cells, transparent 2048x1024 landscape. One complete character in each cell, same scale, frill top at 5% and planted feet at 94% of each cell, 5% safe margins, no automatic crop per pose. Same orange triceratops, dark orange spots, cream chin belly claws and two large cream brow horns, small dark red nose horn, red segmented frill golden border cream edge tips, diagonal red sash with THREE complete opaque ivory-faced GOLD pocket clocks, black ticks and hands with no numerals. Exactly this pose order: Row1 cell1 canonical neutral idle as reference; cell2 wrong answer silly puzzled face, one eyebrow raised, open asymmetric smile, arms palms up at waist BELOW CHIN; cell3 clap opening palms apart at lower chest BELOW CHIN, friendly face; cell4 clap contact BOTH palms touching visibly at lower chest BELOW CHIN. Row2 cell1 palms reopen for second clap; cell2 second clap contact palms together at same lower chest height; cell3 crouch knees bend body lower with both feet on SAME 94% groundline, head same size; cell4 landing knees bent feet on same groundline arms relaxed. Keep all head features proportionally identical, no face warping, no other accessories. All clocks remain complete and opaque, any hand before them naturally occludes. No grid lines labels text ground shadows particles trails or glow; true transparent outside and opaque interiors.",
+    "motion": "Use case: identity-preserve. Production transparent sprite sheet exactly FOUR columns TWO rows equal SQUARE cells, 2048x1024 landscape. Reference exact canonical Magma the Fire Triceratops. Preserve exact same orange skin dark orange spots cream chin belly and claws, two cream brow horns small dark red nose horn red segmented frill golden border cream edge spikes, diagonal red sash with THREE gold pocket clocks with complete opaque ivory tick dials black hands no numerals. Identical face shape eye spacing head size lighting and polished 3D illustration. LEFT-facing three-quarter camera for every pose. Same uniform scale in every cell, frill reference width identical, no auto-fit; 5% clear safety margin, whole toes tail headgear. Exact pose order Row1: 1 upward jump takeoff arms up feet extended; 2 airborne compact knees tucked sitting legs up (upright, software rotates later); 3 comic stumble reaching arms forward body leaning left; 4 fallen on belly and two palms with head raised still exact face, headgear intact and whole body within cell. Row2: 1 push up onto feet, both hands supporting ground at 94% height, head slightly lowered; 2 recovering half standing both feet at 94%; 3 canonical idle; 4 canonical idle. All planted poses groundline y94%, all head sizes constant, do not stretch faces. Clocks on sash follow body, natural hand occlusion. True transparent outside, opaque character. No ground shadow background labels grid text effects trails particles.",
+    "turn": "Use case: identity-preserve. Production game turn-around sprite sheet, precisely FOUR columns by TWO rows, equal SQUARE cells, 2048x1024 landscape transparent canvas. Exact reference Magma the Fire Triceratops: same face and eye spacing, orange skin dark orange spots, cream belly chin claws two large cream brow horns small dark red nose horn; red segmented circular frill with gold border cream edge spikes; diagonal red sash with THREE gold pocket clocks complete opaque ivory dials, dark ticks hands no numerals. Same texture lighting soft polished 3D illustration. FULL BODY consistent physical scale and head size, feet on y94% of every cell with frill top y5%, whole tail toes horns 5% margin. Eight consecutive views rotating around vertical hip axis, arms slightly out and feet planted. Exact order Row1: 1 front left three-quarter matching canonical; 2 left profile; 3 back left three-quarter; 4 straight BACK. Row2: 1 back right three-quarter; 2 RIGHT profile; 3 front right three-quarter; 4 same front LEFT three-quarter as first cell, calm smile. Show actual back of head frill for rear views (no face or dials visible through body), sash continues around back. Camera fixed height no changing view elevation. No motion blur ghosting or multiple bodies per cell. No captions grid lines text particles ground shadows backdrop. Genuine alpha outside, fully opaque inside.",
+    "backgroundExtraction": "Use case: background-extraction. Edit target attached 4x2 sprite sheet. Remove ALL the multicolored translucent noise and contaminated background around the eight characters, leaving EXACTLY the original eight solid dinosaur silhouettes, no other pixels. TRUE alpha transparency required outside, fully opaque inside. Keep every actual dinosaur pixel EXACTLY unchanged: positions, size, facial features, colors, clocks, horns, tails, fingers, frill tips, toes and lighting. Preserve exact 1774x887 dimensions, FOUR equal columns TWO equal rows. Do not redraw characters, no new poses. Erase all colored glow, red pink yellow white haze, loose speckles and ground shadows that are outside the silhouettes. Output perfectly clean transparent cutouts. Never delete eye whites, cream horns belly toes, clock faces or highlights.",
+    "canonical": "Use case: identity-preserve. Production game sprite edit. Image 1 is the exact edit target, Image 2 is supporting original high resolution identity/material reference. Restore Image 1 as a genuinely high detail 1536x1536 transparent full body canonical idle illustration. Preserve EXACTLY Magma the Fire Triceratops: same face shape, two large cream brow horns, small dark red nose horn, red segmented frill with golden border and small cream spikes, orange skin with darker orange spots, cream chin belly claws, diagonal red sash with THREE gold pocket clocks. Keep Image 1 LEFT-facing three-quarter orientation, pose, eye spacing, body proportions, smile, tail, illustration style, lighting and colors. Restore the three clock holes into complete opaque ivory clock faces, dark simple ticks and hands, no numerals, gold rings and bezels; closest small clock partially occluded by the existing hand. All feet, toes, frill tips and tail visible. Canvas square, character centered with 5 percent clear margin on every side, sole at y=94 percent. No ground shadow, no backdrop, no text, no extra effects. Opaque character, true transparent outside. This is a sharp detailed restoration, do not invent a different character."
+  }
+}

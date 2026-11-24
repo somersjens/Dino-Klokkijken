@@ -1,0 +1,234 @@
+{
+  "identity": {
+    "name": "Burgemeester Tik-Tak",
+    "world": "Klokdorp",
+    "worldID": 4,
+    "themeID": 4,
+    "rawValue": 4,
+    "unlockLevel": 40,
+    "collectionSlot": 4,
+    "mapAsset": "boss-clock-village",
+    "reference": "Documentation/Eindbazen/References/boss-clock-village-04.png",
+    "referenceSize": [
+      1254,
+      1254
+    ]
+  },
+  "generation": {
+    "tool": "Built-in ImageGen",
+    "promptLanguage": "en"
+  },
+  "orientation": {
+    "source": "Linksgerichte driekwartaanblik. Draaihoudingen volgen een volledige yaw-draai in dezelfde bronruimte.",
+    "prepared": "DinoSpriteColorRenderer.facingRight spiegelt de hele afbeelding eenmaal. In bronpixels x → width − 1 − x voor integer indices. Voor genormaliseerde pixelcentra u → 1 − u. HUD-effecten staan in voorbereide genormaliseerde canvascoördinaten.",
+    "opening": "De oorspronkelijke detailrestauratie en kaartvariant delen dezelfde uitsnede. De grote opening gebruikt één 1254²-schildering door de hele native sprong. SwiftUI animeert in schermpunten en zet die via de schermschaal om in fysieke pixels."
+  },
+  "files": {
+    "assetDirectory": "Assets.xcassets",
+    "openingAsset": "village-opening-idle",
+    "idleAsset": "village-idle",
+    "portraitScale": 1.66,
+    "portraitOffset": [
+      -0.065,
+      0.236
+    ],
+    "idleEyeAndNoseNormalized": [
+      [
+        0.392578125,
+        0.271484375
+      ],
+      [
+        0.521484375,
+        0.27734375
+      ],
+      [
+        0.404296875,
+        0.333984375
+      ]
+    ],
+    "stanceY": 0.91015625,
+    "clapContactPrepared": [
+      0.555,
+      0.542
+    ],
+    "materialArchive": "village-materials.dataset/village-materials.bin"
+  },
+  "materials": {
+    "0": "Oorspronkelijk pigment of transparantie. Klokglas, streepjes, wijzers, centrale kap, blauwe uurwerkstenen, ogen, neusgaten, mond en neutraal medaillonemail.",
+    "1": "bandana · blauw textiel op hoed en vest",
+    "2": "bandana · goud op hoedband, vest, medaillon, bezel en metalen stafuiteinden",
+    "3": "spikes · hout en rugstekels",
+    "4": "body · huid, voetzolen en huidvlekken",
+    "5": "belly · kin, buik, klauwen en lichte onderzijde van de staart",
+    "bit3": "Alleen de hoed over de volledige cirkelrand. Geen klok, gezicht, arm, staf of schouder in de bovenlaag.",
+    "bit4": "Hoed en gevolgd hoofd voor het losse, niet-cirkelvormige avatarbeeld."
+  },
+  "sheets": [
+    {
+      "name": "canonical",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "grid": [
+        1,
+        1
+      ],
+      "sha256Prefix": "68c44bfc6e644ff5",
+      "cells": [
+        "opening-idle en idle"
+      ],
+      "references": [
+        "Documentation/Eindbazen/References/boss-clock-village-04.png"
+      ],
+      "prompt": "Identity-preserving production cutout for a Dutch children's time-learning game. EDIT the attached original 1254×1254 Clock Village dinosaur illustration. Change ONLY the background and contact shadow to genuine transparent alpha. Reproduce the character in the exact same left-facing three-quarter angle, pixel composition, scale, pose, head silhouette, both eye shapes and distance, snout, smiling cheek, three rounded brown spikes, honey orange spotted body, cream chin/belly/claws, full curled tail, rich blue top hat with wide GOLD band and brim, blue vest with cream piping, gold buttons and LARGE gold star medallion, and wooden staff with a COMPLETE neutral ivory analog clock dial, blue hands and ticks, four blue jewels and gold rim, gold terminal touching the ground. Preserve original soft sculpted 3D polished children's game rendering, original lighting and saturation. Keep all toes, staff and tail, original margins, no background, no ground or shadows, no ghost colors or gaps inside the figure. Square high detail, at least 1254 square. No letters or text, no motion graphics."
+    },
+    {
+      "name": "reactions",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "grid": [
+        2,
+        2
+      ],
+      "sha256Prefix": "cf74d4472ec7a2f8",
+      "cells": [
+        "clap-open",
+        "clap-contact",
+        "clap-release",
+        "wrong"
+      ],
+      "references": [
+        "Documentation/Eindbazen/References/boss-clock-village-04.png"
+      ],
+      "prompt": "Make a production sprite sheet based strictly on the attached canonical left-facing three-quarter Clock Village dinosaur. Square image, genuine alpha, exactly 2 columns by 2 rows, evenly sized square cells, equal scale/margins in every cell with fixed common sole line at 91% of cell height and identical eyes/nose/hat placement relative to the cell. Four full characters, fully isolated, no overlap. Read left-to-right then top-to-bottom: 1 hands slightly apart preparing to clap, 2 palms visibly touching in front of chest for a clap, 3 hands slightly apart and smiling after a clap, 4 wrong answer with an empathetic small frown, raised worried eyebrows and relaxed hands. Keep staff standing upright to character's left with a complete analog neutral ivory dial and blue ticks and hands, safely propped against left shoulder so both hands can move in front of the vest. The hand silhouette remains below the chin. Retain exact honey-orange spotted snout/body, same eye distance, blue tall top hat with GOLD band, blue gold-buttoned trimmed vest, star medallion, cream belly/chin/claws, full tail and round brown spines. Same camera, original soft sculpted 3D shading. No floor, ground shadow, effects, letters, cell guides or markings. Show all extremities in every cell."
+    },
+    {
+      "name": "motion",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "grid": [
+        2,
+        2
+      ],
+      "sha256Prefix": "055f4816fc3eb6f0",
+      "cells": [
+        "crouch",
+        "airborne",
+        null,
+        null
+      ],
+      "references": [
+        "Documentation/Eindbazen/References/boss-clock-village-04.png"
+      ],
+      "prompt": "Production spritesheet in the exact original sculpted 3D style of the attached Clock Village dinosaur. Genuine alpha. EXACT equal 2 columns by 2 rows in a square, fixed left-facing three-quarter camera, framing, scale, and sole baseline, sufficient clear cell gutters. Four whole-body poses in order TL crouching ready to jump with both feet flat; TR buoyant airborne with knees flexed and the clock staff firmly held; BL forward stumble supporting his weight on his right palm, tipped clock staff still held in his other hand; BR seated after the stumble, right palm on ground for recovery, staff held in other hand. Preserve proportions and original orange spotted face/body, cream chin/claws/belly, brown back spines, tall BLUE top hat with GOLD band, blue vest with cream trim, gold buttons and star medal, wooden staff with circular gold-rimmed ivory clock, blue dial ticks and hands and four blue rim studs. Keep every toe, full hat, full staff and tail visible. No shadows, effects, floor, text, or guides."
+    },
+    {
+      "name": "turn",
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "grid": [
+        3,
+        2
+      ],
+      "sha256Prefix": "481adb4c8beda7b2",
+      "cells": [
+        "turn-01",
+        null,
+        "turn-07",
+        "turn-04",
+        "turn-05",
+        null
+      ],
+      "references": [
+        "Documentation/Eindbazen/References/boss-clock-village-04.png"
+      ],
+      "prompt": "Game animation turnaround sheet based on attached original Clock Village dinosaur. Genuine alpha, EXACT 3 columns by 2 rows of equal cells, landscape 3:2, isolated entire sprites with fixed center, scale, camera height, lighting and 91%-height sole baseline, no overlaps. Six ordered yaw views of SAME standing dinosaur spinning in place, shoes planted, from upper-left to lower-right: 1 front-facing, 2 facing screen-right 3/4, 3 facing screen-right profile, 4 rear 3/4, 5 fully rear-facing, 6 facing screen-left profile. Rotate the complete object with it, keep the staff in same hand and the identical blue cylindrical top hat with GOLD band, star medallion and blue vest, orange skin, cream claws, brown spikes, spotted long tail, ivory analog clock dial with gold rim as in reference. Maintain face proportions and limb lengths, original polished soft 3D game style. No text, labels, effects, or shadows."
+    },
+    {
+      "name": "opposite viewpoints",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "grid": [
+        2,
+        2
+      ],
+      "sha256Prefix": "a857357b95a51e89",
+      "cells": [
+        "turn-02",
+        "turn-03",
+        "turn-06",
+        null
+      ],
+      "references": [
+        "Documentation/Eindbazen/References/boss-clock-village-04.png",
+        "turn"
+      ],
+      "prompt": "Asset: transparent 2×2 sprite sheet for the exact orange Clock Village character in reference 1. Reference 2 is a partial turnaround, and already has front-facing, facing viewer's left, and rear views. Fill in the MISSING opposite views. Four equal square cells with a fixed 90% footline and room for staff and full tail. Top left: entire dinosaur looks clearly toward the RIGHT EDGE OF THE IMAGE, three-quarter from front, snout points right and tail curls left. Top right: entire dinosaur in profile, looks directly toward the RIGHT EDGE OF THE IMAGE, snout points right, tail left. Bottom left: rear three-quarter, facing away and toward the LEFT EDGE of the image, tail toward camera. Bottom right: same character as reference 1 carrying his staff, at the canonical camera angle, bending low with knees flexed and his free palm firmly planted flat on the ground immediately in front of his toes as he pushes himself up. Keep the staff held in the character's own right hand in every cell, its gold ring, blue rim jewels and complete neutral analog dial. Lock head size, eye spacing, hat/coat/medallion, all original colors, light and brush rendering. No text, borders, background, contact shadows, or effects. Genuine transparent alpha. 2×2 square layout."
+    },
+    {
+      "name": "recovery",
+      "dimensions": [
+        1388,
+        1133
+      ],
+      "grid": [
+        2,
+        2
+      ],
+      "sha256Prefix": "60e1d7ac10a55b8b",
+      "cells": [
+        "fallen",
+        "rise-low",
+        "push-up",
+        "rise-high"
+      ],
+      "references": [
+        "Documentation/Eindbazen/References/boss-clock-village-04.png",
+        "motion"
+      ],
+      "prompt": "Precisely registered transparent sprite frames. Match the clock mayor in both refs. Reference 2 bottom right seated pose is the starting drawing. Create exact 2x2 1254px sheet, equal square cells. In every frame the source faces left three quarters, the same clock staff stays upright on viewer's LEFT and the free palm stays on viewer's RIGHT with all fingers spread flat at the exact same image coordinate (76% of cell width, 93% of cell height). Keep scale, camera, orange spotted body, wide face, blue hat with gold band, shoes, eyes, star badge, blue vest, full gold ring clock and brown spines. Keep clocks affixed to their same staff; exact same staff angle. Order: top left seated with both toes forward, weight supported by flat planted palm. Top right begins to lift hips and tucks feet underneath while same palm stays planted. Bottom left rises to a low squat, head rising and toes planted, weight on same planted palm. Bottom right rising nearly standing as palm starts to lift, no jump. Whole body incl all toes and tail and hat. No guides, effects, shadows, labels. Genuine alpha cutouts. Match identity and preserve hand contact, do not scale independently."
+    },
+    {
+      "name": "stumble contact restoration",
+      "dimensions": [1388, 1133],
+      "grid": [1, 1],
+      "sha256Prefix": "678083bd86bb92cf",
+      "cells": ["stumble"],
+      "references": ["Documentation/Eindbazen/References/boss-clock-village-04.png", "recovery"],
+      "prompt": "Identity-preserving edit for a single transparent gameplay sprite of the Clock Village dinosaur. Reference 1 is the original full-body mayor; reference 2 is his recovery sheet. Use the top-left seated frame and bottom-left pushing-up frame of reference 2 to lock view, head size, palette, body size, clock staff location, and contact. Draw the preceding moment of tipping forward in a stumble, mouth startled, rump and tail slightly raised, one hind foot briefly lifted. The clock staff is still grasped in the near fist on viewer's LEFT side, with its gold-rimmed complete ivory analog dial and blue studs. His other free palm is extended down and firmly flat on the floor on viewer's RIGHT at x=72% of the canvas and y=91%, exactly where the recovery palm will stay. Show the same head turned to the viewer's left in a three-quarter view, same eye spacing, all four limbs in coherent placement, blue top hat with gold band, gold star medallion, blue vest, brown spines and complete visible orange spotted tail. Use the same eye height and body scale as the reference recovery sprites. The palm reaches the same sole line with digits pointed slightly rightward. 1254 square canvas, truly transparent, no contact shadow, floor, label, guide or effect. One whole figure with generous margin."
+    }
+  ],
+  "preparation": "Celgrenzen afgerond op het vaste raster. De herstelcellen van 694×566 of 694×567 en de losse valpose zijn verwerkt met behoud van hun oorspronkelijke beeldverhouding. De grootste aaneengesloten figuur en de antialiasrand zijn behouden. Reacties registreren irisafstand en oogmiddelpunt met een uniforme schaal, met een kleine correctie onder de kin voor het voetcontact. De draai registreert de heupas. De val, zit en twee steunhoudingen registreren de palm op (375, 459) in de ongespiegelde 512²-rasterruimte totdat de hand wordt geheven.",
+  "rigCoordinateSpace": "Inspectieraster 420×420 per vaste broncel, x vanaf links, y vanaf boven. Het raster is een maat voor beide asfracties, geen veronderstelling dat een broncel vierkant is. De registratie is [uniforme schaal, x- en y-verplaatsing in de inspectieruimte, lagere y-schaal voor het lichaam]. preparedBounds zijn x0,y0,x1,y1 in de ongespiegelde 512²-productie-PNG.",
+  "rigKeys": "clock [cx,cy,rx,ry,rotatiegraden], hat [x0,y0,x1,y1], eyes en nose in dezelfde bronruimte, medallion [cx,cy,rx,ry], staff eindpunten, handOcclusion [cx,cy,rx,ry], bodyOrPalmAnchor [x,y]. Ogen achter de figuur zijn leeg.",
+  "poses": {
+    "village-idle": {"input":"idle","clock":[84,107,50,54,-8],"hat":[138,19,283,95],"eyes":[[166,113],[219,117]],"nose":[170,140],"medallion":[188,229,24,27],"staff":[[89,160],[109,360]],"handOcclusion":[[97,227,23,25]],"bodyOrPalmAnchor":[214,310],"registration":[1,0,0,1],"preparedBounds":[37,26,480,467]},
+    "village-clap-open": {"input":"clap-open","clock":[92,104,52,54,-8],"hat":[149,6,306,94],"eyes":[[177,111],[237,115]],"nose":[181,140],"medallion":[202,235,24,26],"staff":[[98,164],[112,381]],"handOcclusion":[],"bodyOrPalmAnchor":[223,319],"registration":[0.8839,9.5361,15.1212,0.9562],"preparedBounds":[49,30,431,466]},
+    "village-clap-contact": {"input":"clap-contact","clock":[93,104,52,54,-8],"hat":[147,6,307,94],"eyes":[[177,111],[237,115]],"nose":[181,140],"medallion":null,"staff":[[100,164],[111,381]],"handOcclusion":[],"bodyOrPalmAnchor":[223,319],"registration":[0.8839,9.5361,15.1212,0.9562],"preparedBounds":[49,30,431,466]},
+    "village-clap-release": {"input":"clap-release","clock":[94,104,53,54,-8],"hat":[149,6,306,94],"eyes":[[178,110],[237,115]],"nose":[181,140],"medallion":[203,236,24,26],"staff":[[98,164],[112,381]],"handOcclusion":[],"bodyOrPalmAnchor":[223,319],"registration":[0.8976,6.2392,14.0153,0.9477],"preparedBounds":[45,29,433,466]},
+    "village-wrong": {"input":"wrong","clock":[96,105,52,54,-8],"hat":[149,6,306,95],"eyes":[[179,113],[237,118]],"nose":[183,143],"medallion":[200,236,24,26],"staff":[[102,164],[113,381]],"handOcclusion":[],"bodyOrPalmAnchor":[222,319],"registration":[0.913,2.5948,9.5479,0.9547],"preparedBounds":[42,24,436,466]},
+    "village-crouch": {"input":"crouch","clock":[79,175,48,51,-8],"hat":[119,93,276,181],"eyes":[[150,202],[201,205]],"nose":[153,231],"medallion":[206,317,22,24],"staff":[[88,220],[126,383]],"handOcclusion":[[97,292,27,24]],"bodyOrPalmAnchor":[225,327],"registration":[0.98,-4,-10.2971,0.98],"preparedBounds":[26,102,463,466]},
+    "village-airborne": {"input":"airborne","clock":[94,104,47,48,-7],"hat":[147,16,300,107],"eyes":[[170,113],[222,115]],"nose":[179,137],"medallion":[200,225,22,23],"staff":[[101,164],[126,315]],"handOcclusion":[[100,213,23,22]],"bodyOrPalmAnchor":[210,293],"registration":[0.98,7,8.7424,0.98],"preparedBounds":[56,32,467,458]},
+    "village-stumble": {"input":"stumble","clock":[84,109,46,54,-7],"hat":[126,25,270,137],"eyes":[[144,150],[188,165]],"nose":[142,172],"medallion":[193,283,22,24],"staff":[[85,180],[103,370]],"handOcclusion":[[86,238,22,27]],"bodyOrPalmAnchor":[293,385],"registration":[0.91,-18.6394,24.0164,0.91],"preparedBounds":[23,58,501,466]},
+    "village-fallen": {"input":"fallen","clock":[98,132,43,52,0],"hat":[137,24,290,132],"eyes":[[165,145],[211,154]],"nose":[163,174],"medallion":[193,283,21,25],"staff":[[99,197],[98,376]],"handOcclusion":[[97,263,23,29]],"bodyOrPalmAnchor":[300,393],"registration":[0.91,-26.7385,18.973,0.91],"preparedBounds":[31,51,476,466]},
+    "village-rise-low": {"input":"rise-low","clock":[98,132,43,52,0],"hat":[133,23,287,137],"eyes":[[157,145],[204,154]],"nose":[156,173],"medallion":[199,283,23,25],"staff":[[98,199],[98,378]],"handOcclusion":[[97,263,23,29]],"bodyOrPalmAnchor":[300,393],"registration":[0.91,-26.7385,20.9988,0.91],"preparedBounds":[31,52,478,466]},
+    "village-push-up": {"input":"push-up","clock":[99,132,44,51,0],"hat":[127,16,279,126],"eyes":[[152,136],[196,143]],"nose":[151,164],"medallion":[200,277,22,26],"staff":[[99,200],[99,378]],"handOcclusion":[[97,263,23,29]],"bodyOrPalmAnchor":[298,393],"registration":[0.91,-23.9205,20.9619,0.91],"preparedBounds":[34,46,478,466]},
+    "village-rise-high": {"input":"rise-high","clock":[99,132,44,51,0],"hat":[119,8,275,118],"eyes":[[145,126],[190,135]],"nose":[145,154],"medallion":[195,269,23,25],"staff":[[99,200],[98,378]],"handOcclusion":[[97,262,23,29]],"bodyOrPalmAnchor":[310,377],"registration":[0.91,-26.1481,21.636,0.91],"preparedBounds":[31,36,473,466]},
+    "village-turn-01": {"input":"front","clock":[103,99,49,50,-6],"hat":[146,8,308,82],"eyes":[[195,109],[251,111]],"nose":[218,133],"medallion":[220,224,24,26],"staff":[[109,159],[126,356]],"handOcclusion":[[115,218,26,22]],"bodyOrPalmAnchor":[228,305],"registration":[0.96,-5.88,20.0156,0.96],"preparedBounds":[46,36,440,466]},
+    "village-turn-02": {"input":"right-quarter","clock":[134,109,47,56,-4],"hat":[153,2,307,86],"eyes":[[249,116],[292,107]],"nose":[279,138],"medallion":[269,235,23,27],"staff":[[136,177],[165,381]],"handOcclusion":[[145,244,29,31]],"bodyOrPalmAnchor":[242,324],"registration":[0.93,-12.06,9.7317,0.93],"preparedBounds":[32,17,386,466]},
+    "village-turn-03": {"input":"right-profile","clock":[165,112,47,53,-6],"hat":[159,2,314,88],"eyes":[[294,116]],"nose":[337,140],"medallion":[298,229,18,28],"staff":[[163,179],[189,382]],"handOcclusion":[[185,250,31,28]],"bodyOrPalmAnchor":[240,319],"registration":[0.93,-10.2,7.8628,0.93],"preparedBounds":[29,14,386,466]},
+    "village-turn-04": {"input":"rear-right","clock":[322,105,37,53,-9],"hat":[133,8,290,98],"eyes":[],"nose":null,"medallion":null,"staff":[[311,164],[287,355]],"handOcclusion":[[296,225,37,27]],"bodyOrPalmAnchor":[207,324],"registration":[0.96,14.28,16.8656,0.96],"preparedBounds":[81,32,445,466]},
+    "village-turn-05": {"input":"rear","clock":[317,104,42,49,6],"hat":[123,10,276,100],"eyes":[],"nose":null,"medallion":null,"staff":[[309,166],[289,347]],"handOcclusion":[[308,228,29,24]],"bodyOrPalmAnchor":[203,324],"registration":[0.96,18.12,18.4406,0.96],"preparedBounds":[126,35,452,466]},
+    "village-turn-06": {"input":"rear-left","clock":[302,108,36,53,5],"hat":[119,3,272,102],"eyes":[],"nose":null,"medallion":null,"staff":[[305,161],[299,371]],"handOcclusion":[[300,223,29,25]],"bodyOrPalmAnchor":[204,328],"registration":[0.93,23.28,12.2235,0.93],"preparedBounds":[109,21,418,466]},
+    "village-turn-07": {"input":"left-profile","clock":[91,101,22,52,-5],"hat":[126,10,280,107],"eyes":[[153,111]],"nose":[115,146],"medallion":[139,222,16,30],"staff":[[98,159],[112,355]],"handOcclusion":[[101,214,20,23]],"bodyOrPalmAnchor":[204,319],"registration":[0.96,17.16,16.8656,0.96],"preparedBounds":[94,34,462,466]}
+  }
+}

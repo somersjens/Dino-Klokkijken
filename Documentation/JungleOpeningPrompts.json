@@ -1,0 +1,16 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "asset": "Assets.xcassets/jungle-opening-idle.imageset/jungle-opening-idle.png",
+  "reference": "Assets.xcassets/jungle-idle.imageset/jungle-idle.png",
+  "purpose": "Dedicated high-resolution illustration for the continuous jungle welcome jump. The normal map and reactions retain their existing sprites.",
+  "prompts": [
+    "Use case: identity-preserve. Asset type: high resolution transparent game sprite, 1536 by 1536 square PNG. Edit target: the supplied 512x512 idle jungle dinosaur. Primary request: faithfully restore this EXACT illustration in much higher resolution with clean, crisp, polished 3D details for a large app opening animation. This is an upscale/detail restoration, NOT a redesign or new pose. Lock the exact silhouette, pose, expression, face proportions, eye and nostril positions, head-to-body ratio, all original green/gold/cream colors, lighting, materials and the relative pixel placement within the square canvas. Keep the entire character and tail fully visible with exactly the original framing and transparent margins. Keep the 3/4 view facing LEFT, the closed smiling mouth, both hands hanging at the sides, feet planted, every leaf including the lime middle feather, gold headband and green jewel, chest clock with the same hands/position, spots and toenails. Increase edge clarity and recover detailed leaf veins, rounded skin shading, gold highlights and clear eye highlights without changing the art style. No blur, no painterly grain, no extra accessories, no altered body parts, no labels, no motion trail, no ground shadow, no background. Actual transparent alpha outside the character and opaque character interior.",
+    "Use case: background-extraction. Edit target: the high-resolution jungle dinosaur cutout. Change ONLY the transparency cleanup. Remove every colored haze, smudged patch, pixel speckle, yellow/green halo and semi-transparent noise OUTSIDE the actual dinosaur silhouette, especially the large blotch ABOVE and BEHIND the top leaf crown. The background must be exact alpha zero. The character must be opaque, with clean antialiased silhouette edges and NO glow, particles or ground shadow. Keep the existing dinosaur pixel positions, framing, proportions, details, crispness, colors, pose, face, jewelry, clock and leaf tips exactly unchanged. Do not rescale or redraw it. Keep this same full square high resolution."
+  ],
+  "selected_result": "exec-a4144d65-62a4-4132-95b3-e2719f1619b3.png",
+  "actual_dimensions": [
+    1254,
+    1254
+  ],
+  "transparent_background": true
+}

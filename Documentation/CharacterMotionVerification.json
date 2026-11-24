@@ -1,0 +1,90 @@
+{
+  "replacementBosses": {
+    "3": "boss-volcano",
+    "5": "boss-crystal-cave",
+    "9": "boss-pirates",
+    "10": "boss-castle"
+  },
+  "originalDirectory": "Documentation/Eindbazen/References/new_<number>-original.png",
+  "importer": "Tools/import-replacement-bosses.swift",
+  "assetSize": [
+    640,
+    640
+  ],
+  "sourceTotalBytes": 5088084,
+  "runtimeTotalBytes": 1467665,
+  "runtimeReductionPercent": 71.2,
+  "clockCoordinatesSpace": [
+    1254,
+    1254
+  ],
+  "clockCoordinates": {
+    "3": [
+      [
+        395.27,
+        843.95,
+        42.91,
+        59.12
+      ],
+      [
+        534.98,
+        770.52,
+        58.17,
+        57.22
+      ],
+      [
+        687.08,
+        677.06,
+        54.36,
+        54.36
+      ]
+    ],
+    "5": [
+      [
+        499.86,
+        748.19,
+        72.26,
+        73.17
+      ]
+    ],
+    "9": [
+      [
+        224.81,
+        746.99,
+        56.91,
+        59.76
+      ]
+    ],
+    "10": [
+      [
+        478.55,
+        204.42,
+        83.47,
+        80.63
+      ]
+    ]
+  },
+  "jungleSpriteCount": 22,
+  "facing": "right; reflected once during cached sprite preparation",
+  "portrait": {
+    "scale": 2.0833333333333335,
+    "offsetX": -0.04,
+    "offsetY": 0.43
+  },
+  "verified": {
+    "characterAndJungleMotionChecks": 4232,
+    "mainAnimationAndAssetChecks": 288650,
+    "bossClockMotionChecks": 4618,
+    "iphoneUI": [
+      "testJungleWelcomeAndAnswerReactions",
+      "testJungleCharacterResultAnimations",
+      "testReplacementBossClockArtwork"
+    ],
+    "recordingReview": "all answer reactions, result clips and the full native welcome reviewed from simulator video",
+    "ipadUI": [
+      "testFirstCharacterUnlockAndCollectionSwap",
+      "testJungleWelcomeAndAnswerReactions",
+      "testJungleCharacterResultAnimations"
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/ResultLevelSign.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.levelNumber %lld",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 54
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.levelNumber %lld",
+        "location": {
+          "startingColumn": 25,
+          "startingLine": 70
+        }
+      }
+    ]
+  },
+  "version": 1
+}

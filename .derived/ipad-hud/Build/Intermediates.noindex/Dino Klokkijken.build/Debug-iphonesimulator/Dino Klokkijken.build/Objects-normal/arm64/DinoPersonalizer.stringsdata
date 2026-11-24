@@ -1,0 +1,24 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/DinoPersonalizer.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.done",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 90
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.reset",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 171
+        }
+      }
+    ]
+  },
+  "version": 1
+}

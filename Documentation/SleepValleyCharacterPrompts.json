@@ -1,0 +1,375 @@
+{
+  "identity": {
+    "name": "Dommel de Droomsaurus",
+    "englishName": "Dozy the Dreamsaurus",
+    "case": "valley",
+    "rawValue": 7,
+    "world": 7,
+    "themeID": 2,
+    "bossLevel": 70,
+    "collectionSlot": 7,
+    "arrivalLevel": 71,
+    "bossAsset": "boss-sleep-valley",
+    "original": "Documentation/Eindbazen/References/boss-sleep-valley-02.png"
+  },
+  "tool": "built-in image_gen.imagegen",
+  "generatedSources": {
+    "idle": {
+      "file": "exec-84f3ea87-9a1f-4604-a6f7-8eee71ff3f1b.png",
+      "pixels": [1254, 1254],
+      "assets": [
+        "valley-opening-idle",
+        "valley-idle"
+      ],
+      "prompt": "Use case: identity-preserve. Production raster for a native children's clock-learning game. Edit the provided reference of Dozy the Dreamsaurus. Produce one 1536 square genuinely transparent RGBA full character, isolated without any shadow, floor, backdrop, texture outside character or alpha haze. Preserve the existing plush 3D illustrated character exactly: left-facing calm closed eyes, broad blue cheek and muzzle, blue spotted long neck and quadruped body, four short feet, pale warm cream belly, lavender sleeping cap with pale lavender brim and cream pompom, lavender midnight quilt with cream piping and gold moon and stars, complete functioning-looking gold pocket watch including hoop, clear ivory dial and blue ticks and two blue hands, curled blue tail. Don't redesign, crop, change height, angle, facial proportions, quilt or lighting. Keep the reference pixel framing relative to the square, approximately x 16 to 92 percent, y 4.4 to 94 percent, head centered near (32%,29%), foot baseline at 93.5%. Keep every toe, tail and pompom. The reference is already the precise angle and framing. Remove only background and floor shadow, keep smooth opaque silhouette with natural antialiased boundaries. No lettering, typography, border or effects."
+    },
+    "reactions": {
+      "file": "exec-6436ba03-0839-442f-b061-91ea4fe50524.png",
+      "pixels": [1254, 1254],
+      "grid": [2, 2],
+      "cellPixels": [627, 627],
+      "assets": [
+        null,
+        "valley-clap-open",
+        "valley-clap-contact",
+        "valley-wrong"
+      ],
+      "prompt": "Use case: identity-preserve. Transparent square RGBA sprite sheet, exactly 2×2 uniform square cells with uninterrupted transparent gutters, no grid lines or labels. Each cell is a full-body isolated version of the reference Dozy the Dreamsaurus, same camera angle, light, texture, sleepy eye spacing, blue spotted neck, same purple sleep cap with cream pompom, lavender gold-star quilt with cream piping and the same readable complete ivory and gold pocket watch with blue hands, curled tail, four short feet or one/two raised front paws while balancing seated. Exact order: top left calm original idle pose; top right sitting on hind feet with both short front paws open at chest height ready to clap; bottom left same seated pose with both short front paws visibly touching at center chest, below muzzle, in a happy clap; bottom right original stance with worried closed eyelids and gentle frown, still all feet planted. The expression changes, yet the face, head size, eye separation, muzzle shape, hat, clock and material proportions must stay locked. Fixed internal framing, head top at 6% and planted soles at 94% of each cell, complete character with a clear margin. Match original left-facing three-quarter orientation in all cells. No background, shadow, effects, motion trails, marks or text."
+    },
+    "motion": {
+      "file": "exec-51107081-459c-4d08-a2c3-352c2eb233d2.png",
+      "pixels": [1254, 1254],
+      "grid": [2, 2],
+      "cellPixels": [627, 627],
+      "assets": [
+        "valley-crouch",
+        "valley-airborne",
+        "valley-stumble",
+        "valley-push-up"
+      ],
+      "prompt": "Use case: identity-preserve. Transparent square RGBA sheet exactly 2×2 uniform square cells, fixed scale per cell, complete character with margin, no labels or lines. Four full-body poses of the exact left-facing Dozy the Dreamsaurus shown in the reference. Original blue spotted long-neck quadruped with exact sleepy face, purple cap and cream pompom, purple moon and stars quilt with cream piping and one complete gold pocket watch with hoop, cream dial, clean blue hands, four stubby feet and curled tail. Same plush 3D illustration, face proportions and lighting. Row 1 left: anticipating jump with legs compressed and all four soles on ground. Row 1 right: midair joyful small leap with tucked paws. Row 2 left: comic harmless stumble with belly lowered and front paws supporting on ground, same head size. Row 2 right: pushing up after the stumble, front paws planted, head up. Baseline at 94 percent except midair, no horizontal recentering of body between cells, head may naturally lower in crouch but must stay the same size. Don't draw a floor, shadow, motion lines, glow or extra accessories. True alpha outside each character."
+    },
+    "turn": {
+      "file": "exec-ef621a10-4f5d-4d1e-bbce-0cc98d878ac1.png",
+      "pixels": [1254, 1254],
+      "grid": [2, 2],
+      "cellPixels": [627, 627],
+      "assets": [
+        "valley-turn-01",
+        "valley-turn-02",
+        "valley-turn-05",
+        "valley-turn-07"
+      ],
+      "prompt": "Use case: identity-preserve. True transparent RGBA square contact sheet, exactly 2×2 equal cells and exact order. Production 360-degree dance views of the exact quadruped Dozy the Dreamsaurus shown. Unchanged plush proportions, blue spots, cream belly, purple cap and cream pompom, purple blanket with cream piping and gold moons and stars, single complete watch on original anatomical flank, curled tail and four short feet. Row 1 left: straight-on front. Row 1 right: three-quarter from opposite flank looking right. Row 2 left: straight-on back. Row 2 right: back three-quarter showing the original watch flank while looking left. Keep original lamp direction, same size and ground line at 94% of each cell, fixed body center and a complete silhouette with margins. Real alpha and no grid lines, captions, lettering, ground shadow or effects. Retain exact anatomy and expression from supplied reference."
+    },
+    "turn-extra": {
+      "file": "exec-44e5021f-cfc4-43fd-b927-81b9b46e37c4.png",
+      "pixels": [1254, 1254],
+      "grid": [2, 2],
+      "cellPixels": [627, 627],
+      "assets": [
+        "valley-turn-03",
+        "valley-turn-04",
+        "valley-turn-06",
+        null
+      ],
+      "prompt": "Use case: identity-preserve, production turn sequence. Reference image 1 is the exact left-facing standing Dozy identity. Reference image 2 gives compatible front, opposite three-quarter, rear and left-profile views. Generate a genuinely transparent square RGBA sheet, exactly four equal square cells with clear transparent gutters and no labels. Create the four intervening views of the same dinosaur with the same plum-purple nightcap and cream pompom, blue spotted skin, warm cream underside, lavender gold-star quilt and gold watch on the original left flank only. Same scale, ground line, soft light and texture. Top left is full opposite-flank SIDE profile oriented to the right, tail to left, see only far quilt flank without watch. Top right is the opposite REAR three-quarter view, tail pointing partly toward camera and toward LEFT, Dino looking away and toward RIGHT, show the back of his head. Bottom left is the original-watch-flank REAR three-quarter view, tail pointing partly toward camera and to the RIGHT, Dino looking AWAY and toward LEFT, show the back of his head and the original complete watch. Bottom right is a FULL LEFT SIDE profile, snout points exactly left, tail right, only one eye visible, show complete watch. Match total height and place the center of the quadruped pelvis at the center of each cell. All four poses completely visible including toes, tail and pompom, with solid interior alpha. No background, drop shadow, scenery, text, grid or effects."
+    }
+  },
+  "space": {
+    "source": "Top-left registration canvas, 512 × 512. Rig points use source pixels. Opening raster uses 1254/512 × each coordinate.",
+    "prepared": "X reflects once at render preparation (pixel indices: width − 1 − x, normalized positions: 1 − x). Y is unchanged. The visible clock has ticks and hands without numerals.",
+    "screen": "The prepared canvas scales to SwiftUI points. Device pixel density affects only screen rasterization.",
+    "idleFootline": 480,
+    "portrait": {
+      "scale": 1.91,
+      "offsetX": -0.34,
+      "offsetY": 0.352
+    },
+    "handContact": "Clap contact is the measured palm seam in the registered source. Stumble and push-up paw pairs share horizontal midpoint 173."
+  },
+  "materials": {
+    "archive": "Assets.xcassets/valley-materials.dataset/valley-materials.bin",
+    "format": "VLY1. RLE per asset, top-left source pixel order. Low three bits are material, bit 3 is cap plus pompom, bit 4 is isolated full head.",
+    "channels": {
+      "0": "Protected dial, ticks, hands and facial ink",
+      "1": "Purple fabric on cap and quilt (bandana)",
+      "2": "Gold embroidery, watch hoop and case (spikes)",
+      "3": "Blue skin, including cheeks and darker spots (body)",
+      "4": "Cream belly, tail underside, trim and pompom (belly)",
+      "5": "Pale claws (belly, separate reference shade)"
+    }
+  },
+  "poses": {
+    "valley-idle": {
+      "eyes": [
+        [118.7, 141.81],
+        [182.92, 148.87]
+      ],
+      "nose": [118.41, 164.95],
+      "hat": [284.17, 89.01],
+      "hip": [293.15, 359.3],
+      "glass": [357.67, 342.15, 26.95, 31.03],
+      "paws": [
+        [170.67, 464.64],
+        [255.59, 477.7],
+        [368.28, 471.99]
+      ],
+      "alphaBounds": [80, 20, 471, 482],
+      "footline": 479,
+      "hatLimitY": 162
+    },
+    "valley-clap-open": {
+      "hat": [286.94, 84.95],
+      "hip": [270.47, 367.46],
+      "hand": [151.47, 277.32],
+      "eyes": [
+        [118.7, 141.81],
+        [182.92, 148.87]
+      ],
+      "nose": [120.45, 164.37],
+      "paws": [
+        [109.5, 467.56],
+        [183.83, 477.06]
+      ],
+      "glass": [322.18, 349.3, 26.3, 30.38],
+      "alphaBounds": [75, 20, 406, 482],
+      "footline": 480,
+      "hatLimitY": 162
+    },
+    "valley-clap-contact": {
+      "hat": [287.63, 85.66],
+      "hip": [252, 368.39],
+      "hand": [145.14, 252.91],
+      "eyes": [
+        [118.7, 141.81],
+        [182.92, 148.87]
+      ],
+      "nose": [120.44, 164.41],
+      "paws": [
+        [109.66, 467.57],
+        [174.7, 477.1]
+      ],
+      "glass": [322.24, 349.18, 26.3, 30.38],
+      "alphaBounds": [82, 20, 406, 482],
+      "footline": 480,
+      "hatLimitY": 162
+    },
+    "valley-wrong": {
+      "hat": [286.89, 85.64],
+      "hip": [275.14, 358.04],
+      "eyes": [
+        [118.7, 141.81],
+        [182.92, 148.87]
+      ],
+      "nose": [120.44, 164.36],
+      "paws": [
+        [149.89, 468.53],
+        [231.2, 478.51],
+        [338.65, 469.35]
+      ],
+      "glass": [334.57, 340.25, 26.3, 29.61],
+      "alphaBounds": [82, 20, 430, 482],
+      "footline": 480,
+      "hatLimitY": 162
+    },
+    "valley-crouch": {
+      "hat": [292.5, 150.82],
+      "hip": [289.41, 396.55],
+      "eyes": [
+        [118.78, 199.03],
+        [182.84, 207.45]
+      ],
+      "nose": [115.55, 222.68],
+      "paws": [
+        [183.55, 473.82],
+        [253.09, 477.68],
+        [341.95, 477.68]
+      ],
+      "glass": [361.27, 347.86, 27.82, 30.91],
+      "alphaBounds": [80, 78, 465, 481],
+      "footline": 480,
+      "hatLimitY": 220
+    },
+    "valley-airborne": {
+      "hat": [286.01, 91.63],
+      "hip": [294.47, 310.07],
+      "eyes": [
+        [118.72, 141.68],
+        [182.91, 149]
+      ],
+      "nose": [120.65, 163.16],
+      "paws": [
+        [157.57, 389.29],
+        [209.1, 398.52],
+        [301.4, 423.9]
+      ],
+      "glass": [355.24, 298.53, 24.61, 27.69],
+      "alphaBounds": [84, 26, 454, 434],
+      "footline": 433,
+      "hatLimitY": 162
+    },
+    "valley-stumble": {
+      "hat": [250.67, 228.79],
+      "hip": [291.54, 414.6],
+      "eyes": [
+        [86.24, 275.41],
+        [150.3, 283.81]
+      ],
+      "nose": [87.16, 303.86],
+      "paws": [
+        [116.14, 471.08],
+        [229.86, 478.51],
+        [388.9, 473.31]
+      ],
+      "glass": [368.09, 360.34, 28.24, 28.24],
+      "alphaBounds": [50, 162, 471, 481],
+      "footline": 480,
+      "hatLimitY": 296
+    },
+    "valley-push-up": {
+      "hat": [277.52, 144],
+      "hip": [289.69, 387.26],
+      "eyes": [
+        [104.19, 182.93],
+        [167.93, 193.48]
+      ],
+      "nose": [104.2, 206.34],
+      "paws": [
+        [121.69, 473.16],
+        [224.31, 479.24],
+        [361.14, 473.16]
+      ],
+      "glass": [347.46, 352.29, 26.61, 28.89],
+      "alphaBounds": [66, 71, 453, 481],
+      "footline": 480,
+      "hatLimitY": 205
+    },
+    "valley-turn-01": {
+      "hat": [364.84, 96.64],
+      "hip": [270, 360.45],
+      "eyes": [
+        [237.75, 150.33],
+        [305.3, 150.52]
+      ],
+      "nose": [268.41, 173.95],
+      "paws": [
+        [212.62, 477.61],
+        [332.96, 477.61]
+      ],
+      "alphaBounds": [152, 25, 392, 480],
+      "footline": 480,
+      "hatLimitY": 167
+    },
+    "valley-turn-02": {
+      "hat": [275.58, 130.12],
+      "hip": [270, 356.46],
+      "eyes": [
+        [391.34, 150.16],
+        [444.83, 142.59]
+      ],
+      "nose": [444.54, 171.56],
+      "paws": [
+        [194.28, 472.83],
+        [303.47, 479.2],
+        [403.9, 469.64]
+      ],
+      "alphaBounds": [115, 25, 474, 481],
+      "footline": 480,
+      "hatLimitY": 163
+    },
+    "valley-turn-05": {
+      "hat": [168.78, 107],
+      "hip": [270, 359.65],
+      "eyes": [],
+      "paws": [
+        [202.25, 477.61],
+        [336.15, 477.61]
+      ],
+      "alphaBounds": [148, 27, 388, 480],
+      "footline": 480,
+      "hatLimitY": 184
+    },
+    "valley-turn-03": {
+      "hat": [272.72, 122.15],
+      "hip": [252, 358.06],
+      "eyes": [
+        [426.14, 156.15]
+      ],
+      "nose": [475.26, 169.81],
+      "paws": [
+        [216.13, 476.81],
+        [338.87, 478.41],
+        [418.57, 472.03]
+      ],
+      "alphaBounds": [107, 36, 498, 482],
+      "footline": 480,
+      "hatLimitY": 173
+    },
+    "valley-turn-04": {
+      "hat": [252.47, 140.48],
+      "hip": [270, 349.29],
+      "eyes": [
+        [395.02, 142.96]
+      ],
+      "paws": [
+        [199.86, 470.44],
+        [305.07, 476.02],
+        [377.59, 471.23]
+      ],
+      "alphaBounds": [148, 36, 418, 481],
+      "footline": 480,
+      "hatLimitY": 159
+    },
+    "valley-turn-06": {
+      "hat": [313.84, 131.71],
+      "hip": [270, 370.01],
+      "eyes": [
+        [168.32, 144.46]
+      ],
+      "paws": [
+        [175.95, 471.23],
+        [263.62, 477.61],
+        [356.87, 472.03]
+      ],
+      "glass": [280.36, 342.92, 29.49, 31.08],
+      "alphaBounds": [148, 32, 427, 481],
+      "footline": 480,
+      "hatLimitY": 161
+    },
+    "valley-turn-07": {
+      "hat": [282.75, 107],
+      "hip": [270, 371.61],
+      "eyes": [
+        [122.16, 147.94]
+      ],
+      "nose": [94.66, 156.42],
+      "paws": [
+        [167.19, 475.22],
+        [293.11, 479.2]
+      ],
+      "glass": [305.07, 353.28, 31.08, 33.47],
+      "alphaBounds": [85, 25, 456, 481],
+      "footline": 480,
+      "hatLimitY": 164
+    },
+    "valley-opening-idle": {
+      "eyes": [
+        [118.7, 141.81],
+        [182.92, 148.87]
+      ],
+      "nose": [118.41, 164.95],
+      "hat": [284.17, 89.01],
+      "hip": [293.15, 359.3],
+      "glass": [357.67, 342.15, 26.95, 31.03],
+      "paws": [
+        [170.67, 464.64],
+        [255.59, 477.7],
+        [368.28, 471.99]
+      ],
+      "alphaBounds": [80, 20, 471, 482],
+      "footline": 479,
+      "hatLimitY": 162
+    }
+  }
+}

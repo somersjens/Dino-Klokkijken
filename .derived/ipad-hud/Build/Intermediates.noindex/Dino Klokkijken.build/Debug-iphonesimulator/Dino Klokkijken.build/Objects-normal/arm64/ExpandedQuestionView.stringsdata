@@ -1,0 +1,144 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/ExpandedQuestionView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.expanded.sameDay",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 211
+        }
+      },
+      {
+        "comment": "",
+        "key": "?",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 301
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.train.departure",
+        "location": {
+          "startingColumn": 57,
+          "startingLine": 1004
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.train.one",
+        "location": {
+          "startingColumn": 52,
+          "startingLine": 1073
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.train.transfer",
+        "location": {
+          "startingColumn": 43,
+          "startingLine": 1080
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.train.two",
+        "location": {
+          "startingColumn": 52,
+          "startingLine": 1087
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.flightTotalAdded",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 1113
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.timeZone.replay",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 1145
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.train.arrival",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 1153
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.flightTicket",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 1434
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.timeZone.replay",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 1454
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.flightZone",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1529
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.unknownArrival",
+        "location": {
+          "startingColumn": 58,
+          "startingLine": 1502
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.flightDuration",
+        "location": {
+          "startingColumn": 40,
+          "startingLine": 1510
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.flightZoneDifference",
+        "location": {
+          "startingColumn": 44,
+          "startingLine": 1514
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.expanded.flightTotalAdded",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 1571
+        }
+      },
+      {
+        "comment": "",
+        "key": "%@, %@–%@",
+        "location": {
+          "startingColumn": 37,
+          "startingLine": 1878
+        }
+      }
+    ]
+  },
+  "version": 1
+}

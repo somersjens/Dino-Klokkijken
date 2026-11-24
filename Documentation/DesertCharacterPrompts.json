@@ -1,0 +1,256 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "character": {
+    "nl": "Zandstaart de Woestijnwachter",
+    "en": "Sandtail the Desert Guardian",
+    "world": 2,
+    "themeID": 7,
+    "identity": "desert",
+    "savedRawValue": 2,
+    "bossLevel": 20,
+    "collectionSlotOneBased": 2,
+    "bossAsset": "boss-desert",
+    "originalReference": "Documentation/Eindbazen/References/boss-desert-07.png"
+  },
+  "orientation": {
+    "source": "left",
+    "preparedScreen": "right",
+    "rasterMirror": "exactly once in DinoAvatarRenderer, after recoloring",
+    "pixelCentres": "x maps to width - 1 - x; normalized centre u maps to 1-u",
+    "clockReadability": "Source artwork uses unnumbered ticks; neutral face, hands and ink are protected."
+  },
+  "materials": {
+    "bandana": "Knitted scarf and leather harness/bezel; gold hardware retains its original gold.",
+    "spikes": "Both brown forehead horns and all layered rock spines.",
+    "body": "Skin, skin spots, arms, palms, tail and tail club.",
+    "belly": "Cream chin, belly, soles and toenails.",
+    "originalPalette": {
+      "bandana": "F89B20",
+      "spikes": "B47B43",
+      "body": "E7B56D",
+      "belly": "F5DEAA"
+    },
+    "implementation": "Pose-specific geometry, connected source contours for complete horns, neutral dial and leather; explicit painted cheek/scarf contours for support poses. Eyes, eyebrows, mouth and dial protected. Mask cache independent of chosen colors. Unpremultiply sRGB before color calculations; premultiply output; retain source alpha."
+  },
+  "sources": {
+    "canonical": {
+      "file": "opening-source.png",
+      "selectedResult": "exec-16e3e006-2835-4942-8528-6a2a03ea3f8d.png",
+      "actualSize": [
+        1254,
+        1254
+      ],
+      "outputs": [
+        "desert-idle",
+        "desert-opening-idle"
+      ],
+      "translationNormalized": [
+        0,
+        0.0333
+      ]
+    },
+    "reactions": {
+      "file": "reactions-source.png",
+      "selectedResult": "exec-c34bfbd6-9ec9-47a6-9021-dc06470c41d2.png",
+      "actualSize": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "cells": [
+        "reference-only",
+        "desert-wrong",
+        "desert-clap-open",
+        "desert-clap-contact",
+        "desert-clap-open-2",
+        "desert-clap-contact-2",
+        "desert-crouch",
+        "desert-landing"
+      ],
+      "translationY": 0.0397
+    },
+    "motion": {
+      "file": "motion-source.png",
+      "selectedResult": "exec-d19a835b-0b4e-48b1-a73b-9110786c57ee.png",
+      "actualSize": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "cells": [
+        "desert-takeoff",
+        "desert-airborne",
+        "desert-stumble",
+        "desert-fallen",
+        "desert-push-up",
+        "unused",
+        "unused",
+        "unused"
+      ],
+      "translationY": [
+        0.015,
+        0.015,
+        0.004,
+        -0.004,
+        0.055
+      ],
+      "pushUpTranslationX": -0.04
+    },
+    "turn": {
+      "file": "turn-source.png",
+      "selectedResult": "exec-289068cb-fa78-4dbf-b555-accc41d73220.png",
+      "actualSize": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "cells": [
+        "desert-turn-01",
+        "desert-turn-02",
+        "desert-turn-03",
+        "desert-turn-04",
+        "desert-turn-05",
+        "desert-turn-06",
+        "desert-turn-07",
+        "desert-turn-08"
+      ],
+      "translationY": [
+        0.035,
+        0.043,
+        0.043,
+        0.045,
+        0.041,
+        0.041,
+        0.035,
+        0.035
+      ],
+      "hipAxesCellPixels": [
+        229,
+        233,
+        249,
+        226,
+        194.5,
+        210.5,
+        214.5,
+        229
+      ]
+    }
+  },
+  "preparation": {
+    "bodyCacheMiB": 32,
+    "headCacheMiB": 16,
+    "materialCacheMiB": 24,
+    "answers": "Prepare and retain body and isolated head variants before reactions; prepare larger result sets in background.",
+    "coldResult": "Start native result journey and star clock together after the desert set is prepared.",
+    "opening": "Separate 1254px single drawing; prepared map and native clock; release large illustration after welcome."
+  },
+  "portrait": {
+    "scale": 1.72,
+    "offsetX": -0.28,
+    "offsetY": 0.22,
+    "layerOrder": [
+      "Full animated figure clipped to circle",
+      "Continuous circle rim",
+      "Source-locked isolated head; hands, shoulders, clock and lower decoration excluded"
+    ]
+  },
+  "coordinates": {
+    "rig": "Top-left source cell pixels in a 443.5-unit cell, before preparation mirror. Import translations are normalized, applied after cell scaling.",
+    "eyeLandmarks": "Measured dark iris pixel-centre centroids in final 512px canonical source.",
+    "canonicalHeadNormalized": [
+      [
+        0.240039,
+        0.294063
+      ],
+      [
+        0.391133,
+        0.311426
+      ],
+      [
+        0.246768,
+        0.356904
+      ]
+    ],
+    "screen": "SwiftUI and Core Animation points; independent of physical device pixel scale.",
+    "opening": "Same framing at 1254px and 512px; one rigid drawing and continuous uniform scale/rotation; native welcome clock retained."
+  },
+  "prompts": {
+    "desertCanonicalPrompt": "Use case: background-extraction / identity-preserve. Asset type: canonical production full-body transparent game sprite, square at least 1536x1536 requested. Edit target: supplied original Sandtail desert guardian. Faithfully preserve EXACT same character, pose, silhouette, eye spacing and head shape, camera view facing LEFT, body proportions, sandy tan skin with brown spots, two brown head horns, many rocky tan/brown back spikes, orange knitted scarf, cream chin belly and toenails, brown leather clock harness and large complete cream clock dial with dark readable tick marks and hands. Preserve every detail, same polished soft 3D lighting. Remove only white background AND all ground shadow, retain entire character including tail, toes and horns. Place same composition on square canvas with at least 5% transparent margin; opaque character, genuine clean alpha outside, no halo, no holes, no specks. Restore crisp fine detail for large welcome illustration. No redesign, no additional elements, no text, no grid, no effects. Clock MUST remain complete and opaque, no transparent dial.",
+    "desertCanonicalCleanPrompt": "Use case: background-extraction. Edit target supplied full body Sandtail cutout. Change ONLY alpha cleanup, preserve exact illustration pixel framing scale face details clock scarf horns skin colors. Remove every red/yellow speck or haze outside silhouette and clean thin colored halo on edges especially spikes tail feet. Actual alpha 0 outside character, smooth antialiased outline, solid opaque character interior. Preserve full square original resolution at least 1254x1254. No ground shadow. No crop zoom pose alteration or redesign.",
+    "desertReactionPrompt": "Use case: identity-preserve. Production transparent animation spritesheet EXACTLY 4 columns x 2 rows, eight equal square cells, 2048x1024 preferred. Input 1 identity reference Sandtail desert guardian canonical. Match EXACT same eye spacing face shape sandy tan body, brown spots, two brown forehead horns, rocky layered tan brown dorsal spikes, orange knitted scarf, cream chin belly toes, brown leather strap and big COMPLETE opaque cream dial with dark tick marks and hands. Same polished 3D texture lighting and camera facing LEFT. All full bodies including tail/horns/toes, 8% margin, fixed scale standing silhouette 80% cell height, feet at 90% baseline in every planted pose, do not individually zoom to fit. Row 1 left to right: 1 neutral idle SAME POSE AS REFERENCE; 2 wrong-answer confused face eyebrow raised palms slightly turned outward BELOW chin; 3 clap palms OPEN in front of chest BELOW chin; 4 clap palms TOUCH at chest BELOW chin. Row 2: 5 second clap palms OPEN; 6 second clap palms TOUCH; 7 deep crouch knees bent arms forward feet planted; 8 landing knees slightly bent feet planted. Preserve head size, no head reshaping. Entire character within each equal cell. Genuine transparent background, NO white/checkered backdrop, NO colored halo or loose specks, NO ground shadows, NO lines labels text effects or trails.",
+    "desertExtractionPrompt": "Use case: background-extraction. Edit target supplied exact 4x2 eight-cell Sandtail game spritesheet. Change ONLY alpha cleanup. Remove ALL off-white/pink/beige background and colored haze around all characters; output actual fully transparent alpha zero outside the silhouettes. Remove every detached speck and ALL ground shadows. Preserve EXACT pixel composition 4x2 grid, positioning scale poses colors facial details and clock faces. Opaque character interiors, opaque white eyes and cream clock faces belly chin toenails. Clean antialiased edges, no halo, no checkerboard, no labels. Do NOT redraw character or crop/reposition cells. Same landscape 2:1 canvas.",
+    "desertMotionPrompt": "Use case: identity-preserve. Asset type production transparent 4 column by 2 row spritesheet EIGHT EQUAL SQUARE CELLS 2048x1024 preferred. Reference image is EXACT Sandtail the desert dinosaur: sandy tan rounded skin brown spots, two brown head horns, dense rocky tan brown dorsal spikes, orange knitted scarf, cream muzzle belly toenails, brown leather clock strap big opaque cream dial and dark marks hands. Exact same polished soft 3D lighting, face proportions eye spacing head size. Full body and tail in EVERY cell, fixed camera 3/4 facing LEFT except turn views, standing size 80% cell height feet 90% baseline no per-cell automatic fitting. Row1: 1 upward takeoff legs stretched arms up; 2 airborne tucked legs for BACKFLIP upright drawing code rotates it; 3 stumble reaching BOTH hands forward worried face; 4 fallen supporting on BOTH PALMS ground y90%, legs and tail behind, head raised enough readable. Row2: 5 pushing up weight on BOTH PALMS SAME HAND CONTACT as row1 cell4; 6 rear left 3/4 view of standing character; 7 BACK view; 8 rear right 3/4 view. Include full scarf and clock where visible. Keep same head/body physical size, avoid exaggerated distorted heads. Genuine transparent alpha outside solid opaque character, clean edges no halo specks shadow, no grids text labels numbers motion trails effects.",
+    "desertMotionExtractionPrompt": "Use case: background-extraction. Exact same 4x2 spritesheet, preserve all eight drawings and exact pixel positions. Remove white backdrop and ALL ground shadows ONLY. Output REAL transparent alpha zero outside solid opaque character, including between legs and hands. All eyes cream clock faces and cream bellies stay opaque. No white pink beige or checkerboard backdrop, no halo or stray pixels. Same grid and landscape dimensions, NO pose alteration.",
+    "desertTurnPrompt": "Use case: identity-preserve. Transparent production spritesheet EXACT 4 columns 2 rows eight equally sized square cells. Sandtail SAME exact dinosaur as reference, sandy skin brown spots, TWO brown horns on head, dense layered tan and brown rocky dorsal spikes, orange knitted scarf, cream chin belly toes, big cream dial with dark hands on brown leather harness. Same 3D lighting and same head/eye/body proportions. Eight LOGICALLY ORDERED upright standing views for ONE FULL TURN, same size and same planted baseline 90% cell height, character height80%, full tail/horns/toes visible with 6% safe padding. Row1: 1 front threequarter facing LEFT as reference; 2 LEFT PROFILE; 3 REAR LEFT threequarter; 4 straight BACK. Row2: 5 REAR RIGHT threequarter; 6 RIGHT PROFILE; 7 FRONT RIGHT threequarter; 8 front threequarter facing LEFT EXACT reference pose. No jumping, no deformation or shrinking. Clock appears only on correct side, not duplicate. Opaque character on actual fully transparent alpha zero backdrop. No white backdrop, checkerboard, specks, glow, ground shadow, effects, motion trails, lines labels or text.",
+    "desertTurnExtractionPrompt": "Use case background-extraction. Remove ONLY white background and all ground shadows from exact supplied 4x2 dinosaur turnaround sprite sheet. Preserve all eight drawings at exact same pixel position scale colors face eyes horns clocks clothing. Actual alpha zero outside silhouettes, solid opaque character interiors, antialiased clean edges, no halo no stray specks no white checkerboard or colored haze. White eyes cream dial belly chin and toes remain opaque. Same 2:1 canvas and exact grid.",
+    "desertOpeningRestorationPrompt": "Use case: identity-preserve. Exact high resolution detail restoration of THIS transparent idle sprite for large opening. Output square at least1254x1254, preferably1536x1536. Keep EXACT pixel-relative framing and transparent margins, silhouette pose face proportions eye spacing horns scarf clock toe and tail positions. Recreate crisp detailed 3D texture from exact same illustration, not a resized blurry bitmap. Sandtail tan desert guardian, two brown horns and rocky dorsal spikes, orange knit scarf, cream chin belly toes, brown leather clock with cream dial dark hands and ticks. Exact original colors lighting and camera facing LEFT. Do NOT zoom crop rescale within canvas or reposition character. Genuine transparent background alpha0 outside and opaque inside with clean antialiasing. No halo specks ground shadow or added details. This must align perfectly with the supplied low-resolution sprite when downscaled.",
+    "desertOpeningFinalPrompt": "Use case identity-preserve. TRUE DETAIL RESTORATION of this EXACT supplied 444x444 sprite to 1536x1536 (minimum1254) on transparent square. Preserve EXACT normalized locations and shapes of every part, especially eyes at (0.23,0.25) and (0.39,0.27), head horns top y0.04, feet y0.925, tail end x0.96. Keep the small character within the same square margins, same narrower face and small body as supplied. Do not zoom to fill the canvas. Do not change proportions. Same Sandtail sandy dinosaur orange scarf brown horns layered rock spikes and leather clock strap. Lock pixel-relative silhouette, eyes chin nose mouth clothing clock and foot locations. Restore crisp high resolution skin texture knitted scarf detailed rocky spikes and leather seams with same 3D lighting. Opaque complete character and clock dial with dark tick marks hands. Alpha0 outside; no halo specks shadow backdrop text labels or effects. Use ONLY this exact cutout as reference."
+  },
+  "profileBehavior": {
+    "unlock": "World 2 existing completion rules, boss level 20. A pending unlock is persisted before world travel and recovered at launch even without a next level.",
+    "selection": "Swap the active identity with the chosen stable collection slot. Transfer each custom color; translate each unchanged native channel to the selected identity native palette.",
+    "resident": "Always render the stored slot occupant using that occupant own original palette and ground baseline.",
+    "reset": "Clear pending unlock and collection occupants, select main, translate unchanged native channels and retain custom choices.",
+    "reveal": "Desert reveal switches from old to new identity once at 0.68; both paintings are fully opaque, never a frozen crossfade."
+  },
+  "verification": {
+    "coreCommands": [
+      "Tools/test-dino.sh --characters",
+      "Tools/test-dino.sh --animation-timing"
+    ],
+    "build": "xcodebuild build-for-testing, app and UI-test targets, temporary DerivedData outside source tree.",
+    "devices": [
+      "iPhone 17 Pro simulator, iOS 27",
+      "iPad Air 11-inch M4 simulator, iOS 27"
+    ],
+    "uiScenarios": [
+      "Cold welcome and correct/wrong portrait reactions",
+      "Four simultaneous custom colors, full figure, portrait and landscape HUD",
+      "All four different result clips",
+      "Unlock, collection swap, persisted restart",
+      "Jungle unlock then desert unlock, blue active skin with original resident palettes in both swap directions"
+    ],
+    "visualReview": "Native simulator recordings, original decoded samples and slowed playback; no invented frames. All-source-pose contact sheets on light/dark backgrounds, clock closeups, isolated head layers; actual iPhone/iPad screens in portrait and landscape.",
+    "previewSource": "Native simulator video, trimmed and encoded at 1920x1080 maximum; original frame timing retained.",
+    "coreResults": {
+      "characters": 757829,
+      "animationTimingAndAssets": 288696,
+      "status": "PASS"
+    },
+    "offlineRasterChecks": "Every used pose at original palette, four simultaneous contrasting colors, all four individual material changes, pale palette, dark palette, and isolated head. Light and dark backgrounds; neutral clock closeups.",
+    "limitations": "Simulator checks; no physical-device thermal, memory-pressure or frame-rate certification."
+  },
+  "rig": {
+    "desert-airborne": {"chinCellPixels":[],"clockSearchCellPixels":[244,216,69,106],"dorsalCellPixels":[[283,0],[283,43],[290,112],[282,169],[303,208],[313,300],[500,300],[500,0]],"eyeROIsCellPixels":[],"frontRockCellPixels":[[294.5,80.8],[317.8,79.1],[336.9,82.6],[331.7,102.5],[317.8,121.5],[304.9,125]],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[],"headReferenceTransform":[77,-24,0.94],"importTranslationNormalized":[0,0.015],"opaqueBoundsPixels":[75,24,424,488],"opaqueSolePixelCentreNormalized":0.9541015625,"palmsCellPixels":[[66,176,91,67],[155,195,99,72]],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-clap-contact": {"chinCellPixels":[],"clockSearchCellPixels":[211,222,100,112],"dorsalCellPixels":[[234,0],[234,39],[239,80],[240,152],[227,191],[250,209],[284,244],[311,289],[500,289],[500,0]],"eyeROIsCellPixels":[[84,88,39,61],[148,89,51,70]],"frontRockCellPixels":[],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[197,226],[209,219],[214,276],[198,286]],[[315.3,283.2],[343.9,297.9],[343.9,314.4],[317,299.7]]],"headReferenceTransform":[0,0,1],"importTranslationNormalized":[0,0.0397],"opaqueBoundsPixels":[66,39,489,493],"opaqueSolePixelCentreNormalized":0.9638671875,"palmsCellPixels":[[86,214,93,102]],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-clap-contact-2": {"chinCellPixels":[],"clockSearchCellPixels":[211,222,100,112],"dorsalCellPixels":[[234,0],[234,39],[239,80],[240,152],[227,191],[250,209],[284,244],[311,289],[500,289],[500,0]],"eyeROIsCellPixels":[[84,88,39,61],[148,89,51,70]],"frontRockCellPixels":[],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[197,226],[209,219],[214,276],[198,286]],[[315.3,283.2],[343.9,297.9],[343.9,314.4],[317,299.7]]],"headReferenceTransform":[0,0,1],"importTranslationNormalized":[0,0.0397],"opaqueBoundsPixels":[66,39,488,493],"opaqueSolePixelCentreNormalized":0.9638671875,"palmsCellPixels":[[86,214,93,102]],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-clap-open": {"chinCellPixels":[],"clockSearchCellPixels":[211,222,100,112],"dorsalCellPixels":[[234,0],[234,39],[239,80],[240,152],[227,191],[250,209],[284,244],[311,289],[500,289],[500,0]],"eyeROIsCellPixels":[[84,88,39,61],[148,89,51,70]],"frontRockCellPixels":[],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[197,226],[209,219],[214,276],[198,286]],[[315.3,283.2],[343.9,297.9],[343.9,314.4],[317,299.7]]],"headReferenceTransform":[0,0,1],"importTranslationNormalized":[0,0.0397],"opaqueBoundsPixels":[53,39,488,493],"opaqueSolePixelCentreNormalized":0.9638671875,"palmsCellPixels":[[38,213,78,91],[134,215,73,92]],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-clap-open-2": {"chinCellPixels":[],"clockSearchCellPixels":[211,222,100,112],"dorsalCellPixels":[[234,0],[234,39],[239,80],[240,152],[227,191],[250,209],[284,244],[311,289],[500,289],[500,0]],"eyeROIsCellPixels":[[84,88,39,61],[148,89,51,70]],"frontRockCellPixels":[],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[197,226],[209,219],[214,276],[198,286]],[[315.3,283.2],[343.9,297.9],[343.9,314.4],[317,299.7]]],"headReferenceTransform":[0,0,1],"importTranslationNormalized":[0,0.0397],"opaqueBoundsPixels":[53,40,488,494],"opaqueSolePixelCentreNormalized":0.9658203125,"palmsCellPixels":[[38,213,78,91],[134,215,73,92]],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-crouch": {"chinCellPixels":[],"clockSearchCellPixels":[239,228,87,104],"dorsalCellPixels":[[234,0],[234,39],[239,80],[240,152],[227,191],[250,209],[284,244],[311,289],[500,289],[500,0]],"eyeROIsCellPixels":[[79,111,34,54],[141,112,46,61]],"frontRockCellPixels":[],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[226,244],[242,245],[252,286],[239,302]],[[319,278],[355,290],[358,317],[321,311]]],"headReferenceTransform":[-6,28,0.95],"importTranslationNormalized":[0,0.0397],"opaqueBoundsPixels":[36,69,494,494],"opaqueSolePixelCentreNormalized":0.9658203125,"palmsCellPixels":[[26,263,82,47],[130,280,83,57]],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-fallen": {"chinCellPixels":[[159.3828125,285.8911875],[171.509765625,284.158765625],[183.63671875,289.35603125],[192.298828125,299.7505625],[194.8974609375,311.0113046875],[187.9677734375,322.272046875],[174.1083984375,330.93415625],[152.453125,337.86384375],[129.931640625,342.1948984375],[107.41015625,341.3286875],[85.7548828125,338.7300546875],[66.6982421875,331.8003671875],[53.705078125,324.00446875],[47.6416015625,313.6099375],[69.296875,321.4058359375],[92.6845703125,327.4693125],[120.4033203125,328.3355234375],[140.326171875,322.272046875],[153.3193359375,310.14509375],[159.3828125,296.28571875]],"clockSearchCellPixels":[250,303,80,85],"dorsalCellPixels":[[224,0],[224,151],[232,216],[229,259],[251,296],[330,306],[500,306],[500,0]],"eyeROIsCellPixels":[[88,215,37,49],[145,219,46,61]],"frontRockCellPixels":[],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[305.7,317.9],[334.3,319.7],[337.8,333.5],[309.2,331.8]],[[280.6,395.8],[251.2,417.4],[243.4,412.4],[264.2,389]]],"headReferenceTransform":[11,134,0.9],"importTranslationNormalized":[0,-0.004],"opaqueBoundsPixels":[30,156,477,494],"opaqueSolePixelCentreNormalized":0.9658203125,"palmsCellPixels":[[22.521484375,398.498609375,78.8251953125,38.9794921875],[146.3896484375,398.498609375,85.7548828125,40.7119140625]],"protectedBrowsCellPixels":[[65.83203125,204.467359375,41.578125,22.521484375],[129.931640625,203.6011484375,44.1767578125,21.6552734375]],"protectedMouthCellPixels":[[89.2197265625,316.2085703125],[95.283203125,307.5464609375],[107.41015625,302.3491953125],[121.26953125,302.3491953125],[133.396484375,304.947828125],[142.05859375,314.4761484375],[140.326171875,321.4058359375],[122.1357421875,323.1382578125],[104.8115234375,323.1382578125]],"scarfCellPixels":[[83.15625,340.4624765625],[122.1357421875,345.6597421875],[159.3828125,339.596265625],[189.7001953125,325.736890625],[209.623046875,308.412671875],[218.28515625,295.4195078125],[226.0810546875,302.3491953125],[229.5458984375,317.9409921875],[222.6162109375,335.2652109375],[206.158203125,352.5894296875],[183.63671875,369.0474375],[167.1787109375,376.8433359375],[168.044921875,414.09040625],[155.0517578125,426.217359375],[109.142578125,422.752515625],[104.8115234375,388.104078125],[94.4169921875,373.3784921875],[83.15625,362.11775]],"size":[512,512]},
+    "desert-idle": {"chinCellPixels":[],"clockSearchCellPixels":[211,222,100,112],"dorsalCellPixels":[[234,0],[234,39],[239,80],[240,152],[227,191],[250,209],[284,244],[311,289],[500,289],[500,0]],"eyeROIsCellPixels":[[84,88,39,61],[148,89,51,70]],"frontRockCellPixels":[],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[197,226],[209,219],[214,276],[198,286]],[[315.3,283.2],[343.9,297.9],[343.9,314.4],[317,299.7]]],"headReferenceTransform":[0,0,1],"importTranslationNormalized":[0,0.0333],"opaqueBoundsPixels":[66,35,491,493],"opaqueSolePixelCentreNormalized":0.9638671875,"palmsCellPixels":[],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-landing": {"chinCellPixels":[],"clockSearchCellPixels":[230,228,97,100],"dorsalCellPixels":[[234,0],[234,39],[239,80],[240,152],[227,191],[250,209],[284,244],[311,289],[500,289],[500,0]],"eyeROIsCellPixels":[[94,79,33,54],[157,83,43,64]],"frontRockCellPixels":[],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[212,229],[227,220],[236,270],[220,283]],[[319,272],[349,284],[352,308],[318,302]]],"headReferenceTransform":[10,-7,0.95],"importTranslationNormalized":[0,0.0397],"opaqueBoundsPixels":[49,40,489,493],"opaqueSolePixelCentreNormalized":0.9638671875,"palmsCellPixels":[[29,270,77,49],[134,279,73,58]],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-opening-idle": {"chinCellPixels":[],"clockSearchCellPixels":[211,222,100,112],"dorsalCellPixels":[[234,0],[234,39],[239,80],[240,152],[227,191],[250,209],[284,244],[311,289],[500,289],[500,0]],"eyeROIsCellPixels":[[84,88,39,61],[148,89,51,70]],"frontRockCellPixels":[],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[197,226],[209,219],[214,276],[198,286]],[[315.3,283.2],[343.9,297.9],[343.9,314.4],[317,299.7]]],"headReferenceTransform":[0,0,1],"importTranslationNormalized":[0,0.0333],"opaqueBoundsPixels":[161,86,1204,1210],"opaqueSolePixelCentreNormalized":0.965311004784689,"palmsCellPixels":[],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[1254,1254]},
+    "desert-push-up": {"chinCellPixels":[[154.60132812499998,208.61824218750002],[167.59449218749998,206.88582031250002],[179.72144531249998,212.08308593750002],[189.24976562499998,223.343828125],[191.84839843749998,235.47078125],[187.51734374999998,246.7315234375],[174.52417968749998,257.12605468749996],[155.46753906249998,264.05574218749996],[132.94605468749998,268.38679687499996],[107.82593750000001,268.38679687499996],[87.90308593750001,265.78816406249996],[68.84644531250001,259.72468749999996],[54.120859375,251.062578125],[43.726328125,238.935625],[58.4519140625,244.9991015625],[74.90992187500001,249.33015625],[96.56519531250001,252.795],[118.22046875,251.062578125],[136.41089843749998,241.5342578125],[146.80542968749998,227.6748828125],[154.60132812499998,217.28035156250002]],"clockSearchCellPixels":[220,239,91,103],"dorsalCellPixels":[[214,0],[214,88],[222,155],[219,205],[249,233],[302,297],[500,297],[500,0]],"eyeROIsCellPixels":[[62,132,38,54],[120,137,48,62]],"frontRockCellPixels":[],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[315.7,259.7],[341.7,267.5],[344.3,279.7],[319.2,275.3]],[[287.1,329.9],[260.3,364.6],[252.5,369.7],[249.9,360.1],[275,329.9]]],"headReferenceTransform":[-13,57,0.96],"importTranslationNormalized":[-0.04,0.055],"opaqueBoundsPixels":[20,98,459,494],"opaqueSolePixelCentreNormalized":0.9658203125,"palmsCellPixels":[[22,361,215,63]],"protectedBrowsCellPixels":[[62.78296875,131.52546875000002,32.0498046875,20.7890625],[122.5515234375,132.39167968750002,51.1064453125,21.6552734375]],"protectedMouthCellPixels":[[86.17066406250001,236.3369921875],[93.96656250000001,230.273515625],[107.82593750000001,228.54109375],[120.8191015625,231.1397265625],[128.61499999999998,237.203203125],[126.0163671875,244.132890625],[114.755625,248.4639453125],[101.76246093750001,248.4639453125],[90.50171875000001,244.132890625]],"scarfCellPixels":[[84.43824218750001,266.65437499999996],[125.15015625,270.98542968749996],[164.12964843749998,264.92195312499996],[197.04566406249998,249.33015625],[218.70093749999998,225.9424609375],[226.4968359375,213.81550781250002],[234.292734375,224.2100390625],[241.222421875,238.0694140625],[237.757578125,253.6612109375],[217.83472656249998,274.45027343749996],[197.91187499999998,289.17585937499996],[170.19312499999998,304.76765624999996],[168.46070312499998,351.54304687499996],[148.53785156249998,361.07136718749996],[132.07984374999998,352.40925781249996],[129.48121093749998,312.56355468749996],[111.29078125,309.96492187499996],[92.23414062500001,295.23933593749996]],"size":[512,512]},
+    "desert-stumble": {"chinCellPixels":[[201.8271484375,208.7152578125],[213.9541015625,208.7152578125],[225.21484375,215.6449453125],[232.14453125,226.9056875],[233.0107421875,239.032640625],[224.3486328125,248.5609609375],[207.0244140625,256.356859375],[184.5029296875,259.821703125],[164.580078125,258.9554921875],[148.1220703125,255.4906484375],[129.931640625,249.427171875],[116.072265625,239.032640625],[135.12890625,244.22990625],[153.3193359375,245.0961171875],[176.70703125,241.6312734375],[193.1650390625,232.9691640625],[200.9609375,220.8422109375]],"clockSearchCellPixels":[246,260,84,98],"dorsalCellPixels":[[262,0],[262,105],[271,170],[264,210],[280,253],[316,282],[345,310],[500,310],[500,0]],"eyeROIsCellPixels":[[115,127,34,47],[173,132,44,58]],"frontRockCellPixels":[[245,111],[268,100],[290,100],[290,120],[276,146],[268,156],[260,132]],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[],"headReferenceTransform":[34,46,0.95],"importTranslationNormalized":[0,0.004],"opaqueBoundsPixels":[7,75,488,493],"opaqueSolePixelCentreNormalized":0.9638671875,"palmsCellPixels":[[2,211,106,82],[117,249,105,72]],"protectedBrowsCellPixels":[[118.6708984375,127.2914296875,33.7822265625,23.3876953125],[187.1015625,128.157640625,37.2470703125,27.71875]],"protectedMouthCellPixels":[[128.19921875,232.9691640625],[135.12890625,223.44084375],[148.1220703125,215.6449453125],[162.84765625,215.6449453125],[175.8408203125,222.5746328125],[183.63671875,234.7015859375],[181.904296875,239.032640625],[154.185546875,239.032640625],[133.396484375,238.1664296875]],"scarfCellPixels":[[129.931640625,259.821703125],[165.4462890625,264.1527578125],[200.0947265625,257.2230703125],[230.412109375,243.3636953125],[249.46875,227.7718984375],[257.2646484375,230.37053125],[266.79296875,245.0961171875],[265.9267578125,261.554125],[244.271484375,279.7445546875],[215.6865234375,294.470140625],[179.3056640625,301.399828125],[186.2353515625,334.31584375],[173.2421875,345.5765859375],[142.9248046875,340.3793203125],[136.861328125,318.724046875],[120.4033203125,325.653734375],[109.142578125,314.3929921875],[112.607421875,298.8011953125],[123.8681640625,287.540453125]],"size":[512,512]},
+    "desert-takeoff": {"chinCellPixels":[],"clockSearchCellPixels":[212,227,78,96],"dorsalCellPixels":[[264,0],[264,43],[265,112],[252,169],[294,205],[298,294],[500,294],[500,0]],"eyeROIsCellPixels":[[132,56,35,45],[182,60,41,59]],"frontRockCellPixels":[[243.4,59.2],[265.1,50.5],[280.6,48.8],[283.3,68.7],[272.9,89.5],[265.9,98.2],[259,75.6]],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[202,221],[215,217],[215,280],[201,286]],[[289,289],[304,289],[303,306],[291,303]]],"headReferenceTransform":[45,-26,0.95],"importTranslationNormalized":[0,0.015],"opaqueBoundsPixels":[59,23,462,491],"opaqueSolePixelCentreNormalized":0.9599609375,"palmsCellPixels":[[43,145,94,85],[236,143,89,92]],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-turn-01": {"chinCellPixels":[],"clockSearchCellPixels":[195,231,99,108],"dorsalCellPixels":[[210,0],[210,58],[215,124],[207,182],[221,213],[242,226],[270,255],[294,295],[500,295],[500,0]],"eyeROIsCellPixels":[[84,88,39,61],[148,89,51,70]],"frontRockCellPixels":[[183,97],[196,77],[223,57],[230,77],[227,113],[213,135],[205,118],[196,103]],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[197,226],[209,219],[214,276],[198,286]],[[315.3,283.2],[343.9,297.9],[343.9,314.4],[317,299.7]]],"headReferenceTransform":[-15,22,0.9],"importTranslationNormalized":[0,0.035],"opaqueBoundsPixels":[50,62,489,493],"opaqueSolePixelCentreNormalized":0.9638671875,"palmsCellPixels":[],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-turn-02": {"chinCellPixels":[],"clockSearchCellPixels":[121,235,99,111],"dorsalCellPixels":[[206,0],[206,67],[203,128],[185,187],[218,208],[257,252],[296,300],[500,300],[500,0]],"eyeROIsCellPixels":[[92,101,38,61]],"frontRockCellPixels":[[184,100],[211,81],[239,65],[246,90],[237,116],[219,138],[204,119],[196,110]],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[240,278],[299,293],[302,316],[244,303]]],"headReferenceTransform":[-10,17,0.94],"importTranslationNormalized":[0,0.043],"opaqueBoundsPixels":[40,70,493,493],"opaqueSolePixelCentreNormalized":0.9638671875,"palmsCellPixels":[],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-turn-03": {"chinCellPixels":[],"clockSearchCellPixels":[93,234,53,107],"dorsalCellPixels":[[165,0],[165,65],[157,125],[166,168],[153,215],[177,257],[221,299],[500,299],[500,0]],"eyeROIsCellPixels":[],"frontRockCellPixels":[],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[143,285],[214,300],[218,321],[143,306]]],"headReferenceTransform":[70,16,0.9],"importTranslationNormalized":[0,0.043],"opaqueBoundsPixels":[88,70,436,493],"opaqueSolePixelCentreNormalized":0.9638671875,"palmsCellPixels":[],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-turn-04": {"chinCellPixels":[],"clockSearchCellPixels":[195,231,99,108],"dorsalCellPixels":[[153,87],[288,87],[325,228],[290,283],[250,304],[196,303],[154,277],[123,220]],"eyeROIsCellPixels":[],"frontRockCellPixels":[],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[135,230],[152,262],[152,300],[139,314],[118,270]],[[303,230],[285,264],[285,302],[302,316],[323,272]]],"headReferenceTransform":[80,22,0.9],"importTranslationNormalized":[0,0.045],"opaqueBoundsPixels":[116,71,394,493],"opaqueSolePixelCentreNormalized":0.9638671875,"palmsCellPixels":[],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-turn-05": {"chinCellPixels":[],"clockSearchCellPixels":[93,234,53,107],"dorsalCellPixels":[[165,0],[165,65],[157,125],[166,168],[153,215],[177,257],[221,299],[500,299],[500,0]],"eyeROIsCellPixels":[],"frontRockCellPixels":[],"geometryReflectedWithinSourcePose":true,"harnessCellPixels":[[[143,285],[214,300],[218,321],[143,306]]],"headReferenceTransform":[70,16,0.9],"importTranslationNormalized":[0,0.041],"opaqueBoundsPixels":[87,68,424,494],"opaqueSolePixelCentreNormalized":0.9658203125,"palmsCellPixels":[],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-turn-06": {"chinCellPixels":[],"clockSearchCellPixels":[121,235,99,111],"dorsalCellPixels":[[206,0],[206,67],[203,128],[185,187],[218,208],[257,252],[296,300],[500,300],[500,0]],"eyeROIsCellPixels":[[92,101,38,61]],"frontRockCellPixels":[[184,100],[211,81],[239,65],[246,90],[237,116],[219,138],[204,119],[196,110]],"geometryReflectedWithinSourcePose":true,"harnessCellPixels":[[[296.5,297],[179.5,231],[158.5,233],[159.5,249],[280.5,319],[290.5,318]]],"headReferenceTransform":[-10,17,0.94],"importTranslationNormalized":[0,0.041],"opaqueBoundsPixels":[15,67,471,493],"opaqueSolePixelCentreNormalized":0.9638671875,"palmsCellPixels":[],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-turn-07": {"chinCellPixels":[],"clockSearchCellPixels":[195,231,99,108],"dorsalCellPixels":[[210,0],[210,58],[215,124],[207,182],[221,213],[242,226],[270,255],[294,295],[500,295],[500,0]],"eyeROIsCellPixels":[[84,88,39,61],[148,89,51,70]],"frontRockCellPixels":[[184,100],[211,81],[239,65],[246,90],[237,116],[219,138],[204,119],[196,110]],"geometryReflectedWithinSourcePose":true,"harnessCellPixels":[[[322.5,286],[222.5,220],[204.5,227],[207.5,239],[315.5,309],[322.5,302]]],"headReferenceTransform":[-15,22,0.9],"importTranslationNormalized":[0,0.035],"opaqueBoundsPixels":[17,63,446,493],"opaqueSolePixelCentreNormalized":0.9638671875,"palmsCellPixels":[],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-turn-08": {"chinCellPixels":[],"clockSearchCellPixels":[221,237,101,109],"dorsalCellPixels":[[210,0],[210,58],[215,124],[207,182],[221,213],[242,226],[270,255],[294,295],[500,295],[500,0]],"eyeROIsCellPixels":[[84,88,39,61],[148,89,51,70]],"frontRockCellPixels":[[203,97],[216,77],[243,57],[250,77],[247,113],[233,135],[225,118],[216,103]],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[197,226],[209,219],[214,276],[198,286]],[[315.3,283.2],[343.9,297.9],[343.9,314.4],[317,299.7]]],"headReferenceTransform":[0,12,0.97],"importTranslationNormalized":[0,0.035],"opaqueBoundsPixels":[51,61,490,493],"opaqueSolePixelCentreNormalized":0.9638671875,"palmsCellPixels":[],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]},
+    "desert-wrong": {"chinCellPixels":[],"clockSearchCellPixels":[211,222,100,112],"dorsalCellPixels":[[234,0],[234,39],[239,80],[240,152],[227,191],[250,209],[284,244],[311,289],[500,289],[500,0]],"eyeROIsCellPixels":[[84,88,39,61],[148,89,51,70]],"frontRockCellPixels":[],"geometryReflectedWithinSourcePose":false,"harnessCellPixels":[[[197,226],[209,219],[214,276],[198,286]],[[315.3,283.2],[343.9,297.9],[343.9,314.4],[317,299.7]]],"headReferenceTransform":[0,0,1],"importTranslationNormalized":[0,0.0397],"opaqueBoundsPixels":[43,39,488,493],"opaqueSolePixelCentreNormalized":0.9638671875,"palmsCellPixels":[[27,228,75,68],[156,230,76,79]],"protectedBrowsCellPixels":[],"protectedMouthCellPixels":[],"scarfCellPixels":[],"size":[512,512]}
+  }
+}

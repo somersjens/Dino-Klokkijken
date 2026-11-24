@@ -1,0 +1,40 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/MapOpeningView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.launch.title.firstLine",
+        "location": {
+          "startingColumn": 62,
+          "startingLine": 28
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.launch.title.secondLine",
+        "location": {
+          "startingColumn": 63,
+          "startingLine": 29
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.launch.title.firstLine",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 747
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.launch.title.secondLine",
+        "location": {
+          "startingColumn": 87,
+          "startingLine": 747
+        }
+      }
+    ]
+  },
+  "version": 1
+}

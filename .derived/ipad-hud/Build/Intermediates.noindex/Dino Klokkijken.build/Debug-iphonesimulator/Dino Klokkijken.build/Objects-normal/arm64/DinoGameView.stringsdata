@@ -1,0 +1,96 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/DinoGameView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.dayPart.changeSettings",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 267
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.exitTitle",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 335
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.exitTitle",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 329
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.keepPlaying",
+        "location": {
+          "startingColumn": 59,
+          "startingLine": 340
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.exit",
+        "location": {
+          "startingColumn": 64,
+          "startingLine": 342
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.clock.arrowControls",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 563
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.question.setAnalog",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 612
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.clock.check",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 765
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 1062
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.example.another",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 1108
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.ready",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 1112
+        }
+      }
+    ]
+  },
+  "version": 1
+}
