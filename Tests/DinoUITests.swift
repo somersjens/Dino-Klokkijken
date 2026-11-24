@@ -8754,3 +8754,499 @@ extension DinoUITests {
         tap("personalize.done")
     }
 }
+
+extension DinoUITests {
+    func testVillageWelcomeAndPortraitReactions() {
+        launchVillage()
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout: 20))
+        waitForMapOpeningToFinish()
+        saveScreenshot("village-cold-start-map")
+
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        app.launch()
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 20))
+        assertCompanionInPortrait(app.descendants(matching: .any)["dino.character"])
+        saveScreenshot("village-original-portrait")
+        tap("header.dino")
+        for (part, color) in [("bandana", "purple"), ("spikes", "green"), ("body", "blue"), ("belly", "pink")] {
+            tap("personalize.\(part).\(color)")
+        }
+        saveScreenshot("village-custom-full")
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout: 8))
+        saveScreenshot("village-custom-portrait")
+
+        var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.chooseAnalog)), seed: seed)
+        let first = generator.next(index: 0, difficultyForKind: { _ in .introduction })
+        let oldTitle = app.staticTexts["question.title"].label
+        tap("question.option.\(first.responses.firstIndex(of: first.expectedAnswer)!)")
+        expectation(for: NSPredicate { _, _ in self.app.staticTexts["question.title"].label != oldTitle }, evaluatedWith: nil)
+        waitForExpectations(timeout: 10)
+        let second = generator.next(index: 1, difficultyForKind: { _ in .familiar })
+        tap("question.option.\(second.responses.firstIndex { $0 != second.expectedAnswer }!)")
+        if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 8))
+        saveScreenshot("village-wrong-portrait")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        RunLoop.current.run(until: Date().addingTimeInterval(1))
+        saveScreenshot("village-landscape-hud")
+        tap("header.dino")
+        tap("personalize.resetColors")
+        XCTAssertEqual(app.descendants(matching: .any)["personalize.preview"].value as? String, "4")
+        saveScreenshot("village-original-after-resetting-colors")
+    }
+
+    func testVillageWorldUnlockAndCollectionSwap() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "38"
+        app.launchEnvironment["DINO_TEST_EARLY_BOSS_LEVEL"] = "40"
+        app.launch()
+        waitForMapOpeningToFinish()
+        begin(39)
+        finishVillageRouteLesson()
+        XCTAssertTrue(app.buttons["result.next"].waitForExistence(timeout: 30))
+        XCTAssertEqual(app.descendants(matching: .any)["dino.pirouette"].value as? String, "0")
+        tap("result.next")
+        XCTAssertTrue(app.descendants(matching: .any)["map.dino.41"].waitForExistence(timeout: 30))
+        XCTAssertTrue(app.descendants(matching: .any)["map.worldJump"].waitForNonExistence(timeout: 12))
+        waitForMapOpeningToFinish()
+        saveScreenshot("village-unlocked-on-map")
+
+        tap("header.dino")
+        let preview = app.descendants(matching: .any)["personalize.preview"]
+        XCTAssertEqual(preview.value as? String, "4")
+        tap("personalize.body.blue")
+        revealThemeChoice("personalize.character.0")
+        XCTAssertTrue(app.buttons["personalize.character.0"].isEnabled)
+        XCTAssertFalse(app.buttons["personalize.character.4"].exists)
+        tap("personalize.character.0")
+        XCTAssertEqual(preview.value as? String, "0")
+        XCTAssertTrue(app.buttons["personalize.character.4"].isEnabled)
+        tap("personalize.done")
+        _ = revealMapNode(40)
+        saveScreenshot("village-native-resident-after-swap")
+
+        app.terminate()
+        for key in ["DINO_TEST_COMPLETED_LEVEL", "DINO_TEST_EARLY_BOSS_LEVEL"] {
+            app.launchEnvironment.removeValue(forKey: key)
+        }
+        app.launch()
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout: 20))
+        waitForMapOpeningToFinish()
+        tap("header.dino")
+        XCTAssertEqual(preview.value as? String, "0")
+        revealThemeChoice("personalize.character.4")
+        tap("personalize.character.4")
+        XCTAssertEqual(preview.value as? String, "4")
+        saveScreenshot("village-reselected-after-relaunch")
+    }
+
+    private func finishVillageRouteLesson() {
+        let level = DinoLevelCatalog.level(39)!
+        var rng = SeededGenerator(seed: seed)
+        let questions = DinoQuestionGenerator.generate(level: level, using: &rng)
+        for (index, question) in questions.enumerated() {
+            if app.buttons["demo.ready"].exists { tap("demo.ready") }
+            if question.kind == .setAnalog {
+                // Earn the remaining route star through the four reading
+                // questions, leaving the clock-setting prompt incorrect.
+                tap("question.hand.minutes")
+                tap("question.analog.more")
+                tap("question.hand.hours")
+                tap("question.analog.more")
+                tap("question.confirm")
+                if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+                XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 8))
+                tap("question.next")
+            } else {
+                let option = question.responses.firstIndex(of: question.expectedAnswer)!
+                tap("question.option.\(option)")
+            }
+            let advanced = NSPredicate { _, _ in
+                index + 1 == questions.count
+                    ? self.app.buttons["result.map"].exists
+                    : self.app.staticTexts["\(index + 2)/\(questions.count)"].exists
+            }
+            expectation(for: advanced, evaluatedWith: nil)
+            waitForExpectations(timeout: 12)
+        }
+    }
+
+    func testVillageResultAnimations() {
+        let landscape = UIDevice.current.userInterfaceIdiom == .pad
+        if landscape { XCUIDevice.shared.orientation = .landscapeLeft }
+        for (correct, clip) in [(0, "stumble"), (3, "openingJump"), (4, "pirouette"), (5, "backflip")] {
+            app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+            app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "41"
+            app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = String(correct)
+            launchVillage()
+            XCTAssertTrue(app.buttons["result.retry"].waitForExistence(timeout: 25))
+            let actor = app.descendants(matching: .any)["dino.\(clip)"]
+            let finished = NSPredicate(format: "value == %@", "4|ready:true|started:true|finished:true")
+            expectation(for: finished, evaluatedWith: actor)
+            waitForExpectations(timeout: 40)
+            saveScreenshot("village-\(landscape ? "landscape" : "portrait")-result-\(clip)")
+        }
+    }
+
+    func testVillageLandscapeWelcomeAndOrdinaryLevel() {
+        XCUIDevice.shared.orientation = .landscapeLeft
+        launchVillage()
+        XCTAssertTrue(app.buttons["header.dino"].waitForExistence(timeout: 20))
+        waitForMapOpeningToFinish()
+        saveScreenshot("village-landscape-cold-start")
+        begin(41)
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 15))
+        XCTAssertEqual(app.descendants(matching: .any)["dino.character"].value as? String, "4")
+        saveScreenshot("village-landscape-ordinary-level")
+    }
+
+    private func launchVillage() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "40"
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "4"
+        app.launch()
+    }
+}
+
+extension DinoUITests {
+    func testCaveWelcomeAndReactions() {
+        launchCave()
+        waitForMapOpeningToFinish()
+        saveScreenshot("prisma-cold-start-map")
+
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        launchCave()
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 20))
+        let companion = app.descendants(matching: .any)["dino.character"]
+        XCTAssertEqual(companion.value as? String, "5")
+        assertCompanionInPortrait(companion)
+        saveScreenshot("prisma-native-hud")
+
+        tap("header.dino")
+        for (part, color) in [("bandana", "purple"), ("spikes", "green"), ("body", "red"), ("belly", "pink")] {
+            tap("personalize.\(part).\(color)")
+        }
+        saveScreenshot("prisma-custom-full")
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout: 8))
+        saveScreenshot("prisma-custom-hud")
+
+        var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.chooseAnalog)), seed: seed)
+        let first = generator.next(index: 0, difficultyForKind: { _ in .introduction })
+        let oldTitle = app.staticTexts["question.title"].label
+        tap("question.option.\(first.responses.firstIndex(of: first.expectedAnswer)!)")
+        expectation(for: NSPredicate { _, _ in self.app.staticTexts["question.title"].label != oldTitle }, evaluatedWith: nil)
+        waitForExpectations(timeout: 10)
+        let second = generator.next(index: 1, difficultyForKind: { _ in .familiar })
+        tap("question.option.\(second.responses.firstIndex { $0 != second.expectedAnswer }!)")
+        if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 8))
+        saveScreenshot("prisma-after-wrong")
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        RunLoop.current.run(until: Date().addingTimeInterval(1))
+        tap("question.next")
+        XCTAssertTrue(companion.waitForExistence(timeout: 8))
+        XCTAssertEqual(companion.value as? String, "5")
+        saveScreenshot("prisma-landscape-hud")
+    }
+
+    func testCaveResultAnimations() {
+        if UIDevice.current.userInterfaceIdiom == .pad { XCUIDevice.shared.orientation = .landscapeLeft }
+        app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "51"
+        for (correct, clip) in [(0, "stumble"), (3, "openingJump"), (4, "pirouette"), (5, "backflip")] {
+            app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = String(correct)
+            launchCave()
+            XCTAssertTrue(app.buttons["result.retry"].waitForExistence(timeout: 25))
+            let actor = app.descendants(matching: .any)["dino.\(clip)"]
+            expectation(for: NSPredicate(format: "value == %@", "5|ready:true|started:true|finished:true"), evaluatedWith: actor)
+            waitForExpectations(timeout: 35)
+            saveScreenshot("prisma-result-\(clip)")
+        }
+    }
+
+    func testCaveUnlockAndCollectionSwap() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "49"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "50"
+        app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = "10"
+        app.launch()
+        XCTAssertTrue(app.buttons["result.next"].waitForExistence(timeout: 25))
+        tap("result.next")
+        XCTAssertTrue(app.descendants(matching: .any)["map.dino.51"].waitForExistence(timeout: 30))
+        waitForMapOpeningToFinish()
+        saveScreenshot("prisma-unlocked-map")
+
+        tap("header.dino")
+        let preview = app.descendants(matching: .any)["personalize.preview"]
+        XCTAssertEqual(preview.value as? String, "5")
+        revealThemeChoice("personalize.character.0")
+        tap("personalize.character.0")
+        XCTAssertTrue(app.buttons["personalize.character.5"].isEnabled)
+        tap("personalize.done")
+        _ = revealMapNode(50)
+        saveScreenshot("prisma-native-map-resident")
+
+        app.terminate()
+        for key in ["DINO_TEST_COMPLETED_LEVEL", "DINO_TEST_RESULT_LEVEL", "DINO_TEST_RESULT_CORRECT"] {
+            app.launchEnvironment.removeValue(forKey: key)
+        }
+        app.launch()
+        waitForMapOpeningToFinish()
+        tap("header.dino")
+        XCTAssertEqual(preview.value as? String, "0")
+        revealThemeChoice("personalize.character.5")
+        tap("personalize.character.5")
+        XCTAssertEqual(preview.value as? String, "5")
+        tap("personalize.resetColors")
+        XCTAssertEqual(preview.value as? String, "5")
+        saveScreenshot("prisma-selected-after-relaunch")
+        tap("personalize.done")
+        begin(51)
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 15))
+        XCTAssertEqual(app.descendants(matching: .any)["dino.character"].value as? String, "5")
+        saveScreenshot("prisma-normal-level")
+    }
+
+    private func launchCave() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "50"
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "5"
+        app.launch()
+    }
+}
+
+extension DinoUITests {
+    func testNeonWelcomeAndReactions() {
+        launchNeon()
+        waitForMapOpeningToFinish()
+        saveScreenshot("neon-cold-start-map")
+
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        launchNeon()
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 20))
+        let companion = app.descendants(matching: .any)["dino.character"]
+        XCTAssertEqual(companion.value as? String, "6")
+        assertCompanionInPortrait(companion)
+        saveScreenshot("neon-native-hud")
+
+        tap("header.dino")
+        for (part, color) in [("bandana", "purple"), ("spikes", "green"), ("body", "red"), ("belly", "pink")] {
+            tap("personalize.\(part).\(color)")
+        }
+        saveScreenshot("neon-custom-full")
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout: 8))
+        saveScreenshot("neon-custom-hud")
+
+        var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.chooseAnalog)), seed: seed)
+        let first = generator.next(index: 0, difficultyForKind: { _ in .introduction })
+        let title = app.staticTexts["question.title"].label
+        tap("question.option.\(first.responses.firstIndex(of: first.expectedAnswer)!)")
+        expectation(for: NSPredicate { _, _ in self.app.staticTexts["question.title"].label != title }, evaluatedWith: nil)
+        waitForExpectations(timeout: 10)
+        let second = generator.next(index: 1, difficultyForKind: { _ in .familiar })
+        tap("question.option.\(second.responses.firstIndex { $0 != second.expectedAnswer }!)")
+        if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 8))
+        saveScreenshot("neon-after-wrong")
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        tap("question.next")
+        XCTAssertTrue(companion.waitForExistence(timeout: 8))
+        XCTAssertEqual(companion.value as? String, "6")
+        saveScreenshot("neon-landscape-hud")
+    }
+
+    func testNeonResultAnimations() {
+        if UIDevice.current.userInterfaceIdiom == .pad { XCUIDevice.shared.orientation = .landscapeLeft }
+        app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "61"
+        for (correct, clip) in [(0, "stumble"), (3, "openingJump"), (4, "pirouette"), (5, "backflip")] {
+            app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = String(correct)
+            launchNeon()
+            XCTAssertTrue(app.buttons["result.retry"].waitForExistence(timeout: 25))
+            let actor = app.descendants(matching: .any)["dino.\(clip)"]
+            expectation(for: NSPredicate(format: "value == %@", "6|ready:true|started:true|finished:true"), evaluatedWith: actor)
+            waitForExpectations(timeout: 35)
+            saveScreenshot("neon-result-\(clip)")
+        }
+    }
+
+    func testNeonUnlockAndCollectionSwap() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "59"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "60"
+        app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = "10"
+        app.launch()
+        XCTAssertTrue(app.buttons["result.next"].waitForExistence(timeout: 25))
+        let resultActor = app.descendants(matching: .any)["dino.backflip"]
+        expectation(for: NSPredicate(format: "value == %@", "0|ready:true|started:true|finished:true"), evaluatedWith: resultActor)
+        waitForExpectations(timeout: 12)
+        tap("result.next")
+        XCTAssertTrue(app.descendants(matching: .any)["map.dino.61"].waitForExistence(timeout: 30))
+        waitForMapOpeningToFinish()
+        saveScreenshot("neon-unlocked-map")
+        _ = revealMapNode(60)
+        saveScreenshot("neon-swapped-map-resident")
+
+        tap("header.dino")
+        let preview = app.descendants(matching: .any)["personalize.preview"]
+        XCTAssertEqual(preview.value as? String, "6")
+        revealThemeChoice("personalize.character.0")
+        tap("personalize.character.0")
+        XCTAssertTrue(app.buttons["personalize.character.6"].isEnabled)
+        tap("personalize.done")
+        _ = revealMapNode(60)
+        saveScreenshot("neon-native-map-resident")
+
+        app.terminate()
+        for key in ["DINO_TEST_COMPLETED_LEVEL", "DINO_TEST_RESULT_LEVEL", "DINO_TEST_RESULT_CORRECT", "DINO_TEST_ANIMATION_DIAGNOSTICS"] {
+            app.launchEnvironment.removeValue(forKey: key)
+        }
+        app.launch()
+        waitForMapOpeningToFinish()
+        tap("header.dino")
+        XCTAssertEqual(preview.value as? String, "0")
+        revealThemeChoice("personalize.character.6")
+        tap("personalize.character.6")
+        XCTAssertEqual(preview.value as? String, "6")
+        tap("personalize.resetColors")
+        XCTAssertEqual(preview.value as? String, "6")
+        saveScreenshot("neon-selected-after-relaunch")
+        tap("personalize.done")
+        begin(61)
+        XCTAssertTrue(app.staticTexts["question.title"].waitForExistence(timeout: 15))
+        XCTAssertEqual(app.descendants(matching: .any)["dino.character"].value as? String, "6")
+        saveScreenshot("neon-normal-level")
+    }
+
+    private func launchNeon() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "60"
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "6"
+        app.launch()
+    }
+}
+
+extension DinoUITests {
+    func testDommelWelcomeAndReactions() {
+        launchDommel()
+        waitForMapOpeningToFinish()
+        saveScreenshot("dommel-cold-start-map")
+
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        launchDommel()
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 20))
+        let companion = app.descendants(matching: .any)["dino.character"]
+        XCTAssertEqual(companion.value as? String, "7")
+        assertCompanionInPortrait(companion)
+        saveScreenshot("dommel-native-hud")
+
+        tap("header.dino")
+        for (part, color) in [("bandana", "pink"), ("spikes", "green"), ("body", "orange"), ("belly", "blue")] {
+            tap("personalize.\(part).\(color)")
+        }
+        saveScreenshot("dommel-custom-full")
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout: 8))
+        saveScreenshot("dommel-custom-hud")
+
+        var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.chooseAnalog)), seed: seed)
+        let first = generator.next(index: 0, difficultyForKind: { _ in .introduction })
+        let title = app.staticTexts["question.title"].label
+        tap("question.option.\(first.responses.firstIndex(of: first.expectedAnswer)!)")
+        expectation(for: NSPredicate { _, _ in self.app.staticTexts["question.title"].label != title }, evaluatedWith: nil)
+        waitForExpectations(timeout: 10)
+        let second = generator.next(index: 1, difficultyForKind: { _ in .familiar })
+        tap("question.option.\(second.responses.firstIndex { $0 != second.expectedAnswer }!)")
+        if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 8))
+        saveScreenshot("dommel-after-wrong")
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        tap("question.next")
+        XCTAssertTrue(companion.waitForExistence(timeout: 8))
+        XCTAssertEqual(companion.value as? String, "7")
+        saveScreenshot("dommel-landscape-hud")
+    }
+
+    func testDommelResultAnimations() {
+        if UIDevice.current.userInterfaceIdiom == .pad { XCUIDevice.shared.orientation = .landscapeLeft }
+        app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "71"
+        for (correct, clip) in [(0, "stumble"), (3, "openingJump"), (4, "pirouette"), (5, "backflip")] {
+            app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = String(correct)
+            launchDommel()
+            XCTAssertTrue(app.buttons["result.retry"].waitForExistence(timeout: 25))
+            let actor = app.descendants(matching: .any)["dino.\(clip)"]
+            expectation(for: NSPredicate(format: "value == %@", "7|ready:true|started:true|finished:true"), evaluatedWith: actor)
+            waitForExpectations(timeout: 30)
+            saveScreenshot("dommel-result-\(clip)")
+        }
+    }
+
+    func testDommelUnlockAndCollectionSwap() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "69"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "70"
+        app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = "10"
+        app.launch()
+        XCTAssertTrue(app.buttons["result.next"].waitForExistence(timeout: 25))
+        let result = app.descendants(matching: .any)["dino.backflip"]
+        expectation(for: NSPredicate(format: "value == %@", "0|ready:true|started:true|finished:true"), evaluatedWith: result)
+        waitForExpectations(timeout: 15)
+        tap("result.next")
+        XCTAssertTrue(app.descendants(matching: .any)["map.dino.71"].waitForExistence(timeout: 30))
+        waitForMapOpeningToFinish()
+        saveScreenshot("dommel-unlocked-map")
+        _ = revealMapNode(70)
+        saveScreenshot("dommel-swapped-map-resident")
+
+        tap("header.dino")
+        let preview = app.descendants(matching: .any)["personalize.preview"]
+        XCTAssertEqual(preview.value as? String, "7")
+        tap("personalize.body.orange")
+        revealThemeChoice("personalize.character.0")
+        tap("personalize.character.0")
+        XCTAssertEqual(preview.value as? String, "0")
+        XCTAssertTrue(app.buttons["personalize.character.7"].isEnabled)
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout: 8))
+        _ = revealMapNode(70)
+        saveScreenshot("dommel-original-map-resident")
+        app.terminate()
+        for key in ["DINO_TEST_COMPLETED_LEVEL", "DINO_TEST_RESULT_LEVEL", "DINO_TEST_RESULT_CORRECT", "DINO_TEST_ANIMATION_DIAGNOSTICS"] {
+            app.launchEnvironment.removeValue(forKey: key)
+        }
+        app.launch()
+        waitForMapOpeningToFinish()
+        tap("header.dino")
+        XCTAssertEqual(preview.value as? String, "0")
+        revealThemeChoice("personalize.character.7")
+        tap("personalize.character.7")
+        tap("personalize.resetColors")
+        XCTAssertEqual(preview.value as? String, "7")
+        saveScreenshot("dommel-selected-after-relaunch")
+        tap("personalize.done")
+        begin(71)
+        XCTAssertEqual(app.descendants(matching: .any)["dino.character"].value as? String, "7")
+        saveScreenshot("dommel-normal-level")
+    }
+
+    private func launchDommel() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "70"
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "7"
+        app.launch()
+    }
+}

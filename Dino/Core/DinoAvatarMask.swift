@@ -514,6 +514,7 @@ enum DinoSpriteColorRenderer {
             for index in stride(from: 0, to: bytes.count, by: 4) {
                 let alpha = Double(bytes[index + 3]) / 255
                 guard alpha > 0.06 else { continue }
+                let red = Double(bytes[index]), green = Double(bytes[index + 1]), blue = Double(bytes[index + 2])
                 let pixel = HSL(red: Double(bytes[index]) / 255 / alpha,
                                 green: Double(bytes[index + 1]) / 255 / alpha,
                                 blue: Double(bytes[index + 2]) / 255 / alpha)
@@ -526,12 +527,21 @@ enum DinoSpriteColorRenderer {
                 if regions.clockFace.contains(point), !palm, pixel.hue < 0.18 { continue }
                 let part: Int
                 let warm = pixel.hue < 0.18 || pixel.saturation < 0.10
+                // Shaded lime skin and the darker body spots can share a hue
+                // with the leaves. They retain much more red than forest-green paint.
+                let shadedSkin = (0.27..<0.34).contains(pixel.hue) && red >= green * 0.42 && alpha >= 0.90
+                    && regions.skinShadows.contains(point)
+                let cheekSpot = (0.12..<0.18).contains(pixel.hue) && pixel.lightness > 0.28
+                    && green > red * 0.80 && blue < red * 0.49 && regions.cheekSpots.contains(point)
                 if !palm, crown[index / 4] != 0 || clock[index / 4] != 0 || (warm && (regions.clockRim.contains(point) || regions.suspension.contains(point,using:.evenOdd))) {
                     part = 0
                 } else if point.y < regions.leafBase, abs(point.x-regions.crownSeed.x) < 135, pixel.saturation > 0.12 {
                     part = 1
+                } else if cheekSpot {
+                    part = 2
                 } else if (0.18...0.50).contains(pixel.hue), pixel.saturation > 0.12 {
-                    part = pixel.hue > 0.27 && spots[index / 4] == 0 && !regions.faceSkin.contains(point) ? 1 : 2
+                    part = pixel.hue > 0.27 && !shadedSkin && spots[index / 4] == 0
+                        && !regions.faceSkin.contains(point) ? 1 : 2
                 } else if (0.055..<0.18).contains(pixel.hue), pixel.saturation > 0.10 {
                     part = !palm && regions.gold.contains(point) && pixel.hue < 0.118 ? 0 : 3
                 } else { continue }
@@ -737,6 +747,8 @@ enum DinoSpriteColorRenderer {
         let leafBase: CGFloat
         let crownSeed: CGPoint
         let faceSkin: CGPath
+        let cheekSpots: CGPath
+        let skinShadows: CGPath
 
         init(asset: String) {
             // Crown search extent, center-leaf base, iris regions, and strap centerlines.
@@ -828,16 +840,32 @@ enum DinoSpriteColorRenderer {
             }
             let skin = CGMutablePath()
             for palm in palms { skin.addRect(CGRect(x: palm[0], y: palm[1], width: palm[2], height: palm[3])) }
+            let blush = CGMutablePath()
+            blush.addEllipse(in: CGRect(x: 147, y: 163, width: 29, height: 23))
+            blush.addEllipse(in: CGRect(x: 272, y: 166, width: 50, height: 33))
             let face = CGMutablePath()
-            face.move(to:CGPoint(x:180,y:119))
-            for point in [CGPoint(x:195,y:107),CGPoint(x:250,y:109),CGPoint(x:286,y:117),
-                          CGPoint(x:316,y:139),CGPoint(x:336,y:166),CGPoint(x:337,y:202),
-                          CGPoint(x:324,y:227),CGPoint(x:299,y:243),CGPoint(x:269,y:250),
-                          CGPoint(x:221,y:249),CGPoint(x:183,y:238),CGPoint(x:153,y:219),
-                          CGPoint(x:140,y:199),CGPoint(x:141,y:183),CGPoint(x:157,y:172),CGPoint(x:166,y:152)] { face.addLine(to:point) }
+            face.addLines(between: [(180, 119), (195, 107), (250, 109), (286, 117),
+                                    (316, 139), (336, 166), (337, 202), (324, 227),
+                                    (299, 243), (269, 250), (221, 249), (183, 238),
+                                    (153, 219), (140, 199), (141, 183), (157, 172), (166, 152)]
+                .map { CGPoint(x: $0.0, y: $0.1) })
             face.closeSubpath()
             var registration = DinoJungleArtwork.headRegistration(for:asset)
-            faceSkin = asset.hasPrefix("jungle-turn-") || asset == "jungle-fallen" ? CGMutablePath() : face.copy(using:&registration)!
+            let hasRegisteredFace = !asset.hasPrefix("jungle-turn-") && asset != "jungle-fallen"
+            faceSkin = hasRegisteredFace ? face.copy(using: &registration)! : CGMutablePath()
+            cheekSpots = hasRegisteredFace ? blush.copy(using: &registration)! : CGMutablePath()
+            let shadows = CGMutablePath()
+            if asset == "jungle-idle" || asset == DinoJungleArtwork.openingAsset {
+                shadows.addRects([
+                    CGRect(x: 322, y: 137, width: 15, height: 49),
+                    CGRect(x: 346, y: 302, width: 19, height: 78),
+                    CGRect(x: 338, y: 386, width: 26, height: 76),
+                    CGRect(x: 145, y: 289, width: 21, height: 30),
+                    CGRect(x: 118, y: 319, width: 48, height: 44),
+                    CGRect(x: 139, y: 393, width: 56, height: 51)
+                ])
+            }
+            skinShadows = shadows
             self.gold = gold; self.ink = ink; self.skin = skin; self.clockFace = clockFace; self.clockRim = clockRim
         }
     }
@@ -1228,6 +1256,8 @@ extension DinoSpriteColorRenderer {
         var dorsalLeftCount = 7
         var isTurn = false
         var frontRockPoints: [(Double,Double)]? = nil
+        var standingDorsal: CGPath?
+        var turningRocks: CGPath?
         var tailStemPoints: [(Double,Double)]? = nil
         var tailClub = CGRect(x:351,y:234,width:80,height:95)
         var scarfTop = 185.0, scarfBottom = 335.0
@@ -1360,9 +1390,7 @@ extension DinoSpriteColorRenderer {
                     harness = i == 6 ? [[(296.5,297),(179.5,231),(158.5,233),(159.5,249),(280.5,319),(290.5,318)]] : [[(322.5,286),(222.5,220),(204.5,227),(207.5,239),(315.5,309),(322.5,302)]]
                 }
                 if i == 4 {
-                    harness = [[(135,230),(152,262),(152,300),(139,314),(118,270)],[(303,230),(285,264),(285,302),(302,316),(323,272)]]
                     rear = true; eyes = []; headDX = 80
-                    dorsal = [(153,87),(288,87),(325,228),(290,283),(250,304),(196,303),(154,277),(123,220)]
                 }
                 if i == 1 || i == 8 {
                     let shift = i == 8 ? 20.0 : 0
@@ -1396,6 +1424,62 @@ extension DinoSpriteColorRenderer {
                 CGRect(x:(r.minX/512-dx)*443.5,y:(r.minY/512-dy)*443.5,width:r.width/512*443.5,height:r.height/512*443.5)
             }
             switch name {
+            case "desert-idle", "desert-opening-idle":
+                // Trace the forehead seam and the last rocks above the strap.
+                // The lower edge follows the rocks down to the tail attachment.
+                standingDorsal = polygon(cell([
+                    (231, 0), (231, 84), (246, 86), (248, 94), (251, 101),
+                    (258, 112), (266, 125), (273, 140), (278, 166), (278, 188), (274, 205),
+                    (266, 220), (274, 230), (286, 250), (300, 270), (336, 304),
+                    (351, 321), (368, 336), (381, 347), (388, 351), (398, 352),
+                    (398, 327), (420, 301), (432, 260), (512, 245), (512, 0)
+                ]))
+                scarfPoints = cell([
+                    (118, 253), (163, 260), (209, 252), (235, 243), (253, 233),
+                    (264, 221), (273, 210), (277, 209), (281, 227), (289, 242),
+                    (286, 251), (270, 263),
+                    (261, 279), (238, 293), (202, 305), (178, 307), (184, 336),
+                    (188, 363), (181, 371), (156, 374), (137, 370), (120, 367),
+                    (117, 355), (121, 341), (114, 334), (119, 312), (124, 296),
+                    (114, 288), (115, 276), (119, 267), (116, 257)
+                ])
+                chinPoints = cell([
+                    (86, 222), (97, 218), (116, 224), (139, 226), (172, 220),
+                    (195, 212), (206, 205), (213, 196), (225, 191), (236, 194),
+                    (246, 203), (250, 215), (247, 226), (238, 237), (221, 246),
+                    (201, 254), (177, 259), (154, 259), (133, 256), (113, 252),
+                    (97, 244), (87, 235)
+                ])
+                belly = cell([
+                    (128, 294), (202, 294), (245, 277), (280, 284), (278, 325),
+                    (252, 343), (235, 364), (225, 390), (220, 417), (221, 446),
+                    (207, 446), (193, 442), (181, 438), (169, 431), (158, 422),
+                    (149, 411), (141, 400), (134, 387), (129, 373), (123, 343)
+                ])
+                harness.append(cell([(349, 320), (370, 334), (395, 350), (393, 374),
+                                     (387, 382), (374, 372), (349, 359)]))
+            case "desert-turn-03", "desert-turn-05":
+                // The rocky plates in the middle of the back overlap the
+                // scarf and strap search regions in these three-quarter views.
+                turningRocks = polygon(cell([
+                    (183, 257), (210, 233), (250, 226), (290, 214), (353, 235),
+                    (370, 265), (353, 290), (332, 315), (307, 336), (281, 351),
+                    (252, 356), (218, 342), (189, 326), (174, 295)
+                ]))
+            case "desert-turn-04":
+                dorsal = cell([
+                    (155, 188), (166, 153), (183, 130), (210, 121), (230, 108),
+                    (247, 104), (266, 110), (282, 123), (319, 137), (338, 164),
+                    (348, 199), (352, 231), (351, 262), (356, 294), (365, 328),
+                    (356, 350), (331, 357), (318, 372), (289, 358), (251, 348),
+                    (205, 353), (181, 373), (165, 358), (147, 351), (141, 333),
+                    (149, 300), (153, 272), (151, 240)
+                ])
+                harness = [
+                    cell([(132, 285), (151, 268), (151, 290), (139, 328), (130, 363), (119, 405), (103, 401), (107, 368), (117, 327)]),
+                    cell([(123, 343), (140, 353), (162, 363), (182, 371), (176, 394), (151, 390), (126, 378), (114, 365)]),
+                    cell([(328, 363), (353, 354), (375, 339), (384, 356), (386, 376), (365, 389), (334, 398)])
+                ]
             case "desert-fallen":
                 belly = cell([(234,404),(258,407),(266,435),(249,453),(220,453),(206,435)])
                 scarfPoints = cell([(96,391),(141,397),(184,390),(219,374),(242,354),(252,339),(261,347),(265,365),(257,385),(238,405),(212,424),(193,433),(194,476),(179,490),(126,486),(121,446),(109,429),(96,416)])
@@ -1456,9 +1540,10 @@ extension DinoSpriteColorRenderer {
         let key="desert-\(asset)-\(source.width)-\(source.height)" as NSString
         if let cached=desertMaskCache.object(forKey:key) {return cached.labels}
         let w=source.width,h=source.height,rig=DesertRig(asset:asset)
+        let standing = rig.standingDorsal != nil
         var bytes=[UInt8](repeating:0,count:w*h*4), labels=[UInt8](repeating:0,count:w*h)
         let format=CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
-        let dorsal=rig.polygon(rig.dorsal), belly=rig.polygon(rig.belly), chin=rig.chin
+        let dorsal=rig.standingDorsal ?? rig.polygon(rig.dorsal), belly=rig.polygon(rig.belly), chin=rig.chin
         let head=rig.head, cloth=rig.scarf, tailClub=rig.ellipse(rig.tailClub), frontRock=rig.frontRock
         let rearClub=rig.ellipse(CGRect(x:176,y:231,width:102,height:103))
         let rearBelly=rig.ellipse(CGRect(x:165,y:289,width:117,height:97))
@@ -1466,6 +1551,7 @@ extension DinoSpriteColorRenderer {
         let tailStem = rig.polygon(rig.tailStemPoints ?? [(321,350),(338,312),(360,285),(382,272),(410,290),(388,332),(349,365)])
         let eyes=rig.eyes.map {rig.ellipse($0)}, palms=rig.hands.map {rig.ellipse($0)}, toes=rig.toes.map {rig.ellipse($0)}
         let harness=rig.harness.map {rig.polygon($0)}
+        let standingStrap = standing ? harness.last : nil
         let metal = [rig.ellipse(CGRect(x:rig.clock.midX-31,y:rig.clock.minY-25,width:30,height:28)),rig.ellipse(CGRect(x:rig.clock.midX-2,y:rig.clock.maxY-5,width:20,height:22))]
         bytes.withUnsafeMutableBytes { b in
             let c=CGContext(data:b.baseAddress,width:w,height:h,bitsPerComponent:8,bytesPerRow:w*4,space:CGColorSpace(name:CGColorSpace.sRGB)!,bitmapInfo:format)!
@@ -1487,15 +1573,22 @@ extension DinoSpriteColorRenderer {
                 if (eyes.contains(where:{$0.contains(p)}) && (color.saturation<0.22 || color.lightness<0.52)) || color.lightness<0.15 || (rig.mouthPoints.map({rig.polygon($0).contains(p)}) == true) || (rig.brows.contains(where:{rig.ellipse($0).contains(p)}) && color.hue<0.11 && color.lightness<0.66) {continue}
                 if head.contains(p), color.hue<0.065, color.saturation>0.35, color.lightness<0.55, p.y>rig.point(0,130,head:true).y, Double(pixels[i+1])/max(1,Double(pixels[i]))<0.45 {continue}
                 if clockMatte[n] == 1, !hand {continue}
+                let r=Double(pixels[i])/max(1,Double(pixels[i+3])), g=Double(pixels[i+1])/max(1,Double(pixels[i+3])), b=Double(pixels[i+2])/max(1,Double(pixels[i+3]))
+                // The connected horn mask includes a narrow edge around the
+                // brown paint. Keep the sandy forehead between the horns in skin.
+                let horn = hornMatte[n] > 0 && (!standing || g < r * 0.71)
                 var label: UInt8=3
-                if dorsal.contains(p) || frontRock.contains(p) || hornMatte[n]>0 {label=2}
+                if dorsal.contains(p) || (!standing && frontRock.contains(p)) || horn {label=2}
                 if tailClub.contains(p) || (tailStem.contains(p) && !asset.contains("turn-") && asset != "desert-airborne") {label=3}
                 // Geometry limits the material, chromaticity snaps only its edge
                 // to the actual painted cream seam. This includes all relative
                 // cream shadows and avoids classifying bright skin as a new material.
-                let r=Double(pixels[i])/max(1,Double(pixels[i+3])), g=Double(pixels[i+1])/max(1,Double(pixels[i+3])), b=Double(pixels[i+2])/max(1,Double(pixels[i+3]))
                 let cream = b/max(0.001,r)>0.57 && g/max(0.001,r)>0.79
-                if (rig.chinPoints != nil && chin.contains(p)) || (belly.contains(p) && !head.contains(p) && ((!asset.contains("turn-") && asset != "desert-fallen") || cream)) || (cream && (chin.contains(p) || (rig.chinPoints == nil && torsoCreamZone.contains(p) && !asset.contains("turn-") && !dorsal.contains(p) && !head.contains(p)) || toes.contains(where:{$0.contains(p)}))) {label=4}
+                let torsoCream = !standing && rig.chinPoints == nil && torsoCreamZone.contains(p)
+                    && !asset.contains("turn-") && !dorsal.contains(p) && !head.contains(p)
+                if (rig.chinPoints != nil && chin.contains(p))
+                    || (belly.contains(p) && !head.contains(p) && ((!asset.contains("turn-") && asset != "desert-fallen") || cream))
+                    || (cream && (chin.contains(p) || torsoCream || toes.contains(where: { $0.contains(p) }))) {label=4}
                 if !hand && (harnessMatte[n]>0 || clockMatte[n] == 2) {label=5}
                 // One connected orange knitted material. Geometry excludes the
                 // orange cheek and every hand even in front of the clock/scarf.
@@ -1505,19 +1598,27 @@ extension DinoSpriteColorRenderer {
                    color.hue>0.065, !hand, label != 2, label != 5 {label=1}
                 // Horns are a connected brown material within their own cap,
                 // separate from the sandy forehead and all skin spots below.
-                if hornMatte[n]>0 {label=2}
-                if cloth.contains(p), !hand, (label != 2 || b/max(0.001,r)<0.25), label != 5 {label=1}
+                if horn {label=2}
+                let isKnittedPaint = !standing || b < r * 0.40
+                if cloth.contains(p), isKnittedPaint, !hand, (label != 2 || b/max(0.001,r)<0.25), label != 5 {label=1}
+                if standingStrap?.contains(p) == true, color.hue < 0.085, g < r * 0.69, b < r * 0.46 {label=5}
                 if hand {label=3}
                 if rig.rear {
                     label = dorsal.contains(p) ? 2 : 3
                     let club = rearClub
                     if club.contains(p) { label=3 }
-                    if rearBelly.contains(p), !club.contains(p) {label=4}
+                    if rearBelly.contains(p), cream, !club.contains(p) {label=4}
                 }
-                if hornMatte[n]>0 {label=2}
+                if horn {label=2}
                 if !hand && harnessMatte[n]>0 {label=5}
                 if rig.hasClock, !cloth.contains(p), (metal.contains(where:{$0.contains(p)}) || harness.contains(where:{$0.contains(p)}) || clockMatte[n] == 2),
                    (0.095...0.17).contains(color.hue), g/max(0.001,r)>0.60,b/max(0.001,r)<0.65 {label=0}
+                if let turningRocks = rig.turningRocks, turningRocks.contains(p), !tailClub.contains(p), clockMatte[n] == 0, !hand, label > 0 {
+                    label = 2
+                }
+                if rig.rear, label > 0, g < r * 0.67, b < r * 0.43, harness.contains(where: { $0.contains(p) }) {
+                    label = 5
+                }
                 if hand && cream && toes.contains(where:{$0.contains(p)}) {label=4}
                 labels[n]=label
             }
@@ -1617,7 +1718,7 @@ extension DinoSpriteColorRenderer {
                 for (k,value) in [rgb.0,rgb.1,rgb.2].enumerated() {p[i+k]=UInt8((min(1,max(0,value))*a*255).rounded())}
             }
         }
-        return desertImage(bytes,width:w,height:h)
+        return spriteImage(bytes,width:w,height:h)
     }
     static func desertHeadOverflow(_ source: CGImage, asset: String, mirrored: Bool = true) -> CGImage? {
         let w=source.width,h=source.height,rig=DesertRig(asset:asset),head=rig.head
@@ -1632,9 +1733,9 @@ extension DinoSpriteColorRenderer {
                 if !head.contains(point) || hands.contains(where:{$0.contains(point)}) {for k in 0..<4 {p[(y*w+x)*4+k]=0}}
             }}
         }
-        return desertImage(bytes,width:w,height:h)
+        return spriteImage(bytes,width:w,height:h)
     }
-    private static func desertImage(_ bytes:[UInt8],width:Int,height:Int) -> CGImage? {
+    private static func spriteImage(_ bytes:[UInt8],width:Int,height:Int) -> CGImage? {
         guard let provider=CGDataProvider(data:Data(bytes) as CFData) else {return nil}
         return CGImage(width:width,height:height,bitsPerComponent:8,bitsPerPixel:32,bytesPerRow:width*4,space:CGColorSpace(name:CGColorSpace.sRGB)!,bitmapInfo:CGBitmapInfo(rawValue:CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue),provider:provider,decode:nil,shouldInterpolate:true,intent:.defaultIntent)
     }
@@ -1643,6 +1744,10 @@ extension DinoSpriteColorRenderer {
 extension DinoSpriteColorRenderer {
     static func recoloredBoss(_ source: CGImage, appearance: DinoAppearance, asset: String) -> CGImage? {
         switch appearance.identity {
+        case .valley: return recoloredValley(source, appearance: appearance, asset: asset)
+        case .city: return recoloredCity(source, appearance: appearance, asset: asset)
+        case .cave: return recoloredCave(source, appearance: appearance, asset: asset)
+        case .village: return recoloredVillage(source, appearance: appearance, asset: asset)
         case .volcano: return recoloredVolcano(source, appearance:appearance, asset:asset)
         case .desert: return recoloredDesert(source, appearance:appearance, asset:asset)
         default: return recoloredJungle(source, appearance:appearance, asset:asset)
@@ -1650,6 +1755,10 @@ extension DinoSpriteColorRenderer {
     }
     static func bossHeadOverflow(_ source: CGImage, character: DinoIdentity, asset: String, mirrored: Bool = true) -> CGImage? {
         switch character {
+        case .valley: return valleyHead(source, asset: asset, mirrored: mirrored)
+        case .city: return cityHead(source, asset: asset, mirrored: mirrored)
+        case .cave: return caveHead(source, asset: asset, mirrored: mirrored)
+        case .village: return villageHead(source, asset: asset, mirrored: mirrored)
         case .volcano: return volcanoHeadOverflow(source,asset:asset,mirrored:mirrored)
         case .desert: return desertHeadOverflow(source,asset:asset,mirrored:mirrored)
         default: return jungleHeadOverflow(source,asset:asset,mirrored:mirrored)
@@ -1662,6 +1771,7 @@ extension DinoSpriteColorRenderer {
     /// centres scale into that canvas; mirrored head mattes use 512 - x once.
     struct VolcanoRig {
         let asset: String
+        var isStanding: Bool { asset == "volcano-idle" || asset == DinoVolcanoArtwork.openingAsset }
         var headTransform = CGAffineTransform.identity
         var clocks: [CGRect] = [CGRect(x:144,y:330,width:51,height:65),CGRect(x:188,y:294,width:66,height:68),CGRect(x:248,y:254,width:62,height:67)]
         var hands: [CGRect] = []
@@ -1696,13 +1806,38 @@ extension DinoSpriteColorRenderer {
             default: break
             }
             headTransform = headTransform.concatenating(CGAffineTransform(translationX:shift.x,y:shift.y))
-            if hands.isEmpty { hands=[CGRect(x:95,y:283,width:81,height:98),CGRect(x:274,y:288,width:79,height:98)] }
+            if hands.isEmpty && !rear { hands=[CGRect(x:95,y:283,width:81,height:98),CGRect(x:274,y:288,width:79,height:98)] }
             // The visible sash lies between the three independent bezels. Arm
             // exclusions take priority; spot-colored skin never becomes cloth.
             if rear {
-                sashPoints=[CGPoint(x:180,y:244),CGPoint(x:223,y:240),CGPoint(x:346,y:326),CGPoint(x:348,y:360),CGPoint(x:294,y:349),CGPoint(x:177,y:270)]
+                let strap: [(Double, Double)]
+                switch turn {
+                case 3:
+                    strap = [(155, 265), (184, 247), (214, 242), (237, 249),
+                             (268, 274), (300, 301), (327, 321), (346, 345),
+                             (344, 354), (333, 357), (306, 342), (276, 326),
+                             (244, 305), (214, 285), (189, 264), (172, 257)]
+                case 4:
+                    strap = [(171, 255), (196, 245), (215, 244), (241, 263),
+                             (268, 283), (298, 301), (326, 320), (345, 342),
+                             (354, 361), (350, 366), (325, 358), (293, 346),
+                             (268, 334), (244, 319), (224, 312), (198, 290), (181, 272)]
+                default:
+                    strap = [(211, 247), (229, 243), (247, 264), (273, 286),
+                             (300, 301), (326, 314), (346, 326), (364, 341),
+                             (369, 357), (371, 365), (360, 368), (333, 362),
+                             (306, 354), (278, 343), (253, 331), (233, 315),
+                             (219, 297), (213, 277)]
+                }
+                sashPoints = strap.map { CGPoint(x: $0.0, y: $0.1) }
             } else if let first=clocks.first,let last=clocks.last {
                 sashPoints=[CGPoint(x:first.minX-7,y:first.midY-16),CGPoint(x:last.midX+10,y:last.minY-17),CGPoint(x:last.maxX+19,y:last.minY+16),CGPoint(x:first.maxX+12,y:first.maxY+5)]
+            }
+            if isStanding {
+                sashPoints = [(146, 321), (275, 254), (289, 241), (300, 238),
+                              (312, 247), (322, 257), (333, 269), (312, 291),
+                              (303, 305), (284, 316), (230, 347), (173, 381),
+                              (151, 371)].map { CGPoint(x: $0.0, y: $0.1) }
             }
         }
         func path(_ points: [(Double,Double)], head: Bool = false) -> CGPath {
@@ -1732,6 +1867,13 @@ extension DinoSpriteColorRenderer {
             if turn==2 {return path([(135,121),(176,120),(185,87),(231,103),(265,145),(266,226),(237,249),(190,247),(140,231),(122,205),(122,182)])}
             if turn==6 {return path([(285,98),(333,106),(363,142),(378,182),(397,193),(398,222),(364,250),(306,249),(289,211)])}
             if turn==7 {return path([(208,115),(252,95),(314,97),(348,131),(366,183),(361,229),(334,249),(280,250),(238,239),(209,216)])}
+            if isStanding {
+                return path([(158, 141), (174, 128), (192, 119), (237, 110), (277, 119),
+                             (293, 136), (300, 151), (307, 168), (309, 189), (310, 205),
+                             (306, 221), (297, 231), (282, 242), (263, 250), (237, 256),
+                             (208, 256), (181, 247), (162, 234), (149, 221), (142, 209),
+                             (143, 197), (152, 183), (155, 170), (156, 155)])
+            }
             return path([(139,139),(160,128),(180,99),(233,96),(270,113),(290,146),(303,192),(301,231),(278,251),(241,258),(203,252),(169,237),(145,217),(137,179)],head:true)
         }
         var browHorns: [CGPath] {
@@ -1758,7 +1900,7 @@ extension DinoSpriteColorRenderer {
     static func volcanoLabels(_ source: CGImage, asset: String, useArchive: Bool = true) -> [UInt8] {
         let key="magma-v9-\(DinoVolcanoArtwork.asset(for:asset))-\(source.width)-\(source.height)" as NSString
         if useArchive, let hit=volcanoMaskCache.object(forKey:key){return hit.values}
-        if useArchive, let baked=VolcanoMaterialArchive.labels(asset:DinoVolcanoArtwork.asset(for:asset),width:source.width,height:source.height) {
+        if useArchive, let baked=DinoSpriteMaskArchive.volcano?.labels(asset:DinoVolcanoArtwork.asset(for:asset),width:source.width,height:source.height) {
             volcanoMaskCache.setObject(VolcanoLabels(baked),forKey:key,cost:baked.count)
             return baked
         }
@@ -1766,6 +1908,10 @@ extension DinoSpriteColorRenderer {
         let head=rig.head,face=rig.face,eyes=rig.eyes,horns=rig.browHorns,extraSash=rig.extraSash
         let hornEdges=horns.map {$0.copy(strokingWithWidth:rig.turn==3 || rig.turn==5 ? 2:14,lineCap:.round,lineJoin:.round,miterLimit:2)}
         let sash=CGMutablePath();sash.addLines(between:rig.sashPoints);sash.closeSubpath()
+        let raisedTail = rig.turn == 4
+            ? rig.path([(249, 301), (256, 303), (262, 311), (269, 328),
+                        (273, 350), (225, 350), (233, 328), (240, 308)])
+            : nil
         let chin = rig.asset == "volcano-stumble"
             ? rig.path([(140,262),(151,260),(163,274),(183,281),(201,275),(221,255),(231,236),(250,234),(263,241),(265,254),(258,272),(245,284),(220,293),(191,299),(165,291),(147,279),(139,269)])
             : rig.path([(145,216),(151,216),(170,228),(195,235),(218,237),(240,232),(254,218),(275,212),(284,219),(282,233),(265,247),(242,255),(207,254),(181,245),(160,234)],head:true)
@@ -1795,18 +1941,24 @@ extension DinoSpriteColorRenderer {
                 let cream=v.hue>0.060 && v.hue<0.19 && Double(p[i+2])/max(1,Double(p[i]))>0.35 && Double(p[i+1])/max(1,Double(p[i]))>0.65
                 let red=v.hue<0.055 || v.hue>0.95
                 let gold=v.hue>=0.065 && v.hue<0.19
+                // A clock's search ellipse also covers the ivory claws and the
+                // cast shadow on the belly. Only the gold paint is bezel metal.
+                let bezelGold = v.hue > 0.065 && v.hue < 0.19 && Double(p[i+2]) < Double(p[i+1]) * 0.68
                 let onHand=hands.contains {$0.contains(point)} && v.hue<0.055 && v.saturation>0.35
                 var label:UInt8=3
-                if head.contains(point) && !face.contains(point) && !onHand && (v.hue<0.04 || gold) {label=gold ? 6:2}
+                if head.contains(point) && !face.contains(point) && !onHand && (v.hue<0.065 || v.hue>0.95 || gold) {label=gold ? 6:2}
                 if cream && ((face.contains(point) && point.y > (rig.turn>=2 && rig.turn<=7 ? 205:rig.headTransform.ty+209)) || !head.contains(point)) {label=4}
                 if (horns.contains(where:{$0.contains(point)}) || hornEdges.contains(where:{$0.contains(point)})) && cream && Double(p[i+2])/max(1,Double(p[i]))>0.42 {label=4}
                 if chin.contains(point) && rig.turn != 2 && rig.turn != 6 && rig.turn != 7 && !rig.rear {label=4}
                 if noseHorn.contains(point) && v.hue<0.035 && v.saturation>0.5 && rig.turn != 4 {label=2}
-                if (sash.contains(point) || extraSash.contains(point)) && red && !onHand {label=1}
-                if metals.contains(where:{$0.contains(point)}) && v.hue>0.05 && v.hue<0.19 && Double(p[i+1])/max(1,Double(p[i]))>0.5 && !onHand {label=5}
+                if (sash.contains(point) || extraSash.contains(point)) && red && !onHand
+                    && raisedTail?.contains(point) != true {label=1}
+                // The low ivory points are part of the frill in the rear views.
+                if rig.rear && point.y < 259 && !face.contains(point) && cream {label=6}
+                if metals.contains(where:{$0.contains(point)}) && bezelGold && !onHand {label=5}
                 // Hanging loops sit above each separate clock; keep their full
                 // highlights and shadows in metal, independent of dial colors.
-                for clock in rig.clocks where CGRect(x:clock.midX-10,y:clock.minY-14,width:20,height:18).contains(point) && gold && !onHand {label=5}
+                for clock in rig.clocks where CGRect(x:clock.midX-10,y:clock.minY-14,width:20,height:18).contains(point) && bezelGold && !onHand {label=5}
                 if dialMatte[n]>0 {label=0}
                 if (rig.asset == "volcano-clap-open" || rig.asset == "volcano-clap-open-2"), cream {
                     if clapTips.contains(where:{$0.contains(point)}) {label=4}
@@ -1848,7 +2000,7 @@ extension DinoSpriteColorRenderer {
                 for (k,v) in [rgb.0,rgb.1,rgb.2].enumerated(){p[i+k]=UInt8((min(1,max(0,v))*a*255).rounded())}
             }
         }
-        return desertImage(bytes,width:w,height:h)
+        return spriteImage(bytes,width:w,height:h)
     }
     static func volcanoHeadOverflow(_ source:CGImage,asset:String,mirrored:Bool=true) -> CGImage? {
         let w=source.width,h=source.height,rig=VolcanoRig(asset:asset),head=rig.head
@@ -1877,7 +2029,7 @@ extension DinoSpriteColorRenderer {
         }
         var keep=[Bool](repeating:false,count:w*h);for n in largest {keep[n]=true}
         for n in 0..<w*h where !keep[n] {for k in 0..<4 {bytes[n*4+k]=0}}
-        return desertImage(bytes,width:w,height:h)
+        return spriteImage(bytes,width:w,height:h)
     }
 }
 
@@ -1971,35 +2123,231 @@ extension DinoSpriteColorRenderer {
 /// Material analysis is an authoring step. Shipping the color-independent RLE
 /// mattes keeps a cold answer/result from doing connected-component work on the
 /// render thread. Geometry remains the source of truth for rebaking and tests.
-private enum VolcanoMaterialArchive {
-    private struct Entry {let width:Int;let height:Int;let start:Int;let runs:Int}
-    private static let archive: (Data,[String:Entry])? = {
-        let data:Data?
+private struct DinoSpriteMaskArchive {
+    private struct Entry {
+        let width: Int
+        let height: Int
+        let start: Int
+        let runs: Int
+    }
+
+    static let volcano = Self(name: "volcano-materials", filename: "magma-materials.bin",
+                              signature: "MGM9", maximumLabel: 6)
+    static let village = Self(name: "village-materials", filename: "village-materials.bin",
+                              signature: "VLG1", maximumLabel: 31)
+    static let cave = Self(name: "cave-materials", filename: "cave-materials.bin",
+                           signature: "CAV1", maximumLabel: 31)
+    static let city = Self(name: "city-materials", filename: "city-materials.bin",
+                           signature: "CTY1", maximumLabel: 31)
+    static let valley = Self(name: "valley-materials", filename: "valley-materials.bin",
+                             signature: "VLY1", maximumLabel: 31)
+
+    private let data: Data
+    private let entries: [String: Entry]
+    private let maximumLabel: UInt8
+
+    private init?(name: String, filename: String, signature: String, maximumLabel: UInt8) {
+        let loaded: Data?
 #if canImport(UIKit)
-        data=NSDataAsset(name:"volcano-materials")?.data
+        loaded = NSDataAsset(name: name)?.data
 #else
-        data=try? Data(contentsOf:URL(fileURLWithPath:"Assets.xcassets/volcano-materials.dataset/magma-materials.bin"))
+        loaded = try? Data(contentsOf: URL(fileURLWithPath: "Assets.xcassets/\(name).dataset/\(filename)"))
 #endif
-        guard let data,data.count>=6,Array(data.prefix(4))==[77,71,77,57] else {return nil}
-        func u16(_ p:Int)->Int {Int(data[p]) | Int(data[p+1])<<8}
-        func u32(_ p:Int)->Int {Int(data[p]) | Int(data[p+1])<<8 | Int(data[p+2])<<16 | Int(data[p+3])<<24}
-        var entries=[String:Entry](),cursor=6
+        guard let loaded, loaded.count >= 6, loaded.prefix(4).elementsEqual(signature.utf8) else { return nil }
+
+        func u16(_ position: Int) -> Int { Int(loaded[position]) | Int(loaded[position + 1]) << 8 }
+        func u32(_ position: Int) -> Int {
+            u16(position) | u16(position + 2) << 16
+        }
+        var entries = [String: Entry]()
+        var cursor = 6
         for _ in 0..<u16(4) {
-            guard cursor+10<=data.count else {return nil}
-            let length=u16(cursor),w=u16(cursor+2),h=u16(cursor+4),runs=u32(cursor+6);cursor+=10
-            guard cursor+length+runs*5<=data.count,let name=String(data:data[cursor..<cursor+length],encoding:.utf8) else {return nil}
-            cursor+=length;entries[name]=Entry(width:w,height:h,start:cursor,runs:runs);cursor+=runs*5
+            guard cursor + 10 <= loaded.count else { return nil }
+            let length = u16(cursor), width = u16(cursor + 2), height = u16(cursor + 4), runs = u32(cursor + 6)
+            cursor += 10
+            guard cursor + length + runs * 5 <= loaded.count,
+                  let name = String(data: loaded[cursor..<(cursor + length)], encoding: .utf8) else { return nil }
+            cursor += length
+            entries[name] = Entry(width: width, height: height, start: cursor, runs: runs)
+            cursor += runs * 5
         }
-        return (data,entries)
+        self.data = loaded
+        self.entries = entries
+        self.maximumLabel = maximumLabel
+    }
+
+    func labels(asset: String, width: Int, height: Int) -> [UInt8]? {
+        guard let entry = entries[asset], entry.width == width, entry.height == height else { return nil }
+        var output = [UInt8]()
+        let pixelCount = width * height
+        output.reserveCapacity(pixelCount)
+        for run in 0..<entry.runs {
+            let p = entry.start + run * 5
+            let count = Int(data[p]) | Int(data[p + 1]) << 8 | Int(data[p + 2]) << 16 | Int(data[p + 3]) << 24
+            let label = data[p + 4]
+            guard label <= maximumLabel, count > 0, output.count + count <= pixelCount else { return nil }
+            output.append(contentsOf: repeatElement(label, count: count))
+        }
+        return output.count == pixelCount ? output : nil
+    }
+}
+
+extension DinoSpriteColorRenderer {
+    private final class BossMatte {
+        let pixels: [UInt8]
+        init(_ pixels: [UInt8]) { self.pixels = pixels }
+    }
+
+    private static let bossMaskCache: NSCache<NSString, BossMatte> = {
+        let cache = NSCache<NSString, BossMatte>()
+        cache.totalCostLimit = 14 * 1024 * 1024
+        return cache
     }()
-    static func labels(asset:String,width:Int,height:Int)->[UInt8]? {
-        guard let (data,entries)=archive,let e=entries[asset],e.width==width,e.height==height else {return nil}
-        var out=[UInt8]();out.reserveCapacity(width*height)
-        for run in 0..<e.runs {
-            let p=e.start+run*5,count=Int(data[p]) | Int(data[p+1])<<8 | Int(data[p+2])<<16 | Int(data[p+3])<<24,label=data[p+4]
-            guard label<=6,count>0,out.count+count<=width*height else {return nil}
-            out.append(contentsOf:repeatElement(label,count:count))
+
+    /// Low bits are the source material. Bit 3 selects the hat and bit 4
+    /// selects the entire isolated head used by the non-circular avatar.
+    static func villageLabels(_ source: CGImage, asset: String) -> [UInt8]? {
+        archivedLabels(source, name: DinoVillageArtwork.asset(for: asset), archive: .village)
+    }
+
+    static func caveLabels(_ source: CGImage, asset: String) -> [UInt8]? {
+        archivedLabels(source, name: DinoCaveArtwork.asset(for: asset), archive: .cave)
+    }
+
+    static func cityLabels(_ source: CGImage, asset: String) -> [UInt8]? {
+        archivedLabels(source, name: DinoCityArtwork.asset(for: asset), archive: .city)
+    }
+
+    static func valleyLabels(_ source: CGImage, asset: String) -> [UInt8]? {
+        archivedLabels(source, name: DinoValleyArtwork.asset(for: asset), archive: .valley)
+    }
+
+    private static func archivedLabels(_ source: CGImage, name: String, archive: DinoSpriteMaskArchive?) -> [UInt8]? {
+        let key = "\(name)-\(source.width)x\(source.height)" as NSString
+        if let hit = bossMaskCache.object(forKey: key) { return hit.pixels }
+        guard let pixels = archive?.labels(asset: name, width: source.width, height: source.height) else { return nil }
+        bossMaskCache.setObject(BossMatte(pixels), forKey: key, cost: pixels.count)
+        return pixels
+    }
+
+    static func recoloredVillage(_ source: CGImage, appearance: DinoAppearance, asset: String) -> CGImage? {
+        guard !appearance.hasOriginalColors else { return source }
+        guard let matte = villageLabels(source, asset: asset) else { return nil }
+        let standard = DinoAppearance.standard(for: .village)
+        let parts: [DinoAppearance.Part] = [.body, .bandana, .bandana, .spikes, .body, .belly]
+        return recoloredMatte(source, matte: matte, appearance: appearance, standard: standard,
+                              parts: parts, referenceColors: [0, standard.bandana, 0xEAB340, standard.spikes, standard.body, standard.belly])
+    }
+
+    static func recoloredCave(_ source: CGImage, appearance: DinoAppearance, asset: String) -> CGImage? {
+        guard !appearance.hasOriginalColors else { return source }
+        guard let matte = caveLabels(source, asset: asset) else { return nil }
+        let standard = DinoAppearance.standard(for: .cave)
+        let parts: [DinoAppearance.Part] = [.body, .bandana, .spikes, .spikes, .body, .belly, .belly, .body]
+        return recoloredMatte(source, matte: matte, appearance: appearance, standard: standard, parts: parts,
+                              referenceColors: [0, standard.bandana, standard.spikes, 0xB754F0,
+                                                standard.body, standard.belly, 0xD0E0E5, standard.body])
+    }
+
+    static func recoloredCity(_ source: CGImage, appearance: DinoAppearance, asset: String) -> CGImage? {
+        guard !appearance.hasOriginalColors else { return source }
+        guard let matte = cityLabels(source, asset: asset) else { return nil }
+        let standard = DinoAppearance.standard(for: .city)
+        let parts: [DinoAppearance.Part] = [.body, .bandana, .spikes, .body, .belly]
+        return recoloredMatte(source, matte: matte, appearance: appearance, standard: standard,
+                              parts: parts, referenceColors: [0, standard.bandana, standard.spikes,
+                                                              standard.body, standard.belly])
+    }
+
+    static func recoloredValley(_ source: CGImage, appearance: DinoAppearance, asset: String) -> CGImage? {
+        guard !appearance.hasOriginalColors else { return source }
+        guard let matte = valleyLabels(source, asset: asset) else { return nil }
+        let standard = DinoAppearance.standard(for: .valley)
+        // Cloth, embroidery and watch metal, spotted skin, cream trim and belly, blue-white claws.
+        let parts: [DinoAppearance.Part] = [.body, .bandana, .spikes, .body, .belly, .belly]
+        return recoloredMatte(source, matte: matte, appearance: appearance, standard: standard,
+                              parts: parts, referenceColors: [0, standard.bandana, standard.spikes,
+                                                              standard.body, standard.belly, 0xAECED3])
+    }
+
+    private static func recoloredMatte(_ source: CGImage, matte: [UInt8], appearance: DinoAppearance, standard: DinoAppearance,
+                                       parts: [DinoAppearance.Part], referenceColors: [UInt32]) -> CGImage? {
+        let reference = referenceColors.map { HSL(hex: $0) }
+        let target = parts.map { HSL(hex: appearance[$0]) }
+        let changed = parts.map { appearance[$0] != standard[$0] }
+
+        return editedBossPixels(source) { pixels in
+            for n in matte.indices {
+                let label = Int(matte[n] & 7), i = n * 4
+                let alpha = Double(pixels[i + 3]) / 255
+                guard label > 0, label < parts.count, changed[label], alpha > 0 else { continue }
+                let paint = HSL(red: Double(pixels[i]) / 255 / alpha,
+                                green: Double(pixels[i + 1]) / 255 / alpha,
+                                blue: Double(pixels[i + 2]) / 255 / alpha)
+                let native = reference[label], selected = target[label]
+                let lightness = paint.lightness <= native.lightness
+                    ? selected.lightness * paint.lightness / native.lightness
+                    : selected.lightness + (1 - selected.lightness) * (paint.lightness - native.lightness) / (1 - native.lightness)
+                let saturation = min(1, paint.saturation * selected.saturation / native.saturation)
+                let rgb = HSL(hue: selected.hue, saturation: saturation, lightness: lightness).rgb
+                pixels[i] = UInt8((min(1, max(0, rgb.0)) * alpha * 255).rounded())
+                pixels[i + 1] = UInt8((min(1, max(0, rgb.1)) * alpha * 255).rounded())
+                pixels[i + 2] = UInt8((min(1, max(0, rgb.2)) * alpha * 255).rounded())
+            }
         }
-        return out.count==width*height ? out:nil
+    }
+
+    static func villageHead(_ source: CGImage, asset: String, mirrored: Bool, includesFace: Bool = false) -> CGImage? {
+        guard let matte = villageLabels(source, asset: asset) else { return nil }
+        return isolatedHead(source, matte: matte, mirrored: mirrored, includesFace: includesFace)
+    }
+
+    static func caveHead(_ source: CGImage, asset: String, mirrored: Bool, includesFace: Bool = false) -> CGImage? {
+        guard let matte = caveLabels(source, asset: asset) else { return nil }
+        return isolatedHead(source, matte: matte, mirrored: mirrored, includesFace: includesFace)
+    }
+
+    static func cityHead(_ source: CGImage, asset: String, mirrored: Bool, includesFace: Bool = false) -> CGImage? {
+        guard let matte = cityLabels(source, asset: asset) else { return nil }
+        return isolatedHead(source, matte: matte, mirrored: mirrored, includesFace: includesFace)
+    }
+
+    static func valleyHead(_ source: CGImage, asset: String, mirrored: Bool, includesFace: Bool = false) -> CGImage? {
+        guard let matte = valleyLabels(source, asset: asset) else { return nil }
+        return isolatedHead(source, matte: matte, mirrored: mirrored, includesFace: includesFace)
+    }
+
+    private static func isolatedHead(_ source: CGImage, matte: [UInt8], mirrored: Bool, includesFace: Bool) -> CGImage? {
+        let flag: UInt8 = includesFace ? 16 : 8
+        let width = source.width
+        return editedBossPixels(source) { pixels in
+            for y in 0..<source.height {
+                let row = y * width
+                for x in 0..<width {
+                    let originalX = mirrored ? width - 1 - x : x
+                    guard matte[row + originalX] & flag == 0 else { continue }
+                    let i = (row + x) * 4
+                    pixels[i] = 0
+                    pixels[i + 1] = 0
+                    pixels[i + 2] = 0
+                    pixels[i + 3] = 0
+                }
+            }
+        }
+    }
+
+    private static func editedBossPixels(_ source: CGImage, edit: (UnsafeMutableBufferPointer<UInt8>) -> Void) -> CGImage? {
+        let width = source.width, height = source.height
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        let decoded = bytes.withUnsafeMutableBytes { buffer in
+            guard let context = CGContext(data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8,
+                bytesPerRow: width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
+            context.draw(source, in: CGRect(x: 0, y: 0, width: width, height: height))
+            edit(buffer.bindMemory(to: UInt8.self))
+            return true
+        }
+        guard decoded else { return nil }
+        return spriteImage(bytes, width: width, height: height)
     }
 }

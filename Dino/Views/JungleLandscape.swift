@@ -1937,7 +1937,8 @@ struct WorldMapLandscape: View, Equatable {
                 if let resident = player.profile.mapResident(in: 1), resident != .jungle {
                     DinoAvatar(appearance: .standard(for: resident))
                         .frame(width: size, height: size)
-                        .position(x: point.x, y: routeOffset + point.y + 8 * scale - size * 0.466)
+                        .position(x: point.x, y: routeOffset + point.y + 8 * scale
+                                  - size * CGFloat(resident.standingFootline - 0.5))
                         .accessibilityIdentifier("map.jungleResident.main")
                 } else {
                     Canvas { context, _ in
@@ -9986,6 +9987,7 @@ private enum CityGroundLayout {
 }
 
 private struct CityWorldLife: View {
+    @EnvironmentObject private var player: DinoPlayer
     let routeOffset: CGFloat
     let viewportHeight: CGFloat
     var fixedTime: TimeInterval? = nil
@@ -10003,6 +10005,7 @@ private struct CityWorldLife: View {
                                     paused: fixedTime != nil || frozen || reduceMotion || viewport.isEmpty || scenePhase != .active)) { timeline in
                 let time = frozen || reduceMotion ? 0 : (fixedTime ?? timeline.date.timeIntervalSince(animationEpoch ?? Date(timeIntervalSinceReferenceDate: 0)))
                 CityMetroForeground(layout: layout, line: line, time: time, viewport: viewport,
+                                    resident: player.profile.mapResident(in: 6) ?? .city,
                                     frozen: frozen || reduceMotion, alwaysVisible: fixedTime != nil)
             }
         }
@@ -10022,6 +10025,7 @@ private struct CityMetroForeground: View {
     let line: CityMetroLine
     let time: TimeInterval
     let viewport: CGRect
+    let resident: DinoIdentity
     let frozen: Bool
     var alwaysVisible = false
 
@@ -10089,14 +10093,21 @@ private struct CityMetroForeground: View {
                 .position(x: tunnelFrame.midX, y: tunnelFrame.midY).zIndex(Double(tunnelFrame.maxY-layout.routeOffset))
             let court = geometry.court
             let frame = court.clearance.offsetBy(dx: 0, dy: layout.routeOffset)
-            CityCourtArtwork(layout: layout, frame: frame).equatable()
+            CityCourtArtwork(layout: layout, frame: frame, showsBoss: resident == .city).equatable()
                 .frame(width: frame.width, height: frame.height)
                 .position(x: frame.midX, y: frame.midY).zIndex(Double(court.point.y))
             // The carried clocks share the boss's ground depth, so nearer
             // buildings cover them just as they cover the dinosaur's wings.
             let clockPoint = CGPoint(x: court.bossPoint.x, y: layout.routeOffset + court.bossPoint.y)
             let clockFrame = WorldBossPainter.bounds(worldID: 6, at: clockPoint, size: court.artScale)
-            if alwaysVisible || clockFrame.intersects(viewport) {
+            if resident != .city {
+                let side = 195 * court.artScale
+                DinoAvatar(appearance: .standard(for: resident))
+                    .frame(width: side, height: side)
+                    .position(x: clockPoint.x, y: clockPoint.y + 10 * court.artScale
+                              - side * CGFloat(resident.standingFootline - 0.5))
+                    .zIndex(Double(court.point.y) + 0.001)
+            } else if alwaysVisible || clockFrame.intersects(viewport) {
                 Canvas { context, _ in
                     var c = context; c.translateBy(x: -clockFrame.minX, y: -clockFrame.minY)
                     WorldBossPainter(context: c).drawClocks(worldID: 6, at: clockPoint, size: court.artScale, elapsed: clockTime)
@@ -10112,15 +10123,16 @@ private struct CityMetroForeground: View {
 private struct CityCourtArtwork: View, Equatable {
     let layout: WorldSceneryLayout
     let frame: CGRect
+    let showsBoss: Bool
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.frame == rhs.frame && lhs.layout.width == rhs.layout.width &&
+        lhs.showsBoss == rhs.showsBoss && lhs.frame == rhs.frame && lhs.layout.width == rhs.layout.width &&
         lhs.layout.height == rhs.layout.height && lhs.layout.routeOffset == rhs.layout.routeOffset
     }
     var body: some View {
         Canvas { context, _ in
             var c = context
             c.translateBy(x: -frame.minX, y: layout.routeOffset - frame.minY)
-            CityWorldPainter(context: c).metroForeground(layout: layout)
+            CityWorldPainter(context: c).metroForeground(layout: layout, showsBoss: showsBoss)
         }
     }
 }
@@ -10828,11 +10840,11 @@ private struct CityWorldPainter {
         }
     }
 
-    func metroForeground(layout: WorldSceneryLayout) {
+    func metroForeground(layout: WorldSceneryLayout, showsBoss: Bool) {
         let court = CityBossCourt(layout:layout,line:CityMetroLine.cached(layout:layout))
         let p = ThemePainter(context: context, colors: WorldThemeColors(DinoWorldCatalog.world(6)!))
         p.bossClearing(worldID: 6, at: court.bossPoint, size: layout.scale)
-        p.boss(worldID: 6, at: court.bossPoint, size: court.artScale)
+        if showsBoss { p.boss(worldID: 6, at: court.bossPoint, size: court.artScale) }
         p.bossClearingForeground(worldID: 6, at: court.bossPoint, size: layout.scale)
     }
 
@@ -18286,7 +18298,7 @@ struct ThemedWorldLandscape: View, Equatable {
                 let point = CGPoint(x: right - 79 * scale, y: 1675)
                 depth.add(at: routeOffset + point.y) {
                     boss.bossClearing(worldID: 2, at: point, size: scale)
-                    boss.boss(worldID: 2, at: point, size: scale * 0.88)
+                    boss.valleyBossGrounding(at: point, size: scale * 0.88)
                     boss.bossClearingForeground(worldID: 2, at: point, size: scale)
                 }
                 depth.draw()
@@ -18316,7 +18328,7 @@ struct ThemedWorldLandscape: View, Equatable {
                 let point = WorldBossStage(worldID: 4, width: size.width).point
                 depth.add(at: routeOffset + point.y) {
                     boss.bossClearing(worldID: 4, at: point, size: scale)
-                    boss.boss(worldID: 4, at: point, size: scale * 0.88)
+                    // The live collection layer owns the resident and its clock.
                     boss.bossClearingForeground(worldID: 4, at: point, size: scale)
                 }
                 depth.draw()
@@ -18505,7 +18517,7 @@ private struct WorldBossMapClocks: View {
             let point = CGPoint(x: origin.x, y: routeOffset + origin.y)
             let frame = WorldBossPainter.bounds(worldID: world.themeID, at: point, size: artScale)
             Group {
-                if [2, 3].contains(world.id) {
+                if DinoIdentity.boss(in: world.id) != nil, !jungle {
                     if let resident = player.profile.mapResident(in: world.id), resident != DinoIdentity(rawValue: world.id) {
                         DinoAvatar(appearance: .standard(for: resident))
                             .frame(width: 195 * artScale, height: 195 * artScale)
@@ -19506,30 +19518,32 @@ private struct ThemePainter {
     }
 
     func boss(worldID: Int, at point: CGPoint, size: CGFloat, elapsed: TimeInterval = 0) {
-        if worldID == 2 {
-            at(point, size: size) { p in
-                func contact(_ rect: CGRect, opacity: Double) {
-                    var c = p.context
-                    c.translateBy(x: rect.midX, y: rect.midY)
-                    c.scaleBy(x: rect.width / 2, y: rect.height / 2)
-                    c.fill(Path(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2)),
-                           with: .radialGradient(Gradient(stops: [
-                            .init(color: Color(dinoHex: p.colors.shade).opacity(opacity), location: 0),
-                            .init(color: Color(dinoHex: p.colors.shade).opacity(opacity * 0.65), location: 0.5),
-                            .init(color: .clear, location: 1)
-                           ]), center: .zero, startRadius: 0, endRadius: 1))
-                }
-                // Match the four staggered foot contacts in the cropped artwork.
-                contact(CGRect(x: -52, y: -1, width: 108, height: 20), opacity: 0.20)
-                for rect in [CGRect(x: -49, y: 3, width: 26, height: 6),
-                             CGRect(x: -22, y: 7, width: 29, height: 6),
-                             CGRect(x: 6, y: 1, width: 21, height: 6),
-                             CGRect(x: 26, y: 5, width: 28, height: 6)] {
-                    contact(rect, opacity: 0.24)
-                }
+        if worldID == 2 { valleyBossGrounding(at: point, size: size) }
+        WorldBossPainter(context: context).draw(worldID: worldID, at: point, size: size, elapsed: elapsed)
+    }
+
+    func valleyBossGrounding(at point: CGPoint, size: CGFloat) {
+        at(point, size: size) { p in
+            func contact(_ rect: CGRect, opacity: Double) {
+                var c = p.context
+                c.translateBy(x: rect.midX, y: rect.midY)
+                c.scaleBy(x: rect.width / 2, y: rect.height / 2)
+                c.fill(Path(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2)),
+                       with: .radialGradient(Gradient(stops: [
+                        .init(color: Color(dinoHex: p.colors.shade).opacity(opacity), location: 0),
+                        .init(color: Color(dinoHex: p.colors.shade).opacity(opacity * 0.65), location: 0.5),
+                        .init(color: .clear, location: 1)
+                       ]), center: .zero, startRadius: 0, endRadius: 1))
+            }
+            // Match the four staggered foot contacts in the cropped artwork.
+            contact(CGRect(x: -52, y: -1, width: 108, height: 20), opacity: 0.20)
+            for rect in [CGRect(x: -49, y: 3, width: 26, height: 6),
+                         CGRect(x: -22, y: 7, width: 29, height: 6),
+                         CGRect(x: 6, y: 1, width: 21, height: 6),
+                         CGRect(x: 26, y: 5, width: 28, height: 6)] {
+                contact(rect, opacity: 0.24)
             }
         }
-        WorldBossPainter(context: context).draw(worldID: worldID, at: point, size: size, elapsed: elapsed)
     }
 }
 

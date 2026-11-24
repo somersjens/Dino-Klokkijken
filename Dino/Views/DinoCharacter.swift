@@ -64,7 +64,7 @@ struct DinoCharacter: View {
                             .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
                             .offset(y: size * sample.height * jumpHeightScale)
                             .transaction { $0.animation = nil }
-                        drawing.modifier(companionPresentation.withJungleHead(AnyView(head)))
+                        drawing.modifier(companionPresentation.withBossHead(AnyView(head)))
                     } else {
                         drawing.modifier(companionPresentation)
                     }
@@ -114,7 +114,9 @@ struct DinoCharacter: View {
                 sprite(sample.pose, angle: sample.angle, yaw: sample.yaw, headOnly: headOnly)
                     .opacity(sample.previousPose != nil ? sample.poseBlend : 1)
                     .blendMode(.plusLighter)
-                if !headOnly && clip == .thumbsUp && !reduceMotion { DinoClapEffect(elapsed: elapsed, contact: appearance.identity == .volcano ? DinoVolcanoArtwork.clapContact : appearance.identity == .desert ? CGPoint(x: 0.72, y: 0.60) : CGPoint(x: 0.40, y: 0.475)) }
+                if !headOnly && clip == .thumbsUp && !reduceMotion {
+                    DinoClapEffect(elapsed: elapsed, contact: clapContact)
+                }
             }.compositingGroup()
         } else if clip == .thumbsUp {
             ZStack {
@@ -151,6 +153,18 @@ struct DinoCharacter: View {
         }
     }
 
+    private var clapContact: CGPoint {
+        switch appearance.identity {
+        case .valley: DinoValleyArtwork.clapContact
+        case .city: DinoCityArtwork.clapContact
+        case .cave: DinoCaveArtwork.clapContact
+        case .village: DinoVillageArtwork.clapContact
+        case .volcano: DinoVolcanoArtwork.clapContact
+        case .desert: CGPoint(x: 0.72, y: 0.60)
+        default: CGPoint(x: 0.40, y: 0.475)
+        }
+    }
+
     private func morphImage(_ asset: String) -> UIImage? {
         if let prepared, prepared.appearance == appearance, let image = prepared.images[asset] { return image }
         return DinoAvatarRenderer.cached(appearance: appearance, portrait: false, asset: asset)
@@ -171,8 +185,12 @@ struct DinoCharacter: View {
         let image = Group {
             if headOnly, let prepared, prepared.appearance == appearance, let image = prepared.images["head-" + pose.asset] {
                 Image(uiImage:image).resizable().scaledToFit().accessibilityHidden(true)
-            } else if headOnly, let image = DinoAvatarRenderer.bossHead(appearance:appearance,asset:pose.asset) {
-                Image(uiImage:image).resizable().scaledToFit().accessibilityHidden(true)
+            } else if headOnly {
+                if let image = DinoAvatarRenderer.bossHead(appearance: appearance, asset: pose.asset) {
+                    Image(uiImage: image).resizable().scaledToFit().accessibilityHidden(true)
+                } else {
+                    Color.clear
+                }
             } else if let prepared, prepared.appearance == appearance, let image = prepared.images[pose.asset] {
                 Image(uiImage: image).resizable().scaledToFit().accessibilityHidden(true)
             } else {
@@ -543,10 +561,10 @@ struct DinoCompanionPresentation: AnimatableModifier {
     let fadesBeforeTakeoff: Bool
     let palette: HUDPalette
     let rimRatio: CGFloat
-    var jungleHead: AnyView? = nil
-    func withJungleHead(_ head: AnyView) -> Self {
+    var bossHead: AnyView? = nil
+    func withBossHead(_ head: AnyView) -> Self {
         var copy = self
-        copy.jungleHead = head
+        copy.bossHead = head
         return copy
     }
     var animatableData: AnimatablePair<CGFloat, CGFloat> {
@@ -574,8 +592,8 @@ struct DinoCompanionPresentation: AnimatableModifier {
             // Paint the actual bandana/spike pixels over the complete rim.
             // Cutting rectangles out of the rim left gaps when a pose moved.
             // This is the same sampled image, so both crops stay frame-perfect.
-            if let jungleHead {
-                jungleHead
+            if let bossHead {
+                bossHead
                     .scaleEffect(1 + (player.profile.activeCharacter.portraitScale-1)*crop)
                     .offset(x:210*player.profile.activeCharacter.portraitOffsetX*crop,
                             y:210*player.profile.activeCharacter.portraitOffsetY*crop)

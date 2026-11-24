@@ -554,7 +554,32 @@ enum DinoWelcomeJump {
     // original 1254-pixel paintings. Recoloring preserves these facial pixels.
     static let idleHead = Head(pixels: (605.76, 355.11), (800.74, 308.01), (803.62, 397.21))
     static func idleHead(for character: DinoIdentity) -> Head {
-        character == .volcano ? volcanoHead : character == .desert ? desertHead : character == .jungle ? jungleHead(for: "jungle-idle") : idleHead
+        switch character {
+        case .volcano: volcanoHead
+        case .desert: desertHead
+        case .jungle: jungleHead(for: "jungle-idle")
+        case .village: villageHead
+        case .cave: caveHead
+        case .city: cityHead
+        case .valley: valleyHead
+        default: idleHead
+        }
+    }
+    private static var caveHead: Head {
+        let points = DinoCaveArtwork.headLandmarks.map { CGPoint(x: 1 - $0.x, y: $0.y) }
+        return Head(points[0], points[1], points[2])
+    }
+    private static var cityHead: Head {
+        let points = DinoCityArtwork.headLandmarks.map { CGPoint(x: 1 - $0.x, y: $0.y) }
+        return Head(points[0], points[1], points[2])
+    }
+    private static var valleyHead: Head {
+        let points = DinoValleyArtwork.headLandmarks.map { CGPoint(x: 1 - $0.x, y: $0.y) }
+        return Head(points[0], points[1], points[2])
+    }
+    private static var villageHead: Head {
+        let points = DinoVillageArtwork.headLandmarks.map { CGPoint(x: 1 - $0.x, y: $0.y) }
+        return Head(points[0], points[1], points[2])
     }
     private static var volcanoHead: Head {
         let p = DinoVolcanoArtwork.headLandmarks.map { CGPoint(x:1-$0.x,y:$0.y) }
@@ -571,6 +596,10 @@ enum DinoWelcomeJump {
         return Head(p[0], p[1], p[2])
     }
     static func sourceHead(for asset: String, character: DinoIdentity = .main) -> Head {
+        if character == .valley { return valleyHead }
+        if character == .city { return cityHead }
+        if character == .cave { return caveHead }
+        if character == .village { return villageHead }
         if character == .volcano { return volcanoHead }
         if character == .desert { return desertHead }
         if character == .jungle { return jungleHead(for: asset) }
@@ -699,11 +728,13 @@ enum DinoWelcomeJump {
 /// Shared, testable geometry for the welcome's native layers. The world matrix
 /// maps normalized painting coordinates to screen points around the painted feet.
 struct DinoWelcomeFlight {
-    static let footline = CGFloat(1211.0 / 1254)
     let source: CGPoint
     let sourceSide: CGFloat
     let destination: CGRect
     var character: DinoIdentity = .main
+    var footline: CGFloat {
+        character == .valley ? CGFloat(character.standingFootline) : 1211.0 / 1254
+    }
 
     func position(elapsed: Double) -> CGPoint {
         let t = CGFloat(DinoWelcomeJump.travelProgress(elapsed: elapsed))
@@ -712,7 +743,7 @@ struct DinoWelcomeFlight {
         let clearance = max(24, source.y - sourceSide / 2 - 16)
         let arc = -CGFloat(DinoWelcomeJump.motion(elapsed: elapsed).height) * min(250, desiredArc, clearance)
         return CGPoint(x: source.x + (destination.midX - source.x) * t,
-                       y: source.y + (destination.midY - source.y) * t + (Self.footline - 0.5) * side - arc)
+                       y: source.y + (destination.midY - source.y) * t + (footline - 0.5) * side - arc)
     }
 
     func transform(elapsed: Double) -> CGAffineTransform {
@@ -730,7 +761,7 @@ struct DinoWelcomeFlight {
 
     func worldTransform(elapsed: Double) -> CGAffineTransform {
         let linear = transform(elapsed: elapsed), origin = position(elapsed: elapsed)
-        let anchor = CGPoint(x: sourceSide / 2, y: Self.footline * sourceSide).applying(linear)
+        let anchor = CGPoint(x: sourceSide / 2, y: footline * sourceSide).applying(linear)
         return CGAffineTransform(a: linear.a * sourceSide, b: linear.b * sourceSide,
                                  c: linear.c * sourceSide, d: linear.d * sourceSide,
                                  tx: origin.x - anchor.x, ty: origin.y - anchor.y)
@@ -1040,6 +1071,45 @@ enum DinoBossAnimation {
         keys(for: clip, character: character).map(\.asset)
     }
     static func keys(for clip: DinoAnimation.Clip, character: DinoIdentity) -> [DinoJungleAnimation.Key] {
+        if character == .valley { return valleyKeys(for: clip) }
+        if character == .city, let city = cityKeys(for: clip) { return city }
+        if character == .cave, clip == .stumble {
+            let lead = DinoAnimation.leadIn(clip)
+            return [.init(0, "cave-idle"),
+                    .init(lead + DinoAnimation.stumbleTakeoff, "cave-stumble"),
+                    .init(lead + DinoAnimation.stumbleLanding, "cave-fallen"),
+                    .init(lead + DinoAnimation.stumblePushStart, "cave-push-up"),
+                    .init(lead + DinoAnimation.stumbleHandRelease, "cave-recover"),
+                    .init(DinoAnimation.duration(clip) - 0.04, "cave-idle")]
+        }
+        if character == .cave, clip == .pirouette {
+            let takeoff = DinoAnimation.travelDelay(clip), landing = DinoAnimation.travelDuration(clip)
+            let turn = ["cave-idle"] + DinoCaveArtwork.turnAssets
+            return [.init(0, "cave-idle"), .init(DinoAnimation.leadIn(clip) + 0.08, "cave-crouch")]
+                + turn.enumerated().map { index, asset in
+                    .init(takeoff + Double(index) * (landing - takeoff) / Double(turn.count), asset)
+                }
+                + [.init(landing, "cave-crouch"), .init(landing + 0.13, "cave-idle")]
+        }
+        if character == .village, clip == .stumble {
+            let start = DinoAnimation.leadIn(clip)
+            return [.init(0, "village-idle"),
+                    .init(DinoAnimation.travelDelay(clip), "village-stumble"),
+                    .init(DinoAnimation.travelDuration(clip), "village-fallen"),
+                    .init(start + DinoAnimation.stumblePushStart, "village-rise-low"),
+                    .init(start + DinoAnimation.stumbleBraceEnd, "village-push-up"),
+                    .init(start + DinoAnimation.stumbleHandRelease, "village-rise-high"),
+                    .init(DinoAnimation.duration(clip) - 0.04, "village-idle")]
+        }
+        if character == .village, clip == .pirouette {
+            let takeoff = DinoAnimation.travelDelay(clip), landing = DinoAnimation.travelDuration(clip)
+            let turns = DinoVillageArtwork.turnAssets
+            return [.init(0, "village-idle"), .init(DinoAnimation.leadIn(clip) + 0.08, "village-crouch")]
+                + turns.enumerated().map { index, asset in
+                    .init(takeoff + Double(index) * (landing - takeoff) / Double(turns.count), asset)
+                }
+                + [.init(landing, "village-crouch"), .init(landing + 0.13, "village-idle")]
+        }
         if character == .volcano, clip == .stumble {
             let lead=DinoAnimation.leadIn(clip),end=DinoAnimation.duration(clip)
             return [.init(0,"volcano-idle"),.init(lead+DinoAnimation.stumbleTakeoff,"volcano-stumble"),
@@ -1050,9 +1120,70 @@ enum DinoBossAnimation {
             return DinoJungleAnimation.Key(key.time, character.asset(for: key.asset))
         }
     }
+
+    private static func valleyKeys(for clip: DinoAnimation.Clip) -> [DinoJungleAnimation.Key] {
+        let standing = DinoValleyArtwork.idle
+        let idle = DinoJungleAnimation.Key(0, standing)
+        let lead = DinoAnimation.leadIn(clip), end = DinoAnimation.duration(clip)
+        let takeoff = DinoAnimation.travelDelay(clip), landing = DinoAnimation.travelDuration(clip)
+        switch clip {
+        case .idle, .openingJump:
+            return [idle]
+        case .thumbsUp:
+            return zip(DinoAnimation.correctAnswerFrameStarts, DinoAnimation.correctAnswerAssets).map {
+                .init($0.0, DinoValleyArtwork.asset(for: $0.1))
+            }
+        case .wrongAnswer:
+            return [idle, .init(DinoAnimation.answerGestureStart, "valley-wrong"),
+                    .init(DinoAnimation.answerGestureEnd, standing)]
+        case .stumble:
+            return [idle, .init(takeoff, "valley-crouch"), .init(landing, "valley-stumble"),
+                    .init(lead + DinoAnimation.stumblePushStart, "valley-push-up"),
+                    .init(end - 0.04, standing)]
+        case .backflip, .worldJump:
+            return [idle, .init(takeoff + 0.08, "valley-airborne"), .init(landing - 0.10, standing)]
+        case .pirouette:
+            let turns = DinoValleyArtwork.turnAssets
+            let step = (landing - takeoff) / Double(turns.count + 1)
+            return [idle] + turns.enumerated().map { index, asset in
+                .init(takeoff + Double(index + 1) * step, asset)
+            } + [.init(landing, standing)]
+        }
+    }
+
+    private static func cityKeys(for clip: DinoAnimation.Clip) -> [DinoJungleAnimation.Key]? {
+        let idle = DinoJungleAnimation.Key(0, "city-idle")
+        let takeoff = DinoAnimation.travelDelay(clip), landing = DinoAnimation.travelDuration(clip)
+        switch clip {
+        case .openingJump:
+            return [idle]
+        case .backflip, .worldJump:
+            // Hold the wings open at departure and open them again before
+            // landing. Only the middle of the rotation changes to the tuck.
+            return [idle, .init(takeoff + 0.10, "city-airborne"), .init(landing - 0.10, "city-idle")]
+        case .pirouette:
+            let views = ["city-idle"] + DinoCityArtwork.turnAssets
+            let step = (landing - takeoff) / Double(views.count)
+            return [idle] + views.dropFirst().enumerated().map { index, asset in
+                .init(takeoff + Double(index + 1) * step, asset)
+            } + [.init(landing, "city-idle")]
+        case .stumble:
+            let lead = DinoAnimation.leadIn(clip)
+            return [idle, .init(takeoff, "city-crouch"), .init(takeoff + 0.14, "city-stumble"),
+                    .init(landing, "city-fallen"), .init(lead + DinoAnimation.stumblePushStart, "city-push-up"),
+                    .init(lead + DinoAnimation.stumbleHandRelease, "city-crouch"),
+                    .init(DinoAnimation.duration(clip) - 0.04, "city-idle")]
+        case .idle, .thumbsUp, .wrongAnswer:
+            return nil
+        }
+    }
+
     static func sample(_ clip: DinoAnimation.Clip, character: DinoIdentity, elapsed: Double, reducedMotion: Bool = false) -> DinoAnimation.Sample {
         guard character.usesBossArtwork else { return DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reducedMotion) }
         guard character != .jungle else { return DinoJungleAnimation.sample(clip, elapsed: elapsed, reducedMotion: reducedMotion) }
+        if character == .valley, elapsed >= DinoAnimation.duration(clip) {
+            return .init(pose: .init(asset: DinoValleyArtwork.idle))
+        }
         var result = DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reducedMotion)
         result.morph = nil; result.previousPose = nil; result.poseBlend = 1
         let keys = keys(for: clip, character: character).reduce(into: [DinoJungleAnimation.Key]()) { a, b in
@@ -1065,7 +1196,25 @@ enum DinoBossAnimation {
             // Prepared images face right: source-axis deltas reverse once.
             axisOffset = (DinoDesertArtwork.turnAxes[index-1] - 229) / 443.5
         }
+        if character == .cave, let index = DinoCaveArtwork.turnAssets.firstIndex(of: asset) {
+            axisOffset = (DinoCaveArtwork.turnHipX[index] - DinoCaveArtwork.idleHipX) / 512
+        }
         var verticalOffset = 0.0
+        if character == .city {
+            if asset == "city-airborne" {
+                axisOffset = DinoCityArtwork.tuckOffset.x
+                verticalOffset = DinoCityArtwork.tuckOffset.y
+            } else if asset == "city-push-up" {
+                axisOffset = DinoCityArtwork.pushUpOffsetX
+            }
+            if clip == .openingJump && !reducedMotion {
+                let start = DinoAnimation.leadIn(clip), end = DinoAnimation.travelDelay(clip)
+                let p = min(1, max(0, (elapsed - start) / (end - start)))
+                let compression = 0.062 * pow(sin(.pi * p), 2)
+                result.scaleX += compression * 0.24
+                result.scaleY -= compression
+            }
+        }
         if character == .volcano {
             if asset.contains("clap-") || asset == "volcano-wrong" {axisOffset=6.0/512;verticalOffset = -2.0/512}
             if asset == "volcano-crouch" || asset == "volcano-landing" {verticalOffset = -2.0/512}

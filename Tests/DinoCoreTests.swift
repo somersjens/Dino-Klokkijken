@@ -157,6 +157,10 @@ struct DinoCoreTests {
             testJungleMotion()
             testDesertCharacter()
             testVolcanoCharacter()
+            testVillageCharacter()
+            testCaveCharacter()
+            testNeonCharacter()
+            testDommelCharacter()
             print("PASS: \(checks) character unlock, swap and save checks.")
             return
         }
@@ -215,6 +219,10 @@ struct DinoCoreTests {
             testAssetCatalog()
             testAnimation()
             testVolcanoMotion()
+            testVillageMotion()
+            testCaveMotion()
+            testNeonMotion()
+            testDommelMotion()
             print("PASS: \(checks) animation timing and asset checks.")
             return
         }
@@ -338,6 +346,9 @@ struct DinoCoreTests {
         testJungleMotion()
         testDesertCharacter()
         testVolcanoCharacter()
+        testVillageCharacter()
+        testCaveCharacter()
+        testNeonCharacter()
         testDinoAvatarMask()
         testDinoSpriteColors()
         testPaleBandanaLettering()
@@ -4683,6 +4694,15 @@ struct DinoCoreTests {
             expect(pixel(leavesOnly,x,y) != pixel(originalPixels,x,y), "the lime center feather belongs to the leaf color")
             expect(pixel(pinkPixels,x,y) == pixel(originalPixels,x,y), "the center feather never acquires body-color patches")
         }
+        for (x, y) in [(355, 336), (353, 405), (293, 177)] {
+            expect(pixel(pinkPixels, x, y) != pixel(originalPixels, x, y)
+                   && pixel(leavesOnly, x, y) == pixel(originalPixels, x, y)
+                   && pixel(creamOnly, x, y) == pixel(originalPixels, x, y),
+                   "jungle cheek, arm and thigh spots follow the skin color")
+        }
+        expect(pixel(leavesOnly, 367, 350) != pixel(originalPixels, 367, 350)
+               && pixel(pinkPixels, 367, 350) == pixel(originalPixels, 367, 350),
+               "the leaf beside the spotted arm follows the leaf color")
         for asset in DinoJungleArtwork.assets {
             let url = URL(fileURLWithPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
             let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL,nil)!,0,nil)!
@@ -4824,7 +4844,10 @@ struct DinoCoreTests {
         })
         expect(bosses.count == 10, "all ten world boss illustrations are accounted for")
         let jungle = Set(preloaded.map { DinoJungleArtwork.asset(for: $0) })
-        let expected = sprites.union(bosses).union(jungle).union(DinoDesertArtwork.assets).union(DinoVolcanoArtwork.assets).union(["reward-star", DinoJungleArtwork.openingAsset, DinoDesertArtwork.openingAsset, DinoVolcanoArtwork.openingAsset])
+        let playableBosses = DinoIdentity.allCases.filter(\.usesBossArtwork)
+        let bossPoses = Set(playableBosses.flatMap(\.artworkAssets))
+        let openings = Set(playableBosses.map(\.openingAsset))
+        let expected = sprites.union(bosses).union(jungle).union(bossPoses).union(openings).union(["reward-star"])
         let root = URL(fileURLWithPath: "Assets.xcassets")
         let actual = Set(try! FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
             .filter { $0.pathExtension == "imageset" }.map { $0.deletingPathExtension().lastPathComponent })
@@ -4835,8 +4858,8 @@ struct DinoCoreTests {
                   let image = CGImageSourceCreateImageAtIndex(data, 0, nil) else {
                 fatalError("Missing or invalid asset: \(asset)")
             }
-            let side = asset == "dino-idle" || asset.hasPrefix("dino-opening-jump-") || asset == DinoJungleArtwork.openingAsset || asset == DinoDesertArtwork.openingAsset || asset == DinoVolcanoArtwork.openingAsset ? 1254
-                : bosses.contains(asset) ? 640 : jungle.contains(asset) || DinoDesertArtwork.assets.contains(asset) || DinoVolcanoArtwork.assets.contains(asset) ? 512 : asset == "reward-star" ? 384 : 768
+            let side = asset == "dino-idle" || asset.hasPrefix("dino-opening-jump-") || openings.contains(asset) ? 1254
+                : bosses.contains(asset) ? 640 : bossPoses.contains(asset) ? 512 : asset == "reward-star" ? 384 : 768
             expect(image.width == side && image.height == side, "\(asset) retains its intended iPad raster budget")
             let contents = try! Data(contentsOf: url.deletingLastPathComponent().appendingPathComponent("Contents.json"))
             let manifest = try! JSONSerialization.jsonObject(with: contents) as! [String: Any]
@@ -5625,6 +5648,12 @@ extension DinoCoreTests {
                            "horn roots forehead skin spots cloth gloss belly shade and dial keep their own material")
                 }
             }
+            if asset == "desert-idle" || asset == DinoDesertArtwork.openingAsset {
+                for (x, y, label) in [(205, 100, UInt8(3)), (252, 100, 2), (394, 346, 2), (441, 319, 3), (375, 359, 5)] {
+                    let index = (y * image.height / 512) * image.width + x * image.width / 512
+                    expect(labels[index] == label, "desert forehead, rocks, tail and leather follow their own materials at either resolution")
+                }
+            }
             if asset == "desert-idle" || asset.contains("clap") || asset == "desert-wrong" || asset == "desert-crouch" || asset == "desert-landing" || asset.contains("turn-") {
                 var bottom=0
                 for y in 0..<image.height {for x in 0..<image.width where original[(y*image.width+x)*4+3]>240 {bottom=max(bottom,y)}}
@@ -5724,6 +5753,12 @@ extension DinoCoreTests {
             if asset == "volcano-idle" {
                 for (x,y,label) in [(175,130,UInt8(4)),(200,247,4),(294,167,3),(224,325,0),(283,288,0)] {expect(labels[y*image.width+x] == label,"Magma horns, chin shadows, skin spots and separate dials keep their measured materials")}
             }
+            if asset == "volcano-idle" || asset == DinoVolcanoArtwork.openingAsset {
+                for (x, y, label) in [(148, 174, UInt8(2)), (305, 176, 3), (229, 359, 4), (153, 357, 4)] {
+                    let index = (y * image.height / 512) * image.width + x * image.width / 512
+                    expect(labels[index] == label, "Magma keeps side frill, skin, belly shadow and claw separate at either resolution")
+                }
+            }
             if asset == "volcano-turn-02" {
                 for (x,y,label) in [(186,283,UInt8(0)),(145,318,0),(209,292,3)] {expect(labels[y*image.width+x] == label,"Magma profile clocks use their own measured positions and preserve the arm in front")}
             }
@@ -5801,5 +5836,736 @@ extension DinoCoreTests {
             if let key=DinoBossAnimation.keys(for:clip,character:.volcano).first(where:{$0.asset==asset}) {return DinoBossAnimation.sample(clip,character:.volcano,elapsed:key.time+0.001).pose.offsetY}
         }
         return 0
+    }
+}
+
+extension DinoCoreTests {
+    @MainActor static func testVillageCharacter() {
+        let world = DinoWorldCatalog.world(4)!
+        let identity = DinoIdentity.village
+        expect(world.themeID == 4 && world.bossLevel == 40 && world.bossKey == "dino.world.4.boss", "Klokdorp uses its catalog theme and boss")
+        expect(DinoIdentity.boss(in: world.id) == identity && identity.rawValue == 4 && identity.unlockLevel == 40 &&
+               identity.bossAsset == "boss-clock-village", "Tik-Tak owns stable save value 4 and the Klokdorp boss")
+        let legacy = try! JSONDecoder().decode(PlayerProfile.self, from: JSONEncoder().encode(PlayerProfile()))
+        expect(legacy.collectionCharacters[3] == identity && !legacy.isCharacterUnlocked(identity), "older saves keep Tik-Tak in locked slot four")
+
+        var before = legacy
+        for boss in [10, 20, 30] { before.recordCompletedAttempt(levelID: boss, correct: 10) }
+        expect(before.selectCharacter(.volcano), "start Klokdorp with a different playable boss")
+        before.dinoAppearance?[.body] = 0x1965E1
+        before.recordCompletedAttempt(levelID: 40, correct: 9)
+        expect(!before.isCharacterUnlocked(identity), "a nine-answer pass without the route keeps his slot locked")
+        for id in 31...38 { before.recordCompletedAttempt(levelID: id, correct: 3) }
+
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        store.save(before)
+        let player = DinoPlayer(store: store)
+        var rng = SeededGenerator(seed: 22)
+        func finish(_ id: Int, on player: DinoPlayer) -> DinoLevelResult {
+            let level = DinoLevelCatalog.level(id)!
+            var attempt = LevelAttempt(levelID: id, questions: DinoQuestionGenerator.generate(level: level, using: &rng))
+            while !attempt.isComplete {
+                _ = attempt.submit(attempt.current.answer ?? .time(attempt.current.target))
+                attempt.advance()
+            }
+            return player.finish(attempt)!
+        }
+        let lateLesson = finish(39, on: player)
+        expect(lateLesson.hasPendingCharacterUnlock(in: player.profile) && player.profile.activeCharacter == .volcano,
+               "the final ordinary lesson after an early boss pass stages the unlock while retaining the result actor")
+        expect(DinoWorldTransition(after: 4)?.destinationLevel == 41, "Klokdorp arrives at Crystal Cave")
+        let resumed = DinoPlayer(store: store)
+        expect(resumed.profile.pendingCharacterUnlock == .village, "closing before the arrival preserves the pending identity")
+        resumed.completeCharacterUnlock()
+        expect(resumed.profile.activeCharacter == .village && resumed.profile.pendingCharacterUnlock == nil
+               && resumed.profile.collectionCharacters[3] == .volcano, "arrival activates Tik-Tak and swaps Magma into slot four")
+        let resident = resumed.profile.mapResident(in: 4)!
+        expect(DinoAppearance.standard(for: resident).body == 0xFF783E && resumed.profile.dinoAppearance?.body == 0x1965E1,
+               "the map resident gets its native orange while the active skin retains the selected blue")
+        resumed.completeCharacterUnlock()
+        resumed.selectCharacter(.volcano)
+        expect(resumed.profile.collectionCharacters[3] == .village && resumed.profile.mapResident(in: 4) == .village,
+               "manual selection returns Tik-Tak to his original collection and map slot")
+        _ = finish(40, on: resumed)
+        expect(resumed.profile.activeCharacter == .volcano && resumed.profile.pendingCharacterUnlock == nil, "replays preserve manual selection")
+        expect(DinoPlayer(store: store).profile == resumed.profile, "identity, palette and slot order survive a relaunch")
+
+        store.save(before)
+        let perfect = DinoPlayer(store: store)
+        expect(finish(40, on: perfect).victory == .perfect && perfect.profile.pendingCharacterUnlock == .village,
+               "ten correct answers stage the same unlock without completing the route")
+        expect(DinoWorldTransition(after: DinoWorldCatalog.worlds.last!.id) == nil, "the last map has no level 101")
+        perfect.completeCharacterUnlock()
+        expect(perfect.profile.activeCharacter == .village, "pending completion works independently of the map journey")
+        perfect.setDinoAppearance(.standard(for: .village))
+        expect(perfect.profile.activeCharacter == .village && perfect.profile.dinoAppearance?.hasOriginalColors == true,
+               "resetting colors keeps the active identity")
+        perfect.resetProgress()
+        let reset = DinoPlayer(store: store).profile
+        expect(reset.activeCharacter == .main && reset.pendingCharacterUnlock == nil && reset.characterSlots == nil &&
+               !reset.isCharacterUnlocked(.village), "persisted progress reset clears the unlock and slot swap")
+        testVillageMotion()
+        testVillageMattes()
+    }
+
+    static func testVillageMotion() {
+        let identity = DinoIdentity.village
+        let clips: [DinoAnimation.Clip] = [.idle, .thumbsUp, .wrongAnswer, .stumble, .openingJump, .backflip, .pirouette, .worldJump]
+        var used = Set<String>()
+        for clip in clips {
+            let duration = DinoAnimation.duration(clip)
+            let samples = (0...Int(ceil(120 * duration))).map {
+                DinoBossAnimation.sample(clip, character: identity, elapsed: Double($0) / 120)
+            }
+            used.formUnion(samples.map(\.pose.asset))
+            expect(samples.allSatisfy { $0.previousPose == nil && $0.poseBlend == 1 && $0.height.isFinite && $0.angle.isFinite },
+                   "\(clip) always uses one opaque registered painting")
+            let end = DinoBossAnimation.sample(clip, character: identity, elapsed: duration)
+            expect(end.pose.asset == "village-idle" && abs(end.height) < 0.001 && abs(end.angle.truncatingRemainder(dividingBy: 360)) < 0.001,
+                   "\(clip) settles in the canonical idle pose")
+        }
+        expect(used == identity.artworkAssets, "every shipped village sprite is actually displayed")
+        for contact in DinoAnimation.correctAnswerClapContacts {
+            expect(DinoBossAnimation.sample(.thumbsUp, character: identity, elapsed: contact).pose.asset == "village-clap-contact",
+                   "both visible claps meet their shared sound/effect time")
+        }
+        let head = DinoWelcomeJump.idleHead(for: identity)
+        expect(head.leftEye.x > head.rightEye.x && abs(head.leftEye.x - (1 - DinoVillageArtwork.headLandmarks[0].x)) < 1e-9,
+               "the opening's prepared eye landmarks use the same single reflection as the artwork")
+        expect(DinoWelcomeJump.assets(for: identity) == ["dino-idle"], "the large opening retains one detailed pose throughout")
+    }
+
+    static func testVillageMattes() {
+        func rgba(_ source: CGImage) -> [UInt8] {
+            let width = source.width, height = source.height
+            var pixels = [UInt8](repeating: 0, count: width * height * 4)
+            pixels.withUnsafeMutableBytes { bytes in
+                let context = CGContext(data: bytes.baseAddress, width: width, height: height, bitsPerComponent: 8,
+                    bytesPerRow: width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                    bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue)!
+                context.draw(source, in: CGRect(x: 0, y: 0, width: width, height: height))
+            }
+            return pixels
+        }
+        let native = DinoAppearance.standard(for: .village)
+        let colors = DinoAppearance(bandana: 0x9B50E2, spikes: 0x309956, body: 0x3086DF, belly: 0xE46296, character: .village)
+        // Measure each hub in its registered 512² source canvas. A rear
+        // angle moves the clock to the opposite side of the silhouette.
+        let hubs: [String: (Int, Int)] = [
+            "village-idle": (102, 130), "village-clap-open": (111, 130),
+            "village-clap-contact": (112, 130), "village-clap-release": (110, 131),
+            "village-wrong": (110, 129), "village-crouch": (90, 197),
+            "village-airborne": (121, 135), "village-stumble": (91, 150),
+            "village-fallen": (101, 170), "village-rise-low": (101, 172),
+            "village-push-up": (105, 172), "village-rise-high": (103, 173),
+            "village-turn-01": (113, 140), "village-turn-02": (137, 135), "village-turn-03": (175, 137),
+            "village-turn-04": (394, 143), "village-turn-05": (393, 144), "village-turn-06": (371, 137),
+            "village-turn-07": (127, 139)
+        ]
+        expect(Set(hubs.keys) == DinoVillageArtwork.assets, "every pose has an independently measured clock")
+        for name in DinoVillageArtwork.assets.sorted() + [DinoVillageArtwork.openingAsset] {
+            let url = URL(fileURLWithPath: "Assets.xcassets/\(name).imageset/\(name).png")
+            let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
+            let original = rgba(source)
+            let defaults = DinoSpriteColorRenderer.recoloredBoss(source, appearance: native, asset: name)!
+            let changed = rgba(DinoSpriteColorRenderer.recoloredBoss(source, appearance: colors, asset: name)!)
+            let labels = DinoSpriteColorRenderer.villageLabels(source, asset: name)!
+            let mirror = DinoSpriteColorRenderer.facingRight(source)!
+            let hat = rgba(DinoSpriteColorRenderer.bossHeadOverflow(mirror, character: .village, asset: name)!)
+            let width = source.width, height = source.height
+            expect(original == rgba(defaults) && original != changed, "\(name) preserves original colors and supports customization")
+            var alphaMatches = true, protectedMatches = true, maskMatches = true
+            var lowestOpaque = 0, firstHat = height, lastHat = 0
+            for n in labels.indices {
+                let sourceIndex = n * 4
+                let x = n % width, y = n / width
+                let flippedIndex = (y * width + width - 1 - x) * 4
+                let originalAlpha = original[sourceIndex + 3]
+                if originalAlpha != changed[sourceIndex + 3] { alphaMatches = false }
+                if labels[n] & 7 == 0 {
+                    for channel in 0..<3 where original[sourceIndex + channel] != changed[sourceIndex + channel] { protectedMatches = false }
+                }
+                if hat[flippedIndex + 3] != (labels[n] & 8 == 0 ? 0 : originalAlpha) { maskMatches = false }
+                if originalAlpha >= 230 { lowestOpaque = max(lowestOpaque, y) }
+                if hat[flippedIndex + 3] > 0 {
+                    firstHat = min(firstHat, y)
+                    lastHat = max(lastHat, y)
+                }
+            }
+            expect(alphaMatches && protectedMatches, "\(name) keeps source alpha and protected paint across recoloring")
+            expect(maskMatches && lastHat > firstHat && lastHat - firstHat < height / 4,
+                   "\(name) overlays the mirrored hat pixels only")
+            if let (x, y) = hubs[name] {
+                let center = y * width + x
+                expect(labels[center] == 0 && original[center * 4 + 3] > 240,
+                       "\(name) has a complete opaque clock dial and keeps its neutral cap out of the hat matte")
+            }
+            if ["village-stumble", "village-fallen", "village-rise-low", "village-push-up"].contains(name) {
+                let palm = 459 * width + 375
+                expect(original[palm * 4 + 3] >= 240 && labels[palm] & 8 == 0,
+                       "\(name) supports weight at the fixed hand contact below the portrait layer")
+            }
+            if name != DinoVillageArtwork.openingAsset && name != "village-airborne" {
+                expect(abs(Double(lowestOpaque) / Double(height) - identityFootline) < 0.018, "\(name) retains its measured planted ground line")
+            }
+            if name == "village-idle" {
+                let points: [(Int, Int, UInt8)] = [(201, 139, 0), (267, 142, 0), (101, 130, 0), (294, 48, 1),
+                    (228, 75, 2), (132, 366, 3), (365, 326, 4), (232, 353, 5), (160, 448, 5)]
+                for (x, y, label) in points {
+                    expect(labels[y * width + x] & 7 == label, "\(x),\(y) stays in its traced material")
+                }
+            }
+            if name == "village-idle" || name == DinoVillageArtwork.openingAsset {
+                for (x, y, label) in [(340, 150, UInt8(3)), (315, 145, 4), (430, 311, 3)] {
+                    let index = (y * height / 512) * width + x * width / 512
+                    expect(labels[index] & 7 == label, "village head and tail spikes include their tips while the cheek remains skin")
+                }
+            }
+        }
+    }
+
+    private static var identityFootline: Double { DinoIdentity.village.standingFootline }
+}
+
+extension DinoCoreTests {
+    @MainActor static func testCaveCharacter() {
+        let identity = DinoIdentity.cave
+        let world = DinoWorldCatalog.world(5)!
+        expect(world.themeID == 5 && world.bossLevel == 50 && world.bossKey == "dino.world.5.boss"
+               && DinoIdentity.boss(in: world.id) == identity && identity.rawValue == 5
+               && identity.bossAsset == "boss-crystal-cave", "Prisma uses the fifth saved identity and the Crystal Cave boss")
+        let legacy = try! JSONDecoder().decode(PlayerProfile.self, from: JSONEncoder().encode(PlayerProfile()))
+        expect(legacy.collectionCharacters[4] == identity && !legacy.isCharacterUnlocked(identity),
+               "old saves retain the locked Prisma tile")
+        var before = legacy
+        for boss in [10, 20, 30, 40] { before.recordCompletedAttempt(levelID: boss, correct: 10) }
+        expect(before.selectCharacter(.village), "enter Crystal Cave with Tik-Tak")
+        before.dinoAppearance?[.body] = 0x1965E1
+
+        var rng = SeededGenerator(seed: 51)
+        func finish(_ id: Int, count: Int, on player: DinoPlayer) -> DinoLevelResult {
+            let level = DinoLevelCatalog.level(id)!
+            let questions = DinoQuestionGenerator.generate(level: level, using: &rng)
+            var attempt = LevelAttempt(levelID: id, questions: questions)
+            for (index, question) in questions.enumerated() {
+                _ = attempt.submit(index < count ? question.expectedAnswer : .duration(-1))
+                attempt.advance()
+            }
+            return player.finish(attempt)!
+        }
+
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        store.save(before)
+        let player = DinoPlayer(store: store)
+        _ = finish(50, count: 9, on: player)
+        expect(!player.profile.isCharacterUnlocked(identity) && player.profile.pendingCharacterUnlock == nil,
+               "nine correct without the complete route leaves Prisma locked")
+        for id in 41...48 { _ = finish(id, count: 5, on: player) }
+        let lateLesson = finish(49, count: 5, on: player)
+        expect(lateLesson.hasPendingCharacterUnlock(in: player.profile) && player.profile.activeCharacter == .village,
+               "ordinary route completion can stage the unlock while preserving the result actor")
+        expect(DinoWorldTransition(after: 5)?.sourceLevel == 50 && DinoWorldTransition(after: 5)?.destinationLevel == 51,
+               "Prisma crosses from the boss stone into chapter six")
+
+        let resumed = DinoPlayer(store: store)
+        expect(resumed.profile.pendingCharacterUnlock == identity, "an interrupted arrival survives relaunch")
+        resumed.completeCharacterUnlock()
+        expect(resumed.profile.activeCharacter == identity && resumed.profile.collectionCharacters[4] == .village
+               && resumed.profile.pendingCharacterUnlock == nil, "arrival activates Prisma and swaps the fifth tile")
+        let resident = resumed.profile.mapResident(in: 5)!
+        expect(resident == .village && DinoAppearance.standard(for: resident).body == 0xF2AB51
+               && resumed.profile.dinoAppearance?.body == 0x1965E1, "resident and active actor use their own colors")
+        resumed.setDinoAppearance(.standard(for: identity))
+        expect(resumed.profile.dinoAppearance?.hasOriginalColors == true && resumed.profile.activeCharacter == identity,
+               "restoring Prisma's source palette keeps the identity")
+        resumed.selectCharacter(.village)
+        expect(resumed.profile.mapResident(in: 5) == identity && resumed.profile.collectionCharacters[4] == identity,
+               "Prisma can return to the original slot")
+        expect(DinoPlayer(store: store).profile == resumed.profile, "manual selection and colors persist")
+        resumed.resetProgress()
+        let reset = DinoPlayer(store: store).profile
+        expect(reset.activeCharacter == .main && reset.characterSlots == nil && !reset.isCharacterUnlocked(identity),
+               "reset removes Prisma progression and the slot swap")
+
+        store.save(before)
+        let perfect = DinoPlayer(store: store)
+        let result = finish(50, count: 10, on: perfect)
+        expect(result.victory == .perfect && result.hasPendingCharacterUnlock(in: perfect.profile),
+               "perfect boss victory unlocks Prisma without the normal levels")
+        expect(DinoWorldTransition(after: 10) == nil, "the final world has no level 101")
+        perfect.completeCharacterUnlock()
+        expect(perfect.profile.activeCharacter == identity, "pending activation can complete without a journey")
+        testCaveMotion()
+        testCaveMattes()
+    }
+
+    static func testCaveMotion() {
+        let clips: [DinoAnimation.Clip] = [.idle, .thumbsUp, .wrongAnswer, .stumble, .openingJump, .backflip, .pirouette, .worldJump]
+        var used = Set<String>()
+        for clip in clips {
+            let duration = DinoAnimation.duration(clip)
+            for tick in 0...Int(ceil(120 * duration)) {
+                let sample = DinoBossAnimation.sample(clip, character: .cave, elapsed: Double(tick) / 120)
+                used.insert(sample.pose.asset)
+                expect(sample.previousPose == nil && sample.poseBlend == 1 && sample.height.isFinite && sample.angle.isFinite,
+                       "Prisma displays a single painting throughout \(clip)")
+            }
+            for reducedMotion in [false, true] {
+                let end = DinoBossAnimation.sample(clip, character: .cave, elapsed: duration, reducedMotion: reducedMotion)
+                expect(end.pose.asset == "cave-idle" && abs(end.height) < 0.001, "Prisma returns to the ground and idle after \(clip)")
+            }
+        }
+        expect(used == DinoCaveArtwork.assets, "every Prisma pose is used")
+        let turnKeys = DinoBossAnimation.keys(for: .pirouette, character: .cave)
+        for (name, hip) in zip(DinoCaveArtwork.turnAssets, DinoCaveArtwork.turnHipX) {
+            let key = turnKeys.first { $0.asset == name }!
+            let frame = DinoBossAnimation.sample(.pirouette, character: .cave, elapsed: key.time)
+            let alignedAxis = 1 - hip / 512 + frame.pose.offsetX
+            expect(abs(alignedAxis - (1 - DinoCaveArtwork.idleHipX / 512)) < 1e-9,
+                   "Prisma rotates about one registered hip axis")
+        }
+        for t in DinoAnimation.correctAnswerClapContacts {
+            expect(DinoBossAnimation.sample(.thumbsUp, character: .cave, elapsed: t).pose.asset == "cave-clap-contact",
+                   "both clap sounds coincide with touching Prisma palms")
+        }
+        expect(DinoWelcomeJump.assets(for: .cave) == ["dino-idle"], "the welcome holds one detailed painting")
+        let head = DinoWelcomeJump.idleHead(for: .cave)
+        expect(abs(head.leftEye.x - (1 - DinoCaveArtwork.headLandmarks[0].x)) < 1e-9 && head.leftEye.x > head.rightEye.x,
+               "preparation mirrors the face coordinates once")
+        for size in [CGSize(width: 390, height: 844), CGSize(width: 1194, height: 834)] {
+            let flight = DinoWelcomeFlight(source: CGPoint(x: size.width / 2, y: size.height * 0.4), sourceSide: min(size.width, 480),
+                destination: CGRect(x: 40, y: size.height * 0.7, width: 150, height: 150), character: .cave)
+            for time in [DinoWelcomeJump.crouchBottom, DinoWelcomeJump.takeoff, DinoWelcomeJump.flightHandoff, DinoWelcomeJump.landing] {
+                let a = flight.paintedHead(elapsed: time - 0.00001), b = flight.paintedHead(elapsed: time + 0.00001)
+                expect(hypot(a.center.x - b.center.x, a.center.y - b.center.y) < 0.2, "Prisma's welcome follows a continuous screen path")
+            }
+        }
+    }
+
+    static func testCaveMattes() {
+        func rgba(_ image: CGImage) -> [UInt8] {
+            var pixels = [UInt8](repeating: 0, count: image.width * image.height * 4)
+            pixels.withUnsafeMutableBytes {
+                let context = CGContext(data: $0.baseAddress, width: image.width, height: image.height, bitsPerComponent: 8,
+                    bytesPerRow: image.width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                    bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue)!
+                context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+            }
+            return pixels
+        }
+        let colors = DinoAppearance(bandana: 0xAA43DE, spikes: 0x41AA53, body: 0xED8055, belly: 0xE15198, character: .cave)
+        for name in DinoCaveArtwork.assets.union([DinoCaveArtwork.openingAsset]) {
+            let url = URL(fileURLWithPath: "Assets.xcassets/\(name).imageset/\(name).png")
+            let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
+            let n = source.width, original = rgba(source)
+            let labels = DinoSpriteColorRenderer.caveLabels(source, asset: name)!
+            let colored = DinoSpriteColorRenderer.recoloredBoss(source, appearance: colors, asset: name)!
+            let result = rgba(colored)
+            let mirrored = DinoSpriteColorRenderer.facingRight(colored)!
+            let crown = rgba(DinoSpriteColorRenderer.caveHead(mirrored, asset: name, mirrored: true)!)
+            var changed = Set<UInt8>()
+            var alphaAndMaskMatch = true, protected = true, sole = 0, visibleCrownPixels = 0
+            for i in labels.indices where original[i * 4 + 3] > 0 {
+                let p = i * 4, x = i % n, y = i / n
+                let mirroredAlpha = crown[(y * n + n - x - 1) * 4 + 3]
+                alphaAndMaskMatch = alphaAndMaskMatch && original[p + 3] == result[p + 3]
+                    && mirroredAlpha == (labels[i] & 8 == 0 ? 0 : original[p + 3])
+                if mirroredAlpha >= 240 { visibleCrownPixels += 1 }
+                if original[p + 3] >= 240 { sole = max(sole, y) }
+                let didChange = result[p..<(p + 3)] != original[p..<(p + 3)]
+                if labels[i] & 7 == 0 { protected = protected && !didChange }
+                if didChange { changed.insert(labels[i] & 7) }
+            }
+            expect(alphaAndMaskMatch && protected, "\(name) retains alpha and protected eyes/dial while the crown uses mirrored pixel centres")
+            expect(visibleCrownPixels > n && changed.contains(2) && changed.contains(4), "\(name) has a mounted crown, crystals and skin")
+            if name != "cave-airborne" {
+                expect(abs(Double(sole + 1) / Double(n) - DinoCaveArtwork.footline) < 0.014,
+                       "\(name) is registered to the same support line")
+            }
+            if name == "cave-idle" || name == DinoCaveArtwork.openingAsset {
+                func label(x: Double, y: Double) -> UInt8 { labels[Int(y * Double(n) / 512) * n + Int(x * Double(n) / 512)] }
+                expect(label(x: 216, y: 73) & 7 == 3, "the central crystal's lit facet shares its violet material")
+                expect(label(x: 204, y: 318) & 7 == 0 && label(x: 186, y: 297) & 7 == 1,
+                       "Prisma's dial and gold rim have independent regions at either resolution")
+                expect(label(x: 122, y: 368) & 8 == 0 && label(x: 291, y: 269) & 8 == 0
+                       && label(x: 203, y: 62) & 8 != 0, "only crown facets can overflow the portrait")
+                expect(changed.isSuperset(of: [1, 2, 3, 4, 5, 6, 7]), "all Prisma materials can be personalized")
+            }
+        }
+    }
+
+    @MainActor static func testNeonCharacter() {
+        let character = DinoIdentity.city
+        let world = DinoWorldCatalog.world(6)!
+        expect(world.themeID == 6 && world.bossLevel == 60 && world.bossKey == "dino.world.6.boss"
+               && character.rawValue == 6 && character.bossAsset == "boss-clock-city"
+               && DinoIdentity.boss(in: world.id) == character, "Neon belongs to Klokstad and the sixth saved slot")
+        var profile = try! JSONDecoder().decode(PlayerProfile.self, from: JSONEncoder().encode(PlayerProfile()))
+        expect(profile.collectionCharacters[5] == character && !profile.isCharacterUnlocked(character), "a legacy profile reserves Neon's locked slot")
+        for id in [10, 20, 30, 40, 50] { profile.recordCompletedAttempt(levelID: id, correct: 10) }
+        expect(profile.selectCharacter(.cave), "Prisma can enter Klokstad")
+        profile.dinoAppearance?[.body] = 0xB32049
+        var rng = SeededGenerator(seed: 61)
+        func finish(_ id: Int, correct: Int, player: DinoPlayer) -> DinoLevelResult {
+            let level = DinoLevelCatalog.level(id)!
+            let questions = DinoQuestionGenerator.generate(level: level, using: &rng)
+            var attempt = LevelAttempt(levelID: id, questions: questions)
+            for (index, question) in questions.enumerated() {
+                _ = attempt.submit(index < correct ? question.expectedAnswer : .duration(-1))
+                attempt.advance()
+            }
+            return player.finish(attempt)!
+        }
+
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        store.save(profile)
+        let player = DinoPlayer(store: store)
+        expect(finish(60, correct: 9, player: player).victory == .none && player.profile.pendingCharacterUnlock == nil,
+               "a partial boss pass without the route leaves Neon locked")
+        for id in 51...58 { _ = finish(id, correct: 5, player: player) }
+        let lastLesson = finish(59, correct: 5, player: player)
+        expect(lastLesson.hasPendingCharacterUnlock(in: player.profile) && player.profile.activeCharacter == .cave,
+               "completing the route after the boss stages the same unlock from an ordinary result")
+        expect(DinoWorldTransition(after: 6)?.sourceLevel == 60 && DinoWorldTransition(after: 6)?.destinationLevel == 61,
+               "Neon's journey leads from Klokstad to the first Sleep Valley level")
+        let resumed = DinoPlayer(store: store)
+        expect(resumed.profile.pendingCharacterUnlock == character, "the pending identity survives an interrupted journey")
+        resumed.completeCharacterUnlock()
+        expect(resumed.profile.activeCharacter == character && resumed.profile.pendingCharacterUnlock == nil
+               && resumed.profile.collectionCharacters[5] == .cave, "recovery activates Neon and swaps the sixth slot")
+        let resident = resumed.profile.mapResident(in: 6)!
+        expect(resident == .cave && DinoAppearance.standard(for: resident).body == 0x93AEBE
+               && resumed.profile.dinoAppearance?.body == 0xB32049, "the resident keeps its own palette while the active customization carries over")
+        resumed.setDinoAppearance(.standard(for: character))
+        expect(resumed.profile.activeCharacter == character && resumed.profile.dinoAppearance?.hasOriginalColors == true,
+               "original colors restore Neon's native palette with the identity selected")
+        resumed.selectCharacter(.cave)
+        expect(resumed.profile.mapResident(in: 6) == character && DinoPlayer(store: store).profile == resumed.profile,
+               "Neon returns to slot six and the swap is saved")
+        resumed.resetProgress()
+        let reset = DinoPlayer(store: store).profile
+        expect(reset.activeCharacter == .main && reset.characterSlots == nil && reset.pendingCharacterUnlock == nil
+               && !reset.isCharacterUnlocked(character), "reset locks Neon and removes the pending unlock and collection swap")
+
+        store.save(profile)
+        let perfect = DinoPlayer(store: store)
+        expect(finish(60, correct: 10, player: perfect).hasPendingCharacterUnlock(in: perfect.profile),
+               "perfect boss victory stages Neon even with the ordinary route unfinished")
+        // The shared completion path can also run when a world has no next level.
+        expect(DinoWorldTransition(after: 10) == nil, "no transition targets level 101")
+        perfect.completeCharacterUnlock()
+        expect(perfect.profile.activeCharacter == character, "pending activation can finish without a transition")
+        testNeonMotion()
+        testNeonMattes()
+    }
+
+    static func testNeonMotion() {
+        var used = Set<String>()
+        let character = DinoIdentity.city
+        let clips: [DinoAnimation.Clip] = [.idle, .thumbsUp, .wrongAnswer, .stumble, .openingJump, .backflip, .pirouette, .worldJump]
+        for clip in clips {
+            let end = DinoAnimation.duration(clip)
+            let samples = (0...Int(ceil(end * 120))).map {
+                DinoBossAnimation.sample(clip, character: character, elapsed: Double($0) / 120)
+            }
+            expect(samples.allSatisfy { $0.previousPose == nil && $0.poseBlend == 1 && $0.height.isFinite && $0.angle.isFinite },
+                   "Neon has one fully composed figure throughout \(clip)")
+            used.formUnion(samples.map(\.pose.asset))
+            for reducedMotion in [false, true] {
+                let rest = DinoBossAnimation.sample(clip, character: character, elapsed: end, reducedMotion: reducedMotion)
+                expect(rest.pose.asset == "city-idle" && abs(rest.height) < 0.001 && rest.previousPose == nil,
+                       "Neon finishes \(clip) planted in the canonical rest pose")
+            }
+        }
+        expect(used == DinoCityArtwork.assets, "every Neon gameplay pose is displayed")
+        let clap = DinoAnimation.correctAnswerClapContacts
+        for t in clap {
+            expect(DinoBossAnimation.sample(.thumbsUp, character: character, elapsed: t).pose.asset == "city-clap-contact",
+                   "both effects align with the clasped palms")
+        }
+        expect(DinoBossAnimation.sample(.thumbsUp, character: character, elapsed: (clap[0] + clap[1]) / 2).pose.asset == "city-clap-open",
+               "the palms visibly reopen between contacts")
+        let placement = DinoCityArtwork.portraitPlacement
+        let palm = DinoCityArtwork.clapContact
+        let palmX = (palm.x - 0.5) * placement.scale + placement.x
+        let palmY = (palm.y - 0.5) * placement.scale + placement.y
+        expect(hypot(palmX, palmY) < 0.47, "the joined palms and the effect center are visible inside the HUD rim")
+        let turn = DinoBossAnimation.keys(for: .pirouette, character: character).filter { $0.asset.hasPrefix("city-turn-") }
+        expect(turn.map(\.asset) == DinoCityArtwork.turnAssets && zip(turn, turn.dropFirst()).allSatisfy { $1.time - $0.time > 0.06 },
+               "the pirouette uses sequential views at a readable order and cadence")
+        let head = DinoWelcomeJump.idleHead(for: character)
+        expect(head.leftEye.x == 1 - DinoCityArtwork.headLandmarks[0].x && head.leftEye.y == DinoCityArtwork.headLandmarks[0].y,
+               "the welcome's feature coordinates reflect only once")
+        expect(DinoWelcomeJump.assets(for: character) == ["dino-idle"], "the entire welcome holds one illustration")
+        expect(DinoBossAnimation.assets(for: .openingJump, character: character) == ["city-idle"],
+               "the one-star takeoff and landing retain the same drawing")
+        let brace = DinoAnimation.leadIn(.stumble) + DinoAnimation.stumblePushStart
+        let push = DinoBossAnimation.sample(.stumble, character: character, elapsed: brace)
+        expect(push.pose.asset == "city-push-up" && abs(1 - 197.5 / 512 + push.pose.offsetX - (1 - 203.0 / 512)) < 1e-9,
+               "the two planted recovery poses share a palm midpoint after mirroring")
+        for p in [0.0, 0.58, 0.679, 0.68, 0.8, 1] {
+            let alpha = DinoBossAnimation.unlockOpacity(progress: p, character: character)
+            expect(alpha.source + alpha.unlocked == 1 && [0.0, 1.0].contains(alpha.unlocked), "the city unlock shows one character at a time")
+        }
+    }
+
+    static func testNeonMattes() {
+        func rgba(_ image: CGImage) -> [UInt8] {
+            var pixels = [UInt8](repeating: 0, count: image.width * image.height * 4)
+            pixels.withUnsafeMutableBytes { buffer in
+                let context = CGContext(data: buffer.baseAddress, width: image.width, height: image.height,
+                                        bitsPerComponent: 8, bytesPerRow: image.width * 4,
+                                        space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                        bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue)!
+                context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+            }
+            return pixels
+        }
+        let standard = DinoAppearance.standard(for: .city)
+        let contrasted = DinoAppearance(bandana: 0x9C47EC, spikes: 0x3BAD4F, body: 0xCD4552, belly: 0xEF80BD, character: .city)
+        let poseChecks = ["city-idle", "city-clap-open", "city-clap-contact", "city-wrong"]
+        for name in DinoCityArtwork.assets.union([DinoCityArtwork.openingAsset]) {
+            let url = URL(fileURLWithPath: "Assets.xcassets/\(name).imageset/\(name).png")
+            let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
+            let n = source.width, original = rgba(source)
+            let labels = DinoSpriteColorRenderer.cityLabels(source, asset: name)!
+            let painted = DinoSpriteColorRenderer.recoloredBoss(source, appearance: contrasted, asset: name)!
+            let result = rgba(painted)
+            let mirrored = DinoSpriteColorRenderer.facingRight(painted)!
+            let cap = rgba(DinoSpriteColorRenderer.cityHead(mirrored, asset: name, mirrored: true)!)
+            expect(DinoSpriteColorRenderer.recoloredBoss(source, appearance: standard, asset: name) === source,
+                   "\(name) uses the original painting for native colors")
+            var colors = Set<UInt8>()
+            var alphaMatches = true, protectionMatches = true, capMatches = true, sole = 0
+            var capPixels = 0
+            for i in labels.indices {
+                let alpha = original[i * 4 + 3], label = labels[i], p = i * 4
+                let x = i % n, y = i / n
+                let capAlpha = cap[(y * n + n - x - 1) * 4 + 3]
+                alphaMatches = alphaMatches && alpha == result[p + 3]
+                capMatches = capMatches && capAlpha == (label & 8 != 0 ? alpha : 0)
+                if capAlpha > 0 { capPixels += 1 }
+                if alpha >= 240 { sole = max(sole, y) }
+                if alpha > 0 && result[p..<(p + 3)] != original[p..<(p + 3)] {
+                    colors.insert(label & 7)
+                    protectionMatches = protectionMatches && label & 7 != 0
+                }
+            }
+            expect(alphaMatches && protectionMatches && capMatches && capPixels > n,
+                   "\(name) preserves source alpha and protected paint and isolates the mirrored crest")
+            expect(colors.isSuperset(of: [1, 2, 3, 4]), "\(name) has separate regions for metal, membranes, skin and light surfaces")
+            if name != "city-airborne" {
+                expect(abs(Double(sole + 1) / Double(n) - DinoCityArtwork.footline) < 0.012, "\(name) retains the planted contact line")
+            }
+            if poseChecks.contains(name) || name == DinoCityArtwork.openingAsset {
+                func label(_ x: Double, _ y: Double) -> UInt8 {
+                    labels[Int(y * Double(n) / 512) * n + Int(x * Double(n) / 512)]
+                }
+                expect(label(134, 277) & 7 == 0 && label(339, 281) & 7 == 0,
+                       "\(name) protects both clock faces")
+                expect(label(302, 129) & 8 != 0 && label(220, 210) & 8 == 0
+                       && label(240, 308) & 24 == 0 && label(134, 246) & 24 == 0,
+                       "\(name) keeps the brim effect on the crest and excludes palms and clocks")
+                if name == "city-idle" || name == DinoCityArtwork.openingAsset {
+                    expect(label(154, 279) & 7 == 1 && label(135, 245) & 7 == 1 && label(89, 325) & 7 == 2
+                           && label(303, 128) & 7 == 3 && label(214, 247) & 7 == 4 && label(180, 468) & 7 == 4
+                           && label(264, 193) & 7 == 0, "Neon's dark crest markings, dial, metal, wings, chin, toes and eye have their own materials")
+                    let channels: [(DinoAppearance.Part, UInt8)] = [(.bandana, 1), (.spikes, 2), (.body, 3), (.belly, 4)]
+                    for (part, expected) in channels {
+                        var single = standard
+                        single[part] = contrasted[part]
+                        let tinted = rgba(DinoSpriteColorRenderer.recoloredBoss(source, appearance: single, asset: name)!)
+                        var changedLabels = Set<UInt8>()
+                        for i in labels.indices where original[i * 4 + 3] > 0 {
+                            let p = i * 4
+                            if tinted[p..<(p + 3)] != original[p..<(p + 3)] { changedLabels.insert(labels[i] & 7) }
+                        }
+                        expect(changedLabels == [expected], "\(name) changes only \(part) when adjusting one channel")
+                    }
+                }
+            }
+        }
+    }
+}
+
+extension DinoCoreTests {
+    @MainActor static func testDommelCharacter() {
+        let dommel = DinoIdentity.valley
+        let world = DinoWorldCatalog.world(7)!
+        expect(world.themeID == 2 && world.bossLevel == 70 && world.bossKey == "dino.world.2.boss"
+               && dommel.rawValue == 7 && dommel.bossAsset == "boss-sleep-valley"
+               && DinoIdentity.boss(in: 7) == dommel, "Dommel maps to Slaapvallei, level 70 and saved identity 7")
+        var profile = PlayerProfile()
+        expect(profile.collectionCharacters[6] == dommel && !profile.selectCharacter(dommel), "the seventh slot starts locked")
+        for id in [10, 20, 30, 40, 50, 60] { profile.recordCompletedAttempt(levelID: id, correct: 10) }
+        expect(profile.selectCharacter(.city), "Neon can enter Slaapvallei")
+        profile.dinoAppearance?[.body] = 0xB32049
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        store.save(profile)
+        let player = DinoPlayer(store: store)
+        var rng = SeededGenerator(seed: 71)
+        func finish(_ id: Int, _ correct: Int, for player: DinoPlayer) -> DinoLevelResult {
+            let level = DinoLevelCatalog.level(id)!
+            let questions = DinoQuestionGenerator.generate(level: level, using: &rng)
+            var attempt = LevelAttempt(levelID: id, questions: questions)
+            for (index, question) in questions.enumerated() {
+                _ = attempt.submit(index < correct ? question.expectedAnswer : .duration(-1))
+                attempt.advance()
+            }
+            return player.finish(attempt)!
+        }
+        expect(finish(70, 9, for: player).victory == .none && player.profile.pendingCharacterUnlock == nil,
+               "nine boss answers require the usual completed route")
+        for id in 61...68 { _ = finish(id, 5, for: player) }
+        let result = finish(69, 5, for: player)
+        expect(result.hasPendingCharacterUnlock(in: player.profile) && player.profile.activeCharacter == .city,
+               "finishing the route stages Dommel without changing the result actor")
+        let journey = DinoWorldTransition(after: 7)
+        expect(journey?.sourceLevel == 70 && journey?.destinationLevel == 71, "the world journey starts from Dommel's stone")
+        let resumed = DinoPlayer(store: store)
+        expect(resumed.profile.pendingCharacterUnlock == dommel, "the pending identity survives closing the app")
+        resumed.completeCharacterUnlock()
+        let resident = resumed.profile.mapResident(in: 7)
+        expect(resumed.profile.activeCharacter == dommel && resumed.profile.pendingCharacterUnlock == nil
+               && resident == .city && resumed.profile.collectionCharacters[6] == .city,
+               "recovery consumes the pending unlock and swaps the seventh resident")
+        expect(DinoAppearance.standard(for: resident!).body == 0x35A8B9 && resumed.profile.dinoAppearance?.body == 0xB32049,
+               "the stationary resident uses its own colors")
+        resumed.setDinoAppearance(.standard(for: dommel))
+        expect(resumed.profile.activeCharacter == dommel && resumed.profile.dinoAppearance?.hasOriginalColors == true,
+               "restoring the palette preserves Dommel")
+        resumed.selectCharacter(.city)
+        expect(resumed.profile.mapResident(in: 7) == dommel && DinoPlayer(store: store).profile == resumed.profile,
+               "swapping Dommel back onto the map persists")
+        resumed.resetProgress()
+        let reset = DinoPlayer(store: store).profile
+        expect(reset.activeCharacter == .main && reset.pendingCharacterUnlock == nil && reset.characterSlots == nil
+               && reset.collectionCharacters[6] == dommel && !reset.isCharacterUnlocked(dommel),
+               "a progress reset restores the locked slot and its own resident")
+
+        store.save(profile)
+        let perfect = DinoPlayer(store: store)
+        expect(finish(70, 10, for: perfect).hasPendingCharacterUnlock(in: perfect.profile), "a perfect boss result stages Dommel immediately")
+        expect(DinoWorldTransition(after: 10) == nil, "the last world has no synthetic destination")
+        perfect.completeCharacterUnlock()
+        expect(perfect.profile.activeCharacter == dommel, "the shared unlock activates directly when returning without a world journey")
+        testDommelMotion()
+        testDommelMattes()
+    }
+
+    static func testDommelMotion() {
+        let clips: [DinoAnimation.Clip] = [.idle, .thumbsUp, .wrongAnswer, .stumble, .openingJump, .backflip, .pirouette, .worldJump]
+        var sampled = Set<String>()
+        for clip in clips {
+            let end = DinoAnimation.duration(clip)
+            for tick in 0...Int(ceil(end * 120)) {
+                let frame = DinoBossAnimation.sample(clip, character: .valley, elapsed: Double(tick) / 120)
+                sampled.insert(frame.pose.asset)
+                expect(frame.poseBlend == 1 && frame.previousPose == nil && frame.morph == nil,
+                       "Dommel animates as a single opaque drawing")
+            }
+            let rest = DinoBossAnimation.sample(clip, character: .valley, elapsed: end)
+            expect(rest.pose.asset == DinoValleyArtwork.idle && rest.height == 0,
+                   "Dommel returns to standing at the exact end of \(clip)")
+        }
+        expect(sampled == DinoValleyArtwork.assets, "all and only Dommel's runtime poses are sampled")
+        for time in DinoAnimation.correctAnswerClapContacts {
+            expect(DinoBossAnimation.sample(.thumbsUp, character: .valley, elapsed: time).pose.asset == "valley-clap-contact",
+                   "each clap effect coincides with the painted palm seam")
+        }
+        expect(DinoBossAnimation.sample(.thumbsUp, character: .valley, elapsed: 0.47).pose.asset == "valley-clap-open",
+               "the paws visibly separate between contacts")
+        let rotation = DinoBossAnimation.assets(for: .pirouette, character: .valley)
+        expect(Array(rotation.dropFirst().dropLast()) == DinoValleyArtwork.turnAssets, "turn views read in yaw order")
+        let reflection = DinoWelcomeJump.idleHead(for: .valley)
+        expect(abs(reflection.leftEye.x + DinoValleyArtwork.headLandmarks[0].x - 1) < 0.00001 &&
+               reflection.leftEye.y == DinoValleyArtwork.headLandmarks[0].y, "head tracking reflects source X exactly once")
+        let flight = DinoWelcomeFlight(source: CGPoint(x: 210, y: 400), sourceSide: 360,
+                                       destination: CGRect(x: 115, y: 500, width: 140, height: 140), character: .valley)
+        let landing = flight.worldTransform(elapsed: DinoWelcomeJump.duration)
+        let canvasCenter = CGPoint(x: 0.5, y: 0.5).applying(landing)
+        expect(flight.footline == DinoValleyArtwork.footline && abs(canvasCenter.x - flight.destination.midX) < 0.01
+               && abs(canvasCenter.y - flight.destination.midY) < 0.01, "the measured sole pivot ends on the map sprite's same canvas")
+        let handoff = DinoWelcomeJump.flightHandoff
+        let before = DinoWelcomeJump.tracking(elapsed: handoff - 0.0001, flight: flight).position
+            .applying(flight.worldTransform(elapsed: handoff - 0.0001))
+        let after = flight.paintedHead(elapsed: handoff + 0.0001).center
+        expect(hypot(before.x - after.x, before.y - after.y) < 0.2, "the native flight handoff does not jump between head positions")
+        for tick in 0...Int(ceil(DinoWelcomeJump.duration * 120)) {
+            expect(DinoWelcomeJump.pose(elapsed: Double(tick) / 120, character: .valley).asset == "dino-idle",
+                   "the welcome uses the same registered artwork through the crouch and flight")
+        }
+    }
+
+    static func testDommelMattes() {
+        func rgba(_ image: CGImage) -> [UInt8] {
+            var pixels = [UInt8](repeating: 0, count: image.width * image.height * 4)
+            pixels.withUnsafeMutableBytes { buffer in
+                let context = CGContext(data: buffer.baseAddress, width: image.width, height: image.height,
+                                        bitsPerComponent: 8, bytesPerRow: image.width * 4,
+                                        space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                        bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue)!
+                context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+            }
+            return pixels
+        }
+        let url = URL(fileURLWithPath: "Documentation/SleepValleyCharacterPrompts.json")
+        let document = try! JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: Any]
+        let rigs = document["poses"] as! [String: [String: Any]]
+        let original = DinoAppearance.standard(for: .valley)
+        let edited = DinoAppearance(bandana: 0xB32475, spikes: 0x42DF70, body: 0xFE843F, belly: 0x65B2DE, character: .valley)
+        for asset in DinoValleyArtwork.assets.union([DinoValleyArtwork.openingAsset]) {
+            let reference = rigs[asset]!
+            let url = URL(fileURLWithPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
+            let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
+            let labels = DinoSpriteColorRenderer.valleyLabels(source, asset: asset)!
+            let tinted = DinoSpriteColorRenderer.recoloredBoss(source, appearance: edited, asset: asset)!
+            let prepared = DinoSpriteColorRenderer.facingRight(tinted)!
+            let cap = DinoSpriteColorRenderer.valleyHead(prepared, asset: asset, mirrored: true)!
+            let a = rgba(source), b = rgba(tinted), c = rgba(cap)
+            let width = source.width
+            var valid = true, sole = 0, capBottom = 0, total = 0
+            var colored = Set<UInt8>()
+            for i in labels.indices {
+                let p = i * 4, alpha = a[p + 3], y = i / width, x = i % width
+                let label = labels[i], capAlpha = c[(y * width + width - 1 - x) * 4 + 3]
+                valid = valid && b[p + 3] == alpha && capAlpha == (label & 8 != 0 ? alpha : 0)
+                if a[p..<(p + 3)] != b[p..<(p + 3)] { colored.insert(label & 7) }
+                if alpha >= 200 { sole = max(sole, y + 1) }
+                if capAlpha > 0 { total += 1; capBottom = max(capBottom, y) }
+            }
+            expect(valid && !colored.contains(0) && colored.isSuperset(of: [1, 2, 3, 4]),
+                   "\(asset) keeps alpha and separates materials from protected paint")
+            expect(total > width && Double(capBottom) / Double(width) < (reference["hatLimitY"] as! Double) / 512,
+                   "\(asset) only overflows with the fitted cap and pompom")
+            expect(abs(Double(sole) * 512 / Double(width) - (reference["footline"] as! Double)) < 2,
+                   "\(asset) preserves its registered ground or flight contact")
+            expect(DinoSpriteColorRenderer.recoloredBoss(source, appearance: original, asset: asset) === source,
+                   "\(asset) retains original color and texture at defaults")
+            func label(at point: [Double]) -> UInt8 {
+                let x = Int(point[0] * Double(width) / 512), y = Int(point[1] * Double(width) / 512)
+                return labels[y * width + x]
+            }
+            if let glass = reference["glass"] as? [Double] {
+                expect(label(at: glass) == 0, "\(asset) keeps the complete dial and hand pivot protected")
+            }
+            if let palm = reference["hand"] as? [Double] {
+                expect(label(at: palm) & 24 == 0, "\(asset) excludes its raised paws from the head layers")
+            }
+            if asset == DinoValleyArtwork.idle {
+                for (part, expected): (DinoAppearance.Part, Set<UInt8>) in [
+                    (.bandana, [1]), (.spikes, [2]), (.body, [3]), (.belly, [4, 5])
+                ] {
+                    var one = original
+                    one[part] = edited[part]
+                    let bytes = rgba(DinoSpriteColorRenderer.recoloredBoss(source, appearance: one, asset: asset)!)
+                    var changed = Set<UInt8>()
+                    for i in labels.indices where a[(i * 4)..<(i * 4 + 3)] != bytes[(i * 4)..<(i * 4 + 3)] {
+                        changed.insert(labels[i] & 7)
+                    }
+                    expect(changed == expected, "the \(part) picker changes only its assigned material")
+                }
+            }
+        }
     }
 }

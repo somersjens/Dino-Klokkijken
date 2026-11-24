@@ -6,7 +6,12 @@ enum DinoIdentity: Int, Codable, CaseIterable, Sendable {
     case main = 0, jungle, desert, volcano, village, cave, city, valley, machine, pirates, castle
 
     var isPlayable: Bool { self == .main || usesBossArtwork }
-    var usesBossArtwork: Bool { self == .jungle || self == .desert || self == .volcano }
+    var usesBossArtwork: Bool {
+        switch self {
+        case .jungle, .desert, .volcano, .village, .cave, .city, .valley: true
+        default: false
+        }
+    }
     var worldID: Int? { self == .main ? nil : rawValue }
     static func boss(in world: Int) -> DinoIdentity? {
         guard let identity = DinoIdentity(rawValue: world), identity != .main, identity.isPlayable else { return nil }
@@ -17,19 +22,64 @@ enum DinoIdentity: Int, Codable, CaseIterable, Sendable {
         case .jungle: return DinoJungleArtwork.asset(for: pose)
         case .desert: return DinoDesertArtwork.asset(for: pose)
         case .volcano: return DinoVolcanoArtwork.asset(for: pose)
+        case .village: return DinoVillageArtwork.asset(for: pose)
+        case .cave: return DinoCaveArtwork.asset(for: pose)
+        case .city: return DinoCityArtwork.asset(for: pose)
+        case .valley: return DinoValleyArtwork.asset(for: pose)
         default: return pose
         }
     }
     var artworkAssets: Set<String> {
-        self == .volcano ? DinoVolcanoArtwork.assets : self == .desert ? DinoDesertArtwork.assets : self == .jungle ? DinoJungleArtwork.assets : []
+        switch self {
+        case .jungle: DinoJungleArtwork.assets
+        case .desert: DinoDesertArtwork.assets
+        case .volcano: DinoVolcanoArtwork.assets
+        case .village: DinoVillageArtwork.assets
+        case .cave: DinoCaveArtwork.assets
+        case .city: DinoCityArtwork.assets
+        case .valley: DinoValleyArtwork.assets
+        default: []
+        }
     }
-    var openingAsset: String { self == .volcano ? DinoVolcanoArtwork.openingAsset : self == .desert ? DinoDesertArtwork.openingAsset : DinoJungleArtwork.openingAsset }
-    var portraitScale: Double { self == .volcano ? DinoVolcanoArtwork.portraitScale : self == .desert ? 1.72 : self == .jungle ? DinoJungleArtwork.portraitScale : 1 / 0.62 }
-    var portraitOffsetX: Double { self == .volcano ? DinoVolcanoArtwork.portraitOffsetX : self == .desert ? -0.28 : self == .jungle ? DinoJungleArtwork.portraitOffsetX : -0.065 }
-    var portraitOffsetY: Double { self == .volcano ? DinoVolcanoArtwork.portraitOffsetY : self == .desert ? 0.22 : self == .jungle ? DinoJungleArtwork.portraitOffsetY : 0.339 }
+    var openingAsset: String {
+        switch self {
+        case .volcano: DinoVolcanoArtwork.openingAsset
+        case .desert: DinoDesertArtwork.openingAsset
+        case .village: DinoVillageArtwork.openingAsset
+        case .cave: DinoCaveArtwork.openingAsset
+        case .city: DinoCityArtwork.openingAsset
+        case .valley: DinoValleyArtwork.openingAsset
+        default: DinoJungleArtwork.openingAsset
+        }
+    }
+    private var portraitPlacement: (scale: Double, x: Double, y: Double) {
+        switch self {
+        case .volcano: (DinoVolcanoArtwork.portraitScale, DinoVolcanoArtwork.portraitOffsetX, DinoVolcanoArtwork.portraitOffsetY)
+        case .desert: (1.72, -0.28, 0.22)
+        case .jungle: (DinoJungleArtwork.portraitScale, DinoJungleArtwork.portraitOffsetX, DinoJungleArtwork.portraitOffsetY)
+        case .village: DinoVillageArtwork.portraitPlacement
+        case .cave: DinoCaveArtwork.portraitPlacement
+        case .city: DinoCityArtwork.portraitPlacement
+        case .valley: DinoValleyArtwork.portraitPlacement
+        default: (1 / 0.62, -0.065, 0.339)
+        }
+    }
+    var portraitScale: Double { portraitPlacement.scale }
+    var portraitOffsetX: Double { portraitPlacement.x }
+    var portraitOffsetY: Double { portraitPlacement.y }
     /// Visible sole boundary in each canonical source canvas, before mirroring.
     /// Collection residents stand on their own feet, independently of active art.
-    var standingFootline: Double { self == .volcano ? DinoVolcanoArtwork.footline : self == .jungle ? 484.0 / 512 : 1211.0 / 1254 }
+    var standingFootline: Double {
+        switch self {
+        case .volcano: DinoVolcanoArtwork.footline
+        case .jungle: 484.0 / 512
+        case .village: DinoVillageArtwork.footline
+        case .cave: DinoCaveArtwork.footline
+        case .city: DinoCityArtwork.footline
+        case .valley: DinoValleyArtwork.footline
+        default: 1211.0 / 1254
+        }
+    }
     var unlockLevel: Int { rawValue * 10 }
     var bossAsset: String {
         ["dino-idle", "boss-jungle", "boss-desert", "boss-volcano", "boss-clock-village",
@@ -43,7 +93,15 @@ struct DinoAppearance: Codable, Equatable, Hashable, Sendable {
         case bandana, spikes, body, belly
         var labelKey: String { "dino.appearance.\(rawValue)" }
         func labelKey(for identity: DinoIdentity) -> String {
-            identity == .volcano ? "dino.appearance.volcano.\(rawValue)" : identity == .desert ? "dino.appearance.desert.\(rawValue)" : labelKey
+            switch identity {
+            case .volcano: "dino.appearance.volcano.\(rawValue)"
+            case .desert: "dino.appearance.desert.\(rawValue)"
+            case .village: "dino.appearance.village.\(rawValue)"
+            case .cave: "dino.appearance.cave.\(rawValue)"
+            case .city: "dino.appearance.city.\(rawValue)"
+            case .valley: "dino.appearance.valley.\(rawValue)"
+            default: labelKey
+            }
         }
     }
 
@@ -60,6 +118,18 @@ struct DinoAppearance: Codable, Equatable, Hashable, Sendable {
     }
     static let standard = DinoAppearance()
     static func standard(for identity: DinoIdentity) -> DinoAppearance {
+        if identity == .valley {
+            return DinoAppearance(bandana: 0xA478D7, spikes: 0xF7C46E, body: 0x78C4DF, belly: 0xF5E2BC, character: .valley)
+        }
+        if identity == .city {
+            return DinoAppearance(bandana: 0xF5B739, spikes: 0xFFCE6C, body: 0x35A8B9, belly: 0xF8E3AD, character: .city)
+        }
+        if identity == .cave {
+            return DinoAppearance(bandana: 0xEAA932, spikes: 0x29C9EE, body: 0x93AEBE, belly: 0xE6D5B7, character: .cave)
+        }
+        if identity == .village {
+            return DinoAppearance(bandana: 0x277CC5, spikes: 0xAC6C37, body: 0xF2AB51, belly: 0xFBE5B4, character: .village)
+        }
         if identity == .volcano {
             return DinoAppearance(bandana: 0xDB3526, spikes: 0xD93725, body: 0xFF783E, belly: 0xF8D99A, character: .volcano)
         }
@@ -229,5 +299,153 @@ enum DinoVolcanoArtwork {
         if pose.hasPrefix("volcano-") { return pose }
         let semantic = DinoJungleArtwork.asset(for:pose).replacingOccurrences(of:"jungle-",with:"volcano-")
         return semantic == "volcano-recover" ? "volcano-idle" : semantic
+    }
+}
+
+/// Burgemeester Tik-Tak. Source paintings face left, with a top-left origin.
+/// The renderer mirrors the paintings and their registered features together.
+enum DinoVillageArtwork {
+    static let openingAsset = "village-opening-idle"
+    static let footline = 466.0 / 512
+    static let portraitPlacement = (scale: 1.66, x: -0.065, y: 0.236)
+    static let portraitCrop = CGRect(x: 0.29, y: 0.026, width: 0.43, height: 0.46)
+    static let clapContact = CGPoint(x: 0.555, y: 0.542)
+    static let headLandmarks = [CGPoint(x: 201.0 / 512, y: 139.0 / 512), CGPoint(x: 267.0 / 512, y: 142.0 / 512),
+                                CGPoint(x: 207.0 / 512, y: 171.0 / 512)]
+    static let turnAssets = (1...7).map { String(format: "village-turn-%02d", $0) }
+    static let assets: Set<String> = Set([
+        "village-idle", "village-wrong", "village-clap-open", "village-clap-contact",
+        "village-clap-release", "village-crouch", "village-airborne",
+        "village-stumble", "village-fallen", "village-rise-low", "village-push-up", "village-rise-high"
+    ] + turnAssets)
+
+    static func asset(for pose: String) -> String {
+        if pose == openingAsset || assets.contains(pose) { return pose }
+        switch DinoJungleArtwork.asset(for: pose).dropFirst("jungle-".count) {
+        case "clap-open": return "village-clap-open"
+        case "clap-contact", "clap-contact-2": return "village-clap-contact"
+        case "clap-open-2": return "village-clap-release"
+        case "wrong": return "village-wrong"
+        case "crouch", "landing": return "village-crouch"
+        case "airborne", "takeoff": return "village-airborne"
+        case "stumble": return "village-stumble"
+        case "fallen": return "village-fallen"
+        case "push-up": return "village-push-up"
+        case let turn where turn.hasPrefix("turn-"):
+            return turnAssets[min(turnAssets.count, max(1, Int(turn.suffix(2)) ?? 1)) - 1]
+        default: return "village-idle"
+        }
+    }
+}
+
+/// Prisma. All landmarks are normalized top-left source coordinates.
+/// The preparation renderer reflects the raster and landmarks once.
+enum DinoCaveArtwork {
+    static let openingAsset = "cave-opening-idle"
+    static let footline = 472.0 / 512
+    static let portraitPlacement = (scale: 1.80, x: -0.145, y: 0.262)
+    static let portraitCrop = CGRect(x: 0.32, y: 0.060, width: 0.47, height: 0.47)
+    static let headLandmarks = [CGPoint(x: 164.90 / 512, y: 178.26 / 512),
+                                CGPoint(x: 220.38 / 512, y: 182.44 / 512),
+                                CGPoint(x: 160.72 / 512, y: 207.52 / 512)]
+    static let clapContact = CGPoint(x: 1 - 203.54 / 512, y: 286.76 / 512)
+    static let turnAssets = (2...8).map { String(format: "cave-turn-%02d", $0) }
+    /// Hip axes in the 512-pixel registered source, before reflecting.
+    static let idleHipX = 226.46
+    static let turnHipX = [245.93, 244.63, 246.54, 246.63, 246.59, 247.08, 245.47]
+    static let assets: Set<String> = Set([
+        "cave-idle", "cave-wrong", "cave-clap-open", "cave-clap-contact", "cave-clap-release",
+        "cave-crouch", "cave-airborne", "cave-stumble", "cave-fallen", "cave-push-up", "cave-recover"
+    ] + turnAssets)
+
+    static func asset(for pose: String) -> String {
+        if pose == openingAsset || assets.contains(pose) { return pose }
+        switch DinoJungleArtwork.asset(for: pose).dropFirst("jungle-".count) {
+        case "wrong": return "cave-wrong"
+        case "clap-open": return "cave-clap-open"
+        case "clap-contact", "clap-contact-2": return "cave-clap-contact"
+        case "clap-open-2": return "cave-clap-release"
+        case "crouch", "landing": return "cave-crouch"
+        case "takeoff", "airborne": return "cave-airborne"
+        case "stumble": return "cave-stumble"
+        case "fallen": return "cave-fallen"
+        case "push-up": return "cave-push-up"
+        case "recover": return "cave-recover"
+        case let turn where turn.hasPrefix("turn-") && assets.contains("cave-\(turn)"): return "cave-\(turn)"
+        default: return "cave-idle"
+        }
+    }
+}
+
+/// Neon. The registered source faces left. Measurements are top-left source
+/// pixels in the 512-pixel registration canvas, independent of raster resolution.
+enum DinoCityArtwork {
+    static let openingAsset = "city-opening-idle"
+    static let footline = 1211.0 / 1254
+    static let portraitPlacement = (scale: 2.16, x: -0.075, y: 0.165)
+    static let portraitCrop = CGRect(x: 0.31, y: 0.205, width: 0.44, height: 0.44)
+    // Palm seam, in the prepared right-facing canvas.
+    static let clapContact = CGPoint(x: 1 - 230.0 / 512, y: 322.0 / 512)
+    static let turnAssets = (2...8).map { String(format: "city-turn-%02d", $0) }
+    static let assets: Set<String> = Set([
+        "city-idle", "city-clap-open", "city-clap-contact", "city-wrong",
+        "city-airborne", "city-crouch", "city-stumble", "city-fallen", "city-push-up"
+    ] + turnAssets)
+
+    static func asset(for pose: String) -> String {
+        if pose == openingAsset || assets.contains(pose) { return pose }
+        switch DinoJungleArtwork.asset(for: pose) {
+        case "jungle-wrong": return "city-wrong"
+        case "jungle-clap-open", "jungle-clap-open-2": return "city-clap-open"
+        case "jungle-clap-contact", "jungle-clap-contact-2": return "city-clap-contact"
+        case "jungle-crouch", "jungle-landing": return "city-crouch"
+        case "jungle-takeoff", "jungle-airborne": return "city-airborne"
+        case "jungle-stumble": return "city-stumble"
+        case "jungle-fallen": return "city-fallen"
+        case "jungle-push-up": return "city-push-up"
+        case let turn where turn.hasPrefix("jungle-turn-") && turn != "jungle-turn-01":
+            return "city-turn-\(turn.suffix(2))"
+        default: return "city-idle"
+        }
+    }
+
+    /// Far iris, near iris and nostril for the neutral welcome illustration.
+    static let headLandmarks = [CGPoint(x: 195.0 / 512, y: 185.0 / 512),
+                                CGPoint(x: 264.0 / 512, y: 194.0 / 512),
+                                CGPoint(x: 219.0 / 512, y: 210.0 / 512)]
+    /// Register the tuck's head to the standing flight. Its bent legs still
+    /// lift away from the standing sole without raising the entire painting.
+    static let tuckOffset = CGPoint(x: (244.0 - 229.5) / 512, y: (189.5 - 160.0) / 512)
+    /// Midpoint between the two planted palms, reflected to screen coordinates.
+    static let pushUpOffsetX = (197.5 - 203.0) / 512
+}
+
+/// Dommel's rig uses the top-left source canvas, before its one reflection.
+enum DinoValleyArtwork {
+    static let openingAsset = "valley-opening-idle"
+    static let footline = 480.0 / 512
+    static let portraitPlacement = (scale: 1.91, x: -0.34, y: 0.352)
+    static let portraitCrop = CGRect(x: 0.385, y: 0.023, width: 0.47, height: 0.425)
+    static let idle = "valley-idle"
+    static let turnAssets = (1...7).map { String(format: "valley-turn-%02d", $0) }
+    static let assets = Set([idle, "valley-clap-open", "valley-clap-contact", "valley-wrong",
+                             "valley-crouch", "valley-airborne", "valley-stumble", "valley-push-up"] + turnAssets)
+    static let headLandmarks = [CGPoint(x: 118.70 / 512, y: 141.81 / 512),
+                                CGPoint(x: 182.92 / 512, y: 148.87 / 512),
+                                CGPoint(x: 118.41 / 512, y: 164.95 / 512)]
+    /// Seam between the front paws, in the prepared right-facing canvas.
+    static let clapContact = CGPoint(x: 1 - 145.14 / 512, y: 252.91 / 512)
+
+    static func asset(for pose: String) -> String {
+        if pose == openingAsset || assets.contains(pose) { return pose }
+        if pose == "dino-answer-wrong" { return "valley-wrong" }
+        if let index = Int(pose.suffix(2)), pose.hasPrefix("dino-answer-clap-") {
+            switch index {
+            case 1, 3, 4, 6: return "valley-clap-open"
+            case 2, 5: return "valley-clap-contact"
+            default: break
+            }
+        }
+        return idle
     }
 }

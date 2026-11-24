@@ -258,23 +258,6 @@
         }
       }
     },
-    "dino.answer.selectClocks" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select all clocks first"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selecteer eerst alle klokken"
-          }
-        }
-      }
-    },
     "dino.answer.connectClocks" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -292,139 +275,19 @@
         }
       }
     },
-    "dino.appearance.volcano.bandana" : {
+    "dino.answer.selectClocks" : {
       "extractionState" : "manual",
       "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sjerp en klokmetaal"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sash and clock metal"
+            "value" : "Select all clocks first"
           }
-        }
-      }
-    },
-    "dino.appearance.volcano.spikes" : {
-      "extractionState" : "manual",
-      "localizations" : {
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kopschild"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Frill"
-          }
-        }
-      }
-    },
-    "dino.appearance.volcano.body" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Huid en vlekken"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Skin and spots"
-          }
-        }
-      }
-    },
-    "dino.appearance.volcano.belly" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Buik, hoorns en klauwen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Belly, horns and claws"
-          }
-        }
-      }
-    }
-,
-    "dino.appearance.desert.bandana": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scarf and leather"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sjaal en leer"
-          }
-        }
-      }
-    },
-    "dino.appearance.desert.spikes": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Horns and rock spines"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hoorns en rotsstekels"
-          }
-        }
-      }
-    },
-    "dino.appearance.desert.body": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Skin and spots"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Huid en vlekken"
-          }
-        }
-      }
-    },
-    "dino.appearance.desert.belly": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chin, belly and toes"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kin, buik en tenen"
+            "value" : "Selecteer eerst alle klokken"
           }
         }
       }
@@ -480,6 +343,74 @@
         }
       }
     },
+    "dino.appearance.cave.bandana" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clock rim"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klokrand"
+          }
+        }
+      }
+    },
+    "dino.appearance.cave.belly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chin and belly"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kin en buik"
+          }
+        }
+      }
+    },
+    "dino.appearance.cave.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skin and spots"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huid en vlekken"
+          }
+        }
+      }
+    },
+    "dino.appearance.cave.spikes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crystals"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kristallen"
+          }
+        }
+      }
+    },
     "dino.appearance.choose" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -493,6 +424,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kies de kleuren van jouw dino"
+          }
+        }
+      }
+    },
+    "dino.appearance.city.bandana" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clock metal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klokmetaal"
+          }
+        }
+      }
+    },
+    "dino.appearance.city.belly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beak, belly and toes"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snavel, buik en tenen"
+          }
+        }
+      }
+    },
+    "dino.appearance.city.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skin and spots"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huid en vlekken"
+          }
+        }
+      }
+    },
+    "dino.appearance.city.spikes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wing membranes"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vliezen"
           }
         }
       }
@@ -633,6 +632,74 @@
         }
       }
     },
+    "dino.appearance.desert.bandana" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scarf and leather"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sjaal en leer"
+          }
+        }
+      }
+    },
+    "dino.appearance.desert.belly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chin, belly and toes"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kin, buik en tenen"
+          }
+        }
+      }
+    },
+    "dino.appearance.desert.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skin and spots"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huid en vlekken"
+          }
+        }
+      }
+    },
+    "dino.appearance.desert.spikes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Horns and rock spines"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoorns en rotsstekels"
+          }
+        }
+      }
+    },
     "dino.appearance.open" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -714,6 +781,210 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mijn dino"
+          }
+        }
+      }
+    },
+    "dino.appearance.valley.bandana" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleeping cap and quilt"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slaapmuts en deken"
+          }
+        }
+      }
+    },
+    "dino.appearance.valley.belly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belly, trim and claws"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buik, bies en klauwen"
+          }
+        }
+      }
+    },
+    "dino.appearance.valley.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skin and spots"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huid en vlekken"
+          }
+        }
+      }
+    },
+    "dino.appearance.valley.spikes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Embroidery and clock metal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borduurwerk en klokmetaal"
+          }
+        }
+      }
+    },
+    "dino.appearance.village.bandana" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hat, vest and gold trim"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoed, vest en goud"
+          }
+        }
+      }
+    },
+    "dino.appearance.village.belly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chin, belly and claws"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kin, buik en klauwen"
+          }
+        }
+      }
+    },
+    "dino.appearance.village.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skin and spots"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huid en vlekken"
+          }
+        }
+      }
+    },
+    "dino.appearance.village.spikes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spines and staff wood"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rugstekels en hout"
+          }
+        }
+      }
+    },
+    "dino.appearance.volcano.bandana" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sash and clock metal"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sjerp en klokmetaal"
+          }
+        }
+      }
+    },
+    "dino.appearance.volcano.belly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belly, horns and claws"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buik, hoorns en klauwen"
+          }
+        }
+      }
+    },
+    "dino.appearance.volcano.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skin and spots"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huid en vlekken"
+          }
+        }
+      }
+    },
+    "dino.appearance.volcano.spikes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frill"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopschild"
           }
         }
       }
@@ -884,6 +1155,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dino"
+          }
+        }
+      }
+    },
+    "dino.characters.available" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlocked"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontgrendeld"
+          }
+        }
+      }
+    },
+    "dino.characters.level %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Level %lld"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Level %lld"
+          }
+        }
+      }
+    },
+    "dino.characters.locked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locked"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergrendeld"
+          }
+        }
+      }
+    },
+    "dino.characters.main" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Start"
+          }
+        }
+      }
+    },
+    "dino.characters.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose your dino"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies je dino"
           }
         }
       }
@@ -3200,6 +3556,23 @@
         }
       }
     },
+    "dino.friends.scoreHidden" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This friend shares their level only."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze vriend deelt alleen het level."
+          }
+        }
+      }
+    },
     "dino.friends.scoreInfo" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3230,23 +3603,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zet dit uit zodat vrienden in dit spel alleen je level zien. Je sterren en tijden zijn dan verborgen. Apple bewaart eerder gepubliceerde Game Center-resultaten; oudere versies van het spel kunnen die nog tonen."
-          }
-        }
-      }
-    },
-    "dino.friends.scoreHidden" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This friend shares their level only."
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deze vriend deelt alleen het level."
           }
         }
       }
@@ -5973,7 +6329,6 @@
         }
       }
     },
-
     "dino.question.chooseClock.short" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8384,91 +8739,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jouw antwoord"
-          }
-        }
-      }
-    },
-    "dino.characters.available" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unlocked"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ontgrendeld"
-          }
-        }
-      }
-    },
-    "dino.characters.level %lld" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Level %lld"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Level %lld"
-          }
-        }
-      }
-    },
-    "dino.characters.locked" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Locked"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vergrendeld"
-          }
-        }
-      }
-    },
-    "dino.characters.main" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Main Dino"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hoofddino"
-          }
-        }
-      }
-    },
-    "dino.characters.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose your dino"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kies je dino"
           }
         }
       }

@@ -214,7 +214,6 @@ private final class OpeningDinoArtwork: UIView {
         backgroundColor = .clear
         isUserInteractionEnabled = false
         sprite.opacity = 0
-        sprite.anchorPoint = CGPoint(x: 0.5, y: DinoWelcomeFlight.footline)
         sprite.shadowColor = UIColor(red: 0.12, green: 0.28, blue: 0.15, alpha: 1).cgColor
         sprite.shadowOpacity = 0.16
         sprite.shadowRadius = 7
@@ -283,6 +282,7 @@ private final class OpeningDinoArtwork: UIView {
     }
 
     private func placeAtSource(_ flight: DinoWelcomeFlight) {
+        sprite.anchorPoint = CGPoint(x: 0.5, y: flight.footline)
         sprite.bounds = CGRect(x: 0, y: 0, width: flight.sourceSide, height: flight.sourceSide)
         sprite.position = flight.position(elapsed: 0)
         artwork.bounds = sprite.bounds

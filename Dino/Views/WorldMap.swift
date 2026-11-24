@@ -295,17 +295,17 @@ struct WorldMap: View {
             } catch { /* Navigating away, opening a menu or backgrounding cancels the request. */ }
         }
         .task {
+            let recoversUnlock: Bool
 #if DEBUG
-            // The root's isolated result fixture replaces its initial map on
-            // the first task turn. Do not recover that fixture's pending unlock
-            // before its result has a chance to present the normal journey.
-            if ProcessInfo.processInfo.environment["DINO_TEST_SUITE"] != nil,
-               ProcessInfo.processInfo.environment["DINO_TEST_RESULT_LEVEL"] != nil,
-               worldTransition == nil {
-                do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
-            }
+            // The fixture's initial map can coexist with the result during
+            // launch. Let the actual result-to-map route consume its unlock.
+            let environment = ProcessInfo.processInfo.environment
+            recoversUnlock = !(animatesOpening && environment["DINO_TEST_SUITE"] != nil
+                               && environment["DINO_TEST_RESULT_LEVEL"] != nil)
+#else
+            recoversUnlock = true
 #endif
-            if worldTransition == nil { player.completeCharacterUnlock() }
+            if worldTransition == nil && recoversUnlock { player.completeCharacterUnlock() }
             let colors = player.profile.dinoAppearance ?? .standard
             // The small map sprite is ready before its view is constructed; the
             // opening receives a separate original-resolution image and cache key.
@@ -330,7 +330,7 @@ struct WorldMap: View {
                     unlockedJumpImages = await DinoSpriteLoader.shared.worldJumpImages(for: unlocked)
                 }
                 worldJumpImages = await DinoSpriteLoader.shared.worldJumpImages(for: player.profile.dinoAppearance ?? .standard)
-            } else if player.profile.pendingCharacterUnlock != nil {
+            } else if recoversUnlock && player.profile.pendingCharacterUnlock != nil {
                 // Recover a first unlock if the app was closed on the result screen.
                 player.completeCharacterUnlock()
             }
@@ -552,8 +552,8 @@ private struct MapWorldJumpDino: View {
     let idleImage: UIImage?
     let reducedMotion: Bool
     var unlockedImages: [String: UIImage] = [:]
-    var sourceCharacter: DinoIdentity = .main
-    var unlockedCharacter: DinoIdentity = .jungle
+    let sourceCharacter: DinoIdentity
+    let unlockedCharacter: DinoIdentity
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 60, paused: startedAt == nil || reducedMotion)) { context in
@@ -576,7 +576,7 @@ private struct MapWorldJumpDino: View {
                     .blur(radius: 3)
                     .position(x: center.x, y: center.y + size / 2 - 10)
                 if sourceCharacter.usesBossArtwork {
-                    jungleDrawing(boss, size: size, images: images, fallback: idleImage)
+                    bossDrawing(boss, size: size, images: images, fallback: idleImage)
                         .frame(width: size, height: size)
                         .rotationEffect(.degrees(sample.angle), anchor: UnitPoint(x: 0.5, y: 0.52))
                         .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
@@ -585,15 +585,15 @@ private struct MapWorldJumpDino: View {
                 } else if let image = images[sample.pose.asset] ?? idleImage {
                     Image(uiImage: image).resizable().scaledToFit()
                         .frame(width: size, height: size)
-                        .offset(x: sourceCharacter.usesBossArtwork ? 0 : size * sample.pose.offsetX, y: sourceCharacter.usesBossArtwork ? 0 : size * sample.pose.offsetY)
-                        .rotationEffect(.degrees(sample.angle - (sourceCharacter.usesBossArtwork ? 0 : sample.pose.paintedAngle)), anchor: UnitPoint(x: 0.5, y: 0.52))
+                        .offset(x: size * sample.pose.offsetX, y: size * sample.pose.offsetY)
+                        .rotationEffect(.degrees(sample.angle - sample.pose.paintedAngle), anchor: UnitPoint(x: 0.5, y: 0.52))
                         .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
                         .offset(y: size * sample.height)
                         .opacity(sourceOpacity)
                         .position(center)
                 }
                 if !unlockedImages.isEmpty {
-                    jungleDrawing(unlocked, size: size, images: unlockedImages, fallback: unlockedImages["dino-idle"])
+                    bossDrawing(unlocked, size: size, images: unlockedImages, fallback: unlockedImages["dino-idle"])
                         .frame(width: size, height: size)
                         .rotationEffect(.degrees(sample.angle), anchor: UnitPoint(x: 0.5, y: 0.52))
                         .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
@@ -609,7 +609,7 @@ private struct MapWorldJumpDino: View {
         .accessibilityIdentifier("map.worldJump")
     }
 
-    private func jungleDrawing(_ sample: DinoAnimation.Sample, size: CGFloat, images: [String: UIImage], fallback: UIImage?) -> some View {
+    private func bossDrawing(_ sample: DinoAnimation.Sample, size: CGFloat, images: [String: UIImage], fallback: UIImage?) -> some View {
         ZStack {
             if let previous = sample.previousPose, let image = images[previous.asset] {
                 Image(uiImage: image).resizable().scaledToFit()
