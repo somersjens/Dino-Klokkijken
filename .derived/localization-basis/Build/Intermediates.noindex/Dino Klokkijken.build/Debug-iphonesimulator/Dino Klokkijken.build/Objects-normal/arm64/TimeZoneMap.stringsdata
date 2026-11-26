@@ -1,0 +1,16 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/TimeZoneMap.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.timeZone.replay",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 92
+        }
+      }
+    ]
+  },
+  "version": 1
+}

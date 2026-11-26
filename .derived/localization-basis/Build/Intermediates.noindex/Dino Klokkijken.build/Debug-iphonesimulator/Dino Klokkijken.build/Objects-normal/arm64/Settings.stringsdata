@@ -1,0 +1,216 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/Settings.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.settings",
+        "location": {
+          "startingColumn": 14,
+          "startingLine": 108
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.done",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 115
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.dayParts",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 163
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.gameCenter",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 153
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.soundEffects",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 172
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.speakQuestionTitle",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 175
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.haptics",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 178
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.highContrast",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 181
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.friends.privacy",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 190
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.resetProgress",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 196
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.resetTitle",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 227
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.resetMessage",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 229
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.resetAnswer",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 240
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.cancel",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 254
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.resetProgress",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 250
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.icloudSync",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 332
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.icloudSync",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 310
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.icloudDescription",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 311
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.icloudSync",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 293
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.icloudDescription",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 313
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.dayParts",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 569
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.dayParts.help",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 575
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.dayParts.standard",
+        "location": {
+          "startingColumn": 27,
+          "startingLine": 599
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.dayParts.column",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 630
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.dayParts.from",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 633
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.settings.dayParts.to",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 635
+        }
+      }
+    ]
+  },
+  "version": 1
+}

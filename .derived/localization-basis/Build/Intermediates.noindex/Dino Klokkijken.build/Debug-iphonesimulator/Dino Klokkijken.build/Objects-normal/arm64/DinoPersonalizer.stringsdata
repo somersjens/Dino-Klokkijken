@@ -1,0 +1,56 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/DinoPersonalizer.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.done",
+        "location": {
+          "startingColumn": 16,
+          "startingLine": 90
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.appearance.reset",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 183
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.characters.available",
+        "location": {
+          "startingColumn": 57,
+          "startingLine": 227
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.characters.locked",
+        "location": {
+          "startingColumn": 87,
+          "startingLine": 227
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.characters.main",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 219
+        }
+      },
+      {
+        "comment": "",
+        "key": "dino.characters.level %lld",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 221
+        }
+      }
+    ]
+  },
+  "version": 1
+}

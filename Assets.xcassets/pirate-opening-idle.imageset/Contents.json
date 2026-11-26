@@ -1,0 +1,12 @@
+{
+  "images": [
+    {
+      "filename": "pirate-opening-idle.png",
+      "idiom": "universal"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

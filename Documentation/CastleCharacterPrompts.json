@@ -1,0 +1,161 @@
+{
+  "character": {
+    "nl": "Koning Chronos",
+    "en": "King Chronos",
+    "world": 10,
+    "themeID": 10,
+    "rawValue": 10,
+    "unlockLevel": 100,
+    "collectionSlot": 10
+  },
+  "identityReference": "Documentation/Eindbazen/References/new_10-original.png",
+  "mapAsset": "boss-castle",
+  "earlierDesignReference": "Documentation/Eindbazen/References/boss-castle-10.png",
+  "generator": "Built-in ImageGen, transparent background",
+  "sources": [
+    {
+      "use": "idle",
+      "prompt": "Use case: identity-preserve. Asset type: high-resolution canonical transparent game character sprite. Image 1 is the authoritative edit target, the current blue marine dinosaur King Chronos, facing screen LEFT. Image 2 is the same current design at game scale. Reproduce image 1 as closely as possible, preserving the silhouette, head proportions, eye positions and separation, smiling ivory jaw, cobalt blue skin and lighter oval spots, two large flippers, curled whale tail fully visible to the right, royal ultramarine cape, white two-lobe ermine collar and hem, turquoise cabochons, polished gold clock crown and clasp. Same elevated frontal three-quarter camera, colors and soft studio illustration. Change only these things: repair exterior alpha and colored fringe to genuinely clean transparent pixels, and put a complete opaque ivory analog dial inside the existing gold crown bezel, navy twelve tick marks and two navy hands, no numerals. Make its hands point upper-right toward 2 and lower-left toward 7 because production will reflect the artwork once and the displayed dial must read 10:25. No text anywhere. Square high-detail master with the figure centered and a small clear margin on all sides. Include entire tail, crown tips, flippers and cape. No ground, shadow, checkerboard, haze or effects. Save at highest native detail, ideally at least 1254×1254.",
+      "file": "exec-5825e92b-f576-4a9e-b90f-52ed721c04ce.png",
+      "pixels": [
+        1254,
+        1254
+      ],
+      "grid": [
+        1,
+        1
+      ],
+      "assets": [
+        [
+          "castle-opening-idle",
+          "castle-idle"
+        ]
+      ]
+    },
+    {
+      "use": "answers",
+      "prompt": "Use case: identity-preserve. Asset type: transparent 2 by 2 KING CHRONOS game sprite sheet. Input is the identity and exact neutral framing reference. Create an exact square 2 columns × 2 rows grid, four equal square cells separated by transparency, each with 5% clear margin, no lines or labels. Reading order: (1) happy clap anticipation, both SHORT existing blue flippers lift forward and spread, palms visible but well below chin; (2) happy clap contact, same flipper tips meet visibly just above the lower belly, never cover face or crown; (3) sympathetic wrong-answer reaction, eyebrows and mouth express gentle surprise, slight head and upper body tilt, flippers still planted; (4) forward brace, leaning down with both flippers pressed onto level ground and raised tail. Neutral/planted sole line y=0.92 of each cell, identical camera/distance and character size in every cell, do not auto crop. Face left in every cell. Exact same marine dinosaur, eye separation, huge smiling ivory muzzle, cobalt blue spotted body, two flippers with ivory edging, huge curled whale tail, royal blue cape with spotted ivory fur collar and hem, turquoise jewels, full gold crown and opaque ivory clock, marks only. Preserve crown shape, color, light and body volumes. Include crown tips, full tail and flippers in every cell. Truly transparent background, no floor, shadow, loose effects, motion trails, notes, digits, or checkerboard. Maximize detail and draw exactly four figures.",
+      "file": "exec-bef71485-23cb-45f8-9245-994c084ebf6f.png",
+      "pixels": [
+        1254,
+        1254
+      ],
+      "grid": [
+        2,
+        2
+      ],
+      "assets": [
+        null,
+        null,
+        "castle-wrong",
+        "castle-brace"
+      ]
+    },
+    {
+      "use": "turn",
+      "prompt": "Use case: identity-preserve. Asset type: a transparent four-view KING CHRONOS turntable sprite sheet. Square exact grid of two columns × two rows, four cells with absolutely even square bounds, no labels and no dividing lines. One full figure centered at fixed scale, hip axis and ground baseline y=0.92 in each cell, transparent 5% clear cell margins. Input is the authority for the appearance and the left-facing three-quarter/front angle. Change only yaw with a turntable camera at the same height, focal length, illumination and distance. Top left: frontal with full frontal symmetric gold clock crown and both flippers. Top right: pure right-facing side profile with one eye and full tail. Bottom left: directly from the back, full blue royal cape spread, back of crown with no clock visible and whale tail, no eyes or mouth visible. Bottom right: pure left-facing side profile with one eye and full tail. Keep exact same cobalt blue spotted marine dinosaur, warm ivory jaw and belly, two flippers, giant curved whale fluke, royal blue cape, spotted ermine trim, gold crown with turquoise jewels and opaque analog dial, existing expression. Same total height per cell and full crown, tail and flippers. True alpha outside every figure, no shadows, floor, label, checkerboard or other character.",
+      "file": "exec-80cfa07d-0dd2-4f4d-be6b-665ac5adf8fa.png",
+      "pixels": [
+        1254,
+        1254
+      ],
+      "grid": [
+        2,
+        2
+      ],
+      "assets": [
+        "castle-front",
+        "castle-side-left",
+        "castle-back",
+        "castle-side-right"
+      ]
+    },
+    {
+      "use": "stumble",
+      "prompt": "Use case: identity-preserve. Asset type: transparent four-cell gameplay sprite sheet for the EXACT blue sea dinosaur King Chronos in the reference. Square exact 2 columns × 2 rows grid with equal square cells; full figure inside every cell with clear 4% transparent gutters all around, no lines or labels. Top left: left-facing lost balance, flippers spread forward/down, center of mass forward, face surprised. Top right: left-facing fully sprawled on belly, both flippers stretched out and planted on the same imaginary ground as chin, crown stays on at a realistic tilt and tail and cape fully visible. Bottom left: left-facing recovery pushing up on both visibly planted flippers with belly still down, head up. Bottom right: right-facing rear three-quarter turn, only back of head, tail and cape and gold crown backside, no visible clock face. All eyes, cream jaw, blue spotted skin, tail fluke, royal cobalt cape, spotted white ermine and gold crown with blue jewels are strictly identical to the reference. Maintain camera height and distance, body and head size, soft 3D lighting and original palette. No scene or ground plane, no contact shadow, no text, labels, checkerboard, loose effects or props. Preserve opaque analog clock with tick marks and no digits where visible. Full figure toes/flippers, cape, tail and crown in every cell.",
+      "file": "exec-17019f9f-3d3d-4375-ac53-dd102816679e.png",
+      "pixels": [
+        1254,
+        1254
+      ],
+      "grid": [
+        2,
+        2
+      ],
+      "assets": [
+        "castle-stumble",
+        "castle-fallen",
+        "castle-recover",
+        "castle-rear-right"
+      ]
+    },
+    {
+      "use": "refinement",
+      "prompt": "Use case: identity-preserve. Asset type: two transparent KING CHRONOS game sprite cells side by side on an exact 2:1 wide canvas, two equally sized square cells. Image 1 is the canonical left-facing identity. Image 2's upper-right cell is the lying-on-belly pose to match. Image 3's bottom-left cell is the directly rear view. LEFT CELL: one early LEFT-facing push-up recovery, belly and both spread flippers still on the same level ground at the same distance apart as the fallen image; raise the face only a quarter of the distance between prone and idle, with elbow flippers carrying his weight. Same silhouette, angled head level, same cape folds, collar and tail placement as the fallen pose. RIGHT CELL: one rear-left facing 3/4 turn between the dead-rear and left profile views. Show back of the gold crown with only the far edge of the bezel, hidden dial, mostly royal cape back and curling whale tail, no visible eyes. Same camera and colors, body size, ivory trim, teal crown jewels, dotted blue skin and renderer as the source. Crown tips, cape hem and tail wholly visible. Center the body and use 5% true-alpha gutters in each square, ground contact at y=0.93. No floor, shadow, grid, lettering, extra marks, effects or checkerboard.",
+      "file": "exec-0f9f1d9a-5c60-400a-b478-26d8e6bd9e6a.png",
+      "pixels": [
+        1774,
+        887
+      ],
+      "grid": [
+        2,
+        1
+      ],
+      "assets": [
+        "castle-lift",
+        "castle-rear-left"
+      ]
+    },
+    {
+      "use": "raised-claps",
+      "prompt": "Use case: identity-preserve. Asset type: two revised KING CHRONOS applause sprites, exactly two equally sized SQUARE cells side by side in a 2:1 transparent canvas, fully separated with 4% transparent margins. First reference is the identity and framing to copy: blue spotted marine baby dinosaur facing LEFT, huge curled whale tail to the right, cream smiling muzzle, same face shape, same spacing of brown eyes, royal blue cloak and spotted white ermine, gold clock crown with turquoise jewels and complete ivory dial with navy tick marks. Second reference has the old open and contact pair in its upper row, those flippers are too LOW for the HUD. Keep face, head scale, cape drape, tail and ground fixed between these two new cells and the first reference. Draw the same short blue flippers lifted VERY HIGH in FRONT of UPPER CHEST, in front of lower ermine collar. The upper tips must reach y = 0.55 to 0.59 of the square, immediately under the cream jaw, and be centered at x = 0.35 to enter the hud circle. Left cell: clearly separated flipper tips at x = 0.26 and 0.44, both are visibly raised. Right cell: blue flipper tips touch at x = 0.35, y = 0.57 with thick painted arms on both sides. Palms cream in both. Collar and clasp may be naturally occluded by the raised flippers. Preserve full body, crown, fluke, cape hem, clean anatomy and consistent lighting; no extra feet, no floating paws, NO framing autoscaling between cells. Both characters' cape hems share baseline y=0.94. True clean alpha outside both characters, no shadows, ground, artwork behind them, lettering, grid or checkerboard.",
+      "file": "exec-c47e4a9c-53b9-40b4-b0e1-f70d545ce7bb.png",
+      "pixels": [
+        1774,
+        887
+      ],
+      "grid": [
+        2,
+        1
+      ],
+      "assets": [
+        "castle-clap-open",
+        "castle-clap-contact"
+      ]
+    }
+  ],
+  "coordinates": {
+    "rig": "Top-left pixel-edge coordinates on a 627-unit source square. Multiply by sourceSize[0] / 627 for physical source pixels; y points down. Eyes record iris centers plus protection radii. Nose and contacts are measured points; dial records center, radii and rotation in radians.",
+    "registration": "Uniform scale and translation (shift) on the same 627-unit grid; divide by 627 for normalized coordinates. Pixel centers are n + 0.5; x becomes width - 1 - x exactly once during runtime reflection. Screen-point placement uses the normalized prepared canvas.",
+    "clock": "The measured inner-bezel boundary is protected. Tick and hand paint is corrected in the pose-local dial frame, with reflected source angles so the prepared dial reads 10:25. Back views hide the dial.",
+    "opening": "The 1254px artwork is native. The 512px standing image has the same registration. The normalized ground line is 592/627. The opening uses a continuous native transform of the one master.",
+    "mask": "CHR1 RLE asset. Low three bits assign editable material; 0 keeps protected paint. Bit 3 isolates only the crown. Bit 4 isolates the crown and face. All masks share source framing and alpha."
+  },
+  "materials": {
+    "1": "bandana: crown, clock bezel and gold clasp (ECA523)",
+    "2": "spikes: ultramarine cape and its folds (163AB4)",
+    "3": "body: cobalt skin including spots, flippers and tail (2365AA)",
+    "4": "belly: warm ivory muzzle, belly and flipper undersides (F8E2BE)",
+    "5": "bandana: turquoise cabochons matched to crown color choice (1182B9)",
+    "6": "belly: spotted ermine collar and cape hem (F2EAE2)",
+    "0": "clock dial, tick marks, hands, eyes, nostrils, teeth and mouth"
+  },
+  "poses": {
+    "castle-idle": {"crown":[[122,164],[150,173],[176,158],[226,150],[267,152],[298,164],[326,184],[351,167]],"jaw":[[118,242],[138,274],[163,302],[189,317],[231,320],[263,308],[294,278],[328,275],[345,241]],"dial":[239,104,44,45,0],"eyes":[[184,191,22,29],[265,201,25,30]],"nose":[[138,222],[186,228]],"mouth":[[133,249],[162,264],[214,261],[279,241],[274,259],[241,286],[204,302],[179,304],[152,285]],"clasp":[[168,360,14,15],[211,370,25,26],[259,363,14,15]],"hip":[214,475],"contacts":[[75,585],[394,592]],"scale":1,"shift":[0,0],"sourceSize":[1254,1254],"renderedSize":512,"renderedBounds":[34,14,476,485]},
+    "castle-opening-idle": {"crown":[[122,164],[150,173],[176,158],[226,150],[267,152],[298,164],[326,184],[351,167]],"jaw":[[118,242],[138,274],[163,302],[189,317],[231,320],[263,308],[294,278],[328,275],[345,241]],"dial":[239,104,44,45,0],"eyes":[[184,191,22,29],[265,201,25,30]],"nose":[[138,222],[186,228]],"mouth":[[133,249],[162,264],[214,261],[279,241],[274,259],[241,286],[204,302],[179,304],[152,285]],"clasp":[[168,360,14,15],[211,370,25,26],[259,363,14,15]],"hip":[214,475],"contacts":[[75,585],[394,592]],"scale":1,"shift":[0,0],"sourceSize":[1254,1254],"renderedSize":1254,"renderedBounds":[82,34,1166,1187]},
+    "castle-clap-open": {"crown":[[156,181],[183,196],[205,179],[250,165],[293,170],[337,183],[372,201],[411,172]],"jaw":[[147,255],[168,290],[201,324],[233,343],[269,344],[301,327],[336,304],[383,291],[396,241]],"dial":[284,117,49,52,0],"eyes":[[222,208,21,27],[310,220,25,29]],"nose":[[175,239],[224,244]],"mouth":[[163,265],[200,279],[250,280],[323,262],[322,277],[277,314],[244,325],[211,325],[184,309],[177,284]],"clasp":[[235,386,14,25]],"hip":[241,483],"contacts":[[111,599],[398,608]],"scale":0.985,"shift":[-32,-7],"flippers":[[[139,338],[151,328],[173,333],[193,352],[209,373],[222,399],[224,420],[215,443],[198,459],[175,464],[153,456],[148,443],[143,417],[140,381]],[[232,383],[242,362],[258,342],[278,334],[294,335],[305,351],[312,372],[312,397],[322,421],[320,444],[306,461],[284,468],[261,462],[244,447],[233,422]],[[113,588],[136,560],[158,510],[177,466],[195,468],[188,512],[173,558],[157,590],[135,601]],[[304,475],[319,471],[326,496],[348,546],[379,586],[397,601],[375,604],[353,592],[334,570],[316,537],[305,506]]],"sourceSize":[887,887],"renderedSize":512,"renderedBounds":[8,9,455,485],"raisedFlippers":[[147,338],[291,340]]},
+    "castle-clap-contact": {"crown":[[156,183],[180,197],[202,180],[244,169],[291,169],[330,181],[367,203],[404,174]],"jaw":[[145,254],[167,290],[192,324],[228,343],[265,345],[295,329],[335,304],[377,294],[394,242]],"dial":[277,117,49,52,0],"eyes":[[214,207,22,27],[300,220,25,29]],"nose":[[167,239],[218,244]],"mouth":[[161,267],[199,279],[246,280],[317,263],[319,273],[277,312],[240,325],[209,327],[187,310],[175,285]],"clasp":[],"hip":[237,486],"contacts":[[109,601],[394,607]],"scale":0.985,"shift":[-30,-7],"flippers":[[[153,413],[165,392],[187,367],[212,347],[234,341],[249,349],[259,381],[260,415],[242,441],[219,456],[198,461],[176,458],[159,445]],[[239,349],[248,341],[269,350],[297,373],[315,396],[328,421],[332,445],[315,461],[291,467],[265,457],[247,439],[237,421]],[[107,590],[130,562],[148,532],[165,491],[178,466],[199,467],[189,512],[175,555],[157,588],[130,602]],[[302,477],[316,471],[333,512],[354,552],[376,584],[395,600],[373,604],[345,585],[326,557],[310,516]]],"sourceSize":[887,887],"renderedSize":512,"renderedBounds":[6,10,452,485],"clapContact":[242,346]},
+    "castle-wrong": {"crown":[[102,191],[149,214],[170,186],[193,175],[232,169],[278,166],[323,182],[348,167]],"jaw":[[132,283],[144,310],[174,338],[213,351],[244,347],[275,332],[296,308],[328,316],[370,264]],"dial":[222,116,48,49,0.12],"eyes":[[187,232,24,28],[270,222,27,32]],"nose":[[148,270],[203,260]],"mouth":[[208,289],[227,296],[239,320],[233,337],[211,337],[202,310]],"clasp":[[200,387,15,17],[246,392,24,27],[300,386,15,17]],"hip":[232,490],"contacts":[[101,598],[421,603]],"scale":0.982,"shift":[-1,0],"sourceSize":[627,627],"renderedSize":512,"renderedBounds":[36,18,478,485]},
+    "castle-brace": {"crown":[[59,225],[89,252],[112,233],[145,222],[191,219],[240,226],[282,247],[311,226]],"jaw":[[62,320],[81,349],[109,377],[143,399],[181,407],[218,395],[258,375],[282,365],[307,342]],"dial":[183,166,48,48,0],"eyes":[[120,275,26,29],[210,274,26,30]],"nose":[[78,314],[130,314]],"mouth":[[69,331],[104,350],[155,351],[225,324],[224,342],[185,374],[145,394],[115,388],[88,368]],"clasp":[[168,431,16,17],[220,438,30,26],[271,419,16,17]],"hip":[236,488],"contacts":[[63,591],[420,601]],"scale":0.98,"shift":[8,3],"sourceSize":[627,627],"renderedSize":512,"renderedBounds":[40,56,479,483]},
+    "castle-stumble": {"crown":[[112,192],[130,211],[155,192],[200,195],[253,213],[282,229],[313,252],[372,182]],"jaw":[[87,269],[104,318],[135,356],[160,383],[206,389],[230,375],[257,348],[286,340],[322,304]],"dial":[228,138,50,52,0.25],"eyes":[[149,230,21,29],[212,254,32,40]],"nose":[[101,265],[141,275]],"mouth":[[95,291],[139,309],[193,329],[198,357],[182,383],[138,379],[111,354]],"clasp":[[191,423,14,16],[231,429,24,26],[273,413,16,16]],"hip":[218,470],"contacts":[[26,520],[302,600]],"scale":0.99,"shift":[10,-2],"sourceSize":[627,627],"renderedSize":512,"renderedBounds":[26,24,472,483]},
+    "castle-fallen": {"crown":[[45,315],[77,374],[103,352],[138,342],[174,339],[218,342],[261,356],[284,343]],"jaw":[[43,448],[66,475],[97,503],[128,525],[171,530],[205,521],[228,499],[245,474],[272,447]],"dial":[137,284,48,52,-0.23],"eyes":[[100,395,21,28],[165,401,30,38]],"nose":[[60,444],[98,437]],"mouth":[[72,462],[107,473],[140,475],[171,486],[177,516],[141,521],[100,509],[79,484]],"clasp":[[191,534,12,14],[225,532,24,23],[251,518,11,14]],"hip":[231,488],"contacts":[[6,542],[426,561]],"scale":0.93,"shift":[16,70],"sourceSize":[627,627],"renderedSize":512,"renderedBounds":[16,156,472,485]},
+    "castle-recover": {"crown":[[108,185],[134,200],[154,184],[191,178],[241,182],[274,190],[313,209],[357,180]],"jaw":[[97,255],[110,282],[139,329],[175,355],[205,361],[233,350],[259,332],[289,323],[321,300]],"dial":[221,122,48,50,0],"eyes":[[157,216,23,31],[226,234,30,36]],"nose":[[114,252],[156,254]],"mouth":[[102,274],[138,288],[197,295],[252,282],[246,306],[209,341],[165,352],[135,336],[112,304]],"clasp":[[163,412,15,17],[205,418,27,26],[252,413,17,17]],"hip":[227,479],"contacts":[[25,566],[416,587]],"scale":0.98,"shift":[3,17],"sourceSize":[627,627],"renderedSize":512,"renderedBounds":[20,33,485,484]},
+    "castle-lift": {"crown":[[103,297],[125,331],[150,311],[192,310],[231,303],[280,318],[306,333],[325,296]],"jaw":[[92,399],[113,427],[146,454],[177,474],[211,475],[243,453],[275,423],[310,411],[323,374]],"dial":[188,252,41,48,0],"eyes":[[144,344,23,26],[205,351,28,33]],"nose":[[102,381],[144,383]],"mouth":[[105,408],[139,414],[182,415],[209,444],[200,461],[162,456],[137,441]],"clasp":[[231,496,11,14],[259,498,21,22],[280,489,11,13]],"hip":[245,481],"contacts":[[43,552],[460,568]],"scale":0.93,"shift":[-20,63],"sourceSize":[887,887],"renderedSize":512,"renderedBounds":[15,164,451,486]},
+    "castle-rear-left": {"crown":[[151,200],[166,216],[196,225],[233,228],[270,230],[299,231],[323,213],[350,194]],"jaw":[[105,275],[117,308],[134,333],[153,345],[180,334],[217,333],[265,333],[306,324],[325,304]],"dial":null,"eyes":[],"nose":[],"mouth":[],"clasp":[],"hip":[249,480],"contacts":[[44,556],[534,574]],"scale":0.98,"shift":[6,30],"sourceSize":[887,887],"renderedSize":512,"renderedBounds":[37,68,467,488]},
+    "castle-front": {"crown":[[207,164],[232,177],[256,161],[287,152],[330,152],[372,159],[397,177],[422,152]],"jaw":[[208,250],[226,280],[252,310],[285,322],[340,322],[373,307],[401,277],[418,247]],"dial":[313,105,44,45,0],"eyes":[[266,193,24,31],[358,194,24,31]],"nose":[[284,227],[341,228]],"mouth":[[219,244],[249,258],[311,260],[375,252],[402,241],[387,269],[347,300],[311,308],[275,303],[241,281]],"clasp":[[255,363,17,17],[315,371,29,26],[369,364,17,17]],"hip":[312,478],"contacts":[[150,586],[478,591]],"scale":0.98,"shift":[-37,12],"sourceSize":[627,627],"renderedSize":512,"renderedBounds":[22,21,449,484]},
+    "castle-side-left": {"crown":[[219,138],[231,159],[252,152],[286,158],[324,173],[352,188],[371,170]],"jaw":[[117,245],[143,266],[154,291],[184,316],[216,318],[250,303],[275,296],[337,285],[361,237]],"dial":[253,103,26,47,0.27],"eyes":[[227,193,25,31]],"nose":[[137,220]],"mouth":[[122,245],[155,257],[204,252],[237,238],[226,260],[198,290],[169,300],[151,284]],"clasp":[[175,365,19,24],[207,366,15,16]],"hip":[228,476],"contacts":[[113,573],[330,594]],"scale":0.98,"shift":[-31,9],"sourceSize":[627,627],"renderedSize":512,"renderedBounds":[58,19,448,484]},
+    "castle-side-right": {"crown":[[232,169],[253,188],[281,176],[307,166],[343,154],[378,155],[398,145]],"jaw":[[246,258],[272,288],[306,312],[341,329],[367,331],[403,320],[433,296],[460,272],[482,242]],"dial":[350,99,24,45,-0.32],"eyes":[[385,194,25,28]],"nose":[[468,222]],"mouth":[[371,233],[398,250],[446,255],[478,248],[459,275],[435,299],[404,295],[382,271]],"clasp":[[396,367,17,16],[428,365,17,23]],"hip":[376,477],"contacts":[[274,594],[498,580]],"scale":0.98,"shift":[7,8],"sourceSize":[627,627],"renderedSize":512,"renderedBounds":[20,17,413,484]},
+    "castle-back": {"crown":[[215,164],[244,178],[273,162],[308,154],[344,157],[375,164],[403,180],[425,163]],"jaw":[[226,255],[239,281],[262,298],[280,306],[325,306],[361,300],[386,284],[415,256]],"dial":null,"eyes":[],"nose":[],"mouth":[],"clasp":[],"hip":[317,477],"contacts":[[93,585],[551,587]],"scale":0.98,"shift":[-30,10],"sourceSize":[627,627],"renderedSize":512,"renderedBounds":[30,18,438,484]},
+    "castle-rear-right": {"crown":[[279,185],[313,202],[346,190],[377,184],[423,183],[458,186],[491,196],[522,168]],"jaw":[[315,261],[335,299],[359,312],[382,312],[425,324],[478,326],[505,300],[533,271],[541,237]],"dial":null,"eyes":[],"nose":[],"mouth":[],"clasp":[],"hip":[407,474],"contacts":[[82,565],[592,555]],"scale":0.98,"shift":[-12,10],"sourceSize":[627,627],"renderedSize":512,"renderedBounds":[28,25,474,484]}
+  }
+}

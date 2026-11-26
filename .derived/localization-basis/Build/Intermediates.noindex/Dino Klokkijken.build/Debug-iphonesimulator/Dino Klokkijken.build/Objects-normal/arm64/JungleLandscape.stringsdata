@@ -1,0 +1,16 @@
+{
+  "source": "/Users/jenssomers/Desktop/Dino Klokkijken/Dino/Views/JungleLandscape.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "dino.worldNumber %lld",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 449
+        }
+      }
+    ]
+  },
+  "version": 1
+}

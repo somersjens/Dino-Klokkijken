@@ -1,0 +1,156 @@
+{
+  "identity": {
+    "world": 8,
+    "themeID": 8,
+    "savedRawValue": 8,
+    "bossLevel": 80,
+    "collectionSlot": 8,
+    "nameNL": "Professor Pendel",
+    "nameEN": "Professor Pendulum",
+    "worldArt": "boss-time-machine",
+    "reference": "Documentation/Eindbazen/References/boss-time-machine-08.png"
+  },
+  "imageGeneration": {
+    "tool": "Built-in ImageGen, RGBA",
+    "rectangularSheetGrid": [
+      2,
+      2
+    ],
+    "cellOrder": "Top-left, top-right, bottom-left, bottom-right. Each 1254 square sheet gives four fixed 627 square cells.",
+    "requests": [
+      {
+        "tag": "idle",
+        "prompt": "Production image edit, exact identity-preserving background extraction of reference 1 (original full-resolution Professor Pendulum game character). Reference 2 shows the intended alpha silhouette only; its clock holes must stay filled exactly as in reference 1. Preserve the exact 1254 square framing, proportions, left-facing three-quarter camera, large round bronze glasses, violet head and limbs with dark spots, pink wing sails, cream chin/belly, gold-trimmed indigo vest, bow tie, curved tail with round tip, floppy violet wizard hat, and both complete visible analog clocks and their cream dial, markings and hands. The partial fittings in the original stay partial. Match every placement including shoe line, eyes, wing tips and hat. Produce one sharp full character at 1536 square or larger, genuinely transparent outside silhouette, softly antialiased edges, no floor/ground shadow, no halo, zero other edits. No crop, no text, no additional object.",
+        "output": "exec-d7e427aa-86ad-4aa1-91e4-25865ec53b45.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "used": [
+          "machine-opening-idle",
+          "machine-idle"
+        ]
+      },
+      {
+        "tag": "poses",
+        "prompt": "Production game sprite sheet for this exact violet Professor Pendulum from reference. Large square RGBA image with exactly 2 columns x 2 rows of equal square cells. Each isolated character uses the original square framing and size within its cell, feet on original baseline y=93% of cell, face at original position, left-facing three-quarter, same face shape, eye distance, nose, glasses, purple spots, cream belly, gold-indigo waistcoat and bow tie, pink wings, floppy violet wizard hat with the original two intact gold clocks with cream dials dark marks hands. Preserve the entire hat, wings, tail and all toes with margins. Top-left: hands open by lower chest (before clap), smile. Top-right: exactly two hands touching with readable palm seam centered in front of upper belly, smile, elbows bent, feet remain planted. Bottom-left: worried gentle frown, hands low at sides, same eye size, feet planted. Bottom-right: slightly crouched, bent knees, hands low, compress legs and body only with head same scale, feet planted. No changes to camera, lighting, palette, texture, glasses, hat shape or clocks. Genuine transparency, absolutely no ground shadow, crop, labels, grid, text, effects or motion streaks.",
+        "output": "exec-cb54e3d0-65ba-484a-ad3d-9c40c5011a9d.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "cells": [
+          "machine-clap-open",
+          "machine-clap-contact",
+          "machine-wrong",
+          "machine-crouch"
+        ]
+      },
+      {
+        "tag": "results",
+        "prompt": "Production game sprites for exactly the same Professor Pendulum from reference, square RGBA sheet, exactly 2 columns and 2 rows of equal square cells. Paint at fixed original reference scale with even generous cell margins. Top left airborne tuck, left three-quarter front angle, dynamic bent knees and arms but same head proportions and same undamaged hat with the two original analog dials. Top right left-facing recovery from a soft tumble, front hands reaching the ground, hat still on and glasses still on, entire tail and wings. Bottom left intermediate side profile facing left, still standing. Bottom right rear three-quarter turn with clearly visible same pink wings, violet skin and bow of indigo hat, feet planted. Each standing pose's soles reach y=93% in cell. The bronze glasses and golden clock frames, violet floppy hat, brass-trim indigo vest bow tie, pink wing sails, cream face belly, purple limbs and round-tail tip are the reference's exact designs. Keep lighting, original scale and style. Genuine transparency. No shadow, effects, labels, grid lines, text or neighboring elements entering other cells.",
+        "output": "exec-dc30a5ac-5b86-4b08-8f31-9cf175ca2db5.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "cells": [
+          "machine-airborne",
+          "machine-brace",
+          "machine-turn-side-left",
+          null
+        ]
+      },
+      {
+        "tag": "turn",
+        "prompt": "Exact character turnaround for the attached existing Professor Pendulum, a production sprite sheet in 2 columns × 2 rows, square equal cells. Original input is the actual left-facing 3/4 reference, keep exact height, head-to-body ratio, eye distance, color lighting, all toes, tail ball, violet floppy wizard hat with TWO brass analog clocks with complete cream dials on its front, round brass glasses, two purple-pink wings, spotted violet skin, indigo waistcoat, gold trim and bow tie. Do NOT invent a ribbon or bow on the back of the hat, it is plain violet. Each body upright over the same centered hip axis and baseline, same camera elevation. Top left FRONT (0 degrees, both eyes and wings, tail partially visible behind). Top right RIGHT THREE QUARTERS (45 degrees, nose points right). Bottom left RIGHT PROFILE (90 degrees, nose points right). Bottom right REAR (180 degrees, looking away, neither face nor front clocks visible). Full transparent background and clear margins; no ground, shadow, captions, motion trails, grid or decorative props.",
+        "output": "exec-653a809c-a42d-4a9d-88b0-8fbbd23022e1.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "cells": [
+          "machine-turn-front",
+          null,
+          "machine-turn-side-right",
+          "machine-turn-back"
+        ]
+      },
+      {
+        "tag": "additional",
+        "prompt": "Draw a production turnaround of the exact purple Professor Pendulum seen in reference 1. Reference 2 is an existing RIGHT-facing profile and reference 3 is the existing back view. The target is a precisely split square 2×2 PNG sheet of four equal square cells with genuine transparency. Keep the same texture, lighting, floppy violet wizard hat with two gold clock faces on its front, bronze round glasses, indigo waistcoat, wings, tail with round end, skin spots, cream chin and belly. Plain back of hat, absolutely no bows on the hat; bow tie at neck only. Top left: interpolate between reference 2 (right-facing side) and front view, nose points clearly toward the RIGHT side of page, both eyes visible, tail trails toward LEFT. Top right: interpolate between reference 3 (back) and reference 2 (right profile), mostly back, only right cheek, nose to RIGHT and tail LEFT. Bottom left: opposite three-quarter rear pose, mostly back, nose and cheek toward LEFT of page, tail RIGHT. Bottom right: exact reference 1 in three-quarter front, knees bent in a soft seated fall, hands planted on the same ground line, hat and glasses in place. Same scale and hip axis, full silhouette inside each cell with even margin. No floor shadows, no checkering, no marks, no text, no extra accessories.",
+        "output": "exec-2ae1887f-d74a-4a10-acdd-675f077b0041.png",
+        "size": [
+          1254,
+          1254
+        ],
+        "cells": [
+          "machine-turn-front-right",
+          "machine-turn-back-right",
+          "machine-turn-back-left",
+          null
+        ]
+      },
+      {
+        "tag": "fallen",
+        "prompt": "Exact character-reference action edit of Professor Pendulum in image 1. Make ONE full scene-free production sprite. He has just gently stumbled forward and caught himself with both open palms on the ground. Pose: both forearms slant diagonally toward bottom LEFT and forward, both palms spread and FLAT at the same horizontal line (bottom 93%), elbows bent close to ground; chest horizontal, head as low as his chest just above those forearms, knees bent under the belly and both hind feet still on floor. Eyebrows surprised but friendly. Maintain the precise left-facing camera, face proportions, skin spots, glasses, indigo clothing, original two complete clock dials, original floppy violet hat outline still on his head, pink wings and full tail and feet. Reference 2 shows the required exact direction and angle of this recovery but draw the body lower, palms stay at their same contact points. Keep the character height proportional to its crouching body, do not size to fill canvas. Spotless transparent outside, no ground shadow, no white halo, no extra objects or motion marks.",
+        "output": "exec-e107ac74-0128-47d6-8571-d13e1ca0be53.png",
+        "size": [
+          1536,
+          1024
+        ],
+        "used": [],
+        "squarePadding": [
+          0,
+          256,
+          0,
+          256
+        ],
+        "review": "Rejected for play because the lower drawing changed eye size and palm elevation. The runtime holds one planted brace drawing through support."
+      }
+    ]
+  },
+  "coordinates": {
+    "rig": "Top-left source coordinates stored as 627 units per square, at pixel centres. Convert to 512 or 1254 raster pixels by multiplying by width/627.",
+    "reflection": "One horizontal runtime reflection. Normalized prepared X = 1 - source X/627. Pixel index x maps to width - 1 - x.",
+    "display": "Multiply normalized coordinates by the SwiftUI sprite side in points. Multiply points by displayScale for physical pixels.",
+    "dials": "Each [x,y,xRadius,yRadius] describes the inner dial, excluded from all material channels. In visible dials, two painted hands read 10:10 and 03:00 in the prepared orientation. Partial mounts are metal.",
+    "registration": "[uniformScale,tx,ty,groundCorrection,bodyBlendStart,rawSole]; the ground correction is interpolated below the jaw only. The opening and standing image share the same framing.",
+    "palette": {
+      "bandana": "indigo hat, coat and bow tie; brass and bronze fittings/frames",
+      "spikes": "pink wing membranes",
+      "body": "violet skin, spots, wing ribs and tail",
+      "belly": "cream trim, chin, belly and claws"
+    },
+    "archive": "machine-materials.dataset, low three bits encode protected/cloth/brass/membranes/skin/cream/claws/bronze; bit 3 selects the hat and bit 4 selects the isolated head.",
+    "portrait": "Mirrored canvas: 1.61× scale, horizontal offset -0.11 and vertical offset +0.183 circle diameters. The hat has a separate alpha matte.",
+    "clapContact": {
+      "source627": [
+        266.15,
+        352.7
+      ],
+      "preparedNormalized": [
+        0.57552,
+        0.56252
+      ]
+    }
+  },
+  "preview": "Documentation/TimeMachineCharacterPreview.gif",
+  "poses": {
+    "machine-idle": {"eyes": [[237.5, 213.0], [315.5, 225.7]], "feet": [[195.0, 568.0], [359.0, 583.0]], "nose": [232.0, 248.0], "hip": [274.0, 471.0], "dials": [[313.5, 87.2, 29.3, 26.2], [360.5, 132.4, 23.5, 26.0]], "sole": 584.139, "hatBounds": [169.0, 20.82, 439.63, 221.65], "registration": [1.0, 0.0, 0.0, 0.0, 330.0, 584.5]},
+    "machine-opening-idle": {"eyes": [[237.5, 213.0], [315.5, 225.7]], "feet": [[195.0, 568.0], [359.0, 583.0]], "nose": [232.0, 248.0], "hip": [274.0, 471.0], "dials": [[313.5, 87.2, 29.3, 26.2], [360.5, 132.4, 23.5, 26.0]], "sole": 584.0, "hatBounds": [169.5, 21.0, 439.5, 221.0], "registration": [1.0, 0.0, 0.0, 0.0, 330.0, 584.5]},
+    "machine-clap-open": {"eyes": [[237.44, 213.38], [315.56, 225.32]], "feet": [[198.84, 566.33], [344.05, 581.24]], "nose": [235.6, 247.38], "hip": [276.96, 465.57], "hand": [166.67, 385.64], "dials": [[314.64, 92.06, 30.33, 26.65], [362.43, 138.01, 23.9, 24.81]], "sole": 582.914, "hatBounds": [167.77, 20.82, 442.08, 221.65], "registration": [0.91904, 19.62704, 5.67213, 15.87258, 329.0, 612.0]},
+    "machine-clap-contact": {"eyes": [[237.35, 213.95], [315.65, 224.75]], "feet": [[199.55, 566.6], [341.75, 581.29]], "nose": [234.65, 247.25], "hip": [276.05, 464.84], "hand": [266.15, 352.7], "dials": [[312.95, 94.25, 29.7, 26.1], [359.75, 139.25, 23.4, 24.3]], "sole": 582.914, "hatBounds": [169.0, 24.49, 438.41, 220.43], "registration": [0.9, 24.05, 9.65, 23.55, 329.0, 612.0]},
+    "machine-wrong": {"eyes": [[237.43, 213.44], [315.57, 225.26]], "feet": [[197.45, 569.24], [342.83, 582.18]], "nose": [234.7, 247.97], "hip": [276.5, 463.77], "hand": [363.73, 481.26], "dials": [[312.84, 90.78, 29.98, 26.35], [360.09, 136.21, 23.62, 24.53]], "sole": 584.139, "hatBounds": [167.77, 20.82, 439.63, 217.98], "registration": [0.9086, 21.18393, 5.37514, 23.4714, 329.0, 611.0]},
+    "machine-crouch": {"eyes": [[236.9, 221.6], [316.1, 235.1]], "feet": [[199.1, 568.42], [343.1, 582.2]], "nose": [235.1, 256.7], "hip": [280.1, 472.87], "dials": [[313.4, 104.6, 29.7, 26.1], [361.1, 147.8, 23.4, 25.2]], "sole": 584.139, "hatBounds": [171.45, 30.62, 439.63, 229.0], "registration": [0.9, 25.4, 7.4, 26.7, 329.0, 611.0]},
+    "machine-airborne": {"eyes": [[238.53, 208.43], [314.47, 230.27]], "feet": [[196.91, 481.0], [291.59, 534.06]], "nose": [238.53, 251.08], "hip": [286.38, 440.43], "hand": [358.17, 363.44], "dials": [[345.68, 88.78, 35.37, 31.21], [397.7, 137.68, 27.05, 29.13]], "sole": 537.604, "hatBounds": [171.45, 3.67, 475.15, 235.12], "registration": [1.04037, -8.04157, -22.53635, 0.0, 329.0, 539.0]},
+    "machine-brace": {"eyes": [[116.0, 394.0], [194.0, 405.0]], "feet": [[359.0, 565.0]], "palms": [[98.0, 566.0], [230.0, 583.0]], "nose": [115.0, 429.0], "hip": [347.0, 468.0], "dials": [[190.0, 255.0, 30.0, 28.0], [244.0, 296.0, 26.0, 26.0]], "sole": 582.914, "hatBounds": [42.86, 161.65, 331.87, 368.61], "registration": [1.0, 5.0, -3.0, 0.0, 330.0, 587.0]},
+    "machine-turn-side-left": {"eyes": [[203.54, 212.64]], "feet": [[258.15, 578.04]], "nose": [161.83, 234.48], "hip": [279.0, 452.93], "dials": [[273.04, 83.56, 25.82, 28.8], [305.81, 130.22, 27.8, 23.83]], "sole": 582.914, "hatBounds": [155.53, 20.82, 423.71, 221.65], "registration": [0.99295, 9.91182, 7.09877, 0.0, 330.0, 581.0]},
+    "machine-turn-back-left": {"eyes": [], "feet": [[230.5, 578.29], [345.57, 574.49]], "nose": [156.32, 248.29], "hip": [279.0, 447.05], "dials": [], "sole": 582.914, "hatBounds": [150.63, 20.82, 417.59, 221.65], "registration": [0.95101, 7.96115, 11.48986, 0.0, 330.0, 602.0]},
+    "machine-turn-back": {"eyes": [], "feet": [[192.17, 579.33], [367.7, 579.33]], "hip": [279.0, 449.55], "dials": [], "sole": 582.914, "hatBounds": [129.81, 20.82, 422.49, 224.1], "registration": [0.93367, -15.10448, 13.53068, 0.0, 330.0, 611.0]},
+    "machine-turn-back-right": {"eyes": [], "feet": [[272.37, 572.63], [362.41, 580.21]], "nose": [388.0, 242.79], "hip": [279.0, 439.93], "dials": [], "sole": 582.914, "hatBounds": [112.66, 20.82, 391.88, 233.9], "registration": [0.94781, -45.15152, 12.4697, 0.0, 330.0, 603.0]},
+    "machine-turn-side-right": {"eyes": [[348.0, 223.39]], "feet": [[276.24, 580.32]], "nose": [398.59, 246.38], "hip": [279.0, 446.93], "dials": [[322.24, 99.19, 15.64, 24.84], [359.03, 133.23, 8.28, 16.56]], "sole": 582.914, "hatBounds": [131.03, 20.82, 393.1, 243.7], "registration": [0.91993, -64.13562, 15.48039, 0.0, 330.0, 618.0]},
+    "machine-turn-front-right": {"eyes": [[304.55, 226.33], [358.48, 216.87]], "feet": [[255.34, 581.16], [377.41, 574.54]], "nose": [362.27, 250.93], "hip": [279.0, 444.91], "dials": [[310.23, 87.24, 22.71, 27.44], [364.16, 129.82, 16.09, 22.71]], "sole": 582.914, "hatBounds": [116.34, 20.82, 401.67, 241.25], "registration": [0.94622, -56.90756, 10.5916, 0.0, 330.0, 606.0]},
+    "machine-turn-front": {"eyes": [[236.28, 236.52], [318.88, 238.41]], "feet": [[209.69, 581.15], [351.16, 581.15]], "nose": [276.15, 271.64], "hip": [279.0, 455.83], "dials": [[282.8, 102.65, 30.38, 26.58], [341.66, 146.32, 22.79, 23.74]], "sole": 582.914, "hatBounds": [127.36, 20.82, 426.16, 232.68], "registration": [0.94941, -21.01349, 15.30354, 0.0, 330.0, 599.0]}
+  }
+}
