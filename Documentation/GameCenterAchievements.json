@@ -20,6 +20,16 @@
           "name": "50 sterren",
           "before": "Verzamel 50 sterren tijdens je avontuur.",
           "after": "Je hebt 50 sterren verzameld!"
+        },
+        "de-DE": {
+          "name": "50 Sterne",
+          "before": "Sammle 50 Sterne im Abenteuer.",
+          "after": "Du hast 50 Sterne gesammelt!"
+        },
+        "ar-SA": {
+          "name": "٥٠ نجمة",
+          "before": "اجمع ٥٠ نجمة خلال المغامرة.",
+          "after": "جمعت ٥٠ نجمة!"
         }
       }
     },
@@ -41,6 +51,16 @@
           "name": "100 sterren",
           "before": "Verzamel 100 sterren tijdens je avontuur.",
           "after": "Je hebt 100 sterren verzameld!"
+        },
+        "de-DE": {
+          "name": "100 Sterne",
+          "before": "Sammle 100 Sterne im Abenteuer.",
+          "after": "Du hast 100 Sterne gesammelt!"
+        },
+        "ar-SA": {
+          "name": "١٠٠ نجمة",
+          "before": "اجمع ١٠٠ نجمة خلال المغامرة.",
+          "after": "جمعت ١٠٠ نجمة!"
         }
       }
     },
@@ -62,6 +82,16 @@
           "name": "150 sterren",
           "before": "Verzamel 150 sterren tijdens je avontuur.",
           "after": "Je hebt 150 sterren verzameld!"
+        },
+        "de-DE": {
+          "name": "150 Sterne",
+          "before": "Sammle 150 Sterne im Abenteuer.",
+          "after": "Du hast 150 Sterne gesammelt!"
+        },
+        "ar-SA": {
+          "name": "١٥٠ نجمة",
+          "before": "اجمع ١٥٠ نجمة خلال المغامرة.",
+          "after": "جمعت ١٥٠ نجمة!"
         }
       }
     },
@@ -83,6 +113,16 @@
           "name": "200 sterren",
           "before": "Verzamel 200 sterren tijdens je avontuur.",
           "after": "Je hebt 200 sterren verzameld!"
+        },
+        "de-DE": {
+          "name": "200 Sterne",
+          "before": "Sammle 200 Sterne im Abenteuer.",
+          "after": "Du hast 200 Sterne gesammelt!"
+        },
+        "ar-SA": {
+          "name": "٢٠٠ نجمة",
+          "before": "اجمع ٢٠٠ نجمة خلال المغامرة.",
+          "after": "جمعت ٢٠٠ نجمة!"
         }
       }
     },
@@ -104,6 +144,16 @@
           "name": "250 sterren",
           "before": "Verzamel 250 sterren tijdens je avontuur.",
           "after": "Je hebt 250 sterren verzameld!"
+        },
+        "de-DE": {
+          "name": "250 Sterne",
+          "before": "Sammle 250 Sterne im Abenteuer.",
+          "after": "Du hast 250 Sterne gesammelt!"
+        },
+        "ar-SA": {
+          "name": "٢٥٠ نجمة",
+          "before": "اجمع ٢٥٠ نجمة خلال المغامرة.",
+          "after": "جمعت ٢٥٠ نجمة!"
         }
       }
     },
@@ -125,6 +175,16 @@
           "name": "300 sterren",
           "before": "Verzamel 300 sterren tijdens je avontuur.",
           "after": "Je hebt 300 sterren verzameld!"
+        },
+        "de-DE": {
+          "name": "300 Sterne",
+          "before": "Sammle 300 Sterne im Abenteuer.",
+          "after": "Du hast 300 Sterne gesammelt!"
+        },
+        "ar-SA": {
+          "name": "٣٠٠ نجمة",
+          "before": "اجمع ٣٠٠ نجمة خلال المغامرة.",
+          "after": "جمعت ٣٠٠ نجمة!"
         }
       }
     },
@@ -148,6 +208,16 @@
           "name": "Tiko verslagen",
           "before": "Versla Tiko de Junglewachter in level 10.",
           "after": "Je hebt Tiko de Junglewachter verslagen!"
+        },
+        "de-DE": {
+          "name": "Tiko besiegt",
+          "before": "Besiege den Dschungelwächter Tiko in Level 10.",
+          "after": "Du hast den Dschungelwächter Tiko besiegt!"
+        },
+        "ar-SA": {
+          "name": "هزمت تيكو",
+          "before": "اهزم تيكو حارس الأدغال في المستوى ١٠.",
+          "after": "هزمت تيكو حارس الأدغال!"
         }
       }
     },
@@ -171,6 +241,16 @@
           "name": "Zandstaart verslagen",
           "before": "Versla Zandstaart de Woestijnwachter in level 20.",
           "after": "Je hebt Zandstaart de Woestijnwachter verslagen!"
+        },
+        "de-DE": {
+          "name": "Sand besiegt",
+          "before": "Besiege den Wüstenwächter Sand in Level 20.",
+          "after": "Du hast den Wüstenwächter Sand besiegt!"
+        },
+        "ar-SA": {
+          "name": "هزمت ساندتيل",
+          "before": "اهزم ساندتيل حارس الصحراء في المستوى ٢٠.",
+          "after": "هزمت ساندتيل حارس الصحراء!"
         }
       }
     },
@@ -194,6 +274,16 @@
           "name": "Magma verslagen",
           "before": "Versla Magma de Vuurtriceratops in level 30.",
           "after": "Je hebt Magma de Vuurtriceratops verslagen!"
+        },
+        "de-DE": {
+          "name": "Magma besiegt",
+          "before": "Besiege den Feuertriceratops Magma in Level 30.",
+          "after": "Du hast den Feuertriceratops Magma besiegt!"
+        },
+        "ar-SA": {
+          "name": "هزمت ماغما",
+          "before": "اهزم ماغما ديناصور النار في المستوى ٣٠.",
+          "after": "هزمت ماغما ديناصور النار!"
         }
       }
     },
@@ -217,6 +307,16 @@
           "name": "Burgemeester Tik-Tak verslagen",
           "before": "Versla Burgemeester Tik-Tak in level 40.",
           "after": "Je hebt Burgemeester Tik-Tak verslagen!"
+        },
+        "de-DE": {
+          "name": "Bürgermeister Tick-Tack besiegt",
+          "before": "Besiege in Level 40 Bürgermeister Tick-Tack.",
+          "after": "Du hast Bürgermeister Tick-Tack besiegt!"
+        },
+        "ar-SA": {
+          "name": "هزمت العمدة تيك توك",
+          "before": "اهزم العمدة تيك توك في المستوى ٤٠.",
+          "after": "هزمت العمدة تيك توك!"
         }
       }
     },
@@ -240,6 +340,16 @@
           "name": "Prisma verslagen",
           "before": "Versla Prisma de Kristalbewaker in level 50.",
           "after": "Je hebt Prisma de Kristalbewaker verslagen!"
+        },
+        "de-DE": {
+          "name": "Prisma besiegt",
+          "before": "Besiege den Kristallwächter Prisma in Level 50.",
+          "after": "Du hast den Kristallwächter Prisma besiegt!"
+        },
+        "ar-SA": {
+          "name": "هزمت بريزما",
+          "before": "اهزم بريزما حارس البلّورات في المستوى ٥٠.",
+          "after": "هزمت بريزما حارس البلّورات!"
         }
       }
     },
@@ -263,6 +373,16 @@
           "name": "Neon verslagen",
           "before": "Versla Neon de Klokrobot in level 60.",
           "after": "Je hebt Neon de Klokrobot verslagen!"
+        },
+        "de-DE": {
+          "name": "Neon besiegt",
+          "before": "Besiege den Uhrenroboter Neon in Level 60.",
+          "after": "Du hast den Uhrenroboter Neon besiegt!"
+        },
+        "ar-SA": {
+          "name": "هزمت نيون",
+          "before": "اهزم نيون روبوت الساعات في المستوى ٦٠.",
+          "after": "هزمت نيون روبوت الساعات!"
         }
       }
     },
@@ -286,6 +406,16 @@
           "name": "Dommel verslagen",
           "before": "Versla Dommel de Droomsaurus in level 70.",
           "after": "Je hebt Dommel de Droomsaurus verslagen!"
+        },
+        "de-DE": {
+          "name": "Dozy besiegt",
+          "before": "Besiege den Traumsaurier Dozy in Level 70.",
+          "after": "Du hast den Traumsaurier Dozy besiegt!"
+        },
+        "ar-SA": {
+          "name": "هزمت دوزي",
+          "before": "اهزم دوزي ديناصور الأحلام في المستوى ٧٠.",
+          "after": "هزمت دوزي ديناصور الأحلام!"
         }
       }
     },
@@ -309,6 +439,16 @@
           "name": "Professor Pendel verslagen",
           "before": "Versla Professor Pendel in level 80.",
           "after": "Je hebt Professor Pendel verslagen!"
+        },
+        "de-DE": {
+          "name": "Professor Pendel besiegt",
+          "before": "Besiege in Level 80 Professor Pendel.",
+          "after": "Du hast Professor Pendel besiegt!"
+        },
+        "ar-SA": {
+          "name": "هزمت الأستاذ بندول",
+          "before": "اهزم الأستاذ بندول في المستوى ٨٠.",
+          "after": "هزمت الأستاذ بندول!"
         }
       }
     },
@@ -332,6 +472,16 @@
           "name": "Kapitein Zandloper verslagen",
           "before": "Versla Kapitein Zandloper in level 90.",
           "after": "Je hebt Kapitein Zandloper verslagen!"
+        },
+        "de-DE": {
+          "name": "Kapitän Sanduhr besiegt",
+          "before": "Besiege in Level 90 Kapitän Sanduhr.",
+          "after": "Du hast Kapitän Sanduhr besiegt!"
+        },
+        "ar-SA": {
+          "name": "هزمت القبطان ساعة الرمل",
+          "before": "اهزم القبطان ساعة الرمل في المستوى ٩٠.",
+          "after": "هزمت القبطان ساعة الرمل!"
         }
       }
     },
@@ -355,6 +505,16 @@
           "name": "Koning Chronos verslagen",
           "before": "Versla Koning Chronos in level 100.",
           "after": "Je hebt Koning Chronos verslagen!"
+        },
+        "de-DE": {
+          "name": "König Chronos besiegt",
+          "before": "Besiege in Level 100 König Chronos.",
+          "after": "Du hast König Chronos besiegt!"
+        },
+        "ar-SA": {
+          "name": "هزمت الملك كرونوس",
+          "before": "اهزم الملك كرونوس في المستوى ١٠٠.",
+          "after": "هزمت الملك كرونوس!"
         }
       }
     }

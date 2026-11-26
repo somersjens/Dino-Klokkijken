@@ -75,6 +75,11 @@ struct PlayerProfile: Codable, Equatable, Sendable {
         }
         return DinoIdentity.allCases.filter { $0 != activeCharacter }
     }
+    /// Menu tiles stay in chapter order no matter which slot the outgoing resident occupies.
+    /// Start is first whenever it is not the active character.
+    var menuCharacters: [DinoIdentity] {
+        collectionCharacters.sorted { $0.rawValue < $1.rawValue }
+    }
     @discardableResult
     mutating func selectCharacter(_ character: DinoIdentity) -> Bool {
         guard character != activeCharacter, isCharacterUnlocked(character),

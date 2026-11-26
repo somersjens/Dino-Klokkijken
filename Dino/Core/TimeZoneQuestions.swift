@@ -10,12 +10,17 @@ struct DinoCapital: Equatable, Sendable {
     let latitude: Double
     let longitude: Double
 
-    func name(language: String) -> String { language == "nl" ? dutchName : englishName }
+    var nameKey: String { "dino.timeZone.city.\(id)" }
+
+    func name(language: String, localizing: ((String) -> String)? = nil) -> String {
+        if let value = localizing?(nameKey), value != nameKey { return value }
+        return AppLanguage.resolved(language).bundleCode == "nl" ? dutchName : englishName
+    }
     var utcMinutes: Int { gmtMinutes(on: DinoTimeZoneJourney.referenceDate) }
     /// Offset baked into the simplified winter zone bands.
     var atlasUTCMinutes: Int { gmtMinutes(on: DinoTimeZoneJourney.atlasDate) }
 
-    private func gmtMinutes(on date: Date) -> Int {
+    fileprivate func gmtMinutes(on date: Date) -> Int {
         TimeZone(identifier: timeZoneID)!.secondsFromGMT(for: date) / 60
     }
 }
@@ -70,7 +75,14 @@ enum DinoTimeZoneDifficulty: CaseIterable {
 struct DinoTimeZoneJourney: Equatable, Sendable {
     let origin: DinoCapital
     let destination: DinoCapital
-    var offsetMinutes: Int { destination.utcMinutes - origin.utcMinutes }
+    let date: Date
+    var offsetMinutes: Int { destination.gmtMinutes(on: date) - origin.gmtMinutes(on: date) }
+
+    init(origin: DinoCapital, destination: DinoCapital, date: Date = Self.referenceDate) {
+        self.origin = origin
+        self.destination = destination
+        self.date = date
+    }
 
     /// Noon UTC on the player's current calendar day. The header and the city
     /// difference both use this instant, so the shown date matches the answer.
@@ -84,12 +96,15 @@ struct DinoTimeZoneJourney: Equatable, Sendable {
     /// The bundled zone shapes were simplified for this winter afternoon.
     static let atlasDate = Date(timeIntervalSince1970: 1_768_478_400) // 15 January 2026, 12:00 UTC
 
-    static func displayedDate(language: String) -> String {
+    static func displayedDate(language: String, date: Date = Self.referenceDate) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: language == "nl" ? "nl_NL" : "en_GB")
+        let profile = AppLanguage.resolved(language)
+        formatter.locale = Locale(identifier: profile.dateLocale)
+        // The atlas exercises use the civil date both for the label and time-zone data.
+        formatter.calendar = Calendar(identifier: .gregorian)
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.setLocalizedDateFormatFromTemplate("dMMMM")
-        return formatter.string(from: referenceDate)
+        return formatter.string(from: date)
     }
 
     /// Apply one hour at a time; bridge to a whole hour first for shifts with minutes.
@@ -99,21 +114,36 @@ struct DinoTimeZoneJourney: Equatable, Sendable {
 
     static func generate<R: RandomNumberGenerator>(language: String, difficulty: DinoTimeZoneDifficulty,
                                                    minuteStep: Int = 60, recentDestinations: [String] = [],
-                                                   using rng: inout R) -> Self {
-        let origin = capitals.first { $0.id == (language == "nl" ? "amsterdam" : "london") }!
-        let candidates = capitals.filter { capital in
-            let difference = abs(capital.utcMinutes - origin.utcMinutes)
+                                                   date: Date = Self.referenceDate, using rng: inout R) -> Self {
+        let fallback = capitals.first { $0.id == AppLanguage.english.timeZoneOrigin }!
+        let profile = AppLanguage.resolved(language)
+        let preferred = (capitals + profile.regionalTimeZoneCapitals).first { $0.id == profile.timeZoneOrigin } ?? fallback
+        let preferredDestinations = destinations(from: preferred, difficulty: difficulty, minuteStep: minuteStep,
+                                                 date: date, regionalCapitals: profile.regionalTimeZoneCapitals,
+                                                 regionalMinimum: profile.regionalTimeZoneMinimum)
+        let origin = preferredDestinations.isEmpty ? fallback : preferred
+        let candidates = preferredDestinations.isEmpty
+            ? destinations(from: fallback, difficulty: difficulty, minuteStep: minuteStep, date: date)
+            : preferredDestinations
+        let destination = DinoQuestionTeaching.varied(candidates.map(\.id), recent: recentDestinations, using: &rng)
+        return Self(origin: origin, destination: candidates.first { $0.id == destination }!, date: date)
+    }
+
+    static func destinations(from origin: DinoCapital, difficulty: DinoTimeZoneDifficulty,
+                             minuteStep: Int, date: Date, regionalCapitals: [DinoCapital] = [],
+                             regionalMinimum: Int = 60) -> [DinoCapital] {
+        let originOffset = origin.gmtMinutes(on: date)
+        return (capitals + regionalCapitals).filter { capital in
+            let difference = abs(capital.gmtMinutes(on: date) - originOffset)
             let distance = hypot(capital.longitude - origin.longitude, capital.latitude - origin.latitude)
             guard capital.id != origin.id, difference != 0, difference.isMultiple(of: 30),
                   difference.isMultiple(of: minuteStep) else { return false }
             switch difficulty {
             case .nearby: return difference == 60 && distance < 40
-            case .regional: return (60...180).contains(difference) && distance < 70
+            case .regional: return (regionalMinimum...180).contains(difference) && distance < 70
             case .worldwide: return difference >= 210
             }
         }
-        let destination = DinoQuestionTeaching.varied(candidates.map(\.id), recent: recentDestinations, using: &rng)
-        return Self(origin: origin, destination: candidates.first { $0.id == destination }!)
     }
 
     // Familiar countries, whole-hour and occasional half-hour zones and actual capitals; Istanbul is
@@ -141,6 +171,30 @@ struct DinoTimeZoneJourney: Equatable, Sendable {
         .init(id: "tokyo", dutchName: "Tokio", englishName: "Tokyo", countryCode: "JPN", timeZoneID: "Asia/Tokyo", latitude: 35.68, longitude: 139.69),
         .init(id: "seoul", dutchName: "Seoul", englishName: "Seoul", countryCode: "KOR", timeZoneID: "Asia/Seoul", latitude: 37.57, longitude: 126.98),
         .init(id: "canberra", dutchName: "Canberra", englishName: "Canberra", countryCode: "AUS", timeZoneID: "Australia/Sydney", latitude: -35.28, longitude: 149.13)
+    ]
+
+    // Provincial capitals offer nearby examples and Newfoundland's half-hour offset from Ottawa.
+    static let canadianCapitals: [DinoCapital] = [
+        .init(id: "halifax", dutchName: "Halifax", englishName: "Halifax", countryCode: "CAN", timeZoneID: "America/Halifax", latitude: 44.65, longitude: -63.58),
+        .init(id: "regina", dutchName: "Regina", englishName: "Regina", countryCode: "CAN", timeZoneID: "America/Regina", latitude: 50.45, longitude: -104.62),
+        .init(id: "stJohns", dutchName: "St. John’s", englishName: "St. John’s", countryCode: "CAN", timeZoneID: "America/St_Johns", latitude: 47.56, longitude: -52.71)
+    ]
+
+    // State and territory capitals demonstrate the half-hour zones and differences in daylight saving.
+    static let australianCapitals: [DinoCapital] = [
+        .init(id: "brisbane", dutchName: "Brisbane", englishName: "Brisbane", countryCode: "AUS", timeZoneID: "Australia/Brisbane", latitude: -27.47, longitude: 153.03),
+        .init(id: "adelaide", dutchName: "Adelaide", englishName: "Adelaide", countryCode: "AUS", timeZoneID: "Australia/Adelaide", latitude: -34.93, longitude: 138.60),
+        .init(id: "darwin", dutchName: "Darwin", englishName: "Darwin", countryCode: "AUS", timeZoneID: "Australia/Darwin", latitude: -12.46, longitude: 130.84),
+        .init(id: "perth", dutchName: "Perth", englishName: "Perth", countryCode: "AUS", timeZoneID: "Australia/Perth", latitude: -31.95, longitude: 115.86),
+        .init(id: "noumea", dutchName: "Nouméa", englishName: "Nouméa", countryCode: "NCL", timeZoneID: "Pacific/Noumea", latitude: -22.27, longitude: 166.46)
+    ]
+
+    static let saudiCapitals: [DinoCapital] = [
+        .init(id: "riyadh", dutchName: "Riyad", englishName: "Riyadh", countryCode: "SAU", timeZoneID: "Asia/Riyadh", latitude: 24.71, longitude: 46.68),
+        .init(id: "abuDhabi", dutchName: "Abu Dhabi", englishName: "Abu Dhabi", countryCode: "ARE", timeZoneID: "Asia/Dubai", latitude: 24.45, longitude: 54.38),
+        .init(id: "muscat", dutchName: "Masqat", englishName: "Muscat", countryCode: "OMN", timeZoneID: "Asia/Muscat", latitude: 23.59, longitude: 58.41),
+        .init(id: "tehran", dutchName: "Teheran", englishName: "Tehran", countryCode: "IRN", timeZoneID: "Asia/Tehran", latitude: 35.69, longitude: 51.39),
+        .init(id: "islamabad", dutchName: "Islamabad", englishName: "Islamabad", countryCode: "PAK", timeZoneID: "Asia/Karachi", latitude: 33.69, longitude: 73.06)
     ]
 }
 

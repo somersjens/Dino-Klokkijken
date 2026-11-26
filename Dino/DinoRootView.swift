@@ -149,8 +149,11 @@ struct DinoRootView: View {
         }
     }
     private func advanceWorld(after worldID: Int) {
+        let transition = DinoWorldTransition(after: worldID,
+                                             terminalUnlock: player.profile.pendingCharacterUnlock?.worldID == worldID)
+        if transition == nil { player.completeCharacterUnlock() }
         withAnimation(.easeOut(duration: 0.24)) {
-            worldTransition = DinoWorldTransition(after: worldID)
+            worldTransition = transition
             requestsReviewAfterWorldArrival = true
             hasShownMap = true
             result = nil; session = nil; startCard = nil

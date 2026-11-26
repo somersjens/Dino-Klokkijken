@@ -18,7 +18,8 @@ struct DinoResultView: View {
     var body: some View {
         GeometryReader { geometry in
             let layout = ResultLayout(size: geometry.size, needsMessage: !succeeded,
-                                      hasPerfectBadge: hasPerfectBadge, worldID: result.level.worldID)
+                                      hasPerfectBadge: hasPerfectBadge, worldID: result.level.worldID,
+                                      bossFootprint: ResultBossFootprint(character: player.profile.activeCharacter))
             ZStack {
                 if layout.landscape {
                     HStack(spacing: 20) {
@@ -143,7 +144,7 @@ struct DinoResultView: View {
         ZStack(alignment: .bottom) {
             ResultSunburst(worldID: result.level.worldID, strength: result.stars > 0 ? (starsRevealed > 0 ? 1 : 0.78) : 0.3)
                 .frame(width: layout.podiumWidth * 1.38, height: layout.podiumWidth * 1.38)
-                .position(x: layout.stageWidth / 2, y: layout.dinoCenterY + layout.dinoSize * 0.05)
+                .position(x: layout.stageWidth / 2, y: layout.dinoCenter.y + layout.dinoSize * 0.05)
             podiumSurround(layout: layout, foreground: false)
             ResultWorldPodium(worldID: result.level.worldID)
                 .frame(width: layout.podiumWidth, height: layout.podiumHeight)
@@ -151,11 +152,11 @@ struct DinoResultView: View {
                 .position(x: layout.podiumCenterX, y: layout.stageHeight - layout.podiumHeight / 2 + layout.podiumLift)
             Ellipse()
                 .fill(Color(dinoHex: ResultPodiumPalette(worldID: result.level.worldID).edge).opacity(0.24))
-                .frame(width: layout.dinoSize * 0.55, height: layout.dinoSize * 0.055)
+                .frame(width: layout.shadowWidth, height: layout.dinoSize * 0.055)
                 .blur(radius: 3)
                 .position(x: layout.podiumCenterX, y: layout.contactY)
             character(size: layout.dinoSize)
-                .position(x: layout.stageWidth / 2, y: layout.dinoCenterY)
+                .position(layout.dinoCenter)
             foregroundDetails(layout: layout)
             ResultStarReward(count: result.stars, revealed: starsRevealed, size: layout.starSize)
                 .position(x: layout.podiumCenterX, y: layout.rewardCenterY)
@@ -262,6 +263,31 @@ private struct ResultSceneBoundsKey: PreferenceKey {
     }
 }
 
+/// The support of each resting pose in the displayed, right-facing sprite.
+/// The contact shadow spans the feet or flippers.
+private struct ResultBossFootprint {
+    let center: CGPoint
+    let width: CGFloat
+
+    init?(character: DinoIdentity) {
+        let x: CGFloat, y: CGFloat
+        switch character {
+        case .main: return nil
+        case .jungle: (x, y, width) = (0.52, 0.942, 0.46)
+        case .desert: (x, y, width) = (0.515, 0.955, 0.57)
+        case .volcano: (x, y, width) = (0.555, 0.929, 0.51)
+        case .village: (x, y, width) = (0.495, 0.905, 0.47)
+        case .cave: (x, y, width) = (0.575, 0.917, 0.43)
+        case .city: (x, y, width) = (0.525, 0.958, 0.37)
+        case .valley: (x, y, width) = (0.45, 0.921, 0.52)
+        case .machine: (x, y, width) = (0.55, 0.923, 0.42)
+        case .pirates: (x, y, width) = (0.52, 0.936, 0.51)
+        case .castle: (x, y, width) = (0.62, 0.929, 0.54)
+        }
+        center = CGPoint(x: x, y: y)
+    }
+}
+
 /// Reserve space for the controls first, then scale the illustration as one scene.
 /// This keeps Dino's feet, the rock and the stars registered on every window size.
 private struct ResultLayout {
@@ -269,6 +295,7 @@ private struct ResultLayout {
     let needsMessage: Bool
     let hasPerfectBadge: Bool
     let worldID: Int
+    let bossFootprint: ResultBossFootprint?
     var landscape: Bool { size.width > size.height }
     var topInset: CGFloat { landscape ? 12 : size.height < 650 ? 0 : 8 }
     var spacious: Bool { size.width >= 700 && size.height >= 700 }
@@ -305,8 +332,16 @@ private struct ResultLayout {
     var podiumCenterX: CGFloat { stageWidth / 2 + dinoSize * 0.04 }
     var podiumLift: CGFloat { -dinoSize * 0.015 }
     var stageHeight: CGFloat { min(availableHeight, dinoSize + podiumHeight * 0.85 + 20) }
-    var contactY: CGFloat { stageHeight - podiumHeight * 0.82 + podiumLift }
-    var dinoCenterY: CGFloat { contactY - dinoSize * 0.44 }
+    var contactY: CGFloat {
+        let depth = bossFootprint == nil ? 0.18 : ResultPodiumGeometry.supportY(worldID: worldID) / ResultPodiumGeometry.height
+        return stageHeight - podiumHeight + podiumLift + podiumHeight * depth
+    }
+    var dinoCenter: CGPoint {
+        guard let bossFootprint else { return CGPoint(x: stageWidth / 2, y: contactY - dinoSize * 0.44) }
+        return CGPoint(x: podiumCenterX - dinoSize * (bossFootprint.center.x - 0.5),
+                       y: contactY - dinoSize * (bossFootprint.center.y - 0.5))
+    }
+    var shadowWidth: CGFloat { dinoSize * (bossFootprint?.width ?? 0.55) }
     var starSize: CGFloat { podiumWidth * ResultPodiumGeometry.starWidth(worldID: worldID) }
     var rewardCenterY: CGFloat { stageHeight - podiumHeight + podiumLift + podiumHeight * ResultPodiumGeometry.rewardY(worldID: worldID) / ResultPodiumGeometry.height }
 

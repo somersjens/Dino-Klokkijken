@@ -68,13 +68,13 @@ final class DinoQuestionSpeech {
         let token = nextToken
         active[owner] = token
         let spoken = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !spoken.isEmpty, !UIAccessibility.isVoiceOverRunning else {
+        guard !spoken.isEmpty, !UIAccessibility.isVoiceOverRunning, let voice = Self.voice(for: languageCode) else {
             synthesizer.stopSpeaking(at: .immediate)
             return token
         }
         configureSession()
         let utterance = AVSpeechUtterance(string: spoken)
-        utterance.voice = Self.voice(for: languageCode)
+        utterance.voice = voice
         utterance.prefersAssistiveTechnologySettings = false
         synthesizer.stopSpeaking(at: .immediate)
         synthesizer.speak(utterance)
@@ -112,7 +112,10 @@ final class DinoQuestionSpeech {
            let voice = AVSpeechSynthesisVoice(identifier: best.identifier) {
             return voice
         }
-        return AVSpeechSynthesisVoice(language: DinoSpeechVoicePicker.preferredLanguageIdentifier(for: languageCode))
+        let preferred = DinoSpeechVoicePicker.preferredLanguageIdentifier(for: languageCode)
+        guard let voice = AVSpeechSynthesisVoice(language: preferred),
+              DinoSpeechVoicePicker.matchesLanguageAndScript(voice.language, preferred) else { return nil }
+        return voice
     }
 }
 

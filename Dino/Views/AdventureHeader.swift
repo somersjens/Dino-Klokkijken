@@ -5,8 +5,8 @@ import CoreText
 /// One world-themed HUD shared by the map and the running level.
 struct AdventureHeader: View {
     @EnvironmentObject private var player: DinoPlayer
-    @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.locale) private var locale
+    @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var showsPersonalizer = false
     @State private var availableWidth: CGFloat = 390
@@ -56,8 +56,7 @@ struct AdventureHeader: View {
          control == .settings ? "dino.practice.shortTitle" : "dino.example", control.labelKey]
     }
     private var localizedTitles: [String] {
-        titleKeys.map { String(localized: String.LocalizationValue($0),
-                               bundle: LanguageManager.shared.bundle, locale: locale) }
+        titleKeys.map { L(key: $0) }
     }
 
     var body: some View {
@@ -327,12 +326,13 @@ struct AdventureHeader: View {
     }
 
     private func number(_ value: String, metrics: HUDMetrics) -> some View {
-        Text(verbatim: value)
+        let localized = localizedHUDDigits(value, locale: locale)
+        return Text(verbatim: localized)
             .font(.system(size: metrics.number, weight: .heavy, design: .rounded))
             .monospacedDigit().lineLimit(1).fixedSize()
             .shadow(color: .white.opacity(0.9), radius: 0, y: 1)
             .frame(height: metrics.icon)
-            .offset(x: HUDNumberAlignment.offset(for: value, fontSize: metrics.number), y: metrics.numberOffset)
+            .offset(x: HUDNumberAlignment.offset(for: localized, fontSize: metrics.number), y: metrics.numberOffset)
             .padding(.horizontal, 3)
     }
 
@@ -346,6 +346,7 @@ struct AdventureHeader: View {
 
 /// A medal attached to the HUD rim, using the chapter plaque's paper and outline.
 private struct HUDRecordBadge: View {
+    @Environment(\.locale) private var locale
     let value: String
     let trophy: Bool
     let palette: HUDPalette
@@ -364,9 +365,10 @@ private struct HUDRecordBadge: View {
                                                     startPoint: .top, endPoint: .bottom))
                     .accessibilityHidden(true)
             }
-            Text(verbatim: value).foregroundStyle(highContrast ? palette.contrastInk : palette.ink)
+            let localized = localizedHUDDigits(value, locale: locale)
+            Text(verbatim: localized).foregroundStyle(highContrast ? palette.contrastInk : palette.ink)
                 .monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
-                .offset(x: HUDNumberAlignment.offset(for: value, fontSize: fontSize))
+                .offset(x: HUDNumberAlignment.offset(for: localized, fontSize: fontSize))
         }
         .font(.system(size: fontSize, weight: .heavy, design: .rounded))
         .padding(.horizontal, trophy ? (compact ? 6 : 8) : (compact ? 4 : 6))
@@ -427,6 +429,7 @@ private struct HUDQuarterTurnLayout: Layout {
 
 /// The practice type and its trophy record share one chapter-style plaque.
 private struct HUDPracticeSubtitle: View {
+    @Environment(\.locale) private var locale
     let configuration: DinoPracticeConfiguration
     let record: Int
     let palette: HUDPalette
@@ -442,7 +445,7 @@ private struct HUDPracticeSubtitle: View {
 
     private var markerTitle: String {
         switch configuration.order {
-        case .specific(let type): return String(type.number)
+        case .specific(let type): return DinoTimeWords.number(type.number, locale: locale, minimumDigits: 1)
         case .ascending: return L("dino.practice.ascending")
         case .mix: return L("dino.practice.mix")
         }
@@ -452,9 +455,9 @@ private struct HUDPracticeSubtitle: View {
         HStack(spacing: (compact ? 5 : 8) * Self.enlargement) {
             Group {
                 switch configuration.order {
-                case .specific(let type):
-                    Text(verbatim: String(type.number)).monospacedDigit()
-                        .offset(x: HUDNumberAlignment.offset(for: String(type.number), fontSize: (compact ? 10 : spacious ? 14 : 12) * Self.enlargement))
+                case .specific:
+                    Text(verbatim: markerTitle).monospacedDigit()
+                        .offset(x: HUDNumberAlignment.offset(for: markerTitle, fontSize: (compact ? 10 : spacious ? 14 : 12) * Self.enlargement))
                 case .ascending: Image(systemName: "arrow.up.right")
                 case .mix: Image(systemName: "shuffle")
                 }
@@ -475,8 +478,9 @@ private struct HUDPracticeSubtitle: View {
                     .foregroundStyle(LinearGradient(colors: [Color(dinoHex: 0xD4AF5D), Color(dinoHex: 0x876128)],
                                                     startPoint: .top, endPoint: .bottom))
                     .accessibilityHidden(true)
-                Text(verbatim: String(record)).monospacedDigit()
-                    .offset(x: HUDNumberAlignment.offset(for: String(record), fontSize: (compact ? 11 : spacious ? 18 : 14) * Self.enlargement))
+                let displayedRecord = DinoTimeWords.number(record, locale: locale, minimumDigits: 1)
+                Text(verbatim: displayedRecord).monospacedDigit()
+                    .offset(x: HUDNumberAlignment.offset(for: displayedRecord, fontSize: (compact ? 11 : spacious ? 18 : 14) * Self.enlargement))
                     .accessibilityIdentifier("practice.bestStreak")
                     .accessibilityHint(Text("dino.practice.bestStreak"))
             }
@@ -497,6 +501,15 @@ private struct HUDPracticeSubtitle: View {
         .accessibilityLabel(Text(verbatim: "\(markerTitle) · \(L(key: configuration.time.titleKey))"))
         .accessibilityIdentifier("practice.hudSubtitle")
     }
+}
+
+/// Localize the digits while preserving the HUD's counter separators.
+private func localizedHUDDigits(_ value: String, locale: Locale) -> String {
+    guard DinoTimeWords.number(0, locale: locale, minimumDigits: 1) != "0" else { return value }
+    return value.map { character in
+        guard let digit = character.wholeNumberValue else { return String(character) }
+        return DinoTimeWords.number(digit, locale: locale, minimumDigits: 1)
+    }.joined()
 }
 
 /// Center the visible weight of narrow 1s while retaining fixed digit widths.
@@ -657,10 +670,14 @@ struct HUDPalette {
 
     init(worldID: Int) {
         let world = DinoWorldCatalog.world(worldID) ?? DinoWorldCatalog.worlds[0]
-        let colors = WorldThemeColors(world)
+        let landscape = WorldThemeColors(world)
+        // Match the level stones and start card rather than the landscape's own accent.
+        let colors = (ground: landscape.ground,
+                      accent: LevelStonePalette.face(themeID: world.themeID),
+                      shade: LevelStonePalette.cardShade(themeID: world.themeID) ?? landscape.shade)
         let edge = Self.mix(colors.accent, colors.shade, amount: 0.6)
-        // Darken each world's hue to keep small labels readable on the paper.
-        let textInk = Self.mix(edge, 0x102535, amount: 0.32)
+        // Darken each world's hue until small labels stay readable on the paper.
+        let textInk = Self.readableInk(edge, on: Self.mix(colors.ground, 0xFFFFFF, amount: 0.70))
         ink = Color(dinoHex: textInk)
         contrastInk = Color(dinoHex: Self.mix(textInk, 0x102535, amount: 0.40))
         iconLight = Color(dinoHex: Self.mix(textInk, colors.accent, amount: 0.25))
@@ -677,6 +694,29 @@ struct HUDPalette {
         leafDarkLight = Color(dinoHex: Self.mix(colors.accent, colors.shade, amount: 0.25))
         leafDark = Color(dinoHex: colors.shade)
         veins = Color(dinoHex: Self.mix(colors.ground, 0xFFFFFF, amount: 0.35))
+    }
+
+    /// Mixes toward navy from 32% until the label reaches a 4.5:1 contrast with the paper.
+    private static func readableInk(_ hue: UInt32, on paper: UInt32) -> UInt32 {
+        var amount = 0.32
+        var ink = mix(hue, 0x102535, amount: amount)
+        while contrast(ink, paper) < 4.5 && amount < 0.9 {
+            amount += 0.04
+            ink = mix(hue, 0x102535, amount: amount)
+        }
+        return ink
+    }
+
+    private static func contrast(_ first: UInt32, _ second: UInt32) -> Double {
+        func luminance(_ hex: UInt32) -> Double {
+            let channels = [16, 8, 0].map { shift -> Double in
+                let value = Double((hex >> UInt32(shift)) & 255) / 255
+                return value <= 0.03928 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+            }
+            return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+        }
+        let a = luminance(first), b = luminance(second)
+        return (max(a, b) + 0.05) / (min(a, b) + 0.05)
     }
 
     private static func mix(_ first: UInt32, _ second: UInt32, amount: Double) -> UInt32 {

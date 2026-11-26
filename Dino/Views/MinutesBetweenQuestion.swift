@@ -41,6 +41,7 @@ struct DinoMinutesBetweenCard: View {
             .strokeBorder(highContrast ? DinoStyle.ink : DinoStyle.deepGreen.opacity(0.16),
                           lineWidth: highContrast ? 2.5 : 1.5))
         .shadow(color: DinoStyle.deepGreen.opacity(0.08), radius: 14, y: 6)
+        .environment(\.layoutDirection, .leftToRight)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("\(prefix).minutesBetween.card")
     }
@@ -151,7 +152,7 @@ struct DinoMinutesBetweenTimeline: View {
                                 .frame(width: max(1, widths[index] - 8), height: 10)
                                 .position(x: center, y: lineY + 34)
                                 .opacity(expansion).accessibilityHidden(true)
-                            Text(verbatim: "\(minutes) min")
+                            Text(verbatim: DinoTimeWords.compactMinutes(minutes, language: language))
                                 .font(.system(size: demonstrationLayout.spacious ? 22 : compact ? 13 : 15, weight: .heavy, design: .rounded))
                                 .monospacedDigit().lineLimit(1).minimumScaleFactor(0.65)
                                 .foregroundStyle(DinoStyle.ink)

@@ -152,6 +152,38 @@ struct DinoCoreTests {
     }
 
     static func main() async {
+        if CommandLine.arguments.contains("--arabic-localization") {
+            testArabicLocalization()
+            print("PASS: \(checks) Saudi Arabic localization checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--australian-localization") {
+            testAustralianLocalization()
+            print("PASS: \(checks) Australian English localization checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--canadian-localization") {
+            testCanadianLocalization()
+            print("PASS: \(checks) Canadian English localization checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--german-localization") {
+            testGermanLocalization()
+            print("PASS: \(checks) German localization checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--localization") {
+            testLocalizationBaseline()
+            testLocalizationInfrastructure()
+            testSpokenTime()
+            print("PASS: \(checks) localization checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--time-machine") {
+            testMachineCharacter()
+            print("PASS: \(checks) time-machine character checks.")
+            return
+        }
         if CommandLine.arguments.contains("--characters") {
             testCharacterUnlocks()
             testJungleMotion()
@@ -161,6 +193,9 @@ struct DinoCoreTests {
             testCaveCharacter()
             testNeonCharacter()
             testDommelCharacter()
+            testMachineCharacter()
+            testPirateCharacter()
+            testCastleCharacter()
             print("PASS: \(checks) character unlock, swap and save checks.")
             return
         }
@@ -223,6 +258,9 @@ struct DinoCoreTests {
             testCaveMotion()
             testNeonMotion()
             testDommelMotion()
+            testMachineMotion()
+            testPirateMotion()
+            testCastleMotion()
             print("PASS: \(checks) animation timing and asset checks.")
             return
         }
@@ -326,6 +364,12 @@ struct DinoCoreTests {
         testTimeReadingReview()
         testPlausibleChoices()
         testSpokenTime()
+        testLocalizationBaseline()
+        testLocalizationInfrastructure()
+        testGermanLocalization()
+        testCanadianLocalization()
+        testAustralianLocalization()
+        testArabicLocalization()
         testFlightArrivals()
         testMinutesBetweenQuestions()
         testClockArithmetic()
@@ -349,6 +393,9 @@ struct DinoCoreTests {
         testVillageCharacter()
         testCaveCharacter()
         testNeonCharacter()
+        testMachineCharacter()
+        testPirateCharacter()
+        testCastleCharacter()
         testDinoAvatarMask()
         testDinoSpriteColors()
         testPaleBandanaLettering()
@@ -2459,8 +2506,8 @@ struct DinoCoreTests {
     static func testSpokenTime() {
         let dutch = SpokenTimeCatalog.language(code: "nl")
         let english = SpokenTimeCatalog.language(code: "en")
-        expect(SpokenTimeCatalog.language(code: "fr").code == "nl", "an unknown language keeps the Dutch clock until it is added")
-        expect(SpokenTimeCatalog.language(code: "en-GB").code == "en" && SpokenTimeCatalog.language(code: "EN").code == "en",
+        expect(SpokenTimeCatalog.language(code: "qaa").code == "en", "an unknown language follows the same English fallback as the interface")
+        expect(SpokenTimeCatalog.language(code: "en-Latn-XZ").code == "en" && SpokenTimeCatalog.language(code: "EN").code == "en",
                "region codes use the registered language")
         let dutchPhrases = [
             (3, 0, "Drie uur"), (3, 5, "Vijf over drie"), (3, 10, "Tien over drie"), (3, 15, "Kwart over drie"),
@@ -2598,9 +2645,545 @@ struct DinoCoreTests {
         }
     }
 
+    static func testLocalizationBaseline() {
+        let examples: [(Int, String, String, Int, Int)] = [
+            (0, "zeven uur", "seven o’clock", 0, 0),
+            (14, "14 over zeven", "14 past seven", 0, 0),
+            (15, "kwart over zeven", "quarter past seven", 0, 0),
+            (16, "14 voor half acht", "16 past seven", 30, 0),
+            (29, "1 voor half acht", "29 past seven", 30, 0),
+            (30, "half acht", "half past seven", 30, 0),
+            (31, "1 over half acht", "29 to eight", 30, 60),
+            (44, "14 over half acht", "16 to eight", 30, 60),
+            (45, "kwart voor acht", "quarter to eight", 60, 60),
+            (59, "1 voor acht", "1 to eight", 60, 60)
+        ]
+        for (minute, dutch, english, dutchReference, englishReference) in examples {
+            let time = ClockTime(hour: 7, minute: minute)
+            for (code, words, reference) in [("nl", dutch, dutchReference), ("en", english, englishReference)] {
+                expect(DinoTimeWords.time(time, language: code) == words, "\(code) describes 07:\(minute) as \(words)")
+                let hint = SpokenClockReadingHint(minute: minute, language: code)
+                expect(hint.referenceMinute == reference && hint.spokenHour(for: time.hour) == (reference == 0 ? 7 : 8),
+                       "\(code) shows the same reference hour in the clock hint")
+            }
+        }
+    }
+
+    static func testLocalizationInfrastructure() {
+        expect(AppLanguage.named("nl") == .dutch && AppLanguage.named("en") == .english,
+               "stored language preferences retain their original IDs")
+        expect(AppLanguage.named("nl_XZ") == .dutch && AppLanguage.named("EN-Latn-XZ") == .english,
+               "device region variants still use their generic translations")
+        expect(AppLanguage.dutch.resourceCodes == ["nl", "en"] && AppLanguage.english.resourceCodes == ["en"],
+               "missing resources fall back in the same order as missing lessons")
+        let englishChoices = ["en", "en-GB", "en-US"]
+        expect(AppLanguage.match("en_Latn_US", among: englishChoices, code: \.self) == "en-US"
+               && AppLanguage.match("en-AU", among: englishChoices, code: \.self) == "en",
+               "regional matches win when available")
+        let chineseChoices = ["zh", "zh-Hans", "zh-Hant", "zh-Hant-HK"]
+        expect(AppLanguage.match("zh-TW", among: chineseChoices, code: \.self) == "zh-Hant"
+               && AppLanguage.match("zh-HK", among: chineseChoices, code: \.self) == "zh-Hant-HK"
+               && AppLanguage.match("zh-Hant-CN", among: chineseChoices, code: \.self) == "zh-Hant",
+               "the script survives both regional inference and explicit overrides")
+        expect(AppLanguage.match("zh-TW", among: ["zh", "zh-Hans"], code: \.self) == nil,
+               "Traditional Chinese never falls back to Simplified Chinese by region alone")
+        expect(DinoSpeechVoicePicker.preferredLanguageIdentifier(for: "en_US") == "en-US"
+               && DinoSpeechVoicePicker.matchesLanguageAndScript("zh-HK", "zh-Hant")
+               && !DinoSpeechVoicePicker.matchesLanguageAndScript("zh-CN", "zh-Hant"),
+               "voices preserve explicitly requested regions and never switch script silently")
+        let clock = ClockTime(hour: 17, minute: 5)
+        let taiwan = clock.localizedDigitalReading(notation: .twelve, locale: Locale(identifier: "zh-TW"))
+        expect(taiwan.hour == "5" && taiwan.minute == "05" && taiwan.periodBeforeClock
+               && taiwan.text.hasPrefix(taiwan.period ?? "invalid"), "the local display can put the day period first")
+        let arabic = clock.localizedDigitalReading(notation: .twentyFour, locale: Locale(identifier: "ar-SA"))
+        expect(arabic.hour == "١٧" && arabic.minute == "٠٥" && arabic.period == nil,
+               "the 24-hour clock uses the selected numbering system")
+        let finnish = clock.localizedDigitalReading(notation: .twentyFour, locale: Locale(identifier: "fi-FI"))
+        expect(finnish.text == "17.05" && finnish.separator == ".", "the display and accessibility use the same local separator")
+
+        let time = DinoQuestionPrompt.Argument(text: "07:30", emphasis: .plain)
+        let direction = DinoQuestionPrompt.Argument(text: "later", emphasis: .forward)
+        let ordered = DinoQuestionPrompt.interpolated("%2$@ · %1$@ · 100%%", arguments: [time, direction])
+        expect(ordered?.map(\.text).joined() == "later · 07:30 · 100%" && ordered?.first == .argument(direction),
+               "the translated argument keeps its emphasis when moved")
+        expect(DinoQuestionPrompt.interpolated("%3$@ %@", arguments: [time, direction]) == nil
+               && DinoQuestionPrompt.interpolated("%@", arguments: [time, direction]) == nil,
+               "invalid indices and omitted arguments fall back to the plain instruction")
+
+        let calendar = Calendar(identifier: .gregorian)
+        let winter = calendar.date(from: DateComponents(timeZone: TimeZone(secondsFromGMT: 0), year: 2026, month: 1, day: 15))!
+        let summer = calendar.date(from: DateComponents(timeZone: TimeZone(secondsFromGMT: 0), year: 2026, month: 7, day: 15))!
+        let london = DinoTimeZoneJourney.capitals.first { $0.id == "london" }!
+        let delhi = DinoTimeZoneJourney.capitals.first { $0.id == "newDelhi" }!
+        expect(DinoTimeZoneJourney(origin: london, destination: delhi, date: winter).offsetMinutes == 330
+               && DinoTimeZoneJourney(origin: london, destination: delhi, date: summer).offsetMinutes == 270,
+               "a journey keeps a single reference date when applying a half-hour zone and daylight saving")
+    }
+
     static func spokenPhrase(_ code: String, hour: Int, minute: Int) -> String {
         var rng = SeededGenerator(seed: 1)
         return SpokenTimeCatalog.language(code: code).prompt(for: ClockTime(hour: hour, minute: minute), using: &rng).phrase
+    }
+
+    static func testCanadianLocalization() {
+        let profile = AppLanguage.canadianEnglish
+        let code = profile.code
+        expect(AppLanguage.named("en_CA") == profile && AppLanguage.named("en-Latn-CA") == profile,
+               "Canadian English resolves to its regional resources")
+        expect(profile.resourceCodes == ["en-CA", "en"] && AppLanguage.named("en") == .english,
+               "Canadian text shares the English base and saved generic English stays distinct")
+        let canadian = DinoSpeechVoice(identifier: "ca", name: "Canadian", language: "en-CA", quality: 1)
+        let british = DinoSpeechVoice(identifier: "gb", name: "British", language: "en-GB", quality: 3)
+        expect(DinoSpeechVoicePicker.preferredLanguageIdentifier(for: code) == "en-CA"
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [british, canadian]) == canadian
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [british]) == british,
+               "a Canadian voice is preferred, with English speech available as a fallback")
+
+        let examples: [(Int, String, Int)] = [
+            (0, "Seven o’clock", 0), (1, "One past seven", 0), (5, "Five past seven", 0),
+            (14, "Fourteen past seven", 0), (15, "Quarter past seven", 0), (16, "Sixteen past seven", 0),
+            (20, "Twenty past seven", 0), (25, "Twenty-five past seven", 0), (29, "Twenty-nine past seven", 0),
+            (30, "Half past seven", 0), (31, "Twenty-nine to eight", 60), (35, "Twenty-five to eight", 60),
+            (40, "Twenty to eight", 60), (44, "Sixteen to eight", 60), (45, "Quarter to eight", 60),
+            (46, "Fourteen to eight", 60), (55, "Five to eight", 60), (59, "One to eight", 60)
+        ]
+        for (minute, phrase, reference) in examples {
+            let time = ClockTime(hour: 7, minute: minute)
+            var rng = SeededGenerator(seed: 42)
+            let prompt = profile.spokenTime.prompt(for: time, using: &rng)
+            let hint = SpokenClockReadingHint(minute: minute, language: code)
+            expect(prompt.phrase == phrase && hint.referenceMinute == reference
+                   && hint.spokenHour(for: time.hour) == (reference == 0 ? 7 : 8), "Canadian English teaches and marks 07:\(minute) consistently")
+        }
+        var rng = SeededGenerator(seed: 34)
+        var baseRng = SeededGenerator(seed: 34)
+        for hour in 0..<24 {
+            for minute in 0..<60 {
+                let time = ClockTime(hour: hour, minute: minute)
+                let prompt = profile.spokenTime.prompt(for: time, using: &rng)
+                let base = SpokenTimeCatalog.language(code: "en").prompt(for: time, using: &baseRng)
+                expect(prompt == base && DinoTimeWords.time(time, language: code) == DinoTimeWords.time(time, language: "en"),
+                       "Canadian and generic English share the same phrase and answer logic at every minute")
+            }
+        }
+        for (hour, minute, clockHour, period) in [(0, 0, "12", "AM"), (0, 5, "12", "AM"), (12, 0, "12", "PM"),
+                                                  (12, 5, "12", "PM"), (17, 5, "5", "PM"), (23, 59, "11", "PM")] {
+            let time = ClockTime(hour: hour, minute: minute)
+            let reading = time.digitalReading(notation: .twelve, languageCode: code)
+            expect(reading.hour == clockHour && reading.period == period && reading.separator == ":"
+                   && time.digitalReading(notation: .twentyFour, languageCode: code).text == time.digitalText,
+                   "the regional display distinguishes a.m., p.m. and the 24-hour clock")
+        }
+        expect(ClockTime(hour: 23, minute: 55).adding(minutes: 10) == .init(hour: 0, minute: 5)
+               && ClockTime(hour: 0, minute: 5).adding(minutes: -10) == .init(hour: 23, minute: 55), "time arithmetic crosses midnight in both directions")
+        for type in DinoPracticeQuestion.allCases {
+            for time in DinoPracticeTime.allCases {
+                var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(type)), seed: 71, language: code)
+                for index in 0..<3 {
+                    let question = generator.next(index: index)
+                    expect(AnswerValidator.isCorrect(question.expectedAnswer, for: question), "every Canadian practice combination accepts its expected answer")
+                    if question.kind == .timeZone { expect(question.timeZoneJourney?.origin.id == "ottawa", "Canadian time-zone exercises start in Ottawa") }
+                }
+            }
+        }
+
+        let ottawa = DinoTimeZoneJourney.capitals.first { $0.id == "ottawa" }!
+        let utc = TimeZone(secondsFromGMT: 0)!
+        for month in 1...12 {
+            let date = Calendar(identifier: .gregorian).date(from: .init(timeZone: utc, year: 2026, month: month, day: 15))!
+            let expected: [String: Int] = ["halifax": 60, "stJohns": 90]
+            for capital in profile.regionalTimeZoneCapitals where expected[capital.id] != nil {
+                let journey = DinoTimeZoneJourney(origin: ottawa, destination: capital, date: date)
+                expect(journey.offsetMinutes == expected[capital.id] && journey.steps(from: .init(hour: 23, minute: 55)).last?.time ==
+                       ClockTime(hour: 23, minute: 55).adding(minutes: journey.offsetMinutes), "the offset and replay agree in month \(month)")
+            }
+            for difficulty in DinoTimeZoneDifficulty.allCases {
+                for step in [1, 5, 10, 15, 30, 60] {
+                    let journey = DinoTimeZoneJourney.generate(language: code, difficulty: difficulty, minuteStep: step, date: date, using: &rng)
+                    expect(journey.origin.id == "ottawa" && journey.offsetMinutes != 0 && journey.offsetMinutes.isMultiple(of: step),
+                           "every Canadian time-zone level has a valid destination from Ottawa in month \(month)")
+                }
+            }
+        }
+    }
+
+    static func testArabicLocalization() {
+        let profile = AppLanguage.saudiArabic
+        let code = profile.code
+        expect(AppLanguage.named("ar_SA") == profile && AppLanguage.named("ar-Arab-SA") == profile
+               && AppLanguage.named("ar-Latn-SA") == nil && profile.runsRightToLeft && profile.resourceCodes == ["ar", "en"],
+               "Saudi Arabic follows the Arabic script and uses the Arabic bundle")
+        expect((try? DinoNameValidator.validated("عَبْد الله").get()) == "عَبْد الله",
+               "a player name retains Arabic letters and marks")
+        expect(DinoTimeWords.parsedInteger("١٢٣") == 123 && DinoTimeWords.parsedInteger("۱۲۳") == 123
+               && DinoTimeWords.parsedInteger("123") == 123 && DinoTimeWords.parsedInteger("Ⅻ") == nil
+               && DinoTimeWords.parsedInteger("١٢ن") == nil,
+               "numeric entry accepts decimal keypad digits and rejects nondecimal characters")
+        let localVoice = DinoSpeechVoice(identifier: "sa", name: "Arabic", language: "ar-SA", quality: 1)
+        let regionalVoice = DinoSpeechVoice(identifier: "eg", name: "Arabic", language: "ar-EG", quality: 3)
+        let englishVoice = DinoSpeechVoice(identifier: "en", name: "English", language: "en-GB", quality: 3)
+        expect(DinoSpeechVoicePicker.preferredLanguageIdentifier(for: code) == "ar-SA"
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [regionalVoice, localVoice]) == localVoice
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [regionalVoice, englishVoice]) == regionalVoice
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [englishVoice]) == nil,
+               "prefer the Saudi voice, fall back to Arabic, and keep the written question if no Arabic voice exists")
+
+        let examples: [(Int, Int, String, Int, Int)] = [
+            (7, 0, "الساعة السابعة تمامًا", 0, 7),
+            (7, 1, "الساعة السابعة ودقيقة واحدة", 0, 7),
+            (7, 5, "الساعة السابعة وخمس دقائق", 0, 7),
+            (7, 14, "الساعة السابعة وأربع عشرة دقيقة", 0, 7),
+            (7, 15, "الساعة السابعة والربع", 0, 7),
+            (7, 16, "الساعة السابعة وست عشرة دقيقة", 0, 7),
+            (7, 20, "الساعة السابعة وعشرون دقيقة", 0, 7),
+            (7, 25, "الساعة السابعة وخمس وعشرون دقيقة", 0, 7),
+            (7, 29, "الساعة السابعة وتسع وعشرون دقيقة", 0, 7),
+            (7, 30, "الساعة السابعة والنصف", 0, 7),
+            (7, 31, "الساعة الثامنة إلا تسعًا وعشرين دقيقة", 60, 8),
+            (7, 35, "الساعة الثامنة إلا خمسًا وعشرين دقيقة", 60, 8),
+            (7, 40, "الساعة الثامنة إلا عشرين دقيقة", 60, 8),
+            (7, 44, "الساعة الثامنة إلا ست عشرة دقيقة", 60, 8),
+            (7, 45, "الساعة الثامنة إلا ربعًا", 60, 8),
+            (7, 46, "الساعة الثامنة إلا أربع عشرة دقيقة", 60, 8),
+            (7, 55, "الساعة الثامنة إلا خمس دقائق", 60, 8),
+            (7, 59, "الساعة الثامنة إلا دقيقة واحدة", 60, 8),
+            (8, 0, "الساعة الثامنة تمامًا", 0, 8)
+        ]
+        for (hour, minute, wording, referenceMinute, referenceHour) in examples {
+            let time = ClockTime(hour: hour, minute: minute)
+            let hint = SpokenClockReadingHint(minute: minute, language: code)
+            expect(spokenPhrase(code, hour: hour, minute: minute) == wording
+                   && DinoTimeWords.time(time, language: code) == wording && hint.referenceMinute == referenceMinute
+                   && hint.spokenHour(for: hour) == referenceHour, "the phrase and minute guide agree at \(hour):\(minute)")
+        }
+        var rng = SeededGenerator(seed: 35)
+        for hour in 0..<24 {
+            for minute in 0..<60 {
+                let time = ClockTime(hour: hour, minute: minute)
+                let prompt = profile.spokenTime.prompt(for: time, using: &rng)
+                let hint = SpokenClockReadingHint(minute: minute, language: code)
+                let expectedReference = minute > 30 ? 60 : 0
+                expect(prompt.slots.count == 2 && prompt.slots.first?.id == "hour"
+                       && prompt.slots.allSatisfy { $0.choices.count == 3 && Set($0.choices.map(\.word)).count == 3 }
+                       && prompt.phrase == DinoTimeWords.time(time, language: code)
+                       && hint.referenceMinute == expectedReference
+                       && hint.spokenHour(for: hour) == ((hour + (minute > 30 ? 1 : 0) + 11) % 12 + 1),
+                       "every Arabic clock has distinct hour-first stones and the right hour anchor")
+                let combinations = prompt.slots[0].choices.flatMap { hour in
+                    prompt.slots[1].choices.map { SpokenTimeAnswer(choiceIDs: [hour.id, $0.id]) }
+                }
+                expect(combinations.filter(prompt.accepts) == [prompt.correct],
+                       "each Arabic stone combination has one intended answer")
+            }
+        }
+
+        let boundaries: [(Int, Int, String, String, String)] = [
+            (0, 0, "٠٠:٠٠", "١٢:٠٠", "ص"), (0, 5, "٠٠:٠٥", "١٢:٠٥", "ص"),
+            (12, 0, "١٢:٠٠", "١٢:٠٠", "م"), (12, 5, "١٢:٠٥", "١٢:٠٥", "م"),
+            (17, 5, "١٧:٠٥", "٥:٠٥", "م"), (23, 59, "٢٣:٥٩", "١١:٥٩", "م")
+        ]
+        for (hour, minute, twentyFour, twelve, period) in boundaries {
+            let time = ClockTime(hour: hour, minute: minute)
+            let ordinary = time.digitalReading(notation: .twelve, languageCode: code)
+            expect(time.digitalReading(notation: .twentyFour, languageCode: code).text == twentyFour
+                   && ordinary.text == twelve + ordinary.periodSpacing + period && ordinary.period == period,
+                   "Arabic digital times maintain hour, minute and day period")
+        }
+        expect(DinoTimeWords.spokenDuration(1, language: code) == "دقيقة واحدة"
+               && DinoTimeWords.spokenDuration(2, language: code) == "دقيقتان"
+               && DinoTimeWords.spokenDuration(5, language: code) == "خمس دقائق"
+               && DinoTimeWords.spokenDuration(65, language: code) == "ساعة واحدة وخمس دقائق"
+               && DinoTimeWords.spokenDuration(71, language: code) == "ساعة واحدة وإحدى عشرة دقيقة"
+               && DinoTimeWords.zoneHours(90, language: code) == "١٫٥",
+               "Arabic durations distinguish singular, dual, plural and fractional hours")
+        expect(DinoTimeWords.time(.init(hour: 0), language: code, dayPart: true).hasSuffix("ليلًا")
+               && DinoTimeWords.time(.init(hour: 7), language: code, dayPart: true).hasSuffix("صباحًا")
+               && DinoTimeWords.time(.init(hour: 12), language: code, dayPart: true).hasSuffix("بعد الظهر")
+               && DinoTimeWords.time(.init(hour: 23), language: code, dayPart: true).hasSuffix("مساءً"),
+               "the four day parts use the configured lesson schedule")
+        expect(ClockTime(hour: 23, minute: 55).adding(minutes: 10) == .init(hour: 0, minute: 5)
+               && ClockTime(hour: 0, minute: 5).adding(minutes: -10) == .init(hour: 23, minute: 55),
+               "adding and subtracting across midnight keep the numeric answer")
+
+        for type in DinoPracticeQuestion.allCases {
+            for family in DinoPracticeTime.allCases {
+                var generator = DinoPracticeGenerator(configuration: .init(time: family, order: .specific(type)), seed: 71, language: code)
+                for index in 0..<3 {
+                    let question = generator.next(index: index)
+                    expect(AnswerValidator.isCorrect(question.expectedAnswer, for: question), "Arabic \(type) accepts its answer for \(family)")
+                    if question.kind.usesOptions {
+                        expect(question.responses.filter { AnswerValidator.isCorrect($0, for: question) }.count == 1,
+                               "Arabic \(type) has only one correct choice")
+                    }
+                    if question.kind == .timeZone {
+                        expect(question.timeZoneJourney?.origin.id == "riyadh", "Arabic journeys start in Riyadh")
+                    }
+                }
+                if type.recipe.kind.isExpanded {
+                    let example = DinoDemonstrationExamples.question(kind: type.recipe.kind, minutes: family.minutes,
+                        minuteStep: family.minuteStep, index: 0, previousTarget: nil, language: code)
+                    expect(AnswerValidator.isCorrect(example.expectedAnswer, for: example), "Arabic examples use their live question rules")
+                }
+            }
+        }
+
+        let utc = TimeZone(secondsFromGMT: 0)!
+        let calendar = Calendar(identifier: .gregorian)
+        func date(_ month: Int) -> Date {
+            calendar.date(from: .init(timeZone: utc, year: 2026, month: month, day: 15, hour: 12))!
+        }
+        let riyadh = profile.regionalTimeZoneCapitals.first { $0.id == "riyadh" }!
+        let cities = DinoTimeZoneJourney.capitals + profile.regionalTimeZoneCapitals
+        for (id, january, july) in [("cairo", -60, 0), ("abuDhabi", 60, 60), ("muscat", 60, 60),
+                                   ("tehran", 30, 30), ("islamabad", 120, 120), ("ankara", 0, 0)] {
+            let destination = cities.first { $0.id == id }!
+            expect(DinoTimeZoneJourney(origin: riyadh, destination: destination, date: date(1)).offsetMinutes == january
+                   && DinoTimeZoneJourney(origin: riyadh, destination: destination, date: date(7)).offsetMinutes == july,
+                   "Riyadh to \(id) has the correct signed offset in both seasons")
+        }
+        expect(DinoTimeZoneJourney.displayedDate(language: code, date: date(1)) == "١٥ يناير",
+               "the atlas displays the civil date in Arabic")
+        for month in 1...12 {
+            for difficulty in DinoTimeZoneDifficulty.allCases {
+                for family in DinoPracticeTime.allCases {
+                    let step = family.minuteStep
+                    let journey = DinoTimeZoneJourney.generate(language: code, difficulty: difficulty, minuteStep: step,
+                                                               date: date(month), using: &rng)
+                    expect(journey.origin == riyadh && journey.offsetMinutes != 0 && journey.offsetMinutes.isMultiple(of: step),
+                           "all Saudi zone levels have a reachable destination every month")
+                }
+            }
+        }
+    }
+
+    static func testAustralianLocalization() {
+        let profile = AppLanguage.australianEnglish
+        let code = profile.code
+        expect(AppLanguage.named("en_AU") == profile && AppLanguage.named("en-Latn-AU") == profile
+               && AppLanguage.named("en-NZ") == .english && AppLanguage.named("en-CA") == .canadianEnglish
+               && profile.resourceCodes == ["en-AU", "en"] && profile.teaches24HourConversion,
+               "only Australian English selects the Australian profile and conversion lesson")
+        let australian = DinoSpeechVoice(identifier: "au", name: "Australian", language: "en-AU", quality: 1)
+        let british = DinoSpeechVoice(identifier: "gb", name: "British", language: "en-GB", quality: 3)
+        expect(DinoSpeechVoicePicker.preferredLanguageIdentifier(for: code) == "en-AU"
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [british, australian]) == australian
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [british]) == british,
+               "prefer an Australian voice and fall back to another suitable English voice")
+
+        let examples: [(Int, Int, String, Int, Int)] = [
+            (7, 0, "Seven o’clock", 0, 7), (7, 1, "One past seven", 0, 7), (7, 5, "Five past seven", 0, 7),
+            (7, 14, "Fourteen past seven", 0, 7), (7, 15, "Quarter past seven", 0, 7),
+            (7, 16, "Sixteen past seven", 0, 7), (7, 20, "Twenty past seven", 0, 7), (7, 25, "Twenty-five past seven", 0, 7),
+            (7, 29, "Twenty-nine past seven", 0, 7), (7, 30, "Half past seven", 0, 7),
+            (7, 31, "Twenty-nine to eight", 60, 8), (7, 35, "Twenty-five to eight", 60, 8),
+            (7, 40, "Twenty to eight", 60, 8), (7, 44, "Sixteen to eight", 60, 8), (7, 45, "Quarter to eight", 60, 8),
+            (7, 46, "Fourteen to eight", 60, 8), (7, 55, "Five to eight", 60, 8), (7, 59, "One to eight", 60, 8),
+            (8, 0, "Eight o’clock", 0, 8)
+        ]
+        for (hour, minute, phrase, reference, spokenHour) in examples {
+            let hint = SpokenClockReadingHint(minute: minute, language: code)
+            expect(spokenPhrase(code, hour: hour, minute: minute) == phrase && hint.referenceMinute == reference
+                   && hint.spokenHour(for: hour) == spokenHour, "Australian phrase and explanation agree at \(hour):\(minute)")
+        }
+        var rng = SeededGenerator(seed: 34)
+        var baseRng = SeededGenerator(seed: 34)
+        for hour in 0..<24 {
+            for minute in 0..<60 {
+                let time = ClockTime(hour: hour, minute: minute)
+                let prompt = profile.spokenTime.prompt(for: time, using: &rng)
+                let base = AppLanguage.english.spokenTime.prompt(for: time, using: &baseRng)
+                expect(prompt == base && DinoTimeWords.time(time, language: code) == DinoTimeWords.time(time, language: "en"),
+                       "Australian English shares the answer tiles and clock wording across all minutes")
+            }
+        }
+        let boundaries: [(Int, Int, String, String)] = [
+            (0, 0, "12:00", "am"), (0, 5, "12:05", "am"), (12, 0, "12:00", "pm"),
+            (12, 5, "12:05", "pm"), (17, 5, "5:05", "pm"), (23, 59, "11:59", "pm")
+        ]
+        for (hour, minute, clock, period) in boundaries {
+            let time = ClockTime(hour: hour, minute: minute)
+            let twelve = time.digitalReading(notation: .twelve, languageCode: code)
+            let twentyFour = time.digitalReading(notation: .twentyFour, languageCode: code)
+            expect(twelve.period == period && !twelve.periodBeforeClock
+                   && ["\u{00a0}", "\u{202f}"].contains(twelve.periodSpacing)
+                   && twelve.text == clock + twelve.periodSpacing + period
+                   && twentyFour.text == time.digitalText && twentyFour.period == nil,
+                   "both Australian digital clock formats distinguish midday and midnight")
+        }
+        expect(ClockTime(hour: 23, minute: 55).adding(minutes: 10) == .init(hour: 0, minute: 5)
+               && ClockTime(hour: 0, minute: 5).adding(minutes: -10) == .init(hour: 23, minute: 55),
+               "time arithmetic crosses midnight in both directions")
+        for type in DinoPracticeQuestion.allCases {
+            for time in DinoPracticeTime.allCases {
+                var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(type)), seed: 71, language: code)
+                for index in 0..<3 {
+                    let question = generator.next(index: index)
+                    expect(AnswerValidator.isCorrect(question.expectedAnswer, for: question),
+                           "Australian \(type) accepts its expected answer for \(time)")
+                    if question.kind.usesOptions {
+                        expect(question.responses.filter { AnswerValidator.isCorrect($0, for: question) }.count == 1,
+                               "Australian \(type) has exactly one correct choice for \(time)")
+                    }
+                    if question.kind == .timeZone {
+                        expect(question.timeZoneJourney?.origin.id == "canberra", "Australian time-zone exercises start in Canberra")
+                    }
+                }
+            }
+        }
+
+        let canberra = DinoTimeZoneJourney.capitals.first { $0.id == "canberra" }!
+        let cities = Dictionary(uniqueKeysWithValues: profile.regionalTimeZoneCapitals.map { ($0.id, $0) })
+        let utc = TimeZone(secondsFromGMT: 0)!
+        let calendar = Calendar(identifier: .gregorian)
+        func date(_ month: Int, _ day: Int = 15) -> Date {
+            calendar.date(from: .init(timeZone: utc, year: 2026, month: month, day: day, hour: 12))!
+        }
+        expect(DinoTimeZoneJourney.displayedDate(language: code, date: date(1)) == "15 January", "the date puts the day before the month")
+        let seasons = [(date(1), [-60, -30, -90, -180, 0]), (date(7), [0, -30, -30, -120, 60])]
+        for (season, offsets) in seasons {
+            for (city, offset) in zip(["brisbane", "adelaide", "darwin", "perth", "noumea"], offsets) {
+                let journey = DinoTimeZoneJourney(origin: canberra, destination: cities[city]!, date: season)
+                let midnight = ClockTime(hour: 0)
+                expect(journey.offsetMinutes == offset
+                       && journey.steps(from: midnight).last?.time == (offset == 0 ? nil : midnight.adding(minutes: offset)),
+                       "Canberra to \(city) agrees with the seasonal offset and the replay across midnight")
+            }
+            for (step, includesAdelaide) in [(30, true), (60, false)] {
+                let destinations = DinoTimeZoneJourney.destinations(from: canberra, difficulty: .regional,
+                    minuteStep: step, date: season, regionalCapitals: profile.regionalTimeZoneCapitals,
+                    regionalMinimum: profile.regionalTimeZoneMinimum)
+                expect(destinations.contains(cities["adelaide"]!) == includesAdelaide,
+                       "Adelaide appears if the exercise allows half-hour offsets")
+            }
+        }
+        for (day, nearby) in [(date(4, 4), "brisbane"), (date(4, 5), "noumea"),
+                              (date(10, 3), "noumea"), (date(10, 4), "brisbane")] {
+            let journey = DinoTimeZoneJourney.generate(language: code, difficulty: .nearby, date: day, using: &rng)
+            expect(journey.origin.id == "canberra" && journey.destination.id == nearby,
+                   "nearby questions change city on the Canberra daylight-saving transition")
+        }
+        for month in 1...12 {
+            for difficulty in DinoTimeZoneDifficulty.allCases {
+                for family in DinoPracticeTime.allCases {
+                    let step = family.minuteStep
+                    let journey = DinoTimeZoneJourney.generate(language: code, difficulty: difficulty,
+                                                               minuteStep: step, date: date(month), using: &rng)
+                    expect(journey.origin.id == "canberra" && journey.offsetMinutes != 0 && journey.offsetMinutes.isMultiple(of: step),
+                           "every time-zone level has a valid destination from Canberra in month \(month)")
+                }
+            }
+        }
+    }
+
+    static func testGermanLocalization() {
+        let code = AppLanguage.german.code
+        let language = SpokenTimeCatalog.language(code: code)
+        expect(AppLanguage.named("de-DE") == .german && AppLanguage.named("de_DE") == .german,
+               "German Germany resolves to the shipped bundle and lesson")
+        expect(AppLanguage.named("de-AT") == .german && AppLanguage.named("de-CH") == .german,
+               "regional German uses the same standard German bundle until individually supported")
+        expect(DinoSpeechVoicePicker.preferredLanguageIdentifier(for: code) == "de-DE"
+               && !DinoSpeechVoicePicker.matchesLanguageAndScript("nl-NL", "de-DE"), "German requests a German voice")
+
+        let examples: [(Int, String, Int, Int)] = [
+            (0, "sieben Uhr", 0, 7), (1, "sieben Uhr eins", 0, 7), (5, "fünf nach sieben", 0, 7),
+            (14, "sieben Uhr vierzehn", 0, 7), (15, "Viertel nach sieben", 0, 7),
+            (16, "sieben Uhr sechzehn", 0, 7), (20, "zwanzig nach sieben", 0, 7),
+            (25, "fünf vor halb acht", 30, 8), (29, "sieben Uhr neunundzwanzig", 0, 7),
+            (30, "halb acht", 30, 8), (31, "sieben Uhr einunddreißig", 0, 7),
+            (35, "fünf nach halb acht", 30, 8), (40, "zwanzig vor acht", 60, 8),
+            (44, "sieben Uhr vierundvierzig", 0, 7), (45, "Viertel vor acht", 60, 8),
+            (46, "sieben Uhr sechsundvierzig", 0, 7), (55, "fünf vor acht", 60, 8),
+            (59, "sieben Uhr neunundfünfzig", 0, 7)
+        ]
+        for (minute, phrase, reference, hour) in examples {
+            let time = ClockTime(hour: 7, minute: minute)
+            let hint = SpokenClockReadingHint(minute: minute, language: code)
+            expect(DinoTimeWords.time(time, language: code) == phrase, "07:\(minute) is \(phrase)")
+            expect(hint.referenceMinute == reference && hint.spokenHour(for: time.hour) == hour,
+                   "07:\(minute) points to the same hour and minute anchor as the phrase")
+        }
+        expect(DinoTimeWords.time(.init(hour: 8), language: code) == "acht Uhr", "08:00 starts a new hour")
+        expect(DinoTimeWords.time(.init(hour: 1), language: code) == "ein Uhr"
+               && DinoTimeWords.time(.init(hour: 1, minute: 1), language: code) == "ein Uhr eins"
+               && DinoTimeWords.time(.init(hour: 1, minute: 5), language: code) == "fünf nach eins", "ein and eins follow their position")
+        for (hour, minute, phrase) in [(0, 0, "null Uhr"), (0, 5, "null Uhr fünf"), (12, 0, "zwölf Uhr"),
+                                       (12, 5, "zwölf Uhr fünf"), (17, 5, "siebzehn Uhr fünf"),
+                                       (23, 59, "dreiundzwanzig Uhr neunundfünfzig")] {
+            expect(DinoTimeWords.digitalTimeInWords(.init(hour: hour, minute: minute), language: code) == phrase,
+                   "the 24-hour question speaks the complete hour")
+        }
+        expect(ClockTime(hour: 23, minute: 55).adding(minutes: 10) == .init(hour: 0, minute: 5)
+               && ClockTime(hour: 0, minute: 5).adding(minutes: -10) == .init(hour: 23, minute: 55),
+               "German date rollover works in both directions")
+        let digital = ClockTime(hour: 17, minute: 5)
+        expect(digital.digitalReading(notation: .twentyFour, languageCode: code).text == "17:05", "German 24-hour display")
+        let twelve = digital.digitalReading(notation: .twelve, languageCode: code)
+        expect(twelve.hour == "5" && twelve.minute == "05" && twelve.period?.isEmpty == false, "explicit 12-hour mode includes its day period")
+        expect(DinoTimeWords.spokenDuration(61, language: code) == "eine Stunde und eine Minute"
+               && DinoTimeWords.spokenDuration(122, language: code) == "2 Stunden und 2 Minuten", "German time units inflect independently")
+        var rng = SeededGenerator(seed: 42)
+        for hour in 0..<24 {
+            for minute in 0..<60 {
+                let clock = ClockTime(hour: hour, minute: minute)
+                let prompt = language.prompt(for: clock, using: &rng)
+                let question = spokenQuestion(prompt: prompt, time: clock)
+                let description = DinoTimeWords.time(clock, language: code)
+                expect(prompt.phrase == description.prefix(1).uppercased() + description.dropFirst(),
+                       "German tiles and the clock description name the same time")
+                expect(AnswerValidator.isCorrect(.spoken(prompt.correct), for: question), "the canonical German phrase scores correctly")
+                for (index, slot) in prompt.slots.enumerated() {
+                    let correct = prompt.correct.choiceIDs[index]
+                    expect(Set(slot.choices.map(\.word)).count == slot.choices.count && slot.choices.contains { $0.id == correct },
+                           "German answer tiles are distinct and include the correct word")
+                    for wrong in slot.choices where wrong.id != correct {
+                        var ids = prompt.correct.choiceIDs
+                        ids[index] = wrong.id
+                        expect(!AnswerValidator.isCorrect(.spoken(.init(choiceIDs: ids)), for: question), "one wrong tile changes the answer")
+                    }
+                }
+            }
+        }
+
+        let catalogURL = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Localizable.xcstrings")
+        let catalog = try! JSONSerialization.jsonObject(with: Data(contentsOf: catalogURL)) as! [String: Any]
+        let strings = catalog["strings"] as! [String: [String: Any]]
+        func localized(_ key: String) -> String {
+            let languages = strings[key]?["localizations"] as? [String: [String: Any]]
+            return (languages?["de"]?["stringUnit"] as? [String: String])?["value"] ?? key
+        }
+        for type in DinoPracticeQuestion.allCases {
+            for time in DinoPracticeTime.allCases {
+                var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(type)), seed: 71, language: code)
+                for index in 0..<3 {
+                    let question = generator.next(index: index)
+                    let prompt = DinoQuestionPrompt.make(question: question, language: code, instructionKey: question.kind.instructionKey)
+                    let text = prompt.spoken(localizing: localized)
+                    expect(!text.contains("dino.") && !text.contains("$@") && !text.contains("%@"), "German title resolves for \(type) and \(time)")
+                    if let format = prompt.formatKey {
+                        expect(DinoQuestionPrompt.interpolated(localized(format), arguments: prompt.arguments) != nil,
+                               "the German translation supplies each reordered question argument")
+                    }
+                    expect(AnswerValidator.isCorrect(question.expectedAnswer, for: question), "the German question accepts its expected result")
+                    if question.kind == .timeZone { expect(question.timeZoneJourney?.origin.id == "berlin", "German time zone questions start in Berlin") }
+                }
+            }
+        }
+        let berlin = DinoTimeZoneJourney.capitals.first { $0.id == "berlin" }!
+        let delhi = DinoTimeZoneJourney.capitals.first { $0.id == "newDelhi" }!
+        let utc = TimeZone(secondsFromGMT: 0)!
+        for (month, offset) in [(1, 270), (7, 210)] {
+            let date = Calendar(identifier: .gregorian).date(from: .init(timeZone: utc, year: 2026, month: month, day: 15))!
+            expect(DinoTimeZoneJourney(origin: berlin, destination: delhi, date: date).offsetMinutes == offset,
+                   "Berlin to New Delhi preserves the half hour and German summer time")
+            for difficulty in [DinoTimeZoneDifficulty.nearby, .regional, .worldwide] {
+                for step in [1, 5, 10, 15, 30, 60] {
+                    expect(!DinoTimeZoneJourney.destinations(from: berlin, difficulty: difficulty, minuteStep: step, date: date).isEmpty,
+                           "Berlin has destinations for \(difficulty), step \(step), and month \(month)")
+                }
+            }
+        }
     }
 
     static func spokenQuestion(prompt: SpokenTimePrompt, time: ClockTime) -> ClockQuestion {
@@ -4620,6 +5203,13 @@ struct DinoCoreTests {
         profile.recordCompletedAttempt(levelID: 20, correct: 10)
         expect(profile.selectCharacter(.desert), "the desert guardian unlocks at chapter two, independently of theme seven")
         expect(!profile.selectCharacter(.volcano), "unimplemented characters remain locked")
+        var scrambled = PlayerProfile()
+        for level in [10, 20, 30, 40] { scrambled.recordCompletedAttempt(levelID: level, correct: 10) }
+        scrambled.dinoAppearance = .standard(for: .desert)
+        scrambled.characterSlots = [.volcano, .main, .jungle, .village, .cave, .city, .valley, .machine, .pirates, .castle]
+        expect(scrambled.activeCharacter == .desert
+               && Array(scrambled.menuCharacters.prefix(4)) == [.main, .jungle, .volcano, .village],
+               "any slot swap still shows start, 10, 30 and 40 while the desert dinosaur is selected")
         var normal = PlayerProfile()
         for level in 1...9 { normal.recordCompletedAttempt(levelID: level, correct: 3) }
         normal.recordCompletedAttempt(levelID: 10, correct: 6)
@@ -5072,6 +5662,12 @@ struct DinoCoreTests {
         func sentence(_ prompt: DinoQuestionPrompt, _ language: String) -> String {
             prompt.spoken { localized($0, language) }
         }
+        func renderedArguments(_ prompt: DinoQuestionPrompt, _ language: String) -> [DinoQuestionPrompt.Argument] {
+            prompt.segments { localized($0, language) }.compactMap {
+                guard case .argument(let argument) = $0 else { return nil }
+                return argument
+            }
+        }
         func prompt(_ question: ClockQuestion, _ language: String) -> DinoQuestionPrompt {
             DinoQuestionPrompt.make(question: question, language: language, instructionKey: question.kind.instructionKey)
         }
@@ -5185,9 +5781,9 @@ struct DinoCoreTests {
         let toWashington = DinoTimeZoneJourney(origin: london, destination: washington)
         let washingtonQuestion = question(kind: .timeZone, target: ClockTime(hour: 10), related: [ClockTime(hour: 15)], journey: toWashington)
         expect(toWashington.offsetMinutes < 0, "Washington is behind London in this check")
-        expect(prompt(washingtonQuestion, "nl").arguments.last?.text == "eerder",
+        expect(renderedArguments(prompt(washingtonQuestion, "nl"), "nl").last?.text == "eerder",
                "Dutch zones describe an earlier local time rather than a slow clock")
-        expect(prompt(parisQuestion, "nl").arguments.last?.text == "later",
+        expect(renderedArguments(prompt(parisQuestion, "nl"), "nl").last?.text == "later",
                "Dutch zones describe a later local time rather than a fast clock")
         expect(prompt(washingtonQuestion, "nl").arguments.last?.emphasis == .backward, "a city behind is red")
         expect(!sentence(prompt(washingtonQuestion, "en"), "en").contains("ten"), "the destination time is not spoken")
@@ -5256,11 +5852,11 @@ struct DinoCoreTests {
                         let title = prompt(asked, language)
                         let text = sentence(title, language)
                         let format = localized(title.formatKey ?? title.plainKey, language)
-                        expect(format.components(separatedBy: "%@").count - 1 == title.arguments.count,
-                               "\(kind) has the exact number of arguments required by its \(language) translation")
+                        expect(DinoQuestionPrompt.interpolated(format, arguments: title.arguments) != nil,
+                               "\(kind) supplies every argument required by its \(language) translation")
                         expect(!text.isEmpty && !text.contains("%@") && !text.contains("dino."), "every question has a complete localized title")
                         expect(!text.contains(DinoTimeWords.dayPartSuffix(time, language: language)), "titles omit redundant day-part suffixes")
-                        for argument in title.arguments where argument.emphasis != .plain {
+                        for argument in renderedArguments(title, language) where argument.emphasis != .plain {
                             let allowed = language == "nl" ? ["vooruit", "over", "geleden", "later", "eerder", "voor", "achter"]
                                 : ["forward", "later", "ago", "ahead", "behind"]
                             expect(allowed.contains(argument.text), "only a direction word can be colored")
@@ -6567,5 +7163,641 @@ extension DinoCoreTests {
                 }
             }
         }
+    }
+}
+
+extension DinoCoreTests {
+    @MainActor static func testPirateCharacter() {
+        let pirate = DinoIdentity.pirates
+        let world = DinoWorldCatalog.world(9)!
+        expect(pirate.rawValue == 9 && pirate.bossAsset == "boss-pirates" && pirate.unlockLevel == 90
+               && world.themeID == 9 && world.bossKey == "dino.world.9.boss" && DinoIdentity.boss(in: world.id) == pirate,
+               "Kapitein Zandloper is world 9's boss and keeps the ninth saved identity")
+        let journey = DinoWorldTransition(after: 9)
+        expect(journey?.sourceLevel == 90 && journey?.destinationLevel == 91
+               && DinoWorldTransition(after: 10) == nil, "the final route follows the catalog without a synthetic level")
+
+        var profile = PlayerProfile()
+        expect(profile.collectionCharacters[8] == pirate && !profile.selectCharacter(pirate),
+               "the ninth collection slot is locked before the victory")
+        for id in stride(from: 10, through: 80, by: 10) {
+            profile.recordCompletedAttempt(levelID: id, correct: 10)
+        }
+        expect(profile.selectCharacter(.valley), "a different boss can play before the unlock")
+        profile.dinoAppearance?[.body] = 0xCA3D89
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        store.save(profile)
+        let player = DinoPlayer(store: store)
+        var seed = SeededGenerator(seed: 90)
+        func finish(_ levelID: Int, correct: Int, player: DinoPlayer) -> DinoLevelResult {
+            let level = DinoLevelCatalog.level(levelID)!
+            let questions = DinoQuestionGenerator.generate(level: level, using: &seed)
+            var attempt = LevelAttempt(levelID: levelID, questions: questions)
+            for (index, question) in questions.enumerated() {
+                _ = attempt.submit(index < correct ? question.expectedAnswer : .duration(-1))
+                attempt.advance()
+            }
+            return player.finish(attempt)!
+        }
+        expect(finish(90, correct: 9, player: player).victory == .none
+               && !player.profile.isCharacterUnlocked(pirate), "nine correct answers still require route stars")
+        for id in 81...88 { _ = finish(id, correct: 3, player: player) }
+        let lateRoute = finish(89, correct: 3, player: player)
+        expect(lateRoute.hasPendingCharacterUnlock(in: player.profile) && player.profile.activeCharacter == .valley,
+               "the final ordinary lesson can stage a world transition without replacing the result actor")
+        let restarted = DinoPlayer(store: store)
+        expect(restarted.profile.pendingCharacterUnlock == pirate, "the pending character survives interruption")
+        restarted.completeCharacterUnlock()
+        restarted.completeCharacterUnlock()
+        expect(restarted.profile.activeCharacter == pirate && restarted.profile.pendingCharacterUnlock == nil
+               && restarted.profile.collectionCharacters[8] == .valley && restarted.profile.mapResident(in: 9) == .valley,
+               "recovery activates the pirate and swaps the outgoing resident exactly once")
+        expect(restarted.profile.dinoAppearance?.body == 0xCA3D89 &&
+               DinoAppearance.standard(for: restarted.profile.mapResident(in: 9)!).body == 0x78C4DF,
+               "the outgoing map resident uses its own palette")
+        restarted.setDinoAppearance(.standard(for: pirate))
+        expect(restarted.profile.dinoAppearance?.hasOriginalColors == true && restarted.profile.activeCharacter == pirate,
+               "original colors preserve the selected pirate")
+        restarted.selectCharacter(.valley)
+        expect(restarted.profile.mapResident(in: 9) == pirate && DinoPlayer(store: store).profile == restarted.profile,
+               "the manual swap persists and restores the pirate to his home")
+        restarted.resetProgress()
+        let reset = DinoPlayer(store: store).profile
+        expect(reset.activeCharacter == .main && reset.collectionCharacters[8] == pirate
+               && reset.pendingCharacterUnlock == nil && !reset.isCharacterUnlocked(pirate),
+               "reset restores the locked ninth slot")
+        store.save(profile)
+        let shortcut = DinoPlayer(store: store)
+        expect(finish(90, correct: 10, player: shortcut).hasPendingCharacterUnlock(in: shortcut.profile),
+               "a perfect match unlocks the pirate without the route")
+        shortcut.completeCharacterUnlock()
+        expect(shortcut.profile.activeCharacter == pirate, "the pending pirate can activate without a journey")
+        testPirateMotion()
+        testPirateMattes()
+    }
+
+    static func testPirateMotion() {
+        let character = DinoIdentity.pirates
+        var drawn = Set<String>()
+        for clip: DinoAnimation.Clip in [.idle, .thumbsUp, .wrongAnswer, .stumble, .openingJump, .backflip, .pirouette, .worldJump] {
+            let end = DinoAnimation.duration(clip)
+            for tick in 0...Int(ceil(end * 120)) {
+                let sample = DinoBossAnimation.sample(clip, character: character, elapsed: Double(tick) / 120)
+                drawn.insert(sample.pose.asset)
+                expect(sample.previousPose == nil && sample.poseBlend == 1 && sample.morph == nil,
+                       "the pirate shows a single source pose at each sample")
+            }
+            let final = DinoBossAnimation.sample(clip, character: character, elapsed: end)
+            expect(final.pose.asset == DinoPirateArtwork.idle && final.height == 0 && final.angle == 0
+                   && final.scaleX == 1 && final.scaleY == 1, "the pirate ends each clip in opaque standing idle")
+        }
+        expect(drawn == DinoPirateArtwork.assets, "all shipped pirate poses are sampled")
+        let contact = DinoAnimation.correctAnswerClapContacts
+        for elapsed in contact {
+            expect(DinoBossAnimation.sample(.thumbsUp, character: character, elapsed: elapsed).pose.asset == "pirate-clap-contact",
+                   "the effect occurs during visible palm contact")
+        }
+        expect(DinoBossAnimation.sample(.thumbsUp, character: character, elapsed: (contact[0] + contact[1]) / 2)
+            .pose.asset == "pirate-clap-open", "the palms separate between the two claps")
+        expect(Array(DinoBossAnimation.assets(for: .pirouette, character: character).dropFirst().dropLast())
+               == DinoPirateArtwork.turnAssets, "the spin follows the measured yaw order")
+        let held = DinoAnimation.leadIn(.stumble)
+        for elapsed in stride(from: held + DinoAnimation.stumbleLanding + 0.001,
+                              to: held + DinoAnimation.stumbleHandRelease, by: 1.0 / 120) {
+            let sample = DinoBossAnimation.sample(.stumble, character: character, elapsed: elapsed)
+            expect(sample.pose.asset == "pirate-fallen" && sample.pose.offsetY == 0 && sample.pose.offsetX == 0
+                   && sample.height == 0 && sample.angle == 0, "both palms stay fixed through the supported phase")
+        }
+        let opening = DinoWelcomeJump.idleHead(for: character)
+        let source = DinoPirateArtwork.headLandmarks[0]
+        expect(abs(opening.leftEye.x + source.x - 1) < 1e-6 && opening.leftEye.y == source.y, "the head rig reflects exactly once")
+        expect(DinoWelcomeJump.assets(for: character) == ["dino-idle"], "only one full-size opening sprite is prepared")
+        for size in [CGSize(width: 402, height: 874), CGSize(width: 1194, height: 834)] {
+            let flight = DinoWelcomeFlight(source: CGPoint(x: size.width / 2, y: size.height * 0.54),
+                sourceSide: min(size.width, 520), destination: CGRect(x: 90, y: size.height * 0.65, width: 138, height: 138),
+                character: character)
+            for t in [DinoWelcomeJump.crouchBottom, DinoWelcomeJump.takeoff, DinoWelcomeJump.flightHandoff, DinoWelcomeJump.landing] {
+                let before = DinoWelcomeJump.tracking(elapsed: t - 0.00001, flight: flight).head.center
+                let after = DinoWelcomeJump.tracking(elapsed: t + 0.00001, flight: flight).head.center
+                expect(hypot(before.x - after.x, before.y - after.y) < 0.15, "native launch tracks through each boundary")
+            }
+            let final = flight.worldTransform(elapsed: DinoWelcomeJump.duration)
+            let actual = CGPoint(x: 0.5, y: 0.5).applying(final)
+            expect(hypot(actual.x - flight.destination.midX, actual.y - flight.destination.midY) < 0.01,
+                   "the opening sprite meets the small map sprite without a translation")
+        }
+    }
+
+    static func testPirateMattes() {
+        let character = DinoIdentity.pirates
+        let original = DinoAppearance.standard(for: character)
+        let strong = DinoAppearance(bandana: 0xDB40E8, spikes: 0x24CC52, body: 0xFB5C2F, belly: 0x1F6ABC, character: character)
+        let document = try! JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: "Documentation/PirateCharacterPrompts.json"))) as! [String: Any]
+        let rig = document["poses"] as! [String: [String: Any]]
+        func bytes(_ image: CGImage) -> [UInt8] {
+            var result = [UInt8](repeating: 0, count: image.width * image.height * 4)
+            result.withUnsafeMutableBytes { buffer in
+                let context = CGContext(data: buffer.baseAddress, width: image.width, height: image.height,
+                    bitsPerComponent: 8, bytesPerRow: image.width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                    bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue)!
+                context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+            }
+            return result
+        }
+        let assets = character.artworkAssets.union([character.openingAsset])
+        expect(Set(rig.keys) == assets, "the rig documents every rendered pirate asset")
+        for asset in assets.sorted() {
+            let url = URL(fileURLWithPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
+            let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
+            let width = source.width
+            let matte = DinoSpriteColorRenderer.pirateLabels(source, asset: asset)!
+            let tinted = DinoSpriteColorRenderer.recoloredBoss(source, appearance: strong, asset: asset)!
+            let head = DinoSpriteColorRenderer.pirateHead(DinoSpriteColorRenderer.facingRight(tinted)!, asset: asset, mirrored: true)!
+            let a = bytes(source), b = bytes(tinted), h = bytes(head)
+            var alphaValid = true, headValid = true, sole = 0
+            var changed = Set<UInt8>()
+            for i in matte.indices {
+                let offset = i * 4, y = i / width, x = i % width
+                let alpha = a[offset + 3], headAlpha = h[(y * width + width - 1 - x) * 4 + 3]
+                alphaValid = alphaValid && alpha == b[offset + 3]
+                headValid = headValid && headAlpha == (matte[i] & 8 != 0 ? alpha : 0)
+                if alpha >= 200 { sole = max(sole, y + 1) }
+                if a[offset..<(offset + 3)] != b[offset..<(offset + 3)] { changed.insert(matte[i] & 7) }
+            }
+            expect(alphaValid && headValid && changed == [1, 2, 3, 4], "\(asset) preserves alpha, paint channels and reflected hat isolation")
+            expect(sole == rig[asset]!["footline"] as! Int, "\(asset) matches its registered contact")
+            expect(DinoSpriteColorRenderer.recoloredBoss(source, appearance: original, asset: asset) === source,
+                   "\(asset) uses the stock pigment at default settings")
+            func point(_ position: [Double]) -> Int { Int(position[1]) * width + Int(position[0]) }
+            let watch = rig[asset]!["watch"] as! [Double]
+            let pivot = point(watch)
+            expect(matte[pivot] == 0 && a[pivot * 4 + 3] == 255, "\(asset) has an opaque, protected clock pivot")
+            let dialSamples = [[watch[0], watch[1] - watch[3] * 0.55],
+                               [watch[0], watch[1] + watch[3] * 0.55],
+                               [watch[0] + watch[2] * 0.55, watch[1]]]
+            expect(dialSamples.allSatisfy { matte[point($0)] == 0 },
+                   "\(asset) keeps the visible dial and the minute hand out of the color channels")
+            let finial = point(rig[asset]!["sailBall"] as! [Double])
+            expect(matte[finial] == 2, "\(asset) treats the sail finial as metal and keeps it out of the portrait")
+            for eye in rig[asset]!["eyes"] as! [[Double]] {
+                expect(matte[point(eye)] & 7 == 0, "\(asset) protects the painted pupil")
+            }
+            for palm in rig[asset]!["palms"] as? [[Double]] ?? [] {
+                expect(matte[point(palm)] & 24 == 0, "\(asset) keeps the palms out of both head layers")
+            }
+            if asset == DinoPirateArtwork.idle {
+                for (index, part) in DinoAppearance.Part.allCases.enumerated() {
+                    var one = original
+                    one[part] = strong[part]
+                    let rendered = bytes(DinoSpriteColorRenderer.recoloredBoss(source, appearance: one, asset: asset)!)
+                    let materials = Set(matte.indices.compactMap { n -> UInt8? in
+                        let i = n * 4
+                        return a[i..<(i + 3)] != rendered[i..<(i + 3)] ? matte[n] & 7 : nil
+                    })
+                    expect(materials == [UInt8(index + 1)], "only the selected pirate material changes")
+                }
+            }
+        }
+    }
+}
+
+extension DinoCoreTests {
+    @MainActor static func testMachineCharacter() {
+        let machine = DinoIdentity.machine
+        let world = DinoWorldCatalog.world(8)!
+        expect(world.themeID == 8 && world.bossLevel == 80 && machine.rawValue == 8 &&
+               machine.bossAsset == "boss-time-machine" && DinoIdentity.boss(in: world.id) == machine,
+               "Professor Pendulum uses the reserved world-eight save identity and map art")
+        var profile = PlayerProfile()
+        for earlier in 1...7 {
+            profile.recordCompletedAttempt(levelID: earlier * 10, correct: 10)
+        }
+        expect(profile.collectionCharacters[7] == machine && !profile.selectCharacter(machine),
+               "the eighth slot is visible and locked until the regular victory")
+        expect(profile.selectCharacter(.valley), "use a different boss as the outgoing actor")
+        profile.dinoAppearance?[.body] = 0xD54E3E
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        store.save(profile)
+
+        var random = SeededGenerator(seed: 80)
+        @discardableResult
+        func finish(_ id: Int, correct: Int, player: DinoPlayer) -> DinoLevelResult {
+            let level = DinoLevelCatalog.level(id)!
+            let questions = DinoQuestionGenerator.generate(level: level, using: &random)
+            var attempt = LevelAttempt(levelID: id, questions: questions)
+            for (index, question) in questions.enumerated() {
+                _ = attempt.submit(index < correct ? question.expectedAnswer : .duration(-1))
+                attempt.advance()
+            }
+            return player.finish(attempt)!
+        }
+
+        let player = DinoPlayer(store: store)
+        expect(finish(80, correct: 9, player: player).victory == .none &&
+               player.profile.pendingCharacterUnlock == nil && !player.profile.isCharacterUnlocked(machine),
+               "nine boss answers alone leave Professor Pendulum locked")
+        for lesson in 71...78 { finish(lesson, correct: 5, player: player) }
+        expect(finish(79, correct: 5, player: player).hasPendingCharacterUnlock(in: player.profile) &&
+               player.profile.activeCharacter == .valley,
+               "the final lesson after an earlier boss pass stages the unlock without changing the result actor")
+        expect(DinoWorldTransition(after: 8)?.sourceLevel == 80 && DinoWorldTransition(after: 8)?.destinationLevel == 81,
+               "the arrival travels from the right boss stone to the first pirate lesson")
+
+        let resumed = DinoPlayer(store: store)
+        expect(resumed.profile.pendingCharacterUnlock == machine && resumed.profile.activeCharacter == .valley,
+               "a pending victory and its outgoing actor survive an interrupted transition")
+        resumed.completeCharacterUnlock()
+        expect(resumed.profile.activeCharacter == machine && resumed.profile.pendingCharacterUnlock == nil &&
+               resumed.profile.collectionCharacters[7] == .valley && resumed.profile.mapResident(in: 8) == .valley,
+               "consuming the arrival activates Pendulum and swaps the actual eighth slot")
+        expect(resumed.profile.dinoAppearance?.body == 0xD54E3E &&
+               DinoAppearance.standard(for: resumed.profile.mapResident(in: 8)!).body == 0x78C4DF,
+               "the map resident keeps its own native palette while the active selection keeps the custom channel")
+        resumed.setDinoAppearance(.standard(for: machine))
+        expect(resumed.profile.dinoAppearance?.hasOriginalColors == true && resumed.profile.activeCharacter == machine,
+               "restoring source colors preserves the identity")
+        resumed.selectCharacter(.valley)
+        expect(resumed.profile.mapResident(in: 8) == machine && DinoPlayer(store: store).profile == resumed.profile,
+               "a manual return of Pendulum to his slot persists")
+        finish(80, correct: 10, player: resumed)
+        expect(resumed.profile.pendingCharacterUnlock == nil && resumed.profile.activeCharacter == .valley,
+               "a replay respects the manual choice")
+        resumed.resetProgress()
+        let reset = DinoPlayer(store: store).profile
+        expect(reset.activeCharacter == .main && reset.pendingCharacterUnlock == nil && reset.characterSlots == nil &&
+               reset.collectionCharacters[7] == machine && !reset.isCharacterUnlocked(machine),
+               "reset restores the locked slot and removes the saved swap")
+
+        store.save(profile)
+        let perfect = DinoPlayer(store: store)
+        expect(finish(80, correct: 10, player: perfect).hasPendingCharacterUnlock(in: perfect.profile),
+               "a perfect boss victory immediately stages the character")
+        expect(DinoWorldTransition(after: DinoWorldCatalog.worlds.last!.id) == nil,
+               "final-world completion requests no level beyond the catalog")
+        perfect.completeCharacterUnlock()
+        expect(perfect.profile.activeCharacter == machine, "direct recovery needs no destination level")
+
+        testMachineMotion()
+        testMachineMattes()
+    }
+
+    static func testMachineMotion() {
+        let machine = DinoIdentity.machine
+        let clips: [DinoAnimation.Clip] = [.idle, .thumbsUp, .wrongAnswer, .stumble, .openingJump, .backflip, .pirouette, .worldJump]
+        var sampled = Set<String>()
+        for clip in clips {
+            let end = DinoAnimation.duration(clip)
+            for tick in 0...Int(ceil(end * 120)) {
+                let frame = DinoBossAnimation.sample(clip, character: machine, elapsed: Double(tick) / 120)
+                sampled.insert(frame.pose.asset)
+                expect(frame.poseBlend == 1 && frame.previousPose == nil && frame.morph == nil,
+                       "\(clip) presents one fully opaque Pendulum pose")
+            }
+            for reducedMotion in [false, true] {
+                let rest = DinoBossAnimation.sample(clip, character: machine, elapsed: end, reducedMotion: reducedMotion)
+                expect(rest.pose.asset == DinoMachineArtwork.idle && rest.height == 0 && rest.scaleY == 1 &&
+                       rest.scaleX == 1 && rest.angle == 0 && rest.pose.offsetY == 0,
+                       "\(clip) settles at precisely the standing anchor")
+            }
+        }
+        expect(sampled == DinoMachineArtwork.assets, "every shipped play pose is actually used")
+        for time in DinoAnimation.correctAnswerClapContacts {
+            expect(DinoBossAnimation.sample(.thumbsUp, character: machine, elapsed: time).pose.asset == "machine-clap-contact",
+                   "both clap effects coincide with a painted palm seam")
+        }
+        expect(DinoBossAnimation.sample(.thumbsUp, character: machine, elapsed: 0.47).pose.asset == "machine-clap-open",
+               "the hands visibly reopen in between")
+        expect(Array(DinoBossAnimation.assets(for: .pirouette, character: machine).dropFirst().dropLast()) == DinoMachineArtwork.turnAssets,
+               "the turn plays each yaw view once in geometric order")
+        let stumbleLead = DinoAnimation.leadIn(.stumble)
+        for step in 0..<96 {
+            let progress = Double(step) / 96
+            let support = stumbleLead + DinoAnimation.stumbleLanding +
+                (DinoAnimation.stumbleHandRelease - DinoAnimation.stumbleLanding) * progress
+            let sample = DinoBossAnimation.sample(.stumble, character: machine, elapsed: support)
+            expect(sample.pose.asset == "machine-brace" && sample.height == 0 && sample.angle == 0 &&
+                   sample.scaleX == 1 && sample.scaleY >= 0.955,
+                   "the support phase keeps the same palm positions and floor pivot")
+        }
+        let handoff = DinoWelcomeJump.flightHandoff
+        let flight = DinoWelcomeFlight(source: CGPoint(x: 211, y: 394), sourceSide: 351,
+                                       destination: CGRect(x: 113, y: 502, width: 140, height: 140), character: machine)
+        let tracked = DinoWelcomeJump.tracking(elapsed: handoff - 0.0001, flight: flight)
+        let before = tracked.position.applying(flight.worldTransform(elapsed: handoff - 0.0001))
+        let after = flight.paintedHead(elapsed: handoff + 0.0001).center
+        let centered = CGPoint(x: 0.5, y: 0.5).applying(flight.worldTransform(elapsed: DinoWelcomeJump.duration))
+        expect(hypot(before.x - after.x, before.y - after.y) < 0.2 &&
+               hypot(centered.x - flight.destination.midX, centered.y - flight.destination.midY) < 0.01,
+               "the native takeoff follows the tracked head and lands at the map canvas")
+        expect(flight.footline == machine.standingFootline &&
+               abs(DinoWelcomeJump.idleHead(for: machine).leftEye.x + DinoMachineArtwork.headLandmarks[0].x - 1) < 0.00001,
+               "the measured sole is the pivot and source X is reflected once")
+        expect(DinoWelcomeJump.assets(for: machine) == ["dino-idle"] &&
+               DinoWelcomeJump.pose(elapsed: handoff, character: machine).asset == "dino-idle",
+               "one detailed original slot covers the full native welcome")
+    }
+
+    static func testMachineMattes() {
+        let url = URL(fileURLWithPath: "Documentation/TimeMachineCharacterPrompts.json")
+        let document = try! JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: Any]
+        let rigs = document["poses"] as! [String: [String: Any]]
+        let original = DinoAppearance.standard(for: .machine)
+        let edited = DinoAppearance(bandana: 0xD61B4B, spikes: 0x55DF65, body: 0x2196F3, belly: 0xFAD548, character: .machine)
+        func rgba(_ image: CGImage) -> [UInt8] {
+            var pixels = [UInt8](repeating: 0, count: image.width * image.height * 4)
+            pixels.withUnsafeMutableBytes { buffer in
+                let context = CGContext(data: buffer.baseAddress, width: image.width, height: image.height,
+                                        bitsPerComponent: 8, bytesPerRow: image.width * 4,
+                                        space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                        bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue)!
+                context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+            }
+            return pixels
+        }
+
+        for asset in DinoMachineArtwork.assets.union([DinoMachineArtwork.openingAsset]) {
+            let url = URL(fileURLWithPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
+            let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
+            let labels = DinoSpriteColorRenderer.machineLabels(source, asset: asset)!
+            let tinted = DinoSpriteColorRenderer.recoloredBoss(source, appearance: edited, asset: asset)!
+            let mirrored = DinoSpriteColorRenderer.facingRight(tinted)!
+            let hat = DinoSpriteColorRenderer.machineHead(mirrored, asset: asset, mirrored: true)!
+            let a = rgba(source), b = rgba(tinted), c = rgba(hat)
+            let width = source.width
+            let rig = rigs[asset]!
+            var valid = true
+            var changed = Set<UInt8>()
+            var sole = 0
+            var hatPixels = 0
+            var lowestHatPixel = 0
+
+            for i in labels.indices {
+                let x = i % width, y = i / width, p = i * 4
+                let capAlpha = c[(y * width + width - 1 - x) * 4 + 3]
+                valid = valid && b[p + 3] == a[p + 3] && capAlpha == (labels[i] & 8 != 0 ? a[p + 3] : 0)
+                if a[p + 3] >= 200 { sole = y + 1 }
+                if capAlpha > 0 {
+                    hatPixels += 1
+                    lowestHatPixel = y + 1
+                }
+                if a[p..<(p + 3)] != b[p..<(p + 3)] { changed.insert(labels[i] & 7) }
+            }
+
+            func label(_ point: [Double]) -> UInt8 {
+                let x = Int(point[0] * Double(width) / 627), y = Int(point[1] * Double(width) / 627)
+                return labels[y * width + x]
+            }
+
+            expect(valid && hatPixels > width && !changed.contains(0) && changed.isSuperset(of: [1, 3, 4, 5]),
+                   "\(asset) keeps every alpha pixel, mirrors its isolated hat and protects the neutral pixels")
+            let hatBounds = rig["hatBounds"] as! [Double]
+            expect(abs(Double(lowestHatPixel) * 627 / Double(width) - hatBounds[3]) < 1,
+                   "\(asset) keeps its separate hat layer inside the measured brim")
+            expect(abs(Double(sole) * 627 / Double(width) - (rig["sole"] as! Double)) < 1,
+                   "\(asset) uses its measured sole boundary")
+            if asset != "machine-airborne" {
+                expect(abs(Double(sole) / Double(width) - DinoMachineArtwork.footline) < 0.005,
+                       "\(asset) contacts the common ground plane")
+            }
+            for dial in rig["dials"] as! [[Double]] {
+                expect(label(dial) & 7 == 0, "\(asset) preserves each visible clock face")
+            }
+            for palm in (rig["palms"] as? [[Double]] ?? []) + ((rig["hand"] as? [Double]).map { [$0] } ?? []) {
+                expect(label(palm) & 24 == 0, "\(asset) excludes the hands from the hat and portrait head layers")
+            }
+            expect(DinoSpriteColorRenderer.recoloredBoss(source, appearance: original, asset: asset) === source,
+                   "\(asset) uses the unmodified original RGB when no color is selected")
+            if asset == DinoMachineArtwork.idle {
+                for (part, expected): (DinoAppearance.Part, Set<UInt8>) in [
+                    (.bandana, [1, 2, 7]), (.spikes, [3]), (.body, [4]), (.belly, [5, 6])
+                ] {
+                    var custom = original
+                    custom[part] = edited[part]
+                    let pixels = rgba(DinoSpriteColorRenderer.recoloredBoss(source, appearance: custom, asset: asset)!)
+                    let materials = Set(labels.indices.compactMap { index -> UInt8? in
+                        let rgb = (index * 4)..<(index * 4 + 3)
+                        return a[rgb] == pixels[rgb] ? nil : labels[index] & 7
+                    })
+                    expect(materials == expected, "\(part) only recolors its assigned materials")
+                }
+            }
+        }
+    }
+}
+
+extension DinoCoreTests {
+    @MainActor static func testCastleCharacter() {
+        let king = DinoIdentity.castle
+        let world = DinoWorldCatalog.world(10)!
+        expect(world.themeID == 10 && world.bossKey == "dino.world.10.boss" &&
+               king.rawValue == 10 && king.bossAsset == "boss-castle" &&
+               king.unlockLevel == world.bossLevel && DinoIdentity.boss(in: world.id) == king,
+               "Chronos uses the reserved castle save identity, art and tenth slot")
+        var oldProfile = PlayerProfile()
+        for world in DinoWorldCatalog.worlds.dropLast() {
+            oldProfile.recordCompletedAttempt(levelID: world.bossLevel, correct: 10)
+        }
+        expect(oldProfile.collectionCharacters[9] == king && !oldProfile.selectCharacter(king),
+               "the last resident is locked before completing the castle")
+        expect(oldProfile.selectCharacter(.pirates), "use a customized boss as the outgoing character")
+        oldProfile.dinoAppearance?[.body] = 0xE94A91
+        let store = DinoProgressStore(defaults: InMemoryKeyValueStore())
+        store.save(oldProfile)
+
+        var random = SeededGenerator(seed: 100)
+        @discardableResult
+        func finish(_ id: Int, correct: Int, for player: DinoPlayer) -> DinoLevelResult {
+            let level = DinoLevelCatalog.level(id)!
+            let questions = DinoQuestionGenerator.generate(level: level, using: &random)
+            var attempt = LevelAttempt(levelID: id, questions: questions)
+            for (index, question) in questions.enumerated() {
+                _ = attempt.submit(index < correct ? question.expectedAnswer : .duration(-1))
+                attempt.advance()
+            }
+            return player.finish(attempt)!
+        }
+
+        let player = DinoPlayer(store: store)
+        expect(finish(100, correct: 9, for: player).victory == .none &&
+               player.profile.pendingCharacterUnlock == nil && !player.profile.isCharacterUnlocked(king),
+               "a near-perfect score alone leaves Chronos locked")
+        for id in 91...98 { finish(id, correct: 5, for: player) }
+        expect(finish(99, correct: 5, for: player).hasPendingCharacterUnlock(in: player.profile) &&
+               player.profile.activeCharacter == .pirates && player.profile.mapLevel == 100,
+               "the last ordinary lesson can stage the terminal unlock after an earlier boss pass")
+        let transition = DinoWorldTransition(after: 10, terminalUnlock: true)
+        expect(transition?.sourceLevel == 100 && transition?.destinationLevel == 100 &&
+               DinoWorldTransition(after: 10) == nil && DinoLevelCatalog.level(101) == nil,
+               "the terminal introduction lands on the final stone without requiring level 101")
+
+        let resumed = DinoPlayer(store: store)
+        expect(resumed.profile.pendingCharacterUnlock == king && resumed.profile.activeCharacter == .pirates,
+               "closing before the landing saves the pending castle identity and the old result actor")
+        resumed.completeCharacterUnlock()
+        resumed.completeCharacterUnlock()
+        expect(resumed.profile.activeCharacter == king && resumed.profile.pendingCharacterUnlock == nil &&
+               resumed.profile.mapResident(in: 10) == .pirates && resumed.profile.collectionCharacters[9] == .pirates,
+               "the swap consumes the pending unlock once and places the former actor in slot ten")
+        expect(resumed.profile.dinoAppearance?.body == 0xE94A91 &&
+               DinoAppearance.standard(for: resumed.profile.mapResident(in: 10)!).body == 0x178FDB,
+               "the outgoing map resident has its own default blue skin")
+        resumed.setDinoAppearance(.standard(for: king))
+        expect(resumed.profile.dinoAppearance?.hasOriginalColors == true && resumed.profile.activeCharacter == king,
+               "restoring the castle palette preserves Chronos")
+        resumed.selectCharacter(.pirates)
+        finish(100, correct: 10, for: resumed)
+        expect(resumed.profile.pendingCharacterUnlock == nil && resumed.profile.activeCharacter == .pirates &&
+               resumed.profile.collectionCharacters[9] == king && DinoPlayer(store: store).profile == resumed.profile,
+               "a manual swap persists and survives a replay of the final boss")
+        resumed.resetProgress()
+        let reset = DinoPlayer(store: store).profile
+        expect(reset.activeCharacter == .main && reset.pendingCharacterUnlock == nil && reset.characterSlots == nil &&
+               reset.collectionCharacters[9] == king && !reset.isCharacterUnlocked(king),
+               "reset locks the tenth slot and removes the active identity")
+
+        oldProfile.recordCompletedAttempt(levelID: 100, correct: 10)
+        store.save(oldProfile)
+        let existing = DinoPlayer(store: store)
+        expect(existing.profile.isCharacterUnlocked(king) && existing.profile.activeCharacter == .pirates &&
+               existing.profile.pendingCharacterUnlock == nil, "earlier finished saves can select Chronos from their existing collection")
+        existing.selectCharacter(king)
+        expect(DinoPlayer(store: store).profile.activeCharacter == king, "raw value ten is saved and restored")
+
+        testCastleMotion()
+        testCastleMattes()
+    }
+
+    static func testCastleMotion() {
+        let king = DinoIdentity.castle
+        let clips: [DinoAnimation.Clip] = [.idle, .thumbsUp, .wrongAnswer, .stumble, .openingJump, .backflip, .pirouette, .worldJump]
+        var observed = Set<String>()
+        for clip in clips {
+            let end = DinoAnimation.duration(clip)
+            for tick in 0...Int(ceil(end * 120)) {
+                let sample = DinoBossAnimation.sample(clip, character: king, elapsed: Double(tick) / 120)
+                observed.insert(sample.pose.asset)
+                expect(sample.previousPose == nil && sample.poseBlend == 1 && sample.morph == nil,
+                       "\(clip) uses one opaque Chronos pose")
+            }
+            for reduced in [true, false] {
+                let end = DinoBossAnimation.sample(clip, character: king, elapsed: end, reducedMotion: reduced)
+                expect(end.pose.asset == DinoCastleArtwork.idle && end.height == 0 && end.angle == 0 &&
+                       end.scaleX == 1 && end.scaleY == 1, "\(clip) returns to the same fully planted pose")
+            }
+        }
+        expect(observed == king.artworkAssets, "every Chronos sprite is sampled")
+        for time in DinoAnimation.correctAnswerClapContacts {
+            expect(DinoBossAnimation.sample(.thumbsUp, character: king, elapsed: time).pose.asset == "castle-clap-contact",
+                   "both air ripples appear at visible flipper contact")
+        }
+        expect(DinoBossAnimation.sample(.thumbsUp, character: king, elapsed: 0.46).pose.asset == "castle-clap-open",
+               "flippers visibly part between contacts")
+        let palm = DinoCastleArtwork.clapContact
+        expect(hypot((palm.x - 0.5) * king.portraitScale + king.portraitOffsetX,
+                     (palm.y - 0.5) * king.portraitScale + king.portraitOffsetY) < 0.4,
+               "the clap contact falls inside the HUD circle")
+        let landing = DinoAnimation.travelDuration(.stumble)
+        let push = DinoAnimation.leadIn(.stumble) + DinoAnimation.stumblePushStart
+        let release = DinoAnimation.leadIn(.stumble) + DinoAnimation.stumbleHandRelease
+        for tick in 0..<48 {
+            let t = landing + (release - landing) * Double(tick) / 48
+            let sample = DinoBossAnimation.sample(.stumble, character: king, elapsed: t)
+            expect(sample.pose.asset == (t < push ? "castle-fallen" : "castle-lift") &&
+                   sample.pose.offsetY == 0 && sample.angle == 0,
+                   "the weight-bearing flippers stay planted until hand release")
+        }
+        expect(Array(DinoBossAnimation.assets(for: .pirouette, character: king).dropFirst().dropLast())
+               == DinoCastleArtwork.turnAssets, "the turn follows the measured viewing angles")
+        expect(DinoWelcomeJump.assets(for: king) == ["dino-idle"], "the welcome uses one high-resolution painting")
+        let source = DinoCastleArtwork.headLandmarks[0]
+        expect(abs(DinoWelcomeJump.idleHead(for: king).leftEye.x + source.x - 1) < 1e-10,
+               "the source iris reflects once")
+        let flight = DinoWelcomeFlight(source: CGPoint(x: 205, y: 340), sourceSide: 285,
+                                       destination: CGRect(x: 126, y: 550, width: 132, height: 132), character: king)
+        let t = DinoWelcomeJump.flightHandoff
+        let prior = flight.paintedHead(elapsed: t - 0.0001).center
+        let next = flight.paintedHead(elapsed: t + 0.0001).center
+        let destination = CGPoint(x: 0.5, y: 0.5).applying(flight.worldTransform(elapsed: DinoWelcomeJump.duration))
+        expect(hypot(prior.x - next.x, prior.y - next.y) < 0.2 &&
+               hypot(destination.x - flight.destination.midX, destination.y - flight.destination.midY) < 0.01 &&
+               flight.footline == king.standingFootline, "welcome head, sole and destination are registered across flight")
+    }
+
+    static func testCastleMattes() {
+        let king = DinoIdentity.castle
+        let path = URL(fileURLWithPath: "Documentation/CastleCharacterPrompts.json")
+        let document = try! JSONSerialization.jsonObject(with: Data(contentsOf: path)) as! [String: Any]
+        let rigs = document["poses"] as! [String: [String: Any]]
+        let original = DinoAppearance.standard(for: king)
+        let edited = DinoAppearance(bandana: 0xDF2F54, spikes: 0x4FD254, body: 0xD76B19, belly: 0xA46CF0, character: king)
+        func rgba(_ image: CGImage) -> [UInt8] {
+            var pixels = [UInt8](repeating: 0, count: image.width * image.height * 4)
+            pixels.withUnsafeMutableBytes { buffer in
+                let context = CGContext(data: buffer.baseAddress, width: image.width, height: image.height,
+                                        bitsPerComponent: 8, bytesPerRow: image.width * 4,
+                                        space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                        bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue)!
+                context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+            }
+            return pixels
+        }
+        expect(Set(rigs.keys) == king.artworkAssets.union([king.openingAsset]), "every final sprite has its own rig measurements")
+        for (asset, rig) in rigs {
+            let url = URL(fileURLWithPath: "Assets.xcassets/\(asset).imageset/\(asset).png")
+            let source = CGImageSourceCreateImageAtIndex(CGImageSourceCreateWithURL(url as CFURL, nil)!, 0, nil)!
+            let labels = DinoSpriteColorRenderer.castleLabels(source, asset: asset)!
+            let tinted = DinoSpriteColorRenderer.recoloredBoss(source, appearance: edited, asset: asset)!
+            let unchanged = DinoSpriteColorRenderer.recoloredBoss(source, appearance: original, asset: asset)!
+            let sourcePixels = rgba(source), recoloredPixels = rgba(tinted)
+            expect(source === unchanged && source.width == (rig["renderedSize"] as! Int),
+                   "original colors preserve the native bitmap and size")
+            let mirrored = DinoSpriteColorRenderer.facingRight(tinted)!
+            let crown = DinoSpriteColorRenderer.castleHead(mirrored, asset: asset, mirrored: true)!
+            let flipped = rgba(mirrored), cap = rgba(crown), w = source.width
+            var preserved = true
+            var maskMatches = true
+            var changed = Set<UInt8>()
+            for index in labels.indices {
+                let i = index * 4
+                let reflected = (index / w * w + w - 1 - index % w) * 4
+                let label = labels[index] & 7
+                let changedRGB = (0..<3).contains { sourcePixels[i + $0] != recoloredPixels[i + $0] }
+                if changedRGB { changed.insert(label) }
+                preserved = preserved && sourcePixels[i+3] == recoloredPixels[i+3] &&
+                    (!changedRGB || label > 0) && recoloredPixels[i+3] == flipped[reflected+3]
+                maskMatches = maskMatches && cap[reflected+3] == (labels[index] & 8 == 0 ? 0 : flipped[reflected+3])
+            }
+            expect(preserved && maskMatches && changed.isSuperset(of: [1, 2, 3, 4]),
+                   "\(asset) preserves source alpha and protected pigments and reflects exactly its painted crown")
+            if let dial = rig["dial"] as? [Double], let shift = rig["shift"] as? [Double] {
+                let scale = rig["scale"] as! Double
+                let x = Int((dial[0] * scale + shift[0]) * Double(w) / 627)
+                let y = Int((dial[1] * scale + shift[1]) * Double(w) / 627)
+                expect(labels[y*w+x] == 24 && sourcePixels[(y*w+x)*4+3] == 255,
+                       "the crown dial hub is completely opaque and protected in \(asset)")
+            }
+            if asset.hasPrefix("castle-clap-") || asset == "castle-wrong" {
+                let landmarks = rig["eyes"] as! [[Double]]
+                let shift = rig["shift"] as! [Double]
+                let scale = rig["scale"] as! Double
+                let excludesEyes = landmarks.allSatisfy {
+                    let x = Int(($0[0] * scale + shift[0]) * Double(w) / 627)
+                    let y = Int(($0[1] * scale + shift[1]) * Double(w) / 627)
+                    return cap[(y*w + w-1-x)*4+3] == 0
+                }
+                expect(excludesEyes && cap[(w*3/4*w*4)..<cap.count].allSatisfy { $0 == 0 },
+                       "no eye, flipper, cape or shoulder can escape the crown layer in \(asset)")
+            }
+        }
+        func registeredContacts(_ name: String) -> [CGPoint] {
+            let rig = rigs[name]!
+            let shift = rig["shift"] as! [Double], scale = rig["scale"] as! Double
+            return (rig["contacts"] as! [[Double]]).map {
+                CGPoint(x: $0[0] * scale + shift[0], y: $0[1] * scale + shift[1])
+            }
+        }
+        let support = zip(registeredContacts("castle-fallen"), registeredContacts("castle-lift"))
+        expect(support.allSatisfy { hypot($0.0.x - $0.1.x, $0.0.y - $0.1.y) < 5 },
+               "both weight-bearing flippers stay registered to the fallen pose")
     }
 }

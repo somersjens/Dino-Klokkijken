@@ -8,7 +8,7 @@ enum DinoIdentity: Int, Codable, CaseIterable, Sendable {
     var isPlayable: Bool { self == .main || usesBossArtwork }
     var usesBossArtwork: Bool {
         switch self {
-        case .jungle, .desert, .volcano, .village, .cave, .city, .valley: true
+        case .jungle, .desert, .volcano, .village, .cave, .city, .valley, .machine, .pirates, .castle: true
         default: false
         }
     }
@@ -26,6 +26,9 @@ enum DinoIdentity: Int, Codable, CaseIterable, Sendable {
         case .cave: return DinoCaveArtwork.asset(for: pose)
         case .city: return DinoCityArtwork.asset(for: pose)
         case .valley: return DinoValleyArtwork.asset(for: pose)
+        case .machine: return DinoMachineArtwork.asset(for: pose)
+        case .pirates: return DinoPirateArtwork.asset(for: pose)
+        case .castle: return DinoCastleArtwork.asset(for: pose)
         default: return pose
         }
     }
@@ -38,6 +41,9 @@ enum DinoIdentity: Int, Codable, CaseIterable, Sendable {
         case .cave: DinoCaveArtwork.assets
         case .city: DinoCityArtwork.assets
         case .valley: DinoValleyArtwork.assets
+        case .machine: DinoMachineArtwork.assets
+        case .pirates: DinoPirateArtwork.assets
+        case .castle: DinoCastleArtwork.assets
         default: []
         }
     }
@@ -49,6 +55,9 @@ enum DinoIdentity: Int, Codable, CaseIterable, Sendable {
         case .cave: DinoCaveArtwork.openingAsset
         case .city: DinoCityArtwork.openingAsset
         case .valley: DinoValleyArtwork.openingAsset
+        case .machine: DinoMachineArtwork.openingAsset
+        case .pirates: DinoPirateArtwork.openingAsset
+        case .castle: DinoCastleArtwork.openingAsset
         default: DinoJungleArtwork.openingAsset
         }
     }
@@ -61,6 +70,9 @@ enum DinoIdentity: Int, Codable, CaseIterable, Sendable {
         case .cave: DinoCaveArtwork.portraitPlacement
         case .city: DinoCityArtwork.portraitPlacement
         case .valley: DinoValleyArtwork.portraitPlacement
+        case .machine: DinoMachineArtwork.portraitPlacement
+        case .pirates: DinoPirateArtwork.portraitPlacement
+        case .castle: DinoCastleArtwork.portraitPlacement
         default: (1 / 0.62, -0.065, 0.339)
         }
     }
@@ -77,9 +89,13 @@ enum DinoIdentity: Int, Codable, CaseIterable, Sendable {
         case .cave: DinoCaveArtwork.footline
         case .city: DinoCityArtwork.footline
         case .valley: DinoValleyArtwork.footline
+        case .machine: DinoMachineArtwork.footline
+        case .pirates: DinoPirateArtwork.footline
+        case .castle: DinoCastleArtwork.footline
         default: 1211.0 / 1254
         }
     }
+    var usesPaintedFootline: Bool { self == .machine || self == .pirates || self == .castle }
     var unlockLevel: Int { rawValue * 10 }
     var bossAsset: String {
         ["dino-idle", "boss-jungle", "boss-desert", "boss-volcano", "boss-clock-village",
@@ -100,6 +116,9 @@ struct DinoAppearance: Codable, Equatable, Hashable, Sendable {
             case .cave: "dino.appearance.cave.\(rawValue)"
             case .city: "dino.appearance.city.\(rawValue)"
             case .valley: "dino.appearance.valley.\(rawValue)"
+            case .machine: "dino.appearance.machine.\(rawValue)"
+            case .pirates: "dino.appearance.pirates.\(rawValue)"
+            case .castle: "dino.appearance.castle.\(rawValue)"
             default: labelKey
             }
         }
@@ -118,6 +137,17 @@ struct DinoAppearance: Codable, Equatable, Hashable, Sendable {
     }
     static let standard = DinoAppearance()
     static func standard(for identity: DinoIdentity) -> DinoAppearance {
+        if identity == .castle {
+            return DinoAppearance(bandana: 0xECA523, spikes: 0x163AB4, body: 0x2365AA,
+                                  belly: 0xF8E2BE, character: .castle)
+        }
+        if identity == .machine {
+            return DinoAppearance(bandana: 0x5751A5, spikes: 0xDEA1D9, body: 0xB673C5,
+                                  belly: 0xF5DFB7, character: .machine)
+        }
+        if identity == .pirates {
+            return DinoAppearance(bandana: 0xDE2928, spikes: 0xF5B632, body: 0x178FDB, belly: 0xEDE1C0, character: .pirates)
+        }
         if identity == .valley {
             return DinoAppearance(bandana: 0xA478D7, spikes: 0xF7C46E, body: 0x78C4DF, belly: 0xF5E2BC, character: .valley)
         }
@@ -443,6 +473,98 @@ enum DinoValleyArtwork {
             switch index {
             case 1, 3, 4, 6: return "valley-clap-open"
             case 2, 5: return "valley-clap-contact"
+            default: break
+            }
+        }
+        return idle
+    }
+}
+
+/// King Chronos uses normalized top-left source coordinates. The preparation
+/// renderer reflects all paintings once. Both idle resolutions share framing.
+enum DinoCastleArtwork {
+    static let idle = "castle-idle"
+    static let openingAsset = "castle-opening-idle"
+    static let footline = 592.0 / 627
+    static let portraitPlacement = (scale: 1.68, x: -0.215, y: 0.245)
+    static let portraitCrop = CGRect(x: 0.40, y: 0.015, width: 0.43, height: 0.51)
+    static let headLandmarks = [CGPoint(x: 184.0 / 627, y: 191.0 / 627),
+                                CGPoint(x: 265.0 / 627, y: 201.0 / 627),
+                                CGPoint(x: 162.0 / 627, y: 225.0 / 627)]
+    static let clapContact = CGPoint(x: 1 - (242 * 0.985 - 30) / 627, y: (346 * 0.985 - 7) / 627)
+    static let turnAssets = ["castle-front", "castle-side-right", "castle-rear-right", "castle-back",
+                             "castle-rear-left", "castle-side-left"]
+    /// Hip locations after registration, in the 627-unit source grid.
+    static let turnHips: [Double] = [269, 375, 387, 281, 250, 192]
+    static let assets = Set([idle, "castle-clap-open", "castle-clap-contact", "castle-wrong",
+                             "castle-brace", "castle-stumble", "castle-fallen", "castle-lift", "castle-recover"] + turnAssets)
+
+    static func asset(for pose: String) -> String {
+        if pose == openingAsset || assets.contains(pose) { return pose }
+        if pose == "dino-answer-wrong" { return "castle-wrong" }
+        if pose.hasPrefix("dino-answer-clap-"), let index = Int(pose.suffix(2)) {
+            switch index {
+            case 1, 3, 4, 6: return "castle-clap-open"
+            case 2, 5: return "castle-clap-contact"
+            default: break
+            }
+        }
+        return idle
+    }
+}
+
+/// Kapitein Zandloper. Top-left original pixel measurements, prior to the
+/// preparation mirror. Poses use a registered 512px canvas.
+enum DinoPirateArtwork {
+    static let idle = "pirate-idle"
+    static let openingAsset = "pirate-opening-idle"
+    static let footline = 1189.0 / 1254
+    static let portraitPlacement = (scale: 1.69, x: -0.105, y: 0.231)
+    static let portraitCrop = CGRect(x: 0.22, y: 0.007, width: 0.54, height: 0.49)
+    static let headLandmarks = [CGPoint(x: 488.0 / 1254, y: 346.0 / 1254),
+                                CGPoint(x: 650.0 / 1254, y: 370.0 / 1254),
+                                CGPoint(x: 504.0 / 1254, y: 428.0 / 1254)]
+    static let clapContact = CGPoint(x: 1 - 231.91 / 512, y: 263.12 / 512)
+    static let turnAssets = (1...6).map { String(format: "pirate-turn-%02d", $0) }
+    static let assets = Set([idle, "pirate-clap-open", "pirate-clap-contact", "pirate-wrong",
+                             "pirate-crouch", "pirate-airborne", "pirate-stumble", "pirate-fallen", "pirate-push-up"] + turnAssets)
+
+    static func asset(for pose: String) -> String {
+        if pose == openingAsset || assets.contains(pose) { return pose }
+        if pose == "dino-answer-wrong" { return "pirate-wrong" }
+        switch pose {
+        case "dino-answer-clap-02", "dino-answer-clap-05": return "pirate-clap-contact"
+        case "dino-answer-clap-01", "dino-answer-clap-03", "dino-answer-clap-04", "dino-answer-clap-06": return "pirate-clap-open"
+        default: return idle
+        }
+    }
+}
+
+/// Pendel's landmarks use top-left source pixel centres, normalized to the
+/// square painting. The renderer reflects that canvas once before display.
+enum DinoMachineArtwork {
+    static let idle = "machine-idle"
+    static let openingAsset = "machine-opening-idle"
+    static let footline = 1168.0 / 1254
+    static let portraitPlacement = (scale: 1.61, x: -0.11, y: 0.183)
+    static let portraitCrop = CGRect(x: 0.28, y: 0.027, width: 0.46, height: 0.49)
+    static let headLandmarks = [CGPoint(x: 475.5 / 1254, y: 426.5 / 1254),
+                                CGPoint(x: 630.5 / 1254, y: 451.5 / 1254),
+                                CGPoint(x: 464.5 / 1254, y: 495.5 / 1254)]
+    static let clapContact = CGPoint(x: 1 - 266.15 / 627, y: 352.70 / 627)
+    static let turnAssets = ["machine-turn-side-left", "machine-turn-back-left", "machine-turn-back",
+                             "machine-turn-back-right", "machine-turn-side-right", "machine-turn-front-right",
+                             "machine-turn-front"]
+    static let assets = Set([idle, "machine-clap-open", "machine-clap-contact", "machine-wrong",
+                             "machine-crouch", "machine-airborne", "machine-brace"] + turnAssets)
+
+    static func asset(for pose: String) -> String {
+        if pose == openingAsset || assets.contains(pose) { return pose }
+        if pose == "dino-answer-wrong" { return "machine-wrong" }
+        if pose.hasPrefix("dino-answer-clap-"), let index = Int(pose.suffix(2)) {
+            switch index {
+            case 2, 5: return "machine-clap-contact"
+            case 1, 3, 4, 6: return "machine-clap-open"
             default: break
             }
         }

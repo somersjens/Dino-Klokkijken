@@ -51,6 +51,7 @@ struct AnalogClockOutline: InsettableShape {
 /// Noninteractive clocks in the practice picker have no per-tick layout or gestures.
 struct PracticeClockPreview: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.locale) private var locale
     let time: ClockTime
     let theme: ClockTheme
 
@@ -80,7 +81,7 @@ struct PracticeClockPreview: View {
             }
             for hour in 1...12 {
                 let radians = Double(hour) * .pi / 6
-                context.draw(Text(verbatim: theme.analogNumerals.label(for: hour))
+                context.draw(Text(verbatim: theme.analogNumerals.label(for: hour, language: locale.identifier))
                     .font(.system(size: size * 0.08, weight: .bold, design: theme.analogNumerals == .roman ? .serif : .rounded)).canvasInk(markings),
                              at: CGPoint(x: center.x + CGFloat(sin(radians)) * size * 0.34,
                                          y: center.y - CGFloat(cos(radians)) * size * 0.34))
@@ -104,6 +105,7 @@ struct PracticeClockPreview: View {
 /// The ordinary hour face pairs with the second half of a 24-hour day outside its rim.
 struct Dino24HourReadingClock: View {
     @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
+    @Environment(\.locale) private var locale
     let time: ClockTime
     let theme: ClockTheme
     let width: CGFloat
@@ -120,7 +122,7 @@ struct Dino24HourReadingClock: View {
                 let edge = theme.analogShape == .square
                     ? 0.5 / max(abs(sin(angle)), abs(cos(angle))) : 0.5
                 let radius = face * (edge + 0.14)
-                Text(verbatim: String(format: "%02d", (hour + 12) % 24))
+                Text(verbatim: DinoTimeWords.number((hour + 12) % 24, locale: locale, minimumDigits: 2))
                     .font(.system(size: face * 0.075, weight: .heavy, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(DinoStyle.ink)
@@ -130,6 +132,7 @@ struct Dino24HourReadingClock: View {
             }
         }
         .frame(width: width, height: width)
+        .environment(\.layoutDirection, .leftToRight)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("demo.24Hour.clock")
     }
@@ -137,6 +140,7 @@ struct Dino24HourReadingClock: View {
 
 struct AnalogClock: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.locale) private var locale
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dinoClockReadingAssistance) private var readingAssistance
     @Environment(\.dinoSpaciousQuestion) private var spaciousQuestion
@@ -287,7 +291,7 @@ struct AnalogClock: View {
         .padding(.bottom, spokenVerticalBounds.map { size * ($0.upperBound - 0.5) }
                  ?? handHintBounds.map { size * ($0.maxY - 0.5) } ?? 0)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(time.digitalText)
+        .accessibilityLabel(DinoTimeWords.digitalDuration(time.minutesOfDay, language: locale.identifier))
         .accessibilityValue(Text(verbatim: spokenHintLanguage.map { DinoTimeWords.time(time, language: $0) } ?? ""))
         .task(id: readingGuide) {
             revealedReadingGuide = nil
@@ -325,7 +329,7 @@ struct AnalogClock: View {
                 AnalogClockTicks(size: face, markingHex: theme.markingHex, highContrast: highContrast).equatable()
                 ForEach(1...12, id: \.self) { hour in
                     let radians = Double(hour) * .pi / 6
-                    Text(verbatim: theme.analogNumerals.label(for: hour))
+                    Text(verbatim: theme.analogNumerals.label(for: hour, language: locale.identifier))
                         .font(.system(size: face * 0.08, weight: .bold, design: theme.analogNumerals == .roman ? .serif : .rounded))
                         .foregroundStyle(Color(dinoHex: theme.markingHex))
                         .position(x: face / 2 + CGFloat(sin(radians)) * face * 0.34,
@@ -580,6 +584,7 @@ private struct ClockHandHint: View {
 }
 
 private struct ClockMinuteReadingScale: View {
+    @Environment(\.locale) private var locale
     let shape: AnalogClockShape
     let size: CGFloat
     let bounds: CGRect
@@ -593,7 +598,7 @@ private struct ClockMinuteReadingScale: View {
                 CGPoint(x: size * (point.x - bounds.minX), y: size * (point.y - bounds.minY))
             }
             for minute in stride(from: 0, to: 60, by: 5) {
-                let label = Text(verbatim: paddedDigits ? String(format: "%02d", minute) : String(minute))
+                let label = Text(verbatim: DinoTimeWords.number(minute, locale: locale, minimumDigits: paddedDigits ? 2 : 1))
                     .font(.system(size: size * 0.064, weight: .bold, design: .rounded))
                     .monospacedDigit()
                 let resolved = context.resolve(label.canvasInk(ink))

@@ -212,8 +212,10 @@ final class DinoMapArtworkCache: ObservableObject {
                                          tileContent: ((CGRect) -> Content)?) async -> UIImage? {
         // Live layers need their geometry even when the terrain came from disk.
         // Start it ahead of the viewport, rather than on an actor's first frame.
+        let extendsCastleForecourt = worldID == 10 && UIDevice.current.userInterfaceIdiom == .pad
         let preparation = Task.detached(priority: .userInitiated) {
-            DinoMapArtworkPreparation.prepare(worldID: worldID, size: size, routeOffset: routeOffset)
+            DinoMapArtworkPreparation.prepare(worldID: worldID, size: size, routeOffset: routeOffset,
+                                               extendsCastleForecourt: extendsCastleForecourt)
         }
         defer { preparation.cancel() }
         if let cached = cached(key) {

@@ -159,7 +159,7 @@ struct DinoPracticeView: View {
         } label: {
             HStack(spacing: 10 * layout.scale) {
                 if let number {
-                    Text(verbatim: "\(number)").font(.system(size: 14 * layout.scale, weight: .heavy, design: .rounded))
+                    Text(number, format: .number).font(.system(size: 14 * layout.scale, weight: .heavy, design: .rounded))
                         .frame(width: 32 * layout.scale, height: 32 * layout.scale).background(DinoStyle.green.opacity(0.16), in: Circle())
                 } else {
                     Image(systemName: symbol).font(.system(size: 18 * layout.scale, weight: .semibold)).frame(width: 32 * layout.scale, height: 32 * layout.scale)
@@ -168,7 +168,7 @@ struct DinoPracticeView: View {
                     .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 if let record {
-                    Label { Text(verbatim: "\(record)").monospacedDigit() } icon: { Image(systemName: "trophy.fill") }
+                    Label { Text(record, format: .number.grouping(.never)).monospacedDigit() } icon: { Image(systemName: "trophy.fill") }
                         .font(.system(size: 13 * layout.scale, weight: .semibold, design: .rounded))
                         .foregroundStyle(highContrast ? DinoStyle.ink : Color(dinoHex: 0x92702E))
                         .fixedSize().accessibilityIdentifier("\(identifier).record")

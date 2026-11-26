@@ -562,8 +562,15 @@ enum DinoWelcomeJump {
         case .cave: caveHead
         case .city: cityHead
         case .valley: valleyHead
+        case .machine: machineHead
+        case .pirates: pirateHead
+        case .castle: castleHead
         default: idleHead
         }
+    }
+    private static var castleHead: Head {
+        let points = DinoCastleArtwork.headLandmarks.map { CGPoint(x: 1 - $0.x, y: $0.y) }
+        return Head(points[0], points[1], points[2])
     }
     private static var caveHead: Head {
         let points = DinoCaveArtwork.headLandmarks.map { CGPoint(x: 1 - $0.x, y: $0.y) }
@@ -575,6 +582,14 @@ enum DinoWelcomeJump {
     }
     private static var valleyHead: Head {
         let points = DinoValleyArtwork.headLandmarks.map { CGPoint(x: 1 - $0.x, y: $0.y) }
+        return Head(points[0], points[1], points[2])
+    }
+    private static var pirateHead: Head {
+        let points = DinoPirateArtwork.headLandmarks.map { CGPoint(x: 1 - $0.x, y: $0.y) }
+        return Head(points[0], points[1], points[2])
+    }
+    private static var machineHead: Head {
+        let points = DinoMachineArtwork.headLandmarks.map { CGPoint(x: 1 - $0.x, y: $0.y) }
         return Head(points[0], points[1], points[2])
     }
     private static var villageHead: Head {
@@ -596,7 +611,10 @@ enum DinoWelcomeJump {
         return Head(p[0], p[1], p[2])
     }
     static func sourceHead(for asset: String, character: DinoIdentity = .main) -> Head {
+        if character == .castle { return castleHead }
+        if character == .pirates { return pirateHead }
         if character == .valley { return valleyHead }
+        if character == .machine { return machineHead }
         if character == .city { return cityHead }
         if character == .cave { return caveHead }
         if character == .village { return villageHead }
@@ -733,7 +751,10 @@ struct DinoWelcomeFlight {
     let destination: CGRect
     var character: DinoIdentity = .main
     var footline: CGFloat {
-        character == .valley ? CGFloat(character.standingFootline) : 1211.0 / 1254
+        switch character {
+        case .valley, .machine, .pirates, .castle: CGFloat(character.standingFootline)
+        default: 1211.0 / 1254
+        }
     }
 
     func position(elapsed: Double) -> CGPoint {
@@ -776,11 +797,16 @@ struct DinoWorldTransition: Equatable {
     let sourceLevel: Int
     let destinationLevel: Int
 
-    init?(after worldID: Int) {
-        guard let source = DinoWorldCatalog.world(worldID),
-              let destination = DinoWorldCatalog.world(worldID + 1) else { return nil }
+    init?(after worldID: Int, terminalUnlock: Bool = false) {
+        guard let source = DinoWorldCatalog.world(worldID) else { return nil }
         sourceLevel = source.bossLevel
-        destinationLevel = destination.firstLevel
+        if let destination = DinoWorldCatalog.world(worldID + 1) {
+            destinationLevel = destination.firstLevel
+        } else if terminalUnlock {
+            destinationLevel = source.bossLevel
+        } else {
+            return nil
+        }
     }
 }
 
@@ -1071,7 +1097,10 @@ enum DinoBossAnimation {
         keys(for: clip, character: character).map(\.asset)
     }
     static func keys(for clip: DinoAnimation.Clip, character: DinoIdentity) -> [DinoJungleAnimation.Key] {
+        if character == .castle { return castleKeys(for: clip) }
+        if character == .pirates { return pirateKeys(for: clip) }
         if character == .valley { return valleyKeys(for: clip) }
+        if character == .machine { return machineKeys(for: clip) }
         if character == .city, let city = cityKeys(for: clip) { return city }
         if character == .cave, clip == .stumble {
             let lead = DinoAnimation.leadIn(clip)
@@ -1118,6 +1147,97 @@ enum DinoBossAnimation {
         }
         return DinoJungleAnimation.keys(for: clip).map { key in
             return DinoJungleAnimation.Key(key.time, character.asset(for: key.asset))
+        }
+    }
+
+    private static func castleKeys(for clip: DinoAnimation.Clip) -> [DinoJungleAnimation.Key] {
+        let idle = DinoCastleArtwork.idle
+        let start = DinoJungleAnimation.Key(0, idle)
+        let takeoff = DinoAnimation.travelDelay(clip), landing = DinoAnimation.travelDuration(clip)
+        let lead = DinoAnimation.leadIn(clip), end = DinoAnimation.duration(clip)
+        switch clip {
+        case .idle, .openingJump, .backflip, .worldJump:
+            return [start]
+        case .thumbsUp:
+            return [.init(0, idle)] + zip(DinoAnimation.correctAnswerFrameStarts, DinoAnimation.correctAnswerAssets)
+                .dropFirst().map { .init($0.0, DinoCastleArtwork.asset(for: $0.1)) }
+        case .wrongAnswer:
+            return [start, .init(DinoAnimation.answerGestureStart, "castle-wrong"),
+                    .init(DinoAnimation.answerGestureEnd, idle)]
+        case .stumble:
+            let release = lead + DinoAnimation.stumbleHandRelease
+            return [start, .init(takeoff, "castle-stumble"), .init(landing, "castle-fallen"),
+                    .init(lead + DinoAnimation.stumblePushStart, "castle-lift"),
+                    .init(release, "castle-brace"), .init(release + 0.12, "castle-recover"),
+                    .init(end - 0.06, idle)]
+        case .pirouette:
+            let turns = DinoCastleArtwork.turnAssets
+            let step = (landing - takeoff) / Double(turns.count + 1)
+            return [start] + turns.enumerated().map { index, asset in
+                .init(takeoff + Double(index + 1) * step, asset)
+            } + [.init(landing, idle)]
+        }
+    }
+
+    private static func pirateKeys(for clip: DinoAnimation.Clip) -> [DinoJungleAnimation.Key] {
+        let standing = DinoPirateArtwork.idle
+        let idle = DinoJungleAnimation.Key(0, standing)
+        let lead = DinoAnimation.leadIn(clip), end = DinoAnimation.duration(clip)
+        let takeoff = DinoAnimation.travelDelay(clip), landing = DinoAnimation.travelDuration(clip)
+        switch clip {
+        case .idle, .openingJump:
+            return [idle]
+        case .thumbsUp:
+            return zip(DinoAnimation.correctAnswerFrameStarts, DinoAnimation.correctAnswerAssets).map {
+                .init($0.0, DinoPirateArtwork.asset(for: $0.1))
+            }
+        case .wrongAnswer:
+            return [idle, .init(DinoAnimation.answerGestureStart, "pirate-wrong"),
+                    .init(DinoAnimation.answerGestureEnd, standing)]
+        case .stumble:
+            return [idle, .init(takeoff + 0.15, "pirate-stumble"), .init(landing, "pirate-fallen"),
+                    .init(lead + DinoAnimation.stumbleHandRelease, "pirate-push-up"),
+                    .init(end - 0.15, "pirate-crouch"), .init(end - 0.03, standing)]
+        case .backflip, .worldJump:
+            return [idle, .init(takeoff + 0.09, "pirate-airborne"), .init(landing - 0.12, standing)]
+        case .pirouette:
+            let turns = DinoPirateArtwork.turnAssets
+            let step = (landing - takeoff) / Double(turns.count + 1)
+            return [idle] + turns.enumerated().map { index, asset in
+                .init(takeoff + Double(index + 1) * step, asset)
+            } + [.init(landing, standing)]
+        }
+    }
+
+    private static func machineKeys(for clip: DinoAnimation.Clip) -> [DinoJungleAnimation.Key] {
+        let standing = DinoMachineArtwork.idle
+        let idle = DinoJungleAnimation.Key(0, standing)
+        let takeoff = DinoAnimation.travelDelay(clip), landing = DinoAnimation.travelDuration(clip)
+        switch clip {
+        case .idle, .openingJump:
+            return [idle]
+        case .thumbsUp:
+            let open = "machine-clap-open", contact = "machine-clap-contact"
+            return [idle, .init(0.10, open), .init(0.23, contact), .init(0.41, open),
+                    .init(0.61, contact), .init(0.80, open), .init(0.94, standing)]
+        case .wrongAnswer:
+            return [idle, .init(DinoAnimation.answerGestureStart, "machine-wrong"),
+                    .init(DinoAnimation.answerGestureEnd, standing)]
+        case .stumble:
+            let lead = DinoAnimation.leadIn(clip)
+            return [idle, .init(takeoff + 0.07, "machine-crouch"),
+                    .init(landing, "machine-brace"),
+                    .init(lead + DinoAnimation.stumbleHandRelease, "machine-crouch"),
+                    .init(DinoAnimation.duration(clip) - 0.04, standing)]
+        case .backflip, .worldJump:
+            return [idle, .init(takeoff + 0.12, "machine-airborne"),
+                    .init(landing - 0.12, standing)]
+        case .pirouette:
+            let turns = DinoMachineArtwork.turnAssets
+            let step = (landing - takeoff) / Double(turns.count + 1)
+            return [idle] + turns.enumerated().map { index, asset in
+                .init(takeoff + Double(index + 1) * step, asset)
+            } + [.init(landing, standing)]
         }
     }
 
@@ -1181,8 +1301,8 @@ enum DinoBossAnimation {
     static func sample(_ clip: DinoAnimation.Clip, character: DinoIdentity, elapsed: Double, reducedMotion: Bool = false) -> DinoAnimation.Sample {
         guard character.usesBossArtwork else { return DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reducedMotion) }
         guard character != .jungle else { return DinoJungleAnimation.sample(clip, elapsed: elapsed, reducedMotion: reducedMotion) }
-        if character == .valley, elapsed >= DinoAnimation.duration(clip) {
-            return .init(pose: .init(asset: DinoValleyArtwork.idle))
+        if character == .valley || character.usesPaintedFootline, elapsed >= DinoAnimation.duration(clip) {
+            return .init(pose: .init(asset: character.asset(for: "dino-idle")))
         }
         var result = DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reducedMotion)
         result.morph = nil; result.previousPose = nil; result.poseBlend = 1
@@ -1199,7 +1319,22 @@ enum DinoBossAnimation {
         if character == .cave, let index = DinoCaveArtwork.turnAssets.firstIndex(of: asset) {
             axisOffset = (DinoCaveArtwork.turnHipX[index] - DinoCaveArtwork.idleHipX) / 512
         }
+        if character == .castle, let index = DinoCastleArtwork.turnAssets.firstIndex(of: asset) {
+            // Partially center the broad fluke silhouette around a common hip
+            // while preserving lateral clearance for the full profile views.
+            axisOffset = (DinoCastleArtwork.turnHips[index] - 287) / 1254
+        }
         var verticalOffset = 0.0
+        if character == .machine, clip == .stumble, asset == "machine-brace", !reducedMotion {
+            // Use one pair of painted palms from impact to release. The
+            // companion scales about Pendel's measured ground line.
+            let lead = DinoAnimation.leadIn(clip)
+            let impact = lead + DinoAnimation.stumbleLanding
+            let low = lead + DinoAnimation.stumbleLowest
+            let release = lead + DinoAnimation.stumbleHandRelease
+            let phase = elapsed < low ? (elapsed - impact) / (low - impact) : (release - elapsed) / (release - low)
+            result.scaleY -= 0.045 * (1 - cos(.pi * phase)) / 2
+        }
         if character == .city {
             if asset == "city-airborne" {
                 axisOffset = DinoCityArtwork.tuckOffset.x

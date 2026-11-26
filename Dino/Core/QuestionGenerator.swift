@@ -116,11 +116,7 @@ enum AnswerValidator {
             return min(delta, 720 - delta) <= 1
         }
         if question.kind == .sayTime, case .spoken(let spoken) = answer, let prompt = question.spokenPrompt {
-            if spoken == prompt.correct { return true }
-            // "Vijf" in the minutes row plus "uur" reads the same as the hour "vijf" plus "uur".
-            guard question.target.minute == 0 else { return false }
-            let said = prompt.phrase(for: spoken)
-            return !said.isEmpty && said == prompt.phrase
+            return prompt.accepts(spoken)
         }
         return answer == question.expectedAnswer
     }

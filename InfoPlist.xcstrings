@@ -5,6 +5,30 @@
       "comment" : "Short app name shown below the app icon on the Home Screen.",
       "extractionState" : "manual",
       "localizations" : {
+        "en-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino Time"
+          }
+        },
+        "en-AU" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino Time"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "دينو والوقت"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino-Zeit"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -23,6 +47,30 @@
       "comment" : "Localized short bundle name.",
       "extractionState" : "manual",
       "localizations" : {
+        "en-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino Time"
+          }
+        },
+        "en-AU" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino Time"
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "دينو والوقت"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino-Zeit"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -40,6 +88,30 @@
     "NSGKFriendListUsageDescription" : {
       "extractionState" : "manual",
       "localizations" : {
+        "en-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show the progress and stars of friends who allow Game Center access."
+          }
+        },
+        "en-AU" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show the progress and stars of friends who allow Game Center access."
+          }
+        },
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "اعرض تقدّم ونجوم الأصدقاء الذين يسمحون بالوصول عبر Game Center."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sieh den Fortschritt und die Sterne von Freunden, die den Zugriff über Game Center erlauben."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",

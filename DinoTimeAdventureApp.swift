@@ -57,7 +57,7 @@ struct DinoTimeAdventureApp: App {
             DinoRootView().id(player.resetGeneration).environmentObject(player).environmentObject(friends)
                 .environmentObject(settings).environmentObject(cloudSync)
                 .environment(\.locale, language.locale)
-                .environment(\.layoutDirection, language.effective.layoutDirection)
+                .environment(\.layoutDirection, language.layoutDirection)
                 .modifier(DinoContrastEnvironment(enabled: settings.highContrastEnabled))
                 .background(GameCenterPresentationAnchor(manager: friends).frame(width: 0, height: 0))
                 .lightPalette()

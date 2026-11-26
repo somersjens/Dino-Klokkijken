@@ -111,22 +111,20 @@ struct DigitalClock: View {
     }
 
     private func display(_ reading: DigitalClockReading, fontSize: CGFloat) -> some View {
-        HStack(alignment: .center, spacing: fontSize * 0.12) {
+        // Keep the numeric group in hour/minute order. Its day period follows the reading direction.
+        let periodOnLeft = reading.periodBeforeClock != language.effective.runsRightToLeft
+        return HStack(alignment: .center, spacing: reading.periodSpacing.isEmpty ? 0 : fontSize * 0.12) {
+            if periodOnLeft, let period = reading.period { periodLabel(period, fontSize: fontSize) }
             HStack(spacing: theme.numerals == .digital ? fontSize * 0.1 : 0) {
                 pair(reading.hour, number: 1, ink: theme.hourHex, fontSize: fontSize)
-                if theme.numerals == .digital {
+                if theme.numerals == .digital && reading.separator == ":" {
                     SevenSegmentDigit(character: ":").frame(width: fontSize * 0.15, height: fontSize * 0.86)
                 } else {
-                    Text(verbatim: ":")
+                    Text(verbatim: reading.separator)
                 }
                 pair(reading.minute, number: 2, ink: theme.minuteHex, fontSize: fontSize)
             }
-            if let period = reading.period {
-                Text(verbatim: period)
-                    .font(.system(size: fontSize * 0.34, weight: .heavy, design: theme.numerals.fontDesign))
-                    .lineLimit(1)
-                    .accessibilityHidden(true)
-            }
+            if !periodOnLeft, let period = reading.period { periodLabel(period, fontSize: fontSize) }
         }
         .font(.system(size: fontSize, weight: .heavy, design: theme.numerals.fontDesign))
         .monospacedDigit()
@@ -164,6 +162,13 @@ struct DigitalClock: View {
         // Reserve the ring even before feedback so checking cannot move the clock.
         .padding(showsDisplay ? 4 : 0)
         .fixedSize(horizontal: true, vertical: true)
+    }
+
+    private func periodLabel(_ period: String, fontSize: CGFloat) -> some View {
+        Text(verbatim: period)
+            .font(.system(size: fontSize * 0.34, weight: .heavy, design: theme.numerals.fontDesign))
+            .lineLimit(1)
+            .accessibilityHidden(true)
     }
 
     private func horizontalPadding(for reading: DigitalClockReading) -> CGFloat {
@@ -255,7 +260,8 @@ private struct DigitalClockDigits: View {
 
     var body: some View {
         Group {
-            if numerals == .digital {
+            // The drawn segment shapes describe Latin digits. Other scripts keep their own glyphs.
+            if numerals == .digital && text.allSatisfy({ "0123456789:".contains($0) }) {
                 HStack(spacing: fontSize * 0.1) {
                     ForEach(Array(text.enumerated()), id: \.offset) { _, character in
                         SevenSegmentDigit(character: character)

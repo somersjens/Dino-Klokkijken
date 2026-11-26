@@ -12,16 +12,21 @@ private struct DinoAfterNoonReadingClock: View {
     let width: CGFloat
     let showsHint: Bool
     let isDemonstration: Bool
+    let readsFullHour: Bool
+    let teaches24HourConversion: Bool
 
+    private var notation: DigitalHourNotation? { readsFullHour || teaches24HourConversion ? .twentyFour : nil }
     private var explains: Bool {
-        showsHint && time.hour > 12 && theme.resolvedHourNotation(device: deviceHourFormat.notation) == .twentyFour
+        let displayedNotation = notation ?? theme.resolvedHourNotation(device: deviceHourFormat.notation)
+        return !readsFullHour && showsHint && time.hour > 12 && displayedNotation == .twentyFour
     }
     private var prefix: String { isDemonstration ? "demo" : "question" }
     private var conversionFont: CGFloat { min(42, (width - 42) * 0.12) }
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 0) {
-            DigitalClock(time: time, theme: theme, fontSize: explains ? conversionFont : demonstrationLayout.spacious ? 54 : 38)
+            DigitalClock(time: time, theme: theme, fontSize: explains ? conversionFont : demonstrationLayout.spacious ? 54 : 38,
+                         showHandHints: readsFullHour && showsHint, notation: notation)
                 .accessibilityIdentifier("\(prefix).targetClock")
             DinoTrainExpansion(axis: .horizontal, fraction: explains ? 1 : 0) {
                 HStack(spacing: 4) {
@@ -40,8 +45,9 @@ private struct DinoAfterNoonReadingClock: View {
                             .accessibilityIdentifier("\(prefix).afterNoon.arrow")
                     }
                     .frame(width: 34)
-                    DigitalClock(time: time.adding(minutes: -720), theme: theme,
-                                 fontSize: conversionFont, notation: .twentyFour, dashedOutline: true)
+                    DigitalClock(time: teaches24HourConversion ? time : time.adding(minutes: -720), theme: theme,
+                                 fontSize: conversionFont, notation: teaches24HourConversion ? .twelve : .twentyFour,
+                                 dashedOutline: true)
                         .accessibilityIdentifier("\(prefix).afterNoon.convertedClock")
                 }
                 .padding(.leading, 4)
@@ -88,6 +94,8 @@ struct DinoExpandedQuestionView: View {
     @State private var reminderProgress: CGFloat = 0
     private var q: ClockQuestion { session.question }
     private var code: String { language.effective.code }
+    private var readsFullHour: Bool { q.kind == .read24Hour && language.effective.timeVocabulary.formalClockTime != nil }
+    private var teaches24HourConversion: Bool { q.kind == .read24Hour && language.effective.teaches24HourConversion }
     private var duration: String { DinoTimeWords.duration(q.durationMinutes, language: code) }
     private var gameLayout: DinoGameLayout {
         DinoGameLayout(width: width, height: availableHeight, kind: q.kind, optionCount: q.responses.count)
@@ -108,7 +116,7 @@ struct DinoExpandedQuestionView: View {
     /// The lesson follows the player's chosen hour notation, including answer feedback.
     private func shownDigital(_ time: ClockTime) -> String {
         let _ = deviceHourFormat.notation
-        return theme.digitalReading(time, languageCode: code)
+        return theme.digitalReading(time, languageCode: code, notation: readsFullHour || teaches24HourConversion ? .twentyFour : nil)
     }
 
     var body: some View {
@@ -159,8 +167,14 @@ struct DinoExpandedQuestionView: View {
                 }
             case .read24Hour:
                 if isDemonstration {
-                    Dino24HourReadingClock(time: q.target, theme: theme,
-                                           width: demonstrationLayout.spacious ? min(contextWidth, 440, max(280, availableHeight - 240)) : min(300, width))
+                    if readsFullHour {
+                        DigitalClock(time: q.target, theme: theme, fontSize: demonstrationLayout.spacious ? 52 : 38,
+                                     showHandHints: true, notation: .twentyFour)
+                            .accessibilityIdentifier("demo.24Hour.digital")
+                    } else {
+                        Dino24HourReadingClock(time: q.target, theme: theme,
+                                               width: demonstrationLayout.spacious ? min(contextWidth, 440, max(280, availableHeight - 240)) : min(300, width))
+                    }
                     Text(verbatim: responseText(q.expectedAnswer))
                         .font(.system(size: demonstrationLayout.spacious ? 28 : 20, weight: .bold, design: .rounded))
                         .fixedSize(horizontal: false, vertical: true)
@@ -191,7 +205,8 @@ struct DinoExpandedQuestionView: View {
         case .read24Hour:
             DinoAfterNoonReadingClock(time: q.target, theme: theme, width: min(demonstrationLayout.spacious ? 600 : 420, contextWidth),
                                       showsHint: session.missedFirstAnswer && !isDemonstration,
-                                      isDemonstration: isDemonstration)
+                                      isDemonstration: isDemonstration, readsFullHour: readsFullHour,
+                                      teaches24HourConversion: teaches24HourConversion)
         case .dayPart:
             VStack(spacing: 12) {
                 DigitalClock(time: q.target, theme: theme, fontSize: gameLayout.spacious ? 58 : 38)
@@ -432,6 +447,7 @@ struct DinoExpandedQuestionView: View {
     }
 
     private func responseTitle(_ response: ClockAnswer) -> String {
+        if q.kind == .read24Hour && readsFullHour { return responseText(response) }
         if [.readDigital, .read24Hour].contains(q.kind), case .time(let time) = response {
             return DinoTimeWords.time(time, language: code)
         }
@@ -446,7 +462,7 @@ struct DinoExpandedQuestionView: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .frame(height: fontSize * 1.25 * CGFloat(titleLines), alignment: .bottom)
-            if q.kind == .read24Hour { dayPartDescription(time).frame(height: 38) }
+            if q.kind == .read24Hour && !readsFullHour { dayPartDescription(time).frame(height: 38) }
         }
         if q.kind == .readDigital {
             content.foregroundStyle(DinoStyle.ink)
@@ -454,7 +470,8 @@ struct DinoExpandedQuestionView: View {
                 .accessibilityLabel(Text(verbatim: description))
         } else {
             AnswerTimeExplanation(time: time, theme: theme, visible: wrong,
-                                  fontSize: gameLayout.spacious ? gameLayout.answerReadoutFont : min(24, width * 0.065), content: content)
+                                  fontSize: gameLayout.spacious ? gameLayout.answerReadoutFont : min(24, width * 0.065),
+                                  notation: readsFullHour ? .twentyFour : nil, content: content)
             .foregroundStyle(DinoStyle.ink)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text(verbatim: wrong && q.kind == .read24Hour ? "\(description), \(shownDigital(time))" : description))
@@ -479,7 +496,9 @@ struct DinoExpandedQuestionView: View {
         switch response {
         case .time(let time):
             if [.readDigital, .read24Hour].contains(q.kind) {
-                return DinoTimeWords.time(time, language: code, dayPart: q.kind == .read24Hour, schedule: session.dayPartSchedule)
+                return q.kind == .read24Hour
+                    ? DinoTimeWords.digitalTimeInWords(time, language: code, dayPart: true, schedule: session.dayPartSchedule)
+                    : DinoTimeWords.time(time, language: code)
             }
             return shownDigital(time)
         case .duration(let minutes):
@@ -514,7 +533,7 @@ struct DinoExpandedQuestionView: View {
                             AnalogClock(time: time, theme: theme, size: clockSize).allowsHitTesting(false)
                                 .overlay(alignment: .topLeading) {
                                     if let position {
-                                        Text(verbatim: "\(position + 1)")
+                                        Text(position + 1, format: .number)
                                             .font(.system(size: 14, weight: .heavy, design: .rounded))
                                             .foregroundStyle(DinoStyle.ink)
                                             .frame(width: badge, height: badge)
@@ -658,14 +677,14 @@ struct DinoExpandedQuestionView: View {
                         .scaleEffect(advanceComparing ? advanceComparisonScale : 1)
                         .offset(x: advanceComparing ? -advanceResultOffset : 0)
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(Text(verbatim: shown.digitalText))
+                        .accessibilityLabel(Text(verbatim: DinoTimeWords.digitalDuration(shown.minutesOfDay, language: code)))
                         .accessibilityIdentifier("question.analogControl")
                     AnalogClock(time: DinoAnalogAdvanceExample.face(q.target), theme: theme, size: playFace)
                         .padding(4)
                         .modifier(ClockAnswerOutline(visible: true, correct: true))
                         .modifier(AnswerCornerVerdict(correct: true, cardWidth: playFace + 8, compactRim: 0))
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(DinoAnalogAdvanceExample.face(q.target).digitalText)
+                        .accessibilityLabel(DinoTimeWords.digitalDuration(DinoAnalogAdvanceExample.face(q.target).minutesOfDay, language: code))
                         .scaleEffect(advanceComparisonScale * (advanceComparing || reduceMotion ? 1 : 0.94))
                         .offset(x: advanceResultOffset)
                         .opacity(advanceComparing ? 1 : 0)
@@ -1121,7 +1140,7 @@ private struct DinoTrainJourneyCard: View {
             HStack(spacing: valueSpacing) {
                 durationColumns(hours: schedule.writtenDuration.hours, minutes: schedule.writtenDuration.minutes,
                                 label: schedule.summedDurationText(language: language))
-                clockChip(DinoTimeWords.digitalDuration(schedule.totalMinutes),
+                clockChip(DinoTimeWords.digitalDuration(schedule.totalMinutes, language: language),
                           fill: (highContrast ? DinoStyle.ink : totalInk).opacity(0.12))
             }
         }
@@ -1263,7 +1282,7 @@ private struct DinoTrainJourneyCard: View {
                             .padding(.horizontal, compactColumns ? 8 : 10).padding(.vertical, 4)
                             .opacity(showsTotal ? 0 : 1)
                             .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: showsTotal)
-                        Text(verbatim: DinoTimeWords.digitalDuration(durationMinutes))
+                        Text(verbatim: DinoTimeWords.digitalDuration(durationMinutes, language: language))
                             .fixedSize(horizontal: true, vertical: false)
                             .padding(.vertical, 4)
                             .opacity(showsTotal ? 1 : 0)
@@ -1273,7 +1292,7 @@ private struct DinoTrainJourneyCard: View {
                     .monospacedDigit()
                     .background(chip, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(Text(verbatim: showsTotal ? DinoTimeWords.digitalDuration(durationMinutes) : value))
+                    .accessibilityLabel(Text(verbatim: showsTotal ? DinoTimeWords.digitalDuration(durationMinutes, language: language) : value))
                 }
             } else {
                 clockChip(value, fill: chip)
@@ -1295,15 +1314,16 @@ private struct DinoTrainJourneyCard: View {
                 .frame(width: 14 * columnScale, alignment: .trailing)
             if showsHoursColumn {
                 let hourText = hours > 0 || plus
-                    ? (language == "nl" ? "\(hours) uur" : "\(hours)h") : ""
+                    ? DinoTimeWords.compactHours(hours, language: language) : ""
+                let columnWidth = AppLanguage.resolved(language).timeVocabulary.shortHoursColumnWidth
                 Text(verbatim: hourText)
                     .numericTextTransition()
                     .fixedSize(horizontal: true, vertical: false)
-                    .frame(width: (language == "nl" ? 44 : 22) * columnScale, alignment: .trailing)
+                    .frame(width: columnWidth * columnScale, alignment: .trailing)
                     .padding(.trailing, schedule.hasMinuteTerms ? 10 * columnScale : 0)
             }
             if schedule.hasMinuteTerms {
-                Text(verbatim: String(format: "%02d min", minutes))
+                Text(verbatim: DinoTimeWords.compactMinutes(minutes, language: language, padded: true))
                     .numericTextTransition()
                     .fixedSize(horizontal: true, vertical: false)
                     .frame(width: 66 * columnScale, alignment: .trailing)
@@ -2001,7 +2021,9 @@ struct DinoDayPartLine: View {
         return highContrast ? DinoStyle.ink : DinoStyle.muted
     }
 
-    private func hourText(_ hour: Int) -> String { String(format: "%02d", hour) }
+    private func hourText(_ hour: Int) -> String {
+        DinoTimeWords.number(hour, language: language.effective.code, minimumDigits: 2)
+    }
 }
 
 /// A soft pointer cap joins a rounded stem that passes through the full ruler.
@@ -2094,6 +2116,13 @@ struct DinoExpandedDemonstration: View {
                         // Reading clocks retain their revealed scale between examples.
                         // Scripted lessons still restart their local animation state.
                         .id([.readDigital, .spokenTime, .trueFalse, .read24Hour].contains(kind) ? 0 : sample.question.id)
+                    if kind == .read24Hour && LanguageManager.shared.effective.teaches24HourConversion {
+                        Text("dino.example.rule.read24Hour")
+                            .font(.system(size: layout.spacious ? 21 : 15, weight: .medium, design: .rounded))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .multilineTextAlignment(.center)
+                            .accessibilityIdentifier("demo.24Hour.conversion")
+                    }
                     if !kind.usesOptions && ![.sortTimes, .advanceAnalog, .sayTime].contains(kind) {
                         Text(verbatim: answer(sample.question)).font(.system(size: layout.spacious ? 23 : 15, weight: .medium, design: .rounded))
                             .multilineTextAlignment(.center).accessibilityIdentifier("demo.answer")
@@ -2160,7 +2189,10 @@ struct DinoExpandedDemonstration: View {
         switch q.expectedAnswer {
         case .time(let time):
             switch q.kind {
-            case .readDigital, .read24Hour, .spokenTime: answer = "\(clockText(time, kind: q.kind)) = \(DinoTimeWords.time(time, language: code, dayPart: q.kind == .read24Hour, schedule: settings.dayPartSchedule))"
+            case .read24Hour:
+                answer = "\(clockText(time, kind: q.kind)) = \(DinoTimeWords.digitalTimeInWords(time, language: code, dayPart: true, schedule: settings.dayPartSchedule))"
+            case .readDigital, .spokenTime:
+                answer = "\(clockText(time, kind: q.kind)) = \(DinoTimeWords.time(time, language: code))"
             case .addTime, .advanceAnalog: answer = "\(clockText(q.relatedTimes[0], kind: q.kind)) + \(duration) = \(clockText(time, kind: q.kind))"
             case .flightArrival:
                 let work = DinoFlightArrivalWork(departure: q.relatedTimes[0], durationMinutes: q.durationMinutes,

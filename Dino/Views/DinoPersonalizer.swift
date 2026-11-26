@@ -140,9 +140,9 @@ struct DinoAppearanceEditor: View {
     var body: some View {
         if pinsCollection {
             VStack(spacing: 0) {
+                characterCollection
                 ScrollView { colorOptions.modifier(CustomizationOptionsCard()) }
                     .bouncesOnlyWhenNeeded().clipped().accessibilityIdentifier("personalize.options")
-                characterCollection.modifier(CustomizationOptionsCard())
             }
         } else if let welcomeChrome {
             CustomizationWelcomeLayout(identifier: "personalize.options", cardIdentifier: "personalize.welcome.optionsCard") {
@@ -150,7 +150,7 @@ struct DinoAppearanceEditor: View {
             } preview: {
                 preview
             } options: {
-                options
+                colorOptions
             } action: {
                 welcomeChrome.action
             }
@@ -160,15 +160,11 @@ struct DinoAppearanceEditor: View {
                                       identifier: "personalize.options", showsOptions: showsOptions) {
                 if showsPreview { preview }
             } options: {
-                options.modifier(CustomizationOptionsCard())
+                VStack(spacing: 0) {
+                    if !metrics.welcome { characterCollection }
+                    colorOptions.modifier(CustomizationOptionsCard())
+                }
             }
-        }
-    }
-
-    private var options: some View {
-        VStack(spacing: metrics.restoreSpacing) {
-            colorOptions
-            if welcomeChrome == nil { characterCollection }
         }
     }
 
@@ -193,48 +189,44 @@ struct DinoAppearanceEditor: View {
     }
 
     private var characterCollection: some View {
-        VStack(alignment: .leading, spacing: compact ? 8 : 12) {
-            Text("dino.characters.title").modifier(CustomizationText())
-                .foregroundStyle(DinoStyle.deepGreen)
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 5), spacing: 10) {
-                ForEach(Array(player.profile.collectionCharacters.enumerated()), id: \.offset) { index, character in
-                    let unlocked = player.profile.isCharacterUnlocked(character)
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.22)) { player.selectCharacter(character) }
-                    } label: {
-                        VStack(spacing: 3) {
-                            ZStack(alignment: .bottomTrailing) {
-                                RoundedRectangle(cornerRadius: 14)
-                                    .fill(unlocked ? Color.white.opacity(0.92) : DinoStyle.deepGreen.opacity(0.07))
-                                if character.isPlayable {
-                                    DinoAvatar(appearance: collectionAppearance(character))
-                                        .padding(3).saturation(unlocked ? 1 : 0)
-                                        .opacity(unlocked ? 1 : 0.38)
-                                } else {
-                                    Image(character.bossAsset).resizable().scaledToFit().padding(5)
-                                        .saturation(0).opacity(0.3)
-                                }
-                                if !unlocked {
-                                    Image(systemName: "lock.fill")
-                                        .font(.system(size: 11, weight: .bold)).foregroundStyle(DinoStyle.deepGreen)
-                                        .padding(5).background(.white.opacity(0.92), in: Circle()).padding(3)
-                                }
-                            }.aspectRatio(1, contentMode: .fit)
-                                .frame(maxHeight: pinsCollection ? (compact ? 54 : 84) : nil)
-                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(DinoStyle.deepGreen.opacity(unlocked ? 0.35 : 0.10), lineWidth: 1))
-                            if character == .main {
-                                Text("dino.characters.main").font(.system(size: compact ? 10 : 11, weight: .semibold))
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 5), spacing: 10) {
+            ForEach(player.profile.menuCharacters, id: \.self) { character in
+                let unlocked = player.profile.isCharacterUnlocked(character)
+                Button {
+                    withAnimation(.easeInOut(duration: 0.22)) { player.selectCharacter(character) }
+                } label: {
+                    VStack(spacing: 3) {
+                        ZStack(alignment: .bottomTrailing) {
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(unlocked ? Color.white.opacity(0.92) : DinoStyle.deepGreen.opacity(0.07))
+                            if character.isPlayable {
+                                DinoAvatar(appearance: collectionAppearance(character))
+                                    .padding(3).saturation(unlocked ? 1 : 0)
+                                    .opacity(unlocked ? 1 : 0.38)
                             } else {
-                                Text("dino.characters.level \(character.unlockLevel)")
-                                    .font(.system(size: compact ? 10 : 11, weight: .semibold))
+                                Image(character.bossAsset).resizable().scaledToFit().padding(5)
+                                    .saturation(0).opacity(0.3)
                             }
-                        }.foregroundStyle(DinoStyle.ink).contentShape(Rectangle())
-                    }.buttonStyle(DinoPlainButtonStyle()).disabled(!unlocked)
-                        .accessibilityIdentifier("personalize.character.\(character.rawValue)")
-                        .accessibilityValue(Text(unlocked ? "dino.characters.available" : "dino.characters.locked"))
-                }
+                            if !unlocked {
+                                Image(systemName: "lock.fill")
+                                    .font(.system(size: 11, weight: .bold)).foregroundStyle(DinoStyle.deepGreen)
+                                    .padding(5).background(.white.opacity(0.92), in: Circle()).padding(3)
+                            }
+                        }.aspectRatio(1, contentMode: .fit)
+                            .frame(maxHeight: pinsCollection ? (compact ? 54 : 84) : nil)
+                            .overlay(RoundedRectangle(cornerRadius: 14).stroke(DinoStyle.deepGreen.opacity(unlocked ? 0.35 : 0.10), lineWidth: 1))
+                        if character == .main {
+                            Text("dino.characters.main").font(.system(size: compact ? 10 : 11, weight: .semibold))
+                        } else {
+                            Text("dino.characters.level \(character.unlockLevel)")
+                                .font(.system(size: compact ? 10 : 11, weight: .semibold))
+                        }
+                    }.foregroundStyle(DinoStyle.ink).contentShape(Rectangle())
+                }.buttonStyle(DinoPlainButtonStyle()).disabled(!unlocked)
+                    .accessibilityIdentifier("personalize.character.\(character.rawValue)")
+                    .accessibilityValue(Text(unlocked ? "dino.characters.available" : "dino.characters.locked"))
             }
-        }.padding(.top, 8)
+        }.modifier(CustomizationOptionsCard())
             .accessibilityIdentifier("personalize.characters")
     }
 

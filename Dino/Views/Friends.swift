@@ -33,6 +33,7 @@ struct DinoParentGate: View {
     var explanationKey: String? = nil
     var confirmKey: String? = nil
     var proceed: () -> Void
+    @ObservedObject private var language = LanguageManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var answer = ""
     @State private var first = Int.random(in: 12...19)
@@ -44,11 +45,14 @@ struct DinoParentGate: View {
                     Label("dino.friends.parentTitle", systemImage: "lock.shield.fill").font(.title2.bold())
                     Text(LocalizedStringKey(explanationKey ?? (sharing ? "dino.friends.sharingDisclosure" : "dino.friends.parentMessage")))
                         .font(.body).multilineTextAlignment(.center)
-                    Text(verbatim: "\(first) × \(second) = ?").font(.title.bold())
+                    let code = language.effective.code
+                    Text(verbatim: "\(DinoTimeWords.number(first, language: code)) × \(DinoTimeWords.number(second, language: code)) = ?")
+                        .font(.title.bold())
+                        .environment(\.layoutDirection, .leftToRight)
                     TextField(L("dino.friends.parentAnswer"), text: $answer).keyboardType(.numberPad)
                         .textFieldStyle(.roundedBorder).accessibilityIdentifier("friends.parentAnswer")
                     Button(LocalizedStringKey(confirmKey ?? (sharing ? "dino.friends.allowSharing" : "dino.next")), action: proceed)
-                        .buttonStyle(DinoButtonStyle()).disabled(Int(answer) != first * second)
+                        .buttonStyle(DinoButtonStyle()).disabled(DinoTimeWords.parsedInteger(answer) != first * second)
                         .accessibilityIdentifier("friends.parentContinue")
                     Button("dino.cancel") { dismiss() }.buttonStyle(DinoSecondaryButtonStyle())
                         .accessibilityIdentifier("friends.parentCancel")
@@ -700,7 +704,7 @@ struct DinoSocialPrivacyView: View {
               var components = URLComponents(string: value),
               components.scheme?.lowercased() == "https",
               let host = components.host, !host.isEmpty else { return nil }
-        components.fragment = language.effective.code == "nl" ? "nl" : "en"
+        components.fragment = language.effective.privacyFragment
         return components.url
     }
     var body: some View {

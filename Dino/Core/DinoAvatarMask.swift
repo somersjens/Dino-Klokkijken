@@ -1744,7 +1744,10 @@ extension DinoSpriteColorRenderer {
 extension DinoSpriteColorRenderer {
     static func recoloredBoss(_ source: CGImage, appearance: DinoAppearance, asset: String) -> CGImage? {
         switch appearance.identity {
+        case .castle: return recoloredCastle(source, appearance: appearance, asset: asset)
+        case .pirates: return recoloredPirates(source, appearance: appearance, asset: asset)
         case .valley: return recoloredValley(source, appearance: appearance, asset: asset)
+        case .machine: return recoloredMachine(source, appearance: appearance, asset: asset)
         case .city: return recoloredCity(source, appearance: appearance, asset: asset)
         case .cave: return recoloredCave(source, appearance: appearance, asset: asset)
         case .village: return recoloredVillage(source, appearance: appearance, asset: asset)
@@ -1755,7 +1758,10 @@ extension DinoSpriteColorRenderer {
     }
     static func bossHeadOverflow(_ source: CGImage, character: DinoIdentity, asset: String, mirrored: Bool = true) -> CGImage? {
         switch character {
+        case .castle: return castleHead(source, asset: asset, mirrored: mirrored)
+        case .pirates: return pirateHead(source, asset: asset, mirrored: mirrored)
         case .valley: return valleyHead(source, asset: asset, mirrored: mirrored)
+        case .machine: return machineHead(source, asset: asset, mirrored: mirrored)
         case .city: return cityHead(source, asset: asset, mirrored: mirrored)
         case .cave: return caveHead(source, asset: asset, mirrored: mirrored)
         case .village: return villageHead(source, asset: asset, mirrored: mirrored)
@@ -2141,6 +2147,12 @@ private struct DinoSpriteMaskArchive {
                            signature: "CTY1", maximumLabel: 31)
     static let valley = Self(name: "valley-materials", filename: "valley-materials.bin",
                              signature: "VLY1", maximumLabel: 31)
+    static let machine = Self(name: "machine-materials", filename: "machine-materials.bin",
+                               signature: "PND1", maximumLabel: 31)
+    static let pirates = Self(name: "pirate-materials", filename: "pirate-materials.bin",
+                              signature: "PRT1", maximumLabel: 31)
+    static let castle = Self(name: "castle-materials", filename: "castle-materials.bin",
+                             signature: "CHR1", maximumLabel: 31)
 
     private let data: Data
     private let entries: [String: Entry]
@@ -2222,6 +2234,18 @@ extension DinoSpriteColorRenderer {
         archivedLabels(source, name: DinoValleyArtwork.asset(for: asset), archive: .valley)
     }
 
+    static func machineLabels(_ source: CGImage, asset: String) -> [UInt8]? {
+        archivedLabels(source, name: DinoMachineArtwork.asset(for: asset), archive: .machine)
+    }
+
+    static func pirateLabels(_ source: CGImage, asset: String) -> [UInt8]? {
+        archivedLabels(source, name: DinoPirateArtwork.asset(for: asset), archive: .pirates)
+    }
+
+    static func castleLabels(_ source: CGImage, asset: String) -> [UInt8]? {
+        archivedLabels(source, name: DinoCastleArtwork.asset(for: asset), archive: .castle)
+    }
+
     private static func archivedLabels(_ source: CGImage, name: String, archive: DinoSpriteMaskArchive?) -> [UInt8]? {
         let key = "\(name)-\(source.width)x\(source.height)" as NSString
         if let hit = bossMaskCache.object(forKey: key) { return hit.pixels }
@@ -2270,6 +2294,37 @@ extension DinoSpriteColorRenderer {
                                                               standard.body, standard.belly, 0xAECED3])
     }
 
+    static func recoloredPirates(_ source: CGImage, appearance: DinoAppearance, asset: String) -> CGImage? {
+        guard !appearance.hasOriginalColors else { return source }
+        guard let matte = pirateLabels(source, asset: asset) else { return nil }
+        let standard = DinoAppearance.standard(for: .pirates)
+        let parts: [DinoAppearance.Part] = [.body, .bandana, .spikes, .body, .belly]
+        return recoloredMatte(source, matte: matte, appearance: appearance, standard: standard,
+                              parts: parts, referenceColors: [0, standard.bandana, standard.spikes, standard.body, standard.belly])
+    }
+
+    static func recoloredCastle(_ source: CGImage, appearance: DinoAppearance, asset: String) -> CGImage? {
+        guard !appearance.hasOriginalColors else { return source }
+        guard let matte = castleLabels(source, asset: asset) else { return nil }
+        let standard = DinoAppearance.standard(for: .castle)
+        // Metal, cape, spotted skin and ivory. Gold and teal fittings follow
+        // one color choice while retaining their different values and textures.
+        return recoloredMatte(source, matte: matte, appearance: appearance, standard: standard,
+                              parts: [.body, .bandana, .spikes, .body, .belly, .bandana, .belly],
+                              referenceColors: [0, standard.bandana, standard.spikes,
+                                                standard.body, standard.belly, 0x1182B9, 0xF2EAE2])
+    }
+
+    static func recoloredMachine(_ source: CGImage, appearance: DinoAppearance, asset: String) -> CGImage? {
+        guard !appearance.hasOriginalColors else { return source }
+        guard let matte = machineLabels(source, asset: asset) else { return nil }
+        let standard = DinoAppearance.standard(for: .machine)
+        let parts: [DinoAppearance.Part] = [.body, .bandana, .bandana, .spikes, .body, .belly, .belly, .bandana]
+        return recoloredMatte(source, matte: matte, appearance: appearance, standard: standard,
+                              parts: parts, referenceColors: [0, standard.bandana, 0xE6A747, standard.spikes,
+                                                              standard.body, standard.belly, 0xD5B3D7, 0x9A582B])
+    }
+
     private static func recoloredMatte(_ source: CGImage, matte: [UInt8], appearance: DinoAppearance, standard: DinoAppearance,
                                        parts: [DinoAppearance.Part], referenceColors: [UInt32]) -> CGImage? {
         let reference = referenceColors.map { HSL(hex: $0) }
@@ -2314,6 +2369,21 @@ extension DinoSpriteColorRenderer {
 
     static func valleyHead(_ source: CGImage, asset: String, mirrored: Bool, includesFace: Bool = false) -> CGImage? {
         guard let matte = valleyLabels(source, asset: asset) else { return nil }
+        return isolatedHead(source, matte: matte, mirrored: mirrored, includesFace: includesFace)
+    }
+
+    static func machineHead(_ source: CGImage, asset: String, mirrored: Bool, includesFace: Bool = false) -> CGImage? {
+        guard let matte = machineLabels(source, asset: asset) else { return nil }
+        return isolatedHead(source, matte: matte, mirrored: mirrored, includesFace: includesFace)
+    }
+
+    static func pirateHead(_ source: CGImage, asset: String, mirrored: Bool, includesFace: Bool = false) -> CGImage? {
+        guard let matte = pirateLabels(source, asset: asset) else { return nil }
+        return isolatedHead(source, matte: matte, mirrored: mirrored, includesFace: includesFace)
+    }
+
+    static func castleHead(_ source: CGImage, asset: String, mirrored: Bool, includesFace: Bool = false) -> CGImage? {
+        guard let matte = castleLabels(source, asset: asset) else { return nil }
         return isolatedHead(source, matte: matte, mirrored: mirrored, includesFace: includesFace)
     }
 

@@ -17,17 +17,17 @@ struct DinoAvatar: View {
     }
 
     private var image: UIImage? {
-        if appearance.identity.usesBossArtwork {
-            return DinoAvatarRenderer.render(original: nil, appearance: appearance, portrait: portrait, asset: asset)
-        }
         if let rendered, rendered.key == renderKey { return rendered.image }
         if let cached = DinoAvatarRenderer.cached(appearance: appearance, portrait: portrait, asset: asset) { return cached }
         if appearance == .standard { return standardImage }
-        if let rendered, rendered.key.asset == asset, rendered.key.portrait == portrait { return rendered.image }
+        if let rendered, rendered.key.appearance.identity == appearance.identity,
+           rendered.key.asset == asset, rendered.key.portrait == portrait {
+            return rendered.image
+        }
         // A cold launch has no rendered state or memory cache yet. Prepare this
         // first image before drawing; showing the standard art would flash the
         // wrong colors. Subsequent picker changes still use the async task below.
-        return DinoAvatarRenderer.render(original: UIImage(named: asset)?.cgImage,
+        return DinoAvatarRenderer.render(original: appearance.identity.usesBossArtwork ? nil : UIImage(named: asset)?.cgImage,
                                          appearance: appearance, portrait: portrait, asset: asset)
     }
 
@@ -47,7 +47,7 @@ struct DinoAvatar: View {
                 rendered = nil
                 return
             }
-            let original = UIImage(named: asset)?.cgImage
+            let original = appearance.identity.usesBossArtwork ? nil : UIImage(named: asset)?.cgImage
             // The system color picker can emit many changes while a finger moves.
             do { try await Task.sleep(for: .milliseconds(35)) } catch { return }
             let job = Task.detached(priority: .userInitiated) {
@@ -340,9 +340,19 @@ enum DinoAvatarRenderer {
                 let head: CGImage
                 let crop: CGRect
                 switch appearance.identity {
+                case .castle:
+                    guard let isolated = DinoSpriteColorRenderer.castleHead(colored, asset: sourceAsset, mirrored: true, includesFace: true) else { return nil }
+                    head = isolated
+                    crop = DinoCastleArtwork.portraitCrop
+                case .pirates:
+                    head = DinoSpriteColorRenderer.pirateHead(colored, asset: sourceAsset, mirrored: true, includesFace: true) ?? colored
+                    crop = DinoPirateArtwork.portraitCrop
                 case .valley:
                     head = DinoSpriteColorRenderer.valleyHead(colored, asset: sourceAsset, mirrored: true, includesFace: true) ?? colored
                     crop = DinoValleyArtwork.portraitCrop
+                case .machine:
+                    head = DinoSpriteColorRenderer.machineHead(colored, asset: sourceAsset, mirrored: true, includesFace: true) ?? colored
+                    crop = DinoMachineArtwork.portraitCrop
                 case .city:
                     head = DinoSpriteColorRenderer.cityHead(colored, asset: sourceAsset, mirrored: true, includesFace: true) ?? colored
                     crop = DinoCityArtwork.portraitCrop

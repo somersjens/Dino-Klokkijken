@@ -50,12 +50,13 @@ struct DinoTimeZoneMap: View {
                     cityLabel(journey.origin, time: theme.digitalReading(referenceTime, languageCode: code), isOrigin: true, width: labelWidth)
                         .position(originLabel)
                         .accessibilityIdentifier("\(prefix).timeZone.origin")
-                    cityLabel(journey.destination, time: showsAnswer ? theme.digitalReading(answer, languageCode: code) : "?", isOrigin: false, width: labelWidth)
+                    cityLabel(journey.destination, time: showsAnswer ? theme.digitalReading(answer, languageCode: code) : L("?"), isOrigin: false, width: labelWidth)
                         .position(destinationLabel)
                         .accessibilityIdentifier("\(prefix).timeZone.destination")
                     marker(color: originColor, target: false).position(origin)
                     destinationMarker.position(destination)
                 }
+                .environment(\.layoutDirection, .leftToRight)
                 .clipShape(RoundedRectangle(cornerRadius: 22))
                 .overlay(RoundedRectangle(cornerRadius: 22)
                     .stroke(highContrast ? DinoStyle.ink : Color(dinoHex: 0x83ADB4).opacity(0.65), lineWidth: highContrast ? 2 : 1)
@@ -102,8 +103,9 @@ struct DinoTimeZoneMap: View {
         let direction = DinoTimeDirection.color(later: later, highContrast: highContrast)
         let difference = animatedOffset ?? journey.offsetMinutes
         let offset = isOrigin ? L(key: "dino.timeZone.reference") : differenceText(difference)
+        let name = capital.name(language: code) { L(key: $0) }
         return VStack(spacing: 2) {
-            Text(verbatim: capital.name(language: code))
+            Text(verbatim: name)
                 .font(.system(size: demonstrationLayout.spacious ? 20 : 13, weight: .heavy, design: .rounded))
                 .lineLimit(1).minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity)
@@ -133,7 +135,7 @@ struct DinoTimeZoneMap: View {
         .background(.white.opacity(0.96), in: RoundedRectangle(cornerRadius: 13))
         .overlay(RoundedRectangle(cornerRadius: 13).stroke(color.opacity(0.5), lineWidth: 1).allowsHitTesting(false))
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(Text(verbatim: "\(capital.name(language: code)), \(time), \(offset)"))
+        .accessibilityLabel(Text(verbatim: [name, time, offset].joined(separator: L(", "))))
     }
 
     private func differenceText(_ difference: Int) -> String {
@@ -141,7 +143,7 @@ struct DinoTimeZoneMap: View {
         if !difference.isMultiple(of: 30) {
             return "\(DinoTimeWords.duration(abs(difference), language: code)) \(L(key: later ? "dino.expanded.later" : "dino.expanded.earlier"))"
         }
-        return String(format: L(key: later ? "dino.timeZone.later" : "dino.timeZone.earlier"), DinoTimeWords.zoneHours(difference))
+        return String(format: L(key: later ? "dino.timeZone.later" : "dino.timeZone.earlier"), DinoTimeWords.zoneHours(difference, language: code))
     }
 
     private func drawLeader(context: inout GraphicsContext, from point: CGPoint, to label: CGPoint, labelWidth: CGFloat, color: Color) {
@@ -205,8 +207,10 @@ struct DinoTimeZoneMap: View {
         }
         for run in runs where run.end - run.start >= 42 {
             let sign = run.offset < 0 ? "−" : run.offset > 0 ? "+" : ""
-            let unit = code == "nl" ? "u" : "h"
-            let text = Text(verbatim: "\(sign)\(DinoTimeWords.zoneHours(run.offset)) \(unit)")
+            let unit = language.effective.timeVocabulary.atlasZoneUnit
+            let numeric = "\(sign)\(DinoTimeWords.zoneHours(run.offset, language: code))"
+            let amount = language.effective.runsRightToLeft ? "\u{2066}\(numeric)\u{2069}" : numeric
+            let text = Text(verbatim: "\(amount) \(unit)")
                 .font(.system(size: 10, weight: .heavy, design: .rounded))
                 .canvasInk(run.offset == 0 ? DinoStyle.ink : DinoTimeDirection.color(later: run.offset > 0, highContrast: highContrast))
             let x = (run.start + run.end) / 2

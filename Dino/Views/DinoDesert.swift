@@ -791,11 +791,11 @@ struct DinoDesertLevelStone: View {
         ZStack {
             Circle().fill(Color(dinoHex: 0x986B3E)).offset(y: 6)
             Circle().fill(LinearGradient(colors: [Color(dinoHex: 0xFFF0C4), Color(dinoHex: 0xE7B96F), Color(dinoHex: 0xAB7744)], startPoint: .topLeading, endPoint: .bottomTrailing))
-            Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0xBCB98C : unlocked ? 0xE4EACD : 0xC9D6D1),
-                                                  Color(dinoHex: boss ? 0x8E8653 : unlocked ? 0xA5BEA3 : 0x8AA7A8)], startPoint: .topLeading, endPoint: .bottomTrailing)).padding(8)
+            Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0xBCB98C : unlocked ? 0xFFF3D8 : 0xE0D9CC),
+                                                  Color(dinoHex: boss ? 0x8E8653 : unlocked ? LevelStonePalette.face(themeID: 7) : 0xB8AA98)], startPoint: .topLeading, endPoint: .bottomTrailing)).padding(8)
             Circle().strokeBorder(Color(dinoHex: highContrast ? 0x78502E : 0xFFF5D8), lineWidth: highContrast ? 3 : 2).padding(3)
             Circle().strokeBorder(Color(dinoHex: 0xD49952), lineWidth: 1.3).padding(7)
-            Circle().strokeBorder(Color(dinoHex: 0x557C7C).opacity(0.45), lineWidth: 1).padding(10)
+            Circle().strokeBorder(Color(dinoHex: 0x9C6B3F).opacity(0.45), lineWidth: 1).padding(10)
             Canvas { c, size in
                 for i in 0..<8 {
                     let angle = Double(i) * .pi / 4 + 0.14

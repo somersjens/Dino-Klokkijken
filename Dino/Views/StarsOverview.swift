@@ -91,7 +91,7 @@ struct DinoStarsOverview: View {
         let tint = Color(dinoHex: world.ground)
         let scale = layout.scale
         return HStack(spacing: 10 * scale) {
-            Text(verbatim: "\(world.id)")
+            Text(world.id, format: .number)
                 .font(.system(size: 14 * scale * textScale, weight: .heavy, design: .rounded))
                 .frame(minWidth: 32 * scale, minHeight: 32 * scale)
                 .padding(2 * max(0, textScale - 1))
@@ -122,7 +122,7 @@ struct DinoStarsOverview: View {
 
     private func starCount(_ count: Int, scale: CGFloat) -> some View {
         HStack(spacing: 6 * scale) {
-            Text(verbatim: "\(count)").monospacedDigit()
+            Text(count, format: .number.grouping(.never)).monospacedDigit()
             DinoRewardStar(size: 22 * scale * textScale)
         }.fixedSize()
     }

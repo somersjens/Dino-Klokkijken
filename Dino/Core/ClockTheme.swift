@@ -95,15 +95,15 @@ enum DigitalHourNotation: String, Codable, CaseIterable, Sendable {
             return defaults.bool(forKey: "AppleICUForce24HourTime") ? .twentyFour : .twelve
         }
         let format = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: .current) ?? ""
-        return format.contains("a") ? .twelve : .twentyFour
+        return format.first(where: { "hHKk".contains($0) }).map { "hK".contains($0) } == true ? .twelve : .twentyFour
     }
 }
 
 enum AnalogNumerals: String, Codable, CaseIterable, Sendable {
     case normal, roman
 
-    func label(for hour: Int) -> String {
-        guard self == .roman, (1...12).contains(hour) else { return String(hour) }
+    func label(for hour: Int, language: String = "en") -> String {
+        guard self == .roman, (1...12).contains(hour) else { return DinoTimeWords.number(hour, language: language) }
         return ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"][hour - 1]
     }
 }

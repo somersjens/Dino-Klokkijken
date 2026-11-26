@@ -13,6 +13,10 @@ private extension EnvironmentValues {
     }
 }
 
+extension EnvironmentValues {
+    @Entry var dinoMapHiddenResidentWorld: Int? = nil
+}
+
 struct WorldMap: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -66,6 +70,13 @@ struct WorldMap: View {
     private var showsMapDino: Bool {
         (introFinished || !animatesOpening) && (worldTransition == nil || worldJumpFinished)
     }
+    private var hiddenResidentWorld: Int? {
+        guard let worldTransition, worldTransition.sourceLevel == worldTransition.destinationLevel,
+              worldJumpStartedAt != nil, !worldJumpFinished else { return nil }
+        // Both actors share a clearing for the final unlock. Release the
+        // boss from the stage before it becomes the airborne companion.
+        return player.profile.pendingCharacterUnlock?.worldID
+    }
     private var mapInteractive: Bool { initialPositionReady && (introFinished || !animatesOpening) && (worldTransition == nil || worldJumpFinished) }
     private var readyForReviewRequest: Bool {
         requestsReviewAfterArrival && mapInteractive && allowsReviewRequest && scenePhase == .active &&
@@ -99,6 +110,7 @@ struct WorldMap: View {
             let viewportObserver = MapViewportObserver(centersLevel: standingLevel > 1 || mapScale > 1,
                 restoresPosition: !initialPositionReady,
                 topClearance: floatingHUDHeight + geometry.safeAreaInsets.top,
+                landscape: landscape,
                 focusRequest: focusRequest, reduceMotion: reduceMotion,
                 artworkReady: readyWorlds.contains((standingLevel - 1) / 10 + 1),
                 ready: { initialPositionReady = true },
@@ -199,6 +211,7 @@ struct WorldMap: View {
                     .disabled(!mapInteractive)
                     .accessibilityHidden(!mapInteractive)
                     .environment(\.dinoMapAnimationEpoch, animationEpoch)
+                    .environment(\.dinoMapHiddenResidentWorld, hiddenResidentWorld)
                     .environment(\.dinoMapPreparing, !introFinished && animatesOpening)
                     .environment(\.dinoMapArtworkPrepared, {
                         preparedWorlds.insert($0)
@@ -579,7 +592,7 @@ private struct MapWorldJumpDino: View {
                     bossDrawing(boss, size: size, images: images, fallback: idleImage)
                         .frame(width: size, height: size)
                         .rotationEffect(.degrees(sample.angle), anchor: UnitPoint(x: 0.5, y: 0.52))
-                        .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
+                        .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: soleAnchor(for: sourceCharacter))
                         .offset(y: size * sample.height).opacity(sourceOpacity)
                         .position(center)
                 } else if let image = images[sample.pose.asset] ?? idleImage {
@@ -596,7 +609,7 @@ private struct MapWorldJumpDino: View {
                     bossDrawing(unlocked, size: size, images: unlockedImages, fallback: unlockedImages["dino-idle"])
                         .frame(width: size, height: size)
                         .rotationEffect(.degrees(sample.angle), anchor: UnitPoint(x: 0.5, y: 0.52))
-                        .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
+                        .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: soleAnchor(for: unlockedCharacter))
                         .offset(y: size * sample.height).opacity(visibility.unlocked)
                         .shadow(color: Color(dinoHex: 0xFFE59A).opacity(sin(transformation * .pi)), radius: 16)
                         .position(center)
@@ -607,6 +620,11 @@ private struct MapWorldJumpDino: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: "Dino"))
         .accessibilityIdentifier("map.worldJump")
+    }
+
+    private func soleAnchor(for character: DinoIdentity) -> UnitPoint {
+        character.usesPaintedFootline
+            ? UnitPoint(x: 0.5, y: character.standingFootline) : .bottom
     }
 
     private func bossDrawing(_ sample: DinoAnimation.Sample, size: CGFloat, images: [String: UIImage], fallback: UIImage?) -> some View {
@@ -698,6 +716,7 @@ private struct MapViewportObserver: UIViewRepresentable {
     let centersLevel: Bool
     let restoresPosition: Bool
     let topClearance: CGFloat
+    let landscape: Bool
     let focusRequest: Int
     let reduceMotion: Bool
     let artworkReady: Bool
@@ -720,6 +739,9 @@ private struct MapViewportObserver: UIViewRepresentable {
         private var focusOffset: CGFloat?
         private var snapshot: UIView?
         private var snapshotViewportSize: CGSize?
+        private var offsetObservation: NSKeyValueObservation?
+        private var viewportFraction: CGFloat?
+        private var resizeFraction: CGFloat?
 
         private struct Layout: Equatable {
             let size: CGSize
@@ -737,13 +759,19 @@ private struct MapViewportObserver: UIViewRepresentable {
         required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
         func configure(_ configuration: MapViewportObserver) {
+            if configuration.landscape != self.configuration.landscape, positioned,
+               configuration.focusRequest == completedFocus {
+                resizeFraction = resizeFraction ?? viewportFraction
+                lastLayout = nil
+                stableFrames = 0
+            }
             self.configuration = configuration
             if configuration.focusRequest == 0 {
                 activeFocus = 0
                 completedFocus = 0
                 removeSnapshot()
             }
-            if !positioned || configuration.focusRequest != completedFocus { startObserving() }
+            if !positioned || resizeFraction != nil || configuration.focusRequest != completedFocus { startObserving() }
         }
 
         override func didMoveToWindow() {
@@ -763,7 +791,11 @@ private struct MapViewportObserver: UIViewRepresentable {
             while let view = ancestor {
                 if let scroll = view as? UIScrollView {
                     scrollView = scroll
-                    if !positioned || configuration.focusRequest != completedFocus { startObserving() }
+                    offsetObservation = scroll.observe(\.contentOffset) { [weak self] scroll, _ in
+                        self?.rememberViewport(in: scroll)
+                    }
+                    rememberViewport(in: scroll)
+                    if !positioned || resizeFraction != nil || configuration.focusRequest != completedFocus { startObserving() }
                     return
                 }
                 ancestor = view.superview
@@ -772,6 +804,8 @@ private struct MapViewportObserver: UIViewRepresentable {
 
         func detach() {
             removeSnapshot()
+            offsetObservation?.invalidate()
+            offsetObservation = nil
             scrollView = nil
             displayLink?.invalidate()
             displayLink = nil
@@ -782,6 +816,15 @@ private struct MapViewportObserver: UIViewRepresentable {
             let link = CADisplayLink(target: self, selector: #selector(tick))
             link.add(to: .main, forMode: .common)
             displayLink = link
+        }
+
+        private func rememberViewport(in scroll: UIScrollView) {
+            let size = scroll.bounds.size
+            guard positioned, resizeFraction == nil, configuration.focusRequest == completedFocus,
+                  size.width > 0, size.height > 0, scroll.contentSize.height > 0,
+                  (size.width > size.height) == configuration.landscape else { return }
+            let center = scroll.contentOffset.y + (size.height + configuration.topClearance) / 2
+            viewportFraction = center / scroll.contentSize.height
         }
 
         private func removeSnapshot() {
@@ -837,11 +880,13 @@ private struct MapViewportObserver: UIViewRepresentable {
                 lastLayout = layout
                 if stableFrames >= 2 {
                     positioned = true
+                    rememberViewport(in: scroll)
                     configuration.ready()
                 }
             } else if configuration.focusRequest > 0, configuration.focusRequest != completedFocus {
                 let request = configuration.focusRequest
                 if activeFocus != request {
+                    resizeFraction = nil
                     activeFocus = request
                     stableFrames = 0
                     snapshot?.layer.removeAllAnimations()
@@ -870,6 +915,7 @@ private struct MapViewportObserver: UIViewRepresentable {
                     lastLayout = layout
                     if stableFrames >= 2 && configuration.artworkReady {
                         completedFocus = request
+                        rememberViewport(in: scroll)
                         if let image = snapshot {
                             UIView.animate(withDuration: configuration.reduceMotion ? 0 : 0.22,
                                            animations: { image.alpha = 0 }, completion: { [weak self, weak image] finished in
@@ -885,8 +931,22 @@ private struct MapViewportObserver: UIViewRepresentable {
                         }
                     }
                 }
+            } else if let fraction = resizeFraction,
+                      (layout.size.width > layout.size.height) == configuration.landscape {
+                stableFrames = layout == lastLayout ? stableFrames + 1 : 0
+                lastLayout = layout
+                if stableFrames >= 2 || scroll.isDragging {
+                    // Chapters change height on rotation. Restore the point that
+                    // was in the middle of the usable viewport in the new layout.
+                    if !scroll.isDragging {
+                        let y = fraction * layout.content.height - (layout.size.height + layout.clearance) / 2
+                        scroll.setContentOffset(CGPoint(x: scroll.contentOffset.x, y: min(maximum, max(minimum, y))), animated: false)
+                    }
+                    resizeFraction = nil
+                    rememberViewport(in: scroll)
+                }
             }
-            if positioned && configuration.focusRequest == completedFocus {
+            if positioned && resizeFraction == nil && configuration.focusRequest == completedFocus {
                 displayLink?.invalidate()
                 displayLink = nil
             }
@@ -1035,7 +1095,7 @@ struct LevelNode: View {
                     }
                     VStack(spacing: 1) {
                         if level.isBoss { Image(systemName: "crown.fill").font(.system(size: 24)).foregroundStyle(DinoStyle.green) }
-                        if unlocked { Text(verbatim: "\(level.id)").font(.system(size: level.isBoss ? 23 : 30, weight: .heavy, design: .rounded)) }
+                        if unlocked { Text(level.id, format: .number).font(.system(size: level.isBoss ? 23 : 30, weight: .heavy, design: .rounded)) }
                         else { Image(systemName: "lock.fill").font(.system(size: 23, weight: .bold)) }
                     }.foregroundStyle(level.isBoss ? .white : DinoStyle.ink)
                         .opacity(current && (level.worldID == 1 || ((2...10).contains(level.worldID) && !highContrast)) ? 0.55 : 1)
@@ -1064,7 +1124,7 @@ private struct JungleLevelStone: View {
     var boss = false
     var highContrast = false
 
-    private var face: Color { Color(dinoHex: boss ? 0x244F52 : !unlocked ? 0xA5B69B : 0x81D349) }
+    private var face: Color { Color(dinoHex: boss ? 0x244F52 : !unlocked ? 0xA5B69B : LevelStonePalette.face(themeID: 1)) }
 
     var body: some View {
         GeometryReader { geometry in
@@ -1104,7 +1164,7 @@ private struct SleepValleyLevelStone: View {
     let boss: Bool
     let highContrast: Bool
 
-    private var face: Color { Color(dinoHex: boss ? 0x3E5676 : unlocked ? 0x9ED2A3 : 0xA5B5B9) }
+    private var face: Color { Color(dinoHex: boss ? 0x3E5676 : unlocked ? LevelStonePalette.face(themeID: 2) : 0xADB5C0) }
 
     var body: some View {
         GeometryReader { geometry in
@@ -1113,14 +1173,14 @@ private struct SleepValleyLevelStone: View {
                 Circle().fill(Color(dinoHex: 0x627787)).offset(y: 6)
                 Circle().fill(LinearGradient(colors: [Color(dinoHex: 0xE8E5CD), Color(dinoHex: 0xA8B6C6), Color(dinoHex: 0x778AA1)],
                                              startPoint: .topLeading, endPoint: .bottomTrailing))
-                Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x718BAD : unlocked ? 0xD2EDB4 : 0xCBD5CC), face],
-                                             startPoint: .topLeading, endPoint: .bottomTrailing)).padding(7)
+                Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x718BAD : unlocked ? 0xE6EEFA : 0xD6DAE0), face],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing)).padding(8)
                 Circle().fill(RadialGradient(colors: [Color(dinoHex: 0xFFFFDF).opacity(0.4), .clear],
                                             center: .init(x: 0.27, y: 0.18), startRadius: 0, endRadius: diameter * 0.7)).padding(8)
                 Circle().strokeBorder(Color(dinoHex: highContrast ? 0x344B66 : 0xFFF5CE), lineWidth: highContrast ? 3 : 2).padding(3)
-                Circle().strokeBorder(Color(dinoHex: 0x526E75).opacity(0.35), lineWidth: 1).padding(9)
+                Circle().strokeBorder(Color(dinoHex: 0x5F6E96).opacity(0.35), lineWidth: 1).padding(10)
                 if occupied {
-                    Circle().fill(Color(dinoHex: 0xEEF0E3).opacity(highContrast ? 0.18 : 0.46)).padding(9)
+                    Circle().fill(Color(dinoHex: 0xEEF2FA).opacity(highContrast ? 0.18 : 0.46)).padding(10)
                     Circle().stroke(Color(dinoHex: 0xFFF3C2).opacity(0.9), lineWidth: 2).padding(-5)
                     Circle().stroke(Color(dinoHex: 0xFFF2BA).opacity(0.22), lineWidth: 5).padding(-10)
                 }
@@ -1145,7 +1205,7 @@ private struct VolcanoLevelStone: View {
     let boss: Bool
     let highContrast: Bool
 
-    private var face: Color { Color(dinoHex: boss ? 0x414A61 : unlocked ? 0xA4CE87 : 0xA7A99F) }
+    private var face: Color { Color(dinoHex: boss ? 0x414A61 : unlocked ? LevelStonePalette.face(themeID: 3) : 0xB5A99F) }
 
     var body: some View {
         GeometryReader { geometry in
@@ -1153,10 +1213,10 @@ private struct VolcanoLevelStone: View {
                 Circle().fill(Color(dinoHex: 0x505366)).offset(y: 6)
                 Circle().fill(LinearGradient(colors: [Color(dinoHex: 0xB8AAA5), Color(dinoHex: 0x7C7F8B), Color(dinoHex: 0x4C546A)],
                                              startPoint: .topLeading, endPoint: .bottomTrailing))
-                Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x6D7288 : unlocked ? 0xE3E7B0 : 0xD6D1B6), face],
+                Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x6D7288 : unlocked ? 0xFFE6BF : 0xDCD3CA), face],
                                              startPoint: .topLeading, endPoint: .bottomTrailing)).padding(8)
                 Circle().strokeBorder(Color(dinoHex: highContrast ? 0x333F54 : 0xF8D6A0), lineWidth: highContrast ? 3 : 2).padding(3)
-                Circle().strokeBorder(Color(dinoHex: 0x485B57).opacity(0.35), lineWidth: 1).padding(10)
+                Circle().strokeBorder(Color(dinoHex: 0x7A4A3A).opacity(0.35), lineWidth: 1).padding(10)
                 Canvas { context, size in
                     let radius = size.width * 0.44
                     for i in 0..<6 {
@@ -1187,7 +1247,7 @@ private struct VillageLevelStone: View {
     let boss: Bool
     let highContrast: Bool
 
-    private var face: Color { Color(dinoHex: boss ? 0x3D645B : unlocked ? 0xA2CE7C : 0xB2BBA4) }
+    private var face: Color { Color(dinoHex: boss ? 0x3D645B : unlocked ? LevelStonePalette.face(themeID: 4) : 0xB2BBA4) }
 
     var body: some View {
         GeometryReader { geometry in
@@ -1226,14 +1286,14 @@ private struct VillageLevelStone: View {
     }
 }
 
-/// A cool mineral rim and mint face echo the cave's illuminated stone terraces.
+/// A cool mineral rim and lavender face echo the cave's glowing crystals.
 private struct CrystalLevelStone: View {
     let unlocked: Bool
     let occupied: Bool
     let boss: Bool
     let highContrast: Bool
 
-    private var face: Color { Color(dinoHex: boss ? 0x475C7C : unlocked ? 0xA1D0B9 : 0xB0BEC0) }
+    private var face: Color { Color(dinoHex: boss ? 0x475C7C : unlocked ? LevelStonePalette.face(themeID: 5) : 0xB4B9C6) }
 
     var body: some View {
         GeometryReader { geometry in
@@ -1241,10 +1301,10 @@ private struct CrystalLevelStone: View {
                 Circle().fill(Color(dinoHex: 0x697F99)).offset(y: 6)
                 Circle().fill(LinearGradient(colors: [Color(dinoHex: 0xE1E6E7), Color(dinoHex: 0xA9B7CD), Color(dinoHex: 0x7586A8)],
                                              startPoint: .topLeading, endPoint: .bottomTrailing))
-                Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x8D9BBF : unlocked ? 0xE0F0CB : 0xDCE4DA), face],
+                Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x8D9BBF : unlocked ? 0xEEEBFC : 0xDDE0E8), face],
                                              startPoint: .topLeading, endPoint: .bottomTrailing)).padding(8)
-                Circle().strokeBorder(Color(dinoHex: highContrast ? 0x445E7A : 0xE2FFF2), lineWidth: highContrast ? 3 : 2).padding(3)
-                Circle().strokeBorder(Color(dinoHex: 0x547F81).opacity(0.35), lineWidth: 1).padding(10)
+                Circle().strokeBorder(Color(dinoHex: highContrast ? 0x445E7A : 0xF1EEFF), lineWidth: highContrast ? 3 : 2).padding(3)
+                Circle().strokeBorder(Color(dinoHex: 0x6A6F9A).opacity(0.35), lineWidth: 1).padding(10)
                 Canvas { context, size in
                     let center = CGPoint(x: size.width / 2, y: size.height / 2)
                     func point(_ angle: Double, _ fraction: CGFloat) -> CGPoint {
@@ -1264,9 +1324,9 @@ private struct CrystalLevelStone: View {
                     }
                 }
                 if occupied {
-                    Circle().fill(Color(dinoHex: 0xF3F9EF).opacity(highContrast ? 0.18 : 0.46)).padding(10)
-                    Circle().stroke(Color(dinoHex: 0xE5FFF2).opacity(0.9), lineWidth: 2).padding(-5)
-                    Circle().stroke(Color(dinoHex: 0xB7E5E5).opacity(0.27), lineWidth: 5).padding(-10)
+                    Circle().fill(Color(dinoHex: 0xF5F3FF).opacity(highContrast ? 0.18 : 0.46)).padding(10)
+                    Circle().stroke(Color(dinoHex: 0xF1EEFF).opacity(0.9), lineWidth: 2).padding(-5)
+                    Circle().stroke(Color(dinoHex: 0xCBC6F0).opacity(0.27), lineWidth: 5).padding(-10)
                 }
             }.shadow(color: Color(dinoHex: 0x536F84).opacity(0.22), radius: 5, y: 9)
         }.allowsHitTesting(false).accessibilityHidden(true)
@@ -1280,7 +1340,7 @@ private struct CityLevelStone: View {
     let boss: Bool
     let highContrast: Bool
 
-    private var face: Color { Color(dinoHex: boss ? 0x376475 : unlocked ? 0xA5D08B : 0xAFBDA8) }
+    private var face: Color { Color(dinoHex: boss ? 0x376475 : unlocked ? LevelStonePalette.face(themeID: 6) : 0xAFBDC0) }
 
     var body: some View {
         GeometryReader { geometry in
@@ -1288,10 +1348,10 @@ private struct CityLevelStone: View {
                 Circle().fill(Color(dinoHex: 0x568991)).offset(y: 6)
                 Circle().fill(LinearGradient(colors: [Color(dinoHex: 0xE3EFE0), Color(dinoHex: 0xA8CFC2), Color(dinoHex: 0x5D98A1)],
                                              startPoint: .topLeading, endPoint: .bottomTrailing))
-                Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x75A6A6 : unlocked ? 0xE7EEC0 : 0xDCE3C8), face],
+                Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x75A6A6 : unlocked ? 0xE4F6F3 : 0xDCE3E3), face],
                                              startPoint: .topLeading, endPoint: .bottomTrailing)).padding(8)
                 Circle().strokeBorder(Color(dinoHex: highContrast ? 0x3B6773 : 0xFFF1C7), lineWidth: highContrast ? 3 : 2).padding(3)
-                Circle().strokeBorder(Color(dinoHex: 0x598467).opacity(0.35), lineWidth: 1).padding(10)
+                Circle().strokeBorder(Color(dinoHex: 0x4F7F8C).opacity(0.35), lineWidth: 1).padding(10)
                 Canvas { context, size in
                     for i in 0..<6 {
                         let angle = Double(i) * .pi / 3 + .pi / 6
@@ -1308,7 +1368,7 @@ private struct CityLevelStone: View {
                 if occupied {
                     Circle().fill(Color(dinoHex: 0xFFFAE1).opacity(highContrast ? 0.18 : 0.46)).padding(10)
                     Circle().stroke(Color(dinoHex: 0xFFF6C9).opacity(0.9), lineWidth: 2).padding(-5)
-                    Circle().stroke(Color(dinoHex: 0xB9D8B5).opacity(0.25), lineWidth: 5).padding(-10)
+                    Circle().stroke(Color(dinoHex: 0xB3DCDA).opacity(0.25), lineWidth: 5).padding(-10)
                 }
             }.shadow(color: Color(dinoHex: 0x587B6B).opacity(0.22), radius: 5, y: 9)
         }.allowsHitTesting(false).accessibilityHidden(true)
@@ -1377,8 +1437,8 @@ private struct TimeMachineLevelStone: View {
             Circle().fill(Color(dinoHex: 0x8F8766)).offset(y: 6)
             Circle().fill(LinearGradient(colors: [Color(dinoHex: 0xFFE8AE), Color(dinoHex: 0xD4B16F), Color(dinoHex: 0x9B895D)],
                                          startPoint: .topLeading, endPoint: .bottomTrailing))
-            Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x7EAFB8 : unlocked ? 0xDAF4C6 : 0xD7DED0),
-                                                  Color(dinoHex: boss ? 0x345F75 : unlocked ? 0x95C5AB : 0xA2B4AC)],
+            Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x7EAFB8 : unlocked ? 0xDDF7F8 : 0xD7DEDF),
+                                                  Color(dinoHex: boss ? 0x345F75 : unlocked ? LevelStonePalette.face(themeID: 8) : 0xA2B2B6)],
                                          startPoint: .topLeading, endPoint: .bottomTrailing)).padding(9)
             Circle().strokeBorder(Color(dinoHex: highContrast ? 0x526E73 : 0xFFF2C4), lineWidth: highContrast ? 3 : 2).padding(3)
             Circle().strokeBorder(Color(dinoHex: 0x587F83).opacity(0.65), lineWidth: 1).padding(9)
@@ -1422,7 +1482,7 @@ private struct PirateLevelStone: View {
             Circle().fill(LinearGradient(colors: [Color(dinoHex: 0xFFF0C4), Color(dinoHex: 0xE0BF86), Color(dinoHex: 0xB89C70)],
                                          startPoint: .topLeading, endPoint: .bottomTrailing))
             Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x75AFB8 : unlocked ? 0xE3F3BE : 0xE3E4CA),
-                                                  Color(dinoHex: boss ? 0x345F75 : unlocked ? 0x94CDB2 : 0xAABFB0)],
+                                                  Color(dinoHex: boss ? 0x345F75 : unlocked ? LevelStonePalette.face(themeID: 9) : 0xAABFB0)],
                                          startPoint: .topLeading, endPoint: .bottomTrailing)).padding(9)
             Circle().strokeBorder(Color(dinoHex: highContrast ? 0x5C7273 : 0xFFF2CB), lineWidth: highContrast ? 3 : 2).padding(3)
             Circle().strokeBorder(Color(dinoHex: 0xB19564).opacity(0.8), lineWidth: 3).padding(6)
@@ -1459,8 +1519,8 @@ private struct CastleLevelStone: View {
             Circle().fill(Color(dinoHex: 0x9F9F82)).offset(y: 6)
             Circle().fill(LinearGradient(colors: [Color(dinoHex: 0xFFF1C9), Color(dinoHex: 0xDCC796), Color(dinoHex: 0xAEB49D)],
                                          startPoint: .topLeading, endPoint: .bottomTrailing))
-            Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x7CA3C1 : unlocked ? 0xE5F3D4 : 0xE2E6D0),
-                                                  Color(dinoHex: boss ? 0x365A7F : unlocked ? 0xA4C9BF : 0xAEBFB5)],
+            Circle().fill(LinearGradient(colors: [Color(dinoHex: boss ? 0x7CA3C1 : unlocked ? 0xE8F0FA : 0xE2E5E8),
+                                                  Color(dinoHex: boss ? 0x365A7F : unlocked ? LevelStonePalette.face(themeID: 10) : 0xB3BCC4)],
                                          startPoint: .topLeading, endPoint: .bottomTrailing)).padding(9)
             Circle().strokeBorder(Color(dinoHex: highContrast ? 0x4D6B7D : 0xFFF7D7), lineWidth: highContrast ? 3 : 2).padding(3)
             Circle().strokeBorder(Color(dinoHex: 0xC8A96C), lineWidth: 2).padding(7)
@@ -1487,7 +1547,7 @@ private struct CastleLevelStone: View {
             }
             if occupied {
                 Circle().fill(Color(dinoHex: 0xFFFBE7).opacity(highContrast ? 0.18 : 0.48)).padding(10)
-                Circle().stroke(Color(dinoHex: 0xF3FFF0).opacity(0.95), lineWidth: 2).padding(-5)
+                Circle().stroke(Color(dinoHex: 0xF4F8FF).opacity(0.95), lineWidth: 2).padding(-5)
                 Circle().stroke(Color(dinoHex: 0xBCDCE3).opacity(0.28), lineWidth: 5).padding(-10)
             }
         }.shadow(color: Color(dinoHex: 0x7C917E).opacity(0.25), radius: 5, y: 9)
@@ -1524,6 +1584,7 @@ private struct WorldChapter: View, Equatable {
         lhs.topClearanceForJump == rhs.topClearanceForJump &&
         lhs.viewportObserver.restoresPosition == rhs.viewportObserver.restoresPosition &&
         lhs.viewportObserver.topClearance == rhs.viewportObserver.topClearance &&
+        lhs.viewportObserver.landscape == rhs.viewportObserver.landscape &&
         lhs.viewportObserver.focusRequest == rhs.viewportObserver.focusRequest &&
         lhs.viewportObserver.reduceMotion == rhs.viewportObserver.reduceMotion &&
         lhs.viewportObserver.artworkReady == rhs.viewportObserver.artworkReady
@@ -1694,10 +1755,39 @@ struct LevelStartTheme {
     init(worldID: Int) {
         world = DinoWorldCatalog.world(worldID) ?? DinoWorldCatalog.worlds[0]
         let colors = WorldThemeColors(world)
+        let shadeHex = LevelStonePalette.cardShade(themeID: world.themeID) ?? colors.shade
         ground = Color(dinoHex: colors.ground)
-        accent = Color(dinoHex: colors.accent)
-        shade = Color(dinoHex: colors.shade)
-        ink = Color(dinoHex: colors.shade).mixed(with: Color(dinoHex: 0x102535), by: 0.36)
+        // The play button wears the same face colour as the level stones on the map.
+        accent = Color(dinoHex: LevelStonePalette.face(themeID: world.themeID))
+        shade = Color(dinoHex: shadeHex)
+        ink = Color(dinoHex: shadeHex).mixed(with: Color(dinoHex: 0x102535), by: 0.36)
+    }
+}
+
+/// Shared colours of the map's level stones, so the start card matches the stone that was tapped.
+enum LevelStonePalette {
+    /// The face of an unlocked, ordinary level stone, keyed by the world's art theme.
+    static func face(themeID: Int) -> UInt32 {
+        switch themeID {
+        case 1: return 0x81D349   // jungle green
+        case 2: return 0xA9BFE3   // Sleep Valley moonlight
+        case 3: return 0xF2B27E   // volcano ember
+        case 4: return 0xA2CE7C   // village grass
+        case 5: return 0xB9BCEA   // crystal lavender
+        case 6: return 0x9DD3D3   // city aqua
+        case 7: return 0xEDC793   // desert sandstone
+        case 8: return 0x8ECDD8   // time-machine glass
+        case 9: return 0x94CDB2   // pirate tide
+        default: return 0xABC6E3  // castle blue
+        }
+    }
+    /// Card outlines that would otherwise clash with the stone face; nil keeps the landscape shade.
+    static func cardShade(themeID: Int) -> UInt32? {
+        switch themeID {
+        case 1: return 0x4F8A2F   // a deeper jungle green instead of dark teal
+        case 5: return 0x5F6A9A   // lavender-slate to match the crystal stones
+        default: return nil
+        }
     }
 }
 

@@ -155,7 +155,8 @@ struct DinoSettingsView: View {
             }
             rowDivider
             linkedRow(identifier: "settings.language", spacious: spacious) { showsLanguages = true } icon: {
-                Text(verbatim: language.effective.flag)
+                if let flag = language.effective.flag { Text(verbatim: flag) }
+                else { Image(systemName: "globe") }
             } title: {
                 Text(verbatim: language.effective.displayName)
             }
@@ -287,12 +288,12 @@ struct DinoSettingsView: View {
 
     /// Same height as the other switches. The longer explanation opens beside the info button.
     private func icloudRow(spacious: Bool) -> some View {
-        HStack(spacing: 12) {
-            HStack(spacing: 6) {
+        HStack(spacing: 0) {
+            HStack(spacing: 3) {
                 Button { settings.icloudSyncEnabled.toggle() } label: {
                     Label("dino.settings.icloudSync", systemImage: "icloud.fill")
                         .lineLimit(1)
-                        .fixedSize(horizontal: true, vertical: false)
+                        .minimumScaleFactor(0.7)
                         .frame(minHeight: 44, alignment: .leading)
                         .contentShape(Rectangle())
                 }
@@ -300,9 +301,9 @@ struct DinoSettingsView: View {
                 .accessibilityHidden(true)
                 Button { showsCloudHelp = true } label: {
                     Image(systemName: "info.circle")
-                        .font(.system(size: spacious ? 22 : 17, weight: .semibold))
+                        .font(.system(size: spacious ? 18 : 14, weight: .semibold))
                         .foregroundStyle(highContrast ? DinoStyle.ink : DinoStyle.muted)
-                        .frame(width: 28, height: 44)
+                        .frame(width: spacious ? 22 : 18, height: 44)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(SettingsRowButtonStyle())
@@ -323,7 +324,7 @@ struct DinoSettingsView: View {
             }
             .layoutPriority(1)
             Button { settings.icloudSyncEnabled.toggle() } label: {
-                Color.clear.frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
+                Color.clear.frame(minWidth: 8, maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
             }
             .buttonStyle(DinoPlainButtonStyle())
             .accessibilityHidden(true)
@@ -340,6 +341,7 @@ struct DinoSettingsView: View {
     private func preference(_ key: LocalizedStringKey, symbol: String, value: Binding<Bool>, identifier: String, spacious: Bool) -> some View {
         Toggle(isOn: value) {
             Label(key, systemImage: symbol)
+                .lineLimit(1).minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
         }.toggleStyle(SettingsToggleStyle()).padding(.vertical, 10).modifier(SettingsRowSizing(spacious: spacious))
             .accessibilityIdentifier(identifier)
@@ -709,7 +711,7 @@ struct DinoDayPartScheduleEditor: View {
     }
 
     private func boundaryText(_ hour: Int, ending: Bool) -> String {
-        if ending && hour == 0 { return "24:00" }
-        return String(format: "%02d:00", hour)
+        let hour = ending && hour == 0 ? 24 : hour
+        return DinoTimeWords.digitalDuration(hour * 60, language: language.effective.code)
     }
 }

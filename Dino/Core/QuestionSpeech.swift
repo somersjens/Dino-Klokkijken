@@ -14,22 +14,16 @@ struct DinoSpeechVoice: Equatable, Sendable {
 /// A matching region stays ahead of a higher-quality voice from another region.
 enum DinoSpeechVoicePicker {
     static func preferredLanguageIdentifier(for languageCode: String) -> String {
-        switch baseCode(languageCode) {
-        case "nl": return "nl-NL"
-        case "en": return "en-GB"
-        default:
-            let trimmed = normalized(languageCode)
-            return trimmed.isEmpty ? "en-GB" : trimmed
+        let code = languageCode.replacingOccurrences(of: "_", with: "-")
+        if let profile = AppLanguage.all.first(where: { $0.code.caseInsensitiveCompare(code) == .orderedSame }) {
+            return profile.voiceLocale
         }
+        return code.isEmpty ? AppLanguage.english.voiceLocale : code
     }
 
     static func bestVoice(for languageCode: String, among voices: [DinoSpeechVoice]) -> DinoSpeechVoice? {
-        let base = baseCode(languageCode)
-        let preferred = preferredLanguageIdentifier(for: base).lowercased()
-        let matching = voices.filter { voice in
-            let language = normalized(voice.language)
-            return language == base || language.hasPrefix(base + "-")
-        }
+        let preferred = preferredLanguageIdentifier(for: languageCode)
+        let matching = voices.filter { matchesLanguageAndScript($0.language, preferred) }
         let spoken = matching.filter { !isNovelty($0) }
         let pool = spoken.isEmpty ? matching : spoken
         return pool.max { lhs, rhs in
@@ -40,9 +34,10 @@ enum DinoSpeechVoicePicker {
         }
     }
 
-    private static func baseCode(_ languageCode: String) -> String {
-        let language = normalized(languageCode)
-        return language.split(separator: "-").first.map(String.init) ?? language
+    static func matchesLanguageAndScript(_ left: String, _ right: String) -> Bool {
+        let first = DinoLanguageTag(left)
+        let second = DinoLanguageTag(right)
+        return first.language == second.language && first.script == second.script
     }
 
     private static func normalized(_ language: String) -> String {
@@ -53,7 +48,10 @@ enum DinoSpeechVoicePicker {
     /// from another country, and the Siri bonus stays inside a single quality tier.
     private static func rank(_ voice: DinoSpeechVoice, preferred: String) -> Int {
         var score = voice.quality * 100
-        if normalized(voice.language) == preferred { score += 250 }
+        let requested = DinoLanguageTag(preferred)
+        let available = DinoLanguageTag(voice.language)
+        if normalized(voice.language) == normalized(preferred)
+            || (requested.region != nil && requested.region == available.region) { score += 250 }
         let identifier = voice.identifier.lowercased()
         if identifier.contains("siri") || voice.name.lowercased().contains("siri") { score += 30 }
         if identifier.contains("compact") || identifier.contains("eloquence") { score -= 20 }
@@ -74,6 +72,7 @@ struct DinoQuestionPrompt: Equatable, Sendable {
     struct Argument: Equatable, Sendable {
         var text: String
         var emphasis: Emphasis
+        var localizationKey: String?
     }
 
     enum Emphasis: Equatable, Sendable {
@@ -84,23 +83,71 @@ struct DinoQuestionPrompt: Equatable, Sendable {
     var formatKey: String?
     var arguments: [Argument]
 
-    func spoken(localizing: (String) -> String) -> String {
-        guard let formatKey else { return localizing(plainKey) }
-        return Self.apply(localizing(formatKey), arguments: arguments)
+    enum Segment: Equatable, Sendable {
+        case literal(String)
+        case argument(Argument)
+
+        var text: String {
+            switch self {
+            case .literal(let text): return text
+            case .argument(let argument): return argument.text
+            }
+        }
     }
 
-    static func apply(_ format: String, arguments: [Argument]) -> String {
-        let parts = format.components(separatedBy: "%@")
-        var result = ""
-        for index in parts.indices {
-            result += parts[index]
-            if index < arguments.count { result += arguments[index].text }
-        }
-        return result
+    func spoken(localizing: (String) -> String) -> String {
+        segments(localizing: localizing).map(\.text).joined()
     }
+
+    func segments(localizing: (String) -> String) -> [Segment] {
+        guard let formatKey else { return [.literal(localizing(plainKey))] }
+        let values = arguments.map { argument in
+            var value = argument
+            if let key = argument.localizationKey {
+                let translation = localizing(key)
+                if translation != key { value.text = translation }
+            }
+            return value
+        }
+        return Self.interpolated(localizing(formatKey), arguments: values) ?? [.literal(localizing(plainKey))]
+    }
+
+    /// The same positional placeholders drive visible emphasis, accessibility and speech.
+    static func interpolated(_ format: String, arguments: [Argument]) -> [Segment]? {
+        let placeholders = formatPattern.matches(in: format, range: NSRange(format.startIndex..., in: format))
+        var segments: [Segment] = []
+        var cursor = format.startIndex
+        var next = 0
+        var used = Set<Int>()
+        for match in placeholders {
+            guard let range = Range(match.range, in: format) else { continue }
+            if cursor < range.lowerBound { segments.append(.literal(String(format[cursor..<range.lowerBound]))) }
+            cursor = range.upperBound
+            if format[range] == "%%" {
+                segments.append(.literal("%"))
+                continue
+            }
+            let index: Int
+            if let position = Range(match.range(at: 1), in: format) {
+                guard let ordinal = Int(format[position]) else { return nil }
+                index = ordinal - 1
+            } else {
+                index = next
+                next += 1
+            }
+            guard arguments.indices.contains(index) else { return nil }
+            used.insert(index)
+            segments.append(.argument(arguments[index]))
+        }
+        guard used.count == arguments.count else { return nil }
+        if cursor < format.endIndex { segments.append(.literal(String(format[cursor...]))) }
+        return segments
+    }
+
+    private static let formatPattern = try! NSRegularExpression(pattern: "%(?:([1-9][0-9]*)\\$)?@|%%")
 
     static func make(question: ClockQuestion, language: String, instructionKey: String) -> DinoQuestionPrompt {
-        let code = language.lowercased().hasPrefix("nl") ? "nl" : "en"
+        let code = AppLanguage.resolved(language).code
         let unchanged = DinoQuestionPrompt(plainKey: instructionKey, formatKey: nil, arguments: [])
         switch question.kind {
         case .chooseAnalog, .activity:
@@ -116,54 +163,59 @@ struct DinoQuestionPrompt: Equatable, Sendable {
             guard question.durationMinutes > 0 else { return unchanged }
             return formatted("dino.question.advanceAnalog.format",
                              [duration(question.durationMinutes, language: code),
-                              word(code == "nl" ? "vooruit" : "forward", .forward)],
+                              word("forward", key: "dino.question.direction.forward", .forward)],
                              plainKey: instructionKey)
         case .addTime:
             guard let start = question.relatedTimes.first, question.durationMinutes > 0 else { return unchanged }
             return formatted("dino.question.addTime.format",
-                             [clock(start, language: code),
-                              code == "nl" ? word("over", .forward) : duration(question.durationMinutes, language: code),
-                              code == "nl" ? duration(question.durationMinutes, language: code) : word("later", .forward)],
+                             [clock(start, language: code, digital: true),
+                              word("later", key: "dino.question.direction.later", .forward),
+                              duration(question.durationMinutes, language: code)],
                              plainKey: instructionKey)
         case .subtractTime:
             guard let start = question.relatedTimes.first, question.durationMinutes > 0 else { return unchanged }
             return formatted("dino.question.subtractTime.format",
-                             [clock(start, language: code),
+                             [clock(start, language: code, digital: true),
                               duration(question.durationMinutes, language: code),
-                              word(code == "nl" ? "geleden" : "ago", .backward)],
+                              word("ago", key: "dino.question.direction.ago", .backward)],
                              plainKey: instructionKey)
         case .minutesBetween:
             guard question.relatedTimes.count == 2 else { return unchanged }
             return formatted("dino.question.minutesBetween.format",
-                             [clock(question.relatedTimes[0], language: code), clock(question.relatedTimes[1], language: code)],
+                             [clock(question.relatedTimes[0], language: code, digital: true), clock(question.relatedTimes[1], language: code, digital: true)],
                              plainKey: instructionKey)
         case .timeSequence:
             guard let latest = question.relatedTimes.last else { return unchanged }
             return formatted("dino.question.timeSequence.format",
-                             [clock(latest, language: code)],
+                             [clock(latest, language: code, digital: true)],
                              plainKey: instructionKey)
         case .timeZone:
             guard let journey = question.timeZoneJourney, let reference = question.relatedTimes.first else { return unchanged }
-            let origin = journey.origin.name(language: code)
-            let destination = journey.destination.name(language: code)
+            let origin = city(journey.origin, language: code)
+            let destination = city(journey.destination, language: code)
             let minutes = journey.offsetMinutes
             if minutes == 0 {
                 return formatted("dino.question.timeZone.same.format",
-                                 [clock(reference, language: code), plain(origin), plain(destination)],
+                                 [clock(reference, language: code, digital: true), origin, destination],
                                  plainKey: instructionKey)
             }
             let ahead = minutes > 0
             let shift = duration(abs(minutes), language: code)
-            let direction = word(code == "nl" ? (ahead ? "later" : "eerder") : (ahead ? "ahead" : "behind"),
+            let direction = word(ahead ? "ahead" : "behind",
+                                 key: ahead ? "dino.question.direction.ahead" : "dino.question.direction.behind",
                                  ahead ? .forward : .backward)
             return formatted(ahead ? "dino.question.timeZone.ahead.format" : "dino.question.timeZone.behind.format", [
-                clock(reference, language: code), plain(origin), plain(destination), shift, direction
+                clock(reference, language: code, digital: true), origin, destination, shift, direction
             ], plainKey: instructionKey)
         case .flightArrival:
             guard let departure = question.relatedTimes.first, question.durationMinutes > 0 else { return unchanged }
             return formatted("dino.question.flightArrival.format",
-                             [clock(departure, language: code)], plainKey: instructionKey)
-        case .chooseDigital, .readDigital, .sayTime, .setAnalog, .setDigital, .read24Hour, .dayPart, .match, .sortTimes, .daySchedule:
+                             [clock(departure, language: code, digital: true)], plainKey: instructionKey)
+        case .sayTime:
+            let lesson = SpokenTimeCatalog.language(code: code)
+            guard let key = lesson.instructionKey(lesson.rule(question.target.minute)) else { return unchanged }
+            return DinoQuestionPrompt(plainKey: key, formatKey: nil, arguments: [])
+        case .chooseDigital, .readDigital, .setAnalog, .setDigital, .read24Hour, .dayPart, .match, .sortTimes, .daySchedule:
             // Reading these aloud would say the answer, or would list every choice.
             return unchanged
         }
@@ -177,14 +229,20 @@ struct DinoQuestionPrompt: Equatable, Sendable {
         Argument(text: text, emphasis: .plain)
     }
 
-    private static func word(_ text: String, _ emphasis: Emphasis) -> Argument {
-        Argument(text: text, emphasis: emphasis)
+    private static func word(_ text: String, key: String, _ emphasis: Emphasis) -> Argument {
+        Argument(text: text, emphasis: emphasis, localizationKey: key)
     }
 
-    private static func clock(_ time: ClockTime, language: String) -> Argument {
+    private static func city(_ capital: DinoCapital, language: String) -> Argument {
+        Argument(text: capital.name(language: language), emphasis: .plain, localizationKey: capital.nameKey)
+    }
+
+    private static func clock(_ time: ClockTime, language: String, digital: Bool = false) -> Argument {
         // Analog faces have no day part. Arithmetic, journeys and sequences show
         // their reference digitally, including AM/PM or 24-hour context.
-        plain(DinoTimeWords.time(time, language: language))
+        let includesDayPart = AppLanguage.resolved(language).timeVocabulary.digitalQuestionsIncludeDayPart
+        return plain(digital ? DinoTimeWords.digitalTimeInWords(time, language: language, dayPart: includesDayPart)
+                             : DinoTimeWords.time(time, language: language))
     }
 
     private static func duration(_ minutes: Int, language: String) -> Argument {

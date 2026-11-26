@@ -232,9 +232,9 @@ struct DinoDaySchedule: Equatable, Sendable {
     func addedDurationText(_ appliedMinutes: Int, language: String) -> String {
         var units: [String] = []
         if totalMinutes >= 60 {
-            units.append(language == "nl" ? "\(appliedMinutes / 60) uur" : "\(appliedMinutes / 60)h")
+            units.append(DinoTimeWords.compactHours(appliedMinutes / 60, language: language))
         }
-        if hasMinuteTerms { units.append(String(format: "%02d min", appliedMinutes % 60)) }
+        if hasMinuteTerms { units.append(DinoTimeWords.compactMinutes(appliedMinutes % 60, language: language, padded: true)) }
         return "+" + units.joined(separator: " ")
     }
 
@@ -685,78 +685,128 @@ struct DinoMinuteTimeline: Equatable, Sendable {
     }
 }
 
-enum DinoTimeWords {
-    static func time(_ time: ClockTime, language: String, dayPart: Bool = false,
-                      schedule: DinoDayPartSchedule = .standard) -> String {
-        let nl = language == "nl"
-        let numbers = nl ? ["twaalf", "een", "twee", "drie", "vier", "vijf", "zes", "zeven", "acht", "negen", "tien", "elf"]
-                         : ["twelve", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven"]
-        let hour = numbers[time.hour % 12], next = numbers[(time.hour + 1) % 12]
-        let text: String
-        if nl {
-            switch time.minute {
-            case 0: text = "\(hour) uur"
-            case 5: text = "vijf over \(hour)"
-            case 10: text = "tien over \(hour)"
-            case 15: text = "kwart over \(hour)"
-            case 20: text = "tien voor half \(next)"
-            case 25: text = "vijf voor half \(next)"
-            case 30: text = "half \(next)"
-            case 35: text = "vijf over half \(next)"
-            case 40: text = "tien over half \(next)"
-            case 45: text = "kwart voor \(next)"
-            case 50: text = "tien voor \(next)"
-            case 55: text = "vijf voor \(next)"
-            case 1..<15: text = "\(time.minute) over \(hour)"
-            case 16..<30: text = "\(30 - time.minute) voor half \(next)"
-            case 31..<45: text = "\(time.minute - 30) over half \(next)"
-            default: text = "\(60 - time.minute) voor \(next)"
-            }
-        } else {
-            switch time.minute {
-            case 0: text = "\(hour) o’clock"
-            case 15: text = "quarter past \(hour)"
-            case 30: text = "half past \(hour)"
-            case 45: text = "quarter to \(next)"
-            case 1..<30: text = "\(time.minute) past \(hour)"
-            default: text = "\(60 - time.minute) to \(next)"
-            }
+/// Locale-specific units and grammar for clock lessons and elapsed time.
+struct DinoTimeVocabulary: Sendable {
+    let dayPartSuffixes: [DinoDayPart: String]
+    let spokenHours: @Sendable (Int, String) -> String
+    let spokenMinutes: @Sendable (Int, String) -> String
+    let joinSpokenUnits: @Sendable (String, String) -> String
+    let shortHours: @Sendable (String) -> String
+    let shortMinutes: @Sendable (String) -> String
+    let zoneUnit: String
+    let atlasZoneUnit: String
+    var shortHoursColumnWidth: Double = 22
+    var withDayPart: @Sendable (String, String) -> String = { "\($0) \($1)" }
+    var formalClockTime: (@Sendable (ClockTime) -> String)?
+    var digitalQuestionsIncludeDayPart = false
+    var decimalZoneHours = false
+
+    static let english = Self(
+        dayPartSuffixes: [.night: "at night", .morning: "in the morning",
+                          .afternoon: "in the afternoon", .evening: "in the evening"],
+        spokenHours: { "\($1) \($0 == 1 ? "hour" : "hours")" },
+        spokenMinutes: { "\($1) \($0 == 1 ? "minute" : "minutes")" },
+        joinSpokenUnits: { "\($0) and \($1)" },
+        shortHours: { "\($0)h" }, shortMinutes: { "\($0) min" }, zoneUnit: "h", atlasZoneUnit: "h"
+    )
+    static let dutch = Self(
+        dayPartSuffixes: [.night: "’s nachts", .morning: "’s ochtends",
+                          .afternoon: "’s middags", .evening: "’s avonds"],
+        spokenHours: { _, number in "\(number) uur" },
+        spokenMinutes: { "\($1) \($0 == 1 ? "minuut" : "minuten")" },
+        joinSpokenUnits: { "\($0) en \($1)" },
+        shortHours: { "\($0) uur" }, shortMinutes: { "\($0) min" }, zoneUnit: "uur", atlasZoneUnit: "u", shortHoursColumnWidth: 44
+    )
+    static let german = Self(
+        dayPartSuffixes: [.night: "nachts", .morning: "morgens", .afternoon: "nachmittags", .evening: "abends"],
+        spokenHours: { $0 == 1 ? "eine Stunde" : "\($1) Stunden" },
+        spokenMinutes: { $0 == 1 ? "eine Minute" : "\($1) Minuten" },
+        joinSpokenUnits: { "\($0) und \($1)" }, shortHours: { "\($0) h" }, shortMinutes: { "\($0) min" },
+        zoneUnit: "h", atlasZoneUnit: "h", shortHoursColumnWidth: 35,
+        formalClockTime: { time in
+            let hour = time.hour == 1 ? "ein" : SpokenTimeLanguage.germanNumber(time.hour)
+            return time.minute == 0 ? "\(hour) Uhr" : "\(hour) Uhr \(SpokenTimeLanguage.germanNumber(time.minute))"
         }
+    )
+}
+
+enum DinoTimeWords {
+    static func number(_ value: Int, language: String, minimumDigits: Int = 1) -> String {
+        let profile = AppLanguage.resolved(language)
+        return number(value, locale: Locale(identifier: profile.formatLocale), minimumDigits: minimumDigits)
+    }
+
+    static func number(_ value: Int, locale: Locale, minimumDigits: Int) -> String {
+        value.formatted(.number.grouping(.never).precision(.integerLength(minimumDigits...)).locale(locale))
+    }
+
+    /// Also accept decimal keypad digits such as ١٢ in numeric text fields.
+    static func parsedInteger(_ text: String) -> Int? {
+        if let value = Int(text) { return value }
+        var ascii = ""
+        for character in text {
+            guard character.unicodeScalars.count == 1,
+                  character.unicodeScalars.first?.properties.generalCategory == .decimalNumber,
+                  let digit = character.wholeNumberValue else { return nil }
+            ascii += String(digit)
+        }
+        return Int(ascii)
+    }
+
+    static func time(_ time: ClockTime, language: String, dayPart: Bool = false,
+                     schedule: DinoDayPartSchedule = .standard) -> String {
+        let profile = AppLanguage.resolved(language)
+        let text = profile.spokenTime.description(for: time) { number($0, language: language) }
         guard dayPart else { return text }
-        return "\(text) \(dayPartSuffix(time, language: language, schedule: schedule))"
+        return profile.timeVocabulary.withDayPart(text, dayPartSuffix(time, language: language, schedule: schedule))
+    }
+
+    static func digitalTimeInWords(_ time: ClockTime, language: String, dayPart: Bool = false,
+                                   schedule: DinoDayPartSchedule = .standard) -> String {
+        let vocabulary = AppLanguage.resolved(language).timeVocabulary
+        return vocabulary.formalClockTime?(time) ?? Self.time(time, language: language, dayPart: dayPart, schedule: schedule)
     }
 
     static func dayPartSuffix(_ time: ClockTime, language: String, schedule: DinoDayPartSchedule = .standard) -> String {
-        let nl = language == "nl"
         let part = DinoDayPart(hour: time.hour, schedule: schedule)
-        switch part {
-        case .night: return nl ? "’s nachts" : "at night"
-        case .morning: return nl ? "’s ochtends" : "in the morning"
-        case .afternoon: return nl ? "’s middags" : "in the afternoon"
-        case .evening: return nl ? "’s avonds" : "in the evening"
-        }
-    }
-    static func minutes(_ value: Int, language: String) -> String {
-        let unit = language == "nl" ? (value == 1 ? "minuut" : "minuten") : (value == 1 ? "minute" : "minutes")
-        return "\(value) \(unit)"
-    }
-    static func duration(_ minutes: Int, language: String) -> String {
-        let h = minutes / 60, m = minutes % 60
-        if h == 0 { return "\(m) min" }
-        return m == 0 ? "\(h) \(language == "nl" ? "uur" : "h")" : "\(h) \(language == "nl" ? "uur" : "h") \(m) min"
+        let words = AppLanguage.resolved(language).timeVocabulary
+        return words.dayPartSuffixes[part] ?? DinoTimeVocabulary.english.dayPartSuffixes[part]!
     }
 
-    /// Elapsed hours and minutes; independent of the clock's 12/24-hour notation.
-    static func digitalDuration(_ minutes: Int) -> String {
-        String(format: "%02d:%02d", minutes / 60, minutes % 60)
+    static func minutes(_ value: Int, language: String) -> String {
+        AppLanguage.resolved(language).timeVocabulary.spokenMinutes(value, number(value, language: language))
+    }
+
+    static func duration(_ minutes: Int, language: String) -> String {
+        let h = minutes / 60, m = minutes % 60
+        if h == 0 { return compactMinutes(m, language: language) }
+        let hours = AppLanguage.resolved(language).timeVocabulary
+        let hoursText = "\(number(h, language: language)) \(hours.zoneUnit)"
+        return m == 0 ? hoursText : "\(hoursText) \(compactMinutes(m, language: language))"
+    }
+
+    /// Elapsed hours and minutes are independent of the clock's 12/24-hour notation.
+    static func digitalDuration(_ minutes: Int, language: String = "en") -> String {
+        let hours = number(minutes / 60, language: language, minimumDigits: 2)
+        let remainder = number(minutes % 60, language: language, minimumDigits: 2)
+        return "\(hours):\(remainder)"
+    }
+
+    static func compactHours(_ value: Int, language: String) -> String {
+        AppLanguage.resolved(language).timeVocabulary.shortHours(number(value, language: language))
+    }
+
+    static func compactMinutes(_ value: Int, language: String, padded: Bool = false) -> String {
+        AppLanguage.resolved(language).timeVocabulary.shortMinutes(number(value, language: language,
+                                                                           minimumDigits: padded ? 2 : 1))
     }
 
     /// Short units also support a written sum whose minutes have not been carried yet.
     static func compactDuration(hours: Int, minutes: Int, language: String, padMinutes: Bool = false) -> String {
-        let minuteText = padMinutes ? String(format: "%02d", minutes) : String(minutes)
-        guard hours > 0 else { return "\(minuteText) min" }
-        let hoursText = language == "nl" ? "\(hours) uur" : "\(hours)h"
-        return minutes == 0 && !padMinutes ? hoursText : "\(hoursText) \(minuteText) min"
+        let minutesText = compactMinutes(minutes, language: language, padded: padMinutes)
+        guard hours > 0 else { return minutesText }
+        let hoursText = compactHours(hours, language: language)
+        return minutes == 0 && !padMinutes ? hoursText : "\(hoursText) \(minutesText)"
     }
 
     /// A clock time for a spoken title. Afternoon and night stay distinct from the morning hour.
@@ -764,37 +814,36 @@ enum DinoTimeWords {
         Self.time(time, language: language, dayPart: time.hour == 0 || time.hour > 12)
     }
 
-    /// Hours and minutes in words, so a title can be read aloud.
     static func spokenDuration(_ minutes: Int, language: String) -> String {
         let hours = abs(minutes) / 60
         let mins = abs(minutes) % 60
-        let dutch = language == "nl"
-        func hoursText(_ value: Int) -> String {
-            if dutch { return "\(value) uur" }
-            return value == 1 ? "1 hour" : "\(value) hours"
-        }
-        func minutesText(_ value: Int) -> String {
-            if dutch { return value == 1 ? "1 minuut" : "\(value) minuten" }
-            return value == 1 ? "1 minute" : "\(value) minutes"
-        }
-        if hours == 0 { return minutesText(mins) }
-        if mins == 0 { return hoursText(hours) }
-        return dutch ? "\(hoursText(hours)) en \(minutesText(mins))" : "\(hoursText(hours)) and \(minutesText(mins))"
+        let words = AppLanguage.resolved(language).timeVocabulary
+        if hours == 0 { return Self.minutes(mins, language: language) }
+        let hourText = words.spokenHours(hours, number(hours, language: language))
+        return mins == 0 ? hourText : words.joinSpokenUnits(hourText, Self.minutes(mins, language: language))
     }
 
     static func hourDifference(_ hours: Int, language: String) -> String {
-        let sign = hours >= 0 ? "+" : "−"
-        return "\(sign)\(abs(hours)) \(language == "nl" ? "uur" : "h")"
+        zoneDifference(hours * 60, language: language)
     }
 
     /// Compact hour labels preserve the half hour instead of truncating it.
-    static func zoneHours(_ minutes: Int) -> String {
+    static func zoneHours(_ minutes: Int, language: String = "en") -> String {
         let hours = abs(minutes) / 60
-        return abs(minutes).isMultiple(of: 60) ? "\(hours)" : "\(hours == 0 ? "" : String(hours))½"
+        let digits = number(hours, language: language)
+        guard !abs(minutes).isMultiple(of: 60) else { return digits }
+        let profile = AppLanguage.resolved(language)
+        if profile.timeVocabulary.decimalZoneHours {
+            return (Double(hours) + 0.5).formatted(.number.locale(Locale(identifier: profile.formatLocale)))
+        }
+        return "\(hours == 0 ? "" : digits)½"
     }
 
     static func zoneDifference(_ minutes: Int, language: String) -> String {
-        "\(minutes >= 0 ? "+" : "−")\(zoneHours(minutes)) \(language == "nl" ? "uur" : "h")"
+        let profile = AppLanguage.resolved(language)
+        let signedHours = "\(minutes >= 0 ? "+" : "−")\(zoneHours(minutes, language: language))"
+        let amount = profile.runsRightToLeft ? "\u{2066}\(signedHours)\u{2069}" : signedHours
+        return "\(amount) \(profile.timeVocabulary.zoneUnit)"
     }
 }
 

@@ -23,7 +23,10 @@ struct DinoTimeReadingClock: View {
     private var diameter: CGFloat { layout.diameter }
     private var center: CGPoint { layout.center }
     private var labelTimes: [ClockTime] {
-        stride(from: 0, to: 60, by: 5).map { ClockTime(hour: time.hour, minute: $0) }
+        if time.minute != 0 && DinoTimeReading.region(minute: time.minute, language: language) == .whole {
+            return DinoTimeReading.explanationTimes(target: time, rejected: [])
+        }
+        return stride(from: 0, to: 60, by: 5).map { ClockTime(hour: time.hour, minute: $0) }
     }
 
     var body: some View {
@@ -42,6 +45,7 @@ struct DinoTimeReadingClock: View {
                     }
                 }
             }
+            .environment(\.layoutDirection, .leftToRight)
             .frame(width: layout.width, height: layout.height)
         }
         .accessibilityElement(children: .contain)
@@ -138,6 +142,7 @@ struct DinoTimeReadingClock: View {
 
 struct SpokenTimeQuestion: View {
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.layoutDirection) private var direction
     @ObservedObject var session: DinoSession
     let theme: ClockTheme
     let width: CGFloat
@@ -227,14 +232,23 @@ struct SpokenTimeQuestion: View {
 
     /// One size for every stone, small enough that the longest word still fits the narrowest row.
     private func optionFontSize(for prompt: SpokenTimePrompt) -> CGFloat {
-        let titles = prompt.slots.flatMap(\.choices).map(buttonTitle)
-        let longest = titles.max { Self.textWidth($0, size: 100) < Self.textWidth($1, size: 100) } ?? ""
+        let titles = prompt.slots.flatMap(\.choices).map { prompt.style.displayedWord($0.word) }
+        let longest = titles.max { fittingWidth($0, at: 100) < fittingWidth($1, at: 100) } ?? ""
         let columns = max(1, prompt.slots.map(\.choices.count).max() ?? 1)
         let buttonWidth = (wordBankWidth - 24 - slotLabelWidth - 8 - CGFloat(columns - 1) * 6) / CGFloat(columns)
         let available = max(20, buttonWidth - 8 - 18)
         var size: CGFloat = spacious ? 26 : tablet ? 20 : 16
-        while size > 10, Self.textWidth(longest, size: size) > available { size -= 0.5 }
+        while size > 10, fittingWidth(longest, at: size) > available { size -= 0.5 }
         return size
+    }
+
+    private func fittingWidth(_ title: String, at size: CGFloat) -> CGFloat {
+        guard direction == .rightToLeft else { return Self.textWidth(title, size: size) }
+        let words = title.split(separator: " ")
+        return words.indices.dropFirst().map { split in
+            max(Self.textWidth(words[..<split].joined(separator: " "), size: size),
+                Self.textWidth(words[split...].joined(separator: " "), size: size))
+        }.min() ?? Self.textWidth(title, size: size)
     }
 
     private static func textWidth(_ text: String, size: CGFloat) -> CGFloat {
@@ -273,13 +287,14 @@ struct SpokenTimeQuestion: View {
                 ? selected
                 : missed && choice.id == correctID && correctID != SpokenTimeChoice.emptyID
         let showWrong = missed && selected && choice.id != correctID
-        let title = buttonTitle(choice)
+        let title = prompt.style.displayedWord(choice.word)
         return Button {
             session.chooseSpoken(slot: slot, choiceID: choice.id)
         } label: {
             HStack(spacing: 4) {
                 Text(verbatim: title)
-                    .lineLimit(1)
+                    .lineLimit(direction == .rightToLeft ? 2 : 1)
+                    .minimumScaleFactor(0.7)
                 if showWrong || showCorrect || (selected && !revealed) {
                     Image(systemName: showWrong ? "xmark" : "checkmark")
                         .font(.system(size: fontSize * 0.7, weight: .heavy))
@@ -308,11 +323,6 @@ struct SpokenTimeQuestion: View {
         }
         guard session.spokenChoices.indices.contains(slot) else { return nil }
         return session.spokenChoices[slot]
-    }
-
-    private func buttonTitle(_ choice: SpokenTimeChoice) -> String {
-        guard let first = choice.word.first else { return choice.word }
-        return String(first).uppercased() + choice.word.dropFirst()
     }
 
     private func chipFill(selected: Bool, correct: Bool, wrong: Bool) -> Color {

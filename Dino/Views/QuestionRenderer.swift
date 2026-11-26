@@ -508,6 +508,7 @@ extension View {
 struct DinoAnalogClockControls: View {
     @Environment(\.dinoDemonstrationLayout) private var demonstrationLayout
     @Environment(\.dinoHighContrast) private var highContrast
+    @Environment(\.locale) private var locale
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.isEnabled) private var isEnabled
     @Namespace private var handSelection
@@ -581,8 +582,10 @@ struct DinoAnalogClockControls: View {
             HStack(spacing: 6) {
                 Image(systemName: direction < 0 ? "arrow.counterclockwise" : "arrow.clockwise")
                     .font(.system(size: 20, weight: .bold))
-                Text(verbatim: "\(direction < 0 ? "−" : "+")\(minutes ? minuteStep : 1)")
+                let amount = DinoTimeWords.number(minutes ? minuteStep : 1, locale: locale, minimumDigits: 1)
+                Text(verbatim: "\(direction < 0 ? "−" : "+")\(amount)")
                     .monospacedDigit()
+                    .environment(\.layoutDirection, .leftToRight)
             }
         }.buttonStyle(DinoClockControlButtonStyle(width: 118, height: 56))
             .accessibilityIdentifier("\(prefix).analog.\(direction < 0 ? "less" : "more")")
@@ -608,6 +611,7 @@ struct AnalogClockAnswerComparison: View {
     @Environment(\.dinoClockReadingAssistance) private var readingAssistance
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dinoSpaciousQuestion) private var spaciousQuestion
+    @Environment(\.locale) private var locale
     let answer: ClockTime
     let target: ClockTime
     let theme: ClockTheme
@@ -654,7 +658,7 @@ struct AnalogClockAnswerComparison: View {
                                               cardWidth: cardWidth, revealDelay: DinoQuestionFeedbackTiming.revealDelay))
                 .scaleEffect(scale)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text(verbatim: answer.digitalText))
+                .accessibilityLabel(Text(verbatim: DinoTimeWords.digitalDuration(answer.minutesOfDay, language: locale.identifier)))
                 .accessibilityIdentifier("question.analogControl")
                 .offset(x: comparing ? -displacement : 0, y: comparing ? -verdictRowHeight / 2 : 0)
             AnalogClock(time: target, theme: theme, size: sharedHintBounds == nil ? clockSize : hintHeight,
@@ -668,7 +672,7 @@ struct AnalogClockAnswerComparison: View {
                                               cardWidth: cardWidth, revealDelay: DinoQuestionFeedbackTiming.revealDelay))
                 .scaleEffect(comparisonScale * (comparing || reduceMotion ? 1 : 0.94))
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text(verbatim: target.digitalText))
+                .accessibilityLabel(Text(verbatim: DinoTimeWords.digitalDuration(target.minutesOfDay, language: locale.identifier)))
                 .accessibilityIdentifier("question.correctClock")
                 .offset(x: displacement, y: -verdictRowHeight / 2)
                 .opacity(comparing ? 1 : 0).allowsHitTesting(false).accessibilityHidden(!comparing)

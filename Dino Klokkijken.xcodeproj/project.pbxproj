@@ -38,6 +38,10 @@
 		9D7D43B62142FE4FF7C72420 /* Dino/Core/LevelConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349A7C34F9172244294A0CFE /* Dino/Core/LevelConfiguration.swift */; };
 		A3A7FCEFEAA9FAF58F4BD046 /* Dino/Views/DinoGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AAEBD1E16CB94C4F51E8B01 /* Dino/Views/DinoGameView.swift */; };
 		A7A164A2377507068726D1A9 /* Dino/DinoRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82850239C26FF8580E07FB20 /* Dino/DinoRootView.swift */; };
+		AA251126BA51000000000002 /* Dino/Core/AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA251126BA51000000000001 /* Dino/Core/AppLanguage.swift */; };
+		AA251126BA51000000000003 /* Dino/Core/AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA251126BA51000000000001 /* Dino/Core/AppLanguage.swift */; };
+		AA261126AA51000000000002 /* Dino/Core/ArabicTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA261126AA51000000000001 /* Dino/Core/ArabicTime.swift */; };
+		AA261126AA51000000000003 /* Dino/Core/ArabicTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA261126AA51000000000001 /* Dino/Core/ArabicTime.swift */; };
 		B8196F54F8B174235D7F48CC /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 8D1BC6DD34FD70BFF7727C14 /* InfoPlist.xcstrings */; };
 		C4C9AF12A9918F7F62561C4B /* Dino/Core/NameValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2373432652E69FC550C1E670 /* Dino/Core/NameValidator.swift */; };
 		CF65DC853F33210C13C32356 /* Dino/Core/LevelConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 349A7C34F9172244294A0CFE /* Dino/Core/LevelConfiguration.swift */; };
@@ -135,6 +139,8 @@
 		9CC831804F11124D46221EE6 /* Dino/Views/DigitalClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/DigitalClock.swift; sourceTree = SOURCE_ROOT; };
 		A1319120659071CDFDC06C3F /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 		A56A2803CE327ECBD272C7D1 /* Dino/Core/PlayerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/PlayerProfile.swift; sourceTree = SOURCE_ROOT; };
+		AA251126BA51000000000001 /* Dino/Core/AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/AppLanguage.swift; sourceTree = SOURCE_ROOT; };
+		AA261126AA51000000000001 /* Dino/Core/ArabicTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/ArabicTime.swift; sourceTree = SOURCE_ROOT; };
 		AE17A7B8D0894CC3A54091A5 /* Dino/DinoGameModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/DinoGameModel.swift; sourceTree = SOURCE_ROOT; };
 		AEC125D38CB3D527355CFD3B /* Dino/Core/ClockTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Core/ClockTheme.swift; sourceTree = SOURCE_ROOT; };
 		B7BF4989C8E56DBDD0035B47 /* Dino/Views/LevelResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dino/Views/LevelResult.swift; sourceTree = SOURCE_ROOT; };
@@ -217,6 +223,8 @@
 			children = (
 				DA152026BD03000000000001 /* Dino/Core/JungleMapLayout.swift */,
 				DA121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift */,
+				AA251126BA51000000000001 /* Dino/Core/AppLanguage.swift */,
+				AA261126AA51000000000001 /* Dino/Core/ArabicTime.swift */,
 				DA1820261018000000000001 /* Dino/Core/SpokenTime.swift */,
 				DA1820261018000000000003 /* Dino/Core/QuestionDifficulty.swift */,
 				DA192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift */,
@@ -410,6 +418,10 @@
 			knownRegions = (
 				en,
 				nl,
+				de,
+				"en-CA",
+				"en-AU",
+				ar,
 			);
 			mainGroup = F951E627307BE01100FF04C4;
 			minimizedProjectReferenceProxies = 1;
@@ -453,6 +465,8 @@
 			isa = PBXSourcesBuildPhase;
 			files = (
 				DC121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift in Sources */,
+				AA251126BA51000000000003 /* Dino/Core/AppLanguage.swift in Sources */,
+				AA261126AA51000000000003 /* Dino/Core/ArabicTime.swift in Sources */,
 				DC1820261018000000000001 /* Dino/Core/SpokenTime.swift in Sources */,
 				DC1820261018000000000003 /* Dino/Core/QuestionDifficulty.swift in Sources */,
 				DC192026BD01000000000001 /* Dino/Core/TimeZoneQuestions.swift in Sources */,
@@ -478,6 +492,8 @@
 			files = (
 				DB152026BD03000000000001 /* Dino/Core/JungleMapLayout.swift in Sources */,
 				DB121026AC02000000000001 /* Dino/Core/ExpandedQuestions.swift in Sources */,
+				AA251126BA51000000000002 /* Dino/Core/AppLanguage.swift in Sources */,
+				AA261126AA51000000000002 /* Dino/Core/ArabicTime.swift in Sources */,
 				DB1820261018000000000001 /* Dino/Core/SpokenTime.swift in Sources */,
 				DB1820261018000000000003 /* Dino/Core/QuestionDifficulty.swift in Sources */,
 				DB1820261018000000000002 /* Dino/Views/SpokenTimeQuestion.swift in Sources */,
@@ -707,7 +723,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Hakketjak.Dino-Klokkijken.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 4283ACUG4Y;
 				DINO_APP_STORE_URL = "";
 				DINO_PRIVACY_POLICY_URL = "https://www.hakketjak.com/dino-time/privacy/";
@@ -738,7 +754,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				LOCALIZATION_PREFERS_STRING_CATALOG = YES;
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "Hakketjak.Dino-Klokkijken";
 				PRODUCT_NAME = "Dino Time";
 				REGISTER_APP_GROUPS = YES;
@@ -764,7 +780,7 @@
 				ASSETCATALOG_COMPILER_OPTIMIZATION = space;
 				CODE_SIGN_ENTITLEMENTS = "Hakketjak.Dino-Klokkijken.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 4283ACUG4Y;
 				DINO_APP_STORE_URL = "";
 				DINO_PRIVACY_POLICY_URL = "https://www.hakketjak.com/dino-time/privacy/";
@@ -795,7 +811,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				LOCALIZATION_PREFERS_STRING_CATALOG = YES;
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "Hakketjak.Dino-Klokkijken";
 				PRODUCT_NAME = "Dino Time";
 				REGISTER_APP_GROUPS = YES;

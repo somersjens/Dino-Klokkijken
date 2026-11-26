@@ -90,10 +90,12 @@ final class DinoUITests: XCTestCase {
             .map { app.buttons[$0] }.first { $0.exists } ?? app.buttons["onboarding.customClock"]
     }
 
-    private func launchUsingDeviceLanguage(_ code: String, locale: String) {
+    private func launchUsingDeviceLanguage(_ code: String, locale: String, force24Hours: Bool = true, extraArguments: [String] = []) {
         app.terminate()
         app.launchEnvironment["DINO_TEST_SUITE"] = "dino.ui.\(UUID().uuidString)"
-        app.launchArguments = ["-AppleLanguages", "(\(code))", "-AppleLocale", locale, "-AppleICUForce24HourTime", "YES"]
+        app.launchArguments = ["-AppleLanguages", "(\(code))", "-AppleLocale", locale,
+                               "-AppleICUForce24HourTime", force24Hours ? "YES" : "NO"]
+            + extraArguments
         app.launch()
     }
 
@@ -683,11 +685,20 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("desert-unlocked-map")
         tap("header.dino")
         revealThemeChoice("personalize.character.0")
-        XCTAssertTrue(app.buttons["personalize.character.0"].isEnabled)
-        XCTAssertFalse(app.buttons["personalize.character.2"].exists)
-        XCTAssertFalse(app.buttons["personalize.character.3"].isEnabled)
+        let main = app.buttons["personalize.character.0"]
+        let jungle = app.buttons["personalize.character.1"]
+        let desert = app.buttons["personalize.character.2"]
+        let volcano = app.buttons["personalize.character.3"]
+        XCTAssertTrue(main.isEnabled)
+        XCTAssertFalse(desert.exists)
+        XCTAssertFalse(volcano.isEnabled)
+        XCTAssertFalse(app.staticTexts["Kies je dino"].exists)
+        XCTAssertLessThan(main.frame.minX, jungle.frame.minX)
+        XCTAssertLessThan(jungle.frame.minX, volcano.frame.minX)
         tap("personalize.character.0")
-        XCTAssertTrue(app.buttons["personalize.character.2"].isEnabled)
+        XCTAssertTrue(desert.isEnabled)
+        XCTAssertLessThan(jungle.frame.minX, desert.frame.minX)
+        XCTAssertLessThan(desert.frame.minX, volcano.frame.minX)
         tap("personalize.character.2")
         saveScreenshot("desert-collection-swapped")
         tap("personalize.done")
@@ -698,8 +709,9 @@ final class DinoUITests: XCTestCase {
         waitForMapOpeningToFinish()
         tap("header.dino")
         revealThemeChoice("personalize.character.0")
-        XCTAssertFalse(app.buttons["personalize.character.2"].exists)
-        XCTAssertTrue(app.buttons["personalize.character.0"].isEnabled)
+        XCTAssertFalse(desert.exists)
+        XCTAssertTrue(main.isEnabled)
+        XCTAssertLessThan(main.frame.minX, jungle.frame.minX)
         saveScreenshot("desert-restarted-selection")
         tap("personalize.done")
     }
@@ -4845,11 +4857,12 @@ final class DinoUITests: XCTestCase {
                 XCTAssertTrue(converted.waitForExistence(timeout: 3))
                 XCTAssertEqual(converted.label, question.target.adding(minutes: -720).digitalText)
                 XCTAssertTrue(subtraction.exists)
-                XCTAssertLessThanOrEqual(subtraction.frame.height, 20, "The smaller −12 capsule stays on one line")
+                XCTAssertTrue(arrow.exists)
+                XCTAssertLessThanOrEqual(subtraction.frame.height, arrow.frame.height,
+                                         "The smaller −12 capsule stays on one line at the lesson's scale")
                 XCTAssertGreaterThanOrEqual(subtraction.frame.minY, target.frame.minY + 4,
                                             "The caption emerges within the display's top edge")
                 XCTAssertLessThanOrEqual(subtraction.frame.maxY, target.frame.maxY - 4)
-                XCTAssertTrue(arrow.exists)
                 XCTAssertGreaterThan(arrow.frame.minX, target.frame.maxX)
                 XCTAssertLessThan(arrow.frame.maxX, converted.frame.minX)
                 XCTAssertGreaterThan(converted.frame.minX, target.frame.maxX)
@@ -5455,6 +5468,16 @@ final class DinoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["friend.close"].waitForExistence(timeout: 5))
         tap("friend.close")
         XCTAssertTrue(app.buttons["level.play"].waitForExistence(timeout: 5))
+    }
+
+    func testWelcomeDinoEditorShowsColorsWithoutCharacterCollection() {
+        let options = app.scrollViews["personalize.options"]
+        XCTAssertTrue(options.waitForExistence(timeout: 5))
+        options.swipeUp()
+        XCTAssertTrue(app.buttons["personalize.resetColors"].isHittable)
+        XCTAssertFalse(app.buttons["personalize.character.1"].exists)
+        tap("onboarding.next")
+        XCTAssertTrue(app.descendants(matching: .any)["theme.analog.preview"].firstMatch.waitForExistence(timeout: 5))
     }
 
     func testWelcomeDinoAndGameCenterIdentity() {
@@ -6702,6 +6725,28 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("tablet-settings-compact-sheet")
     }
 
+    func testGermanSettingsRowsStayInsideMenu() {
+        app.terminate()
+        app.launchArguments = ["-settings.languageOverride", "de", "-AppleICUForce24HourTime", "YES"]
+        app.launch()
+        onboard()
+        openSettings()
+        let viewport = app.scrollViews["settings.options"].frame
+        let cloud = app.descendants(matching: .any)["settings.icloudSync"]
+        let cloudSwitch = cloud.switches.firstMatch
+        let info = app.buttons["settings.icloudInfo"]
+        XCTAssertTrue(cloudSwitch.waitForExistence(timeout: 5))
+        for row in ["settings.gameCenter", "settings.language", "settings.soundEffects", "settings.icloudSync"] {
+            let frame = app.descendants(matching: .any)[row].frame
+            XCTAssertGreaterThanOrEqual(frame.minX, viewport.minX, row)
+            XCTAssertLessThanOrEqual(frame.maxX, viewport.maxX, row)
+        }
+        XCTAssertLessThanOrEqual(cloudSwitch.frame.maxX, viewport.maxX - 16)
+        XCTAssertLessThan(info.frame.minX - cloud.frame.minX, cloudSwitch.frame.minX - cloud.frame.minX)
+        app.scrollViews["settings.options"].swipeUp()
+        saveScreenshot("settings-german")
+    }
+
     func testSettingsPreferencesPersist() {
         onboard()
         openSettings()
@@ -7914,8 +7959,352 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("centered-practice-sorting")
     }
 
+    func testArabicClockTilesReadFromRightAndMarkCorrectAnswer() {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "sayTime"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "quarter"
+        launchUsingDeviceLanguage("ar-SA", locale: "ar_SA", force24Hours: false)
+        var generator = DinoPracticeGenerator(configuration: .init(time: .quarter, order: .specific(.sayTime)),
+                                               seed: seed, language: "ar")
+        let question = generator.next(index: 0)
+        let prompt = question.spokenPrompt!
+        let first = app.buttons["question.spoken.0.0"]
+        let last = app.buttons["question.spoken.0.2"]
+        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        XCTAssertGreaterThan(first.frame.midX, last.frame.midX)
+        XCTAssertEqual(app.staticTexts["question.spoken.slot.0"].label, "الساعة")
+        XCTAssertEqual(app.staticTexts["question.spoken.slot.1"].label, "الدقائق")
+        let clock = app.descendants(matching: .any)["question.targetClock"].firstMatch
+        XCTAssertEqual(clock.label, question.target.digitalReading(notation: .twelve, languageCode: "ar").text)
+        for (index, slot) in prompt.slots.enumerated() {
+            let option = slot.choices.firstIndex { $0.id == prompt.correct.choiceIDs[index] }!
+            tap("question.spoken.\(index).\(option)")
+        }
+        waitUntilLabel("question.spoken.draft", equals: prompt.phrase, timeout: 15)
+        let answeredTime = clock.label
+        tap("question.confirm")
+        let next = NSPredicate { _, _ in clock.exists && clock.label != answeredTime }
+        let advanced = XCTNSPredicateExpectation(predicate: next, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [advanced], timeout: 12), .completed)
+    }
+
+    func testArabicClockErrorShowsCorrectPhrase() {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "sayTime"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "minutes"
+        launchUsingDeviceLanguage("ar-SA", locale: "ar_SA")
+        var generator = DinoPracticeGenerator(configuration: .init(time: .minutes, order: .specific(.sayTime)),
+                                               seed: seed, language: "ar")
+        let prompt = generator.next(index: 0).spokenPrompt!
+        let wrong = prompt.slots[0].choices.firstIndex { $0.id != prompt.correct.choiceIDs[0] }!
+        tap("question.spoken.0.\(wrong)")
+        tap("question.confirm")
+        waitUntilLabel("question.spoken.phrase", equals: prompt.phrase, timeout: 15)
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 8))
+    }
+
+    func testArabicTimeZoneStartsInRiyadhInBothOrientations() {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "timeZone"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        launchUsingDeviceLanguage("ar-SA", locale: "ar_SA")
+        let origin = app.staticTexts["question.timeZone.originName"]
+        XCTAssertTrue(origin.waitForExistence(timeout: 12))
+        XCTAssertEqual(origin.label, "الرياض")
+        let destination = app.staticTexts["question.timeZone.destinationName"]
+        XCTAssertTrue(["أبوظبي", "مسقط", "القاهرة", "أثينا", "روما"].contains(destination.label))
+        let clock = app.staticTexts["question.timeZone.referenceTime"]
+        XCTAssertTrue(clock.label.contains { "٠١٢٣٤٥٦٧٨٩".contains($0) })
+        XCTAssertEqual(app.staticTexts["question.timeZone.targetTime"].label, "؟")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        waitUntilLabel("question.timeZone.originName", equals: "الرياض", timeout: 12)
+        let scroll = app.scrollViews["game.questions"]
+        let map = app.descendants(matching: .any)["question.timeZone.map"].firstMatch
+        XCTAssertTrue(scroll.frame.contains(origin.frame) && scroll.frame.contains(destination.frame),
+                      "Both city labels are visible in landscape")
+        XCTAssertTrue(map.frame.contains(origin.frame) && map.frame.contains(destination.frame))
+        let companion = app.descendants(matching: .any)["dino.character"].firstMatch
+        let hudPortrait = app.buttons["header.dino"]
+        XCTAssertTrue(companion.waitForExistence(timeout: 8))
+        XCTAssertEqual(companion.frame.midX, hudPortrait.frame.midX, accuracy: 6)
+        XCTAssertTrue(app.staticTexts.matching(identifier: "header.questions")
+            .matching(NSPredicate(format: "label == %@", "١")).firstMatch.exists)
+    }
+
+    func testArabicMinutesBetweenExampleUsesLocalUnits() {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "minutesBetween"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "fiveMinutes"
+        launchUsingDeviceLanguage("ar-SA", locale: "ar_SA")
+        tap("question.example")
+        let start = app.descendants(matching: .any)["demo.minutesBetween.start"].firstMatch
+        let end = app.descendants(matching: .any)["demo.minutesBetween.end"].firstMatch
+        let segment = app.staticTexts["demo.minutesBetween.segment.0"]
+        XCTAssertTrue(segment.waitForExistence(timeout: 12))
+        XCTAssertTrue(segment.label.hasSuffix(" د") && segment.label.contains { "٠١٢٣٤٥٦٧٨٩".contains($0) })
+        XCTAssertLessThan(start.frame.midX, end.frame.midX)
+    }
+
+    func testArabicOnboardingAndLanguageSwitch() {
+        launchUsingDeviceLanguage("ar-SA", locale: "ar_SA")
+        XCTAssertEqual(app.staticTexts["onboarding.title"].label, "صمّم دينو الخاص بك")
+        onboard()
+        openSettings()
+        XCTAssertEqual(app.staticTexts["settings.title"].label, "الإعدادات")
+        tap("settings.language")
+        tap("language.option.en")
+        waitUntilLabel("settings.title", equals: "Settings", timeout: 16)
+        app.terminate()
+        app.launch()
+        openSettings()
+        XCTAssertEqual(app.staticTexts["settings.title"].label, "Settings")
+        tap("settings.language")
+        tap("language.system")
+        waitUntilLabel("settings.title", equals: "الإعدادات", timeout: 16)
+    }
+
+    func testCanadianEnglishShowsRegionalAndSharedCopy() {
+        launchUsingDeviceLanguage("en-CA", locale: "en_CA")
+        XCTAssertEqual(app.staticTexts["onboarding.title"].label, "Make your dino", "Canadian English inherits the shared onboarding")
+        openPractice()
+        let start = app.buttons["practice.start"]
+        XCTAssertEqual(start.label, "Start practising")
+        start.tap()
+        let title = app.staticTexts["question.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 8))
+        XCTAssertTrue(title.label.hasPrefix("Which clock shows"), "Canadian English also inherits the shared lesson questions")
+    }
+
+    func testCanadianTimeZoneStartsInOttawa() {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "timeZone"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        launchUsingDeviceLanguage("en-CA", locale: "en_CA", force24Hours: false)
+        let origin = app.staticTexts["question.timeZone.originName"]
+        XCTAssertTrue(origin.waitForExistence(timeout: 10))
+        XCTAssertEqual(origin.label, "Ottawa")
+        let destination = app.staticTexts["question.timeZone.destinationName"]
+        XCTAssertTrue(["Halifax", "Regina"].contains(destination.label))
+        XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.targetTime"].label, "?")
+    }
+
+    func testAustralianEnglishShowsRegionalAndSharedCopy() {
+        launchUsingDeviceLanguage("en-AU", locale: "en_AU")
+        XCTAssertEqual(app.staticTexts["onboarding.title"].label, "Make your dino")
+        openPractice()
+        let start = app.buttons["practice.start"]
+        XCTAssertEqual(start.label, "Start practising")
+        start.tap()
+        let title = app.staticTexts["question.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 8))
+        XCTAssertTrue(title.label.hasPrefix("Which clock shows"))
+    }
+
+    func testAustralianTimeZoneStartsInCanberra() {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "timeZone"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        launchUsingDeviceLanguage("en-AU", locale: "en_AU", force24Hours: false)
+        let origin = app.staticTexts["question.timeZone.originName"]
+        XCTAssertTrue(origin.waitForExistence(timeout: 10))
+        XCTAssertEqual(origin.label, "Canberra")
+        let destination = app.staticTexts["question.timeZone.destinationName"]
+        XCTAssertTrue(["Brisbane", "Nouméa"].contains(destination.label))
+        let referenceTime = app.staticTexts["question.timeZone.referenceTime"]
+        XCTAssertTrue(referenceTime.label.hasSuffix("am") || referenceTime.label.hasSuffix("pm"))
+        XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.targetTime"].label, "?")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        waitUntilLabel("question.timeZone.originName", equals: "Canberra", timeout: 8)
+        XCTAssertTrue(origin.isHittable)
+        XCTAssertTrue(destination.isHittable)
+    }
+
+    func testAustralianAfterNoonLessonConvertsFrom24Hours() {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "read24Hour"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "fiveMinutes"
+        launchUsingDeviceLanguage("en-AU", locale: "en_AU", force24Hours: false)
+        var generator = DinoPracticeGenerator(configuration: .init(time: .fiveMinutes, order: .specific(.read24Hour)),
+                                               seed: seed, language: "en-AU")
+        let question = generator.next(index: 0)
+        let clock = app.descendants(matching: .any)["question.targetClock"]
+        XCTAssertTrue(clock.waitForExistence(timeout: 8))
+        XCTAssertEqual(clock.label, question.target.digitalText)
+        tap("question.example")
+        let explanation = app.staticTexts["demo.24Hour.conversion"]
+        XCTAssertTrue(explanation.waitForExistence(timeout: 5))
+        let text = explanation.label.replacingOccurrences(of: "\u{00a0}", with: " ")
+        XCTAssertTrue(text.contains("17:05 is 5:05 pm") && text.contains("00:00 is midnight"))
+        tap("demo.ready")
+        let wrong = question.responses.firstIndex { $0 != question.expectedAnswer }!
+        tap("question.option.\(wrong)")
+        let converted = app.descendants(matching: .any)["question.afterNoon.convertedClock"]
+        XCTAssertTrue(converted.waitForExistence(timeout: 5))
+        XCTAssertEqual(converted.label, question.target.digitalReading(notation: .twelve, languageCode: "en-AU").text)
+        XCTAssertTrue(converted.isHittable)
+    }
+
+    func testAustralianLanguageSelectionPersistsOnExistingPlayer() {
+        launchUsingDeviceLanguage("nl-NL", locale: "nl_NL")
+        XCTAssertEqual(app.staticTexts["onboarding.title"].label, "Maak jouw dino")
+        onboard()
+        openSettings()
+        tap("settings.language")
+        let picker = app.scrollViews["language.picker"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+        let australian = app.buttons["language.option.en-AU"]
+        for _ in 0..<3 where !australian.isHittable { picker.swipeUp() }
+        XCTAssertEqual(australian.label, "English (Australia)")
+        australian.tap()
+        waitUntilLabel("settings.title", equals: "Settings", timeout: 15)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 10))
+        openSettings()
+        XCTAssertEqual(app.staticTexts["settings.title"].label, "Settings")
+        XCTAssertTrue(app.buttons["settings.language"].label.contains("English (Australia)"))
+        tap("settings.language")
+        tap("language.system")
+        waitUntilLabel("settings.title", equals: "Instellingen", timeout: 15)
+    }
+
+    func testGermanLanguageSelectionAndOnboarding() {
+        launchUsingDeviceLanguage("de-DE", locale: "de_DE")
+        XCTAssertEqual(app.staticTexts["onboarding.title"].label, "Gestalte deinen Dino")
+        onboard()
+        openSettings()
+        XCTAssertEqual(app.staticTexts["settings.title"].label, "Einstellungen")
+        tap("settings.language")
+        tap("language.option.en")
+        waitUntilLabel("settings.title", equals: "Settings", timeout: 5)
+        tap("settings.language")
+        tap("language.option.de")
+        waitUntilLabel("settings.title", equals: "Einstellungen", timeout: 5)
+        app.terminate()
+        app.launchArguments = ["-AppleLanguages", "(nl-NL)", "-AppleLocale", "nl_NL"]
+        app.launch()
+        openSettings()
+        XCTAssertEqual(app.staticTexts["settings.title"].label, "Einstellungen", "German persists independently of the system language")
+        tap("settings.language")
+        tap("language.system")
+        waitUntilLabel("settings.title", equals: "Instellingen", timeout: 5)
+    }
+
+    func testGermanExactMinuteAnswer() {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "sayTime"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "minutes"
+        launchUsingDeviceLanguage("de-DE", locale: "de_DE")
+        let time = DinoPracticeTime.minutes
+        var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.sayTime)), seed: seed, language: "de")
+        let question = generator.next(index: 0)
+        let prompt = question.spokenPrompt!
+        let title = app.staticTexts["question.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 8))
+        XCTAssertEqual(title.label, "Lege die Uhrzeit so, wie du sie von der Digitaluhr abliest.")
+        for (index, slot) in prompt.slots.enumerated() {
+            let option = slot.choices.firstIndex { $0.id == prompt.correct.choiceIDs[index] }!
+            tap("question.spoken.\(index).\(option)")
+        }
+        waitUntilLabel("question.spoken.draft", equals: prompt.phrase, timeout: 5)
+        let clock = app.descendants(matching: .any)["question.targetClock"].firstMatch
+        let answeredTime = clock.label
+        tap("question.confirm")
+        let advanced = NSPredicate { _, _ in clock.exists && clock.label != answeredTime }
+        let advancement = XCTNSPredicateExpectation(predicate: advanced, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [advancement], timeout: 8), .completed,
+                       "A correct answer advances to the next practice clock")
+        XCTAssertFalse(app.staticTexts["question.spoken.phrase"].exists)
+    }
+
+    func testGermanSpokenAnswerShowsCorrectWordsAfterMiss() {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "sayTime"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "half"
+        launchUsingDeviceLanguage("de-DE", locale: "de_DE")
+        var generator = DinoPracticeGenerator(configuration: .init(time: .half, order: .specific(.sayTime)), seed: seed, language: "de")
+        let prompt = generator.next(index: 0).spokenPrompt!
+        let hour = prompt.slots.firstIndex { $0.id == "hour" }!
+        let option = prompt.slots[hour].choices.firstIndex { $0.id != prompt.correct.choiceIDs[hour] }!
+        tap("question.spoken.\(hour).\(option)")
+        tap("question.confirm")
+        waitUntilLabel("question.spoken.phrase", equals: prompt.phrase, timeout: 8)
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 5))
+    }
+
+    func testGerman24HourLessonUsesFullHour() {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "read24Hour"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        launchUsingDeviceLanguage("de-DE", locale: "de_DE", force24Hours: false)
+        var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.read24Hour)), seed: seed, language: "de")
+        let question = generator.next(index: 0)
+        let clock = app.descendants(matching: .any)["question.targetClock"]
+        XCTAssertTrue(clock.waitForExistence(timeout: 8))
+        XCTAssertEqual(clock.label, question.target.digitalText)
+        let correct = question.responses.firstIndex(of: question.expectedAnswer)!
+        let wrong = question.responses.firstIndex { $0 != question.expectedAnswer }!
+        XCTAssertTrue(app.buttons["question.option.\(correct)"].label.contains(DinoTimeWords.digitalTimeInWords(question.target, language: "de")))
+        tap("question.option.\(wrong)")
+        XCTAssertFalse(app.descendants(matching: .any)["question.afterNoon.subtractTwelve"].exists)
+        XCTAssertEqual(clock.label, question.target.digitalText)
+    }
+
+    func testLocalizationPreferenceSurvivesRelaunchAndCanFollowSystem() {
+        launchUsingDeviceLanguage("en-GB", locale: "nl_NL")
+        XCTAssertEqual(app.staticTexts["onboarding.title"].label, "Make your dino")
+        onboard()
+        openSettings()
+        tap("settings.language")
+        tap("language.option.nl")
+        let title = app.staticTexts["settings.title"]
+        waitUntilLabel("settings.title", equals: "Instellingen", timeout: 5)
+        XCTAssertEqual(title.label, "Instellingen")
+
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(app.buttons["header.settings"].waitForExistence(timeout: 10), "the existing player is still on the map")
+        openSettings()
+        XCTAssertEqual(title.label, "Instellingen")
+        tap("settings.language")
+        tap("language.system")
+        waitUntilLabel("settings.title", equals: "Settings", timeout: 5)
+        app.terminate()
+        app.launch()
+        openSettings()
+        XCTAssertEqual(title.label, "Settings")
+    }
+
+    func testLocalizationDoubleLengthPseudolanguage() {
+        launchUsingDeviceLanguage("en-GB", locale: "en_GB", extraArguments: ["-NSDoubleLocalizedStrings", "YES"])
+        let title = app.staticTexts["onboarding.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 8))
+        XCTAssertGreaterThan(title.label.count, "Make your dino".count, "Xcode is displaying expanded strings")
+        XCTAssertTrue(app.frame.contains(title.frame))
+        XCTAssertTrue(app.buttons["onboarding.next"].isHittable)
+    }
+
+    func testLocalizationRightToLeftPseudolanguage() {
+        app.terminate()
+        app.launchArguments += ["-AppleTextDirection", "YES", "-NSForceRightToLeftWritingDirection", "YES"]
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "1"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        app.launch()
+        let first = app.buttons["question.option.0"]
+        let second = app.buttons["question.option.1"]
+        XCTAssertTrue(first.waitForExistence(timeout: 10))
+        XCTAssertTrue(second.exists)
+        XCTAssertGreaterThan(first.frame.midX, second.frame.midX, "answer options start from the right")
+        XCTAssertTrue(first.isHittable && second.isHittable)
+    }
+
     func testLayoutAndLanguage() {
         onboard()
+        waitForMapOpeningToFinish()
+        let initialSettings = app.buttons["header.settings"]
+        XCTAssertTrue(initialSettings.isHittable)
+        let portraitHeaderY = initialSettings.frame.midY
         saveScreenshot("map-portrait")
         begin(10)
         if app.buttons["demo.ready"].exists { tap("demo.ready") }
@@ -7941,15 +8330,15 @@ final class DinoUITests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         let portraitSettled = NSPredicate { _, _ in
             let gear = self.app.buttons["header.settings"]
-            return self.app.frame.width < self.app.frame.height && gear.exists &&
-                gear.frame.maxY < 180 && gear.frame.maxX <= self.app.frame.maxX
+            let viewport = self.app.frame
+            return viewport.width < viewport.height && gear.exists && gear.isHittable
+                && viewport.contains(gear.frame) && abs(gear.frame.midY - portraitHeaderY) <= 10
         }
         expectation(for: portraitSettled, evaluatedWith: nil)
         waitForExpectations(timeout: 8)
         openSettings()
         tap("settings.language")
         XCTAssertTrue(app.buttons["language.option.nl"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "language.option.")).count, 2)
         let english = app.descendants(matching: .any).matching(identifier: "language.option.en").firstMatch
         XCTAssertTrue(english.isHittable)
         english.tap()
@@ -9247,6 +9636,455 @@ extension DinoUITests {
         app.terminate()
         app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "70"
         app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "7"
+        app.launch()
+    }
+}
+
+extension DinoUITests {
+    func testPirateWelcomeAndReactions() {
+        launchPirate()
+        waitForMapOpeningToFinish()
+        saveScreenshot("pirate-cold-start-map")
+
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        launchPirate()
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 20))
+        let companion = app.descendants(matching: .any)["dino.character"]
+        XCTAssertEqual(companion.value as? String, "9")
+        assertCompanionInPortrait(companion)
+        saveScreenshot("pirate-original-hud")
+
+        tap("header.dino")
+        for (part, color) in [("bandana", "pink"), ("spikes", "green"), ("body", "orange"), ("belly", "blue")] {
+            tap("personalize.\(part).\(color)")
+        }
+        saveScreenshot("pirate-custom-full")
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout: 8))
+        saveScreenshot("pirate-custom-hud")
+
+        var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.chooseAnalog)), seed: seed)
+        let first = generator.next(index: 0, difficultyForKind: { _ in .introduction })
+        let title = app.staticTexts["question.title"].label
+        tap("question.option.\(first.responses.firstIndex(of: first.expectedAnswer)!)")
+        expectation(for: NSPredicate { _, _ in self.app.staticTexts["question.title"].label != title }, evaluatedWith: nil)
+        waitForExpectations(timeout: 10)
+        let second = generator.next(index: 1, difficultyForKind: { _ in .familiar })
+        tap("question.option.\(second.responses.firstIndex { $0 != second.expectedAnswer }!)")
+        if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 8))
+        saveScreenshot("pirate-after-wrong")
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        tap("question.next")
+        XCTAssertTrue(companion.waitForExistence(timeout: 8))
+        XCTAssertEqual(companion.value as? String, "9")
+        saveScreenshot("pirate-landscape-hud")
+    }
+
+    func testPirateResults() {
+        if UIDevice.current.userInterfaceIdiom == .pad { XCUIDevice.shared.orientation = .landscapeLeft }
+        app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "91"
+        for (correct, clip) in [(0, "stumble"), (3, "openingJump"), (4, "pirouette"), (5, "backflip")] {
+            app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = String(correct)
+            launchPirate()
+            XCTAssertTrue(app.buttons["result.retry"].waitForExistence(timeout: 25))
+            let actor = app.descendants(matching: .any)["dino.\(clip)"]
+            expectation(for: NSPredicate(format: "value == %@", "9|ready:true|started:true|finished:true"), evaluatedWith: actor)
+            waitForExpectations(timeout: 25)
+            saveScreenshot("pirate-result-\(clip)")
+        }
+    }
+
+    func testPirateUnlockAndSwap() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "89"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "90"
+        app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = "10"
+        app.launch()
+        XCTAssertTrue(app.buttons["result.next"].waitForExistence(timeout: 25))
+        let result = app.descendants(matching: .any)["dino.backflip"]
+        expectation(for: NSPredicate(format: "value == %@", "0|ready:true|started:true|finished:true"), evaluatedWith: result)
+        waitForExpectations(timeout: 20)
+        tap("result.next")
+        XCTAssertTrue(app.descendants(matching: .any)["map.dino.91"].waitForExistence(timeout: 35))
+        waitForMapOpeningToFinish()
+        saveScreenshot("pirate-unlocked-map")
+        _ = revealMapNode(90)
+        saveScreenshot("pirate-swapped-map-resident")
+        tap("header.dino")
+        let preview = app.descendants(matching: .any)["personalize.preview"]
+        XCTAssertEqual(preview.value as? String, "9")
+        tap("personalize.body.orange")
+        revealThemeChoice("personalize.character.0")
+        tap("personalize.character.0")
+        XCTAssertEqual(preview.value as? String, "0")
+        XCTAssertTrue(app.buttons["personalize.character.9"].isEnabled)
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout: 8))
+        _ = revealMapNode(90)
+        saveScreenshot("pirate-original-map-resident")
+
+        app.terminate()
+        for key in ["DINO_TEST_COMPLETED_LEVEL", "DINO_TEST_RESULT_LEVEL", "DINO_TEST_RESULT_CORRECT", "DINO_TEST_ANIMATION_DIAGNOSTICS"] {
+            app.launchEnvironment.removeValue(forKey: key)
+        }
+        app.launch()
+        waitForMapOpeningToFinish()
+        tap("header.dino")
+        XCTAssertEqual(preview.value as? String, "0")
+        revealThemeChoice("personalize.character.9")
+        tap("personalize.character.9")
+        tap("personalize.resetColors")
+        XCTAssertEqual(preview.value as? String, "9")
+        saveScreenshot("pirate-restored-after-relaunch")
+        tap("personalize.done")
+        begin(91)
+        XCTAssertEqual(app.descendants(matching: .any)["dino.character"].value as? String, "9")
+        saveScreenshot("pirate-normal-level")
+    }
+
+    private func launchPirate() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "90"
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "9"
+        app.launch()
+    }
+}
+
+extension DinoUITests {
+    func testPendelWelcomeAndReactions() {
+        launchPendel()
+        waitForMapOpeningToFinish()
+        saveScreenshot("pendel-cold-map")
+
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        launchPendel()
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 20))
+        let companion = app.descendants(matching: .any)["dino.character"]
+        XCTAssertEqual(companion.value as? String, "8")
+        assertCompanionInPortrait(companion)
+        saveScreenshot("pendel-original-hud")
+
+        tap("header.dino")
+        for (part, color) in [("bandana", "pink"), ("spikes", "green"), ("body", "orange"), ("belly", "blue")] {
+            tap("personalize.\(part).\(color)")
+        }
+        saveScreenshot("pendel-custom-full")
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout: 8))
+        saveScreenshot("pendel-custom-hud")
+
+        var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.chooseAnalog)), seed: seed)
+        let first = generator.next(index: 0, difficultyForKind: { _ in .introduction })
+        let title = app.staticTexts["question.title"].label
+        tap("question.option.\(first.responses.firstIndex(of: first.expectedAnswer)!)")
+        expectation(for: NSPredicate { _, _ in self.app.staticTexts["question.title"].label != title }, evaluatedWith: nil)
+        waitForExpectations(timeout: 10)
+        let second = generator.next(index: 1, difficultyForKind: { _ in .familiar })
+        tap("question.option.\(second.responses.firstIndex { $0 != second.expectedAnswer }!)")
+        if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 8))
+        saveScreenshot("pendel-after-wrong")
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        tap("question.next")
+        XCTAssertTrue(companion.waitForExistence(timeout: 8))
+        XCTAssertEqual(companion.value as? String, "8")
+        saveScreenshot("pendel-landscape-hud")
+    }
+
+    func testPendelResults() {
+        if UIDevice.current.userInterfaceIdiom == .pad { XCUIDevice.shared.orientation = .landscapeLeft }
+        app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "81"
+        for (correct, clip) in [(0, "stumble"), (3, "openingJump"), (4, "pirouette"), (5, "backflip")] {
+            app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = String(correct)
+            launchPendel()
+            XCTAssertTrue(app.buttons["result.retry"].waitForExistence(timeout: 25))
+            let actor = app.descendants(matching: .any)["dino.\(clip)"]
+            expectation(for: NSPredicate(format: "value == %@", "8|ready:true|started:true|finished:true"), evaluatedWith: actor)
+            waitForExpectations(timeout: 25)
+            saveScreenshot("pendel-result-\(clip)")
+        }
+    }
+
+    func testPendelUnlockAndCollectionSwap() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "79"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "80"
+        app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = "10"
+        app.launch()
+        XCTAssertTrue(app.buttons["result.next"].waitForExistence(timeout: 25))
+        let result = app.descendants(matching: .any)["dino.backflip"]
+        expectation(for: NSPredicate(format: "value == %@", "0|ready:true|started:true|finished:true"), evaluatedWith: result)
+        waitForExpectations(timeout: 20)
+        tap("result.next")
+        XCTAssertTrue(app.descendants(matching: .any)["map.dino.81"].waitForExistence(timeout: 35))
+        waitForMapOpeningToFinish()
+        saveScreenshot("pendel-unlocked-map")
+        _ = revealMapNode(80)
+        saveScreenshot("pendel-outgoing-resident")
+
+        tap("header.dino")
+        let preview = app.descendants(matching: .any)["personalize.preview"]
+        XCTAssertEqual(preview.value as? String, "8")
+        tap("personalize.body.orange")
+        revealThemeChoice("personalize.character.0")
+        tap("personalize.character.0")
+        XCTAssertEqual(preview.value as? String, "0")
+        XCTAssertTrue(app.buttons["personalize.character.8"].isEnabled)
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout: 8))
+        _ = revealMapNode(80)
+        saveScreenshot("pendel-original-resident")
+
+        app.terminate()
+        for key in ["DINO_TEST_COMPLETED_LEVEL", "DINO_TEST_RESULT_LEVEL", "DINO_TEST_RESULT_CORRECT", "DINO_TEST_ANIMATION_DIAGNOSTICS"] {
+            app.launchEnvironment.removeValue(forKey: key)
+        }
+        app.launch()
+        waitForMapOpeningToFinish()
+        tap("header.dino")
+        XCTAssertEqual(preview.value as? String, "0")
+        revealThemeChoice("personalize.character.8")
+        tap("personalize.character.8")
+        tap("personalize.resetColors")
+        XCTAssertEqual(preview.value as? String, "8")
+        saveScreenshot("pendel-restored-after-relaunch")
+        tap("personalize.done")
+        begin(81)
+        XCTAssertEqual(app.descendants(matching: .any)["dino.character"].value as? String, "8")
+        saveScreenshot("pendel-normal-level")
+    }
+
+    private func launchPendel() {
+        app.terminate()
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = "80"
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = "8"
+        app.launch()
+    }
+}
+
+extension DinoUITests {
+    func testCastleMapRotatesAtPalace() {
+        launchCastle(completedLevel: 98)
+        XCTAssertTrue(app.buttons["header.level"].waitForExistence(timeout: 15))
+        waitForMapOpeningToFinish()
+        defer { XCUIDevice.shared.orientation = .portrait }
+
+        for orientation in [UIDeviceOrientation.portrait, .landscapeLeft, .landscapeRight, .portrait] {
+            XCUIDevice.shared.orientation = orientation
+            let landscape = orientation != .portrait
+            let viewportReady = NSPredicate { _, _ in
+                (self.app.frame.width > self.app.frame.height) == landscape
+                    && self.app.buttons["map.level.99"].isHittable
+            }
+            expectation(for: viewportReady, evaluatedWith: nil)
+            waitForExpectations(timeout: 12)
+
+            let scroll = app.scrollViews["map.route"].frame
+            XCTAssertEqual(scroll.minX, app.frame.minX, accuracy: 1)
+            XCTAssertEqual(scroll.maxX, app.frame.maxX, accuracy: 1)
+            saveScreenshot("castle-map-palace-\(orientation.rawValue)")
+        }
+    }
+
+    func testCastleWelcome() {
+        XCTContext.runActivity(named: "chronos.capture.opening") { _ in
+            launchCastle(completedLevel: 100, selectedCharacter: 10)
+        }
+        waitForMapOpeningToFinish()
+        XCTAssertTrue(app.descendants(matching: .any)["map.dino.100"].waitForExistence(timeout: 20))
+        saveScreenshot("castle-cold-start-map")
+    }
+
+    func testCastlePracticeReactions() {
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "chooseAnalog"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        launchCastle(completedLevel: 100, selectedCharacter: 10)
+        XCTAssertTrue(app.buttons["question.option.0"].waitForExistence(timeout: 20))
+        let companion = app.descendants(matching: .any)["dino.character"]
+        XCTAssertEqual(companion.value as? String, "10")
+        assertCompanionInPortrait(companion)
+        saveScreenshot("castle-original-hud")
+
+        tap("header.dino")
+        for (part, color) in [("bandana", "pink"), ("spikes", "green"), ("body", "orange"), ("belly", "purple")] {
+            tap("personalize.\(part).\(color)")
+        }
+        saveScreenshot("castle-custom-full")
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout: 8))
+        saveScreenshot("castle-custom-hud")
+
+        var generator = DinoPracticeGenerator(configuration: .init(time: .whole, order: .specific(.chooseAnalog)), seed: seed)
+        let first = generator.next(index: 0, difficultyForKind: { _ in .introduction })
+        let title = app.staticTexts["question.title"].label
+        XCTContext.runActivity(named: "chronos.capture.clap") { _ in
+            app.buttons["question.option.\(first.responses.firstIndex(of: first.expectedAnswer)!)"].tap()
+        }
+        expectation(for: NSPredicate { _, _ in self.app.staticTexts["question.title"].label != title }, evaluatedWith: nil)
+        waitForExpectations(timeout: 10)
+        let second = generator.next(index: 1, difficultyForKind: { _ in .familiar })
+        XCTContext.runActivity(named: "chronos.capture.wrong") { _ in
+            app.buttons["question.option.\(second.responses.firstIndex { $0 != second.expectedAnswer }!)"].tap()
+        }
+        if app.buttons["question.showAnswer"].exists { tap("question.showAnswer") }
+        XCTAssertTrue(app.buttons["question.next"].waitForExistence(timeout: 8))
+        saveScreenshot("castle-after-wrong")
+
+        XCUIDevice.shared.orientation = .landscapeLeft
+        tap("question.next")
+        XCTAssertTrue(companion.waitForExistence(timeout: 8))
+        XCTAssertEqual(companion.value as? String, "10")
+        saveScreenshot("castle-landscape-hud")
+    }
+
+    func testCastleResults() {
+        if UIDevice.current.userInterfaceIdiom == .pad { XCUIDevice.shared.orientation = .landscapeLeft }
+        app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "91"
+        for (correct, clip) in [(0, "stumble"), (3, "openingJump"), (4, "pirouette"), (5, "backflip")] {
+            app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = String(correct)
+            XCTContext.runActivity(named: "chronos.capture.result-\(clip)") { _ in
+                launchCastle(completedLevel: 100, selectedCharacter: 10)
+            }
+            XCTAssertTrue(app.buttons["result.retry"].waitForExistence(timeout: 25))
+            let actor = app.descendants(matching: .any)["dino.\(clip)"]
+            expectation(for: NSPredicate(format: "value == %@", "10|ready:true|started:true|finished:true"), evaluatedWith: actor)
+            waitForExpectations(timeout: 25)
+            saveScreenshot("castle-result-\(clip)")
+        }
+    }
+
+    func testCastleLiveLevelToResult() {
+        app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+        launchCastle(completedLevel: 100, selectedCharacter: 10)
+        waitForMapOpeningToFinish()
+        begin(91)
+        XCTAssertTrue((app.descendants(matching: .any)["dino.character"].value as? String)?.hasPrefix("10|") == true)
+        saveScreenshot("castle-level-91")
+
+        var random = SeededGenerator(seed: seed)
+        let level = DinoLevelCatalog.level(91)!
+        let introductions = Dictionary(uniqueKeysWithValues: level.recipes.map {
+            (level.skill(for: $0), DinoQuestionDifficulty.introduction)
+        })
+        // The progress fixture supplies one prior attempt, with no learning history.
+        var questions = DinoQuestionGenerator.generate(level: level, attempt: 1, difficulties: introductions, using: &random)
+        var learned: Set<DinoQuestionSkill> = []
+        for index in questions.indices {
+            let recipe = level.recipe(at: index), skill = level.skill(for: recipe)
+            if index > 0 {
+                let previous = questions[index - 1]
+                let difficulty = learned.contains(skill) ? level.plannedDifficulty(for: recipe) : .introduction
+                if questions[index].difficulty != difficulty || questions[index].target == previous.target {
+                    let available = questions.enumerated().filter { $0.offset != index }
+                    let recent = questions.prefix(index).filter { $0.kind == recipe.kind && $0.timeFamily == level.time(for: recipe) }
+                    questions[index] = DinoQuestionGenerator.generateQuestion(level: level, recipe: recipe,
+                        index: index, attempt: 1, difficulty: difficulty, previousTarget: previous.target,
+                        usedHours: Set(available.map { $0.element.target.hour }),
+                        optionPosition: (previous.options.firstIndex(of: previous.target) ?? 0) + 1,
+                        recentQuestions: recent, using: &random)
+                }
+            }
+            let question = questions[index]
+            if app.buttons["demo.ready"].exists { tap("demo.ready") }
+            let choice = question.responses.firstIndex(of: question.expectedAnswer)!
+            let answer = app.buttons["question.option.\(choice)"]
+            if index == questions.count - 1 {
+                XCTContext.runActivity(named: "chronos.capture.live-result") { _ in answer.tap() }
+            } else {
+                answer.tap()
+                XCTAssertTrue(app.staticTexts["\(index + 2)/\(questions.count)"].waitForExistence(timeout: 8))
+            }
+            learned.insert(skill)
+        }
+        let actor = app.descendants(matching: .any)["dino.backflip"]
+        expectation(for: NSPredicate(format: "value == %@", "10|ready:true|started:true|finished:true"), evaluatedWith: actor)
+        waitForExpectations(timeout: 20)
+        saveScreenshot("castle-live-result")
+    }
+
+    func testCastleTerminalUnlockAndSwap() {
+        app.launchEnvironment["DINO_TEST_ANIMATION_DIAGNOSTICS"] = "1"
+        app.launchEnvironment["DINO_TEST_RESULT_LEVEL"] = "100"
+        app.launchEnvironment["DINO_TEST_RESULT_CORRECT"] = "10"
+        launchCastle(completedLevel: 99)
+        XCTAssertTrue(app.buttons["result.map"].waitForExistence(timeout: 30))
+        let result = app.descendants(matching: .any)["dino.backflip"]
+        expectation(for: NSPredicate(format: "value == %@", "0|ready:true|started:true|finished:true"), evaluatedWith: result)
+        waitForExpectations(timeout: 20)
+        XCTContext.runActivity(named: "chronos.capture.unlock") { _ in
+            app.buttons["result.map"].tap()
+        }
+        XCTAssertTrue(app.descendants(matching: .any)["map.dino.100"].waitForExistence(timeout: 45))
+        saveScreenshot("castle-unlocked-at-100")
+        tap("header.dino")
+        let preview = app.descendants(matching: .any)["personalize.preview"]
+        XCTAssertEqual(preview.value as? String, "10")
+        tap("personalize.body.orange")
+        let outgoingTile = revealCastleTile(0)
+        let tenthSlot = outgoingTile.frame
+        outgoingTile.tap()
+        XCTAssertEqual(preview.value as? String, "0")
+        let returnedTile = revealCastleTile(10)
+        XCTAssertTrue(returnedTile.isEnabled)
+        XCTAssertEqual(returnedTile.frame.midX, tenthSlot.midX, accuracy: 3)
+        XCTAssertEqual(returnedTile.frame.midY, tenthSlot.midY, accuracy: 3)
+        tap("personalize.done")
+        XCTAssertTrue(app.buttons["personalize.done"].waitForNonExistence(timeout: 8))
+        saveScreenshot("castle-swapped-map-resident")
+
+        app.terminate()
+        for key in ["DINO_TEST_COMPLETED_LEVEL", "DINO_TEST_RESULT_LEVEL", "DINO_TEST_RESULT_CORRECT", "DINO_TEST_ANIMATION_DIAGNOSTICS"] {
+            app.launchEnvironment.removeValue(forKey: key)
+        }
+        relaunchCastle()
+        waitForMapOpeningToFinish()
+        tap("header.dino")
+        let restoredPreview = app.descendants(matching: .any)["personalize.preview"]
+        XCTAssertEqual(restoredPreview.value as? String, "0")
+        revealCastleTile(10).tap()
+        tap("personalize.resetColors")
+        XCTAssertEqual(restoredPreview.value as? String, "10")
+        saveScreenshot("castle-restored-after-relaunch")
+        tap("personalize.done")
+        begin(100)
+        XCTAssertEqual(app.descendants(matching: .any)["dino.character"].value as? String, "10")
+        saveScreenshot("castle-level-100")
+    }
+
+    private func launchCastle(completedLevel: Int, selectedCharacter: Int? = nil) {
+        app.launchEnvironment["DINO_TEST_COMPLETED_LEVEL"] = String(completedLevel)
+        app.launchEnvironment["DINO_TEST_SELECTED_CHARACTER"] = selectedCharacter.map(String.init)
+        relaunchCastle()
+    }
+
+    private func revealCastleTile(_ rawValue: Int) -> XCUIElement {
+        let tile = app.buttons["personalize.character.\(rawValue)"]
+        let options = app.scrollViews["personalize.options"]
+        let done = app.buttons["personalize.done"]
+        for _ in 0..<5 {
+            if tile.exists && tile.isHittable && tile.frame.maxY < done.frame.minY { break }
+            if options.exists { options.swipeUp() }
+        }
+        XCTAssertTrue(tile.exists && tile.isHittable)
+        return tile
+    }
+
+    private func relaunchCastle() {
+        let environment = app.launchEnvironment, arguments = app.launchArguments
+        app.terminate()
+        app = XCUIApplication()
+        app.launchEnvironment = environment
+        app.launchArguments = arguments
         app.launch()
     }
 }

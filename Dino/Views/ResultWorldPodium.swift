@@ -32,6 +32,17 @@ struct ResultPodiumPalette {
 enum ResultPodiumGeometry {
     static let width: CGFloat = 1000
     static let height: CGFloat = 455
+
+    /// Midpoint between the back edge and front rim of the painted top.
+    static func supportY(worldID: Int) -> CGFloat {
+        switch DinoWorldCatalog.world(worldID)?.themeID {
+        case 3: return 88
+        case 4, 5, 10: return 79
+        case 6, 8, 9: return 86
+        default: return 82
+        }
+    }
+
     static func rewardY(worldID: Int) -> CGFloat {
         switch DinoWorldCatalog.world(worldID)?.themeID {
         case 4: return 285

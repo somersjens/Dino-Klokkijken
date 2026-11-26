@@ -915,11 +915,14 @@ struct DinoQuestionTitle: View {
     var statementStrikeProgress: CGFloat = 0
 
     var body: some View {
+        let segments = prompt.segments { L(key: $0) }
         Group {
-            if [.spokenTime, .trueFalse].contains(question.kind), let formatKey = prompt.formatKey, let time = prompt.arguments.first {
-                timePromptTitle(formatKey: formatKey, time: time.text)
+            if [.spokenTime, .trueFalse].contains(question.kind),
+               segments.count == 2, case .literal(let heading) = segments[0], heading.hasSuffix("\n"),
+               case .argument(let time) = segments[1] {
+                timePromptTitle(heading: heading.trimmingCharacters(in: .whitespacesAndNewlines), time: time.text)
             } else {
-                title
+                title(segments)
             }
         }
             .font(.system(size: fontSize, weight: .heavy, design: .rounded))
@@ -928,10 +931,9 @@ struct DinoQuestionTitle: View {
             .speakQuestionTitle(spokenText, identity: "\(speechScope)-\(question.id)", active: announces)
     }
 
-    private func timePromptTitle(formatKey: String, time: String) -> some View {
+    private func timePromptTitle(heading: String, time: String) -> some View {
         VStack(spacing: 10) {
-            Text(verbatim: L(key: formatKey).replacingOccurrences(of: "%@", with: "")
-                .trimmingCharacters(in: .whitespacesAndNewlines))
+            Text(verbatim: heading)
             Text(verbatim: time)
                 .font(.system(size: fontSize + 2, weight: .heavy, design: .rounded))
                 .fixedSize(horizontal: false, vertical: true)
@@ -970,19 +972,14 @@ struct DinoQuestionTitle: View {
         prompt.spoken { L(key: $0) }
     }
 
-    private var title: Text {
-        guard let formatKey = prompt.formatKey else {
-            return Text(LocalizedStringKey(prompt.plainKey))
-        }
-        let parts = L(key: formatKey).components(separatedBy: "%@")
-        return parts.indices.reduce(Text(verbatim: "")) { partial, index in
-            var next = partial
-            if !parts[index].isEmpty { next = next + Text(verbatim: parts[index]) }
-            if index < prompt.arguments.count {
-                let argument = prompt.arguments[index]
-                next = next + Text(verbatim: argument.text).foregroundColor(emphasisColor(argument.emphasis))
+    private func title(_ segments: [DinoQuestionPrompt.Segment]) -> Text {
+        segments.reduce(Text(verbatim: "")) { result, segment in
+            switch segment {
+            case .literal(let text):
+                return result + Text(verbatim: text)
+            case .argument(let argument):
+                return result + Text(verbatim: argument.text).foregroundColor(emphasisColor(argument.emphasis))
             }
-            return next
         }
     }
 

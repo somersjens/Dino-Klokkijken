@@ -154,6 +154,7 @@ struct DinoTimeArithmeticExplanation: View {
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.55), value: stage)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: revealedStep)
+        .environment(\.layoutDirection, .leftToRight)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("\(prefix).timeArithmetic")
         .id("\(prefix).timeArithmetic")

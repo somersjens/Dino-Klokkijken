@@ -51,8 +51,11 @@ struct DinoCharacter: View {
             let sample = appearance.identity.usesBossArtwork
                 ? DinoBossAnimation.sample(clip, character: appearance.identity, elapsed: elapsed, reducedMotion: reduceMotion)
                 : DinoAnimation.sample(clip, elapsed: elapsed, reducedMotion: reduceMotion)
+            let character = appearance.identity
+            let soleAnchor = character.usesPaintedFootline
+                ? UnitPoint(x: 0.5, y: character.standingFootline) : .bottom
             let drawing = characterDrawing(sample, elapsed: elapsed)
-                .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
+                .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: soleAnchor)
                 .offset(y: size * sample.height * jumpHeightScale)
                 // Only the pose bypasses answer-card animations. The portrait
                 // modifier must retain its animated unfold during a result jump.
@@ -61,7 +64,7 @@ struct DinoCharacter: View {
                 if let companionPresentation {
                     if appearance.identity.usesBossArtwork, companionPresentation.portraitAmount > 0 {
                         let head = characterDrawing(sample, elapsed: elapsed, headOnly: true)
-                            .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: .bottom)
+                            .scaleEffect(x: sample.scaleX, y: sample.scaleY, anchor: soleAnchor)
                             .offset(y: size * sample.height * jumpHeightScale)
                             .transaction { $0.animation = nil }
                         drawing.modifier(companionPresentation.withBossHead(AnyView(head)))
@@ -155,7 +158,10 @@ struct DinoCharacter: View {
 
     private var clapContact: CGPoint {
         switch appearance.identity {
+        case .castle: DinoCastleArtwork.clapContact
+        case .pirates: DinoPirateArtwork.clapContact
         case .valley: DinoValleyArtwork.clapContact
+        case .machine: DinoMachineArtwork.clapContact
         case .city: DinoCityArtwork.clapContact
         case .cave: DinoCaveArtwork.clapContact
         case .village: DinoVillageArtwork.clapContact
@@ -443,6 +449,8 @@ struct DinoCompanionLayer: View {
         }
         // This layer sits above screen overlays. Match their black scrim while
         // preserving the portrait's transparent edges and overflowing spikes.
+        // Its destinations are already in physical screen coordinates.
+        .environment(\.layoutDirection, .leftToRight)
         .colorMultiply(Color(white: 1 - dimmingOpacity))
         .animation(.easeOut(duration: 0.18), value: dimmingOpacity)
         .task(id: preparationAppearance) {
@@ -507,7 +515,7 @@ struct DinoCompanionLayer: View {
                 .accessibilityHidden(true)
             Color.clear.frame(width: 210, height: 210)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text(verbatim: "Dino"))
+                .accessibilityLabel(Text("dino.character"))
                 .accessibilityIdentifier(presentedClip == .idle ? "dino.character" : "dino.\(presentedClip.rawValue)")
 #if DEBUG
                 .accessibilityValue(ProcessInfo.processInfo.environment["DINO_TEST_ANIMATION_DIAGNOSTICS"] == "1"

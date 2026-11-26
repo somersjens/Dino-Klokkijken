@@ -45,23 +45,63 @@ struct ClockTime: Codable, Equatable, Hashable, Sendable {
     var digitalText: String { String(format: "%02d:%02d", hour, minute) }
 
     func digitalReading(notation: DigitalHourNotation, languageCode: String) -> DigitalClockReading {
+        let language = AppLanguage.resolved(languageCode)
+        let locale = Locale(identifier: language.formatLocale)
+        if language.localDigitalClock {
+            return localizedDigitalReading(notation: notation, locale: locale)
+        }
         let minuteText = String(format: "%02d", minute)
         guard notation == .twelve else {
             return DigitalClockReading(hour: String(format: "%02d", hour), minute: minuteText, period: nil)
         }
-        var calendar = Calendar(identifier: .gregorian)
-        let locale = Locale(identifier: languageCode)
-        calendar.locale = locale
-        let date = calendar.date(from: DateComponents(calendar: calendar, hour: hour, minute: minute)) ?? Date()
-        func part(_ format: String) -> String {
-            let formatter = DateFormatter()
-            formatter.locale = locale
-            formatter.calendar = calendar
-            formatter.dateFormat = format
+        let clockHour = String(format: "%02d", (hour + 11) % 12 + 1)
+        let period = hour < 12 ? "AM" : "PM"
+        return DigitalClockReading(hour: clockHour, minute: minuteText, period: period)
+    }
+
+    func localizedDigitalReading(notation: DigitalHourNotation, locale: Locale) -> DigitalClockReading {
+        let template = notation == .twelve ? "hmma" : "HHmm"
+        let pattern = DateFormatter.dateFormat(fromTemplate: template, options: 0, locale: locale)
+            ?? (notation == .twelve ? "h:mm a" : "HH:mm")
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        let date = Date(timeIntervalSince1970: Double(minutesOfDay * 60))
+        func format(_ pattern: String) -> String {
+            guard !pattern.isEmpty else { return "" }
+            formatter.dateFormat = pattern
             return formatter.string(from: date)
         }
-        return DigitalClockReading(hour: part("hh"), minute: part("mm"), period: part("a"))
+        let tokens = Self.clockPatternTokens.matches(in: pattern, range: NSRange(pattern.startIndex..., in: pattern))
+            .compactMap { match -> (field: Character?, range: Range<String.Index>)? in
+                guard let range = Range(match.range, in: pattern) else { return nil }
+                return (match.range(at: 1).location == NSNotFound ? nil : pattern[range].first, range)
+            }
+        guard let hours = tokens.first(where: { $0.field.map { "hHKk".contains($0) } ?? false }),
+              let minutes = tokens.first(where: { $0.field == "m" }),
+              hours.range.upperBound <= minutes.range.lowerBound else {
+            return DigitalClockReading(hour: format(notation == .twelve ? "h" : "HH"), minute: format("mm"),
+                                       period: notation == .twelve ? format("a") : nil)
+        }
+        let period = tokens.first {
+            ($0.range.upperBound <= hours.range.lowerBound || $0.range.lowerBound >= minutes.range.upperBound)
+                && ($0.field.map { "abB".contains($0) } ?? false)
+        }
+        let separator = format(String(pattern[hours.range.upperBound..<minutes.range.lowerBound]))
+        let gap = period.map { token -> String in
+            let range = token.range.lowerBound < hours.range.lowerBound
+                ? token.range.upperBound..<hours.range.lowerBound : minutes.range.upperBound..<token.range.lowerBound
+            return format(String(pattern[range]))
+        } ?? " "
+        return DigitalClockReading(hour: format(String(pattern[hours.range])), minute: format(String(pattern[minutes.range])),
+                                   period: period.map { format(String(pattern[$0.range])) }, separator: separator,
+                                   periodBeforeClock: period.map { $0.range.lowerBound < hours.range.lowerBound } ?? false,
+                                   periodSpacing: gap, localizedText: format(pattern))
     }
+
+    // ICU patterns can quote literal words, including ones containing letters used by clock fields.
+    private static let clockPatternTokens = try! NSRegularExpression(pattern: "'(?:''|[^'])*'|([hHKk]+|m+|[abB]+)")
     var minutesOfDay: Int { hour * 60 + minute }
     func adding(minutes: Int) -> ClockTime {
         let total = ((minutesOfDay + minutes) % 1440 + 1440) % 1440
@@ -109,9 +149,15 @@ struct DigitalClockReading: Equatable, Sendable {
     var hour: String
     var minute: String
     var period: String?
+    var separator = ":"
+    var periodBeforeClock = false
+    var periodSpacing = " "
+    var localizedText: String?
     var text: String {
-        guard let period else { return "\(hour):\(minute)" }
-        return "\(hour):\(minute) \(period)"
+        if let localizedText { return localizedText }
+        guard let period else { return "\(hour)\(separator)\(minute)" }
+        return periodBeforeClock ? "\(period)\(periodSpacing)\(hour)\(separator)\(minute)"
+            : "\(hour)\(separator)\(minute)\(periodSpacing)\(period)"
     }
 }
 
