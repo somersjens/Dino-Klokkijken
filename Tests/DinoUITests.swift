@@ -7959,6 +7959,238 @@ final class DinoUITests: XCTestCase {
         saveScreenshot("centered-practice-sorting")
     }
 
+    func testSimplifiedChineseOnboardingAndStoredLanguage() {
+        assertChineseOnboarding("zh-Hans-CN", locale: "zh_CN", code: "zh-Hans",
+                                title: "装扮你的恐龙", settings: "设置")
+    }
+
+    func testTraditionalChineseOnboardingAndStoredLanguage() {
+        assertChineseOnboarding("zh-TW", locale: "zh_TW", code: "zh-Hant",
+                                title: "裝扮你的恐龍", settings: "設定")
+    }
+
+    private func assertChineseOnboarding(_ deviceLanguage: String, locale: String, code: String,
+                                         title: String, settings: String) {
+        launchUsingDeviceLanguage(deviceLanguage, locale: locale)
+        let onboarding = app.staticTexts["onboarding.title"]
+        XCTAssertTrue(onboarding.waitForExistence(timeout: 6))
+        XCTAssertEqual(onboarding.label, title)
+        onboard()
+        openSettings()
+        XCTAssertEqual(app.staticTexts["settings.title"].label, settings)
+        tap("settings.language")
+        tap("language.option.en")
+        waitUntilLabel("settings.title", equals: "Settings", timeout: 10)
+        tap("settings.language")
+        let picker = app.scrollViews["language.picker"]
+        XCTAssertTrue(picker.waitForExistence(timeout: 5))
+        let chinese = app.buttons["language.option.\(code)"]
+        for _ in 0..<5 {
+            if chinese.exists && chinese.isHittable { break }
+            picker.swipeUp()
+        }
+        XCTAssertTrue(chinese.isHittable)
+        tap("language.option.\(code)")
+        waitUntilLabel("settings.title", equals: settings, timeout: 10)
+        app.terminate()
+        app.launchArguments = ["-AppleLanguages", "(nl-NL)", "-AppleLocale", "nl_NL"]
+        app.launch()
+        openSettings()
+        XCTAssertEqual(app.staticTexts["settings.title"].label, settings)
+        tap("settings.language")
+        tap("language.system")
+        waitUntilLabel("settings.title", equals: "Instellingen", timeout: 10)
+    }
+
+    func testSimplifiedChineseWordTilesAndFeedback() {
+        assertChineseWordTiles("zh-Hans-CN", locale: "zh_CN", code: "zh-Hans",
+                               hourTitle: "几点", title: "选卡片，拼出钟上显示的时刻")
+    }
+
+    func testTraditionalChineseWordTilesAndFeedback() {
+        assertChineseWordTiles("zh-TW", locale: "zh_TW", code: "zh-Hant",
+                               hourTitle: "幾點", title: "選卡片，拼出時鐘上的時間")
+    }
+
+    private func assertChineseWordTiles(_ deviceLanguage: String, locale: String, code: String,
+                                        hourTitle: String, title: String) {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "sayTime"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "minutes"
+        launchUsingDeviceLanguage(deviceLanguage, locale: locale, force24Hours: false)
+        var generator = DinoPracticeGenerator(configuration: .init(time: .minutes, order: .specific(.sayTime)),
+                                               seed: seed, language: code)
+        let question = generator.next(index: 0)
+        let prompt = question.spokenPrompt!
+        let clock = app.descendants(matching: .any)["question.targetClock"].firstMatch
+        XCTAssertTrue(clock.waitForExistence(timeout: 10))
+        XCTAssertEqual(clock.label, question.target.digitalReading(notation: .twentyFour, languageCode: code).text)
+        XCTAssertEqual(app.staticTexts["question.spoken.slot.0"].label, hourTitle)
+        let wrong = prompt.slots[0].choices.firstIndex { $0.id != prompt.correct.choiceIDs[0] }!
+        tap("question.spoken.0.\(wrong)")
+        tap("question.confirm")
+        waitUntilLabel("question.spoken.phrase", equals: prompt.phrase, timeout: 12)
+        tap("question.next")
+        waitUntilLabel("question.title", equals: title, timeout: 10)
+
+        launchUsingDeviceLanguage(deviceLanguage, locale: locale, force24Hours: false)
+        for (index, slot) in prompt.slots.enumerated() {
+            let option = slot.choices.firstIndex { $0.id == prompt.correct.choiceIDs[index] }!
+            tap("question.spoken.\(index).\(option)")
+        }
+        waitUntilLabel("question.spoken.draft", equals: prompt.phrase, timeout: 8)
+        let answeredTime = clock.label
+        tap("question.confirm")
+        let advanced = NSPredicate { _, _ in clock.exists && clock.label != answeredTime }
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: advanced, object: nil)], timeout: 10), .completed)
+    }
+
+    func testSimplifiedChineseTimeZoneStartsInBeijingInBothOrientations() {
+        assertChineseTimeZone("zh-Hans-CN", locale: "zh_CN", origin: "北京",
+                              destinations: ["东京", "首尔", "河内", "曼谷"])
+    }
+
+    func testTraditionalChineseTimeZoneStartsInTaipeiInBothOrientations() {
+        assertChineseTimeZone("zh-TW", locale: "zh_TW", origin: "台北",
+                              destinations: ["東京", "首爾", "河內", "曼谷"])
+    }
+
+    private func assertChineseTimeZone(_ deviceLanguage: String, locale: String, origin: String,
+                                       destinations: [String]) {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "timeZone"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        launchUsingDeviceLanguage(deviceLanguage, locale: locale)
+        for orientation in [UIDeviceOrientation.portrait, .landscapeLeft] {
+            XCUIDevice.shared.orientation = orientation
+            waitUntilLabel("question.timeZone.originName", equals: origin, timeout: 12)
+            let destination = app.staticTexts["question.timeZone.destinationName"]
+            XCTAssertTrue(destinations.contains(destination.label))
+            XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.targetTime"].label, "？")
+        }
+    }
+
+    func testSimplifiedChinese24HourLessonReadsTheFullHour() {
+        assertChinese24HourLesson("zh-Hans-CN", locale: "zh_CN", code: "zh-Hans")
+    }
+
+    func testTraditionalChinese24HourLessonReadsTheFullHour() {
+        assertChinese24HourLesson("zh-TW", locale: "zh_TW", code: "zh-Hant")
+    }
+
+    private func assertChinese24HourLesson(_ deviceLanguage: String, locale: String, code: String) {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "read24Hour"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "minutes"
+        launchUsingDeviceLanguage(deviceLanguage, locale: locale, force24Hours: false)
+        var generator = DinoPracticeGenerator(configuration: .init(time: .minutes, order: .specific(.read24Hour)),
+                                               seed: seed, language: code)
+        let question = generator.next(index: 0)
+        let clock = app.descendants(matching: .any)["question.targetClock"].firstMatch
+        XCTAssertTrue(clock.waitForExistence(timeout: 10))
+        XCTAssertEqual(clock.label, question.target.digitalReading(notation: .twentyFour, languageCode: code).text)
+        let correct = question.responses.firstIndex(of: question.expectedAnswer)!
+        let option = app.buttons["question.option.\(correct)"]
+        XCTAssertTrue(option.exists)
+        XCTAssertEqual(option.label, DinoTimeWords.digitalTimeInWords(question.target, language: code))
+        tap("question.option.\(correct)")
+        let next = NSPredicate { _, _ in clock.exists && clock.label != question.target.digitalReading(notation: .twentyFour, languageCode: code).text }
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: next, object: nil)], timeout: 10), .completed)
+    }
+
+    func testJapaneseOnboardingAndStoredLanguage() {
+        launchUsingDeviceLanguage("ja-JP", locale: "ja_JP")
+        let onboarding = app.staticTexts["onboarding.title"]
+        XCTAssertTrue(onboarding.waitForExistence(timeout: 6))
+        XCTAssertEqual(onboarding.label, "ディノをつくろう")
+        onboard()
+        openSettings()
+        XCTAssertEqual(app.staticTexts["settings.title"].label, "設定")
+        tap("settings.language")
+        tap("language.option.en")
+        waitUntilLabel("settings.title", equals: "Settings", timeout: 10)
+        tap("settings.language")
+        tap("language.option.ja")
+        waitUntilLabel("settings.title", equals: "設定", timeout: 10)
+        app.terminate()
+        app.launchArguments = ["-AppleLanguages", "(nl-NL)", "-AppleLocale", "nl_NL"]
+        app.launch()
+        openSettings()
+        XCTAssertEqual(app.staticTexts["settings.title"].label, "設定")
+        tap("settings.language")
+        tap("language.system")
+        waitUntilLabel("settings.title", equals: "Instellingen", timeout: 10)
+    }
+
+    func testJapaneseClockTilesGiveFeedbackAndAdvance() {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "sayTime"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "minutes"
+        launchUsingDeviceLanguage("ja-JP", locale: "ja_JP", force24Hours: false)
+        var generator = DinoPracticeGenerator(configuration: .init(time: .minutes, order: .specific(.sayTime)),
+                                               seed: seed, language: "ja")
+        let first = generator.next(index: 0)
+        let prompt = first.spokenPrompt!
+        let clock = app.descendants(matching: .any)["question.targetClock"].firstMatch
+        XCTAssertTrue(clock.waitForExistence(timeout: 10))
+        XCTAssertEqual(clock.label, first.target.digitalReading(notation: .twentyFour, languageCode: "ja").text)
+        XCTAssertEqual(app.staticTexts["question.spoken.slot.0"].label, "なんじ")
+        let wrong = prompt.slots[0].choices.firstIndex { $0.id != prompt.correct.choiceIDs[0] }!
+        tap("question.spoken.0.\(wrong)")
+        tap("question.confirm")
+        waitUntilLabel("question.spoken.phrase", equals: prompt.phrase, timeout: 12)
+
+        tap("question.next")
+        let title = app.staticTexts["question.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 10))
+        XCTAssertEqual(title.label, "カードをえらんで時こくの読み方を作ろう")
+        // Reopen the seeded first question and assemble the exact reading.
+        launchUsingDeviceLanguage("ja-JP", locale: "ja_JP", force24Hours: false)
+        for (index, slot) in prompt.slots.enumerated() {
+            let option = slot.choices.firstIndex { $0.id == prompt.correct.choiceIDs[index] }!
+            tap("question.spoken.\(index).\(option)")
+        }
+        waitUntilLabel("question.spoken.draft", equals: prompt.phrase, timeout: 8)
+        let answeredTime = clock.label
+        tap("question.confirm")
+        let advanced = NSPredicate { _, _ in clock.exists && clock.label != answeredTime }
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: advanced, object: nil)], timeout: 10), .completed)
+    }
+
+    func testJapaneseTimeZoneStartsInTokyoInBothOrientations() {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "timeZone"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
+        launchUsingDeviceLanguage("ja-JP", locale: "ja_JP")
+        for orientation in [UIDeviceOrientation.portrait, .landscapeLeft] {
+            XCUIDevice.shared.orientation = orientation
+            waitUntilLabel("question.timeZone.originName", equals: "東京", timeout: 12)
+            let destination = app.staticTexts["question.timeZone.destinationName"]
+            XCTAssertTrue(["北京", "マニラ"].contains(destination.label))
+            XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.targetTime"].label, "？")
+        }
+    }
+
+    func testJapanese24HourLessonReadsTheFullHour() {
+        app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "read24Hour"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "minutes"
+        launchUsingDeviceLanguage("ja-JP", locale: "ja_JP", force24Hours: false)
+        var generator = DinoPracticeGenerator(configuration: .init(time: .minutes, order: .specific(.read24Hour)),
+                                               seed: seed, language: "ja")
+        let question = generator.next(index: 0)
+        let clock = app.descendants(matching: .any)["question.targetClock"].firstMatch
+        XCTAssertTrue(clock.waitForExistence(timeout: 10))
+        XCTAssertEqual(clock.label, question.target.digitalReading(notation: .twentyFour, languageCode: "ja").text)
+        let correct = question.responses.firstIndex(of: question.expectedAnswer)!
+        let option = app.buttons["question.option.\(correct)"]
+        XCTAssertTrue(option.exists)
+        XCTAssertEqual(option.label, DinoTimeWords.digitalTimeInWords(question.target, language: "ja"))
+        tap("question.option.\(correct)")
+        let next = NSPredicate { _, _ in clock.exists && clock.label != question.target.digitalText }
+        XCTAssertEqual(XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: next, object: nil)], timeout: 10), .completed)
+    }
+
     func testArabicClockTilesReadFromRightAndMarkCorrectAnswer() {
         app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
         app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "sayTime"

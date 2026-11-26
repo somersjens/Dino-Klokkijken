@@ -23,10 +23,7 @@ struct DinoTimeReadingClock: View {
     private var diameter: CGFloat { layout.diameter }
     private var center: CGPoint { layout.center }
     private var labelTimes: [ClockTime] {
-        if time.minute != 0 && DinoTimeReading.region(minute: time.minute, language: language) == .whole {
-            return DinoTimeReading.explanationTimes(target: time, rejected: [])
-        }
-        return stride(from: 0, to: 60, by: 5).map { ClockTime(hour: time.hour, minute: $0) }
+        DinoTimeReading.explanationTimes(target: time, rejected: [])
     }
 
     var body: some View {
@@ -143,6 +140,7 @@ struct DinoTimeReadingClock: View {
 struct SpokenTimeQuestion: View {
     @Environment(\.dinoHighContrast) private var highContrast
     @Environment(\.layoutDirection) private var direction
+    @ObservedObject private var language = LanguageManager.shared
     @ObservedObject var session: DinoSession
     let theme: ClockTheme
     let width: CGFloat
@@ -225,7 +223,9 @@ struct SpokenTimeQuestion: View {
     }
 
     private var clock: some View {
-        DigitalClock(time: session.question.target, theme: theme, fontSize: min(spacious ? 58 : compact ? 36 : 46, width * 0.13))
+        DigitalClock(time: session.question.target, theme: theme,
+                     fontSize: min(spacious ? 58 : compact ? 36 : 46, width * 0.13),
+                     notation: language.effective.spokenTime.promptNotation)
             .frame(maxWidth: .infinity)
             .accessibilityIdentifier("\(prefix).targetClock")
     }
@@ -233,16 +233,21 @@ struct SpokenTimeQuestion: View {
     /// One size for every stone, small enough that the longest word still fits the narrowest row.
     private func optionFontSize(for prompt: SpokenTimePrompt) -> CGFloat {
         let titles = prompt.slots.flatMap(\.choices).map { prompt.style.displayedWord($0.word) }
-        let longest = titles.max { fittingWidth($0, at: 100) < fittingWidth($1, at: 100) } ?? ""
+        let style = prompt.style
+        let longest = titles.max { fittingWidth($0, at: 100, style: style) < fittingWidth($1, at: 100, style: style) } ?? ""
         let columns = max(1, prompt.slots.map(\.choices.count).max() ?? 1)
         let buttonWidth = (wordBankWidth - 24 - slotLabelWidth - 8 - CGFloat(columns - 1) * 6) / CGFloat(columns)
         let available = max(20, buttonWidth - 8 - 18)
         var size: CGFloat = spacious ? 26 : tablet ? 20 : 16
-        while size > 10, fittingWidth(longest, at: size) > available { size -= 0.5 }
+        while size > 10, fittingWidth(longest, at: size, style: style) > available { size -= 0.5 }
         return size
     }
 
-    private func fittingWidth(_ title: String, at size: CGFloat) -> CGFloat {
+    private func fittingWidth(_ title: String, at size: CGFloat, style: SpokenPhraseStyle) -> CGFloat {
+        if style.wrapsCompactWords {
+            let split = title.index(title.startIndex, offsetBy: (title.count + 1) / 2)
+            return max(Self.textWidth(String(title[..<split]), size: size), Self.textWidth(String(title[split...]), size: size))
+        }
         guard direction == .rightToLeft else { return Self.textWidth(title, size: size) }
         let words = title.split(separator: " ")
         return words.indices.dropFirst().map { split in
@@ -293,7 +298,7 @@ struct SpokenTimeQuestion: View {
         } label: {
             HStack(spacing: 4) {
                 Text(verbatim: title)
-                    .lineLimit(direction == .rightToLeft ? 2 : 1)
+                    .lineLimit(direction == .rightToLeft || prompt.style.wrapsCompactWords ? 2 : 1)
                     .minimumScaleFactor(0.7)
                 if showWrong || showCorrect || (selected && !revealed) {
                     Image(systemName: showWrong ? "xmark" : "checkmark")

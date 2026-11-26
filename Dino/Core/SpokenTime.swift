@@ -192,6 +192,7 @@ struct SpokenPhraseStyle: Equatable, Sendable {
     var capitalizesFirstWord = false
     var lowercasesFollowingWords = false
     var collapsesAdjacentRepeats = false
+    var wrapsCompactWords = false
 
     static let legacy = Self(capitalizesFirstWord: true, lowercasesFollowingWords: true,
                              collapsesAdjacentRepeats: true)
@@ -240,6 +241,7 @@ struct SpokenTimeLanguage: Sendable {
     var inflectHour: @Sendable (String, SpokenTimeRule) -> String = { word, _ in word }
     var omitsUnusedSlots = false
     var instructionKey: @Sendable (SpokenTimeRule) -> String? = { _ in nil }
+    var promptNotation: DigitalHourNotation?
 
     func supports(minute: Int) -> Bool { (0..<60).contains(minute) }
 
@@ -353,6 +355,93 @@ struct SpokenWordSlot: Sendable {
 }
 
 extension SpokenTimeLanguage {
+    static let simplifiedChinese = chinese(code: "zh-Hans", hourTitle: "几点", minuteTitle: "几分", hourWord: simplifiedChineseHour)
+    static let traditionalChinese = chinese(code: "zh-Hant", hourTitle: "幾點", minuteTitle: "幾分", hourWord: traditionalChineseHour)
+
+    private static func chinese(code: String, hourTitle: String, minuteTitle: String,
+                                hourWord: (Int) -> String) -> Self {
+        Self(
+            code: code, hours: (0..<12).map { hourWord($0 == 0 ? 12 : $0) },
+            slots: [
+                .hour(title: hourTitle),
+                .words(.init(id: "minutes", title: minuteTitle,
+                             choiceIDs: (1..<60).map { $0 == 30 ? "half" : "m\($0)" },
+                             words: ["half": "半"], minuteValues: ["half": 30]))
+            ],
+            minuteWord: { chineseClockMinute($0) },
+            rule: { minute in
+                switch minute {
+                case 0: return .init(tokens: ["@", "-"], referenceMinute: 0, region: .whole)
+                case 30: return .init(tokens: ["@", "half"], referenceMinute: 0, region: .half)
+                default: return .init(tokens: ["@", "m\(minute)"], referenceMinute: 0, region: .past)
+                }
+            },
+            tileStyle: .init(separator: "", wrapsCompactWords: true),
+            descriptionStyle: .init(separator: ""),
+            omitsUnusedSlots: true, promptNotation: .twentyFour
+        )
+    }
+
+    static func simplifiedChineseHour(_ hour: Int) -> String {
+        (hour == 2 ? "两" : chineseNumber(hour)) + "点"
+    }
+
+    static func traditionalChineseHour(_ hour: Int) -> String {
+        (hour == 2 ? "兩" : chineseNumber(hour)) + "點"
+    }
+
+    static func chineseClockMinute(_ minute: Int) -> String {
+        (minute < 10 ? "零" : "") + chineseNumber(minute) + "分"
+    }
+
+    /// Spell the clock's hour and minute values, which are always below 60.
+    private static func chineseNumber(_ value: Int) -> String {
+        let digits = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"]
+        if value < 10 { return digits[value] }
+        let tens = value / 10
+        let ones = value % 10
+        return (tens == 1 ? "" : digits[tens]) + "十" + (ones == 0 ? "" : digits[ones])
+    }
+
+    static let japanese = Self(
+        code: "ja", hours: (0..<12).map { japaneseHour($0 == 0 ? 12 : $0) },
+        slots: [
+            .hour(title: "なんじ"),
+            .words(.init(id: "minutes", title: "なんぷん",
+                         choiceIDs: (1..<60).map { $0 == 30 ? "half" : "m\($0)" },
+                         words: ["half": "はん"], minuteValues: ["half": 30]))
+        ],
+        minuteWord: { japaneseMinute($0) },
+        rule: { minute in
+            switch minute {
+            case 0: return .init(tokens: ["@", "-"], referenceMinute: 0, region: .whole)
+            case 30: return .init(tokens: ["@", "half"], referenceMinute: 0, region: .half)
+            default: return .init(tokens: ["@", "m\(minute)"], referenceMinute: 0, region: .past)
+            }
+        },
+        tileStyle: .init(wrapsCompactWords: true),
+        // The lesson names 12 as the hour. The local 12-hour display uses 午後0 instead.
+        omitsUnusedSlots: true, promptNotation: .twentyFour
+    )
+
+    static func japaneseHour(_ hour: Int) -> String {
+        let readings = ["れい", "いち", "に", "さん", "よ", "ご", "ろく", "しち", "はち", "く"]
+        return japaneseTens(hour / 10) + (hour > 0 && hour.isMultiple(of: 10) ? "" : readings[hour % 10]) + "じ"
+    }
+
+    static func japaneseMinute(_ minute: Int) -> String {
+        if minute == 0 { return "れいふん" }
+        let endings = ["", "いっぷん", "にふん", "さんぷん", "よんぷん", "ごふん",
+                       "ろっぷん", "ななふん", "はっぷん", "きゅうふん"]
+        let tens = japaneseTens(minute / 10)
+        if minute.isMultiple(of: 10) { return String(tens.dropLast()) + "っぷん" }
+        return tens + endings[minute % 10]
+    }
+
+    private static func japaneseTens(_ tens: Int) -> String {
+        ["", "じゅう", "にじゅう", "さんじゅう", "よんじゅう", "ごじゅう"][tens]
+    }
+
     static let german = Self(
         code: "de", hours: (0..<12).map { germanNumber($0 == 0 ? 12 : $0) },
         slots: [

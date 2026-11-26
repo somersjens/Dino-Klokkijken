@@ -40,6 +40,24 @@
             "state" : "translated",
             "value" : "Tijd Dino"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ディノのとけい"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恐龙学看钟"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恐龍學看鐘"
+          }
         }
       }
     },
@@ -82,6 +100,24 @@
             "state" : "translated",
             "value" : "Tijd Dino"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ディノのとけい"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恐龙学看钟"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恐龍學看鐘"
+          }
         }
       }
     },
@@ -122,6 +158,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bekijk de voortgang en sterren van vrienden die Game Center-toegang toestaan."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Centerへのアクセスを許可した友だちの進み具合や集めた星を表示します。"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示允许通过 Game Center 访问的好友的游戏进度和星星。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示允許透過 Game Center 取用的朋友的遊戲進度和星星。"
           }
         }
       }

@@ -77,7 +77,20 @@ struct AppLanguage: Identifiable, Hashable, Sendable {
         timeZoneOrigin: "riyadh", privacyFragment: "en", spokenTime: .arabic, timeVocabulary: .arabic,
         regionalTimeZoneCapitals: DinoTimeZoneJourney.saudiCapitals, regionalTimeZoneMinimum: 30,
         teaches24HourConversion: true, interfaceLocale: "ar-SA")
-    static let all = [dutch, english, german, canadianEnglish, australianEnglish, saudiArabic]
+    static let japanese = AppLanguage(code: "ja", displayName: "日本語", flag: "🇯🇵", bundleCode: "ja",
+        inheritedBundles: [], formatLocale: "ja-JP", dateLocale: "ja-JP", voiceLocale: "ja-JP",
+        timeZoneOrigin: "tokyo", privacyFragment: "en", spokenTime: .japanese, timeVocabulary: .japanese,
+        regionalTimeZoneCapitals: DinoTimeZoneJourney.asiaPacificCapitals)
+    static let simplifiedChinese = AppLanguage(code: "zh-Hans", displayName: "简体中文", flag: "🇨🇳", bundleCode: "zh-Hans",
+        inheritedBundles: [], formatLocale: "zh-Hans-CN", dateLocale: "zh-Hans-CN", voiceLocale: "zh-CN",
+        timeZoneOrigin: "beijing", privacyFragment: "en", spokenTime: .simplifiedChinese, timeVocabulary: .simplifiedChinese,
+        regionalTimeZoneCapitals: DinoTimeZoneJourney.asiaPacificCapitals, regionalTimeZoneMinimum: 30)
+    static let traditionalChinese = AppLanguage(code: "zh-Hant", displayName: "繁體中文", flag: "🇹🇼", bundleCode: "zh-Hant",
+        inheritedBundles: [], formatLocale: "zh-Hant-TW", dateLocale: "zh-Hant-TW", voiceLocale: "zh-TW",
+        timeZoneOrigin: "taipei", privacyFragment: "en", spokenTime: .traditionalChinese, timeVocabulary: .traditionalChinese,
+        regionalTimeZoneCapitals: DinoTimeZoneJourney.taiwanCapitals, regionalTimeZoneMinimum: 30,
+        interfaceLocale: "zh-Hant-TW")
+    static let all = [dutch, english, german, canadianEnglish, australianEnglish, saudiArabic, japanese, simplifiedChinese, traditionalChinese]
     private static let byCode = Dictionary(uniqueKeysWithValues: all.map { ($0.code, $0) })
 
     static func named(_ identifier: String) -> Self? {

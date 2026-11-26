@@ -196,6 +196,17 @@ struct DinoTimeZoneJourney: Equatable, Sendable {
         .init(id: "tehran", dutchName: "Teheran", englishName: "Tehran", countryCode: "IRN", timeZoneID: "Asia/Tehran", latitude: 35.69, longitude: 51.39),
         .init(id: "islamabad", dutchName: "Islamabad", englishName: "Islamabad", countryCode: "PAK", timeZoneID: "Asia/Karachi", latitude: 33.69, longitude: 73.06)
     ]
+
+    static let asiaPacificCapitals: [DinoCapital] = [
+        .init(id: "manila", dutchName: "Manilla", englishName: "Manila", countryCode: "PHL", timeZoneID: "Asia/Manila", latitude: 14.60, longitude: 120.98),
+        .init(id: "hanoi", dutchName: "Hanoi", englishName: "Hanoi", countryCode: "VNM", timeZoneID: "Asia/Ho_Chi_Minh", latitude: 21.03, longitude: 105.83),
+        .init(id: "bangkok", dutchName: "Bangkok", englishName: "Bangkok", countryCode: "THA", timeZoneID: "Asia/Bangkok", latitude: 13.76, longitude: 100.50),
+        .init(id: "wellington", dutchName: "Wellington", englishName: "Wellington", countryCode: "NZL", timeZoneID: "Pacific/Auckland", latitude: -41.29, longitude: 174.78)
+    ]
+
+    static let taiwanCapitals: [DinoCapital] = asiaPacificCapitals + [
+        .init(id: "taipei", dutchName: "Taipei", englishName: "Taipei", countryCode: "TWN", timeZoneID: "Asia/Taipei", latitude: 25.03, longitude: 121.57)
+    ]
 }
 
 /// Highest simplified coastline in each 10° longitude bin of the bundled atlas.

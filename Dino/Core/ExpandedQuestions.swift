@@ -700,6 +700,7 @@ struct DinoTimeVocabulary: Sendable {
     var formalClockTime: (@Sendable (ClockTime) -> String)?
     var digitalQuestionsIncludeDayPart = false
     var decimalZoneHours = false
+    var unitSpacing = " "
 
     static let english = Self(
         dayPartSuffixes: [.night: "at night", .morning: "in the morning",
@@ -727,6 +728,40 @@ struct DinoTimeVocabulary: Sendable {
             let hour = time.hour == 1 ? "ein" : SpokenTimeLanguage.germanNumber(time.hour)
             return time.minute == 0 ? "\(hour) Uhr" : "\(hour) Uhr \(SpokenTimeLanguage.germanNumber(time.minute))"
         }
+    )
+    static let simplifiedChinese = chinese(two: "两", hours: "小时", minutes: "分钟") {
+        SpokenTimeLanguage.simplifiedChineseHour($0)
+    }
+    static let traditionalChinese = chinese(two: "兩", hours: "小時", minutes: "分鐘") {
+        SpokenTimeLanguage.traditionalChineseHour($0)
+    }
+
+    private static func chinese(two: String, hours: String, minutes: String,
+                                hourWord: @escaping @Sendable (Int) -> String) -> Self {
+        Self(dayPartSuffixes: [.night: "凌晨", .morning: "上午", .afternoon: "下午", .evening: "晚上"],
+             spokenHours: { count, number in (count == 2 ? two : number) + hours },
+             spokenMinutes: { _, number in number + minutes },
+             joinSpokenUnits: { $0 + $1 }, shortHours: { $0 + hours }, shortMinutes: { $0 + "分" },
+             zoneUnit: hours, atlasZoneUnit: hours, shortHoursColumnWidth: 53,
+             withDayPart: { time, part in part + time },
+             formalClockTime: { time in
+                 let hour = hourWord(time.hour)
+                 return time.minute == 0 ? hour : hour + SpokenTimeLanguage.chineseClockMinute(time.minute)
+             },
+             decimalZoneHours: true, unitSpacing: "")
+    }
+    static let japanese = Self(
+        dayPartSuffixes: [.night: "夜中", .morning: "朝", .afternoon: "昼", .evening: "夜"],
+        spokenHours: { _, number in "\(number)時間" },
+        spokenMinutes: { _, number in "\(number)分" },
+        joinSpokenUnits: { $0 + $1 }, shortHours: { "\($0)時間" }, shortMinutes: { "\($0)分" },
+        zoneUnit: "時間", atlasZoneUnit: "h", shortHoursColumnWidth: 53,
+        withDayPart: { time, part in "\(part)の\(time)" },
+        formalClockTime: { time in
+            let hour = SpokenTimeLanguage.japaneseHour(time.hour)
+            return time.minute == 0 ? hour : "\(hour) \(SpokenTimeLanguage.japaneseMinute(time.minute))"
+        },
+        unitSpacing: ""
     )
 }
 
@@ -781,8 +816,8 @@ enum DinoTimeWords {
         let h = minutes / 60, m = minutes % 60
         if h == 0 { return compactMinutes(m, language: language) }
         let hours = AppLanguage.resolved(language).timeVocabulary
-        let hoursText = "\(number(h, language: language)) \(hours.zoneUnit)"
-        return m == 0 ? hoursText : "\(hoursText) \(compactMinutes(m, language: language))"
+        let hoursText = number(h, language: language) + hours.unitSpacing + hours.zoneUnit
+        return m == 0 ? hoursText : hoursText + hours.unitSpacing + compactMinutes(m, language: language)
     }
 
     /// Elapsed hours and minutes are independent of the clock's 12/24-hour notation.
@@ -806,7 +841,8 @@ enum DinoTimeWords {
         let minutesText = compactMinutes(minutes, language: language, padded: padMinutes)
         guard hours > 0 else { return minutesText }
         let hoursText = compactHours(hours, language: language)
-        return minutes == 0 && !padMinutes ? hoursText : "\(hoursText) \(minutesText)"
+        let spacing = AppLanguage.resolved(language).timeVocabulary.unitSpacing
+        return minutes == 0 && !padMinutes ? hoursText : hoursText + spacing + minutesText
     }
 
     /// A clock time for a spoken title. Afternoon and night stay distinct from the morning hour.
@@ -843,7 +879,7 @@ enum DinoTimeWords {
         let profile = AppLanguage.resolved(language)
         let signedHours = "\(minutes >= 0 ? "+" : "−")\(zoneHours(minutes, language: language))"
         let amount = profile.runsRightToLeft ? "\u{2066}\(signedHours)\u{2069}" : signedHours
-        return "\(amount) \(profile.timeVocabulary.zoneUnit)"
+        return amount + profile.timeVocabulary.unitSpacing + profile.timeVocabulary.zoneUnit
     }
 }
 

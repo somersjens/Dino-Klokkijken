@@ -152,6 +152,21 @@ struct DinoCoreTests {
     }
 
     static func main() async {
+        if CommandLine.arguments.contains("--traditional-chinese-localization") {
+            testChineseLocalization(profile: .traditionalChinese)
+            print("PASS: \(checks) Traditional Chinese localization checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--simplified-chinese-localization") {
+            testChineseLocalization(profile: .simplifiedChinese)
+            print("PASS: \(checks) Simplified Chinese localization checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--japanese-localization") {
+            testJapaneseLocalization()
+            print("PASS: \(checks) Japanese localization checks.")
+            return
+        }
         if CommandLine.arguments.contains("--arabic-localization") {
             testArabicLocalization()
             print("PASS: \(checks) Saudi Arabic localization checks.")
@@ -370,6 +385,9 @@ struct DinoCoreTests {
         testCanadianLocalization()
         testAustralianLocalization()
         testArabicLocalization()
+        testJapaneseLocalization()
+        testChineseLocalization(profile: .simplifiedChinese)
+        testChineseLocalization(profile: .traditionalChinese)
         testFlightArrivals()
         testMinutesBetweenQuestions()
         testClockArithmetic()
@@ -2803,6 +2821,320 @@ struct DinoCoreTests {
                     expect(journey.origin.id == "ottawa" && journey.offsetMinutes != 0 && journey.offsetMinutes.isMultiple(of: step),
                            "every Canadian time-zone level has a valid destination from Ottawa in month \(month)")
                 }
+            }
+        }
+    }
+
+    static func testChineseLocalization(profile: AppLanguage) {
+        let code = profile.code
+        let traditional = profile == .traditionalChinese
+        let hourCharacter = traditional ? "點" : "点"
+        let two = traditional ? "兩" : "两"
+        let originID = traditional ? "taipei" : "beijing"
+        let expectedCode = traditional ? "zh-Hant" : "zh-Hans"
+        let deviceLanguages = traditional ? ["zh-TW", "zh_Hant_TW", "zh-Hant-HK", "zh-Hant-CN"] : ["zh", "zh_CN", "zh-Hans-SG", "zh-Hans-CN"]
+        expect(code == expectedCode && deviceLanguages.allSatisfy { AppLanguage.named($0) == profile }
+               && !profile.runsRightToLeft && profile.resourceCodes == [expectedCode, "en"],
+               "Chinese matches the intended script in settings and the app bundle")
+        expect((try? DinoNameValidator.validated("王小雨").get()) == "王小雨"
+               && DinoTimeWords.parsedInteger("１２") == 12, "Chinese names and full-width decimal digits work")
+        let mainland = DinoSpeechVoice(identifier: "cn", name: "Mandarin", language: "zh-CN", quality: 1)
+        let singapore = DinoSpeechVoice(identifier: "sg", name: "Mandarin", language: "zh-SG", quality: 2)
+        let cantonese = DinoSpeechVoice(identifier: "hk", name: "Cantonese", language: "yue-HK", quality: 3)
+        let taiwan = DinoSpeechVoice(identifier: "tw", name: "Mandarin", language: "zh-TW", quality: 3)
+        let voices = [singapore, mainland, taiwan, cantonese]
+        if traditional {
+            expect(DinoSpeechVoicePicker.preferredLanguageIdentifier(for: code) == "zh-TW"
+                   && DinoSpeechVoicePicker.bestVoice(for: code, among: voices) == taiwan
+                   && DinoSpeechVoicePicker.bestVoice(for: code, among: [mainland, cantonese]) == nil,
+                   "Taiwanese Mandarin is preferred and unavailable speech leaves the written question")
+        } else {
+            expect(DinoSpeechVoicePicker.preferredLanguageIdentifier(for: code) == "zh-CN"
+                   && DinoSpeechVoicePicker.bestVoice(for: code, among: voices) == mainland
+                   && DinoSpeechVoicePicker.bestVoice(for: code, among: [singapore, taiwan, cantonese]) == singapore
+                   && DinoSpeechVoicePicker.bestVoice(for: code, among: [taiwan, cantonese]) == nil,
+                   "the voice picker prefers mainland Mandarin and falls back within the matching script")
+        }
+
+        let minutes: [(Int, String)] = [
+            (0, ""), (1, "零一分"), (5, "零五分"), (14, "十四分"), (15, "十五分"), (16, "十六分"),
+            (20, "二十分"), (25, "二十五分"), (29, "二十九分"), (30, "半"), (31, "三十一分"),
+            (35, "三十五分"), (40, "四十分"), (44, "四十四分"), (45, "四十五分"), (46, "四十六分"),
+            (55, "五十五分"), (59, "五十九分")
+        ]
+        for (minute, ending) in minutes {
+            expect(spokenPhrase(code, hour: 7, minute: minute) == "七" + hourCharacter + ending, "Mandarin reading for 7:\(minute)")
+        }
+        expect(spokenPhrase(code, hour: 8, minute: 0) == "八" + hourCharacter
+               && spokenPhrase(code, hour: 2, minute: 2) == two + hourCharacter + "零二分", "hour and minute counters use the correct form of two")
+
+        let hours = ["十二", "一", two, "三", "四", "五", "六", "七", "八", "九", "十", "十一"]
+        var rng = SeededGenerator(seed: 42)
+        for hour in 0..<24 {
+            for minute in 0..<60 {
+                let time = ClockTime(hour: hour, minute: minute)
+                let prompt = profile.spokenTime.prompt(for: time, using: &rng)
+                let hint = SpokenClockReadingHint(minute: minute, language: code)
+                let namedHour = hour.isMultiple(of: 12) ? 12 : hour % 12
+                let slotIDs = minute == 0 ? ["hour"] : ["hour", "minutes"]
+                expect(prompt.phrase == DinoTimeWords.time(time, language: code)
+                       && prompt.phrase.hasPrefix(hours[hour % 12] + hourCharacter) && prompt.slots.map(\.id) == slotIDs
+                       && hint.spokenHour(for: hour) == namedHour && hint.referenceMinute == 0
+                       && hint.count == minute && hint.scaleLabel == String(minute),
+                       "word tiles and the visual hint read minutes from the current hour")
+                let question = spokenQuestion(prompt: prompt, time: time)
+                expect(AnswerValidator.isCorrect(question.expectedAnswer, for: question), "the Mandarin reading scores")
+                for (index, slot) in prompt.slots.enumerated() {
+                    expect(slot.choices.count == 3 && Set(slot.choices.map(\.word)).count == 3
+                           && slot.choices.contains { $0.id == prompt.correct.choiceIDs[index] }, "the three tiles are visibly distinct")
+                    for choice in slot.choices where choice.id != prompt.correct.choiceIDs[index] {
+                        var wrong = prompt.correct.choiceIDs
+                        wrong[index] = choice.id
+                        expect(!AnswerValidator.isCorrect(.spoken(.init(choiceIDs: wrong)), for: question),
+                               "a different Mandarin tile scores as a different time")
+                    }
+                }
+            }
+        }
+
+        let digital: [(Int, Int, String, String, String, String)] = [
+            (0, 0, "00:00", "上午12:00", "零点", "凌晨十二点"),
+            (0, 5, "00:05", "上午12:05", "零点零五分", "凌晨十二点零五分"),
+            (12, 0, "12:00", "下午12:00", "十二点", "下午十二点"),
+            (12, 5, "12:05", "下午12:05", "十二点零五分", "下午十二点零五分"),
+            (17, 5, "17:05", "下午5:05", "十七点零五分", "下午五点零五分"),
+            (23, 59, "23:59", "下午11:59", "二十三点五十九分", "晚上十一点五十九分"),
+            (7, 30, "07:30", "上午7:30", "七点三十分", "上午七点半")
+        ]
+        for (hour, minute, twentyFour, twelve, words, withDayPart) in digital {
+            let clock = ClockTime(hour: hour, minute: minute)
+            let local = clock.digitalReading(notation: .twelve, languageCode: code)
+            expect(local.text == twelve && local.periodBeforeClock && local.separator == ":"
+                   && clock.digitalReading(notation: .twentyFour, languageCode: code).text == twentyFour
+                   && DinoTimeWords.digitalTimeInWords(clock, language: code) == words.replacingOccurrences(of: "点", with: hourCharacter)
+                   && DinoTimeWords.time(clock, language: code, dayPart: true) == withDayPart.replacingOccurrences(of: "点", with: hourCharacter),
+                   "clock notation, day part and Mandarin reading agree for \(twentyFour)")
+        }
+        expect(DinoTimeWords.spokenDuration(125, language: code) == (traditional ? "兩小時5分鐘" : "两小时5分钟")
+               && DinoTimeWords.duration(65, language: code) == (traditional ? "1小時5分" : "1小时5分")
+               && DinoTimeWords.zoneHours(150, language: code) == "2.5",
+               "duration and time-zone offsets use their local units")
+        expect(ClockTime(hour: 23, minute: 55).adding(minutes: 10) == .init(hour: 0, minute: 5)
+               && ClockTime(hour: 0, minute: 5).adding(minutes: -10) == .init(hour: 23, minute: 55),
+               "adding and subtracting cross midnight")
+
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        func localizedStrings(from file: String) -> [String: String] {
+            let data = try! Data(contentsOf: root.appendingPathComponent(file))
+            let catalog = try! JSONSerialization.jsonObject(with: data) as! [String: Any]
+            let entries = catalog["strings"] as! [String: [String: Any]]
+            return entries.compactMapValues { entry in
+                let languages = entry["localizations"] as? [String: [String: Any]]
+                let unit = languages?[code]?["stringUnit"] as? [String: String]
+                expect(unit?["state"] == "translated" && unit?["value"] != nil, "all strings in \(file) are translated")
+                return unit?["value"]
+            }
+        }
+        let strings = localizedStrings(from: "Localizable.xcstrings")
+        expect(localizedStrings(from: "InfoPlist.xcstrings")["CFBundleDisplayName"] == (traditional ? "恐龍學看鐘" : "恐龙学看钟"), "iOS has a localized app name")
+        if traditional {
+            expect(strings["dino.timeZone.city.taipei"] == "台北"
+                   && strings["dino.digital"] == "數位時鐘"
+                   && strings["dino.question.sayTime"] == "選卡片，拼出時鐘上的時間",
+                   "Taiwanese copy uses local terms")
+        }
+        for type in DinoPracticeQuestion.allCases {
+            for time in DinoPracticeTime.allCases {
+                var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(type)), seed: 71, language: code)
+                for index in 0..<3 {
+                    let question = generator.next(index: index)
+                    let prompt = DinoQuestionPrompt.make(question: question, language: code, instructionKey: question.kind.instructionKey)
+                    let text = prompt.spoken { strings[$0] ?? $0 }
+                    expect(!text.contains("dino.") && !text.contains("$@") && !text.contains("%@"), "the Chinese title resolves for \(type) and \(time)")
+                    if let format = prompt.formatKey {
+                        expect(DinoQuestionPrompt.interpolated(strings[format] ?? format, arguments: prompt.arguments) != nil,
+                               "the translated template supplies all arguments")
+                    }
+                    expect(AnswerValidator.isCorrect(question.expectedAnswer, for: question), "the generated answer scores")
+                    if question.kind == .timeZone {
+                        expect(question.timeZoneJourney?.origin.id == originID, "Chinese time-zone practice starts in the local city")
+                    }
+                    if question.kind == .sayTime, let solution = question.spokenPrompt?.phrase {
+                        expect(!text.contains(solution), "the spoken instructions leave the solution to the player")
+                    }
+                }
+            }
+        }
+        let capitals = Dictionary(uniqueKeysWithValues: (DinoTimeZoneJourney.capitals + profile.regionalTimeZoneCapitals).map { ($0.id, $0) })
+        let origin = capitals[originID]!
+        let utc = TimeZone(secondsFromGMT: 0)!
+        for month in 1...12 {
+            let date = Calendar(identifier: .gregorian).date(from: .init(timeZone: utc, year: 2026, month: month, day: 15))!
+            let dateText = DinoTimeZoneJourney.displayedDate(language: code, date: date)
+            expect(dateText == "\(month)月15日", "the atlas date uses Chinese month-day order")
+            for difficulty in DinoTimeZoneDifficulty.allCases {
+                for step in [1, 5, 10, 15, 30, 60] {
+                    let journey = DinoTimeZoneJourney.generate(language: code, difficulty: difficulty, minuteStep: step, date: date, using: &rng)
+                    expect(journey.origin == origin && journey.offsetMinutes != 0 && journey.offsetMinutes.isMultiple(of: step)
+                           && strings[journey.destination.nameKey] != nil, "every time-zone difficulty has a localized destination from the local city")
+                }
+            }
+            for (id, offset) in ["tokyo": 60, "hanoi": -60, "manila": 0, "newDelhi": -150] {
+                let journey = DinoTimeZoneJourney(origin: origin, destination: capitals[id]!, date: date)
+                let start = ClockTime(hour: 0, minute: 5)
+                expect(journey.offsetMinutes == offset
+                       && (journey.steps(from: start).last?.time ?? start) == start.adding(minutes: offset),
+                       "time-zone replay uses the correct offset from the local city")
+            }
+            if month == 1 || month == 7 {
+                let london = DinoTimeZoneJourney(origin: origin, destination: capitals["london"]!, date: date)
+                expect(london.offsetMinutes == (month == 1 ? -480 : -420), "London observes seasonal time changes")
+            }
+        }
+    }
+
+    static func testJapaneseLocalization() {
+        let profile = AppLanguage.japanese
+        let code = profile.code
+        expect(AppLanguage.named("ja_JP") == profile && AppLanguage.named("ja-Jpan-JP") == profile
+               && AppLanguage.named("ja-Latn-JP") == nil && !profile.runsRightToLeft
+               && profile.resourceCodes == ["ja", "en"], "Japanese uses the native script and bundle")
+        expect((try? DinoNameValidator.validated("山田 はな").get()) == "山田 はな"
+               && DinoTimeWords.parsedInteger("１２") == 12, "Japanese names and full-width decimal digits work")
+        let japanese = DinoSpeechVoice(identifier: "ja", name: "Japanese", language: "ja-JP", quality: 1)
+        let english = DinoSpeechVoice(identifier: "en", name: "English", language: "en", quality: 3)
+        expect(DinoSpeechVoicePicker.preferredLanguageIdentifier(for: code) == "ja-JP"
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [english, japanese]) == japanese
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [english]) == nil,
+               "the Japanese lesson uses a Japanese voice when available")
+
+        let examples: [(Int, String)] = [
+            (0, ""), (1, "いっぷん"), (5, "ごふん"), (14, "じゅうよんぷん"), (15, "じゅうごふん"),
+            (16, "じゅうろっぷん"), (20, "にじゅっぷん"), (25, "にじゅうごふん"), (29, "にじゅうきゅうふん"),
+            (30, "はん"), (31, "さんじゅういっぷん"), (35, "さんじゅうごふん"), (40, "よんじゅっぷん"),
+            (44, "よんじゅうよんぷん"), (45, "よんじゅうごふん"), (46, "よんじゅうろっぷん"),
+            (55, "ごじゅうごふん"), (59, "ごじゅうきゅうふん")
+        ]
+        for (minute, ending) in examples {
+            let phrase = ending.isEmpty ? "しちじ" : "しちじ \(ending)"
+            expect(spokenPhrase(code, hour: 7, minute: minute) == phrase, "Japanese reading for 7:\(minute)")
+        }
+        expect(spokenPhrase(code, hour: 8, minute: 0) == "はちじ"
+               && spokenPhrase(code, hour: 4, minute: 8) == "よじ はっぷん"
+               && spokenPhrase(code, hour: 9, minute: 3) == "くじ さんぷん", "irregular readings stay together with their counters")
+        var rng = SeededGenerator(seed: 42)
+        for hour in 0..<24 {
+            for minute in 0..<60 {
+                let clock = ClockTime(hour: hour, minute: minute)
+                let prompt = profile.spokenTime.prompt(for: clock, using: &rng)
+                let hint = SpokenClockReadingHint(minute: minute, language: code)
+                let expectedHour = hour.isMultiple(of: 12) ? 12 : hour % 12
+                expect(prompt.phrase == DinoTimeWords.time(clock, language: code)
+                       && prompt.slots.map(\.id) == (minute == 0 ? ["hour"] : ["hour", "minutes"])
+                       && hint.spokenHour(for: hour) == expectedHour && hint.referenceMinute == 0
+                       && hint.count == minute && hint.scaleLabel == String(minute),
+                       "Japanese words and visual hint describe elapsed minutes from the current hour")
+                let question = spokenQuestion(prompt: prompt, time: clock)
+                expect(AnswerValidator.isCorrect(question.expectedAnswer, for: question), "the correct Japanese phrase scores")
+                for (index, slot) in prompt.slots.enumerated() {
+                    expect(Set(slot.choices.map(\.word)).count == 3
+                           && slot.choices.contains { $0.id == prompt.correct.choiceIDs[index] }, "three distinct Japanese options")
+                    for choice in slot.choices where choice.id != prompt.correct.choiceIDs[index] {
+                        var ids = prompt.correct.choiceIDs
+                        ids[index] = choice.id
+                        expect(!AnswerValidator.isCorrect(.spoken(.init(choiceIDs: ids)), for: question),
+                               "a different tile gives a different time")
+                    }
+                }
+            }
+        }
+
+        let digital: [(Int, Int, String, String, String)] = [
+            (0, 0, "0:00", "午前0:00", "れいじ"), (0, 5, "0:05", "午前0:05", "れいじ ごふん"),
+            (12, 0, "12:00", "午後0:00", "じゅうにじ"), (12, 5, "12:05", "午後0:05", "じゅうにじ ごふん"),
+            (17, 5, "17:05", "午後5:05", "じゅうしちじ ごふん"), (23, 59, "23:59", "午後11:59", "にじゅうさんじ ごじゅうきゅうふん")
+        ]
+        for (hour, minute, twentyFour, twelve, words) in digital {
+            let clock = ClockTime(hour: hour, minute: minute)
+            let local = clock.digitalReading(notation: .twelve, languageCode: code)
+            expect(local.text == twelve && local.periodBeforeClock && local.separator == ":"
+                   && clock.digitalReading(notation: .twentyFour, languageCode: code).text == twentyFour
+                   && DinoTimeWords.digitalTimeInWords(clock, language: code) == words, "Japanese format and digital reading for \(twentyFour)")
+        }
+        expect(profile.spokenTime.promptNotation == .twentyFour, "the word exercise keeps noon as 12")
+        expect(DinoTimeWords.spokenDuration(65, language: code) == "1時間5分"
+               && DinoTimeWords.duration(65, language: code) == "1時間5分"
+               && DinoTimeWords.compactDuration(hours: 1, minutes: 5, language: code, padMinutes: true) == "1時間05分"
+               && DinoTimeWords.minutes(1, language: code) == "1分", "duration units preserve their meaning and spacing")
+        expect(ClockTime(hour: 23, minute: 55).adding(minutes: 10) == .init(hour: 0, minute: 5)
+               && ClockTime(hour: 0, minute: 5).adding(minutes: -10) == .init(hour: 23, minute: 55),
+               "time arithmetic wraps at midnight")
+
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        func japaneseStrings(from file: String) -> [String: String] {
+            let data = try! Data(contentsOf: root.appendingPathComponent(file))
+            let catalog = try! JSONSerialization.jsonObject(with: data) as! [String: Any]
+            let entries = catalog["strings"] as! [String: [String: Any]]
+            var localized: [String: String] = [:]
+            for (key, entry) in entries {
+                let languages = entry["localizations"] as? [String: [String: Any]]
+                let unit = languages?[code]?["stringUnit"] as? [String: String]
+                expect(unit?["state"] == "translated" && unit?["value"] != nil, "\(key) has a Japanese value in \(file)")
+                localized[key] = unit?["value"]
+            }
+            return localized
+        }
+        let strings = japaneseStrings(from: "Localizable.xcstrings")
+        expect(japaneseStrings(from: "InfoPlist.xcstrings")["CFBundleDisplayName"] == "ディノのとけい", "the iOS app name is Japanese")
+        for type in DinoPracticeQuestion.allCases {
+            for time in DinoPracticeTime.allCases {
+                var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(type)), seed: 71, language: code)
+                for index in 0..<3 {
+                    let question = generator.next(index: index)
+                    let prompt = DinoQuestionPrompt.make(question: question, language: code, instructionKey: question.kind.instructionKey)
+                    let text = prompt.spoken { strings[$0] ?? $0 }
+                    expect(!text.contains("dino.") && !text.contains("$@") && !text.contains("%@"),
+                           "the Japanese instruction resolves for \(type) and \(time)")
+                    if let format = prompt.formatKey {
+                        expect(DinoQuestionPrompt.interpolated(strings[format] ?? format, arguments: prompt.arguments) != nil,
+                               "the Japanese template supplies all question arguments")
+                    }
+                    expect(AnswerValidator.isCorrect(question.expectedAnswer, for: question), "Japanese practice accepts its expected result")
+                    if question.kind == .timeZone {
+                        expect(question.timeZoneJourney?.origin.id == "tokyo", "Japanese time-zone questions start in Tokyo")
+                    }
+                    if question.kind == .sayTime, let solution = question.spokenPrompt?.phrase {
+                        expect(!text.contains(solution), "the spoken instruction leaves the solution to the player")
+                    }
+                }
+            }
+        }
+        let capitals = DinoTimeZoneJourney.capitals + profile.regionalTimeZoneCapitals
+        let tokyo = capitals.first { $0.id == "tokyo" }!
+        let utc = TimeZone(secondsFromGMT: 0)!
+        for month in 1...12 {
+            let date = Calendar(identifier: .gregorian).date(from: .init(timeZone: utc, year: 2026, month: month, day: 15))!
+            expect(DinoTimeZoneJourney.displayedDate(language: code, date: date) == "\(month)月15日", "dates use the Japanese month-day order")
+            for difficulty in DinoTimeZoneDifficulty.allCases {
+                for step in [1, 5, 10, 15, 30, 60] {
+                    let journey = DinoTimeZoneJourney.generate(language: code, difficulty: difficulty, minuteStep: step, date: date, using: &rng)
+                    expect(journey.origin == tokyo && journey.offsetMinutes != 0 && journey.offsetMinutes.isMultiple(of: step)
+                           && strings[journey.destination.nameKey] != nil, "every difficulty uses a suitable, localized destination from Tokyo")
+                }
+            }
+            let offsets = ["beijing": -60, "manila": -60, "hanoi": -120, "newDelhi": -210, "seoul": 0]
+            for (id, difference) in offsets {
+                let city = capitals.first { $0.id == id }!
+                let journey = DinoTimeZoneJourney(origin: tokyo, destination: city, date: date)
+                let start = ClockTime(hour: 0, minute: 5)
+                expect(journey.offsetMinutes == difference
+                       && (journey.steps(from: start).last?.time ?? start) == start.adding(minutes: difference),
+                       "real Tokyo offsets and replay agree")
+            }
+            if month == 1 || month == 7 {
+                let city = capitals.first { $0.id == "wellington" }!
+                let journey = DinoTimeZoneJourney(origin: tokyo, destination: city, date: date)
+                expect(journey.offsetMinutes == (month == 1 ? 240 : 180), "Wellington observes seasonal time changes")
             }
         }
     }

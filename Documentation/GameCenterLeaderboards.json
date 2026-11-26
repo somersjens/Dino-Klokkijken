@@ -14,7 +14,10 @@
       "titleDE": "Level 1 – Punkte",
       "minimum": 0,
       "maximum": 30,
-      "titleAR": "نقاط المستوى ١"
+      "titleAR": "نقاط المستوى ١",
+      "titleJA": "レベル1のスコア",
+      "titleZH-Hans": "第1关 · 成绩",
+      "titleZH-Hant": "第1關 · 成績"
     },
     {
       "id": "dino.level.2.result.v1",
@@ -23,7 +26,10 @@
       "titleDE": "Level 2 – Punkte",
       "minimum": 0,
       "maximum": 30,
-      "titleAR": "نقاط المستوى ٢"
+      "titleAR": "نقاط المستوى ٢",
+      "titleJA": "レベル2のスコア",
+      "titleZH-Hans": "第2关 · 成绩",
+      "titleZH-Hant": "第2關 · 成績"
     },
     {
       "id": "dino.level.3.result.v1",
@@ -32,7 +38,10 @@
       "titleDE": "Level 3 – Punkte",
       "minimum": 0,
       "maximum": 30,
-      "titleAR": "نقاط المستوى ٣"
+      "titleAR": "نقاط المستوى ٣",
+      "titleJA": "レベル3のスコア",
+      "titleZH-Hans": "第3关 · 成绩",
+      "titleZH-Hant": "第3關 · 成績"
     },
     {
       "id": "dino.level.4.result.v1",
@@ -41,7 +50,10 @@
       "titleDE": "Level 4 – Punkte",
       "minimum": 0,
       "maximum": 30,
-      "titleAR": "نقاط المستوى ٤"
+      "titleAR": "نقاط المستوى ٤",
+      "titleJA": "レベル4のスコア",
+      "titleZH-Hans": "第4关 · 成绩",
+      "titleZH-Hant": "第4關 · 成績"
     },
     {
       "id": "dino.level.5.result.v1",
@@ -50,7 +62,10 @@
       "titleDE": "Level 5 – Punkte",
       "minimum": 0,
       "maximum": 30,
-      "titleAR": "نقاط المستوى ٥"
+      "titleAR": "نقاط المستوى ٥",
+      "titleJA": "レベル5のスコア",
+      "titleZH-Hans": "第5关 · 成绩",
+      "titleZH-Hant": "第5關 · 成績"
     },
     {
       "id": "dino.level.6.result.v1",
@@ -59,7 +74,10 @@
       "titleDE": "Level 6 – Punkte",
       "minimum": 0,
       "maximum": 30,
-      "titleAR": "نقاط المستوى ٦"
+      "titleAR": "نقاط المستوى ٦",
+      "titleJA": "レベル6のスコア",
+      "titleZH-Hans": "第6关 · 成绩",
+      "titleZH-Hant": "第6關 · 成績"
     },
     {
       "id": "dino.level.7.result.v1",
@@ -68,7 +86,10 @@
       "titleDE": "Level 7 – Punkte",
       "minimum": 0,
       "maximum": 30,
-      "titleAR": "نقاط المستوى ٧"
+      "titleAR": "نقاط المستوى ٧",
+      "titleJA": "レベル7のスコア",
+      "titleZH-Hans": "第7关 · 成绩",
+      "titleZH-Hant": "第7關 · 成績"
     },
     {
       "id": "dino.level.8.result.v1",
@@ -77,7 +98,10 @@
       "titleDE": "Level 8 – Punkte",
       "minimum": 0,
       "maximum": 30,
-      "titleAR": "نقاط المستوى ٨"
+      "titleAR": "نقاط المستوى ٨",
+      "titleJA": "レベル8のスコア",
+      "titleZH-Hans": "第8关 · 成绩",
+      "titleZH-Hant": "第8關 · 成績"
     },
     {
       "id": "dino.level.9.result.v1",
@@ -86,7 +110,10 @@
       "titleDE": "Level 9 – Punkte",
       "minimum": 0,
       "maximum": 30,
-      "titleAR": "نقاط المستوى ٩"
+      "titleAR": "نقاط المستوى ٩",
+      "titleJA": "レベル9のスコア",
+      "titleZH-Hans": "第9关 · 成绩",
+      "titleZH-Hant": "第9關 · 成績"
     },
     {
       "id": "dino.level.10.result.v1",
@@ -95,7 +122,10 @@
       "titleDE": "Level 10 – Punkte",
       "minimum": 0,
       "maximum": 251,
-      "titleAR": "نقاط المستوى ١٠"
+      "titleAR": "نقاط المستوى ١٠",
+      "titleJA": "レベル10のスコア",
+      "titleZH-Hans": "第10关 · 成绩",
+      "titleZH-Hant": "第10關 · 成績"
     },
     {
       "id": "dino.progress.highest.v1",
@@ -104,7 +134,10 @@
       "titleDE": "Höchstes abgeschlossenes Level",
       "minimum": 0,
       "maximum": 100,
-      "titleAR": "أعلى مستوى مكتمل"
+      "titleAR": "أعلى مستوى مكتمل",
+      "titleJA": "最高クリアレベル",
+      "titleZH-Hans": "通过的最高关卡",
+      "titleZH-Hant": "已完成的最高關卡"
     },
     {
       "id": "dino.progress.stars.v1",
@@ -113,7 +146,10 @@
       "titleDE": "Gesammelte Sterne",
       "minimum": 0,
       "maximum": 300,
-      "titleAR": "النجوم التي جمعتها"
+      "titleAR": "النجوم التي جمعتها",
+      "titleJA": "集めた星",
+      "titleZH-Hans": "收集的星星",
+      "titleZH-Hant": "收集的星星"
     }
   ],
   "timingNote": "Additive optional boards. Same best-score descending integer settings; quality first, then fastest time. Existing result boards remain required and unchanged.",
@@ -122,77 +158,108 @@
       "id": "dino.level.1.timed.v1",
       "titleNL": "Level 1 — resultaat en tijd",
       "titleEN": "Level 1 — result and time",
+      "titleJA": "レベル1のスコアと時間",
       "minimum": 1000,
-      "maximum": 30596
+      "maximum": 30596,
+      "titleZH-Hans": "第1关 · 成绩和用时",
+      "titleZH-Hant": "第1關 · 成績與遊玩時間"
     },
     {
       "id": "dino.level.2.timed.v1",
       "titleNL": "Level 2 — resultaat en tijd",
       "titleEN": "Level 2 — result and time",
+      "titleJA": "レベル2のスコアと時間",
       "minimum": 1000,
-      "maximum": 30596
+      "maximum": 30596,
+      "titleZH-Hans": "第2关 · 成绩和用时",
+      "titleZH-Hant": "第2關 · 成績與遊玩時間"
     },
     {
       "id": "dino.level.3.timed.v1",
       "titleNL": "Level 3 — resultaat en tijd",
       "titleEN": "Level 3 — result and time",
+      "titleJA": "レベル3のスコアと時間",
       "minimum": 1000,
-      "maximum": 30596
+      "maximum": 30596,
+      "titleZH-Hans": "第3关 · 成绩和用时",
+      "titleZH-Hant": "第3關 · 成績與遊玩時間"
     },
     {
       "id": "dino.level.4.timed.v1",
       "titleNL": "Level 4 — resultaat en tijd",
       "titleEN": "Level 4 — result and time",
+      "titleJA": "レベル4のスコアと時間",
       "minimum": 1000,
-      "maximum": 30596
+      "maximum": 30596,
+      "titleZH-Hans": "第4关 · 成绩和用时",
+      "titleZH-Hant": "第4關 · 成績與遊玩時間"
     },
     {
       "id": "dino.level.5.timed.v1",
       "titleNL": "Level 5 — resultaat en tijd",
       "titleEN": "Level 5 — result and time",
+      "titleJA": "レベル5のスコアと時間",
       "minimum": 1000,
-      "maximum": 30596
+      "maximum": 30596,
+      "titleZH-Hans": "第5关 · 成绩和用时",
+      "titleZH-Hant": "第5關 · 成績與遊玩時間"
     },
     {
       "id": "dino.level.6.timed.v1",
       "titleNL": "Level 6 — resultaat en tijd",
       "titleEN": "Level 6 — result and time",
+      "titleJA": "レベル6のスコアと時間",
       "minimum": 1000,
-      "maximum": 30596
+      "maximum": 30596,
+      "titleZH-Hans": "第6关 · 成绩和用时",
+      "titleZH-Hant": "第6關 · 成績與遊玩時間"
     },
     {
       "id": "dino.level.7.timed.v1",
       "titleNL": "Level 7 — resultaat en tijd",
       "titleEN": "Level 7 — result and time",
+      "titleJA": "レベル7のスコアと時間",
       "minimum": 1000,
-      "maximum": 30596
+      "maximum": 30596,
+      "titleZH-Hans": "第7关 · 成绩和用时",
+      "titleZH-Hant": "第7關 · 成績與遊玩時間"
     },
     {
       "id": "dino.level.8.timed.v1",
       "titleNL": "Level 8 — resultaat en tijd",
       "titleEN": "Level 8 — result and time",
+      "titleJA": "レベル8のスコアと時間",
       "minimum": 1000,
-      "maximum": 30596
+      "maximum": 30596,
+      "titleZH-Hans": "第8关 · 成绩和用时",
+      "titleZH-Hant": "第8關 · 成績與遊玩時間"
     },
     {
       "id": "dino.level.9.timed.v1",
       "titleNL": "Level 9 — resultaat en tijd",
       "titleEN": "Level 9 — result and time",
+      "titleJA": "レベル9のスコアと時間",
       "minimum": 1000,
-      "maximum": 30596
+      "maximum": 30596,
+      "titleZH-Hans": "第9关 · 成绩和用时",
+      "titleZH-Hant": "第9關 · 成績與遊玩時間"
     },
     {
       "id": "dino.level.10.timed.v1",
       "titleNL": "Level 10 — resultaat en tijd",
       "titleEN": "Level 10 — result and time",
+      "titleJA": "レベル10のスコアと時間",
       "minimum": 1000,
-      "maximum": 251591
+      "maximum": 251591,
+      "titleZH-Hans": "第10关 · 成绩和用时",
+      "titleZH-Hant": "第10關 · 成績與遊玩時間"
     }
   ],
   "visibilityLeaderboard": {
     "id": "dino.progress.visibility.v1",
     "titleNL": "Dino vriendenprofiel",
     "titleEN": "Dino friends profile",
+    "titleJA": "ディノの友だちプロフィール",
     "type": "classic",
     "submission": "bestScore",
     "sort": "highToLow",
@@ -200,7 +267,9 @@
     "hidden": true,
     "scoreRange": null,
     "contextVersion": 1,
-    "encoding": "preferenceRevisionMilliseconds * 1024 + (showsScores ? 0 : 512) + currentLevel * 2 + (adventureComplete ? 1 : 0)"
+    "encoding": "preferenceRevisionMilliseconds * 1024 + (showsScores ? 0 : 512) + currentLevel * 2 + (adventureComplete ? 1 : 0)",
+    "titleZH-Hans": "成绩可见范围",
+    "titleZH-Hant": "成績可見範圍"
   },
   "defaultLeaderboardID": "dino.progress.stars.v1",
   "appearanceLeaderboards": [
@@ -208,6 +277,7 @@
       "id": "dino.appearance.primary.v1",
       "titleNL": "Dino bandana en stekels",
       "titleEN": "Dino bandana and spikes",
+      "titleJA": "ディノのバンダナとトゲ",
       "type": "classic",
       "submission": "bestScore",
       "sort": "highToLow",
@@ -216,12 +286,15 @@
       "scoreRange": null,
       "score": "Monotonic palette revision; both records must match",
       "context": "(1 << 48) | (bandanaRGB << 24) | spikesRGB",
-      "referenceName": "Dino kleuren — bandana en stekels"
+      "referenceName": "Dino kleuren — bandana en stekels",
+      "titleZH-Hans": "恐龙的头巾和背刺",
+      "titleZH-Hant": "恐龍的頭巾和背刺"
     },
     {
       "id": "dino.appearance.secondary.v1",
       "titleNL": "Dino lijf en buik",
       "titleEN": "Dino body and belly",
+      "titleJA": "ディノの体とおなか",
       "type": "classic",
       "submission": "bestScore",
       "sort": "highToLow",
@@ -230,7 +303,9 @@
       "scoreRange": null,
       "score": "Monotonic palette revision; submit this record before the primary record",
       "context": "(1 << 48) | (bodyRGB << 24) | bellyRGB",
-      "referenceName": "Dino kleuren — lijf en buik"
+      "referenceName": "Dino kleuren — lijf en buik",
+      "titleZH-Hans": "恐龙的身体和肚皮",
+      "titleZH-Hant": "恐龍的身體和肚皮"
     }
   ]
 }
