@@ -701,6 +701,11 @@ struct DinoTimeVocabulary: Sendable {
     var digitalQuestionsIncludeDayPart = false
     var decimalZoneHours = false
     var unitSpacing = " "
+    var singularZoneUnit: String? = nil
+
+    func hourUnit(for minutes: Int) -> String {
+        minutes == 60 ? singularZoneUnit ?? zoneUnit : zoneUnit
+    }
 
     static let english = Self(
         dayPartSuffixes: [.night: "at night", .morning: "in the morning",
@@ -729,12 +734,66 @@ struct DinoTimeVocabulary: Sendable {
             return time.minute == 0 ? "\(hour) Uhr" : "\(hour) Uhr \(SpokenTimeLanguage.germanNumber(time.minute))"
         }
     )
+    static let french = Self(
+        dayPartSuffixes: [.night: "de la nuit", .morning: "du matin",
+                          .afternoon: "de l’après-midi", .evening: "du soir"],
+        spokenHours: { count, number in count == 1 ? "une heure" : "\(number) heures" },
+        spokenMinutes: { count, number in
+            if count == 1 { return "une minute" }
+            return "\(number) \(count == 0 ? "minute" : "minutes")"
+        },
+        joinSpokenUnits: { "\($0) et \($1)" },
+        shortHours: { "\($0)\u{00A0}h" }, shortMinutes: { "\($0)\u{00A0}min" },
+        zoneUnit: "h", atlasZoneUnit: "h", shortHoursColumnWidth: 32,
+        formalClockTime: { SpokenTimeLanguage.frenchDigitalTime($0) },
+        decimalZoneHours: true, unitSpacing: "\u{00A0}"
+    )
     static let simplifiedChinese = chinese(two: "两", hours: "小时", minutes: "分钟") {
         SpokenTimeLanguage.simplifiedChineseHour($0)
     }
     static let traditionalChinese = chinese(two: "兩", hours: "小時", minutes: "分鐘") {
         SpokenTimeLanguage.traditionalChineseHour($0)
     }
+    static let hebrew = Self(
+        dayPartSuffixes: [.night: "בלילה", .morning: "בבוקר", .afternoon: "אחר הצהריים", .evening: "בערב"],
+        spokenHours: { count, number in
+            switch count {
+            case 1: return "שעה אחת"
+            case 2: return "שעתיים"
+            default: return "\(number) שעות"
+            }
+        },
+        spokenMinutes: { count, number in
+            switch count {
+            case 1, 2: return SpokenTimeLanguage.hebrewMinutes(count)
+            default: return "\(number) דקות"
+            }
+        },
+        joinSpokenUnits: { "\($0) ו\($1)" }, shortHours: { "\($0) ש׳" }, shortMinutes: { "\($0) דק׳" },
+        zoneUnit: "ש׳", atlasZoneUnit: "ש׳", shortHoursColumnWidth: 34,
+        formalClockTime: { time in
+            let hour = SpokenTimeLanguage.hebrewNumber(time.hour)
+            if time.minute == 0 { return time.hour == 0 ? "חצות" : "\(hour) בדיוק" }
+            return "\(hour) ו\(SpokenTimeLanguage.hebrewMinutes(time.minute))"
+        },
+        decimalZoneHours: true
+    )
+
+    static let urdu = Self(
+        dayPartSuffixes: [.night: "رات", .morning: "صبح", .afternoon: "دوپہر", .evening: "شام"],
+        spokenHours: { count, number in count == 1 ? "ایک گھنٹہ" : "\(number) گھنٹے" },
+        spokenMinutes: { count, number in count == 1 ? "ایک منٹ" : "\(number) منٹ" },
+        joinSpokenUnits: { "\($0) اور \($1)" },
+        shortHours: { "\($0) \($0 == "1" ? "گھنٹہ" : "گھنٹے")" }, shortMinutes: { "\($0) منٹ" },
+        zoneUnit: "گھنٹے", atlasZoneUnit: "گ", shortHoursColumnWidth: 52,
+        withDayPart: { time, part in "\(part) \(time)" },
+        formalClockTime: { time in
+            let hour = SpokenTimeLanguage.urduNumber(time.hour)
+            return time.minute == 0 ? "\(hour) بجے" : "\(hour) بج کر \(SpokenTimeLanguage.urduNumber(time.minute)) منٹ"
+        },
+        decimalZoneHours: true,
+        singularZoneUnit: "گھنٹہ"
+    )
 
     private static func chinese(two: String, hours: String, minutes: String,
                                 hourWord: @escaping @Sendable (Int) -> String) -> Self {
@@ -816,7 +875,7 @@ enum DinoTimeWords {
         let h = minutes / 60, m = minutes % 60
         if h == 0 { return compactMinutes(m, language: language) }
         let hours = AppLanguage.resolved(language).timeVocabulary
-        let hoursText = number(h, language: language) + hours.unitSpacing + hours.zoneUnit
+        let hoursText = number(h, language: language) + hours.unitSpacing + hours.hourUnit(for: h * 60)
         return m == 0 ? hoursText : hoursText + hours.unitSpacing + compactMinutes(m, language: language)
     }
 
@@ -879,7 +938,7 @@ enum DinoTimeWords {
         let profile = AppLanguage.resolved(language)
         let signedHours = "\(minutes >= 0 ? "+" : "−")\(zoneHours(minutes, language: language))"
         let amount = profile.runsRightToLeft ? "\u{2066}\(signedHours)\u{2069}" : signedHours
-        return amount + profile.timeVocabulary.unitSpacing + profile.timeVocabulary.zoneUnit
+        return amount + profile.timeVocabulary.unitSpacing + profile.timeVocabulary.hourUnit(for: abs(minutes))
     }
 }
 

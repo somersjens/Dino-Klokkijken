@@ -112,7 +112,7 @@ struct DigitalClock: View {
 
     private func display(_ reading: DigitalClockReading, fontSize: CGFloat) -> some View {
         // Keep the numeric group in hour/minute order. Its day period follows the reading direction.
-        let periodOnLeft = reading.periodBeforeClock != language.effective.runsRightToLeft
+        let periodOnLeft = reading.periodOnLeft(inRightToLeftInterface: language.effective.runsRightToLeft)
         return HStack(alignment: .center, spacing: reading.periodSpacing.isEmpty ? 0 : fontSize * 0.12) {
             if periodOnLeft, let period = reading.period { periodLabel(period, fontSize: fontSize) }
             HStack(spacing: theme.numerals == .digital ? fontSize * 0.1 : 0) {

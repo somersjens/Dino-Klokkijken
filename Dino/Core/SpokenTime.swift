@@ -355,6 +355,186 @@ struct SpokenWordSlot: Sendable {
 }
 
 extension SpokenTimeLanguage {
+    static let french = Self(
+        code: "fr", hours: (0..<12).map { frenchClockHour($0 == 0 ? 12 : $0) },
+        slots: [
+            .hour(title: "Heures"),
+            .words(.init(id: "minutes", title: "Minutes", choiceIDs: (1..<60).map { "m\($0)" },
+                         words: [:], minuteValues: ["m1": 1])),
+            .words(.init(id: "expression", title: "Formule",
+                         choiceIDs: ["quarterPast", "half", "quarterTo"],
+                         words: ["quarterPast": "et quart", "half": "et demie", "quarterTo": "moins le quart"])),
+            .words(.init(id: "remainingMinutes", title: "Minutes",
+                         choiceIDs: ["before5", "before10", "before20"],
+                         words: ["before5": "moins cinq", "before10": "moins dix", "before20": "moins vingt"]))
+        ],
+        minuteWord: { frenchClockNumber($0) },
+        rule: { minute in
+            switch minute {
+            case 0:
+                return .init(tokens: ["@", "-", "-", "-"], referenceMinute: 0, region: .whole)
+            case 15:
+                return .init(tokens: ["@", "-", "quarterPast", "-"], referenceMinute: 0, region: .past,
+                             scaleLabel: "quart")
+            case 30:
+                return .init(tokens: ["@", "-", "half", "-"], referenceMinute: 0, region: .half,
+                             scaleLabel: "demie")
+            case 45:
+                return .init(tokens: ["+", "-", "quarterTo", "-"], referenceMinute: 60, region: .to,
+                             relation: "moins", scaleLabel: "quart")
+            case 40, 50, 55:
+                return .init(tokens: ["+", "-", "-", "before\(60 - minute)"], referenceMinute: 60,
+                             region: .to, relation: "moins")
+            default:
+                return .init(tokens: ["@", "m\(minute)", "-", "-"], referenceMinute: 0, region: .past)
+            }
+        },
+        omitsUnusedSlots: true
+    )
+
+    private static func frenchClockHour(_ value: Int) -> String {
+        "\(frenchClockNumber(value)) \(value == 1 ? "heure" : "heures")"
+    }
+
+    private static func frenchClockNumber(_ value: Int) -> String {
+        let small = ["zéro", "une", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf",
+                     "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize",
+                     "dix-sept", "dix-huit", "dix-neuf"]
+        guard value >= 20 else { return small[value] }
+        let tens = ["vingt", "trente", "quarante", "cinquante"][value / 10 - 2]
+        switch value % 10 {
+        case 0: return tens
+        case 1: return "\(tens) et une"
+        default: return "\(tens)-\(small[value % 10])"
+        }
+    }
+
+    static func frenchDigitalTime(_ time: ClockTime) -> String {
+        let hour = switch time.hour {
+        case 0: "minuit"
+        case 12: "midi"
+        default: frenchClockHour(time.hour)
+        }
+        return time.minute == 0 ? hour : "\(hour) \(frenchClockNumber(time.minute))"
+    }
+
+    static let urdu = Self(
+        code: "ur", hours: (0..<12).map { urduNumber($0 == 0 ? 12 : $0) },
+        slots: [
+            .words(.init(id: "quarter", title: "وقت کا لفظ",
+                         choiceIDs: ["quarterPast", "exact", "quarterTo"],
+                         words: ["quarterPast": "سوا", "exact": "ٹھیک", "quarterTo": "پونے"])),
+            .hour(title: "گھنٹہ"),
+            .words(.init(id: "minutes", title: "منٹ",
+                         choiceIDs: (1..<60).map { "m\($0)" }, words: [:],
+                         minuteValues: ["m1": 1]))
+        ],
+        minuteWord: { "\(urduNumber($0)) منٹ" },
+        rule: { minute in
+            switch minute {
+            case 0:
+                return .init(tokens: ["-", "@", "-"], referenceMinute: 0, region: .whole)
+            case 15:
+                return .init(tokens: ["quarterPast", "@", "-"], referenceMinute: 0, region: .past)
+            case 30:
+                return .init(tokens: ["-", "@", "-"], referenceMinute: 0, region: .half)
+            case 45:
+                return .init(tokens: ["quarterTo", "+", "-"], referenceMinute: 60, region: .to)
+            default:
+                return .init(tokens: ["-", "@", "m\(minute)"], referenceMinute: 0, region: .past)
+            }
+        },
+        inflectHour: { hour, rule in
+            if rule.region == .half {
+                switch hour {
+                case "ایک": return "ڈیڑھ بجے"
+                case "دو": return "ڈھائی بجے"
+                default: return "ساڑھے \(hour) بجے"
+                }
+            }
+            return rule.tokens[2] == "-" ? "\(hour) بجے" : "\(hour) بج کر"
+        },
+        omitsUnusedSlots: true, promptNotation: .twelve
+    )
+
+    // The forms from 1 to 59 are used for hours and exact minutes.
+    static func urduNumber(_ value: Int) -> String {
+        urduNumbers[value]
+    }
+
+    private static let urduNumbers = [
+        "صفر", "ایک", "دو", "تین", "چار", "پانچ", "چھ", "سات", "آٹھ", "نو",
+        "دس", "گیارہ", "بارہ", "تیرہ", "چودہ", "پندرہ", "سولہ", "سترہ", "اٹھارہ", "انیس",
+        "بیس", "اکیس", "بائیس", "تیئیس", "چوبیس", "پچیس", "چھبیس", "ستائیس", "اٹھائیس", "انتیس",
+        "تیس", "اکتیس", "بتیس", "تینتیس", "چونتیس", "پینتیس", "چھتیس", "سینتیس", "اڑتیس", "انتالیس",
+        "چالیس", "اکتالیس", "بیالیس", "تینتالیس", "چوالیس", "پینتالیس", "چھیالیس", "سینتالیس", "اڑتالیس", "انچاس",
+        "پچاس", "اکیاون", "باون", "ترپن", "چوّن", "پچپن", "چھپن", "ستاون", "اٹھاون", "انسٹھ"
+    ]
+
+    static let hebrew = Self(
+        code: "he", hours: (0..<12).map { hebrewNumber($0 == 0 ? 12 : $0) },
+        slots: [
+            .words(.init(id: "remaining", title: "כמה דקות",
+                         choiceIDs: (1..<30).map { $0 == 15 ? "quarterTo" : "m\($0)" },
+                         words: ["quarterTo": "רבע"], minuteValues: ["quarterTo": 15])),
+            .hour(title: "איזו שעה"),
+            .words(.init(id: "minutes", title: "כמה דקות",
+                         choiceIDs: (1...30).map(hebrewPastToken),
+                         words: Dictionary(uniqueKeysWithValues: (1...30).map { minute in
+                             let word = switch minute {
+                             case 15: "ורבע"
+                             case 30: "וחצי"
+                             default: "ו" + hebrewMinutes(minute)
+                             }
+                             return (hebrewPastToken(minute), word)
+                         }), minuteValues: ["quarterPast": 15, "half": 30]))
+        ],
+        minuteWord: { hebrewMinutes($0) },
+        rule: { minute in
+            switch minute {
+            case 0: return .init(tokens: ["-", "@", "-"], referenceMinute: 0, region: .whole)
+            case 30: return .init(tokens: ["-", "@", "half"], referenceMinute: 0, region: .half)
+            case 1..<30:
+                return .init(tokens: ["-", "@", hebrewPastToken(minute)], referenceMinute: 0, region: .past)
+            default:
+                let remaining = 60 - minute
+                return .init(tokens: [remaining == 15 ? "quarterTo" : "m\(remaining)", "+", "-"],
+                             referenceMinute: 60, region: .to)
+            }
+        },
+        inflectHour: { hour, rule in rule.region == .to ? "ל" + hour : hour },
+        omitsUnusedSlots: true, promptNotation: .twelve
+    )
+
+    private static func hebrewPastToken(_ minute: Int) -> String {
+        switch minute {
+        case 15: return "quarterPast"
+        case 30: return "half"
+        default: return "m\(minute)"
+        }
+    }
+
+    static func hebrewMinutes(_ minute: Int) -> String {
+        switch minute {
+        case 1: return "דקה אחת"
+        case 2: return "שתי דקות"
+        default: return "\(hebrewNumber(minute)) דקות"
+        }
+    }
+
+    /// Feminine cardinal forms agree with both hour and minute in Hebrew.
+    static func hebrewNumber(_ value: Int) -> String {
+        let units = ["אפס", "אחת", "שתיים", "שלוש", "ארבע", "חמש", "שש", "שבע", "שמונה", "תשע"]
+        let teens = ["עשר", "אחת עשרה", "שתים עשרה", "שלוש עשרה", "ארבע עשרה",
+                     "חמש עשרה", "שש עשרה", "שבע עשרה", "שמונה עשרה", "תשע עשרה"]
+        let tens = ["", "", "עשרים", "שלושים", "ארבעים", "חמישים"]
+        if value < 10 { return units[value] }
+        if value < 20 { return teens[value - 10] }
+        let remainder = value % 10
+        let decade = tens[value / 10]
+        return remainder == 0 ? decade : "\(decade) ו\(units[remainder])"
+    }
+
     static let simplifiedChinese = chinese(code: "zh-Hans", hourTitle: "几点", minuteTitle: "几分", hourWord: simplifiedChineseHour)
     static let traditionalChinese = chinese(code: "zh-Hant", hourTitle: "幾點", minuteTitle: "幾分", hourWord: traditionalChineseHour)
 

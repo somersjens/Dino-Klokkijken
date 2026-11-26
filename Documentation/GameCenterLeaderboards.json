@@ -17,7 +17,10 @@
       "titleAR": "نقاط المستوى ١",
       "titleJA": "レベル1のスコア",
       "titleZH-Hans": "第1关 · 成绩",
-      "titleZH-Hant": "第1關 · 成績"
+      "titleZH-Hant": "第1關 · 成績",
+      "titleHE": "שלב 1 · נקודות",
+      "titleUR": "مرحلہ 1 کے پوائنٹس",
+      "titleFR": "Niveau 1 · points"
     },
     {
       "id": "dino.level.2.result.v1",
@@ -29,7 +32,10 @@
       "titleAR": "نقاط المستوى ٢",
       "titleJA": "レベル2のスコア",
       "titleZH-Hans": "第2关 · 成绩",
-      "titleZH-Hant": "第2關 · 成績"
+      "titleZH-Hant": "第2關 · 成績",
+      "titleHE": "שלב 2 · נקודות",
+      "titleUR": "مرحلہ 2 کے پوائنٹس",
+      "titleFR": "Niveau 2 · points"
     },
     {
       "id": "dino.level.3.result.v1",
@@ -41,7 +47,10 @@
       "titleAR": "نقاط المستوى ٣",
       "titleJA": "レベル3のスコア",
       "titleZH-Hans": "第3关 · 成绩",
-      "titleZH-Hant": "第3關 · 成績"
+      "titleZH-Hant": "第3關 · 成績",
+      "titleHE": "שלב 3 · נקודות",
+      "titleUR": "مرحلہ 3 کے پوائنٹس",
+      "titleFR": "Niveau 3 · points"
     },
     {
       "id": "dino.level.4.result.v1",
@@ -53,7 +62,10 @@
       "titleAR": "نقاط المستوى ٤",
       "titleJA": "レベル4のスコア",
       "titleZH-Hans": "第4关 · 成绩",
-      "titleZH-Hant": "第4關 · 成績"
+      "titleZH-Hant": "第4關 · 成績",
+      "titleHE": "שלב 4 · נקודות",
+      "titleUR": "مرحلہ 4 کے پوائنٹس",
+      "titleFR": "Niveau 4 · points"
     },
     {
       "id": "dino.level.5.result.v1",
@@ -65,7 +77,10 @@
       "titleAR": "نقاط المستوى ٥",
       "titleJA": "レベル5のスコア",
       "titleZH-Hans": "第5关 · 成绩",
-      "titleZH-Hant": "第5關 · 成績"
+      "titleZH-Hant": "第5關 · 成績",
+      "titleHE": "שלב 5 · נקודות",
+      "titleUR": "مرحلہ 5 کے پوائنٹس",
+      "titleFR": "Niveau 5 · points"
     },
     {
       "id": "dino.level.6.result.v1",
@@ -77,7 +92,10 @@
       "titleAR": "نقاط المستوى ٦",
       "titleJA": "レベル6のスコア",
       "titleZH-Hans": "第6关 · 成绩",
-      "titleZH-Hant": "第6關 · 成績"
+      "titleZH-Hant": "第6關 · 成績",
+      "titleHE": "שלב 6 · נקודות",
+      "titleUR": "مرحلہ 6 کے پوائنٹس",
+      "titleFR": "Niveau 6 · points"
     },
     {
       "id": "dino.level.7.result.v1",
@@ -89,7 +107,10 @@
       "titleAR": "نقاط المستوى ٧",
       "titleJA": "レベル7のスコア",
       "titleZH-Hans": "第7关 · 成绩",
-      "titleZH-Hant": "第7關 · 成績"
+      "titleZH-Hant": "第7關 · 成績",
+      "titleHE": "שלב 7 · נקודות",
+      "titleUR": "مرحلہ 7 کے پوائنٹس",
+      "titleFR": "Niveau 7 · points"
     },
     {
       "id": "dino.level.8.result.v1",
@@ -101,7 +122,10 @@
       "titleAR": "نقاط المستوى ٨",
       "titleJA": "レベル8のスコア",
       "titleZH-Hans": "第8关 · 成绩",
-      "titleZH-Hant": "第8關 · 成績"
+      "titleZH-Hant": "第8關 · 成績",
+      "titleHE": "שלב 8 · נקודות",
+      "titleUR": "مرحلہ 8 کے پوائنٹس",
+      "titleFR": "Niveau 8 · points"
     },
     {
       "id": "dino.level.9.result.v1",
@@ -113,7 +137,10 @@
       "titleAR": "نقاط المستوى ٩",
       "titleJA": "レベル9のスコア",
       "titleZH-Hans": "第9关 · 成绩",
-      "titleZH-Hant": "第9關 · 成績"
+      "titleZH-Hant": "第9關 · 成績",
+      "titleHE": "שלב 9 · נקודות",
+      "titleUR": "مرحلہ 9 کے پوائنٹس",
+      "titleFR": "Niveau 9 · points"
     },
     {
       "id": "dino.level.10.result.v1",
@@ -125,7 +152,10 @@
       "titleAR": "نقاط المستوى ١٠",
       "titleJA": "レベル10のスコア",
       "titleZH-Hans": "第10关 · 成绩",
-      "titleZH-Hant": "第10關 · 成績"
+      "titleZH-Hant": "第10關 · 成績",
+      "titleHE": "שלב 10 · נקודות",
+      "titleUR": "مرحلہ 10 کے پوائنٹس",
+      "titleFR": "Niveau 10 · points"
     },
     {
       "id": "dino.progress.highest.v1",
@@ -137,7 +167,10 @@
       "titleAR": "أعلى مستوى مكتمل",
       "titleJA": "最高クリアレベル",
       "titleZH-Hans": "通过的最高关卡",
-      "titleZH-Hant": "已完成的最高關卡"
+      "titleZH-Hant": "已完成的最高關卡",
+      "titleHE": "השלב הגבוה ביותר שהושלם",
+      "titleUR": "سب سے آگے مکمل کیا گیا مرحلہ",
+      "titleFR": "Plus haut niveau terminé"
     },
     {
       "id": "dino.progress.stars.v1",
@@ -149,7 +182,10 @@
       "titleAR": "النجوم التي جمعتها",
       "titleJA": "集めた星",
       "titleZH-Hans": "收集的星星",
-      "titleZH-Hant": "收集的星星"
+      "titleZH-Hant": "收集的星星",
+      "titleHE": "כוכבים שנאספו",
+      "titleUR": "جمع کیے گئے ستارے",
+      "titleFR": "Étoiles récoltées"
     }
   ],
   "timingNote": "Additive optional boards. Same best-score descending integer settings; quality first, then fastest time. Existing result boards remain required and unchanged.",
@@ -162,7 +198,10 @@
       "minimum": 1000,
       "maximum": 30596,
       "titleZH-Hans": "第1关 · 成绩和用时",
-      "titleZH-Hant": "第1關 · 成績與遊玩時間"
+      "titleZH-Hant": "第1關 · 成績與遊玩時間",
+      "titleHE": "שלב 1 · נקודות וזמן משחק",
+      "titleUR": "مرحلہ 1 کا نتیجہ اور وقت",
+      "titleFR": "Niveau 1 · résultat et temps"
     },
     {
       "id": "dino.level.2.timed.v1",
@@ -172,7 +211,10 @@
       "minimum": 1000,
       "maximum": 30596,
       "titleZH-Hans": "第2关 · 成绩和用时",
-      "titleZH-Hant": "第2關 · 成績與遊玩時間"
+      "titleZH-Hant": "第2關 · 成績與遊玩時間",
+      "titleHE": "שלב 2 · נקודות וזמן משחק",
+      "titleUR": "مرحلہ 2 کا نتیجہ اور وقت",
+      "titleFR": "Niveau 2 · résultat et temps"
     },
     {
       "id": "dino.level.3.timed.v1",
@@ -182,7 +224,10 @@
       "minimum": 1000,
       "maximum": 30596,
       "titleZH-Hans": "第3关 · 成绩和用时",
-      "titleZH-Hant": "第3關 · 成績與遊玩時間"
+      "titleZH-Hant": "第3關 · 成績與遊玩時間",
+      "titleHE": "שלב 3 · נקודות וזמן משחק",
+      "titleUR": "مرحلہ 3 کا نتیجہ اور وقت",
+      "titleFR": "Niveau 3 · résultat et temps"
     },
     {
       "id": "dino.level.4.timed.v1",
@@ -192,7 +237,10 @@
       "minimum": 1000,
       "maximum": 30596,
       "titleZH-Hans": "第4关 · 成绩和用时",
-      "titleZH-Hant": "第4關 · 成績與遊玩時間"
+      "titleZH-Hant": "第4關 · 成績與遊玩時間",
+      "titleHE": "שלב 4 · נקודות וזמן משחק",
+      "titleUR": "مرحلہ 4 کا نتیجہ اور وقت",
+      "titleFR": "Niveau 4 · résultat et temps"
     },
     {
       "id": "dino.level.5.timed.v1",
@@ -202,7 +250,10 @@
       "minimum": 1000,
       "maximum": 30596,
       "titleZH-Hans": "第5关 · 成绩和用时",
-      "titleZH-Hant": "第5關 · 成績與遊玩時間"
+      "titleZH-Hant": "第5關 · 成績與遊玩時間",
+      "titleHE": "שלב 5 · נקודות וזמן משחק",
+      "titleUR": "مرحلہ 5 کا نتیجہ اور وقت",
+      "titleFR": "Niveau 5 · résultat et temps"
     },
     {
       "id": "dino.level.6.timed.v1",
@@ -212,7 +263,10 @@
       "minimum": 1000,
       "maximum": 30596,
       "titleZH-Hans": "第6关 · 成绩和用时",
-      "titleZH-Hant": "第6關 · 成績與遊玩時間"
+      "titleZH-Hant": "第6關 · 成績與遊玩時間",
+      "titleHE": "שלב 6 · נקודות וזמן משחק",
+      "titleUR": "مرحلہ 6 کا نتیجہ اور وقت",
+      "titleFR": "Niveau 6 · résultat et temps"
     },
     {
       "id": "dino.level.7.timed.v1",
@@ -222,7 +276,10 @@
       "minimum": 1000,
       "maximum": 30596,
       "titleZH-Hans": "第7关 · 成绩和用时",
-      "titleZH-Hant": "第7關 · 成績與遊玩時間"
+      "titleZH-Hant": "第7關 · 成績與遊玩時間",
+      "titleHE": "שלב 7 · נקודות וזמן משחק",
+      "titleUR": "مرحلہ 7 کا نتیجہ اور وقت",
+      "titleFR": "Niveau 7 · résultat et temps"
     },
     {
       "id": "dino.level.8.timed.v1",
@@ -232,7 +289,10 @@
       "minimum": 1000,
       "maximum": 30596,
       "titleZH-Hans": "第8关 · 成绩和用时",
-      "titleZH-Hant": "第8關 · 成績與遊玩時間"
+      "titleZH-Hant": "第8關 · 成績與遊玩時間",
+      "titleHE": "שלב 8 · נקודות וזמן משחק",
+      "titleUR": "مرحلہ 8 کا نتیجہ اور وقت",
+      "titleFR": "Niveau 8 · résultat et temps"
     },
     {
       "id": "dino.level.9.timed.v1",
@@ -242,7 +302,10 @@
       "minimum": 1000,
       "maximum": 30596,
       "titleZH-Hans": "第9关 · 成绩和用时",
-      "titleZH-Hant": "第9關 · 成績與遊玩時間"
+      "titleZH-Hant": "第9關 · 成績與遊玩時間",
+      "titleHE": "שלב 9 · נקודות וזמן משחק",
+      "titleUR": "مرحلہ 9 کا نتیجہ اور وقت",
+      "titleFR": "Niveau 9 · résultat et temps"
     },
     {
       "id": "dino.level.10.timed.v1",
@@ -252,7 +315,10 @@
       "minimum": 1000,
       "maximum": 251591,
       "titleZH-Hans": "第10关 · 成绩和用时",
-      "titleZH-Hant": "第10關 · 成績與遊玩時間"
+      "titleZH-Hant": "第10關 · 成績與遊玩時間",
+      "titleHE": "שלב 10 · נקודות וזמן משחק",
+      "titleUR": "مرحلہ 10 کا نتیجہ اور وقت",
+      "titleFR": "Niveau 10 · résultat et temps"
     }
   ],
   "visibilityLeaderboard": {
@@ -269,7 +335,10 @@
     "contextVersion": 1,
     "encoding": "preferenceRevisionMilliseconds * 1024 + (showsScores ? 0 : 512) + currentLevel * 2 + (adventureComplete ? 1 : 0)",
     "titleZH-Hans": "成绩可见范围",
-    "titleZH-Hant": "成績可見範圍"
+    "titleZH-Hant": "成績可見範圍",
+    "titleHE": "הצגת תוצאות לחברים",
+    "titleUR": "دوستوں کو دکھائے جانے والے نتائج",
+    "titleFR": "Visibilité du score"
   },
   "defaultLeaderboardID": "dino.progress.stars.v1",
   "appearanceLeaderboards": [
@@ -288,7 +357,10 @@
       "context": "(1 << 48) | (bandanaRGB << 24) | spikesRGB",
       "referenceName": "Dino kleuren — bandana en stekels",
       "titleZH-Hans": "恐龙的头巾和背刺",
-      "titleZH-Hant": "恐龍的頭巾和背刺"
+      "titleZH-Hant": "恐龍的頭巾和背刺",
+      "titleHE": "צבעי הדינו: בנדנה וקוצים",
+      "titleUR": "ڈائنو کا سر کا رومال اور کانٹے",
+      "titleFR": "Bandana et pointes de Dino"
     },
     {
       "id": "dino.appearance.secondary.v1",
@@ -305,7 +377,10 @@
       "context": "(1 << 48) | (bodyRGB << 24) | bellyRGB",
       "referenceName": "Dino kleuren — lijf en buik",
       "titleZH-Hans": "恐龙的身体和肚皮",
-      "titleZH-Hant": "恐龍的身體和肚皮"
+      "titleZH-Hant": "恐龍的身體和肚皮",
+      "titleHE": "צבעי הדינו: גוף ובטן",
+      "titleUR": "ڈائنو کا جسم اور پیٹ",
+      "titleFR": "Corps et ventre de Dino"
     }
   ]
 }

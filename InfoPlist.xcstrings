@@ -58,6 +58,24 @@
             "state" : "translated",
             "value" : "恐龍學看鐘"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "השעון של דינו"
+          }
+        },
+        "ur" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ڈائنو کی گھڑی"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino donne l’heure"
+          }
         }
       }
     },
@@ -118,6 +136,24 @@
             "state" : "translated",
             "value" : "恐龍學看鐘"
           }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "השעון של דינו"
+          }
+        },
+        "ur" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ڈائنو کی گھڑی"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino donne l’heure"
+          }
         }
       }
     },
@@ -176,6 +212,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示允許透過 Game Center 取用的朋友的遊戲進度和星星。"
+          }
+        },
+        "he" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "הצגת ההתקדמות והכוכבים של חברים שמאפשרים גישה ב־Game Center."
+          }
+        },
+        "ur" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ان دوستوں کی پیش رفت اور ستارے دکھائیں جو Game Center تک رسائی کی اجازت دیتے ہیں۔"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Affiche la progression et les étoiles des amis qui autorisent l’accès via Game Center."
           }
         }
       }

@@ -207,6 +207,15 @@ struct DinoTimeZoneJourney: Equatable, Sendable {
     static let taiwanCapitals: [DinoCapital] = asiaPacificCapitals + [
         .init(id: "taipei", dutchName: "Taipei", englishName: "Taipei", countryCode: "TWN", timeZoneID: "Asia/Taipei", latitude: 25.03, longitude: 121.57)
     ]
+
+    static let hebrewCapitals: [DinoCapital] = saudiCapitals + [
+        .init(id: "jerusalem", dutchName: "Jeruzalem", englishName: "Jerusalem", countryCode: "ISR", timeZoneID: "Asia/Jerusalem", latitude: 31.78, longitude: 35.22)
+    ]
+
+    static let pakistaniCapitals: [DinoCapital] = saudiCapitals + [
+        .init(id: "dhaka", dutchName: "Dhaka", englishName: "Dhaka", countryCode: "BGD", timeZoneID: "Asia/Dhaka", latitude: 23.81, longitude: 90.41),
+        .init(id: "kabul", dutchName: "Kaboel", englishName: "Kabul", countryCode: "AFG", timeZoneID: "Asia/Kabul", latitude: 34.53, longitude: 69.17)
+    ]
 }
 
 /// Highest simplified coastline in each 10° longitude bin of the bundled atlas.

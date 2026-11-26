@@ -45,6 +45,21 @@
           "name": "50顆星",
           "before": "在冒險中收集50顆星。",
           "after": "你收集到50顆星！"
+        },
+        "he": {
+          "name": "50 כוכבים",
+          "before": "אוספים 50 כוכבים במהלך ההרפתקה.",
+          "after": "אספת 50 כוכבים!"
+        },
+        "ur-PK": {
+          "name": "50 ستارے",
+          "before": "مہم میں 50 ستارے جمع کرو۔",
+          "after": "تم نے 50 ستارے جمع کر لیے!"
+        },
+        "fr-FR": {
+          "name": "50 étoiles",
+          "before": "Récolte 50 étoiles au fil de l’aventure.",
+          "after": "Tu as récolté 50 étoiles !"
         }
       }
     },
@@ -91,6 +106,21 @@
           "name": "100顆星",
           "before": "在冒險中收集100顆星。",
           "after": "你收集到100顆星！"
+        },
+        "he": {
+          "name": "100 כוכבים",
+          "before": "אוספים 100 כוכבים במהלך ההרפתקה.",
+          "after": "אספת 100 כוכבים!"
+        },
+        "ur-PK": {
+          "name": "100 ستارے",
+          "before": "مہم میں 100 ستارے جمع کرو۔",
+          "after": "تم نے 100 ستارے جمع کر لیے!"
+        },
+        "fr-FR": {
+          "name": "100 étoiles",
+          "before": "Récolte 100 étoiles au fil de l’aventure.",
+          "after": "Tu as récolté 100 étoiles !"
         }
       }
     },
@@ -137,6 +167,21 @@
           "name": "150顆星",
           "before": "在冒險中收集150顆星。",
           "after": "你收集到150顆星！"
+        },
+        "he": {
+          "name": "150 כוכבים",
+          "before": "אוספים 150 כוכבים במהלך ההרפתקה.",
+          "after": "אספת 150 כוכבים!"
+        },
+        "ur-PK": {
+          "name": "150 ستارے",
+          "before": "مہم میں 150 ستارے جمع کرو۔",
+          "after": "تم نے 150 ستارے جمع کر لیے!"
+        },
+        "fr-FR": {
+          "name": "150 étoiles",
+          "before": "Récolte 150 étoiles au fil de l’aventure.",
+          "after": "Tu as récolté 150 étoiles !"
         }
       }
     },
@@ -183,6 +228,21 @@
           "name": "200顆星",
           "before": "在冒險中收集200顆星。",
           "after": "你收集到200顆星！"
+        },
+        "he": {
+          "name": "200 כוכבים",
+          "before": "אוספים 200 כוכבים במהלך ההרפתקה.",
+          "after": "אספת 200 כוכבים!"
+        },
+        "ur-PK": {
+          "name": "200 ستارے",
+          "before": "مہم میں 200 ستارے جمع کرو۔",
+          "after": "تم نے 200 ستارے جمع کر لیے!"
+        },
+        "fr-FR": {
+          "name": "200 étoiles",
+          "before": "Récolte 200 étoiles au fil de l’aventure.",
+          "after": "Tu as récolté 200 étoiles !"
         }
       }
     },
@@ -229,6 +289,21 @@
           "name": "250顆星",
           "before": "在冒險中收集250顆星。",
           "after": "你收集到250顆星！"
+        },
+        "he": {
+          "name": "250 כוכבים",
+          "before": "אוספים 250 כוכבים במהלך ההרפתקה.",
+          "after": "אספת 250 כוכבים!"
+        },
+        "ur-PK": {
+          "name": "250 ستارے",
+          "before": "مہم میں 250 ستارے جمع کرو۔",
+          "after": "تم نے 250 ستارے جمع کر لیے!"
+        },
+        "fr-FR": {
+          "name": "250 étoiles",
+          "before": "Récolte 250 étoiles au fil de l’aventure.",
+          "after": "Tu as récolté 250 étoiles !"
         }
       }
     },
@@ -275,6 +350,21 @@
           "name": "300顆星",
           "before": "在冒險中收集300顆星。",
           "after": "你收集到300顆星！"
+        },
+        "he": {
+          "name": "300 כוכבים",
+          "before": "אוספים 300 כוכבים במהלך ההרפתקה.",
+          "after": "אספת 300 כוכבים!"
+        },
+        "ur-PK": {
+          "name": "300 ستارے",
+          "before": "مہم میں 300 ستارے جمع کرو۔",
+          "after": "تم نے 300 ستارے جمع کر لیے!"
+        },
+        "fr-FR": {
+          "name": "300 étoiles",
+          "before": "Récolte 300 étoiles au fil de l’aventure.",
+          "after": "Tu as récolté 300 étoiles !"
         }
       }
     },
@@ -323,6 +413,21 @@
           "name": "擊敗提科",
           "before": "在第10關擊敗叢林守衛提科。",
           "after": "你擊敗了叢林守衛提科！"
+        },
+        "he": {
+          "name": "ניצחון על טיקו",
+          "before": "מנצחים את טיקו, שומר הג׳ונגל בשלב 10.",
+          "after": "ניצחת את טיקו, שומר הג׳ונגל!"
+        },
+        "ur-PK": {
+          "name": "ٹیکو کو ہرا دیا",
+          "before": "مرحلہ 10 میں باس کو ہراؤ۔ باس ہے ٹیکو، جنگل کا رکھوالا۔",
+          "after": "تم نے ٹیکو کو ہرا دیا!"
+        },
+        "fr-FR": {
+          "name": "Victoire sur Tiko",
+          "before": "Au niveau 10, bats Tiko, le gardien de la jungle.",
+          "after": "Tu as battu Tiko, le gardien de la jungle !"
         }
       }
     },
@@ -371,6 +476,21 @@
           "name": "擊敗沙尾",
           "before": "在第20關擊敗沙漠守衛沙尾。",
           "after": "你擊敗了沙漠守衛沙尾！"
+        },
+        "he": {
+          "name": "ניצחון על זנב־חול",
+          "before": "מנצחים את זנב־חול, שומר המדבר בשלב 20.",
+          "after": "ניצחת את זנב־חול, שומר המדבר!"
+        },
+        "ur-PK": {
+          "name": "سینڈ ٹیل کو ہرا دیا",
+          "before": "مرحلہ 20 میں باس کو ہراؤ۔ باس ہے سینڈ ٹیل، صحرا کا رکھوالا۔",
+          "after": "تم نے سینڈ ٹیل کو ہرا دیا!"
+        },
+        "fr-FR": {
+          "name": "Victoire sur Sable",
+          "before": "Au niveau 20, bats Sable, le gardien du désert.",
+          "after": "Tu as battu Sable, le gardien du désert !"
         }
       }
     },
@@ -419,6 +539,21 @@
           "name": "擊敗瑪格瑪",
           "before": "在第30關擊敗火焰三角龍瑪格瑪。",
           "after": "你擊敗了火焰三角龍瑪格瑪！"
+        },
+        "he": {
+          "name": "ניצחון על מגמה",
+          "before": "מנצחים את מגמה, טריצרטופס האש בשלב 30.",
+          "after": "ניצחת את מגמה, טריצרטופס האש!"
+        },
+        "ur-PK": {
+          "name": "میگما کو ہرا دیا",
+          "before": "مرحلہ 30 میں باس کو ہراؤ۔ باس ہے میگما، آگ والا ٹرائی سیراٹوپس۔",
+          "after": "تم نے میگما کو ہرا دیا!"
+        },
+        "fr-FR": {
+          "name": "Victoire sur Magma",
+          "before": "Au niveau 30, bats Magma, le tricératops de feu.",
+          "after": "Tu as battu Magma, le tricératops de feu !"
         }
       }
     },
@@ -467,6 +602,21 @@
           "name": "擊敗滴答村長",
           "before": "在第40關擊敗滴答村長。",
           "after": "你擊敗了滴答村長！"
+        },
+        "he": {
+          "name": "ניצחון על ראש הכפר טיק־טק",
+          "before": "מנצחים את ראש הכפר טיק־טק בשלב 40.",
+          "after": "ניצחת את ראש הכפר טיק־טק!"
+        },
+        "ur-PK": {
+          "name": "میئر ٹک ٹاک کو ہرا دیا",
+          "before": "مرحلہ 40 میں باس کو ہراؤ۔ باس ہے میئر ٹک ٹاک۔",
+          "after": "تم نے میئر ٹک ٹاک کو ہرا دیا!"
+        },
+        "fr-FR": {
+          "name": "Victoire sur le maire Tic-Tac",
+          "before": "Au niveau 40, bats le maire Tic-Tac.",
+          "after": "Tu as battu le maire Tic-Tac !"
         }
       }
     },
@@ -515,6 +665,21 @@
           "name": "擊敗普里斯瑪",
           "before": "在第50關擊敗水晶守衛普里斯瑪。",
           "after": "你擊敗了水晶守衛普里斯瑪！"
+        },
+        "he": {
+          "name": "ניצחון על פריזמה",
+          "before": "מנצחים את פריזמה, שומר הגבישים בשלב 50.",
+          "after": "ניצחת את פריזמה, שומר הגבישים!"
+        },
+        "ur-PK": {
+          "name": "پریزما کو ہرا دیا",
+          "before": "مرحلہ 50 میں باس کو ہراؤ۔ باس ہے پریزما، بلوروں کا رکھوالا۔",
+          "after": "تم نے پریزما کو ہرا دیا!"
+        },
+        "fr-FR": {
+          "name": "Victoire sur Prisma",
+          "before": "Au niveau 50, bats Prisma, le gardien des cristaux.",
+          "after": "Tu as battu Prisma, le gardien des cristaux !"
         }
       }
     },
@@ -563,6 +728,21 @@
           "name": "擊敗霓虹",
           "before": "在第60關擊敗時鐘機器人霓虹。",
           "after": "你擊敗了時鐘機器人霓虹！"
+        },
+        "he": {
+          "name": "ניצחון על ניאון",
+          "before": "מנצחים את ניאון, רובוט השעון בשלב 60.",
+          "after": "ניצחת את ניאון, רובוט השעון!"
+        },
+        "ur-PK": {
+          "name": "نیون کو ہرا دیا",
+          "before": "مرحلہ 60 میں باس کو ہراؤ۔ باس ہے نیون، گھڑی والا روبوٹ۔",
+          "after": "تم نے نیون کو ہرا دیا!"
+        },
+        "fr-FR": {
+          "name": "Victoire sur Néon",
+          "before": "Au niveau 60, bats Néon, le robot horloger.",
+          "after": "Tu as battu Néon, le robot horloger !"
         }
       }
     },
@@ -611,6 +791,21 @@
           "name": "擊敗多奇",
           "before": "在第70關擊敗瞌睡恐龍多奇。",
           "after": "你擊敗了瞌睡恐龍多奇！"
+        },
+        "he": {
+          "name": "ניצחון על דוזי",
+          "before": "מנצחים את דוזי, דינו החלומות בשלב 70.",
+          "after": "ניצחת את דוזי, דינו החלומות!"
+        },
+        "ur-PK": {
+          "name": "دوزی کو ہرا دیا",
+          "before": "مرحلہ 70 میں باس کو ہراؤ۔ باس ہے دوزی، خوابوں والا ڈائنو۔",
+          "after": "تم نے دوزی کو ہرا دیا!"
+        },
+        "fr-FR": {
+          "name": "Victoire sur Dozy",
+          "before": "Au niveau 70, bats Dozy, le dino des rêves.",
+          "after": "Tu as battu Dozy, le dino des rêves !"
         }
       }
     },
@@ -659,6 +854,21 @@
           "name": "擊敗鐘擺教授",
           "before": "在第80關擊敗鐘擺教授。",
           "after": "你擊敗了鐘擺教授！"
+        },
+        "he": {
+          "name": "ניצחון על פרופסור מטוטלת",
+          "before": "מנצחים את פרופסור מטוטלת בשלב 80.",
+          "after": "ניצחת את פרופסור מטוטלת!"
+        },
+        "ur-PK": {
+          "name": "پروفیسر پینڈولم کو ہرا دیا",
+          "before": "مرحلہ 80 میں باس کو ہراؤ۔ باس ہے پروفیسر پینڈولم۔",
+          "after": "تم نے پروفیسر پینڈولم کو ہرا دیا!"
+        },
+        "fr-FR": {
+          "name": "Victoire sur le professeur Pendule",
+          "before": "Au niveau 80, bats le professeur Pendule.",
+          "after": "Tu as battu le professeur Pendule !"
         }
       }
     },
@@ -707,6 +917,21 @@
           "name": "擊敗沙漏船長",
           "before": "在第90關擊敗沙漏船長。",
           "after": "你擊敗了沙漏船長！"
+        },
+        "he": {
+          "name": "ניצחון על קפטן שעון־חול",
+          "before": "מנצחים את קפטן שעון־חול בשלב 90.",
+          "after": "ניצחת את קפטן שעון־חול!"
+        },
+        "ur-PK": {
+          "name": "کپتان ریت گھڑی کو ہرا دیا",
+          "before": "مرحلہ 90 میں باس کو ہراؤ۔ باس ہے کپتان ریت گھڑی۔",
+          "after": "تم نے کپتان ریت گھڑی کو ہرا دیا!"
+        },
+        "fr-FR": {
+          "name": "Victoire sur le capitaine Sablier",
+          "before": "Au niveau 90, bats le capitaine Sablier.",
+          "after": "Tu as battu le capitaine Sablier !"
         }
       }
     },
@@ -755,6 +980,21 @@
           "name": "擊敗克羅諾斯國王",
           "before": "在第100關擊敗克羅諾斯國王。",
           "after": "你擊敗了克羅諾斯國王！"
+        },
+        "he": {
+          "name": "ניצחון על המלך כרונוס",
+          "before": "מנצחים את המלך כרונוס בשלב 100.",
+          "after": "ניצחת את המלך כרונוס!"
+        },
+        "ur-PK": {
+          "name": "بادشاہ کرونوس کو ہرا دیا",
+          "before": "مرحلہ 100 میں باس کو ہراؤ۔ باس ہے بادشاہ کرونوس۔",
+          "after": "تم نے بادشاہ کرونوس کو ہرا دیا!"
+        },
+        "fr-FR": {
+          "name": "Victoire sur le roi Chronos",
+          "before": "Au niveau 100, bats le roi Chronos.",
+          "after": "Tu as battu le roi Chronos !"
         }
       }
     }

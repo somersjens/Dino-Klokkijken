@@ -12,7 +12,9 @@ struct DinoLanguageTag {
         let components = Locale.Components(identifier: identifier).languageComponents
         let locale = Locale.Language(identifier: identifier)
         language = locale.maximalIdentifier.split(separator: "-").first.map(String.init)?.lowercased() ?? ""
-        script = locale.script?.identifier
+        let resolvedScript = locale.script?.identifier
+        // Apple can identify Urdu's Nastaliq form as Aran and other Urdu resources as Arab.
+        script = language == "ur" && resolvedScript == "Aran" ? "Arab" : resolvedScript
         explicitScript = components.script?.identifier
         region = components.region?.identifier
     }
@@ -90,7 +92,21 @@ struct AppLanguage: Identifiable, Hashable, Sendable {
         timeZoneOrigin: "taipei", privacyFragment: "en", spokenTime: .traditionalChinese, timeVocabulary: .traditionalChinese,
         regionalTimeZoneCapitals: DinoTimeZoneJourney.taiwanCapitals, regionalTimeZoneMinimum: 30,
         interfaceLocale: "zh-Hant-TW")
-    static let all = [dutch, english, german, canadianEnglish, australianEnglish, saudiArabic, japanese, simplifiedChinese, traditionalChinese]
+    static let hebrew = AppLanguage(code: "he", displayName: "עברית", flag: "🇮🇱", bundleCode: "he",
+        inheritedBundles: [], formatLocale: "he-IL", dateLocale: "he-IL", voiceLocale: "he-IL",
+        timeZoneOrigin: "jerusalem", privacyFragment: "en", spokenTime: .hebrew, timeVocabulary: .hebrew,
+        regionalTimeZoneCapitals: DinoTimeZoneJourney.hebrewCapitals, regionalTimeZoneMinimum: 30,
+        teaches24HourConversion: true, interfaceLocale: "he-IL")
+    static let pakistaniUrdu = AppLanguage(code: "ur", displayName: "اردو", flag: "🇵🇰", bundleCode: "ur",
+        inheritedBundles: [], formatLocale: "ur-PK", dateLocale: "ur-PK", voiceLocale: "ur-PK",
+        timeZoneOrigin: "islamabad", privacyFragment: "en", spokenTime: .urdu, timeVocabulary: .urdu,
+        regionalTimeZoneCapitals: DinoTimeZoneJourney.pakistaniCapitals, regionalTimeZoneMinimum: 30,
+        interfaceLocale: "ur-PK")
+    static let french = AppLanguage(code: "fr", displayName: "Français (France)", flag: "🇫🇷", bundleCode: "fr",
+        inheritedBundles: [], formatLocale: "fr-FR", dateLocale: "fr-FR", voiceLocale: "fr-FR",
+        timeZoneOrigin: "paris", privacyFragment: "en", spokenTime: .french, timeVocabulary: .french)
+    static let all = [dutch, english, german, canadianEnglish, australianEnglish, saudiArabic, japanese,
+                      simplifiedChinese, traditionalChinese, hebrew, pakistaniUrdu, french]
     private static let byCode = Dictionary(uniqueKeysWithValues: all.map { ($0.code, $0) })
 
     static func named(_ identifier: String) -> Self? {

@@ -153,6 +153,13 @@ struct DigitalClockReading: Equatable, Sendable {
     var periodBeforeClock = false
     var periodSpacing = " "
     var localizedText: String?
+
+    func periodOnLeft(inRightToLeftInterface: Bool) -> Bool {
+        // A leading LRM keeps the whole clock together in left-to-right order.
+        let hasLeftToRightMark = localizedText?.hasPrefix("\u{200E}") == true
+        return periodBeforeClock != (inRightToLeftInterface && !hasLeftToRightMark)
+    }
+
     var text: String {
         if let localizedText { return localizedText }
         guard let period else { return "\(hour)\(separator)\(minute)" }

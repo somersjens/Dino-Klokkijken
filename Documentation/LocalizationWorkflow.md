@@ -37,6 +37,12 @@ Vereenvoudigd Chinees gebruikt `zh-Hans` voor de bundel en winkelpagina, `zh-Han
 
 Traditioneel Chinees gebruikt `zh-Hant` voor de bundel en winkelpagina, `zh-Hant-TW` voor notatie en `zh-TW` voor de voorleesstem. De teksten volgen het taalgebruik in Taiwan. De les gebruikt 點 voor het uur en 台北 is het vertrekpunt voor tijdzonevragen. [Traditioneel-Chinees lesprofiel](TraditionalChineseLocalization.md)
 
+Hebreeuws gebruikt `he` voor de bundel en winkelpagina en `he-IL` voor klok, datum en stem. Na het halve uur noemen de woordkaarten eerst de resterende minuten en dan het volgende uur. De tijdzoneles vertrekt uit Jeruzalem. [Hebreeuws lesprofiel](HebrewLocalization.md)
+
+Urdu gebruikt `ur` voor de bundel en `ur-PK` voor de winkelpagina, klok, datum en stemvoorkeur. De les gebruikt سوا, ساڑھے en پونے op de kwartiergrenzen en vertrekt voor tijdzonevragen uit Islamabad. [Pakistaans Urdu-lesprofiel](PakistaniUrduLocalization.md)
+
+Frans voor Frankrijk gebruikt `fr` voor de bundel en `fr-FR` voor de winkelpagina, klok, datum en voorkeursstem. In de wijzerles lees je *et quart*, *et demie* en *moins le quart*. De 24-uursles leest het volledige uur en de tijdzonevragen vertrekken uit Parijs. [Frans lesprofiel](FrenchLocalization.md)
+
 | Locales | Advies |
 | --- | --- |
 | `en-GB`, `en-US`, `en-AU`, `en-CA` | **Eén Engelse basis voor veel schermtekst en de kernles.** Deel bijvoorbeeld *half past seven* voor 07:30 in een analoge les. Bekijk per regio welke kwartier- en digitale formuleringen gangbaar zijn, wanneer een antwoordvariant meetelt en welke tijden kinderen met AM/PM oefenen. De huidige tekst gebruikt onder meer *analog* en *colors*. Controleer o.a. *analog/analogue*, *color/colour*, *practice/practise* in context en de titelvorm *tell time/tell the time*. Gebruik een stem die bij de geselecteerde variant past. Maak vier productpagina’s aan en hergebruik tekst die een regionale review doorstaat. Engeland noemt kwart over/voor en beide kloknotaties in zijn rekenprogramma. De Amerikaanse Common Core-standaard voor Grade 2 noemt expliciet a.m. en p.m. [Engels rekenprogramma](https://www.gov.uk/government/publications/national-curriculum-in-england-mathematics-programmes-of-study/national-curriculum-in-england-mathematics-programmes-of-study) · [Common Core 2.MD.C.7](https://www.thecorestandards.org/Math/Content/2/MD/C/7/) · [Apple over regionale stemmen](https://developer.apple.com/documentation/avfaudio/avspeechsynthesisvoice/language) |
