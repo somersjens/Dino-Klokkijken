@@ -5,5 +5,13 @@
 # Local build and test output.
 DerivedData/
 .build/
+.derived/
 *.xcresult/
+*.xcarchive/
+*.trace/
+/Documentation/*TestLogs/**/*.log
+
+# Local Xcode settings and macOS metadata.
+xcuserdata/
+*.xcuserstate
 .DS_Store
