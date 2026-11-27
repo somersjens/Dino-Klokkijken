@@ -76,6 +76,36 @@
             "state" : "translated",
             "value" : "Dino donne l’heure"
           }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino donne l’heure"
+          }
+        },
+        "es-MX" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino y el reloj"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Relógio do Dino"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Relógio do Dino"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino y el reloj"
+          }
         }
       }
     },
@@ -154,6 +184,36 @@
             "state" : "translated",
             "value" : "Dino donne l’heure"
           }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino donne l’heure"
+          }
+        },
+        "es-MX" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino y el reloj"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Relógio do Dino"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Relógio do Dino"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dino y el reloj"
+          }
         }
       }
     },
@@ -230,6 +290,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Affiche la progression et les étoiles des amis qui autorisent l’accès via Game Center."
+          }
+        },
+        "fr-CA" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Affiche la progression et les étoiles des amis qui autorisent l’accès dans Game Center."
+          }
+        },
+        "es-MX" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra el progreso y las estrellas de los amigos que dan permiso en Game Center."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra o progresso e as estrelas dos amigos que autorizam o acesso através do Game Center."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostra o progresso e as estrelas dos amigos que permitem o acesso pelo Game Center."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra el progreso y las estrellas de los amigos que dan permiso en Game Center."
           }
         }
       }

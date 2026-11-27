@@ -355,6 +355,205 @@ struct SpokenWordSlot: Sendable {
 }
 
 extension SpokenTimeLanguage {
+    static let spanish = hourThenDirection(
+        code: "es", hours: (0..<12).map { spanishClockHour($0 == 0 ? 12 : $0) },
+        expressionTitle: "Expresión", directionTitle: "Enlace",
+        exact: "en punto", past: "y", oneMinute: "un minuto",
+        quarter: "cuarto", quarterLabel: "cuarto", half: "media",
+        minuteWord: { spanishClockNumber($0) }
+    )
+
+    static let mexicanSpanish = Self(
+        code: "es-MX", hours: spanish.hours,
+        slots: [
+            .words(.init(id: "remainingMinutes", title: "Minutos", choiceIDs: (1..<30).map { "m\($0)" },
+                         words: Dictionary(uniqueKeysWithValues: (1..<30).map { minute in
+                             let count = switch minute {
+                             case 1: "un minuto"
+                             case 15: "cuarto"
+                             default: spanishClockNumber(minute)
+                             }
+                             return ("m\(minute)", "\(count) para")
+                         }), minuteValues: ["m1": 1])),
+            .hour(title: "Horas"),
+            .words(.init(id: "pastMinutes", title: "Minutos", choiceIDs: (0...30).map { "m\($0)" },
+                         words: ["m0": "en punto", "m1": "y un minuto", "m15": "y cuarto", "m30": "y media"],
+                         minuteValues: ["m0": 0]))
+        ],
+        minuteWord: { "y \(spanishClockNumber($0))" },
+        rule: { minute in
+            switch minute {
+            case 0:
+                return .init(tokens: ["-", "@", "m0"], referenceMinute: 0, region: .whole)
+            case 15:
+                return .init(tokens: ["-", "@", "m15"], referenceMinute: 0, region: .past,
+                             relation: "y", scaleLabel: "cuarto")
+            case 30:
+                return .init(tokens: ["-", "@", "m30"], referenceMinute: 0, region: .half,
+                             relation: "y", scaleLabel: "media")
+            case 1..<30:
+                return .init(tokens: ["-", "@", "m\(minute)"], referenceMinute: 0, region: .past, relation: "y")
+            default:
+                return .init(tokens: ["m\(60 - minute)", "+", "-"], referenceMinute: 60, region: .to,
+                             relation: "para", scaleLabel: minute == 45 ? "cuarto" : nil)
+            }
+        },
+        omitsUnusedSlots: true
+    )
+
+    static let europeanPortuguese = hourThenDirection(
+        code: "pt-PT", hours: (0..<12).map { hour in
+            portugueseClockNumber(hour == 0 ? 12 : hour, feminine: true)
+        },
+        expressionTitle: "Expressão", directionTitle: "Ligação",
+        exact: "em ponto", past: "e", oneMinute: "um minuto",
+        quarter: "um quarto", quarterLabel: "quarto", half: "meia",
+        minuteWord: { portugueseClockNumber($0) },
+        inflectHour: { hour, rule in hour == "uma" && rule.region == .whole ? "uma hora" : hour }
+    )
+
+    /// The hour is followed by either a fixed expression or a direction and amount.
+    private static func hourThenDirection(
+        code: String, hours: [String], expressionTitle: String, directionTitle: String,
+        exact: String, past: String, oneMinute: String, quarter: String, quarterLabel: String, half: String,
+        minuteWord: @escaping @Sendable (Int) -> String,
+        inflectHour: @escaping @Sendable (String, SpokenTimeRule) -> String = { hour, _ in hour }
+    ) -> Self {
+        Self(
+            code: code, hours: hours,
+            slots: [
+                .hour(title: "Horas"),
+                .words(.init(id: "expression", title: expressionTitle, choiceIDs: ["exact", "quarterPast", "half"],
+                             words: ["exact": exact, "quarterPast": "\(past) \(quarter)", "half": "\(past) \(half)"])),
+                .words(.init(id: "direction", title: directionTitle, choiceIDs: ["past", "to"],
+                             words: ["past": past, "to": "menos"])),
+                .words(.init(id: "minutes", title: "Minutos", choiceIDs: (1..<30).map { "m\($0)" },
+                             words: ["m1": oneMinute, "m15": quarter], minuteValues: ["m1": 1]))
+            ],
+            minuteWord: minuteWord,
+            rule: { minute in
+                switch minute {
+                case 0:
+                    return .init(tokens: ["@", "exact", "-", "-"], referenceMinute: 0, region: .whole)
+                case 30:
+                    return .init(tokens: ["@", "half", "-", "-"], referenceMinute: 0, region: .half,
+                                 relation: past, scaleLabel: half)
+                default:
+                    let beforeNextHour = minute > 30
+                    let count = beforeNextHour ? 60 - minute : minute
+                    return .init(tokens: [beforeNextHour ? "+" : "@", "-", beforeNextHour ? "to" : "past", "m\(count)"],
+                                 referenceMinute: beforeNextHour ? 60 : 0, region: beforeNextHour ? .to : .past,
+                                 relation: beforeNextHour ? "menos" : past, scaleLabel: count == 15 ? quarterLabel : nil)
+                }
+            },
+            tileStyle: .init(wrapsCompactWords: true),
+            inflectHour: inflectHour,
+            omitsUnusedSlots: true
+        )
+    }
+
+    static let brazilianPortuguese = Self(
+        code: "pt-BR", hours: (0..<12).map { hour in
+            portugueseClockNumber(hour == 0 ? 12 : hour, feminine: true)
+        },
+        slots: [
+            .words(.init(id: "remainingMinutes", title: "Minutos", choiceIDs: (1..<30).map { "m\($0)" },
+                         words: Dictionary(uniqueKeysWithValues: (1..<30).map { minute in
+                             let count = minute == 1 ? "um minuto" : portugueseClockNumber(minute, brazilian: true)
+                             return ("m\(minute)", "\(count) para")
+                         }), minuteValues: ["m1": 1])),
+            .hour(title: "Horas"),
+            .words(.init(id: "pastMinutes", title: "Minutos", choiceIDs: (0...30).map { "m\($0)" },
+                         words: ["m0": "em ponto", "m1": "e um minuto", "m30": "e meia"],
+                         minuteValues: ["m0": 0]))
+        ],
+        minuteWord: { "e \(portugueseClockNumber($0, brazilian: true))" },
+        rule: { minute in
+            switch minute {
+            case 0:
+                return .init(tokens: ["-", "@", "m0"], referenceMinute: 0, region: .whole)
+            case 1...30:
+                return .init(tokens: ["-", "@", "m\(minute)"], referenceMinute: 0,
+                             region: minute == 30 ? .half : .past, relation: "e",
+                             scaleLabel: minute == 30 ? "meia" : nil)
+            default:
+                return .init(tokens: ["m\(60 - minute)", "+", "-"], referenceMinute: 60, region: .to, relation: "para")
+            }
+        },
+        tileStyle: .init(wrapsCompactWords: true),
+        inflectHour: { hour, rule in rule.region == .to && hour != "uma" ? "as \(hour)" : hour },
+        omitsUnusedSlots: true
+    )
+
+    private static func portugueseClockNumber(_ value: Int, feminine: Bool = false, brazilian: Bool = false) -> String {
+        if brazilian {
+            switch value {
+            case 16: return "dezesseis"
+            case 17: return "dezessete"
+            case 19: return "dezenove"
+            default: break
+            }
+        }
+        let small = ["zero", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez",
+                     "onze", "doze", "treze", "catorze", "quinze", "dezasseis", "dezassete", "dezoito", "dezanove"]
+        let ones = value % 10
+        let unit = switch ones {
+        case 1 where feminine: "uma"
+        case 2 where feminine: "duas"
+        default: small[ones]
+        }
+        guard value >= 20 else { return value < 10 ? unit : small[value] }
+        let tens = ["vinte", "trinta", "quarenta", "cinquenta"][value / 10 - 2]
+        return ones == 0 ? tens : "\(tens) e \(unit)"
+    }
+
+    static func portugueseDigitalTime(_ time: ClockTime, brazilian: Bool = false) -> String {
+        let hour = switch time.hour {
+        case 0: "meia-noite"
+        case 1: "uma hora"
+        case 12: "meio-dia"
+        default: "\(portugueseClockNumber(time.hour, feminine: true, brazilian: brazilian)) horas"
+        }
+        switch time.minute {
+        case 0: return hour
+        case 1: return "\(hour) e um minuto"
+        default: return "\(hour) e \(portugueseClockNumber(time.minute, brazilian: brazilian)) minutos"
+        }
+    }
+
+    private static func spanishClockNumber(_ value: Int) -> String {
+        let small = ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve",
+                     "diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete",
+                     "dieciocho", "diecinueve", "veinte", "veintiuno", "veintidós", "veintitrés", "veinticuatro",
+                     "veinticinco", "veintiséis", "veintisiete", "veintiocho", "veintinueve"]
+        guard value >= 30 else { return small[value] }
+        let tens = ["treinta", "cuarenta", "cincuenta"][value / 10 - 3]
+        let ones = value % 10
+        return ones == 0 ? tens : "\(tens) y \(small[ones])"
+    }
+
+    private static func spanishClockHour(_ value: Int) -> String {
+        value == 1 ? "la una" : "las \(spanishClockNumber(value))"
+    }
+
+    static func spanishDigitalTime(_ time: ClockTime) -> String {
+        let hour = time.hour == 0 ? "las cero horas" : spanishClockHour(time.hour)
+        return switch time.minute {
+        case 0: hour
+        case 1: "\(hour) y un minuto"
+        default: "\(hour) y \(spanishClockNumber(time.minute))"
+        }
+    }
+
+    static func mexicanDigitalTime(_ time: ClockTime) -> String {
+        let hour = time.hour == 1 ? "la una" : "\(spanishClockHour(time.hour)) horas"
+        return switch time.minute {
+        case 0: hour
+        case 1: "\(hour) con un minuto"
+        default: "\(hour) con \(spanishClockNumber(time.minute)) minutos"
+        }
+    }
+
     static let french = Self(
         code: "fr", hours: (0..<12).map { frenchClockHour($0 == 0 ? 12 : $0) },
         slots: [

@@ -734,6 +734,41 @@ struct DinoTimeVocabulary: Sendable {
             return time.minute == 0 ? "\(hour) Uhr" : "\(hour) Uhr \(SpokenTimeLanguage.germanNumber(time.minute))"
         }
     )
+    static let spanish = Self(
+        dayPartSuffixes: [.night: "de la madrugada", .morning: "de la mañana",
+                          .afternoon: "de la tarde", .evening: "de la noche"],
+        spokenHours: { $0 == 1 ? "una hora" : "\($1) horas" },
+        spokenMinutes: { $0 == 1 ? "un minuto" : "\($1) minutos" },
+        joinSpokenUnits: { "\($0) y \($1)" },
+        shortHours: { "\($0)\u{00A0}h" }, shortMinutes: { "\($0)\u{00A0}min" },
+        zoneUnit: "h", atlasZoneUnit: "h", shortHoursColumnWidth: 32,
+        withDayPart: { time, part in
+            let suffix = part == "de la tarde" && time.hasPrefix("las doce ") ? "del mediodía" : part
+            return "\(time) \(suffix)"
+        },
+        formalClockTime: { SpokenTimeLanguage.spanishDigitalTime($0) },
+        decimalZoneHours: true, unitSpacing: "\u{00A0}"
+    )
+    static let mexicanSpanish: Self = {
+        var vocabulary = spanish
+        vocabulary.formalClockTime = { SpokenTimeLanguage.mexicanDigitalTime($0) }
+        return vocabulary
+    }()
+    static let europeanPortuguese = Self(
+        dayPartSuffixes: [.night: "da madrugada", .morning: "da manhã", .afternoon: "da tarde", .evening: "da noite"],
+        spokenHours: { count, number in count == 1 ? "uma hora" : "\(number) horas" },
+        spokenMinutes: { count, number in count == 1 ? "um minuto" : "\(number) minutos" },
+        joinSpokenUnits: { "\($0) e \($1)" },
+        shortHours: { "\($0)\u{00A0}h" }, shortMinutes: { "\($0)\u{00A0}min" },
+        zoneUnit: "h", atlasZoneUnit: "h", shortHoursColumnWidth: 32,
+        formalClockTime: { SpokenTimeLanguage.portugueseDigitalTime($0) },
+        decimalZoneHours: true, unitSpacing: "\u{00A0}"
+    )
+    static let brazilianPortuguese: Self = {
+        var vocabulary = europeanPortuguese
+        vocabulary.formalClockTime = { SpokenTimeLanguage.portugueseDigitalTime($0, brazilian: true) }
+        return vocabulary
+    }()
     static let french = Self(
         dayPartSuffixes: [.night: "de la nuit", .morning: "du matin",
                           .afternoon: "de l’après-midi", .evening: "du soir"],

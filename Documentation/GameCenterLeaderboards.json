@@ -20,7 +20,12 @@
       "titleZH-Hant": "第1關 · 成績",
       "titleHE": "שלב 1 · נקודות",
       "titleUR": "مرحلہ 1 کے پوائنٹس",
-      "titleFR": "Niveau 1 · points"
+      "titleFR": "Niveau 1 · points",
+      "titleFR-CA": "Niveau 1 · points",
+      "titleES": "Nivel 1 · puntos",
+      "titleES-MX": "Nivel 1 · puntos",
+      "titlePT-PT": "Nível 1 · pontos",
+      "titlePT-BR": "Nível 1 · pontos"
     },
     {
       "id": "dino.level.2.result.v1",
@@ -35,7 +40,12 @@
       "titleZH-Hant": "第2關 · 成績",
       "titleHE": "שלב 2 · נקודות",
       "titleUR": "مرحلہ 2 کے پوائنٹس",
-      "titleFR": "Niveau 2 · points"
+      "titleFR": "Niveau 2 · points",
+      "titleFR-CA": "Niveau 2 · points",
+      "titleES": "Nivel 2 · puntos",
+      "titleES-MX": "Nivel 2 · puntos",
+      "titlePT-PT": "Nível 2 · pontos",
+      "titlePT-BR": "Nível 2 · pontos"
     },
     {
       "id": "dino.level.3.result.v1",
@@ -50,7 +60,12 @@
       "titleZH-Hant": "第3關 · 成績",
       "titleHE": "שלב 3 · נקודות",
       "titleUR": "مرحلہ 3 کے پوائنٹس",
-      "titleFR": "Niveau 3 · points"
+      "titleFR": "Niveau 3 · points",
+      "titleFR-CA": "Niveau 3 · points",
+      "titleES": "Nivel 3 · puntos",
+      "titleES-MX": "Nivel 3 · puntos",
+      "titlePT-PT": "Nível 3 · pontos",
+      "titlePT-BR": "Nível 3 · pontos"
     },
     {
       "id": "dino.level.4.result.v1",
@@ -65,7 +80,12 @@
       "titleZH-Hant": "第4關 · 成績",
       "titleHE": "שלב 4 · נקודות",
       "titleUR": "مرحلہ 4 کے پوائنٹس",
-      "titleFR": "Niveau 4 · points"
+      "titleFR": "Niveau 4 · points",
+      "titleFR-CA": "Niveau 4 · points",
+      "titleES": "Nivel 4 · puntos",
+      "titleES-MX": "Nivel 4 · puntos",
+      "titlePT-PT": "Nível 4 · pontos",
+      "titlePT-BR": "Nível 4 · pontos"
     },
     {
       "id": "dino.level.5.result.v1",
@@ -80,7 +100,12 @@
       "titleZH-Hant": "第5關 · 成績",
       "titleHE": "שלב 5 · נקודות",
       "titleUR": "مرحلہ 5 کے پوائنٹس",
-      "titleFR": "Niveau 5 · points"
+      "titleFR": "Niveau 5 · points",
+      "titleFR-CA": "Niveau 5 · points",
+      "titleES": "Nivel 5 · puntos",
+      "titleES-MX": "Nivel 5 · puntos",
+      "titlePT-PT": "Nível 5 · pontos",
+      "titlePT-BR": "Nível 5 · pontos"
     },
     {
       "id": "dino.level.6.result.v1",
@@ -95,7 +120,12 @@
       "titleZH-Hant": "第6關 · 成績",
       "titleHE": "שלב 6 · נקודות",
       "titleUR": "مرحلہ 6 کے پوائنٹس",
-      "titleFR": "Niveau 6 · points"
+      "titleFR": "Niveau 6 · points",
+      "titleFR-CA": "Niveau 6 · points",
+      "titleES": "Nivel 6 · puntos",
+      "titleES-MX": "Nivel 6 · puntos",
+      "titlePT-PT": "Nível 6 · pontos",
+      "titlePT-BR": "Nível 6 · pontos"
     },
     {
       "id": "dino.level.7.result.v1",
@@ -110,7 +140,12 @@
       "titleZH-Hant": "第7關 · 成績",
       "titleHE": "שלב 7 · נקודות",
       "titleUR": "مرحلہ 7 کے پوائنٹس",
-      "titleFR": "Niveau 7 · points"
+      "titleFR": "Niveau 7 · points",
+      "titleFR-CA": "Niveau 7 · points",
+      "titleES": "Nivel 7 · puntos",
+      "titleES-MX": "Nivel 7 · puntos",
+      "titlePT-PT": "Nível 7 · pontos",
+      "titlePT-BR": "Nível 7 · pontos"
     },
     {
       "id": "dino.level.8.result.v1",
@@ -125,7 +160,12 @@
       "titleZH-Hant": "第8關 · 成績",
       "titleHE": "שלב 8 · נקודות",
       "titleUR": "مرحلہ 8 کے پوائنٹس",
-      "titleFR": "Niveau 8 · points"
+      "titleFR": "Niveau 8 · points",
+      "titleFR-CA": "Niveau 8 · points",
+      "titleES": "Nivel 8 · puntos",
+      "titleES-MX": "Nivel 8 · puntos",
+      "titlePT-PT": "Nível 8 · pontos",
+      "titlePT-BR": "Nível 8 · pontos"
     },
     {
       "id": "dino.level.9.result.v1",
@@ -140,7 +180,12 @@
       "titleZH-Hant": "第9關 · 成績",
       "titleHE": "שלב 9 · נקודות",
       "titleUR": "مرحلہ 9 کے پوائنٹس",
-      "titleFR": "Niveau 9 · points"
+      "titleFR": "Niveau 9 · points",
+      "titleFR-CA": "Niveau 9 · points",
+      "titleES": "Nivel 9 · puntos",
+      "titleES-MX": "Nivel 9 · puntos",
+      "titlePT-PT": "Nível 9 · pontos",
+      "titlePT-BR": "Nível 9 · pontos"
     },
     {
       "id": "dino.level.10.result.v1",
@@ -155,7 +200,12 @@
       "titleZH-Hant": "第10關 · 成績",
       "titleHE": "שלב 10 · נקודות",
       "titleUR": "مرحلہ 10 کے پوائنٹس",
-      "titleFR": "Niveau 10 · points"
+      "titleFR": "Niveau 10 · points",
+      "titleFR-CA": "Niveau 10 · points",
+      "titleES": "Nivel 10 · puntos",
+      "titleES-MX": "Nivel 10 · puntos",
+      "titlePT-PT": "Nível 10 · pontos",
+      "titlePT-BR": "Nível 10 · pontos"
     },
     {
       "id": "dino.progress.highest.v1",
@@ -170,7 +220,12 @@
       "titleZH-Hant": "已完成的最高關卡",
       "titleHE": "השלב הגבוה ביותר שהושלם",
       "titleUR": "سب سے آگے مکمل کیا گیا مرحلہ",
-      "titleFR": "Plus haut niveau terminé"
+      "titleFR": "Plus haut niveau terminé",
+      "titleFR-CA": "Plus haut niveau terminé",
+      "titleES": "Nivel más alto completado",
+      "titleES-MX": "Nivel más alto completado",
+      "titlePT-PT": "Nível mais alto concluído",
+      "titlePT-BR": "Nível mais alto concluído"
     },
     {
       "id": "dino.progress.stars.v1",
@@ -185,7 +240,12 @@
       "titleZH-Hant": "收集的星星",
       "titleHE": "כוכבים שנאספו",
       "titleUR": "جمع کیے گئے ستارے",
-      "titleFR": "Étoiles récoltées"
+      "titleFR": "Étoiles récoltées",
+      "titleFR-CA": "Étoiles ramassées",
+      "titleES": "Estrellas conseguidas",
+      "titleES-MX": "Estrellas reunidas",
+      "titlePT-PT": "Estrelas conquistadas",
+      "titlePT-BR": "Estrelas conquistadas"
     }
   ],
   "timingNote": "Additive optional boards. Same best-score descending integer settings; quality first, then fastest time. Existing result boards remain required and unchanged.",
@@ -201,7 +261,12 @@
       "titleZH-Hant": "第1關 · 成績與遊玩時間",
       "titleHE": "שלב 1 · נקודות וזמן משחק",
       "titleUR": "مرحلہ 1 کا نتیجہ اور وقت",
-      "titleFR": "Niveau 1 · résultat et temps"
+      "titleFR": "Niveau 1 · résultat et temps",
+      "titleFR-CA": "Niveau 1 · résultat et temps",
+      "titleES": "Nivel 1 · resultado y tiempo",
+      "titleES-MX": "Nivel 1 · resultado y tiempo",
+      "titlePT-PT": "Nível 1 · resultado e tempo",
+      "titlePT-BR": "Nível 1 · resultado e tempo"
     },
     {
       "id": "dino.level.2.timed.v1",
@@ -214,7 +279,12 @@
       "titleZH-Hant": "第2關 · 成績與遊玩時間",
       "titleHE": "שלב 2 · נקודות וזמן משחק",
       "titleUR": "مرحلہ 2 کا نتیجہ اور وقت",
-      "titleFR": "Niveau 2 · résultat et temps"
+      "titleFR": "Niveau 2 · résultat et temps",
+      "titleFR-CA": "Niveau 2 · résultat et temps",
+      "titleES": "Nivel 2 · resultado y tiempo",
+      "titleES-MX": "Nivel 2 · resultado y tiempo",
+      "titlePT-PT": "Nível 2 · resultado e tempo",
+      "titlePT-BR": "Nível 2 · resultado e tempo"
     },
     {
       "id": "dino.level.3.timed.v1",
@@ -227,7 +297,12 @@
       "titleZH-Hant": "第3關 · 成績與遊玩時間",
       "titleHE": "שלב 3 · נקודות וזמן משחק",
       "titleUR": "مرحلہ 3 کا نتیجہ اور وقت",
-      "titleFR": "Niveau 3 · résultat et temps"
+      "titleFR": "Niveau 3 · résultat et temps",
+      "titleFR-CA": "Niveau 3 · résultat et temps",
+      "titleES": "Nivel 3 · resultado y tiempo",
+      "titleES-MX": "Nivel 3 · resultado y tiempo",
+      "titlePT-PT": "Nível 3 · resultado e tempo",
+      "titlePT-BR": "Nível 3 · resultado e tempo"
     },
     {
       "id": "dino.level.4.timed.v1",
@@ -240,7 +315,12 @@
       "titleZH-Hant": "第4關 · 成績與遊玩時間",
       "titleHE": "שלב 4 · נקודות וזמן משחק",
       "titleUR": "مرحلہ 4 کا نتیجہ اور وقت",
-      "titleFR": "Niveau 4 · résultat et temps"
+      "titleFR": "Niveau 4 · résultat et temps",
+      "titleFR-CA": "Niveau 4 · résultat et temps",
+      "titleES": "Nivel 4 · resultado y tiempo",
+      "titleES-MX": "Nivel 4 · resultado y tiempo",
+      "titlePT-PT": "Nível 4 · resultado e tempo",
+      "titlePT-BR": "Nível 4 · resultado e tempo"
     },
     {
       "id": "dino.level.5.timed.v1",
@@ -253,7 +333,12 @@
       "titleZH-Hant": "第5關 · 成績與遊玩時間",
       "titleHE": "שלב 5 · נקודות וזמן משחק",
       "titleUR": "مرحلہ 5 کا نتیجہ اور وقت",
-      "titleFR": "Niveau 5 · résultat et temps"
+      "titleFR": "Niveau 5 · résultat et temps",
+      "titleFR-CA": "Niveau 5 · résultat et temps",
+      "titleES": "Nivel 5 · resultado y tiempo",
+      "titleES-MX": "Nivel 5 · resultado y tiempo",
+      "titlePT-PT": "Nível 5 · resultado e tempo",
+      "titlePT-BR": "Nível 5 · resultado e tempo"
     },
     {
       "id": "dino.level.6.timed.v1",
@@ -266,7 +351,12 @@
       "titleZH-Hant": "第6關 · 成績與遊玩時間",
       "titleHE": "שלב 6 · נקודות וזמן משחק",
       "titleUR": "مرحلہ 6 کا نتیجہ اور وقت",
-      "titleFR": "Niveau 6 · résultat et temps"
+      "titleFR": "Niveau 6 · résultat et temps",
+      "titleFR-CA": "Niveau 6 · résultat et temps",
+      "titleES": "Nivel 6 · resultado y tiempo",
+      "titleES-MX": "Nivel 6 · resultado y tiempo",
+      "titlePT-PT": "Nível 6 · resultado e tempo",
+      "titlePT-BR": "Nível 6 · resultado e tempo"
     },
     {
       "id": "dino.level.7.timed.v1",
@@ -279,7 +369,12 @@
       "titleZH-Hant": "第7關 · 成績與遊玩時間",
       "titleHE": "שלב 7 · נקודות וזמן משחק",
       "titleUR": "مرحلہ 7 کا نتیجہ اور وقت",
-      "titleFR": "Niveau 7 · résultat et temps"
+      "titleFR": "Niveau 7 · résultat et temps",
+      "titleFR-CA": "Niveau 7 · résultat et temps",
+      "titleES": "Nivel 7 · resultado y tiempo",
+      "titleES-MX": "Nivel 7 · resultado y tiempo",
+      "titlePT-PT": "Nível 7 · resultado e tempo",
+      "titlePT-BR": "Nível 7 · resultado e tempo"
     },
     {
       "id": "dino.level.8.timed.v1",
@@ -292,7 +387,12 @@
       "titleZH-Hant": "第8關 · 成績與遊玩時間",
       "titleHE": "שלב 8 · נקודות וזמן משחק",
       "titleUR": "مرحلہ 8 کا نتیجہ اور وقت",
-      "titleFR": "Niveau 8 · résultat et temps"
+      "titleFR": "Niveau 8 · résultat et temps",
+      "titleFR-CA": "Niveau 8 · résultat et temps",
+      "titleES": "Nivel 8 · resultado y tiempo",
+      "titleES-MX": "Nivel 8 · resultado y tiempo",
+      "titlePT-PT": "Nível 8 · resultado e tempo",
+      "titlePT-BR": "Nível 8 · resultado e tempo"
     },
     {
       "id": "dino.level.9.timed.v1",
@@ -305,7 +405,12 @@
       "titleZH-Hant": "第9關 · 成績與遊玩時間",
       "titleHE": "שלב 9 · נקודות וזמן משחק",
       "titleUR": "مرحلہ 9 کا نتیجہ اور وقت",
-      "titleFR": "Niveau 9 · résultat et temps"
+      "titleFR": "Niveau 9 · résultat et temps",
+      "titleFR-CA": "Niveau 9 · résultat et temps",
+      "titleES": "Nivel 9 · resultado y tiempo",
+      "titleES-MX": "Nivel 9 · resultado y tiempo",
+      "titlePT-PT": "Nível 9 · resultado e tempo",
+      "titlePT-BR": "Nível 9 · resultado e tempo"
     },
     {
       "id": "dino.level.10.timed.v1",
@@ -318,7 +423,12 @@
       "titleZH-Hant": "第10關 · 成績與遊玩時間",
       "titleHE": "שלב 10 · נקודות וזמן משחק",
       "titleUR": "مرحلہ 10 کا نتیجہ اور وقت",
-      "titleFR": "Niveau 10 · résultat et temps"
+      "titleFR": "Niveau 10 · résultat et temps",
+      "titleFR-CA": "Niveau 10 · résultat et temps",
+      "titleES": "Nivel 10 · resultado y tiempo",
+      "titleES-MX": "Nivel 10 · resultado y tiempo",
+      "titlePT-PT": "Nível 10 · resultado e tempo",
+      "titlePT-BR": "Nível 10 · resultado e tempo"
     }
   ],
   "visibilityLeaderboard": {
@@ -338,7 +448,12 @@
     "titleZH-Hant": "成績可見範圍",
     "titleHE": "הצגת תוצאות לחברים",
     "titleUR": "دوستوں کو دکھائے جانے والے نتائج",
-    "titleFR": "Visibilité du score"
+    "titleFR": "Visibilité du score",
+    "titleFR-CA": "Visibilité du score",
+    "titleES": "Visibilidad de la puntuación",
+    "titleES-MX": "Visibilidad de la puntuación",
+    "titlePT-PT": "Perfil de amigos do Dino",
+    "titlePT-BR": "Perfil de amigos do Dino"
   },
   "defaultLeaderboardID": "dino.progress.stars.v1",
   "appearanceLeaderboards": [
@@ -360,7 +475,12 @@
       "titleZH-Hant": "恐龍的頭巾和背刺",
       "titleHE": "צבעי הדינו: בנדנה וקוצים",
       "titleUR": "ڈائنو کا سر کا رومال اور کانٹے",
-      "titleFR": "Bandana et pointes de Dino"
+      "titleFR": "Bandana et pointes de Dino",
+      "titleFR-CA": "Bandana et pointes de Dino",
+      "titleES": "Pañuelo y púas de Dino",
+      "titleES-MX": "Paliacate y púas de Dino",
+      "titlePT-PT": "Lenço e espinhos do Dino",
+      "titlePT-BR": "Lenço e espinhos do Dino"
     },
     {
       "id": "dino.appearance.secondary.v1",
@@ -380,7 +500,12 @@
       "titleZH-Hant": "恐龍的身體和肚皮",
       "titleHE": "צבעי הדינו: גוף ובטן",
       "titleUR": "ڈائنو کا جسم اور پیٹ",
-      "titleFR": "Corps et ventre de Dino"
+      "titleFR": "Corps et ventre de Dino",
+      "titleFR-CA": "Corps et ventre de Dino",
+      "titleES": "Cuerpo y barriga de Dino",
+      "titleES-MX": "Cuerpo y panza de Dino",
+      "titlePT-PT": "Corpo e barriga do Dino",
+      "titlePT-BR": "Corpo e barriga do Dino"
     }
   ]
 }

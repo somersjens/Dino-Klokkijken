@@ -7984,6 +7984,31 @@ final class DinoUITests: XCTestCase {
                                   title: "Crée ton Dino", settings: "Réglages")
     }
 
+    func testCanadianFrenchOnboardingAndStoredLanguage() {
+        assertLocalizedOnboarding("fr-CA", locale: "fr_CA", code: "fr-CA",
+                                  title: "Crée ton Dino", settings: "Réglages")
+    }
+
+    func testSpanishOnboardingAndStoredLanguage() {
+        assertLocalizedOnboarding("es-ES", locale: "es_ES", code: "es",
+                                  title: "Crea tu Dino", settings: "Ajustes")
+    }
+
+    func testMexicanSpanishOnboardingAndStoredLanguage() {
+        assertLocalizedOnboarding("es-MX", locale: "es_MX", code: "es-MX",
+                                  title: "Crea tu propio Dino", settings: "Configuración")
+    }
+
+    func testEuropeanPortugueseOnboardingAndStoredLanguage() {
+        assertLocalizedOnboarding("pt-PT", locale: "pt_PT", code: "pt-PT",
+                                  title: "Personaliza o teu Dino", settings: "Definições")
+    }
+
+    func testBrazilianPortugueseOnboardingAndStoredLanguage() {
+        assertLocalizedOnboarding("pt-BR", locale: "pt_BR", code: "pt-BR",
+                                  title: "Personalize seu Dino", settings: "Ajustes")
+    }
+
     private func assertLocalizedOnboarding(_ deviceLanguage: String, locale: String, code: String,
                                          title: String, settings: String) {
         launchUsingDeviceLanguage(deviceLanguage, locale: locale)
@@ -8043,6 +8068,66 @@ final class DinoUITests: XCTestCase {
                                  force24Hours: true)
     }
 
+    func testCanadianFrench12HourWordTilesAndFeedback() {
+        assertLocalizedWordTiles("fr-CA", locale: "fr_CA", code: "fr-CA",
+                                 hourTitle: "Heures", title: "Compose l’heure avec les cartes")
+    }
+
+    func testSpanish12HourWordTilesAndFeedback() {
+        assertLocalizedWordTiles("es-ES", locale: "es_ES", code: "es",
+                                 hourTitle: "Horas", title: "Completa la frase con la hora que marca el reloj")
+    }
+
+    func testMexicanSpanishWordTilesSayMinutesBeforeTheHour() throws {
+        let configuration = DinoPracticeConfiguration(time: .minutes, order: .specific(.sayTime))
+        let questionSeed = try XCTUnwrap((1...100).map(UInt64.init).first { seed in
+            var generator = DinoPracticeGenerator(configuration: configuration, seed: seed, language: "es-MX")
+            return generator.next(index: 0).target.minute > 30
+        })
+        assertLocalizedWordTiles("es-MX", locale: "es_MX", code: "es-MX",
+                                 hourTitle: "Horas", title: "Arma la frase con la hora del reloj",
+                                 questionSeed: questionSeed, firstSlotTitle: "Minutos")
+    }
+
+    func testEuropeanPortugueseWordTilesNameTheNextHour() throws {
+        let code = "pt-PT"
+        let configuration = DinoPracticeConfiguration(time: .minutes, order: .specific(.sayTime))
+        let questionSeed = try XCTUnwrap((1...100).map(UInt64.init).first { seed in
+            var generator = DinoPracticeGenerator(configuration: configuration, seed: seed, language: code)
+            return generator.next(index: 0).target.minute > 30
+        })
+        assertLocalizedWordTiles(code, locale: "pt_PT", code: code, hourTitle: "Horas",
+                                 title: "Completa a frase com a hora que o relógio mostra",
+                                 questionSeed: questionSeed, firstSlotTitle: "Horas",
+                                 secondRowChoices: ["e", "menos"])
+    }
+
+    func testEuropeanPortugueseWholeHourWordTiles() throws {
+        let code = "pt-PT"
+        let configuration = DinoPracticeConfiguration(time: .whole, order: .specific(.sayTime))
+        let questionSeed = try XCTUnwrap((1...100).map(UInt64.init).first { seed in
+            var generator = DinoPracticeGenerator(configuration: configuration, seed: seed, language: code)
+            return generator.next(index: 0).target.hour == 6
+        })
+        assertLocalizedWordTiles(code, locale: "pt_PT", code: code, hourTitle: "Horas",
+                                 title: "Completa a frase com a hora que o relógio mostra",
+                                 force24Hours: true, questionSeed: questionSeed, firstSlotTitle: "Horas",
+                                 secondRowChoices: ["em ponto", "e um quarto", "e meia"], time: .whole)
+        XCTAssertEqual(app.staticTexts["question.spoken.slot.1"].label, "Expressão")
+    }
+
+    func testBrazilianPortugueseWordTilesStartWithRemainingMinutes() throws {
+        let code = "pt-BR"
+        let configuration = DinoPracticeConfiguration(time: .minutes, order: .specific(.sayTime))
+        let questionSeed = try XCTUnwrap((1...100).map(UInt64.init).first { seed in
+            var generator = DinoPracticeGenerator(configuration: configuration, seed: seed, language: code)
+            return generator.next(index: 0).target.minute > 30
+        })
+        assertLocalizedWordTiles(code, locale: "pt_BR", code: code, hourTitle: "Horas",
+                                 title: "Monte a frase com a hora que o relógio mostra",
+                                 questionSeed: questionSeed, firstSlotTitle: "Minutos")
+    }
+
     func testFrenchWordTilesFollowThe12HourSetting() {
         app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
         app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "sayTime"
@@ -8057,12 +8142,16 @@ final class DinoUITests: XCTestCase {
     }
 
     private func assertLocalizedWordTiles(_ deviceLanguage: String, locale: String, code: String,
-                                        hourTitle: String, title: String, force24Hours: Bool = false) {
+                                        hourTitle: String, title: String, force24Hours: Bool = false,
+                                        questionSeed: UInt64? = nil, firstSlotTitle: String? = nil,
+                                        secondRowChoices: [String] = [], time: DinoPracticeTime = .minutes) {
         app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
         app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "sayTime"
-        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "minutes"
+        app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = time.rawValue
+        let seed = questionSeed ?? self.seed
+        app.launchEnvironment["DINO_TEST_SEED"] = String(seed)
         launchUsingDeviceLanguage(deviceLanguage, locale: locale, force24Hours: force24Hours)
-        var generator = DinoPracticeGenerator(configuration: .init(time: .minutes, order: .specific(.sayTime)),
+        var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(.sayTime)),
                                                seed: seed, language: code)
         let question = generator.next(index: 0)
         let prompt = question.spokenPrompt!
@@ -8073,6 +8162,13 @@ final class DinoUITests: XCTestCase {
         XCTAssertEqual(clock.label, question.target.digitalReading(notation: notation, languageCode: code).text)
         let hourSlot = try! XCTUnwrap(prompt.slots.firstIndex { $0.id == "hour" })
         XCTAssertEqual(app.staticTexts["question.spoken.slot.\(hourSlot)"].label, hourTitle)
+        if let firstSlotTitle {
+            XCTAssertEqual(app.staticTexts["question.spoken.slot.0"].label, firstSlotTitle)
+            saveScreenshot("\(code)-word-tiles-\(time.rawValue)")
+        }
+        for (index, word) in secondRowChoices.enumerated() {
+            XCTAssertEqual(app.buttons["question.spoken.1.\(index)"].label, word)
+        }
         if profile.runsRightToLeft {
             let first = app.buttons["question.spoken.0.0"]
             let last = app.buttons["question.spoken.0.2"]
@@ -8099,17 +8195,17 @@ final class DinoUITests: XCTestCase {
     }
 
     func testSimplifiedChineseTimeZoneStartsInBeijingInBothOrientations() {
-        assertChineseTimeZone("zh-Hans-CN", locale: "zh_CN", origin: "北京",
-                              destinations: ["东京", "首尔", "河内", "曼谷"])
+        assertLocalizedTimeZone("zh-Hans-CN", locale: "zh_CN", origin: "北京",
+                                destinations: ["东京", "首尔", "河内", "曼谷"], questionMark: "？")
     }
 
     func testTraditionalChineseTimeZoneStartsInTaipeiInBothOrientations() {
-        assertChineseTimeZone("zh-TW", locale: "zh_TW", origin: "台北",
-                              destinations: ["東京", "首爾", "河內", "曼谷"])
+        assertLocalizedTimeZone("zh-TW", locale: "zh_TW", origin: "台北",
+                                destinations: ["東京", "首爾", "河內", "曼谷"], questionMark: "？")
     }
 
-    private func assertChineseTimeZone(_ deviceLanguage: String, locale: String, origin: String,
-                                       destinations: [String]) {
+    private func assertLocalizedTimeZone(_ deviceLanguage: String, locale: String, origin: String,
+                                         destinations: [String], questionMark: String = "?") {
         app.launchEnvironment["DINO_TEST_COMPLETED_WORLDS"] = "0"
         app.launchEnvironment["DINO_TEST_PRACTICE_TYPE"] = "timeZone"
         app.launchEnvironment["DINO_TEST_PRACTICE_TIME"] = "whole"
@@ -8119,7 +8215,7 @@ final class DinoUITests: XCTestCase {
             waitUntilLabel("question.timeZone.originName", equals: origin, timeout: 12)
             let destination = app.staticTexts["question.timeZone.destinationName"]
             XCTAssertTrue(destinations.contains(destination.label))
-            XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.targetTime"].label, "？")
+            XCTAssertEqual(app.descendants(matching: .any)["question.timeZone.targetTime"].label, questionMark)
         }
     }
 
@@ -8141,6 +8237,50 @@ final class DinoUITests: XCTestCase {
 
     func testFrench24HourLessonReadsTheFullHour() {
         assertFull24HourLesson("fr-FR", locale: "fr_FR", code: "fr")
+    }
+
+    func testCanadianFrench24HourLessonReadsTheFullHour() {
+        assertFull24HourLesson("fr-CA", locale: "fr_CA", code: "fr-CA")
+    }
+
+    func testSpanish24HourLessonReadsTheFullHour() {
+        assertFull24HourLesson("es-ES", locale: "es_ES", code: "es")
+    }
+
+    func testMexicanSpanish24HourLessonReadsTheFullHour() {
+        assertFull24HourLesson("es-MX", locale: "es_MX", code: "es-MX")
+    }
+
+    func testEuropeanPortuguese24HourLessonReadsTheFullHour() {
+        assertFull24HourLesson("pt-PT", locale: "pt_PT", code: "pt-PT")
+    }
+
+    func testEuropeanPortugueseTimeZoneStartsInLisbonInBothOrientations() {
+        assertLocalizedTimeZone("pt-PT", locale: "pt_PT", origin: "Lisboa",
+                                destinations: ["Amesterdão", "Paris", "Berlim", "Bruxelas", "Madrid", "Roma"])
+    }
+
+    func testBrazilianPortuguese24HourLessonReadsTheFullHour() {
+        assertFull24HourLesson("pt-BR", locale: "pt_BR", code: "pt-BR")
+    }
+
+    func testBrazilianPortugueseTimeZoneStartsInBrasiliaInBothOrientations() {
+        assertLocalizedTimeZone("pt-BR", locale: "pt_BR", origin: "Brasília",
+                                destinations: ["Cuiabá", "Manaus", "Porto Velho"])
+    }
+
+    func testMexicanSpanishTimeZoneStartsInMexicoCityInBothOrientations() {
+        assertLocalizedTimeZone("es-MX", locale: "es_MX", origin: "Ciudad de México",
+                                destinations: ["Cancún", "Hermosillo", "Tijuana", "Ciudad de Panamá", "Washington", "Ottawa"])
+    }
+
+    func testSpanishTimeZoneStartsInMadridInBothOrientations() {
+        assertLocalizedTimeZone("es-ES", locale: "es_ES", origin: "Madrid",
+                                destinations: ["Londres", "Dublín", "Lisboa", "Atenas", "Helsinki", "Ankara", "El Cairo"])
+    }
+
+    func testCanadianFrenchTimeZoneStartsInOttawaInBothOrientations() {
+        assertLocalizedTimeZone("fr-CA", locale: "fr_CA", origin: "Ottawa", destinations: ["Halifax", "Regina"])
     }
 
     func testFrenchTimeZoneStartsInParisInBothOrientations() {

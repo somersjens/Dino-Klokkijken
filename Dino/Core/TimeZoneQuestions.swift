@@ -180,6 +180,21 @@ struct DinoTimeZoneJourney: Equatable, Sendable {
         .init(id: "stJohns", dutchName: "St. John’s", englishName: "St. John’s", countryCode: "CAN", timeZoneID: "America/St_Johns", latitude: 47.56, longitude: -52.71)
     ]
 
+    static let mexicanCities: [DinoCapital] = [
+        .init(id: "mexicoCity", dutchName: "Mexico-Stad", englishName: "Mexico City", countryCode: "MEX", timeZoneID: "America/Mexico_City", latitude: 19.43, longitude: -99.13),
+        .init(id: "cancun", dutchName: "Cancún", englishName: "Cancún", countryCode: "MEX", timeZoneID: "America/Cancun", latitude: 21.16, longitude: -86.85),
+        .init(id: "hermosillo", dutchName: "Hermosillo", englishName: "Hermosillo", countryCode: "MEX", timeZoneID: "America/Hermosillo", latitude: 29.07, longitude: -110.96),
+        .init(id: "tijuana", dutchName: "Tijuana", englishName: "Tijuana", countryCode: "MEX", timeZoneID: "America/Tijuana", latitude: 32.51, longitude: -117.04),
+        .init(id: "panamaCity", dutchName: "Panama-Stad", englishName: "Panama City", countryCode: "PAN", timeZoneID: "America/Panama", latitude: 8.98, longitude: -79.52)
+    ]
+
+    static let brazilianCities: [DinoCapital] = [
+        .init(id: "manaus", dutchName: "Manaus", englishName: "Manaus", countryCode: "BRA", timeZoneID: "America/Manaus", latitude: -3.12, longitude: -60.02),
+        .init(id: "cuiaba", dutchName: "Cuiabá", englishName: "Cuiabá", countryCode: "BRA", timeZoneID: "America/Cuiaba", latitude: -15.60, longitude: -56.10),
+        .init(id: "portoVelho", dutchName: "Porto Velho", englishName: "Porto Velho", countryCode: "BRA", timeZoneID: "America/Porto_Velho", latitude: -8.76, longitude: -63.90),
+        .init(id: "rioBranco", dutchName: "Rio Branco", englishName: "Rio Branco", countryCode: "BRA", timeZoneID: "America/Rio_Branco", latitude: -9.97, longitude: -67.81)
+    ]
+
     // State and territory capitals demonstrate the half-hour zones and differences in daylight saving.
     static let australianCapitals: [DinoCapital] = [
         .init(id: "brisbane", dutchName: "Brisbane", englishName: "Brisbane", countryCode: "AUS", timeZoneID: "Australia/Brisbane", latitude: -27.47, longitude: 153.03),

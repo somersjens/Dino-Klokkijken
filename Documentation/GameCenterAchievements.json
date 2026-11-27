@@ -60,6 +60,31 @@
           "name": "50 étoiles",
           "before": "Récolte 50 étoiles au fil de l’aventure.",
           "after": "Tu as récolté 50 étoiles !"
+        },
+        "fr-CA": {
+          "name": "50 étoiles",
+          "before": "Ramasse 50 étoiles au fil de l’aventure.",
+          "after": "Tu as ramassé 50 étoiles!"
+        },
+        "es-ES": {
+          "name": "50 estrellas",
+          "before": "Consigue 50 estrellas durante la aventura.",
+          "after": "¡Has conseguido 50 estrellas!"
+        },
+        "es-MX": {
+          "name": "50 estrellas",
+          "before": "Junta 50 estrellas durante la aventura.",
+          "after": "¡Juntaste 50 estrellas!"
+        },
+        "pt-PT": {
+          "name": "50 estrelas",
+          "before": "Junta 50 estrelas ao longo da aventura.",
+          "after": "Juntaste 50 estrelas!"
+        },
+        "pt-BR": {
+          "name": "50 estrelas",
+          "before": "Junte 50 estrelas durante a aventura.",
+          "after": "Você juntou 50 estrelas!"
         }
       }
     },
@@ -121,6 +146,31 @@
           "name": "100 étoiles",
           "before": "Récolte 100 étoiles au fil de l’aventure.",
           "after": "Tu as récolté 100 étoiles !"
+        },
+        "fr-CA": {
+          "name": "100 étoiles",
+          "before": "Ramasse 100 étoiles au fil de l’aventure.",
+          "after": "Tu as ramassé 100 étoiles!"
+        },
+        "es-ES": {
+          "name": "100 estrellas",
+          "before": "Consigue 100 estrellas durante la aventura.",
+          "after": "¡Has conseguido 100 estrellas!"
+        },
+        "es-MX": {
+          "name": "100 estrellas",
+          "before": "Junta 100 estrellas durante la aventura.",
+          "after": "¡Juntaste 100 estrellas!"
+        },
+        "pt-PT": {
+          "name": "100 estrelas",
+          "before": "Junta 100 estrelas ao longo da aventura.",
+          "after": "Juntaste 100 estrelas!"
+        },
+        "pt-BR": {
+          "name": "100 estrelas",
+          "before": "Junte 100 estrelas durante a aventura.",
+          "after": "Você juntou 100 estrelas!"
         }
       }
     },
@@ -182,6 +232,31 @@
           "name": "150 étoiles",
           "before": "Récolte 150 étoiles au fil de l’aventure.",
           "after": "Tu as récolté 150 étoiles !"
+        },
+        "fr-CA": {
+          "name": "150 étoiles",
+          "before": "Ramasse 150 étoiles au fil de l’aventure.",
+          "after": "Tu as ramassé 150 étoiles!"
+        },
+        "es-ES": {
+          "name": "150 estrellas",
+          "before": "Consigue 150 estrellas durante la aventura.",
+          "after": "¡Has conseguido 150 estrellas!"
+        },
+        "es-MX": {
+          "name": "150 estrellas",
+          "before": "Junta 150 estrellas durante la aventura.",
+          "after": "¡Juntaste 150 estrellas!"
+        },
+        "pt-PT": {
+          "name": "150 estrelas",
+          "before": "Junta 150 estrelas ao longo da aventura.",
+          "after": "Juntaste 150 estrelas!"
+        },
+        "pt-BR": {
+          "name": "150 estrelas",
+          "before": "Junte 150 estrelas durante a aventura.",
+          "after": "Você juntou 150 estrelas!"
         }
       }
     },
@@ -243,6 +318,31 @@
           "name": "200 étoiles",
           "before": "Récolte 200 étoiles au fil de l’aventure.",
           "after": "Tu as récolté 200 étoiles !"
+        },
+        "fr-CA": {
+          "name": "200 étoiles",
+          "before": "Ramasse 200 étoiles au fil de l’aventure.",
+          "after": "Tu as ramassé 200 étoiles!"
+        },
+        "es-ES": {
+          "name": "200 estrellas",
+          "before": "Consigue 200 estrellas durante la aventura.",
+          "after": "¡Has conseguido 200 estrellas!"
+        },
+        "es-MX": {
+          "name": "200 estrellas",
+          "before": "Junta 200 estrellas durante la aventura.",
+          "after": "¡Juntaste 200 estrellas!"
+        },
+        "pt-PT": {
+          "name": "200 estrelas",
+          "before": "Junta 200 estrelas ao longo da aventura.",
+          "after": "Juntaste 200 estrelas!"
+        },
+        "pt-BR": {
+          "name": "200 estrelas",
+          "before": "Junte 200 estrelas durante a aventura.",
+          "after": "Você juntou 200 estrelas!"
         }
       }
     },
@@ -304,6 +404,31 @@
           "name": "250 étoiles",
           "before": "Récolte 250 étoiles au fil de l’aventure.",
           "after": "Tu as récolté 250 étoiles !"
+        },
+        "fr-CA": {
+          "name": "250 étoiles",
+          "before": "Ramasse 250 étoiles au fil de l’aventure.",
+          "after": "Tu as ramassé 250 étoiles!"
+        },
+        "es-ES": {
+          "name": "250 estrellas",
+          "before": "Consigue 250 estrellas durante la aventura.",
+          "after": "¡Has conseguido 250 estrellas!"
+        },
+        "es-MX": {
+          "name": "250 estrellas",
+          "before": "Junta 250 estrellas durante la aventura.",
+          "after": "¡Juntaste 250 estrellas!"
+        },
+        "pt-PT": {
+          "name": "250 estrelas",
+          "before": "Junta 250 estrelas ao longo da aventura.",
+          "after": "Juntaste 250 estrelas!"
+        },
+        "pt-BR": {
+          "name": "250 estrelas",
+          "before": "Junte 250 estrelas durante a aventura.",
+          "after": "Você juntou 250 estrelas!"
         }
       }
     },
@@ -365,6 +490,31 @@
           "name": "300 étoiles",
           "before": "Récolte 300 étoiles au fil de l’aventure.",
           "after": "Tu as récolté 300 étoiles !"
+        },
+        "fr-CA": {
+          "name": "300 étoiles",
+          "before": "Ramasse 300 étoiles au fil de l’aventure.",
+          "after": "Tu as ramassé 300 étoiles!"
+        },
+        "es-ES": {
+          "name": "300 estrellas",
+          "before": "Consigue 300 estrellas durante la aventura.",
+          "after": "¡Has conseguido 300 estrellas!"
+        },
+        "es-MX": {
+          "name": "300 estrellas",
+          "before": "Junta 300 estrellas durante la aventura.",
+          "after": "¡Juntaste 300 estrellas!"
+        },
+        "pt-PT": {
+          "name": "300 estrelas",
+          "before": "Junta 300 estrelas ao longo da aventura.",
+          "after": "Juntaste 300 estrelas!"
+        },
+        "pt-BR": {
+          "name": "300 estrelas",
+          "before": "Junte 300 estrelas durante a aventura.",
+          "after": "Você juntou 300 estrelas!"
         }
       }
     },
@@ -428,6 +578,31 @@
           "name": "Victoire sur Tiko",
           "before": "Au niveau 10, bats Tiko, le gardien de la jungle.",
           "after": "Tu as battu Tiko, le gardien de la jungle !"
+        },
+        "fr-CA": {
+          "name": "Victoire sur Tiko",
+          "before": "Au niveau 10, bats Tiko, le gardien de la jungle.",
+          "after": "Tu as battu Tiko, le gardien de la jungle!"
+        },
+        "es-ES": {
+          "name": "Victoria ante Tiko",
+          "before": "Vence a Tiko para completar este mundo.",
+          "after": "¡Has vencido a Tiko y completado el mundo!"
+        },
+        "es-MX": {
+          "name": "Victoria contra Tiko",
+          "before": "Vence a Tiko para completar este mundo.",
+          "after": "¡Venciste a Tiko y completaste el mundo!"
+        },
+        "pt-PT": {
+          "name": "Tiko: vitória",
+          "before": "Vence Tiko, o Guardião da Selva no nível 10.",
+          "after": "Venceste Tiko, o Guardião da Selva!"
+        },
+        "pt-BR": {
+          "name": "Tiko: vitória",
+          "before": "Vença Tiko, o Guardião da Selva no nível 10.",
+          "after": "Você venceu Tiko, o Guardião da Selva!"
         }
       }
     },
@@ -491,6 +666,31 @@
           "name": "Victoire sur Sable",
           "before": "Au niveau 20, bats Sable, le gardien du désert.",
           "after": "Tu as battu Sable, le gardien du désert !"
+        },
+        "fr-CA": {
+          "name": "Victoire sur Sable",
+          "before": "Au niveau 20, bats Sable, le gardien du désert.",
+          "after": "Tu as battu Sable, le gardien du désert!"
+        },
+        "es-ES": {
+          "name": "Victoria ante Modorro",
+          "before": "Vence a Modorro para completar este mundo.",
+          "after": "¡Has vencido a Modorro y completado el mundo!"
+        },
+        "es-MX": {
+          "name": "Victoria contra Dormilón",
+          "before": "Vence a Dormilón para completar este mundo.",
+          "after": "¡Venciste a Dormilón y completaste el mundo!"
+        },
+        "pt-PT": {
+          "name": "Cauda de Areia: vitória",
+          "before": "Vence Cauda de Areia, o Guardião do Deserto no nível 20.",
+          "after": "Venceste Cauda de Areia, o Guardião do Deserto!"
+        },
+        "pt-BR": {
+          "name": "Cauda de Areia: vitória",
+          "before": "Vença Cauda de Areia, o Guardião do Deserto no nível 20.",
+          "after": "Você venceu Cauda de Areia, o Guardião do Deserto!"
         }
       }
     },
@@ -554,6 +754,31 @@
           "name": "Victoire sur Magma",
           "before": "Au niveau 30, bats Magma, le tricératops de feu.",
           "after": "Tu as battu Magma, le tricératops de feu !"
+        },
+        "fr-CA": {
+          "name": "Victoire sur Magma",
+          "before": "Au niveau 30, bats Magma, le tricératops de feu.",
+          "after": "Tu as battu Magma, le tricératops de feu!"
+        },
+        "es-ES": {
+          "name": "Victoria ante Magma",
+          "before": "Vence a Magma para completar este mundo.",
+          "after": "¡Has vencido a Magma y completado el mundo!"
+        },
+        "es-MX": {
+          "name": "Victoria contra Magma",
+          "before": "Vence a Magma para completar este mundo.",
+          "after": "¡Venciste a Magma y completaste el mundo!"
+        },
+        "pt-PT": {
+          "name": "Magma: vitória",
+          "before": "Vence Magma, o Tricerátopo de Fogo no nível 30.",
+          "after": "Venceste Magma, o Tricerátopo de Fogo!"
+        },
+        "pt-BR": {
+          "name": "Magma: vitória",
+          "before": "Vença Magma, o Tricerátops de Fogo no nível 30.",
+          "after": "Você venceu Magma, o Tricerátops de Fogo!"
         }
       }
     },
@@ -617,6 +842,31 @@
           "name": "Victoire sur le maire Tic-Tac",
           "before": "Au niveau 40, bats le maire Tic-Tac.",
           "after": "Tu as battu le maire Tic-Tac !"
+        },
+        "fr-CA": {
+          "name": "Victoire sur le maire Tic-Tac",
+          "before": "Au niveau 40, bats le maire Tic-Tac.",
+          "after": "Tu as battu le maire Tic-Tac!"
+        },
+        "es-ES": {
+          "name": "Victoria ante Alcalde Tic Tac",
+          "before": "Vence al alcalde Tic Tac para completar este mundo.",
+          "after": "¡Has vencido al alcalde Tic Tac y completado el mundo!"
+        },
+        "es-MX": {
+          "name": "Victoria contra Alcalde Tic Tac",
+          "before": "Vence al alcalde Tic Tac para completar este mundo.",
+          "after": "¡Venciste al alcalde Tic Tac y completaste el mundo!"
+        },
+        "pt-PT": {
+          "name": "Presidente Tique-Taque: vitória",
+          "before": "Vence o Presidente Tique-Taque no nível 40.",
+          "after": "Venceste o Presidente Tique-Taque!"
+        },
+        "pt-BR": {
+          "name": "Presidente Tique-Taque: vitória",
+          "before": "Vença o Presidente Tique-Taque no nível 40.",
+          "after": "Você venceu o Presidente Tique-Taque!"
         }
       }
     },
@@ -680,6 +930,31 @@
           "name": "Victoire sur Prisma",
           "before": "Au niveau 50, bats Prisma, le gardien des cristaux.",
           "after": "Tu as battu Prisma, le gardien des cristaux !"
+        },
+        "fr-CA": {
+          "name": "Victoire sur Prisma",
+          "before": "Au niveau 50, bats Prisma, le gardien des cristaux.",
+          "after": "Tu as battu Prisma, le gardien des cristaux!"
+        },
+        "es-ES": {
+          "name": "Victoria ante Prisma",
+          "before": "Vence a Prisma para completar este mundo.",
+          "after": "¡Has vencido a Prisma y completado el mundo!"
+        },
+        "es-MX": {
+          "name": "Victoria contra Prisma",
+          "before": "Vence a Prisma para completar este mundo.",
+          "after": "¡Venciste a Prisma y completaste el mundo!"
+        },
+        "pt-PT": {
+          "name": "Prisma: vitória",
+          "before": "Vence Prisma, o Guardião dos Cristais no nível 50.",
+          "after": "Venceste Prisma, o Guardião dos Cristais!"
+        },
+        "pt-BR": {
+          "name": "Prisma: vitória",
+          "before": "Vença Prisma, o Guardião dos Cristais no nível 50.",
+          "after": "Você venceu Prisma, o Guardião dos Cristais!"
         }
       }
     },
@@ -743,6 +1018,31 @@
           "name": "Victoire sur Néon",
           "before": "Au niveau 60, bats Néon, le robot horloger.",
           "after": "Tu as battu Néon, le robot horloger !"
+        },
+        "fr-CA": {
+          "name": "Victoire sur Néon",
+          "before": "Au niveau 60, bats Néon, le robot horloger.",
+          "after": "Tu as battu Néon, le robot horloger!"
+        },
+        "es-ES": {
+          "name": "Victoria ante Neón",
+          "before": "Vence a Neón para completar este mundo.",
+          "after": "¡Has vencido a Neón y completado el mundo!"
+        },
+        "es-MX": {
+          "name": "Victoria contra Neón",
+          "before": "Vence a Neón para completar este mundo.",
+          "after": "¡Venciste a Neón y completaste el mundo!"
+        },
+        "pt-PT": {
+          "name": "Néon: vitória",
+          "before": "Vence Néon, o Robô dos Relógios no nível 60.",
+          "after": "Venceste Néon, o Robô dos Relógios!"
+        },
+        "pt-BR": {
+          "name": "Neon: vitória",
+          "before": "Vença Neon, o Robô dos Relógios no nível 60.",
+          "after": "Você venceu Neon, o Robô dos Relógios!"
         }
       }
     },
@@ -806,6 +1106,31 @@
           "name": "Victoire sur Dozy",
           "before": "Au niveau 70, bats Dozy, le dino des rêves.",
           "after": "Tu as battu Dozy, le dino des rêves !"
+        },
+        "fr-CA": {
+          "name": "Victoire sur Dozy",
+          "before": "Au niveau 70, bats Dozy, le dino des rêves.",
+          "after": "Tu as battu Dozy, le dino des rêves!"
+        },
+        "es-ES": {
+          "name": "Victoria ante Cola de Arena",
+          "before": "Vence a Cola de Arena para completar este mundo.",
+          "after": "¡Has vencido a Cola de Arena y completado el mundo!"
+        },
+        "es-MX": {
+          "name": "Victoria contra Cola de Arena",
+          "before": "Vence a Cola de Arena para completar este mundo.",
+          "after": "¡Venciste a Cola de Arena y completaste el mundo!"
+        },
+        "pt-PT": {
+          "name": "Sonocas: vitória",
+          "before": "Vence Sonocas, o Dinossauro dos Sonhos no nível 70.",
+          "after": "Venceste Sonocas, o Dinossauro dos Sonhos!"
+        },
+        "pt-BR": {
+          "name": "Soninho: vitória",
+          "before": "Vença Soninho, o Dinossauro dos Sonhos no nível 70.",
+          "after": "Você venceu Soninho, o Dinossauro dos Sonhos!"
         }
       }
     },
@@ -869,6 +1194,31 @@
           "name": "Victoire sur le professeur Pendule",
           "before": "Au niveau 80, bats le professeur Pendule.",
           "after": "Tu as battu le professeur Pendule !"
+        },
+        "fr-CA": {
+          "name": "Victoire sur le professeur Pendule",
+          "before": "Au niveau 80, bats le professeur Pendule.",
+          "after": "Tu as battu le professeur Pendule!"
+        },
+        "es-ES": {
+          "name": "Victoria ante Profesor Péndulo",
+          "before": "Vence al profesor Péndulo para completar este mundo.",
+          "after": "¡Has vencido al profesor Péndulo y completado el mundo!"
+        },
+        "es-MX": {
+          "name": "Victoria contra Profesor Péndulo",
+          "before": "Vence al profesor Péndulo para completar este mundo.",
+          "after": "¡Venciste al profesor Péndulo y completaste el mundo!"
+        },
+        "pt-PT": {
+          "name": "Professor Pêndulo: vitória",
+          "before": "Vence o Professor Pêndulo no nível 80.",
+          "after": "Venceste o Professor Pêndulo!"
+        },
+        "pt-BR": {
+          "name": "Professor Pêndulo: vitória",
+          "before": "Vença o Professor Pêndulo no nível 80.",
+          "after": "Você venceu o Professor Pêndulo!"
         }
       }
     },
@@ -932,6 +1282,31 @@
           "name": "Victoire sur le capitaine Sablier",
           "before": "Au niveau 90, bats le capitaine Sablier.",
           "after": "Tu as battu le capitaine Sablier !"
+        },
+        "fr-CA": {
+          "name": "Victoire sur le capitaine Sablier",
+          "before": "Au niveau 90, bats le capitaine Sablier.",
+          "after": "Tu as battu le capitaine Sablier!"
+        },
+        "es-ES": {
+          "name": "Victoria pirata",
+          "before": "Vence al capitán Reloj de Arena para completar este mundo.",
+          "after": "¡Has vencido al capitán Reloj de Arena y completado el mundo!"
+        },
+        "es-MX": {
+          "name": "Victoria pirata",
+          "before": "Vence al capitán Reloj de Arena para completar este mundo.",
+          "after": "¡Venciste al capitán Reloj de Arena y completaste el mundo!"
+        },
+        "pt-PT": {
+          "name": "Capitão Ampulheta: vitória",
+          "before": "Vence o Capitão Ampulheta no nível 90.",
+          "after": "Venceste o Capitão Ampulheta!"
+        },
+        "pt-BR": {
+          "name": "Capitão Ampulheta: vitória",
+          "before": "Vença o Capitão Ampulheta no nível 90.",
+          "after": "Você venceu o Capitão Ampulheta!"
         }
       }
     },
@@ -995,6 +1370,31 @@
           "name": "Victoire sur le roi Chronos",
           "before": "Au niveau 100, bats le roi Chronos.",
           "after": "Tu as battu le roi Chronos !"
+        },
+        "fr-CA": {
+          "name": "Victoire sur le roi Chronos",
+          "before": "Au niveau 100, bats le roi Chronos.",
+          "after": "Tu as battu le roi Chronos!"
+        },
+        "es-ES": {
+          "name": "Victoria ante Rey Cronos",
+          "before": "Vence al rey Cronos para completar este mundo.",
+          "after": "¡Has vencido al rey Cronos y completado el mundo!"
+        },
+        "es-MX": {
+          "name": "Victoria contra Rey Cronos",
+          "before": "Vence al rey Cronos para completar este mundo.",
+          "after": "¡Venciste al rey Cronos y completaste el mundo!"
+        },
+        "pt-PT": {
+          "name": "Rei Cronos: vitória",
+          "before": "Vence o Rei Cronos no nível 100.",
+          "after": "Venceste o Rei Cronos!"
+        },
+        "pt-BR": {
+          "name": "Rei Cronos: vitória",
+          "before": "Vença o Rei Cronos no nível 100.",
+          "after": "Você venceu o Rei Cronos!"
         }
       }
     }

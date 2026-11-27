@@ -105,8 +105,27 @@ struct AppLanguage: Identifiable, Hashable, Sendable {
     static let french = AppLanguage(code: "fr", displayName: "Français (France)", flag: "🇫🇷", bundleCode: "fr",
         inheritedBundles: [], formatLocale: "fr-FR", dateLocale: "fr-FR", voiceLocale: "fr-FR",
         timeZoneOrigin: "paris", privacyFragment: "en", spokenTime: .french, timeVocabulary: .french)
+    static let canadianFrench = AppLanguage(code: "fr-CA", displayName: "Français (Canada)", flag: "🇨🇦", bundleCode: "fr-CA",
+        inheritedBundles: ["fr"], formatLocale: "fr-CA", dateLocale: "fr-CA", voiceLocale: "fr-CA",
+        timeZoneOrigin: "ottawa", privacyFragment: "en", spokenTime: .french, timeVocabulary: .french,
+        regionalTimeZoneCapitals: DinoTimeZoneJourney.canadianCapitals)
+    static let spanish = AppLanguage(code: "es", displayName: "Español (España)", flag: "🇪🇸", bundleCode: "es",
+        inheritedBundles: [], formatLocale: "es-ES", dateLocale: "es-ES", voiceLocale: "es-ES",
+        timeZoneOrigin: "madrid", privacyFragment: "en", spokenTime: .spanish, timeVocabulary: .spanish)
+    static let mexicanSpanish = AppLanguage(code: "es-MX", displayName: "Español (México)", flag: "🇲🇽", bundleCode: "es-MX",
+        inheritedBundles: ["es"], formatLocale: "es-MX", dateLocale: "es-MX", voiceLocale: "es-MX",
+        timeZoneOrigin: "mexicoCity", privacyFragment: "en", spokenTime: .mexicanSpanish, timeVocabulary: .mexicanSpanish,
+        regionalTimeZoneCapitals: DinoTimeZoneJourney.mexicanCities)
+    static let europeanPortuguese = AppLanguage(code: "pt-PT", displayName: "Português (Portugal)", flag: "🇵🇹", bundleCode: "pt-PT",
+        inheritedBundles: [], formatLocale: "pt-PT", dateLocale: "pt-PT", voiceLocale: "pt-PT",
+        timeZoneOrigin: "lisbon", privacyFragment: "en", spokenTime: .europeanPortuguese, timeVocabulary: .europeanPortuguese)
+    static let brazilianPortuguese = AppLanguage(code: "pt-BR", displayName: "Português (Brasil)", flag: "🇧🇷", bundleCode: "pt-BR",
+        inheritedBundles: ["pt-PT"], formatLocale: "pt-BR", dateLocale: "pt-BR", voiceLocale: "pt-BR",
+        timeZoneOrigin: "brasilia", privacyFragment: "en", spokenTime: .brazilianPortuguese, timeVocabulary: .brazilianPortuguese,
+        regionalTimeZoneCapitals: DinoTimeZoneJourney.brazilianCities)
     static let all = [dutch, english, german, canadianEnglish, australianEnglish, saudiArabic, japanese,
-                      simplifiedChinese, traditionalChinese, hebrew, pakistaniUrdu, french]
+                      simplifiedChinese, traditionalChinese, hebrew, pakistaniUrdu, french, canadianFrench, spanish,
+                      mexicanSpanish, europeanPortuguese, brazilianPortuguese]
     private static let byCode = Dictionary(uniqueKeysWithValues: all.map { ($0.code, $0) })
 
     static func named(_ identifier: String) -> Self? {

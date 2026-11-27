@@ -152,6 +152,31 @@ struct DinoCoreTests {
     }
 
     static func main() async {
+        if CommandLine.arguments.contains("--brazilian-portuguese-localization") {
+            testBrazilianPortugueseLocalization()
+            print("PASS: \(checks) Brazilian Portuguese localization checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--european-portuguese-localization") {
+            testEuropeanPortugueseLocalization()
+            print("PASS: \(checks) European Portuguese localization checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--mexican-spanish-localization") {
+            testMexicanSpanishLocalization()
+            print("PASS: \(checks) Mexican Spanish localization checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--spanish-localization") {
+            testSpanishLocalization()
+            print("PASS: \(checks) Spanish localization checks.")
+            return
+        }
+        if CommandLine.arguments.contains("--canadian-french-localization") {
+            testCanadianFrenchLocalization()
+            print("PASS: \(checks) Canadian French localization checks.")
+            return
+        }
         if CommandLine.arguments.contains("--french-localization") {
             testFrenchLocalization()
             print("PASS: \(checks) French localization checks.")
@@ -406,6 +431,11 @@ struct DinoCoreTests {
         testHebrewLocalization()
         testUrduLocalization()
         testFrenchLocalization()
+        testCanadianFrenchLocalization()
+        testSpanishLocalization()
+        testMexicanSpanishLocalization()
+        testEuropeanPortugueseLocalization()
+        testBrazilianPortugueseLocalization()
         testFlightArrivals()
         testMinutesBetweenQuestions()
         testClockArithmetic()
@@ -2706,6 +2736,7 @@ struct DinoCoreTests {
     }
 
     static func testLocalizationInfrastructure() {
+        testLocalizedSpokenTimeChoices()
         expect(AppLanguage.named("nl") == .dutch && AppLanguage.named("en") == .english,
                "stored language preferences retain their original IDs")
         expect(AppLanguage.named("nl_XZ") == .dutch && AppLanguage.named("EN-Latn-XZ") == .english,
@@ -2754,6 +2785,39 @@ struct DinoCoreTests {
         expect(DinoTimeZoneJourney(origin: london, destination: delhi, date: winter).offsetMinutes == 330
                && DinoTimeZoneJourney(origin: london, destination: delhi, date: summer).offsetMinutes == 270,
                "a journey keeps a single reference date when applying a half-hour zone and daylight saving")
+    }
+
+    static func testLocalizedSpokenTimeChoices() {
+        for language in AppLanguage.all {
+            let code = language.code
+            var rng = SeededGenerator(seed: 23)
+            var prompts: Set<String> = []
+            var readings: Set<String> = []
+            for hour in 1...12 {
+                for minute in 0..<60 {
+                    let time = ClockTime(hour: hour, minute: minute)
+                    let prompt = language.spokenTime.prompt(for: time, using: &rng)
+                    let hint = SpokenClockReadingHint(minute: minute, language: code)
+                    let hourSlot = prompt.slots.firstIndex { $0.id == "hour" }
+                    let namedHourID = "h\(hint.spokenHour(for: hour) % 12)"
+                    let context = "\(code) word tiles at \(time.digitalText)"
+                    expect(prompt.slots.count == prompt.correct.choiceIDs.count
+                           && hourSlot.map { prompt.correct.choiceIDs[$0] == namedHourID } == true
+                           && prompt.accepts(prompt.correct), "\(context) has a playable answer for the highlighted hour")
+                    expect(!prompt.phrase.isEmpty && prompts.insert(prompt.phrase).inserted,
+                           "\(context) gives this time its own answer phrase")
+                    let reading = DinoTimeWords.time(time, language: code)
+                    expect(!reading.isEmpty && readings.insert(reading).inserted,
+                           "\(context) gives this time its own spoken reading")
+                    for (slot, correct) in zip(prompt.slots, prompt.correct.choiceIDs) {
+                        let labels = slot.choices.map { prompt.style.displayedWord($0.word) }
+                        expect((1...3).contains(labels.count) && !labels.contains("") && Set(labels).count == labels.count
+                               && (correct == SpokenTimeChoice.emptyID || slot.choices.contains { $0.id == correct }),
+                               "\(context) shows distinct choices and includes every required word")
+                    }
+                }
+            }
+        }
     }
 
     static func spokenPhrase(_ code: String, hour: Int, minute: Int) -> String {
@@ -3011,6 +3075,516 @@ struct DinoCoreTests {
         }
     }
 
+    static func testSpanishLocalization() {
+        let profile = AppLanguage.spanish
+        let code = profile.code
+        expect(AppLanguage.named("es") == profile && AppLanguage.named("es_Latn_ES") == profile
+               && profile.resourceCodes == ["es", "en"] && !profile.runsRightToLeft,
+               "Spain uses generic Spanish resources and the Spanish locale")
+        expect((try? DinoNameValidator.validated("Iñés").get()) == "Iñés", "Spanish accents and ñ are accepted")
+        let spain = DinoSpeechVoice(identifier: "es", name: "Spanish", language: "es-ES", quality: 1)
+        let mexico = DinoSpeechVoice(identifier: "mx", name: "Mexican Spanish", language: "es-MX", quality: 2)
+        let english = DinoSpeechVoice(identifier: "en", name: "English", language: "en-GB", quality: 2)
+        expect(DinoSpeechVoicePicker.preferredLanguageIdentifier(for: code) == "es-ES"
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [mexico, spain]) == spain
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [english, mexico]) == mexico
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [english]) == nil,
+               "speech prefers Spain, then another Spanish voice or the written question")
+
+        let examples: [(Int, String)] = [
+            (0, "las siete en punto"), (1, "las siete y un minuto"), (5, "las siete y cinco"),
+            (14, "las siete y catorce"), (15, "las siete y cuarto"), (16, "las siete y dieciséis"),
+            (20, "las siete y veinte"), (25, "las siete y veinticinco"), (29, "las siete y veintinueve"),
+            (30, "las siete y media"), (31, "las ocho menos veintinueve"), (35, "las ocho menos veinticinco"),
+            (40, "las ocho menos veinte"), (44, "las ocho menos dieciséis"), (45, "las ocho menos cuarto"),
+            (46, "las ocho menos catorce"), (55, "las ocho menos cinco"), (59, "las ocho menos un minuto")
+        ]
+        for (minute, phrase) in examples {
+            expect(spokenPhrase(code, hour: 7, minute: minute) == phrase, "Spanish reading at 07:\(minute)")
+        }
+        expect(spokenPhrase(code, hour: 8, minute: 0) == "las ocho en punto"
+               && spokenPhrase(code, hour: 11, minute: 45) == "las doce menos cuarto"
+               && spokenPhrase(code, hour: 12, minute: 45) == "la una menos cuarto",
+               "Spanish names the right hour and uses the singular article for one")
+
+        var rng = SeededGenerator(seed: 33)
+        for hour in 0..<24 {
+            for minute in 0..<60 {
+                let time = ClockTime(hour: hour, minute: minute)
+                let prompt = profile.spokenTime.prompt(for: time, using: &rng)
+                let hint = SpokenClockReadingHint(minute: minute, language: code)
+                let readsNextHour = minute > 30
+                let namedHour = (hour + (readsNextHour ? 1 : 0) + 11) % 12 + 1
+                expect(prompt.phrase == DinoTimeWords.time(time, language: code)
+                       && hint.spokenHour(for: hour) == namedHour
+                       && hint.referenceMinute == (readsNextHour ? 60 : 0)
+                       && hint.count == (readsNextHour ? 60 - minute : minute),
+                       "Spanish tiles and clock hint point to the same time")
+                let fixedExpression = minute == 0 || minute == 30
+                expect(prompt.accepts(prompt.correct)
+                       && prompt.slots.map(\.id) == (fixedExpression ? ["hour", "expression"] : ["hour", "direction", "minutes"]),
+                       "Spanish separates y and menos for minute counts")
+                for (index, slot) in prompt.slots.enumerated() {
+                    let words = slot.choices.map(\.word)
+                    expect(slot.id == "direction" ? words == ["y", "menos"] : Set(words).count == 3,
+                           "Spanish choices are distinct")
+                    for choice in slot.choices where choice.id != prompt.correct.choiceIDs[index] {
+                        var wrong = prompt.correct.choiceIDs
+                        wrong[index] = choice.id
+                        expect(!prompt.accepts(.init(choiceIDs: wrong)), "a different Spanish tile changes the answer")
+                    }
+                }
+            }
+        }
+
+        let digital: [(ClockTime, String, String, String)] = [
+            (.init(hour: 0), "las cero horas", "a.m.", "de la madrugada"),
+            (.init(hour: 0, minute: 5), "las cero horas y cinco", "a.m.", "de la madrugada"),
+            (.init(hour: 12), "las doce", "p.m.", "de la tarde"),
+            (.init(hour: 12, minute: 5), "las doce y cinco", "p.m.", "de la tarde"),
+            (.init(hour: 17, minute: 5), "las diecisiete y cinco", "p.m.", "de la tarde"),
+            (.init(hour: 23, minute: 59), "las veintitrés y cincuenta y nueve", "p.m.", "de la noche")
+        ]
+        for (clock, words, period, part) in digital {
+            let twelve = clock.digitalReading(notation: .twelve, languageCode: code)
+            let full = clock.digitalReading(notation: .twentyFour, languageCode: code)
+            expect(full.text == "\(clock.hour):\(String(format: "%02d", clock.minute))" && full.period == nil
+                   && twelve.period?.filter({ !$0.isWhitespace }) == period
+                   && !twelve.periodBeforeClock && twelve.minute == full.minute
+                   && DinoTimeWords.digitalTimeInWords(clock, language: code) == words
+                   && DinoTimeWords.dayPartSuffix(clock, language: code) == part,
+                   "Spanish notation, day part and reading at \(clock.digitalText)")
+        }
+        expect(DinoTimeWords.time(.init(hour: 12, minute: 5), language: code, dayPart: true)
+               == "las doce y cinco del mediodía", "Spanish uses mediodía when naming twelve at noon")
+        expect(DinoTimeWords.spokenDuration(61, language: code) == "una hora y un minuto"
+               && DinoTimeWords.duration(125, language: code) == "2\u{00A0}h\u{00A0}5\u{00A0}min"
+               && DinoTimeWords.zoneDifference(-30, language: code) == "−0,5\u{00A0}h"
+               && DinoTimeWords.digitalDuration(65, language: code) == "01:05", "Spanish durations and offsets")
+        expect(ClockTime(hour: 23, minute: 55).adding(minutes: 10) == .init(hour: 0, minute: 5)
+               && ClockTime(hour: 0, minute: 5).adding(minutes: -10) == .init(hour: 23, minute: 55),
+               "Spanish clock arithmetic crosses the day boundary")
+
+        let strings = localizedCatalog("Localizable.xcstrings", code: code)
+        expect(localizedCatalog("InfoPlist.xcstrings", code: code)["CFBundleDisplayName"] == "Dino y el reloj"
+               && strings["dino.timeZone.city.madrid"] == "Madrid"
+               && strings["dino.timeZone.city.lisbon"] == "Lisboa", "Spanish app and city names")
+        testLocalizedPracticeQuestions(code: code, strings: strings)
+
+        let capitals = Dictionary(uniqueKeysWithValues: DinoTimeZoneJourney.capitals.map { ($0.id, $0) })
+        let madrid = capitals["madrid"]!
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let winter = calendar.date(from: .init(year: 2026, month: 1, day: 15, hour: 12))!
+        let summer = calendar.date(from: .init(year: 2026, month: 7, day: 15, hour: 12))!
+        expect(DinoTimeZoneJourney.displayedDate(language: code, date: winter) == "15 de enero", "Spanish atlas date")
+        for (date, city, offset) in [(winter, "lisbon", -60), (summer, "athens", 60), (summer, "paris", 0),
+                                     (winter, "ankara", 120), (summer, "ankara", 60),
+                                     (winter, "newDelhi", 270), (summer, "newDelhi", 210)] {
+            let journey = DinoTimeZoneJourney(origin: madrid, destination: capitals[city]!, date: date)
+            let clock = ClockTime(hour: offset > 0 ? 23 : 0, minute: 5)
+            expect(journey.offsetMinutes == offset
+                   && (journey.steps(from: clock).last?.time ?? clock) == clock.adding(minutes: offset),
+                   "Madrid replay uses the real offset for \(city)")
+        }
+        for month in 0..<12 {
+            let date = calendar.date(byAdding: .month, value: month, to: winter)!
+            for difficulty in DinoTimeZoneDifficulty.allCases {
+                for step in [1, 5, 10, 15, 30, 60] {
+                    let destinations = DinoTimeZoneJourney.destinations(from: madrid, difficulty: difficulty,
+                                                                        minuteStep: step, date: date)
+                    let journey = DinoTimeZoneJourney.generate(language: code, difficulty: difficulty, minuteStep: step,
+                                                               date: date, using: &rng)
+                    expect(destinations.count >= 2 && destinations.allSatisfy { strings[$0.nameKey] != nil }
+                           && journey.origin == madrid && destinations.contains(journey.destination),
+                           "Madrid has translated destinations at every difficulty and minute step")
+                }
+            }
+        }
+    }
+
+    static func testMexicanSpanishLocalization() {
+        let profile = AppLanguage.mexicanSpanish
+        let code = profile.code
+        expect(AppLanguage.named("es-MX") == profile && AppLanguage.named("es_Latn_MX") == profile
+               && AppLanguage.named("es") == .spanish && AppLanguage.named("es-ES") == .spanish
+               && profile.resourceCodes == ["es-MX", "es", "en"] && !profile.runsRightToLeft,
+               "Mexican Spanish has a distinct regional profile and an inherited Spanish bundle")
+        expect((try? DinoNameValidator.validated("Xóchitl Muñoz").get()) == "Xóchitl Muñoz",
+               "Mexican names can use accents and ñ")
+        let mexico = DinoSpeechVoice(identifier: "mx", name: "Paulina", language: "es-MX", quality: 1)
+        let spain = DinoSpeechVoice(identifier: "es", name: "Mónica", language: "es-ES", quality: 3)
+        let english = DinoSpeechVoice(identifier: "en", name: "English", language: "en-GB", quality: 2)
+        expect(DinoSpeechVoicePicker.preferredLanguageIdentifier(for: code) == "es-MX"
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [spain, mexico]) == mexico
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [english, spain]) == spain
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [english]) == nil,
+               "speech prefers Mexico and falls back to Spanish or the written question")
+
+        let examples: [(Int, String)] = [
+            (0, "las siete en punto"), (1, "las siete y un minuto"), (5, "las siete y cinco"),
+            (14, "las siete y catorce"), (15, "las siete y cuarto"), (16, "las siete y dieciséis"),
+            (20, "las siete y veinte"), (25, "las siete y veinticinco"), (29, "las siete y veintinueve"),
+            (30, "las siete y media"), (31, "veintinueve para las ocho"), (35, "veinticinco para las ocho"),
+            (40, "veinte para las ocho"), (44, "dieciséis para las ocho"), (45, "cuarto para las ocho"),
+            (46, "catorce para las ocho"), (55, "cinco para las ocho"), (59, "un minuto para las ocho")
+        ]
+        for (minute, phrase) in examples {
+            expect(spokenPhrase(code, hour: 7, minute: minute) == phrase, "Mexican Spanish reading at 07:\(minute)")
+        }
+        expect(spokenPhrase(code, hour: 8, minute: 0) == "las ocho en punto"
+               && spokenPhrase(code, hour: 23, minute: 45) == "cuarto para las doce"
+               && spokenPhrase(code, hour: 12, minute: 45) == "cuarto para la una",
+               "Mexican Spanish crosses midnight and distinguishes la una from las doce")
+
+        var rng = SeededGenerator(seed: 52)
+        for hour in 0..<24 {
+            for minute in 0..<60 {
+                let time = ClockTime(hour: hour, minute: minute)
+                let prompt = profile.spokenTime.prompt(for: time, using: &rng)
+                let hint = SpokenClockReadingHint(minute: minute, language: code)
+                let countsDown = minute > 30
+                let namedHour = (hour + (countsDown ? 1 : 0) + 11) % 12 + 1
+                expect(prompt.phrase == DinoTimeWords.time(time, language: code)
+                       && hint.spokenHour(for: hour) == namedHour
+                       && hint.referenceMinute == (countsDown ? 60 : 0)
+                       && hint.count == (countsDown ? 60 - minute : minute),
+                       "Mexican Spanish tiles and the arc name the same hour")
+                expect(prompt.accepts(prompt.correct) && prompt.slots.map(\.choices.count) == [3, 3]
+                       && prompt.slots.map(\.id) == (countsDown ? ["remainingMinutes", "hour"] : ["hour", "pastMinutes"]),
+                       "Mexican Spanish switches to minutes first after the half hour")
+                for (index, slot) in prompt.slots.enumerated() {
+                    expect(Set(slot.choices.map(\.word)).count == 3, "Mexican Spanish choices are distinct")
+                    for choice in slot.choices where choice.id != prompt.correct.choiceIDs[index] {
+                        var wrong = prompt.correct.choiceIDs
+                        wrong[index] = choice.id
+                        expect(!prompt.accepts(.init(choiceIDs: wrong)), "a different tile changes the time")
+                    }
+                }
+            }
+        }
+
+        let digital: [(ClockTime, String, String, String)] = [
+            (.init(hour: 0), "las cero horas", "a.m.", "de la madrugada"),
+            (.init(hour: 0, minute: 5), "las cero horas con cinco minutos", "a.m.", "de la madrugada"),
+            (.init(hour: 1, minute: 1), "la una con un minuto", "a.m.", "de la madrugada"),
+            (.init(hour: 12), "las doce horas", "p.m.", "de la tarde"),
+            (.init(hour: 12, minute: 5), "las doce horas con cinco minutos", "p.m.", "de la tarde"),
+            (.init(hour: 17, minute: 5), "las diecisiete horas con cinco minutos", "p.m.", "de la tarde"),
+            (.init(hour: 23, minute: 59), "las veintitrés horas con cincuenta y nueve minutos", "p.m.", "de la noche")
+        ]
+        for (clock, words, period, part) in digital {
+            let twelve = clock.digitalReading(notation: .twelve, languageCode: code)
+            let full = clock.digitalReading(notation: .twentyFour, languageCode: code)
+            expect(full.text == "\(clock.hour):\(String(format: "%02d", clock.minute))" && full.period == nil
+                   && twelve.period?.filter({ !$0.isWhitespace }) == period
+                   && !twelve.periodBeforeClock && twelve.separator == ":" && twelve.minute == full.minute
+                   && DinoTimeWords.digitalTimeInWords(clock, language: code) == words
+                   && DinoTimeWords.dayPartSuffix(clock, language: code) == part,
+                   "Mexican Spanish formats time and day parts at \(clock.digitalText)")
+        }
+        expect(DinoTimeWords.time(.init(hour: 12, minute: 5), language: code, dayPart: true) == "las doce y cinco del mediodía"
+               && DinoTimeWords.time(.init(hour: 23, minute: 59), language: code, dayPart: true) == "un minuto para las doce de la noche",
+               "Mexican Spanish disambiguates the two readings of twelve")
+        expect(DinoTimeWords.spokenDuration(61, language: code) == "una hora y un minuto"
+               && DinoTimeWords.duration(125, language: code) == "2\u{00A0}h\u{00A0}5\u{00A0}min"
+               && DinoTimeWords.zoneDifference(-30, language: code) == "−0.5\u{00A0}h"
+               && DinoTimeWords.digitalDuration(65, language: code) == "01:05", "Mexican durations and decimal offsets")
+        expect(ClockTime(hour: 23, minute: 55).adding(minutes: 10) == .init(hour: 0, minute: 5)
+               && ClockTime(hour: 0, minute: 5).adding(minutes: -10) == .init(hour: 23, minute: 55),
+               "clock arithmetic crosses midnight both ways")
+
+        let strings = localizedCatalog("Localizable.xcstrings", code: code)
+        expect(localizedCatalog("InfoPlist.xcstrings", code: code)["CFBundleDisplayName"] == "Dino y el reloj"
+               && strings["dino.settings"] == "Configuración" && strings["dino.timeZone.city.mexicoCity"] == "Ciudad de México"
+               && strings["dino.timeZone.city.cancun"] == "Cancún", "the app name, settings and Mexican cities are localized")
+        for kind in [ClockQuestionKind.addTime, .subtractTime] {
+            for (hour, reading) in [(1, "la una con un minuto"), (2, "las dos horas con un minuto")] {
+                let start = ClockTime(hour: hour, minute: 1)
+                let question = ClockQuestion(id: 0, kind: kind, target: start, options: [], activity: nil,
+                                             companionClocks: [], relatedTimes: [start], durationMinutes: 5)
+                let prompt = DinoQuestionPrompt.make(question: question, language: code, instructionKey: kind.instructionKey)
+                let sentence = prompt.spoken { strings[$0] ?? $0 }
+                expect(sentence.hasPrefix("El reloj marca \(reading)."), "Mexican arithmetic reads singular and plural hours naturally")
+            }
+        }
+        testLocalizedPracticeQuestions(code: code, strings: strings)
+
+        let cities = Dictionary(uniqueKeysWithValues: (DinoTimeZoneJourney.capitals + profile.regionalTimeZoneCapitals).map { ($0.id, $0) })
+        let origin = cities[profile.timeZoneOrigin]!
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let winter = calendar.date(from: .init(year: 2026, month: 1, day: 15, hour: 12))!
+        let summer = calendar.date(from: .init(year: 2026, month: 7, day: 15, hour: 12))!
+        expect(DinoTimeZoneJourney.displayedDate(language: code, date: winter) == "15 de enero", "Mexican atlas date")
+        for (date, city, offset) in [(winter, "cancun", 60), (summer, "hermosillo", -60),
+                                     (winter, "tijuana", -120), (summer, "tijuana", -60),
+                                     (winter, "panamaCity", 60), (summer, "newDelhi", 690)] {
+            let journey = DinoTimeZoneJourney(origin: origin, destination: cities[city]!, date: date)
+            let clock = ClockTime(hour: offset > 0 ? 23 : 0, minute: 5)
+            expect(journey.offsetMinutes == offset
+                   && (journey.steps(from: clock).last?.time ?? clock) == clock.adding(minutes: offset),
+                   "Mexico City replay applies the actual offset for \(city)")
+        }
+        for month in 0..<12 {
+            let date = calendar.date(byAdding: .month, value: month, to: winter)!
+            for difficulty in DinoTimeZoneDifficulty.allCases {
+                for step in [1, 5, 10, 15, 30, 60] {
+                    let destinations = DinoTimeZoneJourney.destinations(from: origin, difficulty: difficulty, minuteStep: step,
+                                                                        date: date, regionalCapitals: profile.regionalTimeZoneCapitals)
+                    let journey = DinoTimeZoneJourney.generate(language: code, difficulty: difficulty, minuteStep: step,
+                                                               date: date, using: &rng)
+                    expect(destinations.count >= 2 && destinations.allSatisfy { strings[$0.nameKey] != nil }
+                           && journey.origin == origin && destinations.contains(journey.destination),
+                           "Mexico City has localized destinations on every difficulty and time grid")
+                }
+            }
+        }
+    }
+
+    static func testEuropeanPortugueseLocalization() {
+        let profile = AppLanguage.europeanPortuguese
+        let code = profile.code
+        expect(AppLanguage.named("pt-PT") == profile && AppLanguage.named("pt_Latn_PT") == profile
+               && AppLanguage.named("pt-BR") == .brazilianPortuguese && profile.resourceCodes == ["pt-PT", "en"]
+               && !profile.runsRightToLeft && profile.voiceLocale == "pt-PT",
+               "European Portuguese has its own bundle, region and preferred voice")
+        expect((try? DinoNameValidator.validated("Inês Gonçalves").get()) == "Inês Gonçalves",
+               "European Portuguese diacritics are accepted in names")
+        let localVoice = DinoSpeechVoice(identifier: "pt", name: "Português", language: "pt-PT", quality: 1)
+        let brazilianVoice = DinoSpeechVoice(identifier: "br", name: "Português", language: "pt-BR", quality: 3)
+        let englishVoice = DinoSpeechVoice(identifier: "en", name: "English", language: "en-GB", quality: 3)
+        expect(DinoSpeechVoicePicker.bestVoice(for: code, among: [brazilianVoice, localVoice]) == localVoice
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [englishVoice, brazilianVoice]) == brazilianVoice
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [englishVoice]) == nil,
+               "voice selection prefers Portugal, then Portuguese, then written text")
+
+        let minuteExamples: [(Int, String)] = [
+            (0, "sete em ponto"), (1, "sete e um minuto"), (5, "sete e cinco"),
+            (14, "sete e catorze"), (15, "sete e um quarto"), (16, "sete e dezasseis"),
+            (20, "sete e vinte"), (25, "sete e vinte e cinco"), (29, "sete e vinte e nove"),
+            (30, "sete e meia"), (31, "oito menos vinte e nove"), (35, "oito menos vinte e cinco"),
+            (40, "oito menos vinte"), (44, "oito menos dezasseis"), (45, "oito menos um quarto"),
+            (46, "oito menos catorze"), (55, "oito menos cinco"), (59, "oito menos um minuto")
+        ]
+        for (minute, phrase) in minuteExamples {
+            expect(DinoTimeWords.time(.init(hour: 7, minute: minute), language: code) == phrase,
+                   "Portuguese word reading for 07:\(minute)")
+        }
+        expect(DinoTimeWords.time(.init(hour: 8), language: code) == "oito em ponto"
+               && DinoTimeWords.time(.init(hour: 1), language: code) == "uma hora em ponto"
+               && DinoTimeWords.time(.init(hour: 2), language: code) == "duas em ponto"
+               && DinoTimeWords.time(.init(hour: 12, minute: 45), language: code) == "uma menos um quarto",
+               "Portuguese hour cards agree with hora and wrap through one")
+        var rng = SeededGenerator(seed: 96)
+        for hour in 0..<24 {
+            for minute in 0..<60 {
+                let time = ClockTime(hour: hour, minute: minute)
+                let prompt = profile.spokenTime.prompt(for: time, using: &rng)
+                let hint = SpokenClockReadingHint(minute: minute, language: code)
+                let beforeNextHour = minute > 30
+                let named = (hour + (beforeNextHour ? 1 : 0) + 11) % 12 + 1
+                let region: DinoTimeReading.Region = minute == 0 ? .whole : minute == 30 ? .half : beforeNextHour ? .to : .past
+                expect(hint.spokenHour(for: hour) == named && hint.referenceMinute == (beforeNextHour ? 60 : 0)
+                       && hint.count == (beforeNextHour ? 60 - minute : minute)
+                       && DinoTimeReading.region(minute: minute, language: code) == region
+                       && prompt.slots.map(\.id) == (minute == 0 || minute == 30
+                           ? ["hour", "expression"] : ["hour", "direction", "minutes"])
+                       && prompt.phrase == DinoTimeWords.time(time, language: code)
+                       && prompt.accepts(prompt.correct), "Portuguese words, score and clock hint for \(time.digitalText)")
+                for (slotIndex, slot) in prompt.slots.enumerated() {
+                    if slot.id == "direction" {
+                        expect(slot.choices.map(\.word) == ["e", "menos"], "Portuguese direction is a separate choice")
+                    } else {
+                        expect(Set(slot.choices.map(\.word)).count == 3, "Portuguese cards have distinct labels")
+                    }
+                    for choice in slot.choices where choice.id != prompt.correct.choiceIDs[slotIndex] {
+                        var wrong = prompt.correct.choiceIDs
+                        wrong[slotIndex] = choice.id
+                        expect(!prompt.accepts(.init(choiceIDs: wrong)), "a different Portuguese card changes the time")
+                    }
+                }
+            }
+        }
+
+        let digital: [(ClockTime, String, String, String)] = [
+            (.init(hour: 0), "meia-noite", "AM", "da madrugada"),
+            (.init(hour: 0, minute: 5), "meia-noite e cinco minutos", "AM", "da madrugada"),
+            (.init(hour: 1, minute: 1), "uma hora e um minuto", "AM", "da madrugada"),
+            (.init(hour: 12), "meio-dia", "PM", "da tarde"),
+            (.init(hour: 12, minute: 5), "meio-dia e cinco minutos", "PM", "da tarde"),
+            (.init(hour: 17, minute: 5), "dezassete horas e cinco minutos", "PM", "da tarde"),
+            (.init(hour: 21, minute: 22), "vinte e uma horas e vinte e dois minutos", "PM", "da noite"),
+            (.init(hour: 23, minute: 59), "vinte e três horas e cinquenta e nove minutos", "PM", "da noite")
+        ]
+        for (clock, words, period, part) in digital {
+            let twelve = clock.digitalReading(notation: .twelve, languageCode: code)
+            let full = clock.digitalReading(notation: .twentyFour, languageCode: code)
+            expect(full.text == clock.digitalText && full.period == nil && twelve.period == period
+                   && twelve.separator == ":" && !twelve.periodBeforeClock && twelve.minute == full.minute
+                   && DinoTimeWords.digitalTimeInWords(clock, language: code) == words
+                   && DinoTimeWords.dayPartSuffix(clock, language: code) == part,
+                   "Portuguese 12- and 24-hour display, speech and day part for \(clock.digitalText)")
+        }
+        expect(DinoTimeWords.spokenDuration(61, language: code) == "uma hora e um minuto"
+               && DinoTimeWords.duration(125, language: code) == "2\u{00A0}h\u{00A0}5\u{00A0}min"
+               && DinoTimeWords.zoneDifference(-30, language: code) == "−0,5\u{00A0}h"
+               && ClockTime(hour: 23, minute: 55).adding(minutes: 10) == .init(hour: 0, minute: 5)
+               && ClockTime(hour: 0, minute: 5).adding(minutes: -10) == .init(hour: 23, minute: 55),
+               "Portuguese duration, decimal offset and time arithmetic across midnight")
+
+        let strings = localizedCatalog("Localizable.xcstrings", code: code)
+        expect(localizedCatalog("InfoPlist.xcstrings", code: code)["CFBundleDisplayName"] == "O Relógio do Dino"
+               && strings["dino.settings"] == "Definições" && strings["dino.timeZone.city.lisbon"] == "Lisboa"
+               && strings["dino.stars %lld"] == "%lld estrelas", "Portuguese app, city and interface text")
+        testLocalizedPracticeQuestions(code: code, strings: strings)
+
+        let cities = Dictionary(uniqueKeysWithValues: DinoTimeZoneJourney.capitals.map { ($0.id, $0) })
+        let origin = cities[profile.timeZoneOrigin]!
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let winter = calendar.date(from: .init(year: 2026, month: 1, day: 15, hour: 12))!
+        let summer = calendar.date(from: .init(year: 2026, month: 7, day: 15, hour: 12))!
+        expect(DinoTimeZoneJourney.displayedDate(language: code, date: winter) == "15 de janeiro", "Portuguese atlas date")
+        for (date, city, offset) in [(winter, "madrid", 60), (summer, "london", 0), (winter, "brasilia", -180),
+                                     (summer, "brasilia", -240), (winter, "newDelhi", 330), (summer, "newDelhi", 270)] {
+            let journey = DinoTimeZoneJourney(origin: origin, destination: cities[city]!, date: date)
+            let clock = ClockTime(hour: offset > 0 ? 23 : 0, minute: 5)
+            expect(journey.offsetMinutes == offset && (journey.steps(from: clock).last?.time ?? clock) == clock.adding(minutes: offset),
+                   "Lisbon time zone and replay match \(city) at \(date)")
+        }
+        for month in 0..<12 {
+            let date = calendar.date(byAdding: .month, value: month, to: winter)!
+            for difficulty in DinoTimeZoneDifficulty.allCases {
+                for step in [1, 5, 10, 15, 30, 60] {
+                    let destinations = DinoTimeZoneJourney.destinations(from: origin, difficulty: difficulty, minuteStep: step, date: date)
+                    let journey = DinoTimeZoneJourney.generate(language: code, difficulty: difficulty, minuteStep: step,
+                                                               date: date, using: &rng)
+                    expect(destinations.count >= 2 && destinations.allSatisfy { strings[$0.nameKey] != nil }
+                           && journey.origin == origin && destinations.contains(journey.destination),
+                           "Lisbon offers localized destinations at every difficulty and time grid")
+                }
+            }
+        }
+    }
+
+    static func testBrazilianPortugueseLocalization() {
+        let profile = AppLanguage.brazilianPortuguese
+        let code = profile.code
+        expect(AppLanguage.named("pt_BR") == profile && AppLanguage.named("pt-Latn-BR") == profile
+               && AppLanguage.named("pt-PT") == .europeanPortuguese && profile.resourceCodes == ["pt-BR", "pt-PT", "en"]
+               && !profile.runsRightToLeft && profile.voiceLocale == "pt-BR", "Brazil has its own bundle, region and voice")
+        expect((try? DinoNameValidator.validated("João Gonçalves").get()) == "João Gonçalves", "Brazilian diacritics in names")
+        let brazil = DinoSpeechVoice(identifier: "br", name: "Português", language: "pt-BR", quality: 1)
+        let portugal = DinoSpeechVoice(identifier: "pt", name: "Português", language: "pt-PT", quality: 3)
+        let english = DinoSpeechVoice(identifier: "en", name: "English", language: "en-GB", quality: 3)
+        expect(DinoSpeechVoicePicker.bestVoice(for: code, among: [portugal, brazil]) == brazil
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [english, portugal]) == portugal
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [english]) == nil,
+               "speech prefers Brazil, then Portuguese, then the written question")
+
+        let examples: [(Int, String)] = [
+            (0, "sete em ponto"), (1, "sete e um minuto"), (5, "sete e cinco"), (14, "sete e catorze"),
+            (15, "sete e quinze"), (16, "sete e dezesseis"), (20, "sete e vinte"), (25, "sete e vinte e cinco"),
+            (29, "sete e vinte e nove"), (30, "sete e meia"), (31, "vinte e nove para as oito"),
+            (35, "vinte e cinco para as oito"), (40, "vinte para as oito"), (44, "dezesseis para as oito"),
+            (45, "quinze para as oito"), (46, "catorze para as oito"), (55, "cinco para as oito"),
+            (59, "um minuto para as oito")
+        ]
+        for (minute, phrase) in examples {
+            expect(DinoTimeWords.time(.init(hour: 7, minute: minute), language: code) == phrase,
+                   "Brazilian Portuguese analog words for 07:\(minute)")
+        }
+        expect(DinoTimeWords.time(.init(hour: 8), language: code) == "oito em ponto"
+               && DinoTimeWords.time(.init(hour: 12, minute: 45), language: code) == "quinze para uma"
+               && DinoTimeWords.time(.init(hour: 1, minute: 30), language: code) == "uma e meia"
+               && DinoTimeWords.time(.init(hour: 1, minute: 45), language: code) == "quinze para as duas",
+               "Brazilian hours agree with hora and use the article where needed")
+
+        var rng = SeededGenerator(seed: 101)
+        for hour in 0..<24 {
+            for minute in 0..<60 {
+                let time = ClockTime(hour: hour, minute: minute)
+                let prompt = profile.spokenTime.prompt(for: time, using: &rng)
+                let hint = SpokenClockReadingHint(minute: minute, language: code)
+                let remaining = minute > 30
+                let region: DinoTimeReading.Region = minute == 0 ? .whole : minute == 30 ? .half : remaining ? .to : .past
+                expect(hint.spokenHour(for: hour) == (hour + (remaining ? 1 : 0) + 11) % 12 + 1
+                       && hint.referenceMinute == (remaining ? 60 : 0) && hint.count == (remaining ? 60 - minute : minute)
+                       && DinoTimeReading.region(minute: minute, language: code) == region
+                       && prompt.slots.map(\.id) == (remaining ? ["remainingMinutes", "hour"] : ["hour", "pastMinutes"])
+                       && prompt.phrase == DinoTimeWords.time(time, language: code), "Brazilian words and hint for \(time.digitalText)")
+                let first = prompt.slots[0].choices, second = prompt.slots[1].choices
+                expect(Set(first.map(\.word)).count == 3 && Set(second.map(\.word)).count == 3
+                       && first.flatMap { first in second.map { SpokenTimeAnswer(choiceIDs: [first.id, $0.id]) } }
+                           .filter(prompt.accepts) == [prompt.correct], "Brazilian word tiles have exactly one correct combination")
+            }
+        }
+
+        let digital: [(ClockTime, String, String, String)] = [
+            (.init(hour: 0), "meia-noite", "AM", "da madrugada"),
+            (.init(hour: 0, minute: 5), "meia-noite e cinco minutos", "AM", "da madrugada"),
+            (.init(hour: 1, minute: 1), "uma hora e um minuto", "AM", "da madrugada"),
+            (.init(hour: 7, minute: 5), "sete horas e cinco minutos", "AM", "da manhã"),
+            (.init(hour: 12), "meio-dia", "PM", "da tarde"),
+            (.init(hour: 12, minute: 5), "meio-dia e cinco minutos", "PM", "da tarde"),
+            (.init(hour: 17, minute: 5), "dezessete horas e cinco minutos", "PM", "da tarde"),
+            (.init(hour: 21, minute: 22), "vinte e uma horas e vinte e dois minutos", "PM", "da noite"),
+            (.init(hour: 23, minute: 59), "vinte e três horas e cinquenta e nove minutos", "PM", "da noite")
+        ]
+        for (clock, words, period, part) in digital {
+            let twelve = clock.digitalReading(notation: .twelve, languageCode: code)
+            let full = clock.digitalReading(notation: .twentyFour, languageCode: code)
+            expect(full.text == clock.digitalText && full.period == nil && twelve.period == period
+                   && twelve.separator == ":" && !twelve.periodBeforeClock && twelve.minute == full.minute
+                   && DinoTimeWords.digitalTimeInWords(clock, language: code) == words
+                   && DinoTimeWords.dayPartSuffix(clock, language: code) == part, "Brazilian clock notation and speech for \(clock.digitalText)")
+        }
+        expect(DinoTimeWords.spokenDuration(61, language: code) == "uma hora e um minuto"
+               && DinoTimeWords.duration(125, language: code) == "2\u{00A0}h\u{00A0}5\u{00A0}min"
+               && DinoTimeWords.zoneDifference(-30, language: code) == "−0,5\u{00A0}h"
+               && ClockTime(hour: 23, minute: 55).adding(minutes: 10) == .init(hour: 0, minute: 5)
+               && ClockTime(hour: 0, minute: 5).adding(minutes: -10) == .init(hour: 23, minute: 55),
+               "Brazilian duration, decimal offset and arithmetic across midnight")
+
+        let strings = localizedCatalog("Localizable.xcstrings", code: code)
+        expect(localizedCatalog("InfoPlist.xcstrings", code: code)["CFBundleDisplayName"] == "O Relógio do Dino"
+               && strings["dino.settings"] == "Ajustes" && strings["dino.timeZone.city.brasilia"] == "Brasília"
+               && strings["dino.train.one"] == "Trem 1" && strings["dino.stars %lld"] == "%lld estrelas",
+               "Brazilian app name, settings, city, train and plural")
+        testLocalizedPracticeQuestions(code: code, strings: strings)
+
+        let cities = Dictionary(uniqueKeysWithValues: (DinoTimeZoneJourney.capitals + profile.regionalTimeZoneCapitals).map { ($0.id, $0) })
+        let origin = cities[profile.timeZoneOrigin]!
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let january = calendar.date(from: .init(year: 2026, month: 1, day: 15, hour: 12))!
+        let july = calendar.date(from: .init(year: 2026, month: 7, day: 15, hour: 12))!
+        expect(DinoTimeZoneJourney.displayedDate(language: code, date: january) == "15 de janeiro", "Brazilian atlas date")
+        for (date, city, offset) in [(january, "manaus", -60), (july, "rioBranco", -120), (january, "washington", -120),
+                                     (july, "washington", -60), (january, "london", 180), (july, "london", 240),
+                                     (january, "newDelhi", 510)] {
+            let journey = DinoTimeZoneJourney(origin: origin, destination: cities[city]!, date: date)
+            let clock = ClockTime(hour: offset > 0 ? 23 : 0, minute: 5)
+            expect(journey.offsetMinutes == offset && journey.steps(from: clock).last?.time == clock.adding(minutes: offset),
+                   "Brasília time-zone offset and replay for \(city)")
+        }
+        for month in 0..<12 {
+            let date = calendar.date(byAdding: .month, value: month, to: january)!
+            for difficulty in DinoTimeZoneDifficulty.allCases {
+                for step in [1, 5, 10, 15, 30, 60] {
+                    let destinations = DinoTimeZoneJourney.destinations(from: origin, difficulty: difficulty, minuteStep: step,
+                        date: date, regionalCapitals: profile.regionalTimeZoneCapitals)
+                    let journey = DinoTimeZoneJourney.generate(language: code, difficulty: difficulty, minuteStep: step,
+                                                               date: date, using: &rng)
+                    expect(destinations.count >= 3 && destinations.allSatisfy { strings[$0.nameKey] != nil }
+                           && journey.origin == origin && destinations.contains(journey.destination),
+                           "Brasília offers localized destinations on every difficulty and time grid")
+                }
+            }
+        }
+    }
+
     static func testFrenchLocalization() {
         let profile = AppLanguage.french
         let code = profile.code
@@ -3099,50 +3673,10 @@ struct DinoCoreTests {
                && ClockTime(hour: 0, minute: 5).adding(minutes: -10) == .init(hour: 23, minute: 55),
                "French clock arithmetic crosses the day boundary")
 
-        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-        func localizedStrings(in file: String) -> [String: String] {
-            let data = try! Data(contentsOf: root.appendingPathComponent(file))
-            let catalog = try! JSONSerialization.jsonObject(with: data) as! [String: Any]
-            let entries = catalog["strings"] as! [String: [String: Any]]
-            return entries.compactMapValues { entry in
-                let languages = entry["localizations"] as? [String: [String: Any]]
-                let unit = languages?[code]?["stringUnit"] as? [String: String]
-                expect(unit?["state"] == "translated" && unit?["value"] != nil, "French covers every entry in \(file)")
-                return unit?["value"]
-            }
-        }
-        let strings = localizedStrings(in: "Localizable.xcstrings")
-        expect(localizedStrings(in: "InfoPlist.xcstrings")["CFBundleDisplayName"] == "Dino donne l’heure"
+        let strings = localizedCatalog("Localizable.xcstrings", code: code)
+        expect(localizedCatalog("InfoPlist.xcstrings", code: code)["CFBundleDisplayName"] == "Dino donne l’heure"
                && strings["dino.timeZone.city.paris"] == "Paris", "French app and origin names")
-        for type in DinoPracticeQuestion.allCases {
-            for time in DinoPracticeTime.allCases {
-                var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(type)),
-                                                       seed: 71, language: code)
-                for index in 0..<3 {
-                    let question = generator.next(index: index)
-                    let prompt = DinoQuestionPrompt.make(question: question, language: code, instructionKey: question.kind.instructionKey)
-                    let text = prompt.spoken { strings[$0] ?? $0 }
-                    expect(!text.contains("dino.") && !text.contains("%@") && !text.contains("$@")
-                           && AnswerValidator.isCorrect(question.expectedAnswer, for: question),
-                           "French title and scoring for \(type) with \(time)")
-                    if let key = prompt.formatKey {
-                        expect(DinoQuestionPrompt.interpolated(strings[key] ?? key, arguments: prompt.arguments) != nil,
-                               "French templates retain each argument and its emphasis")
-                    }
-                    if let solution = question.spokenPrompt?.phrase {
-                        expect(!text.contains(solution), "the French word-tile prompt keeps the answer hidden")
-                    }
-                    if [.readDigital, .read24Hour].contains(question.kind) {
-                        let words = question.responses.compactMap { response -> String? in
-                            guard case .time(let clock) = response else { return nil }
-                            return question.kind == .read24Hour ? DinoTimeWords.digitalTimeInWords(clock, language: code)
-                                : DinoTimeWords.time(clock, language: code)
-                        }
-                        expect(Set(words).count == question.responses.count, "French time choices sound distinct")
-                    }
-                }
-            }
-        }
+        testLocalizedPracticeQuestions(code: code, strings: strings)
 
         let capitals = Dictionary(uniqueKeysWithValues: DinoTimeZoneJourney.capitals.map { ($0.id, $0) })
         let origin = capitals["paris"]!
@@ -3171,6 +3705,140 @@ struct DinoCoreTests {
                     expect(destinations.count >= 2 && destinations.allSatisfy { strings[$0.nameKey] != nil }
                            && journey.origin == origin && destinations.contains(journey.destination),
                            "Paris has translated destinations at every difficulty and minute step")
+                }
+            }
+        }
+    }
+
+    static func localizedCatalog(_ file: String, code: String) -> [String: String] {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        let data = try! Data(contentsOf: root.appendingPathComponent(file))
+        let catalog = try! JSONSerialization.jsonObject(with: data) as! [String: Any]
+        let entries = catalog["strings"] as! [String: [String: Any]]
+        return entries.compactMapValues { entry in
+            let languages = entry["localizations"] as? [String: [String: Any]]
+            let localization = languages?[code]
+            let plural = (localization?["variations"] as? [String: Any])?["plural"] as? [String: [String: Any]]
+            let unit = (localization?["stringUnit"] ?? plural?["other"]?["stringUnit"]) as? [String: String]
+            expect(unit?["state"] == "translated" && unit?["value"] != nil, "\(code) covers every entry in \(file)")
+            return unit?["value"]
+        }
+    }
+
+    static func testLocalizedPracticeQuestions(code: String, strings: [String: String]) {
+        for type in DinoPracticeQuestion.allCases {
+            for time in DinoPracticeTime.allCases {
+                var generator = DinoPracticeGenerator(configuration: .init(time: time, order: .specific(type)),
+                                                       seed: 71, language: code)
+                for index in 0..<3 {
+                    let question = generator.next(index: index)
+                    let prompt = DinoQuestionPrompt.make(question: question, language: code, instructionKey: question.kind.instructionKey)
+                    let text = prompt.spoken { strings[$0] ?? $0 }
+                    expect(!text.contains("dino.") && !text.contains("%@") && !text.contains("$@")
+                           && AnswerValidator.isCorrect(question.expectedAnswer, for: question),
+                           "\(code) title and scoring for \(type) with \(time)")
+                    if let key = prompt.formatKey {
+                        expect(DinoQuestionPrompt.interpolated(strings[key] ?? key, arguments: prompt.arguments) != nil,
+                               "\(code) templates retain each argument and its emphasis")
+                    }
+                    if let solution = question.spokenPrompt?.phrase {
+                        expect(!text.contains(solution), "the \(code) word-tile prompt keeps the answer hidden")
+                    }
+                    if [.readDigital, .read24Hour].contains(question.kind) {
+                        let words = question.responses.compactMap { response -> String? in
+                            guard case .time(let clock) = response else { return nil }
+                            return question.kind == .read24Hour ? DinoTimeWords.digitalTimeInWords(clock, language: code)
+                                : DinoTimeWords.time(clock, language: code)
+                        }
+                        expect(Set(words).count == question.responses.count, "\(code) time choices sound distinct")
+                    }
+                }
+            }
+        }
+    }
+
+    static func testCanadianFrenchLocalization() {
+        let profile = AppLanguage.canadianFrench
+        let code = profile.code
+        expect(AppLanguage.named("fr_CA") == profile && AppLanguage.named("fr-Latn-CA") == profile
+               && AppLanguage.named("fr-FR") == .french && AppLanguage.named("fr") == .french
+               && profile.resourceCodes == ["fr-CA", "fr", "en"] && !profile.runsRightToLeft,
+               "Canadian French has its own saved preference and inherits generic French")
+        let canada = DinoSpeechVoice(identifier: "ca", name: "Canadian French", language: "fr-CA", quality: 1)
+        let france = DinoSpeechVoice(identifier: "fr", name: "French", language: "fr-FR", quality: 3)
+        let english = DinoSpeechVoice(identifier: "en", name: "English", language: "en-CA", quality: 2)
+        expect(DinoSpeechVoicePicker.preferredLanguageIdentifier(for: code) == "fr-CA"
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [france, canada]) == canada
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [english, france]) == france
+               && DinoSpeechVoicePicker.bestVoice(for: code, among: [english]) == nil,
+               "speech prefers Canadian French, then another French voice or the written question")
+
+        var rng = SeededGenerator(seed: 34)
+        var franceRNG = rng
+        for hour in 0..<24 {
+            for minute in 0..<60 {
+                let time = ClockTime(hour: hour, minute: minute)
+                let prompt = profile.spokenTime.prompt(for: time, using: &rng)
+                let francePrompt = AppLanguage.french.spokenTime.prompt(for: time, using: &franceRNG)
+                let hint = SpokenClockReadingHint(minute: minute, language: code)
+                let franceHint = SpokenClockReadingHint(minute: minute, language: "fr")
+                expect(prompt == francePrompt && hint.referenceMinute == franceHint.referenceMinute
+                       && hint.count == franceHint.count && hint.spokenHour(for: hour) == franceHint.spokenHour(for: hour)
+                       && DinoTimeWords.digitalTimeInWords(time, language: code) == DinoTimeWords.digitalTimeInWords(time, language: "fr"),
+                       "Canadian and generic French share the phrase, answers and hint at \(time.digitalText)")
+            }
+        }
+        for (hour, minute, twelveHour, period) in [(0, 0, "12", "a.m."), (0, 5, "12", "a.m."), (7, 5, "7", "a.m."),
+                                                  (12, 0, "12", "p.m."), (12, 5, "12", "p.m."),
+                                                  (17, 5, "5", "p.m."), (23, 59, "11", "p.m.")] {
+            let time = ClockTime(hour: hour, minute: minute)
+            let twelve = time.digitalReading(notation: .twelve, languageCode: code)
+            let full = time.digitalReading(notation: .twentyFour, languageCode: code)
+            expect(twelve.hour == twelveHour && twelve.period == period && !twelve.periodBeforeClock
+                   && twelve.minute == full.minute && full.period == nil && full.text == time.digitalText,
+                   "Canadian French uses local 12-hour periods and preserves the 24-hour lesson display")
+        }
+        expect(DinoTimeWords.spokenDuration(61, language: code) == "une heure et une minute"
+               && DinoTimeWords.zoneDifference(90, language: code) == "+1,5\u{00A0}h"
+               && ClockTime(hour: 23, minute: 55).adding(minutes: 10) == .init(hour: 0, minute: 5)
+               && ClockTime(hour: 0, minute: 5).adding(minutes: -10) == .init(hour: 23, minute: 55),
+               "Canadian French displays durations, decimal offsets and arithmetic over midnight")
+
+        let strings = localizedCatalog("Localizable.xcstrings", code: code)
+        expect(localizedCatalog("InfoPlist.xcstrings", code: code)["CFBundleDisplayName"] == "Dino donne l’heure"
+               && strings["dino.activity.breakfast"] == "Déjeuner" && strings["dino.activity.lunch"] == "Dîner"
+               && strings["dino.timeZone.city.stJohns"] == "St. John’s"
+               && strings["dino.question.chooseDigital"] == "Quelle heure est-il?", "Canadian French regional text")
+        testLocalizedPracticeQuestions(code: code, strings: strings)
+
+        let regionalCapitals = profile.regionalTimeZoneCapitals
+        let capitals = Dictionary(uniqueKeysWithValues: (DinoTimeZoneJourney.capitals + regionalCapitals).map { ($0.id, $0) })
+        let origin = capitals["ottawa"]!
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let winter = calendar.date(from: .init(year: 2026, month: 1, day: 15, hour: 12))!
+        let summer = calendar.date(from: .init(year: 2026, month: 7, day: 15, hour: 12))!
+        expect(DinoTimeZoneJourney.displayedDate(language: code, date: winter) == "15 janvier", "Canadian French atlas date")
+        for (date, city, offset) in [(winter, "halifax", 60), (summer, "stJohns", 90), (summer, "washington", 0),
+                                     (winter, "regina", -60), (summer, "regina", -120)] {
+            let journey = DinoTimeZoneJourney(origin: origin, destination: capitals[city]!, date: date)
+            let clock = ClockTime(hour: offset > 0 ? 23 : 0, minute: 5)
+            let end = journey.steps(from: clock).last?.time ?? clock
+            expect(journey.offsetMinutes == offset && end == clock.adding(minutes: offset),
+                   "Ottawa replay uses the real offset for \(city)")
+        }
+        for month in 0..<12 {
+            let date = calendar.date(byAdding: .month, value: month, to: winter)!
+            for difficulty in DinoTimeZoneDifficulty.allCases {
+                for step in [1, 5, 10, 15, 30, 60] {
+                    let destinations = DinoTimeZoneJourney.destinations(from: origin, difficulty: difficulty,
+                                                                        minuteStep: step, date: date, regionalCapitals: regionalCapitals)
+                    let journey = DinoTimeZoneJourney.generate(language: code, difficulty: difficulty, minuteStep: step,
+                                                               date: date, using: &rng)
+                    expect(destinations.allSatisfy { strings[$0.nameKey] != nil }
+                           && journey.origin == origin && destinations.contains(journey.destination)
+                           && journey.offsetMinutes.isMultiple(of: step),
+                           "Ottawa has translated destinations at every difficulty and minute step")
                 }
             }
         }
@@ -3321,6 +3989,16 @@ struct DinoCoreTests {
         let winter = calendar.date(from: .init(year: 2026, month: 1, day: 15, hour: 12))!
         let summer = calendar.date(from: .init(year: 2026, month: 7, day: 15, hour: 12))!
         expect(DinoTimeZoneJourney.displayedDate(language: code, date: winter) == "15 جنوری", "Urdu atlas date")
+        for destination in [capitals["muscat"]!, origin, capitals["dhaka"]!] {
+            let reference = ClockTime(hour: 1)
+            let journey = DinoTimeZoneJourney(origin: origin, destination: destination, date: winter)
+            let question = ClockQuestion(id: 0, kind: .timeZone, target: reference.adding(minutes: journey.offsetMinutes),
+                                         options: [], activity: nil, companionClocks: [], relatedTimes: [reference],
+                                         timeZoneJourney: journey)
+            let prompt = DinoQuestionPrompt.make(question: question, language: code, instructionKey: question.kind.instructionKey)
+            let text = prompt.spoken { strings[$0] ?? $0 }
+            expect(text.hasPrefix("اسلام آباد میں وقت: ایک بجے۔"), "Urdu time zones present a one-o'clock label without plural agreement")
+        }
         for (date, city, offset) in [(winter, "london", -300), (summer, "london", -240),
                                      (winter, "dhaka", 60), (winter, "muscat", -60),
                                      (summer, "kabul", -30), (summer, "newDelhi", 30)] {
